@@ -586,6 +586,21 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
   const totalExternalLinks = crawlPages.reduce((sum, page) => sum + Number(page?.external_links || 0), 0);
   const brokenPages = crawlPages.filter((page) => Number(page?.http_status || 200) >= 400).length;
 
+  // Agrégats site (et non page d'accueil) : les tuiles du rapport annonçaient
+  // « Images 0 / Sans alt 0 » parce qu'on lisait la seule home, et sur une
+  // colonne inexistante (`images_missing_alt` au lieu de `images_without_alt`).
+  const totalImages = crawlPages.reduce((sum, page) => sum + Number(page?.images_total || 0), 0);
+  const totalImagesWithoutAlt = crawlPages.reduce(
+    (sum, page) => sum + Number(page?.images_without_alt ?? page?.images_missing_alt ?? 0),
+    0,
+  );
+  const responseTimes = crawlPages
+    .map((page) => Number(page?.response_time_ms))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  const avgResponseTime = responseTimes.length
+    ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+    : (rawData?.responseTimeMs || null);
+
   const title = primaryPage?.title || htmlAnalysis?.titleContent || '';
   const metaDesc = primaryPage?.meta_description || htmlAnalysis?.metaDescContent || '';
   const h1 = primaryPage?.h1 || htmlAnalysis?.h1Contents?.[0] || '';
@@ -597,19 +612,27 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     // mono-page alors que le crawl multi-pages avait bien tourné.
     crawled_pages: Number(crawl?.crawled_pages || crawlPages.length || 1),
     total_pages: Number(crawl?.total_pages || crawl?.pages_discovered || crawl?.urls_discovered || 0) || null,
-    avgSeoScore: crawl?.avg_score ? Math.round(Number(crawl.avg_score)) : null,
-    avgResponseTime: rawData?.responseTimeMs || null,
+    // `seo_score` est stocké sur /200 : on l'affiche normalisé sur /100 comme
+    // partout ailleurs dans le rapport.
+    avgSeoScore: crawl?.avg_score ? Math.min(100, Math.round(Number(crawl.avg_score) / 2)) : null,
+    avgResponseTime,
     wordCount: totalWordCount || htmlAnalysis?.wordCount || 0,
-    imagesTotal: primaryPage?.images_total ?? htmlAnalysis?.imagesTotal ?? 0,
-    imagesWithoutAlt: primaryPage?.images_missing_alt ?? htmlAnalysis?.imagesMissingAlt ?? 0,
+    imagesTotal: totalImages || htmlAnalysis?.imagesTotal || 0,
+    imagesWithoutAlt: totalImagesWithoutAlt,
     h1,
     h2Count: primaryPage?.h2_count ?? htmlAnalysis?.h2Count ?? 0,
-    hasSchema: htmlAnalysis?.hasSchemaOrg || false,
-    hasOg: htmlAnalysis?.hasOg || false,
-    hasCanonical: htmlAnalysis?.hasCanonical || false,
+    hasSchema: primaryPage?.has_schema_org ?? htmlAnalysis?.hasSchemaOrg ?? false,
+    // Priorité au crawl réel : l'analyse expert ne voyait pas les balises
+    // injectées côté serveur et déclarait canonical/OG absents à tort.
+    hasOg: primaryPage?.has_og ?? htmlAnalysis?.hasOg ?? false,
+    hasCanonical: primaryPage?.has_canonical ?? htmlAnalysis?.hasCanonical ?? false,
+    canonicalCoverage: crawlPages.length
+      ? Math.round((crawlPages.filter((p) => p?.has_canonical).length / crawlPages.length) * 100)
+      : null,
     brokenLinks: brokenPages || rawData?.brokenLinks?.length || brokenLinksInsight?.broken?.length || 0,
     externalLinks: totalExternalLinks || linkProfile?.external || 0,
     internalLinks: totalInternalLinks || linkProfile?.internal || 0,
+
     indexable: htmlAnalysis?.isIndexable !== false,
     performanceScore: scores?.performance?.psiPerformance || null,
     lcp: scores?.performance?.lcp || null,
@@ -1037,19 +1060,21 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
       ${sectionLead('crawl', lang)}
       ${topHtml}
-      ${crawlMeta.pagesFound > 1 ? `<div class="intro-text">Crawl multi-pages analysé : <strong>${crawlMeta.pagesFound}</strong> pages${crawlMeta.avgSeoScore != null ? ` · score SEO moyen <strong>${crawlMeta.avgSeoScore}/200</strong>` : ''}</div>` : ''}
+      ${crawlMeta.pagesFound > 1 ? `<div class="intro-text">Crawl multi-pages analysé : <strong>${crawlMeta.pagesFound}</strong> pages${crawlMeta.avgSeoScore != null ? ` · score SEO moyen <strong>${crawlMeta.avgSeoScore}/100</strong>` : ''}</div>` : ''}
+      <div class="intro-text" style="font-size:12px;color:#6b7280;">Les quatre premières tuiles cumulent l'ensemble des pages explorées ; les balises et la structure de titres qui suivent décrivent la page d'accueil.</div>
       <div class="stat-grid-4">
-        <div class="stat-card"><div class="value">${crawlMeta.wordCount}</div><div class="label">Mots</div></div>
-        <div class="stat-card"><div class="value">${crawlMeta.internalLinks}</div><div class="label">Liens internes</div></div>
-        <div class="stat-card"><div class="value">${crawlMeta.externalLinks}</div><div class="label">Liens externes</div></div>
-        <div class="stat-card"><div class="value">${crawlMeta.avgResponseTime ? crawlMeta.avgResponseTime + 'ms' : '-'}</div><div class="label">Temps de réponse</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.wordCount}</div><div class="label">Mots (total site)</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.internalLinks}</div><div class="label">Liens internes (total)</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.externalLinks}</div><div class="label">Liens externes (total)</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.avgResponseTime ? crawlMeta.avgResponseTime + 'ms' : 'non mesuré'}</div><div class="label">Temps de réponse moyen</div></div>
       </div>
       <div class="stat-grid-4" style="margin-top:12px;">
-        <div class="stat-card"><div class="value">${crawlMeta.imagesTotal}</div><div class="label">Images</div></div>
-        <div class="stat-card"><div class="value" style="color:${crawlMeta.imagesWithoutAlt > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.imagesWithoutAlt}</div><div class="label">Sans alt</div></div>
-        <div class="stat-card"><div class="value">${crawlMeta.h2Count}</div><div class="label">H2</div></div>
-        <div class="stat-card"><div class="value" style="color:${crawlMeta.brokenLinks > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.brokenLinks}</div><div class="label">Liens cassés</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.imagesTotal}</div><div class="label">Images (total site)</div></div>
+        <div class="stat-card"><div class="value" style="color:${crawlMeta.imagesWithoutAlt > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.imagesWithoutAlt}</div><div class="label">Images sans alt</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.h2Count}</div><div class="label">H2 (page d'accueil)</div></div>
+        <div class="stat-card"><div class="value" style="color:${crawlMeta.brokenLinks > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.brokenLinks}</div><div class="label">Pages en erreur</div></div>
       </div>
+
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Balises SEO</h3>
         <div style="padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;margin-bottom:8px;">
@@ -1070,7 +1095,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       <div class="checklist" style="margin-top:16px;">
         <div class="checklist-item">${checkMark(crawlMeta.indexable)} Indexable</div>
         <div class="checklist-item">${checkMark(crawlMeta.isHttps)} HTTPS</div>
-        <div class="checklist-item">${checkMark(crawlMeta.hasCanonical)} Canonical</div>
+        <div class="checklist-item">${checkMark(crawlMeta.hasCanonical)} Canonical${crawlMeta.canonicalCoverage != null ? ` (${crawlMeta.canonicalCoverage} % des pages crawlées)` : ''}</div>
         <div class="checklist-item">${checkMark(crawlMeta.hasOg)} Open Graph</div>
         <div class="checklist-item">${checkMark(crawlMeta.hasSchema)} Schema.org ${crawlMeta.schemaTypes.length > 0 ? `(${crawlMeta.schemaTypes.join(', ')})` : ''}</div>
         <div class="checklist-item">${checkMark(crawlMeta.hasRobotsTxt)} robots.txt ${crawlMeta.robotsPermissive ? '(permissif)' : ''}</div>
@@ -1148,7 +1173,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 }
 
 // ─── Section 3: Strategic GEO Audit (standalone HTML) ───
-function generateStrategicSectionHTML(strategicData: any, lang: string, domain: string, llmRealData?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = ''): string {
+function generateStrategicSectionHTML(strategicData: any, lang: string, domain: string, llmRealData?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = '', hasConsolidatedPlan = false): string {
   const tr = getTranslations(lang);
   const stratScore = strategicData?.overallScore || 0;
   const stratIntro = strategicData?.introduction || {};
@@ -1200,7 +1225,9 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${buildModuleSection('Red Team (Adversarial)', '🔴', redTeam)}
       ${buildModuleSection('Google My Business', '📍', gmb)}
       ${buildModuleSection('Cibles Clients', '👥', clientTargets)}
-      ${stratRoadmap.length > 0 ? `
+      ${hasConsolidatedPlan ? `<div class="intro-text" style="font-size:12px;color:#6b7280;">Les actions issues de cette analyse ne sont pas listées ici : elles sont fusionnées, dédoublonnées et pondérées par impact / effort dans la section « Plan d'action consolidé ».</div>` : ''}
+      ${(!hasConsolidatedPlan && stratRoadmap.length > 0) ? `
+
       <div style="margin-top:20px;">
         <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">🗺️ ${tr.roadmap}</h3>
         <table style="width:100%;border-collapse:collapse;">
@@ -3520,7 +3547,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           renderTopPrioritiesHTML(topGeo),
           renderTopPrioritiesHTML(topKw),
           renderTopPrioritiesHTML(topEeat),
+          rawConsolidatedPlan.length > 0,
         );
+
         const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, renderTopPrioritiesHTML(topCocoon));
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
 

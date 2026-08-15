@@ -277,10 +277,47 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
+const MAX_TITLE_CHARS = 80;
+
+/**
+ * Les titres produits par les modules LLM dépassent parfois 150 caractères et
+ * étaient tronqués visuellement dans le PDF. On garde une accroche courte et on
+ * reverse le reste en tête de description : aucune information n'est perdue.
+ */
+export function splitLongTitle(
+  rawTitle: string,
+  rawDescription?: string,
+): { title: string; description: string } {
+  const title = (rawTitle || '').replace(/\s+/g, ' ').trim();
+  const description = (rawDescription || '').replace(/\s+/g, ' ').trim();
+  if (title.length <= MAX_TITLE_CHARS) return { title, description };
+
+  const head = title.slice(0, MAX_TITLE_CHARS + 20);
+  const breakers = [' : ', ' — ', ' – ', ' - ', ', ', ' afin ', ' pour ', ' ('];
+  let cut = -1;
+  for (const b of breakers) {
+    const idx = head.lastIndexOf(b);
+    if (idx >= 30 && idx > cut) cut = idx;
+  }
+  if (cut < 0) {
+    const space = title.lastIndexOf(' ', MAX_TITLE_CHARS);
+    cut = space >= 30 ? space : MAX_TITLE_CHARS;
+  }
+
+  const shortTitle = title.slice(0, cut).replace(/[\s:,–—-]+$/, '');
+  const remainder = title.slice(cut).replace(/^[\s:,–—-]+/, '');
+  const sentence = remainder ? remainder.charAt(0).toUpperCase() + remainder.slice(1) : '';
+  const merged = [sentence ? (/[.!?]$/.test(sentence) ? sentence : `${sentence}.`) : '', description]
+    .filter(Boolean)
+    .join(' ');
+  return { title: shortTitle, description: merged };
+}
+
 /**
  * Render the "Top 3 actions prioritaires" block as standalone HTML
  * to be injected at the top of a Marina section.
  */
+
 export function renderTopPrioritiesHTML(top: SectionTopPriorities): string {
   if (!top.actions.length) {
     return `<div style="margin:16px 0 20px;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;color:#6b7280;font-size:13px;">
@@ -290,18 +327,20 @@ export function renderTopPrioritiesHTML(top: SectionTopPriorities): string {
 
   const items = top.actions.map((a) => {
     const badge = SEVERITY_BADGE[a.severity];
+    const { title, description } = splitLongTitle(a.title, a.description);
     return `<li style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f3f4f6;">
       <div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#111827;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">${a.rank}</div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
-          <span style="font-weight:600;font-size:13.5px;color:#111827;">${escapeHtml(a.title)}</span>
+          <span style="font-weight:600;font-size:13.5px;color:#111827;">${escapeHtml(title)}</span>
           <span style="background:${badge.bg};color:${badge.fg};padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:600;letter-spacing:0.2px;">${badge.label}</span>
         </div>
-        ${a.description ? `<div style="font-size:12.5px;color:#4b5563;line-height:1.45;">${escapeHtml(a.description)}</div>` : ''}
+        ${description ? `<div style="font-size:12.5px;color:#4b5563;line-height:1.45;">${escapeHtml(description)}</div>` : ''}
         ${a.next_step ? `<div style="margin-top:6px;font-size:12px;color:#374151;"><strong>Prochaine étape :</strong> ${escapeHtml(a.next_step)}</div>` : ''}
       </div>
     </li>`;
   }).join('');
+
 
   return `<div style="margin:16px 0 24px;padding:16px 18px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -331,6 +370,7 @@ export function renderConsolidatedPlanHTML(
 
   const rows = items.map((it) => {
     const badge = SEVERITY_BADGE[it.severity];
+    const { title, description } = splitLongTitle(it.title, it.description);
     const origin = it.source === 'workbench'
       ? `<span style="background:#ede9fe;color:#5b21b6;padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">Workbench</span>`
       : `<span style="background:#fef3c7;color:#7c5b00;padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">Nouveau · ${escapeHtml(SECTION_LABELS[it.source_section || 'seo'])}</span>`;
@@ -341,8 +381,9 @@ export function renderConsolidatedPlanHTML(
     return `<tr style="border-bottom:1px solid #e5e7eb;">
       <td style="padding:10px 12px;font-weight:700;color:#111827;font-size:13px;">${it.rank}</td>
       <td style="padding:10px 12px;">
-        <div style="font-weight:600;font-size:13px;color:#111827;margin-bottom:3px;">${escapeHtml(it.title)}</div>
-        ${it.description ? `<div style="font-size:12px;color:#4b5563;line-height:1.45;">${escapeHtml(it.description)}</div>` : ''}
+        <div style="font-weight:600;font-size:13px;color:#111827;margin-bottom:3px;">${escapeHtml(title)}</div>
+        ${description ? `<div style="font-size:12px;color:#4b5563;line-height:1.45;">${escapeHtml(description)}</div>` : ''}
+
         ${it.roi ? `<div style="font-size:11px;color:#6b7280;margin-top:5px;">${escapeHtml(it.roi.roi_note)}</div>` : ''}
       </td>
       <td style="padding:10px 12px;white-space:nowrap;">
