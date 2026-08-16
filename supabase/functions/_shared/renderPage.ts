@@ -146,7 +146,7 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
         console.log(`[renderPage] ⚠️ Browserless error: ${response.status}`);
         await logBrowserlessError(response.status, `HTTP ${response.status}`, url);
         if (response.status === 429 || response.status >= 500) {
-          return await renderWithFlyPlaywright(url);
+          return await renderWithFlyThenSpider(url);
         }
         return null;
       }
@@ -154,9 +154,9 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
       const msg = err instanceof Error ? err.message : String(err);
       console.log('[renderPage] ⚠️ Browserless failed:', msg);
       await logBrowserlessError(0, msg, url);
-      return await renderWithFlyPlaywright(url);
+      return await renderWithFlyThenSpider(url);
     }
-  }, `renderPage:${url}`) ?? await renderWithFlyPlaywright(url);
+  }, `renderPage:${url}`) ?? await renderWithFlyThenSpider(url);
 }
 
 /**
