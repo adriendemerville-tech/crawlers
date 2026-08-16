@@ -576,8 +576,10 @@ function buildModuleSection(title: string, emoji: string, data: any): string {
  * Chaque sous-section est un bloc paginable (`data-marina-block`) pour que la
  * coupure PDF tombe entre deux cadres et jamais au milieu d'un titre.
  */
-function buildKeywordPositioningSection(kp: any): string {
-  if (!kp) return '';
+function buildKeywordPositioningSection(kp: any, rankingOverview?: any): string {
+  if (!kp && !rankingOverview) return '';
+  kp = kp || {};
+
 
   const num = (v: any): number | null => {
     const n = typeof v === 'number' ? v : parseInt(String(v ?? '').replace(/[^0-9]/g, ''), 10);
