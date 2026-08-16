@@ -199,6 +199,66 @@ async function renderWithFlyPlaywright(url: string): Promise<string | null> {
 }
 
 /**
+ * Tier 3 renderer: Spider.cloud (JS rendering via `request: 'chrome'`).
+ * Auto-fallback when Browserless AND Fly.io both fail or are unavailable.
+ */
+async function renderWithSpider(url: string): Promise<string | null> {
+  const spiderKey = Deno.env.get('SPIDER_API_KEY');
+  if (!spiderKey) {
+    console.log('[renderPage] ⚠️ SPIDER_API_KEY not configured — no Spider fallback');
+    return null;
+  }
+
+  try {
+    console.log(`[renderPage] 🔄 Falling back to Spider.cloud for ${url}`);
+    const response = await fetch('https://api.spider.cloud/crawl', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${spiderKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        limit: 1,
+        return_format: 'raw',
+        request: 'chrome',
+        wait_for: { delay: { timeout: { secs: 3, nanos: 0 } } },
+      }),
+      signal: AbortSignal.timeout(45000),
+    });
+
+    if (!response.ok) {
+      console.log(`[renderPage] ⚠️ Spider.cloud error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const page = Array.isArray(data) ? data[0] : data;
+    const html = page?.content || '';
+    if (html.length > 500) {
+      console.log(`[renderPage] ✅ Spider.cloud success (${html.length} chars)`);
+      await trackPaidApiCall('renderPage', 'spider', '/crawl', url).catch(() => {});
+      return html;
+    }
+    console.log('[renderPage] ⚠️ Spider.cloud returned no usable HTML');
+    return null;
+  } catch (err) {
+    console.log('[renderPage] ⚠️ Spider.cloud failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/**
+ * Fly.io with automatic Spider.cloud fallback.
+ */
+async function renderWithFlyThenSpider(url: string): Promise<string | null> {
+  const fly = await renderWithFlyPlaywright(url);
+  if (fly) return fly;
+  return await renderWithSpider(url);
+}
+
+
+/**
  * Self-render fallback for crawlers.fr (our own SPA).
  * Uses fetch-external-site edge function which has Spider/Browserless/Fly cascade.
  */
