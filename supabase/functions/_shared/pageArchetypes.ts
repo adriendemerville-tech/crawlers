@@ -808,6 +808,20 @@ export function analyzePageArchetypes(
 
   let usable = (pages || []).filter((p) => p && p.url);
 
+  // Une même page peut avoir été crawlée sous plusieurs variantes (www vs apex,
+  // http vs https, slash final). On ne conserve qu'une occurrence par page réelle,
+  // en gardant la version la plus renseignée (H1 + volume de contenu) : sinon les
+  // volumes par gabarit sont gonflés et les exemples affichent deux fois la même page.
+  const dedup = new Map<string, ArchetypePageInput>();
+  for (const p of usable) {
+    const key = crawlUrlKey(p.url);
+    const prev = dedup.get(key);
+    if (!prev) { dedup.set(key, p); continue; }
+    const score = (x: ArchetypePageInput) => (x.h1 ? 1_000_000 : 0) + Number(x.word_count || 0);
+    if (score(p) > score(prev)) dedup.set(key, p);
+  }
+  usable = Array.from(dedup.values());
+
   // Périmètre ciblé : l'audit porte sur une URL précise. On ne segmente alors
   // que cette page et son voisinage de liens (entrants + sortants), sinon on
   // décrirait des gabarits que l'audit n'a pas réellement examinés.
