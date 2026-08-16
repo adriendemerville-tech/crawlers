@@ -1315,21 +1315,33 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${stratIntro?.strengths ? `<div class="intro-text"><strong>${tr.strengths}:</strong> ${stratIntro.strengths}</div>` : ''}
       ${stratIntro?.improvement ? `<div class="intro-text"><strong>${tr.improvements}:</strong> ${stratIntro.improvement}</div>` : ''}
       ${stratSummary ? `<div style="margin-top:16px;padding:16px;background:#eff6ff;border-radius:8px;"><h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">📋 ${tr.executiveSummary}</h3><div class="intro-text">${stratSummary}</div></div>` : ''}
+      <!-- ── Bloc GEO / citabilité IA : remonté en tête de la section, c'est
+           l'objet même de l'audit stratégique. ── -->
+      ${buildModuleSection('Citabilité par les moteurs de réponse IA', '🌍', geoCitability)}
+      <!--MARINA_LLM_START-->${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}<!--MARINA_LLM_END-->
+      ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
+      ${buildModuleSection('Quotabilité', '💬', quotability)}
+      ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
+      ${buildModuleSection('Intention conversationnelle', '💭', conversationalIntent)}
+      ${buildModuleSection('Risque zéro-clic', '🚫', zeroClickRisk)}
+
+      <!-- ── Bloc mots-clés et marché ── -->
+      ${buildKeywordPositioningSection(keywordPos, rankingOverview)}
+      ${buildModuleSection('Contenus prioritaires à créer / renforcer', '🧭', priorityContent)}
+      ${buildModuleSection('Marché et autorité de domaine', '🔗', domainAuthority)}
+      ${buildModuleSection('Données Marché', '📈', marketData)}
+
+      <!-- ── Bloc marque, concurrence, audience ── -->
       ${buildModuleSection('Autorité de Marque', '🏛️', brandAuth)}
       ${buildSocialSignalsSection(socialSignals)}
       ${buildModuleSection('Intelligence Marché', '📊', marketIntel)}
       ${buildCompetitiveLandscapeSection(competitive)}
-      ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
-      ${buildKeywordPositioningSection(keywordPos)}
-      ${buildModuleSection('Données Marché', '📈', marketData)}
-      <!--MARINA_LLM_START-->${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}<!--MARINA_LLM_END-->
-      ${buildModuleSection('Quotabilité', '💬', quotability)}
-      ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
       ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
       ${buildModuleSection("Sentiment d'Expertise", '🎯', expertiseSentiment)}
       ${buildModuleSection('Red Team (Adversarial)', '🔴', redTeam)}
       ${buildModuleSection('Google My Business', '📍', gmb)}
       ${buildModuleSection('Cibles Clients', '👥', clientTargets)}
+
       ${hasConsolidatedPlan ? `<div class="intro-text" style="font-size:12px;color:#6b7280;">Les actions issues de cette analyse ne sont pas listées ici : elles sont fusionnées, dédoublonnées et pondérées par impact / effort dans la section « Plan d'action consolidé ».</div>` : ''}
       ${(!hasConsolidatedPlan && stratRoadmap.length > 0) ? `
 
