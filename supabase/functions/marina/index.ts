@@ -2028,7 +2028,7 @@ function buildConclusionHTML(
 
 
 function compileMarinaReport(
-  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string; scopeLimits?: string; intro?: string; conclusion?: string; archetypes?: string; identity?: string; ownerPerformance?: string },
+  sectionHTMLs: { crawl: string; tech: string; strategic: string; cocoon: string; indexation?: string; consolidatedPlan?: string; visual?: string; disclosure?: string; summary?: string; scopeLimits?: string; intro?: string; conclusion?: string; archetypes?: string; identity?: string; ownerPerformance?: string; pageVerdict?: string; cocoonPage?: string },
 
 
   lang: string,
