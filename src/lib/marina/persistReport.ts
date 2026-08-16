@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { normalizeScanMode } from './scanMode';
 
 /**
  * Archive un rapport Marina terminé dans `saved_reports` pour l'utilisateur
@@ -39,7 +40,7 @@ export async function persistMarinaReport(
         report_url: reportData?.report_url ?? null,
         report_view_url: reportData?.report_view_url ?? null,
         report_path: reportData?.report_path ?? null,
-        scan_mode: reportData?.scan_mode ?? null,
+        scan_mode: normalizeScanMode(reportData?.scan_mode),
         pages_crawled: reportData?.pages_crawled ?? null,
       } as any,
     });

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, ExternalLink, RefreshCw, Terminal, Layers, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { listMyMarinaAudits, getMyMarinaReportUrl } from '@/lib/marina/myAudits.functions';
+import { normalizeScanMode } from '@/lib/marina/scanMode';
 
 type Audit = Awaited<ReturnType<typeof listMyMarinaAudits>>[number];
 
@@ -75,7 +76,9 @@ export function MarinaMyAuditsTab() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {audits.map(a => (
+            {audits.map(a => {
+              const scanMode = normalizeScanMode(a.scanMode);
+              return (
               <Card key={a.id}>
                 <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0">
@@ -95,8 +98,8 @@ export function MarinaMyAuditsTab() {
                           <Layers className="w-3 h-3" /> Multipages
                         </Badge>
                       )}
-                      {a.scanMode && (
-                        <Badge variant="outline" className="text-[10px] capitalize">{a.scanMode}</Badge>
+                      {scanMode && (
+                        <Badge variant="outline" className="text-[10px] capitalize">{scanMode}</Badge>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -119,7 +122,8 @@ export function MarinaMyAuditsTab() {
                   </Button>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
