@@ -554,11 +554,93 @@ function checkMark(val: boolean): string {
 
 function buildModuleSection(title: string, emoji: string, data: any): string {
   if (!data) return '';
-  return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
+  return `<div data-marina-block="module" style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
     <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">${emoji} ${title}</h3>
     ${renderJsonSection(data)}
   </div>`;
 }
+
+/**
+ * Bloc « Positionnement Mots-clés » — rendu explicite en 3 sous-sections
+ * pédagogiques (positions actuelles / gains rapides / mots-clés non attaqués)
+ * au lieu du dump JSON générique qui affichait `current_rank` brut.
+ * Chaque sous-section est un bloc paginable (`data-marina-block`) pour que la
+ * coupure PDF tombe entre deux cadres et jamais au milieu d'un titre.
+ */
+function buildKeywordPositioningSection(kp: any): string {
+  if (!kp) return '';
+
+  const num = (v: any): number | null => {
+    const n = typeof v === 'number' ? v : parseInt(String(v ?? '').replace(/[^0-9]/g, ''), 10);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+  const esc = (s: any) => String(s ?? '').replace(/</g, '&lt;');
+
+  const row = (kw: any, extra: string[] = []) => {
+    const rank = num(kw?.current_rank ?? kw?.position);
+    const vol = num(kw?.volume);
+    const meta = [
+      rank ? `Position dans la SERP : <strong>${rank}</strong>` : 'Position dans la SERP : non classé',
+      vol ? `Volume de recherche : <strong>${vol.toLocaleString('fr-FR')}</strong>/mois` : null,
+      num(kw?.difficulty) ? `Difficulté : <strong>${num(kw.difficulty)}</strong>/100` : null,
+      ...extra,
+    ].filter(Boolean).join(' · ');
+    const action = kw?.action || kw?.strategic_analysis?.recommended_action || '';
+    return `<div style="border-left:3px solid #7c3aed;padding:6px 0 6px 12px;margin-bottom:10px;">
+      <div style="font-size:13.5px;font-weight:600;color:#111827;">${esc(kw?.keyword || kw?.term || '')}</div>
+      <div style="font-size:12px;color:#4b5563;margin-top:2px;">${meta}</div>
+      ${action ? `<div style="font-size:12px;color:#374151;margin-top:4px;">${esc(action)}</div>` : ''}
+    </div>`;
+  };
+
+  const sub = (title: string, lead: string, body: string) => body
+    ? `<div data-marina-block="keywords-sub" style="margin-top:16px;padding:14px 16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
+        <h4 style="font-size:14px;font-weight:600;margin:0 0 4px 0;color:#111827;">${title}</h4>
+        <p style="font-size:12px;color:#6b7280;margin:0 0 10px 0;">${lead}</p>
+        ${body}
+      </div>`
+    : '';
+
+  const main: any[] = Array.isArray(kp.main_keywords) ? kp.main_keywords : [];
+  const quickWins: any[] = Array.isArray(kp.quick_wins) ? kp.quick_wins : [];
+  const gaps: any[] = Array.isArray(kp.content_gaps) ? kp.content_gaps : [];
+
+  const ranked = main.filter((k) => num(k?.current_rank ?? k?.position));
+  const positions = (ranked.length ? ranked : main).slice(0, 15);
+
+  const html = [
+    sub(
+      'Positions actuelles',
+      'Mots-clés sur lesquels le domaine est déjà positionné dans les résultats Google.',
+      positions.map((k) => row(k)).join(''),
+    ),
+    sub(
+      'Quick Wins',
+      'Gains rapides : mots-clés à optimiser en priorité.',
+      quickWins.slice(0, 15).map((k) => row(k)).join(''),
+    ),
+    sub(
+      'Content gap',
+      'Mots-clés non attaqués actuellement.',
+      gaps.slice(0, 15).map((k) => row(k, k?.priority ? [`Priorité : <strong>${esc(k.priority)}</strong>`] : [])).join(''),
+    ),
+  ].join('');
+
+  // Le reste du module (densité sémantique, termes manquants, recommandations…)
+  // garde le rendu générique, sans les trois clés déjà traitées ci-dessus.
+  const rest: any = { ...kp };
+  delete rest.main_keywords; delete rest.quick_wins; delete rest.content_gaps;
+  const restHtml = renderJsonSection(rest);
+
+  if (!html && !restHtml) return '';
+
+  return `<div data-marina-block="keywords" style="margin-top:20px;">
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">🔑 Positionnement Mots-clés</h3>
+    ${html}
+    ${restHtml ? `<div data-marina-block="keywords-sub" style="margin-top:16px;padding:14px 16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">${restHtml}</div>` : ''}
+  </div>`;
+}
+
 
 function normalizeUrl(value: string | null | undefined, base?: string): string | null {
   if (!value) return null;
@@ -1216,7 +1298,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${buildModuleSection('Intelligence Marché', '📊', marketIntel)}
       ${buildCompetitiveLandscapeSection(competitive)}
       ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
-      ${buildModuleSection('Positionnement Mots-clés', '🔑', keywordPos)}
+      ${buildKeywordPositioningSection(keywordPos)}
       ${buildModuleSection('Données Marché', '📈', marketData)}
       <!--MARINA_LLM_START-->${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}<!--MARINA_LLM_END-->
       ${buildModuleSection('Quotabilité', '💬', quotability)}
