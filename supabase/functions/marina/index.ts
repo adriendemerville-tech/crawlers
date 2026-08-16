@@ -3831,7 +3831,25 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
               criticalCount: (consolidatedPlan || []).filter((i: any) => i.severity === 'critical').length,
               roi: roiSummary,
+              // Conclusion stratégique déterministe : chaque levier est adossé à
+              // un signal réellement mesuré dans ce run (0 token LLM).
+              verdictSignals: {
+                pagesKnown: crawlSnapshot?.total_pages || null,
+                psiPerformanceMobile: expertData?.scores?.performance?.psiPerformance ?? null,
+                cannibalizationGroups: crawlSnapshot?.contentIntegrity?.cannibalizationGroups ?? null,
+                nearDuplicateGroups: crawlSnapshot?.contentIntegrity?.nearDuplicateGroups ?? null,
+                thinPages: crawlSnapshot?.contentIntegrity?.thinPages ?? null,
+                clusterCount: cocoonResult?.stats?.cluster_count ?? (cocoonResult?.cluster_summary?.length || null),
+                orphanPages: cocoonResult?.graph_details?.orphan_pages?.length ?? null,
+                hasSchema: crawlSnapshot?.hasSchema ?? null,
+                schemaTypesCount: (crawlSnapshot?.schemaTypes || []).length,
+                rankedKeywords: (strategicData?.keyword_positioning?.main_keywords || []).length,
+                quickWinKeywords: (strategicData?.keyword_positioning?.quick_wins || []).length,
+                contentGapKeywords: (strategicData?.keyword_positioning?.content_gaps || []).length,
+                hostDuplication: Boolean(hostDuplication?.hasDuplication),
+              },
             }),
+
             intro: buildReportIntroHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData,
               indexationCount: indexationData.length,
