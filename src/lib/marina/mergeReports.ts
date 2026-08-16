@@ -56,12 +56,32 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
+/** Métriques propres à une URL, portées par son bloc de conclusion intermédiaire. */
+export interface PageMeta {
+  url: string;
+  path: string;
+  tech: number | null;
+  geo: number | null;
+  global: number | null;
+  band: string;
+  headline: string;
+  cluster?: string | null;
+  linksIn?: number | null;
+  linksOut?: number | null;
+  criticalCount?: number;
+  actions?: string[];
+}
+
 /** Découpe un body Marina en blocs balisés + reste (header, toolbar, footer…). */
 interface SplitBody {
   /** Blocs de périmètre site, par identifiant de bloc. */
   siteBlocks: Map<string, string>;
-  /** Blocs de périmètre page, dans l'ordre du document. */
-  pageBlocks: string[];
+  /** Blocs de périmètre page, dans l'ordre du document, avec leur identifiant. */
+  pageBlocks: Array<{ id: string; html: string }>;
+  /** Métriques de l'URL extraites du bloc `page-verdict`, si présent. */
+  meta: PageMeta | null;
+  /** Verdict stratégique de périmètre domaine, extrait de la synthèse. */
+  domainVerdict: string | null;
   /** Vrai si le rapport porte les balises de périmètre (rapports récents). */
   tagged: boolean;
 }
@@ -72,9 +92,11 @@ interface SplitBody {
  */
 function splitBody(body: string): SplitBody {
   const siteBlocks = new Map<string, string>();
-  const pageBlocks: string[] = [];
+  const pageBlocks: Array<{ id: string; html: string }> = [];
   const openRe = /<div\b[^>]*data-marina-scope="(site|page)"[^>]*>/gi;
   let tagged = false;
+  let meta: PageMeta | null = null;
+  let domainVerdict: string | null = null;
   let match: RegExpExecArray | null;
 
   while ((match = openRe.exec(body))) {
@@ -82,6 +104,14 @@ function splitBody(body: string): SplitBody {
     const scope = match[1];
     const blockIdMatch = match[0].match(/data-marina-block="([^"]+)"/i);
     const blockId = blockIdMatch ? blockIdMatch[1] : `block-${pageBlocks.length}`;
+    const metaMatch = match[0].match(/data-marina-page-meta="([^"]*)"/i);
+    if (metaMatch && !meta) {
+      try {
+        meta = JSON.parse(decodeURIComponent(metaMatch[1]));
+      } catch {
+        meta = null;
+      }
+    }
 
     // Recherche du </div> fermant correspondant.
     const tagRe = /<div\b[^>]*>|<\/div>/gi;
@@ -103,15 +133,21 @@ function splitBody(body: string): SplitBody {
     if (end === -1) end = body.length;
 
     const inner = body.slice(openRe.lastIndex, end);
+    if (blockId === 'summary' && !domainVerdict) {
+      // Le paragraphe de verdict stratégique est de périmètre domaine : on le
+      // remonte dans la synthèse fusionnée au lieu de le répéter dans chaque fiche.
+      const vIdx = inner.search(/<div\b[^>]*data-marina-block="verdict"/i);
+      if (vIdx >= 0) domainVerdict = inner.slice(vIdx);
+    }
     if (scope === 'site') {
       if (!siteBlocks.has(blockId)) siteBlocks.set(blockId, inner);
     } else {
-      pageBlocks.push(inner);
+      pageBlocks.push({ id: blockId, html: inner });
     }
     openRe.lastIndex = end;
   }
 
-  return { siteBlocks, pageBlocks, tagged };
+  return { siteBlocks, pageBlocks, meta, domainVerdict, tagged };
 }
 
 const SITE_BLOCK_LABELS: Record<string, string> = {
@@ -122,6 +158,135 @@ const SITE_BLOCK_LABELS: Record<string, string> = {
   indexation: "Santé d'indexation",
   llm: "Visibilité dans les moteurs de réponse IA",
 };
+
+const BAND_TEXT: Record<string, string> = {
+  strong: 'solide',
+  ok: 'fonctionnelle mais incomplète',
+  weak: 'insuffisante',
+  critical: 'en défaut critique',
+  unknown: 'non consolidée',
+};
+
+/** Observations transverses entre les URLs auditées — 100 % déterministe. */
+function crossPageObservations(metas: PageMeta[]): string[] {
+  const out: string[] = [];
+  if (metas.length < 2) return out;
+
+  const scored = metas.filter((m) => typeof m.global === 'number') as Array<PageMeta & { global: number }>;
+  if (scored.length >= 2) {
+    const sorted = [...scored].sort((a, b) => b.global - a.global);
+    const best = sorted[0];
+    const worst = sorted[sorted.length - 1];
+    const spread = best.global - worst.global;
+    out.push(
+      spread >= 15
+        ? `Écart de ${spread} points entre la page la mieux notée (${escapeHtml(best.path)} — ${best.global}/100) et la moins bien notée (${escapeHtml(worst.path)} — ${worst.global}/100) : le gabarit de ${escapeHtml(best.path)} sert de référence pour reprendre les autres.`
+        : `Les ${scored.length} pages auditées se tiennent dans un intervalle de ${spread} points : les défauts sont structurels (partagés par le gabarit) plutôt que propres à une page.`,
+    );
+  }
+
+  const lowGeo = scored.filter((m) => typeof m.geo === 'number' && (m.geo as number) < 60);
+  if (lowGeo.length >= 2) {
+    out.push(
+      `${lowGeo.length} des ${metas.length} pages auditées ont un score GEO inférieur à 60 : le déficit de citabilité IA se traite au niveau du gabarit (réponse directe, données factuelles, JSON-LD) et non page par page.`,
+    );
+  }
+
+  const lowTech = scored.filter((m) => typeof m.tech === 'number' && (m.tech as number) < 70);
+  if (lowTech.length >= 2) {
+    out.push(
+      `${lowTech.length} pages partagent des manquements techniques comparables : un correctif appliqué au modèle de page les couvre toutes.`,
+    );
+  }
+
+  const byCluster = new Map<string, PageMeta[]>();
+  for (const m of metas) {
+    if (!m.cluster) continue;
+    const arr = byCluster.get(String(m.cluster)) || [];
+    arr.push(m);
+    byCluster.set(String(m.cluster), arr);
+  }
+  for (const [cluster, group] of byCluster) {
+    if (group.length >= 2) {
+      out.push(
+        `${group.length} URLs auditées appartiennent au même cluster sémantique (${escapeHtml(cluster)}) : ${group
+          .map((g) => escapeHtml(g.path))
+          .join(', ')}. Désignez une page pivot pour l'intention visée et faites converger le maillage vers elle.`,
+      );
+    }
+  }
+
+  const weakMesh = metas.filter((m) => typeof m.linksIn === 'number' && (m.linksIn as number) <= 2);
+  if (weakMesh.length >= 2) {
+    out.push(
+      `${weakMesh.length} pages reçoivent 2 liens internes ou moins : elles dépendent presque uniquement du sitemap pour être découvertes.`,
+    );
+  }
+
+  return out;
+}
+
+/** Synthèse exécutive du document fusionné : domaine + reprise de chaque URL. */
+function buildGlobalSummary(domain: string, metas: PageMeta[], domainVerdict: string | null, pageCount: number): string {
+  const rows = metas
+    .map(
+      (m) => `
+      <tr>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-weight:600;">${escapeHtml(m.path)}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${m.global ?? 'n/d'}${m.global != null ? '/100' : ''}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${m.tech ?? 'n/d'}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${m.geo ?? 'n/d'}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:12.5px;color:#374151;">${escapeHtml(
+          BAND_TEXT[m.band] || m.band,
+        )} — ${escapeHtml(m.headline.replace(/^[^:]*:\s*/, ''))}</td>
+      </tr>`,
+    )
+    .join('');
+
+  const observations = crossPageObservations(metas);
+
+  return `
+  <section class="marina-batch-summary section" style="page-break-after:always;padding:32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;border-left:6px solid #d4af37;">
+    <h2 style="font-size:22px;margin:0 0 6px 0;">Synthèse exécutive</h2>
+    <p style="font-size:13px;color:#6b7280;margin:0 0 18px 0;">
+      ${escapeHtml(domain)} — ${pageCount} URLs auditées. Cette synthèse reprend l'ensemble de l'audit : d'abord ce qui
+      relève du domaine, puis la conclusion propre à chaque URL, puis les liens entre ces URLs.
+    </p>
+
+    <h3 style="font-size:16px;margin:0 0 8px 0;">1. Le domaine</h3>
+    <p style="font-size:13px;color:#374151;line-height:1.75;margin:0 0 10px 0;">
+      Les analyses de périmètre site — crawl, cocon sémantique global, santé d'indexation, visibilité dans les moteurs
+      de réponse IA — sont calculées une seule fois pour ${escapeHtml(domain)} et valent pour les ${pageCount} URLs.
+    </p>
+    ${domainVerdict || ''}
+
+    <h3 style="font-size:16px;margin:22px 0 8px 0;">2. Ce que dit chaque URL</h3>
+    <p style="font-size:13px;color:#374151;line-height:1.75;margin:0 0 10px 0;">
+      Le score SEO technique, le score GEO et les correctifs de maillage sont mesurés <strong>page par page</strong> :
+      ils ne sont jamais moyennés entre les URLs. Chaque fiche débute par sa propre conclusion intermédiaire.
+    </p>
+    ${metas.length ? `
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="text-align:left;">
+          <th style="padding:8px 10px;border-bottom:2px solid #6d28d9;">URL</th>
+          <th style="padding:8px 10px;border-bottom:2px solid #6d28d9;text-align:center;">Page</th>
+          <th style="padding:8px 10px;border-bottom:2px solid #6d28d9;text-align:center;">SEO tech.</th>
+          <th style="padding:8px 10px;border-bottom:2px solid #6d28d9;text-align:center;">GEO</th>
+          <th style="padding:8px 10px;border-bottom:2px solid #6d28d9;">Conclusion intermédiaire</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>` : `
+    <p style="font-size:13px;color:#374151;">Les conclusions intermédiaires figurent en tête de chaque fiche de page.</p>`}
+
+    ${observations.length ? `
+    <h3 style="font-size:16px;margin:22px 0 8px 0;">3. Liens entre les URLs auditées</h3>
+    <ul style="padding-left:20px;font-size:13px;color:#374151;line-height:1.75;margin:0;">
+      ${observations.map((o) => `<li style="margin:0 0 8px 0;">${o}</li>`).join('')}
+    </ul>` : ''}
+  </section>`;
+}
 
 /**
  * Construit le document fusionné : page de garde + sommaire + analyse du site
