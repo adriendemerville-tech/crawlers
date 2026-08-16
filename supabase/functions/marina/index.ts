@@ -2150,6 +2150,12 @@ function compileMarinaReport(
 
     <div class="marina-separator"></div>
 
+    ${sectionHTMLs.pageVerdict ? `
+    <!-- Conclusion intermédiaire propre à cette URL (périmètre page, en tête de la partie URL) -->
+    ${sectionHTMLs.pageVerdict}
+    <div class="marina-separator"></div>
+    ` : ''}
+
     <!-- Section 2: Technical SEO (périmètre page) -->
     <div data-marina-scope="page" data-marina-block="tech">${techContent}</div>
 
@@ -2168,6 +2174,12 @@ function compileMarinaReport(
 
     <!-- Section 4: Cocoon (périmètre site) -->
     <div data-marina-scope="site" data-marina-block="cocoon">${cocoonContent}</div>
+
+    ${sectionHTMLs.cocoonPage ? `
+    <div class="marina-separator"></div>
+    <!-- Cocon : recommandations propres à CETTE URL (périmètre page) -->
+    ${sectionHTMLs.cocoonPage}
+    ` : ''}
 
     ${llmVisibilityBlock ? `
     <div class="marina-separator"></div>
