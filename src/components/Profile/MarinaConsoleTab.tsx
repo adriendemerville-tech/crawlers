@@ -76,6 +76,23 @@ function computeBundleCost(services: MarinaService[]): number {
   return services.reduce((sum, s) => sum + (SERVICE_META[s]?.credits || 0), 0);
 }
 
+const RUNNING_STATUSES = ['pending', 'queued', 'processing', 'running', 'in_progress'];
+const isRunningStatus = (status?: string | null) =>
+  !!status && RUNNING_STATUSES.includes(status);
+
+/** Domaine lisible d'un job Marina, pour la bannière et l'historique. */
+function jobLabel(job: any): string {
+  const payload = (job?.input_payload && typeof job.input_payload === 'object') ? job.input_payload : {};
+  const raw = payload.url || payload.urls?.[0] || job?.result_data?.domain || '';
+  if (!raw) return '';
+  try {
+    return new URL(raw.startsWith('http') ? raw : `https://${raw}`).hostname.replace(/^www\./, '');
+  } catch {
+    return String(raw);
+  }
+}
+
+
 export function MarinaConsoleTab() {
   const { user } = useAuth();
   const { balance, isAgencyPro } = useCredits();
@@ -158,22 +175,36 @@ export function MarinaConsoleTab() {
 
   useEffect(() => { loadKeys(); }, [loadKeys]);
 
-  useEffect(() => {
+  const loadJobs = useCallback(async () => {
     if (!user) return;
-    const loadJobs = async () => {
-      setJobsLoading(true);
-      const { data } = await supabase
-        .from('async_jobs')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('function_name', 'marina')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      setJobs(data || []);
-      setJobsLoading(false);
-    };
-    loadJobs();
+    const { data } = await supabase
+      .from('async_jobs')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('function_name', 'marina')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    setJobs(data || []);
+    setJobsLoading(false);
   }, [user]);
+
+  useEffect(() => { loadJobs(); }, [loadJobs]);
+
+  // Un job "en cours" reste affiché tant qu'il n'est ni terminé ni trop ancien
+  // (au-delà de 45 min, un statut bloqué côté backend n'est plus considéré actif).
+  const runningJobs = jobs.filter(j => {
+    if (!isRunningStatus(j.status)) return false;
+    const started = j.created_at ? new Date(j.created_at).getTime() : 0;
+    return !started || Date.now() - started < 45 * 60 * 1000;
+  });
+
+  // Rafraîchissement uniquement quand un audit tourne
+  useEffect(() => {
+    if (runningJobs.length === 0) return;
+    const id = setInterval(loadJobs, 10000);
+    return () => clearInterval(id);
+  }, [runningJobs.length, loadJobs]);
+
 
   const createKey = async () => {
     if (!user || newServices.filter(s => DATA_SERVICES.includes(s)).length === 0) return;
@@ -257,6 +288,35 @@ export function MarinaConsoleTab() {
           </Badge>
         )}
       </div>
+
+      {/* Bannière audit(s) Marina en cours */}
+      {runningJobs.length > 0 && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+              <p className="text-sm font-medium truncate">
+                {t3(language,
+                  `Audit Marina ${jobLabel(runningJobs[0])} en cours`,
+                  `Marina audit ${jobLabel(runningJobs[0])} in progress`,
+                  `Auditoría Marina ${jobLabel(runningJobs[0])} en curso`
+                )}
+                {typeof runningJobs[0].progress === 'number' ? ` · ${runningJobs[0].progress}%` : ''}
+              </p>
+            </div>
+            {runningJobs.length > 1 && (
+              <Badge className="bg-primary/15 text-primary border border-primary/40 text-[10px]">
+                {t3(language,
+                  `+${runningJobs.length - 1} autre${runningJobs.length > 2 ? 's' : ''} dans l'historique des appels`,
+                  `+${runningJobs.length - 1} more in call history`,
+                  `+${runningJobs.length - 1} más en el historial`
+                )}
+              </Badge>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
 
       {/* Credit warning */}
       {balance <= 10 && (
@@ -659,9 +719,17 @@ export function MarinaConsoleTab() {
                 return (
                   <div key={job.id} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors text-sm">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <Badge variant={job.status === 'completed' ? 'default' : job.status === 'error' ? 'destructive' : 'secondary'} className="text-[10px] shrink-0">
-                        {job.status}
-                      </Badge>
+                      {isRunningStatus(job.status) ? (
+                        <Badge className="text-[10px] shrink-0 bg-primary/15 text-primary border border-primary/40">
+                          <Loader2 className="h-2.5 w-2.5 mr-1 animate-spin" />
+                          {t3(language, 'En cours', 'Running', 'En curso')}
+                        </Badge>
+                      ) : (
+                        <Badge variant={job.status === 'completed' ? 'default' : job.status === 'error' || job.status === 'failed' ? 'destructive' : 'secondary'} className="text-[10px] shrink-0">
+                          {job.status}
+                        </Badge>
+                      )}
+
                       <span className="truncate text-xs font-mono">{url}</span>
                     </div>
                     <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
