@@ -31,6 +31,11 @@ import { detectGoogleMyBusiness, searchFounderProfile, searchFacebookPage, findL
 import { extractPageMetadata } from '../_shared/strategicAudit/pageAnalyzer.ts';
 import { buildUserPrompt, getSystemPromptForPageType } from '../_shared/strategicAudit/prompts.ts';
 import { saveStrategicRecommendationsToRegistry, saveToCache, buildFallbackResult, feedKeywordUniverse, persistIdentityData } from '../_shared/strategicAudit/registrySaver.ts';
+import {
+  resolveSocialProof, formatSocialProofForPrompt, enforceSocialProofOnLlm,
+  gmbToSocialProofSignals, fetchPlacesSocialProof,
+  type SocialProofResult, type SocialProofSignal,
+} from '../_shared/socialProof.ts';
 
 // ==================== HELPERS ====================
 
