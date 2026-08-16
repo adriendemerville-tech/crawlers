@@ -87,8 +87,8 @@ export function BrowserlessAlert() {
       resolvedAtRef.current = null;
       setBannerState('error');
 
-      const flyEntries = (flyResult.data || []).filter(
-        (e: any) => (e.event_data as any)?.api_service === 'fly-playwright'
+      const spiderEntries = (flyResult.data || []).filter(
+        (e: any) => (e.event_data as any)?.api_service === 'spider'
       );
 
       const has429 = data.some((e: any) => (e.event_data as any)?.status_code === 429);
@@ -99,8 +99,8 @@ export function BrowserlessAlert() {
         lastUrl: latest.target_url || '',
         lastAt: latest.created_at,
         has429,
-        flyFallbackCount: flyEntries.length,
-        flyFallbackLastAt: flyEntries.length > 0 ? flyEntries[0].created_at : null,
+        spiderFallbackCount: spiderEntries.length,
+        spiderFallbackLastAt: spiderEntries.length > 0 ? spiderEntries[0].created_at : null,
       });
       setDismissed(false);
 
