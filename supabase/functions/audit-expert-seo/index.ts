@@ -1041,9 +1041,12 @@ async function checkSitemapRobotsCoherence(url: string, robotsContent: string, r
   // 2. Fetch and parse sitemap.xml
   try {
     const sitemapUrl = `${origin}/sitemap.xml`;
+    // Garde-fou : un sitemap dynamique (index paginé, génération à la volée)
+    // peut ne jamais répondre et faire expirer toute la fonction.
     const resp = await fetch(sitemapUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/2.0)' },
       redirect: 'follow',
+      signal: AbortSignal.timeout(8000),
     });
     
     if (resp.ok) {
