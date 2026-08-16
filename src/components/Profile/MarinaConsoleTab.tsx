@@ -205,6 +205,21 @@ export function MarinaConsoleTab() {
     return () => clearInterval(id);
   }, [runningJobs.length, loadJobs]);
 
+  // Mémorise les audits observés en cours pour afficher « Terminé » quand ils aboutissent
+  const [watchedJobIds, setWatchedJobIds] = useState<string[]>([]);
+  useEffect(() => {
+    const ids = runningJobs.map(j => j.id);
+    if (ids.length === 0) return;
+    setWatchedJobIds(prev => {
+      const merged = Array.from(new Set([...prev, ...ids]));
+      return merged.length === prev.length ? prev : merged;
+    });
+  }, [jobs]);
+
+  const finishedJobs = jobs.filter(
+    j => watchedJobIds.includes(j.id) && !isRunningStatus(j.status) && j.status !== 'failed'
+  );
+
 
   const createKey = async () => {
     if (!user || newServices.filter(s => DATA_SERVICES.includes(s)).length === 0) return;
