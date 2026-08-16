@@ -120,6 +120,17 @@ function estimateGain(s: VerdictSignals): { low: number; high: number } | null {
 
   if (s.hostDuplication) { evidence++; low += 2; high += 5; }
 
+  // Autorité : un profil de liens faible plafonne les gains SEO, un profil
+  // toxique les détruit. Levier mesuré uniquement si DataForSEO a répondu.
+  const auth = n(s.authorityScore);
+  if (auth > 0) {
+    evidence++;
+    if (auth < 20) { low += 4; high += 10; }
+    else if (auth < 40) { low += 2; high += 6; }
+    else { low += 1; high += 3; }
+  }
+  if (n(s.backlinkToxicity) >= 35) { evidence++; low += 2; high += 6; }
+
   // Sans au moins deux signaux mesurés, on n'avance pas de fourchette.
   if (evidence < 2 || high <= 0) return null;
 
