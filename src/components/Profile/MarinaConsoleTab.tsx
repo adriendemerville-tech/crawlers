@@ -659,9 +659,17 @@ export function MarinaConsoleTab() {
                 return (
                   <div key={job.id} className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors text-sm">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <Badge variant={job.status === 'completed' ? 'default' : job.status === 'error' ? 'destructive' : 'secondary'} className="text-[10px] shrink-0">
-                        {job.status}
-                      </Badge>
+                      {isRunningStatus(job.status) ? (
+                        <Badge className="text-[10px] shrink-0 bg-primary/15 text-primary border border-primary/40">
+                          <Loader2 className="h-2.5 w-2.5 mr-1 animate-spin" />
+                          {t3(language, 'En cours', 'Running', 'En curso')}
+                        </Badge>
+                      ) : (
+                        <Badge variant={job.status === 'completed' ? 'default' : job.status === 'error' || job.status === 'failed' ? 'destructive' : 'secondary'} className="text-[10px] shrink-0">
+                          {job.status}
+                        </Badge>
+                      )}
+
                       <span className="truncate text-xs font-mono">{url}</span>
                     </div>
                     <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
