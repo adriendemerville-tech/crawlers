@@ -205,6 +205,21 @@ export function MarinaConsoleTab() {
     return () => clearInterval(id);
   }, [runningJobs.length, loadJobs]);
 
+  // Mémorise les audits observés en cours pour afficher « Terminé » quand ils aboutissent
+  const [watchedJobIds, setWatchedJobIds] = useState<string[]>([]);
+  useEffect(() => {
+    const ids = runningJobs.map(j => j.id);
+    if (ids.length === 0) return;
+    setWatchedJobIds(prev => {
+      const merged = Array.from(new Set([...prev, ...ids]));
+      return merged.length === prev.length ? prev : merged;
+    });
+  }, [jobs]);
+
+  const finishedJobs = jobs.filter(
+    j => watchedJobIds.includes(j.id) && !isRunningStatus(j.status) && j.status !== 'failed'
+  );
+
 
   const createKey = async () => {
     if (!user || newServices.filter(s => DATA_SERVICES.includes(s)).length === 0) return;
@@ -316,6 +331,40 @@ export function MarinaConsoleTab() {
           </CardContent>
         </Card>
       )}
+
+      {/* Bannière audit(s) Marina terminé(s) */}
+      {finishedJobs.map(job => (
+        <Card key={job.id} className="border-emerald-500/40 bg-emerald-500/5">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+              <p className="text-sm font-medium truncate">
+                {t3(language,
+                  `Audit Marina ${jobLabel(job)}`,
+                  `Marina audit ${jobLabel(job)}`,
+                  `Auditoría Marina ${jobLabel(job)}`
+                )}
+                {' · '}
+                <span className="text-emerald-500 font-semibold">
+                  {t3(language, 'Terminé', 'Completed', 'Terminado')}
+                </span>
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openReport(job.id)}
+              disabled={openingId === job.id}
+              className="border-emerald-500/50"
+            >
+              {openingId === job.id
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                : <FileText className="h-3.5 w-3.5 mr-1.5" />}
+              {t3(language, 'Afficher', 'View', 'Ver')}
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
 
 
       {/* Credit warning */}
