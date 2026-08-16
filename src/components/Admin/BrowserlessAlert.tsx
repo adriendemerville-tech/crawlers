@@ -165,7 +165,7 @@ export function BrowserlessAlert() {
 
   // ── Error banner (red) ──
   if (!error) return null;
-  const flyActive = error.flyFallbackCount > 0;
+  const spiderActive = error.spiderFallbackCount > 0;
 
   return (
     <div className="relative rounded-lg border border-destructive/50 bg-destructive/10 p-4 mb-6">
