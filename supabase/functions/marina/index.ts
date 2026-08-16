@@ -53,6 +53,13 @@ import { writeIdentity } from '../_shared/identityGateway.ts';
 import { callLovableAIText } from '../_shared/lovableAI.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { captureSiteVisual, buildVisualEvidenceHtml, type VisualCapture } from '../_shared/pageboltCapture.ts';
+import {
+  analyzeHostDuplication,
+  probeHostRedirect,
+  hostDuplicationFinding,
+  buildHostDuplicationHTML,
+  type HostDuplicationResult,
+} from '../_shared/hostDuplication.ts';
 
 /**
  * Edge Function: Marina
