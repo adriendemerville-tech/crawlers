@@ -2232,11 +2232,6 @@ function compileMarinaReport(
     ${sectionHTMLs.cocoonPage}
     ` : ''}
 
-    ${llmVisibilityBlock ? `
-    <div class="marina-separator"></div>
-    <!-- Visibilité IA (périmètre site) -->
-    <div data-marina-scope="site" data-marina-block="llm">${llmVisibilityBlock}</div>
-    ` : ''}
 
     ${sectionHTMLs.indexation ? `
     <div class="marina-separator"></div>
