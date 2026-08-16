@@ -320,7 +320,10 @@ export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: s
   siteBlocks.delete('scope_limits');
 
 
-  const siteOrder = ['intro', 'crawl', 'archetypes', 'cocoon', 'llm', 'indexation'];
+  // 'llm' (citabilité IA) remonte avant le cocon : c'est un bloc GEO, il doit
+  // suivre l'analyse stratégique et non finir en fin de document.
+  const siteOrder = ['intro', 'crawl', 'archetypes', 'llm', 'cocoon', 'indexation'];
+
   const orderedSiteEntries = [
     ...siteOrder.filter(id => siteBlocks.has(id)).map(id => [id, siteBlocks.get(id)!] as const),
     ...[...siteBlocks.entries()].filter(([id]) => !siteOrder.includes(id)),
