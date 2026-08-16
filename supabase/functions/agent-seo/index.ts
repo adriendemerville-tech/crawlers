@@ -2,7 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
-import { stealthFetch } from '../_shared/stealthFetch.ts';
+import { stealthFetchText } from '../_shared/stealthFetch.ts';
 import { callLovableAI } from '../_shared/lovableAI.ts';
 import { getAgentContext } from '../_shared/getAgentContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
