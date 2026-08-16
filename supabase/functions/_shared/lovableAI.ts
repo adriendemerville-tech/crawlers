@@ -12,6 +12,13 @@
  *   const json = await callLovableAIJson<MyType>({ system: '...', user: '...' });
  */
 
+import {
+  InsufficientContextError, usefulTextLength, injectCurrentYear,
+  hasPromptLeak, stripPromptLeaks, stripPromptLeaksDeep,
+} from './llmGuards.ts';
+
+export { InsufficientContextError } from './llmGuards.ts';
+
 const GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const DEFAULT_MODEL = 'google/gemini-3-flash-preview';
@@ -73,6 +80,16 @@ export interface LovableAIOptions {
   noFallback?: boolean;
   /** Name of the calling edge function (for usage tracking) */
   callerFunction?: string;
+  /**
+   * Garde-fou d'entrée (Lot 2) : contexte de page utile requis. Si le texte
+   * fourni est vide ou trop court, l'appel est refusé (InsufficientContextError)
+   * au lieu de laisser le modèle inventer.
+   */
+  requireContext?: { text: string | null | undefined; minChars?: number; label?: string };
+  /** Désactive le nettoyage des fuites de gabarit en sortie (déconseillé). */
+  skipLeakFilter?: boolean;
+  /** N'injecte pas l'année courante dans le prompt système. */
+  skipYearInjection?: boolean;
 }
 
 export interface LovableAIResponse {
@@ -191,6 +208,20 @@ async function callGateway(
  * Call Lovable AI Gateway with automatic OpenRouter fallback and usage tracking.
  */
 export async function callLovableAI(opts: LovableAIOptions): Promise<LovableAIResponse> {
+  // ═══ GARDE-FOU D'ENTRÉE (Lot 2) : pas de contexte utile → pas d'appel ═══
+  if (opts.requireContext) {
+    const min = opts.requireContext.minChars ?? 300;
+    const chars = usefulTextLength(opts.requireContext.text);
+    if (chars < min) {
+      console.warn(`[lovableAI] Appel refusé — contexte insuffisant (${chars}/${min}) pour ${opts.requireContext.label || opts.callerFunction || 'module'}`);
+      throw new InsufficientContextError(opts.requireContext.label || opts.callerFunction || 'module', chars, min);
+    }
+  }
+  // ═══ Année courante injectée dans le prompt système (défaut 19) ═══
+  if (opts.system && !opts.skipYearInjection) {
+    opts = { ...opts, system: injectCurrentYear(opts.system) };
+  }
+
   const model = opts.model ?? DEFAULT_MODEL;
   const openRouterKey = getOpenRouterKey();
   const allowFallback = !opts.noFallback;
@@ -261,7 +292,11 @@ export async function callLovableAI(opts: LovableAIOptions): Promise<LovableAIRe
  */
 export async function callLovableAIText(opts: LovableAIOptions): Promise<string> {
   const resp = await callLovableAI(opts);
-  return resp.content;
+  if (opts.skipLeakFilter) return resp.content;
+  if (hasPromptLeak(resp.content)) {
+    console.warn(`[lovableAI] Fuite de gabarit détectée en sortie (${opts.callerFunction || 'inconnu'}) — nettoyage appliqué`);
+  }
+  return stripPromptLeaks(resp.content);
 }
 
 /**
@@ -278,7 +313,10 @@ export async function callLovableAIJson<T = unknown>(opts: LovableAIOptions): Pr
     text = text.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
   }
   text = text.replace(/,(\s*[}\]])/g, '$1');
-  return JSON.parse(text) as T;
+  const parsed = JSON.parse(text) as T;
+  // Garde-fou de sortie : aucune chaîne de gabarit ne doit atteindre un rapport.
+  if (opts.skipLeakFilter) return parsed;
+  return stripPromptLeaksDeep(parsed);
 }
 
 /**

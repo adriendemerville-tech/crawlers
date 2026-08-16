@@ -5,6 +5,7 @@ import { trackPaidApiCall } from '../tokenTracker.ts';
 import type { BrandSignal, EEATSignals, CtaSeoSignals } from './types.ts';
 import { DEFAULT_EEAT_SIGNALS, DEFAULT_CTA_SEO_SIGNALS } from './types.ts';
 import { detectBusinessModel, type BusinessModelDetection } from '../businessModelDetector.ts';
+import { extractOnSiteSocialProof, type SocialProofSignal } from '../socialProof.ts';
 
 export interface PageMetadataResult {
   context: string;
@@ -12,6 +13,10 @@ export interface PageMetadataResult {
   eeatSignals: EEATSignals;
   ctaSeoSignals: CtaSeoSignals;
   businessModelDetection?: BusinessModelDetection;
+  /** Couche 1 de la preuve sociale déterministe (JSON-LD, compteurs DOM, widgets). */
+  socialProofSignals?: SocialProofSignal[];
+  /** Longueur du texte utile réellement rendu — garde-fou d'entrée LLM. */
+  usefulTextChars?: number;
 }
 
 export async function extractPageMetadata(url: string): Promise<PageMetadataResult> {
@@ -230,8 +235,22 @@ export async function extractPageMetadata(url: string): Promise<PageMetadataResu
       console.log('🏢 Business model detection failed:', bmErr instanceof Error ? bmErr.message : bmErr);
     }
 
+    // ═══ PREUVE SOCIALE — COUCHE 1 (déterministe, 0 token) ═══
+    let socialProofSignals: SocialProofSignal[] = [];
+    try {
+      socialProofSignals = extractOnSiteSocialProof(html);
+      console.log(`⭐ Preuve sociale on-site: ${socialProofSignals.length} signal(aux) — ${socialProofSignals.map(s => s.source).join(', ') || 'aucun'}`);
+    } catch (spErr) {
+      console.log('⭐ Extraction preuve sociale échouée:', spErr instanceof Error ? spErr.message : spErr);
+    }
+    const usefulTextChars = html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim().length;
+
     html = '';
-    return { context: pageContentContext, brandSignals, eeatSignals, ctaSeoSignals, businessModelDetection };
+    return { context: pageContentContext, brandSignals, eeatSignals, ctaSeoSignals, businessModelDetection, socialProofSignals, usefulTextChars };
   } catch (e) {
     console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
   }

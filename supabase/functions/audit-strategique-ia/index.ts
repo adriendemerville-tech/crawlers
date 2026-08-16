@@ -31,6 +31,11 @@ import { detectGoogleMyBusiness, searchFounderProfile, searchFacebookPage, findL
 import { extractPageMetadata } from '../_shared/strategicAudit/pageAnalyzer.ts';
 import { buildUserPrompt, getSystemPromptForPageType } from '../_shared/strategicAudit/prompts.ts';
 import { saveStrategicRecommendationsToRegistry, saveToCache, buildFallbackResult, feedKeywordUniverse, persistIdentityData } from '../_shared/strategicAudit/registrySaver.ts';
+import {
+  resolveSocialProof, formatSocialProofForPrompt, enforceSocialProofOnLlm,
+  gmbToSocialProofSignals, fetchPlacesSocialProof,
+  type SocialProofResult, type SocialProofSignal,
+} from '../_shared/socialProof.ts';
 
 // ==================== HELPERS ====================
 
@@ -138,6 +143,8 @@ Deno.serve(handleRequest(async (req) => {
     let pageContentContext: string;
     let brandSignals: BrandSignal[];
     let eeatSignals: EEATSignals;
+    let socialProofSignals: SocialProofSignal[] = [];
+    let renderedTextChars = 0;
     let marketData: MarketData | null;
     let rankingOverview: RankingOverview | null;
     let authorityData: AuthorityData | null = null;
@@ -201,6 +208,8 @@ Deno.serve(handleRequest(async (req) => {
       brandSignals = metadataResult?.brandSignals || [];
       eeatSignals = metadataResult?.eeatSignals || { ...DEFAULT_EEAT_SIGNALS, linkedInUrls: [], detectedSocialUrls: [] };
       ctaSeoSignalsForJargon = metadataResult?.ctaSeoSignals || ctaSeoSignalsForJargon;
+      socialProofSignals = metadataResult?.socialProofSignals || [];
+      renderedTextChars = metadataResult?.usefulTextChars || 0;
       rankingOverview = rkOverviewResult;
       if (preCrawlContext) pageContentContext += '\n' + preCrawlContext;
 
@@ -282,7 +291,31 @@ Deno.serve(handleRequest(async (req) => {
     const humanBrandName = isConfidentBrand ? resolvedEntityName : humanizeBrandName(domainSlug);
     console.log(`🎯 Entité: "${resolvedEntityName}" (${(brandConfidence * 100).toFixed(0)}%)`);
 
-    const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData, rankingOverview, authorityData, founderInfo, llmData: effectiveToolsData.llm, gmbData, facebookPageInfo, preCrawlData: preCrawlResult || null };
+    // ═══ PREUVE SOCIALE DÉTERMINISTE (Lot 1) ═══
+    // Couche 1 (HTML) + couche 2 (fiche Google / Places). Le LLM ne pourra plus
+    // affirmer « aucun avis » quand des avis sont mesurés.
+    let socialProof: SocialProofResult;
+    if (useCache && cachedContext?.socialProof) {
+      socialProof = cachedContext.socialProof as SocialProofResult;
+    } else {
+      const layer2: SocialProofSignal[] = [...gmbToSocialProofSignals(gmbData)];
+      const layer1HasVolume = socialProofSignals.some((s) => typeof s.reviewCount === 'number' || typeof s.rating === 'number');
+      if (!isContentMode && !layer1HasVolume && layer2.length === 0) {
+        try {
+          layer2.push(...await fetchPlacesSocialProof(resolvedEntityName || humanBrandName, domainWithoutWww));
+        } catch { /* Places optionnel */ }
+      }
+      socialProof = resolveSocialProof({
+        pageContext: pageContentContext,
+        extraSignals: [...socialProofSignals, ...layer2],
+      });
+    }
+    console.log(`⭐ Preuve sociale: statut=${socialProof.status}, avis=${socialProof.reviewCount ?? 'n/a'}, note=${socialProof.rating ?? 'n/a'}, plateformes=${socialProof.platforms.join(',') || 'aucune'} | texte utile page=${renderedTextChars} car.`);
+    if (renderedTextChars > 0 && renderedTextChars < 300) {
+      console.warn(`⚠️ Contexte page très pauvre (${renderedTextChars} car.) — les conclusions LLM sur le contenu seront marquées comme non concluantes.`);
+    }
+
+    const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData, rankingOverview, authorityData, founderInfo, llmData: effectiveToolsData.llm, gmbData, facebookPageInfo, preCrawlData: preCrawlResult || null, socialProof };
 
     // ═══ CHECK DEADLINE ═══
     const remainingBeforeLLM = GLOBAL_DEADLINE - (Date.now() - startTime);
@@ -297,6 +330,7 @@ Deno.serve(handleRequest(async (req) => {
     console.log(`\n🤖 ÉTAPE 2: Analyse LLM (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
 
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode, facebookPageInfo, authorityData);
+    userPrompt = `${formatSocialProofForPrompt(socialProof)}\n\n` + userPrompt;
     userPrompt = `LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
 
     const pageTypeLabels: Record<PageType, string> = { editorial: 'MODE ÉDITORIAL', product: 'MODE PRODUIT', deep: 'MODE PAGE PROFONDE', homepage: 'MODE PAGE D\'ACCUEIL' };
@@ -580,6 +614,19 @@ Deno.serve(handleRequest(async (req) => {
     if (!parsedAnalysis.lexical_footprint) parsedAnalysis.lexical_footprint = { jargonRatio: 50, concreteRatio: 50 };
     if (!parsedAnalysis.expertise_sentiment) parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué' };
     if (!parsedAnalysis.red_teaming) parsedAnalysis.red_teaming = { objections: [] };
+
+    // ═══ RÈGLE DURE : la couche LLM ne peut pas infirmer la mesure (Lot 1) ═══
+    parsedAnalysis.expertise_sentiment = enforceSocialProofOnLlm(parsedAnalysis.expertise_sentiment, socialProof);
+    parsedAnalysis.social_proof_verified = {
+      status: socialProof.status,
+      review_count: socialProof.reviewCount,
+      rating: socialProof.rating,
+      has_aggregate_rating: socialProof.hasAggregateRating,
+      has_testimonials: socialProof.hasTestimonials,
+      platforms: socialProof.platforms,
+      summary: socialProof.summary,
+      sources: socialProof.signals.map((s) => s.source),
+    };
 
     // ═══ PONDÉRATION MARCHÉ DE LA PRIORISATION (déterministe, zéro coût LLM) ═══
     if (Array.isArray(parsedAnalysis.executive_roadmap) && parsedAnalysis.executive_roadmap.length > 0) {

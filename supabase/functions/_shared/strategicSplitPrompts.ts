@@ -129,7 +129,7 @@ RÈGLES:
 - quotability: phrases factuelles autonomes citables. +33pts/citation.
 - summary_resilience: résumé ≤10 mots.
 - lexical_footprint: jargonRatio+concreteRatio=100. "jargon" = UNIQUEMENT formules vides/corporate.
-- expertise_sentiment: 1(générique/IA) à 5(expert terrain). social_proof: vérifie la présence de témoignages/études de cas (has_testimonials), d'avis clients (has_reviews), de liens vers des réalisations concrètes/portfolio (has_portfolio_links). details = résumé de ce qui a été trouvé ou manque.
+- expertise_sentiment: 1(générique/IA) à 5(expert terrain). social_proof: RECOPIE le bloc « PREUVE SOCIALE (mesure déterministe) » fourni en contexte. Tu n'as PAS le droit de décider has_reviews : si le statut mesuré est "confirmed", has_reviews=true ; si le statut est "inconclusive", has_reviews=null et details indique que la mesure n'a pas pu être établie. Ton rôle se limite à qualifier la mise en valeur de ces avis (visibilité, balisage, fraîcheur).
 - red_team: 3 failles/objections client sceptique.
 - JSON pur, sans virgules traînantes`;
 }
