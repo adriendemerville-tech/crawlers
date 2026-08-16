@@ -260,22 +260,37 @@ function decide(c: PruneCandidate): void {
     return;
   }
 
-  const noTraffic = c.clicks90d === 0;
-  const noVisibility = c.impressions90d < 50;
-  const weakPosition = c.bestPosition === null || c.bestPosition > 30;
-
-  if (noTraffic && noVisibility && weakPosition) {
-    reasons.push(`0 clic et ${c.impressions90d} impression(s) sur ${GSC_WINDOW_DAYS} j.`);
-    reasons.push(c.bestPosition === null ? 'Aucune position SERP mesurée.' : `Meilleure position ${c.bestPosition.toFixed(0)} (> 30).`);
-    if (c.isThin) reasons.push(`Contenu pauvre (thin_score ${c.thinScore}/100, ${c.wordCount} mots).`);
-    c.decision = 'prune';
-    c.reasons = reasons;
+  // ── Protections : toute traction mesurable interdit le pruning ──────
+  if (c.clicks90d > 0) {
+    c.decision = 'keep';
+    c.reasons = [`${c.clicks90d} clic(s) sur ${GSC_WINDOW_DAYS} j — page productive.`];
+    return;
+  }
+  if (c.bestPosition !== null && c.bestPosition <= 15) {
+    c.decision = 'keep';
+    c.reasons = [`Positionnée en moyenne ${c.bestPosition.toFixed(0)} — potentiel à optimiser, pas à supprimer.`];
+    return;
+  }
+  if (c.impressions90d >= 20) {
+    c.decision = 'keep';
+    c.reasons = [`${c.impressions90d} impression(s) sur ${GSC_WINDOW_DAYS} j — visibilité en construction.`];
     return;
   }
 
-  if (c.isThin && noTraffic && c.impressions90d < 200) {
+  // ── Page morte : aucun clic, quasi aucune impression, hors top 30 ───
+  const isDead =
+    c.impressions90d < 10 &&
+    (c.bestPosition === null || c.bestPosition > 30) &&
+    (c.isThin || c.wordCount < 300);
+
+  if (isDead) {
+    reasons.push(`0 clic et ${c.impressions90d} impression(s) sur ${GSC_WINDOW_DAYS} j.`);
+    reasons.push(c.bestPosition === null ? 'Aucune position SERP mesurée.' : `Meilleure position ${c.bestPosition.toFixed(0)} (> 30).`);
+    reasons.push(c.isThin
+      ? `Contenu pauvre (thin_score ${c.thinScore}/100, ${c.wordCount} mots).`
+      : `Contenu court (${c.wordCount} mots).`);
     c.decision = 'prune';
-    c.reasons = [`Contenu pauvre (thin_score ${c.thinScore}/100) sans aucun clic sur ${GSC_WINDOW_DAYS} j.`];
+    c.reasons = reasons;
     return;
   }
 
