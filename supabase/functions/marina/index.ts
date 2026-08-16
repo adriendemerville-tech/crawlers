@@ -1150,6 +1150,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
       ${sectionLead('crawl', lang)}
       ${topHtml}
+      ${hostDupHtml}
       ${crawlMeta.pagesFound > 1 ? `<div class="intro-text">Crawl multi-pages analysé : <strong>${crawlMeta.pagesFound}</strong> pages${crawlMeta.avgSeoScore != null ? ` · score SEO moyen <strong>${crawlMeta.avgSeoScore}/100</strong>` : ''}</div>` : ''}
       <div class="intro-text" style="font-size:12px;color:#6b7280;">Les quatre premières tuiles cumulent l'ensemble des pages explorées ; les balises et la structure de titres qui suivent décrivent la page d'accueil.</div>
       <div class="stat-grid-4">
