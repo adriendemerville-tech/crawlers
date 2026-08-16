@@ -392,17 +392,24 @@ export async function fetchAndRenderPage(
     let rendered: string | null = null;
     const renderingKey = Deno.env.get('RENDERING_API_KEY');
 
-    // Tier 1: Browserless (includes Fly.io fallback internally)
+    // Tier 1: Browserless (includes Fly.io → Spider.cloud fallbacks internally)
     if (renderingKey) {
       rendered = await renderWithBrowserless(url, renderingKey);
     } else {
-      console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured');
+      console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured — going straight to Fly.io/Spider');
+      rendered = await renderWithFlyThenSpider(url);
     }
 
-    // Tier 2: Self-render fallback for crawlers.fr if Browserless/Fly failed
+    // Tier 2: Spider.cloud safety net (Browserless returned null without triggering a fallback)
+    if (!rendered) {
+      rendered = await renderWithSpider(url);
+    }
+
+    // Tier 3: Self-render fallback for crawlers.fr if everything above failed
     if (!rendered) {
       rendered = await renderSelfFallback(url);
     }
+
 
     if (rendered) {
       const renderedText = extractVisibleText(rendered);
