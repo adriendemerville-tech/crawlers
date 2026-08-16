@@ -822,6 +822,8 @@ Deno.serve(handleRequest(async (req) => {
       improvements_count: parsedImprovements?.improvements?.length || 0,
       proposals_created: proposalsCreated,
       page_drafts_created: pageDraftsCreated,
+      pages_auto_unpublished: unpublishedCount,
+
       priority_fixes: parsedImprovements?.priority_fixes || [],
       status: logEntry.status,
     }), {
