@@ -230,6 +230,23 @@ export function buildStrategicVerdict(
       `consolidar el host servido con una redirección 301 (www o apex)`,
     ));
   }
+  const auth = n(signals.authorityScore);
+  const refDomains = n(signals.referringDomains);
+  const tox = n(signals.backlinkToxicity);
+  if (auth > 0 && auth < 40) {
+    seo.push(t(
+      `renforcer l'autorité du domaine (Authority Score ${auth}/100${refDomains ? `, ${refDomains} domaine${refDomains > 1 ? 's' : ''} référent${refDomains > 1 ? 's' : ''}`  : ''}) par des liens éditoriaux thématiques`,
+      `strengthen domain authority (Authority Score ${auth}/100${refDomains ? `, ${refDomains} referring domain(s)` : ''}) through topical editorial links`,
+      `reforzar la autoridad del dominio (Authority Score ${auth}/100) con enlaces editoriales temáticos`,
+    ));
+  }
+  if (tox >= 35) {
+    seo.push(t(
+      `assainir le profil de liens (toxicité mesurée ${tox}/100 : ancres trop répétitives ou référents de faible qualité)`,
+      `clean up the backlink profile (measured toxicity ${tox}/100: over-repeated anchors or low-quality referrers)`,
+      `sanear el perfil de enlaces (toxicidad ${tox}/100)`,
+    ));
+  }
 
   // ── Leviers GEO
   const geoLevers: string[] = [];
