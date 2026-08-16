@@ -1770,10 +1770,12 @@ function buildReportIntroHTML(
     ));
   }
 
+  // Les titres issus du Workbench peuvent être des paragraphes LLM : on les
+  // ramène à une accroche complète (jamais coupée en milieu de phrase).
   const takeaways = (ctx.plan || [])
     .filter((p) => ['critical', 'important'].includes(String(p.severity)))
     .slice(0, 3)
-    .map((p) => `<li style="margin:0 0 6px 0;">${p.title}</li>`)
+    .map((p) => `<li style="margin:0 0 6px 0;">${splitLongTitle(p.title, '').title}</li>`)
     .join('');
 
   const li = (s: string) => `<li style="margin:0 0 6px 0;">${s}</li>`;
