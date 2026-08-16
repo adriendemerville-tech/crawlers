@@ -53,6 +53,13 @@ import { writeIdentity } from '../_shared/identityGateway.ts';
 import { callLovableAIText } from '../_shared/lovableAI.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { captureSiteVisual, buildVisualEvidenceHtml, type VisualCapture } from '../_shared/pageboltCapture.ts';
+import {
+  analyzeHostDuplication,
+  probeHostRedirect,
+  hostDuplicationFinding,
+  buildHostDuplicationHTML,
+  type HostDuplicationResult,
+} from '../_shared/hostDuplication.ts';
 
 /**
  * Edge Function: Marina
@@ -1095,7 +1102,7 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
 }
 
 // ─── Section 1: Crawl Report (standalone HTML) ───
-function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string, crawlSnapshot?: any, topHtml = ''): string {
+function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string, crawlSnapshot?: any, topHtml = '', hostDupHtml = ''): string {
   const tr = getTranslations(lang);
   const scores = expertSeoData?.scores || {};
   const rawData = expertSeoData?.rawData || {};
@@ -1143,6 +1150,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
       ${sectionLead('crawl', lang)}
       ${topHtml}
+      ${hostDupHtml}
       ${crawlMeta.pagesFound > 1 ? `<div class="intro-text">Crawl multi-pages analysé : <strong>${crawlMeta.pagesFound}</strong> pages${crawlMeta.avgSeoScore != null ? ` · score SEO moyen <strong>${crawlMeta.avgSeoScore}/100</strong>` : ''}</div>` : ''}
       <div class="intro-text" style="font-size:12px;color:#6b7280;">Les quatre premières tuiles cumulent l'ensemble des pages explorées ; les balises et la structure de titres qui suivent décrivent la page d'accueil.</div>
       <div class="stat-grid-4">
@@ -3399,6 +3407,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       await llmVisibilityPromise;
 
       let crawlSnapshot: any = null;
+      let hostDuplication: HostDuplicationResult | null = null;
       let archetypeAnalysis: ArchetypeAnalysis | null = null;
       try {
         const { data: recentCrawls, error: crawlLookupError } = await sb
@@ -3431,6 +3440,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
           } else if (crawlPages?.length) {
             crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain);
+
+            // Doublon d'hôte (www vs apex) : preuve directe dans les pages
+            // crawlées + sonde HTTP de 2 requêtes pour savoir si une 301 existe.
+            // 0 token LLM, non bloquant.
+            try {
+              const probe = await probeHostRedirect(domain);
+              hostDuplication = analyzeHostDuplication(crawlPages as any[], domain, probe);
+              if (hostDuplication.detected) {
+                console.log(`[Marina] Doublon d'hôte détecté sur ${domain}: ${hostDuplication.duplicatePaths.length} chemins, canonical ${hostDuplication.canonicalCoverage ?? 'n/d'}%`);
+              }
+            } catch (hostErr) {
+              console.warn('[Marina] Host duplication check failed (non-fatal):', hostErr);
+            }
             // Segmentation par type de page (agence / produit / service / avis / éditorial…) :
             // conclusion intermédiaire par type, puis synthèse business. 0 token LLM.
             // Pondération du mix de gabarits : le sitemap donne la répartition du site
@@ -3641,10 +3663,14 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         console.log(`[Marina] Phase 3 Step 4: Generating section HTMLs...`);
         
         // ─── Top-3 priorities per section + consolidated plan ───
-        const seoFindings: RawFinding[] = (expertData?.recommendations || []).map((r: any) => ({
-          id: r.id, title: r.title || r.label || '', description: r.description || r.detail || '',
-          priority: r.priority || r.severity, category: r.category, fixes: r.fixes,
-        }));
+        const hostDupFinding = hostDuplication ? hostDuplicationFinding(hostDuplication, domain) : null;
+        const seoFindings: RawFinding[] = [
+          ...(hostDupFinding ? [hostDupFinding as RawFinding] : []),
+          ...(expertData?.recommendations || []).map((r: any) => ({
+            id: r.id, title: r.title || r.label || '', description: r.description || r.detail || '',
+            priority: r.priority || r.severity, category: r.category, fixes: r.fixes,
+          })),
+        ];
         const roadmap = strategicData?.executive_roadmap || strategicData?.strategic_roadmap || [];
         const geoFindings: RawFinding[] = roadmap
           .filter((it: any) => !/keyword|mots?-cl|content gap/i.test(`${it.category || ''} ${it.title || ''}`))
@@ -3730,7 +3756,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         );
 
 
-        const crawlHTML = generateCrawlSectionHTML(expertData, detectedLang, domain, url, crawlSnapshot, renderTopPrioritiesHTML(topSeo));
+        const crawlHTML = generateCrawlSectionHTML(
+          expertData, detectedLang, domain, url, crawlSnapshot,
+          renderTopPrioritiesHTML(topSeo),
+          hostDuplication ? buildHostDuplicationHTML(hostDuplication, domain) : '',
+        );
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
         const strategicHTML = generateStrategicSectionHTML(
           strategicData, detectedLang, domain, llmVisibilityData,
