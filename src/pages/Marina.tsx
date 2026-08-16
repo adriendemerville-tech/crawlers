@@ -28,6 +28,7 @@ import {
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 import { getMarinaShowcaseReport } from '@/lib/marina/showcase.functions';
 import { MarinaMyAuditsTab } from '@/components/Marina/MarinaMyAuditsTab';
+import { MarinaRunningAuditsSection } from '@/components/Marina/MarinaRunningAuditsSection';
 
 
 
@@ -936,6 +937,11 @@ export default function Marina() {
             </Tabs>
           </div>
         </section>
+
+        {/* Section: audits Marina en cours (utilisateur connecté) */}
+        {user && <MarinaRunningAuditsSection />}
+
+
 
         {/* Tab: Features */}
         {activeTab === 'features' && (
