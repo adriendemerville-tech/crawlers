@@ -2773,7 +2773,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           identityCard,
         },
 
-        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
       }, { onConflict: 'cache_key' });
 
       console.log(`[Marina] ✅ Phase 1a complete — strategic launched (${strategicJobId}), self-invoking phase1b`);
@@ -2826,7 +2826,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         cache_key: `marina_intermediate_${jobId}`,
         function_name: 'marina',
         result_data: intermediatePayload,
-        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
       }, { onConflict: 'cache_key' });
 
       console.log(`[Marina] ✅ Phase 1b complete — intermediate data saved, launching Phase 2`);
