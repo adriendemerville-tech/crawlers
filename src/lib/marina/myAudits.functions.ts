@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
+import { normalizeScanMode } from './scanMode';
 
 /**
  * Liste les audits Marina de l'utilisateur connecté (lancés depuis l'interface
