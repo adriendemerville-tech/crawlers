@@ -11,7 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from '@/lib/router-compat';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
-import { listMyMarinaAudits, getMyMarinaReportUrl } from '@/lib/marina/myAudits.functions';
+import { listMyMarinaAudits, getMyMarinaReportUrl, deleteMyMarinaAudit } from '@/lib/marina/myAudits.functions';
 import { normalizeScanMode } from '@/lib/marina/scanMode';
 
 
