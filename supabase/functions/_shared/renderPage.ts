@@ -146,7 +146,7 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
         console.log(`[renderPage] ⚠️ Browserless error: ${response.status}`);
         await logBrowserlessError(response.status, `HTTP ${response.status}`, url);
         if (response.status === 429 || response.status >= 500) {
-          return await renderWithFlyPlaywright(url);
+          return await renderWithFlyThenSpider(url);
         }
         return null;
       }
@@ -154,9 +154,9 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
       const msg = err instanceof Error ? err.message : String(err);
       console.log('[renderPage] ⚠️ Browserless failed:', msg);
       await logBrowserlessError(0, msg, url);
-      return await renderWithFlyPlaywright(url);
+      return await renderWithFlyThenSpider(url);
     }
-  }, `renderPage:${url}`) ?? await renderWithFlyPlaywright(url);
+  }, `renderPage:${url}`) ?? await renderWithFlyThenSpider(url);
 }
 
 /**
@@ -197,6 +197,66 @@ async function renderWithFlyPlaywright(url: string): Promise<string | null> {
     return null;
   }
 }
+
+/**
+ * Tier 3 renderer: Spider.cloud (JS rendering via `request: 'chrome'`).
+ * Auto-fallback when Browserless AND Fly.io both fail or are unavailable.
+ */
+async function renderWithSpider(url: string): Promise<string | null> {
+  const spiderKey = Deno.env.get('SPIDER_API_KEY');
+  if (!spiderKey) {
+    console.log('[renderPage] ⚠️ SPIDER_API_KEY not configured — no Spider fallback');
+    return null;
+  }
+
+  try {
+    console.log(`[renderPage] 🔄 Falling back to Spider.cloud for ${url}`);
+    const response = await fetch('https://api.spider.cloud/crawl', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${spiderKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        limit: 1,
+        return_format: 'raw',
+        request: 'chrome',
+        wait_for: { delay: { timeout: { secs: 3, nanos: 0 } } },
+      }),
+      signal: AbortSignal.timeout(45000),
+    });
+
+    if (!response.ok) {
+      console.log(`[renderPage] ⚠️ Spider.cloud error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const page = Array.isArray(data) ? data[0] : data;
+    const html = page?.content || '';
+    if (html.length > 500) {
+      console.log(`[renderPage] ✅ Spider.cloud success (${html.length} chars)`);
+      await trackPaidApiCall('renderPage', 'spider', '/crawl', url).catch(() => {});
+      return html;
+    }
+    console.log('[renderPage] ⚠️ Spider.cloud returned no usable HTML');
+    return null;
+  } catch (err) {
+    console.log('[renderPage] ⚠️ Spider.cloud failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/**
+ * Fly.io with automatic Spider.cloud fallback.
+ */
+async function renderWithFlyThenSpider(url: string): Promise<string | null> {
+  const fly = await renderWithFlyPlaywright(url);
+  if (fly) return fly;
+  return await renderWithSpider(url);
+}
+
 
 /**
  * Self-render fallback for crawlers.fr (our own SPA).
@@ -332,17 +392,24 @@ export async function fetchAndRenderPage(
     let rendered: string | null = null;
     const renderingKey = Deno.env.get('RENDERING_API_KEY');
 
-    // Tier 1: Browserless (includes Fly.io fallback internally)
+    // Tier 1: Browserless (includes Fly.io → Spider.cloud fallbacks internally)
     if (renderingKey) {
       rendered = await renderWithBrowserless(url, renderingKey);
     } else {
-      console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured');
+      console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured — going straight to Fly.io/Spider');
+      rendered = await renderWithFlyThenSpider(url);
     }
 
-    // Tier 2: Self-render fallback for crawlers.fr if Browserless/Fly failed
+    // Tier 2: Spider.cloud safety net (Browserless returned null without triggering a fallback)
+    if (!rendered) {
+      rendered = await renderWithSpider(url);
+    }
+
+    // Tier 3: Self-render fallback for crawlers.fr if everything above failed
     if (!rendered) {
       rendered = await renderSelfFallback(url);
     }
+
 
     if (rendered) {
       const renderedText = extractVisibleText(rendered);
