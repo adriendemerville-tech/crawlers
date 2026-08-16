@@ -65,3 +65,29 @@ export const getMyMarinaReportUrl = createServerFn({ method: 'POST' })
       .createSignedUrl(path, 60 * 60 * 24 * 7);
     return { url: signed?.signedUrl || null };
   });
+
+/**
+ * Supprime un audit Marina de l'utilisateur (job + rapport archivé éventuel).
+ */
+export const deleteMyMarinaAudit = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { jobId: string }) => {
+    if (!input?.jobId || typeof input.jobId !== 'string') throw new Error('jobId requis');
+    return { jobId: input.jobId };
+  })
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from('async_jobs')
+      .delete()
+      .eq('id', data.jobId)
+      .eq('user_id', context.userId);
+    if (error) throw new Error(error.message);
+
+    await context.supabase
+      .from('saved_reports')
+      .delete()
+      .eq('user_id', context.userId)
+      .contains('report_data', { job_id: data.jobId } as any);
+
+    return { ok: true };
+  });
