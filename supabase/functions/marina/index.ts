@@ -576,8 +576,10 @@ function buildModuleSection(title: string, emoji: string, data: any): string {
  * Chaque sous-section est un bloc paginable (`data-marina-block`) pour que la
  * coupure PDF tombe entre deux cadres et jamais au milieu d'un titre.
  */
-function buildKeywordPositioningSection(kp: any): string {
-  if (!kp) return '';
+function buildKeywordPositioningSection(kp: any, rankingOverview?: any): string {
+  if (!kp && !rankingOverview) return '';
+  kp = kp || {};
+
 
   const num = (v: any): number | null => {
     const n = typeof v === 'number' ? v : parseInt(String(v ?? '').replace(/[^0-9]/g, ''), 10);
@@ -617,7 +619,32 @@ function buildKeywordPositioningSection(kp: any): string {
   const ranked = main.filter((k) => num(k?.current_rank ?? k?.position));
   const positions = (ranked.length ? ranked : main).slice(0, 15);
 
+  // Vue d'ensemble chiffrée issue de DataForSEO (ranking_overview) : jusqu'ici
+  // produite par la chaîne stratégique mais jamais affichée dans Marina.
+  const ro = rankingOverview || null;
+  const roNum = (v: any) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  const roStats = ro
+    ? [
+        roNum(ro.total_ranked_keywords) != null ? ['Mots-clés positionnés', roNum(ro.total_ranked_keywords)!.toLocaleString('fr-FR')] : null,
+        roNum(ro.average_position_global) != null ? ['Position moyenne', String(Math.round(roNum(ro.average_position_global)!))] : null,
+        roNum(ro.average_position_top10) != null ? ['Position moyenne du top 10', String(Math.round(roNum(ro.average_position_top10)!))] : null,
+        roNum(ro.etv) != null ? ['Trafic organique estimé', `${Math.round(roNum(ro.etv)!).toLocaleString('fr-FR')} visites/mois`] : null,
+      ].filter(Boolean) as string[][]
+    : [];
+  const roTop: any[] = Array.isArray(ro?.top_keywords) ? ro!.top_keywords : [];
+  const overviewHtml = ro && (roStats.length || roTop.length)
+    ? sub(
+        'Vue d’ensemble des positions',
+        'Volumétrie mesurée sur la SERP : combien de mots-clés le domaine capte déjà et à quelle profondeur.',
+        `${roStats.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:10px;">${roStats
+            .map(([l, v]) => `<div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;"><div style="font-size:16px;font-weight:700;color:#111827;">${v}</div><div style="font-size:11px;color:#6b7280;">${l}</div></div>`)
+            .join('')}</div>` : ''}
+         ${roTop.length ? roTop.slice(0, 10).map((k: any) => row(k)).join('') : ''}`,
+      )
+    : '';
+
   const html = [
+    overviewHtml,
     sub(
       'Positions actuelles',
       'Mots-clés sur lesquels le domaine est déjà positionné dans les résultats Google.',
@@ -634,6 +661,7 @@ function buildKeywordPositioningSection(kp: any): string {
       gaps.slice(0, 15).map((k) => row(k, k?.priority ? [`Priorité : <strong>${esc(k.priority)}</strong>`] : [])).join(''),
     ),
   ].join('');
+
 
   // Le reste du module (densité sémantique, termes manquants, recommandations…)
   // garde le rendu générique, sans les trois clés déjà traitées ci-dessus.
@@ -1289,6 +1317,17 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
   const redTeam = strategicData?.red_team || null;
   const gmb = strategicData?.google_my_business || null;
   const clientTargets = strategicData?.client_targets || null;
+  // Modules produits par strategic-synthesis mais jusqu'ici jamais rendus dans
+  // Marina (ils n'étaient visibles que dans /audit) : citabilité GEO, intention
+  // conversationnelle, risque zéro-clic, contenus prioritaires, autorité de
+  // domaine (backlinks) et vue d'ensemble des positions.
+  const geoCitability = strategicData?.geo_citability || null;
+  const conversationalIntent = strategicData?.conversational_intent || null;
+  const zeroClickRisk = strategicData?.zero_click_risk || null;
+  const priorityContent = strategicData?.priority_content || null;
+  const domainAuthority = strategicData?.domain_authority || null;
+  const rankingOverview = strategicData?.ranking_overview || null;
+
 
   const content = `
     <div class="section">
@@ -1304,21 +1343,33 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${stratIntro?.strengths ? `<div class="intro-text"><strong>${tr.strengths}:</strong> ${stratIntro.strengths}</div>` : ''}
       ${stratIntro?.improvement ? `<div class="intro-text"><strong>${tr.improvements}:</strong> ${stratIntro.improvement}</div>` : ''}
       ${stratSummary ? `<div style="margin-top:16px;padding:16px;background:#eff6ff;border-radius:8px;"><h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">📋 ${tr.executiveSummary}</h3><div class="intro-text">${stratSummary}</div></div>` : ''}
+      <!-- ── Bloc GEO / citabilité IA : remonté en tête de la section, c'est
+           l'objet même de l'audit stratégique. ── -->
+      ${buildModuleSection('Citabilité par les moteurs de réponse IA', '🌍', geoCitability)}
+      <!--MARINA_LLM_START-->${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}<!--MARINA_LLM_END-->
+      ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
+      ${buildModuleSection('Quotabilité', '💬', quotability)}
+      ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
+      ${buildModuleSection('Intention conversationnelle', '💭', conversationalIntent)}
+      ${buildModuleSection('Risque zéro-clic', '🚫', zeroClickRisk)}
+
+      <!-- ── Bloc mots-clés et marché ── -->
+      ${buildKeywordPositioningSection(keywordPos, rankingOverview)}
+      ${buildModuleSection('Contenus prioritaires à créer / renforcer', '🧭', priorityContent)}
+      ${buildModuleSection('Marché et autorité de domaine', '🔗', domainAuthority)}
+      ${buildModuleSection('Données Marché', '📈', marketData)}
+
+      <!-- ── Bloc marque, concurrence, audience ── -->
       ${buildModuleSection('Autorité de Marque', '🏛️', brandAuth)}
       ${buildSocialSignalsSection(socialSignals)}
       ${buildModuleSection('Intelligence Marché', '📊', marketIntel)}
       ${buildCompetitiveLandscapeSection(competitive)}
-      ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
-      ${buildKeywordPositioningSection(keywordPos)}
-      ${buildModuleSection('Données Marché', '📈', marketData)}
-      <!--MARINA_LLM_START-->${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}<!--MARINA_LLM_END-->
-      ${buildModuleSection('Quotabilité', '💬', quotability)}
-      ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
       ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
       ${buildModuleSection("Sentiment d'Expertise", '🎯', expertiseSentiment)}
       ${buildModuleSection('Red Team (Adversarial)', '🔴', redTeam)}
       ${buildModuleSection('Google My Business', '📍', gmb)}
       ${buildModuleSection('Cibles Clients', '👥', clientTargets)}
+
       ${hasConsolidatedPlan ? `<div class="intro-text" style="font-size:12px;color:#6b7280;">Les actions issues de cette analyse ne sont pas listées ici : elles sont fusionnées, dédoublonnées et pondérées par impact / effort dans la section « Plan d'action consolidé ».</div>` : ''}
       ${(!hasConsolidatedPlan && stratRoadmap.length > 0) ? `
 
@@ -2164,6 +2215,12 @@ function compileMarinaReport(
     <!-- Section 3: Strategic GEO (périmètre page) -->
     <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
 
+    ${llmVisibilityBlock ? `
+    <!-- Visibilité / citabilité IA : périmètre site, mais rattachée à la section GEO
+         (elle en est l'objet). Placée juste après l'audit stratégique, plus en fin de rapport. -->
+    <div data-marina-scope="site" data-marina-block="llm">${llmVisibilityBlock}</div>
+    ` : ''}
+
     ${sectionHTMLs.ownerPerformance ? `
     <div class="marina-separator"></div>
     <!-- Section 3b : données propriétaires GSC/GA4 (périmètre site, mutualisable) -->
@@ -2181,11 +2238,6 @@ function compileMarinaReport(
     ${sectionHTMLs.cocoonPage}
     ` : ''}
 
-    ${llmVisibilityBlock ? `
-    <div class="marina-separator"></div>
-    <!-- Visibilité IA (périmètre site) -->
-    <div data-marina-scope="site" data-marina-block="llm">${llmVisibilityBlock}</div>
-    ` : ''}
 
     ${sectionHTMLs.indexation ? `
     <div class="marina-separator"></div>
