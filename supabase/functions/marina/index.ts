@@ -3440,6 +3440,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
           } else if (crawlPages?.length) {
             crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain);
+
+            // Doublon d'hôte (www vs apex) : preuve directe dans les pages
+            // crawlées + sonde HTTP de 2 requêtes pour savoir si une 301 existe.
+            // 0 token LLM, non bloquant.
+            try {
+              const probe = await probeHostRedirect(domain);
+              hostDuplication = analyzeHostDuplication(crawlPages as any[], domain, probe);
+              if (hostDuplication.detected) {
+                console.log(`[Marina] Doublon d'hôte détecté sur ${domain}: ${hostDuplication.duplicatePaths.length} chemins, canonical ${hostDuplication.canonicalCoverage ?? 'n/d'}%`);
+              }
+            } catch (hostErr) {
+              console.warn('[Marina] Host duplication check failed (non-fatal):', hostErr);
+            }
             // Segmentation par type de page (agence / produit / service / avis / éditorial…) :
             // conclusion intermédiaire par type, puis synthèse business. 0 token LLM.
             // Pondération du mix de gabarits : le sitemap donne la répartition du site
