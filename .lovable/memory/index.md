@@ -13,4 +13,4 @@
 - [Spiral score & trigger](mem://tech/autopilot/spiral-score-trigger-conflict-fr) — Trigger qui écrasait le score 10-signaux, neutralité 7/15 sans cluster, crons réconciliation Parménion (horaire) + retry cluster (6h)
 - [Pool SERP mutualisé](mem://tech/serp/pool-mutualise-fr) — Toute requête SERP via _shared/serpPool.ts (getSerp/ingestExternalSerp), TTL 24h/7j/30j, fan-out positions keyword_universe, journal serp_pool_hits
 - [Marina reprise sur checkpoint](mem://features/marina/checkpoint-resume-fr) — Checkpoint de phase dans audit_cache, reprise auto (cron 5 min, max 6 reprises) au lieu d'échouer les jobs tués par le wall-time, tours de crawl courts en phase 2
-
+- [Marina multipages périmètre page](mem://features/marina/multipage-page-scope-fr) — Crawl mutualisé domaine mais score tech/GEO/cocon propres à chaque URL, conclusion intermédiaire par URL + synthèse exécutive globale du rapport fusionné
