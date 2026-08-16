@@ -476,31 +476,52 @@ export async function fetchAndRenderPage(
     !hasMainContainer(html) ||
     isMissingSEOTags(html)
   );
-  const shouldRender = options?.forceRender || needsJSRendering(html, visibleText) || shellLikeInternalSpaRoute;
+  const authGated = isAuthGatedInternalUrl(url);
+  const shouldRender = !authGated && (
+    options?.forceRender || needsJSRendering(html, visibleText) || shellLikeInternalSpaRoute
+  );
+
+  if (authGated) {
+    console.log(`[renderPage] ⛔ Auth-gated internal route — JS rendering skipped (no session): ${url}`);
+  }
 
   if (shouldRender) {
     console.log(`[renderPage] SPA/CSR detected (${visibleText.length} chars text, ${html.length} chars HTML, framework: ${spaInfo.framework || 'unknown'}). Trying JS rendering...`);
 
-    let rendered: string | null = null;
-    const renderingKey = Deno.env.get('RENDERING_API_KEY');
+    let rendered: string | null = await getCachedRender(url);
+    let engineUsed = 'cache';
 
-    // Tier 1: Browserless (includes Fly.io → Spider.cloud fallbacks internally)
-    if (renderingKey) {
-      rendered = await renderWithBrowserless(url, renderingKey);
-    } else {
-      console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured — going straight to Fly.io/Spider');
-      rendered = await renderFallback(url);
-    }
-
-    // Tier 2: Spider.cloud safety net (Browserless returned null without triggering a fallback)
     if (!rendered) {
-      rendered = await renderWithSpider(url);
+      const renderingKey = Deno.env.get('RENDERING_API_KEY');
+
+      // Tier 1: Browserless (falls back to Spider.cloud internally)
+      if (renderingKey) {
+        rendered = await renderWithBrowserless(url, renderingKey);
+        engineUsed = 'browserless';
+      } else {
+        console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured — going straight to Spider.cloud');
+        rendered = await renderFallback(url);
+        engineUsed = 'spider';
+      }
+
+      // Tier 2: Spider.cloud safety net (Browserless returned null without triggering a fallback)
+      if (!rendered) {
+        rendered = await renderWithSpider(url);
+        engineUsed = 'spider';
+      }
+
+      // Tier 3: Self-render fallback for crawlers.fr if everything above failed
+      if (!rendered) {
+        rendered = await renderSelfFallback(url);
+        engineUsed = 'self';
+      }
+
+      if (rendered) {
+        await setCachedRender(url, rendered, engineUsed);
+      }
     }
 
-    // Tier 3: Self-render fallback for crawlers.fr if everything above failed
-    if (!rendered) {
-      rendered = await renderSelfFallback(url);
-    }
+
 
 
     if (rendered) {
