@@ -1289,6 +1289,17 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
   const redTeam = strategicData?.red_team || null;
   const gmb = strategicData?.google_my_business || null;
   const clientTargets = strategicData?.client_targets || null;
+  // Modules produits par strategic-synthesis mais jusqu'ici jamais rendus dans
+  // Marina (ils n'étaient visibles que dans /audit) : citabilité GEO, intention
+  // conversationnelle, risque zéro-clic, contenus prioritaires, autorité de
+  // domaine (backlinks) et vue d'ensemble des positions.
+  const geoCitability = strategicData?.geo_citability || null;
+  const conversationalIntent = strategicData?.conversational_intent || null;
+  const zeroClickRisk = strategicData?.zero_click_risk || null;
+  const priorityContent = strategicData?.priority_content || null;
+  const domainAuthority = strategicData?.domain_authority || null;
+  const rankingOverview = strategicData?.ranking_overview || null;
+
 
   const content = `
     <div class="section">
