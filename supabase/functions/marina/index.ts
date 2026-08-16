@@ -2773,7 +2773,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           identityCard,
         },
 
-        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
       }, { onConflict: 'cache_key' });
 
       console.log(`[Marina] ✅ Phase 1a complete — strategic launched (${strategicJobId}), self-invoking phase1b`);
@@ -2826,7 +2826,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         cache_key: `marina_intermediate_${jobId}`,
         function_name: 'marina',
         result_data: intermediatePayload,
-        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
       }, { onConflict: 'cache_key' });
 
       console.log(`[Marina] ✅ Phase 1b complete — intermediate data saved, launching Phase 2`);
@@ -2846,6 +2846,13 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       if (!cached?.result_data) {
         throw new Error('Phase 2: intermediate data not found — phase 1 may have failed');
       }
+
+      // Un crawl long (ou une reprise après kill) peut dépasser la fenêtre
+      // initiale : on repousse l'expiration à chaque tour pour que les données
+      // de phase 1 restent disponibles jusqu'à la fin du pipeline.
+      await sb.from('audit_cache').update({
+        expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
+      }).eq('cache_key', `marina_intermediate_${jobId}`);
 
       const { domain, detectedLang } = cached.result_data as any;
 
