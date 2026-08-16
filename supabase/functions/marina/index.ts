@@ -3663,10 +3663,14 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         console.log(`[Marina] Phase 3 Step 4: Generating section HTMLs...`);
         
         // ─── Top-3 priorities per section + consolidated plan ───
-        const seoFindings: RawFinding[] = (expertData?.recommendations || []).map((r: any) => ({
-          id: r.id, title: r.title || r.label || '', description: r.description || r.detail || '',
-          priority: r.priority || r.severity, category: r.category, fixes: r.fixes,
-        }));
+        const hostDupFinding = hostDuplication ? hostDuplicationFinding(hostDuplication, domain) : null;
+        const seoFindings: RawFinding[] = [
+          ...(hostDupFinding ? [hostDupFinding as RawFinding] : []),
+          ...(expertData?.recommendations || []).map((r: any) => ({
+            id: r.id, title: r.title || r.label || '', description: r.description || r.detail || '',
+            priority: r.priority || r.severity, category: r.category, fixes: r.fixes,
+          })),
+        ];
         const roadmap = strategicData?.executive_roadmap || strategicData?.strategic_roadmap || [];
         const geoFindings: RawFinding[] = roadmap
           .filter((it: any) => !/keyword|mots?-cl|content gap/i.test(`${it.category || ''} ${it.title || ''}`))
