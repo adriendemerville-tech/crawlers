@@ -23,7 +23,7 @@
  */
 
 import type { SectionTopPriorities, RawFinding, Severity } from './topPriorities.ts';
-import { normalizeSeverity } from './topPriorities.ts';
+import { normalizeSeverity, splitLongTitle } from './topPriorities.ts';
 
 type SectionKey = SectionTopPriorities['section'];
 
@@ -94,8 +94,13 @@ export async function writeMarinaFindingsToWorkbench(
     const defaultCategory = SECTION_TO_DEFAULT_CATEGORY[section];
 
     for (const f of findings) {
-      const title = (f.title || '').trim();
-      if (!title) continue;
+      const rawTitle = (f.title || '').trim();
+      if (!rawTitle) continue;
+
+      // Les modules LLM renvoient parfois un paragraphe entier comme "title".
+      // On coupe sur une frontière de phrase/ponctuation et on reverse le reste
+      // en tête de description : plus aucune phrase tronquée dans les rapports.
+      const { title, description } = splitLongTitle(rawTitle, f.description || '');
 
       const severity = SEVERITY_TO_WB[normalizeSeverity(f.priority || f.severity)];
       const category = mapCategory(section, f.category) || defaultCategory;
@@ -112,7 +117,7 @@ export async function writeMarinaFindingsToWorkbench(
         finding_category: category,
         severity,
         title: title.slice(0, 280),
-        description: (f.description || '').slice(0, 2000),
+        description: description.slice(0, 2000),
         target_url: opts.url || null,
         payload: {
           marina_section: section,
