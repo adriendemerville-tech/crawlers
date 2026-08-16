@@ -28,6 +28,8 @@ const MAX_PRUNES_PER_RUN = 2;
 const MAX_MERGES_PER_RUN = 1;
 /** Plafond glissant : nb max d'actions destructives sur 7 jours. */
 const WEEKLY_ACTION_CAP = 3;
+/** Anti-bruit : nb max de constats poussés au Workbench par exécution. */
+const MAX_FINDINGS_PER_RUN = 6;
 
 const STOPWORDS = new Set([
   'le', 'la', 'les', 'de', 'des', 'du', 'un', 'une', 'et', 'ou', 'pour', 'avec',
