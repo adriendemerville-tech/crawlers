@@ -1194,12 +1194,13 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       </div>
       ${crawlMeta.performanceScore ? `
       <div style="margin-top:16px;">
-        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Core Web Vitals (PageSpeed)</h3>
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Core Web Vitals (PageSpeed Insights — profil mobile)</h3>
         <p style="font-size:12px;color:var(--muted-foreground,#666);margin:0 0 10px;line-height:1.5;">
-          Performances constatées sur session mobile, peuvent différer des performances ordinateur. Depuis 2021, les performances mobiles sont prépondérantes pour le ranking dans Google. En France en 2026, 65% des requêtes search sont mobiles. En revanche, la conversion est 2x plus importante sur desktop.
+          Mesure effectuée exclusivement en profil mobile (Lighthouse, réseau et CPU bridés), conformément à l'indexation mobile-first de Google : c'est cette version que Google explore et classe. Les performances peuvent différer de celles constatées sur ordinateur. En France en 2026, 65 % des requêtes search sont mobiles ; en revanche, la conversion reste environ 2x plus élevée sur desktop.
         </p>
         <div class="stat-grid-4">
-          <div class="stat-card"><div class="value" style="color:${scoreColor(crawlMeta.performanceScore, 100)}">${crawlMeta.performanceScore}</div><div class="label">Performance /100</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(crawlMeta.performanceScore, 100)}">${crawlMeta.performanceScore}</div><div class="label">Performance mobile /100</div></div>
+
           ${crawlMeta.lcp ? `<div class="stat-card"><div class="value">${Number(crawlMeta.lcp) > 60 ? (Number(crawlMeta.lcp) / 1000).toFixed(2) : Number(crawlMeta.lcp).toFixed(2)}s</div><div class="label">LCP</div></div>` : ''}
           ${crawlMeta.tbt ? `<div class="stat-card"><div class="value">${Math.round(Number(crawlMeta.tbt))}ms</div><div class="label">TBT</div></div>` : ''}
           ${crawlMeta.cls !== null && crawlMeta.cls !== undefined ? `<div class="stat-card"><div class="value">${Number(crawlMeta.cls).toFixed(3)}</div><div class="label">CLS (score)</div></div>` : ''}
