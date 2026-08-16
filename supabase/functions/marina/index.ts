@@ -2215,6 +2215,12 @@ function compileMarinaReport(
     <!-- Section 3: Strategic GEO (périmètre page) -->
     <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
 
+    ${llmVisibilityBlock ? `
+    <!-- Visibilité / citabilité IA : périmètre site, mais rattachée à la section GEO
+         (elle en est l'objet). Placée juste après l'audit stratégique, plus en fin de rapport. -->
+    <div data-marina-scope="site" data-marina-block="llm">${llmVisibilityBlock}</div>
+    ` : ''}
+
     ${sectionHTMLs.ownerPerformance ? `
     <div class="marina-separator"></div>
     <!-- Section 3b : données propriétaires GSC/GA4 (périmètre site, mutualisable) -->
