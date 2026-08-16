@@ -3407,6 +3407,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       await llmVisibilityPromise;
 
       let crawlSnapshot: any = null;
+      let hostDuplication: HostDuplicationResult | null = null;
       let archetypeAnalysis: ArchetypeAnalysis | null = null;
       try {
         const { data: recentCrawls, error: crawlLookupError } = await sb
