@@ -3847,7 +3847,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
                 rankedKeywords: (strategicData?.keyword_positioning?.main_keywords || []).length,
                 quickWinKeywords: (strategicData?.keyword_positioning?.quick_wins || []).length,
                 contentGapKeywords: (strategicData?.keyword_positioning?.content_gaps || []).length,
-                hostDuplication: Boolean(hostDuplication?.hasDuplication),
+                hostDuplication: Boolean(hostDuplication?.detected),
               },
             }),
 
