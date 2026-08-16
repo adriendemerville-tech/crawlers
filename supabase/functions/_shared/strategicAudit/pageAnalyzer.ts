@@ -5,6 +5,7 @@ import { trackPaidApiCall } from '../tokenTracker.ts';
 import type { BrandSignal, EEATSignals, CtaSeoSignals } from './types.ts';
 import { DEFAULT_EEAT_SIGNALS, DEFAULT_CTA_SEO_SIGNALS } from './types.ts';
 import { detectBusinessModel, type BusinessModelDetection } from '../businessModelDetector.ts';
+import { extractOnSiteSocialProof, type SocialProofSignal } from '../socialProof.ts';
 
 export interface PageMetadataResult {
   context: string;
@@ -12,6 +13,10 @@ export interface PageMetadataResult {
   eeatSignals: EEATSignals;
   ctaSeoSignals: CtaSeoSignals;
   businessModelDetection?: BusinessModelDetection;
+  /** Couche 1 de la preuve sociale déterministe (JSON-LD, compteurs DOM, widgets). */
+  socialProofSignals?: SocialProofSignal[];
+  /** Longueur du texte utile réellement rendu — garde-fou d'entrée LLM. */
+  usefulTextChars?: number;
 }
 
 export async function extractPageMetadata(url: string): Promise<PageMetadataResult> {
