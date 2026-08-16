@@ -285,7 +285,11 @@ export async function callLovableAI(opts: LovableAIOptions): Promise<LovableAIRe
  */
 export async function callLovableAIText(opts: LovableAIOptions): Promise<string> {
   const resp = await callLovableAI(opts);
-  return resp.content;
+  if (opts.skipLeakFilter) return resp.content;
+  if (hasPromptLeak(resp.content)) {
+    console.warn(`[lovableAI] Fuite de gabarit détectée en sortie (${opts.callerFunction || 'inconnu'}) — nettoyage appliqué`);
+  }
+  return stripPromptLeaks(resp.content);
 }
 
 /**
@@ -302,7 +306,10 @@ export async function callLovableAIJson<T = unknown>(opts: LovableAIOptions): Pr
     text = text.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
   }
   text = text.replace(/,(\s*[}\]])/g, '$1');
-  return JSON.parse(text) as T;
+  const parsed = JSON.parse(text) as T;
+  // Garde-fou de sortie : aucune chaîne de gabarit ne doit atteindre un rapport.
+  if (opts.skipLeakFilter) return parsed;
+  return stripPromptLeaksDeep(parsed);
 }
 
 /**
