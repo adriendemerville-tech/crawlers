@@ -167,19 +167,31 @@ export function ParmenionTargetPanel({
   }, [targetDomain]);
 
   const fetchAutopilotConfig = useCallback(async () => {
-    const { data } = await supabase
+    const normalize = (d?: string | null) =>
+      (d || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+    const wanted = normalize(targetDomain);
+
+    const { data, error } = await supabase
       .from('autopilot_configs')
       .select('id, tracked_site_id, is_active, status, last_cycle_at, total_cycles_run, cooldown_hours, force_iktracker_article, force_content_cycle, tracked_sites!inner(domain)')
-      .eq('is_active', true)
       .order('updated_at', { ascending: false })
-      .limit(10);
-    if (data && data.length > 0) {
-      // Find config matching our target domain
-      const match = data.find((d: any) => {
-        const ts = d.tracked_sites as unknown as { domain: string };
-        return ts?.domain === targetDomain || ts?.domain?.includes(targetDomain.replace('www.', ''));
-      }) || data[0];
-      
+      .limit(200);
+
+    if (error) {
+      console.error('[Parménion] lecture autopilot_configs impossible', error);
+    }
+
+    // Ne JAMAIS retomber sur data[0] : cela viserait un autre domaine.
+    const match = (data || []).find((d: any) => {
+      const ts = d.tracked_sites as unknown as { domain: string };
+      return normalize(ts?.domain) === wanted;
+    }) || (data || []).find((d: any) => {
+      const ts = d.tracked_sites as unknown as { domain: string };
+      const nd = normalize(ts?.domain);
+      return nd.endsWith(`.${wanted}`) || wanted.endsWith(`.${nd}`);
+    });
+
+    if (match) {
       const ts = (match as any).tracked_sites as unknown as { domain: string };
       const cd = (match as any).cooldown_hours ?? 2;
       setAutopilotConfig({
@@ -195,8 +207,35 @@ export function ParmenionTargetPanel({
         force_content_cycle: (match as any).force_content_cycle ?? false,
       });
       setCooldownInput(String(cd));
+      return;
+    }
+
+    // Repli : aucune config lisible → on résout au moins le site suivi pour
+    // permettre le lancement manuel d'un cycle.
+    const { data: sites } = await supabase
+      .from('tracked_sites')
+      .select('id, domain')
+      .limit(500);
+    const site = (sites || []).find((s: any) => normalize(s.domain) === wanted);
+    if (site) {
+      setAutopilotConfig({
+        is_active: false,
+        status: 'idle',
+        last_cycle_at: null,
+        domain: (site as any).domain,
+        total_cycles_run: 0,
+        tracked_site_id: (site as any).id,
+        cooldown_hours: 2,
+        config_id: '',
+        force_iktracker_article: false,
+        force_content_cycle: false,
+      });
+    } else {
+      setAutopilotConfig(null);
     }
   }, [targetDomain]);
+
+
 
   const fetchHistory = useCallback(async () => {
     setHistLoading(true);
