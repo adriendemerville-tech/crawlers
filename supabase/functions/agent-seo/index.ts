@@ -736,6 +736,8 @@ Deno.serve(handleRequest(async (req) => {
           } catch { /* ignore */ }
 
           if (pageParsed?.title && pageParsed?.content) {
+            // Autonomie contenu v2 : publication directe, plafonnée à 1 / 7 jours
+            const canPublish = await autonomousPublishAvailable(supabase);
             await supabase.from('seo_page_drafts').insert({
               user_id: '00000000-0000-0000-0000-000000000000',
               page_type: pageType,
@@ -753,12 +755,18 @@ Deno.serve(handleRequest(async (req) => {
                 keyword: newPage.keyword,
                 directive: newPage.directive || null,
                 score_context: { overall: scoreBefore.overall },
+                autonomy: canPublish ? 'auto_published_v2' : 'weekly_cap_reached',
               },
-              status: 'draft',
+              status: canPublish ? 'published' : 'draft',
+              published_at: canPublish ? new Date().toISOString() : null,
+              review_note: canPublish
+                ? 'Publication autonome (gouvernance v2 : contenu autonome, code sous validation).'
+                : 'Plafond de 1 publication autonome par semaine atteint — en attente de validation admin.',
             });
             pageDraftsCreated++;
-            console.log(`[AGENT-SEO] 📄 Brouillon créé: "${pageParsed.title}" (${pageType})`);
+            console.log(`[AGENT-SEO] 📄 ${canPublish ? 'Publiée' : 'Brouillon'}: "${pageParsed.title}" (${pageType})`);
           }
+
         }
       } catch (e) {
         console.error('[AGENT-SEO] Erreur création brouillons:', e);
