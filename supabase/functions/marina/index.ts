@@ -3946,6 +3946,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
                 quickWinKeywords: (strategicData?.keyword_positioning?.quick_wins || []).length,
                 contentGapKeywords: (strategicData?.keyword_positioning?.content_gaps || []).length,
                 hostDuplication: Boolean(hostDuplication?.detected),
+                // Autorité / backlinks : intégrée au verdict et à la fourchette
+                // de gain, uniquement si DataForSEO a réellement répondu.
+                authorityScore: strategicData?.domain_authority?.data_source === 'dataforseo'
+                  ? Number(strategicData.domain_authority.authority_score) || null
+                  : null,
+                referringDomains: strategicData?.domain_authority?.data_source === 'dataforseo'
+                  ? Number(strategicData.domain_authority.referring_domains) || null
+                  : null,
+                backlinkToxicity: Number(strategicData?.domain_authority?.toxicity?.toxicity_score) || null,
               },
             }),
 
