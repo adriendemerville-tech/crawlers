@@ -12,6 +12,7 @@ import { useNavigate } from '@/lib/router-compat';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { listMyMarinaAudits, getMyMarinaReportUrl } from '@/lib/marina/myAudits.functions';
+import { normalizeScanMode } from '@/lib/marina/scanMode';
 
 
 const t3 = (lang: string, fr: string, en: string, es: string) =>
@@ -563,7 +564,9 @@ export function MarinaConsoleTab() {
             </div>
           ) : (
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {reports.map((report: any) => (
+              {reports.map((report: any) => {
+                const scanMode = normalizeScanMode(report.scanMode);
+                return (
                 <div key={report.id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm truncate">{report.domain || report.url || '—'}</p>
@@ -573,8 +576,8 @@ export function MarinaConsoleTab() {
                     </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    {report.scanMode && (
-                      <Badge variant="outline" className="text-[10px]">{report.scanMode}</Badge>
+                    {scanMode && (
+                      <Badge variant="outline" className="text-[10px]">{scanMode}</Badge>
                     )}
                     {report.viaApi && (
                       <Badge variant="outline" className="text-[10px]">API</Badge>
@@ -593,7 +596,8 @@ export function MarinaConsoleTab() {
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
