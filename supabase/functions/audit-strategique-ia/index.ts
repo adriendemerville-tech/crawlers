@@ -143,6 +143,8 @@ Deno.serve(handleRequest(async (req) => {
     let pageContentContext: string;
     let brandSignals: BrandSignal[];
     let eeatSignals: EEATSignals;
+    let socialProofSignals: SocialProofSignal[] = [];
+    let renderedTextChars = 0;
     let marketData: MarketData | null;
     let rankingOverview: RankingOverview | null;
     let authorityData: AuthorityData | null = null;
