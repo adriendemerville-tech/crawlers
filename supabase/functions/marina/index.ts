@@ -53,6 +53,7 @@ import { writeIdentity } from '../_shared/identityGateway.ts';
 import { callLovableAIText } from '../_shared/lovableAI.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { captureSiteVisual, buildVisualEvidenceHtml, type VisualCapture } from '../_shared/pageboltCapture.ts';
+import { buildStrategicVerdict, type VerdictSignals } from '../_shared/strategicVerdict.ts';
 import {
   analyzeHostDuplication,
   probeHostRedirect,
@@ -1193,12 +1194,13 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       </div>
       ${crawlMeta.performanceScore ? `
       <div style="margin-top:16px;">
-        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Core Web Vitals (PageSpeed)</h3>
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Core Web Vitals (PageSpeed Insights — profil mobile)</h3>
         <p style="font-size:12px;color:var(--muted-foreground,#666);margin:0 0 10px;line-height:1.5;">
-          Performances constatées sur session mobile, peuvent différer des performances ordinateur. Depuis 2021, les performances mobiles sont prépondérantes pour le ranking dans Google. En France en 2026, 65% des requêtes search sont mobiles. En revanche, la conversion est 2x plus importante sur desktop.
+          Mesure effectuée exclusivement en profil mobile (Lighthouse, réseau et CPU bridés), conformément à l'indexation mobile-first de Google : c'est cette version que Google explore et classe. Les performances peuvent différer de celles constatées sur ordinateur. En France en 2026, 65 % des requêtes search sont mobiles ; en revanche, la conversion reste environ 2x plus élevée sur desktop.
         </p>
         <div class="stat-grid-4">
-          <div class="stat-card"><div class="value" style="color:${scoreColor(crawlMeta.performanceScore, 100)}">${crawlMeta.performanceScore}</div><div class="label">Performance /100</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(crawlMeta.performanceScore, 100)}">${crawlMeta.performanceScore}</div><div class="label">Performance mobile /100</div></div>
+
           ${crawlMeta.lcp ? `<div class="stat-card"><div class="value">${Number(crawlMeta.lcp) > 60 ? (Number(crawlMeta.lcp) / 1000).toFixed(2) : Number(crawlMeta.lcp).toFixed(2)}s</div><div class="label">LCP</div></div>` : ''}
           ${crawlMeta.tbt ? `<div class="stat-card"><div class="value">${Math.round(Number(crawlMeta.tbt))}ms</div><div class="label">TBT</div></div>` : ''}
           ${crawlMeta.cls !== null && crawlMeta.cls !== undefined ? `<div class="stat-card"><div class="value">${Number(crawlMeta.cls).toFixed(3)}</div><div class="label">CLS (score)</div></div>` : ''}
@@ -1697,7 +1699,7 @@ function sanitizeMarinaHtml(html: string, opts?: { keepColors?: boolean }): stri
 function buildExecutiveSummaryHTML(
   lang: string,
   domain: string,
-  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number; roi?: RoiSummary | null },
+  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number; roi?: RoiSummary | null; verdictSignals?: VerdictSignals | null },
 
 ): string {
   const isEn = lang === 'en';
@@ -1774,6 +1776,11 @@ function buildExecutiveSummaryHTML(
       ${ctx.roi ? cell(t('Gains rapides', 'Quick wins', 'Ganancias rápidas'), `${ctx.roi.quickWins}${ctx.roi.quickWinDays ? ` · ~${ctx.roi.quickWinDays} j` : ''}`) : ''}
     </div>
     ${ctx.roi ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;">${ctx.roi.sentence}${ctx.roi.topQuickWins.length ? ` ${t('À traiter en premier', 'Start with', 'Empezar por')} : ${ctx.roi.topQuickWins.join(' ; ')}.` : ''}</p>` : ''}
+
+    ${ctx.verdictSignals
+      ? buildStrategicVerdict(domain, { ...ctx.verdictSignals, criticalCount: ctx.criticalCount, geoScore: geo100, techScore: tech100, pagesAnalyzed: pages }, lang).html
+      : ''}
+
 
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
       ${t(
@@ -3826,7 +3833,25 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
               criticalCount: (consolidatedPlan || []).filter((i: any) => i.severity === 'critical').length,
               roi: roiSummary,
+              // Conclusion stratégique déterministe : chaque levier est adossé à
+              // un signal réellement mesuré dans ce run (0 token LLM).
+              verdictSignals: {
+                pagesKnown: crawlSnapshot?.total_pages || null,
+                psiPerformanceMobile: expertData?.scores?.performance?.psiPerformance ?? null,
+                cannibalizationGroups: crawlSnapshot?.contentIntegrity?.cannibalizationGroups ?? null,
+                nearDuplicateGroups: crawlSnapshot?.contentIntegrity?.nearDuplicateGroups ?? null,
+                thinPages: crawlSnapshot?.contentIntegrity?.thinPages ?? null,
+                clusterCount: cocoonResult?.stats?.cluster_count ?? (cocoonResult?.cluster_summary?.length || null),
+                orphanPages: cocoonResult?.graph_details?.orphan_pages?.length ?? null,
+                hasSchema: crawlSnapshot?.hasSchema ?? null,
+                schemaTypesCount: (crawlSnapshot?.schemaTypes || []).length,
+                rankedKeywords: (strategicData?.keyword_positioning?.main_keywords || []).length,
+                quickWinKeywords: (strategicData?.keyword_positioning?.quick_wins || []).length,
+                contentGapKeywords: (strategicData?.keyword_positioning?.content_gaps || []).length,
+                hostDuplication: Boolean(hostDuplication?.detected),
+              },
             }),
+
             intro: buildReportIntroHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData,
               indexationCount: indexationData.length,
