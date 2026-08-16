@@ -153,7 +153,8 @@ async function fetchPageWithCascade(targetUrl: string): Promise<FetchResult> {
     if (renderedVia === 'static') {
       const flyUrl = Deno.env.get('FLY_RENDERER_URL');
       const flySecret = Deno.env.get('FLY_RENDERER_SECRET');
-      if (flyUrl && flySecret) {
+      const flyEnabled = Deno.env.get('FLY_RENDER_ENABLED') === 'true';
+      if (flyEnabled && flyUrl && flySecret) {
         try {
           const flyResp = await fetch(`${flyUrl}/content`, {
             method: 'POST',

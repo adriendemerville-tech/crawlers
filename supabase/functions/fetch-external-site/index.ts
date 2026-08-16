@@ -157,7 +157,8 @@ Deno.serve(handleRequest(async (req) => {
       // ── Étape 3 : Fly.io (headless Chrome auto-hébergé) ──
       const flyRendererUrl = Deno.env.get('FLY_RENDERER_URL');
       const flyRendererSecret = Deno.env.get('FLY_RENDERER_SECRET');
-      if (!rendered && flyRendererUrl && flyRendererSecret) {
+      const flyEnabled = Deno.env.get('FLY_RENDER_ENABLED') === 'true';
+      if (!rendered && flyEnabled && flyRendererUrl && flyRendererSecret) {
         try {
           console.log(`[fetch-external-site] 🚀 Trying Fly.io renderer...`);
           const flyResp = await fetch(`${flyRendererUrl}/content`, {

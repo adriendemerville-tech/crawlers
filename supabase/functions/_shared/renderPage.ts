@@ -94,9 +94,99 @@ function needsJSRendering(html: string, visibleText: string): boolean {
 }
 
 /**
+ * Internal auth-gated routes of crawlers.fr: rendering them is pointless
+ * (no session → empty shell → waitForSelector timeout → HTTP 500 + paid call for nothing).
+ */
+const AUTH_GATED_PATH_PATTERNS: RegExp[] = [
+  /^\/app(\/|$)/i,
+  /^\/cf-shield(\/|$)/i,
+  /^\/console(\/|$)/i,
+  /^\/auth(\/|$)/i,
+  /^\/admin(\/|$)/i,
+  /^\/profile(\/|$)/i,
+  /^\/site-crawl(\/|$)/i,
+
+];
+
+const INTERNAL_HOSTS = ['crawlers.fr', 'www.crawlers.fr', 'crawlers.lovable.app'];
+
+export function isAuthGatedInternalUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase();
+    const isInternal = INTERNAL_HOSTS.includes(host) || host.endsWith('.lovable.app');
+    if (!isInternal) return false;
+    return AUTH_GATED_PATH_PATTERNS.some((re) => re.test(u.pathname));
+  } catch {
+    return false;
+  }
+}
+
+/** Canonical cache key: protocol/host-case/trailing-slash neutral. */
+function renderCacheKey(url: string): string {
+  try {
+    const u = new URL(url);
+    const path = u.pathname.replace(/\/+$/, '') || '/';
+    return `${u.hostname.toLowerCase().replace(/^www\./, '')}${path}${u.search}`;
+  } catch {
+    return url;
+  }
+}
+
+async function getCachedRender(url: string): Promise<string | null> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceKey) return null;
+  try {
+    const key = encodeURIComponent(renderCacheKey(url));
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/external_render_cache?url_key=eq.${key}&expires_at=gt.${new Date().toISOString()}&select=html&limit=1`,
+      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } },
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    const html = rows?.[0]?.html;
+    if (typeof html === 'string' && html.length > 500) {
+      console.log(`[renderPage] ♻️ Cache hit (24h) for ${url}`);
+      return html;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function setCachedRender(url: string, html: string, engine: string): Promise<void> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceKey || html.length < 500) return;
+  try {
+    await fetch(`${supabaseUrl}/rest/v1/external_render_cache?on_conflict=url_key`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        Prefer: 'resolution=merge-duplicates,return=minimal',
+      },
+      body: JSON.stringify({
+        url_key: renderCacheKey(url),
+        url,
+        html,
+        engine,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    });
+  } catch {
+    // Silent — cache is best effort
+  }
+}
+
+/**
  * Attempts to render a page using Browserless.io.
  * Returns rendered HTML or null on failure.
  */
+
 async function logBrowserlessError(statusCode: number, errorMessage: string, url: string): Promise<void> {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -146,7 +236,7 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
         console.log(`[renderPage] ⚠️ Browserless error: ${response.status}`);
         await logBrowserlessError(response.status, `HTTP ${response.status}`, url);
         if (response.status === 429 || response.status >= 500) {
-          return await renderWithFlyThenSpider(url);
+          return await renderFallback(url);
         }
         return null;
       }
@@ -154,9 +244,9 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
       const msg = err instanceof Error ? err.message : String(err);
       console.log('[renderPage] ⚠️ Browserless failed:', msg);
       await logBrowserlessError(0, msg, url);
-      return await renderWithFlyThenSpider(url);
+      return await renderFallback(url);
     }
-  }, `renderPage:${url}`) ?? await renderWithFlyThenSpider(url);
+  }, `renderPage:${url}`) ?? await renderFallback(url);
 }
 
 /**
@@ -249,13 +339,17 @@ async function renderWithSpider(url: string): Promise<string | null> {
 }
 
 /**
- * Fly.io with automatic Spider.cloud fallback.
+ * Fallback renderer. Fly.io is DISABLED by default (service suspended: every call
+ * burned a 45s timeout before falling through). Set FLY_RENDER_ENABLED=true to re-arm it.
  */
-async function renderWithFlyThenSpider(url: string): Promise<string | null> {
-  const fly = await renderWithFlyPlaywright(url);
-  if (fly) return fly;
+async function renderFallback(url: string): Promise<string | null> {
+  if (Deno.env.get('FLY_RENDER_ENABLED') === 'true') {
+    const fly = await renderWithFlyPlaywright(url);
+    if (fly) return fly;
+  }
   return await renderWithSpider(url);
 }
+
 
 
 /**
@@ -384,31 +478,52 @@ export async function fetchAndRenderPage(
     !hasMainContainer(html) ||
     isMissingSEOTags(html)
   );
-  const shouldRender = options?.forceRender || needsJSRendering(html, visibleText) || shellLikeInternalSpaRoute;
+  const authGated = isAuthGatedInternalUrl(url);
+  const shouldRender = !authGated && (
+    options?.forceRender || needsJSRendering(html, visibleText) || shellLikeInternalSpaRoute
+  );
+
+  if (authGated) {
+    console.log(`[renderPage] ⛔ Auth-gated internal route — JS rendering skipped (no session): ${url}`);
+  }
 
   if (shouldRender) {
     console.log(`[renderPage] SPA/CSR detected (${visibleText.length} chars text, ${html.length} chars HTML, framework: ${spaInfo.framework || 'unknown'}). Trying JS rendering...`);
 
-    let rendered: string | null = null;
-    const renderingKey = Deno.env.get('RENDERING_API_KEY');
+    let rendered: string | null = await getCachedRender(url);
+    let engineUsed = 'cache';
 
-    // Tier 1: Browserless (includes Fly.io → Spider.cloud fallbacks internally)
-    if (renderingKey) {
-      rendered = await renderWithBrowserless(url, renderingKey);
-    } else {
-      console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured — going straight to Fly.io/Spider');
-      rendered = await renderWithFlyThenSpider(url);
-    }
-
-    // Tier 2: Spider.cloud safety net (Browserless returned null without triggering a fallback)
     if (!rendered) {
-      rendered = await renderWithSpider(url);
+      const renderingKey = Deno.env.get('RENDERING_API_KEY');
+
+      // Tier 1: Browserless (falls back to Spider.cloud internally)
+      if (renderingKey) {
+        rendered = await renderWithBrowserless(url, renderingKey);
+        engineUsed = 'browserless';
+      } else {
+        console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured — going straight to Spider.cloud');
+        rendered = await renderFallback(url);
+        engineUsed = 'spider';
+      }
+
+      // Tier 2: Spider.cloud safety net (Browserless returned null without triggering a fallback)
+      if (!rendered) {
+        rendered = await renderWithSpider(url);
+        engineUsed = 'spider';
+      }
+
+      // Tier 3: Self-render fallback for crawlers.fr if everything above failed
+      if (!rendered) {
+        rendered = await renderSelfFallback(url);
+        engineUsed = 'self';
+      }
+
+      if (rendered) {
+        await setCachedRender(url, rendered, engineUsed);
+      }
     }
 
-    // Tier 3: Self-render fallback for crawlers.fr if everything above failed
-    if (!rendered) {
-      rendered = await renderSelfFallback(url);
-    }
+
 
 
     if (rendered) {

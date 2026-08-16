@@ -397,6 +397,8 @@ async function tryBrowserless(url: string): Promise<string | null> {
 async function tryFlyPlaywright(url: string): Promise<string | null> {
   const flyUrl = Deno.env.get('FLY_RENDERER_URL');
   const flySecret = Deno.env.get('FLY_RENDERER_SECRET');
+  // Fly.io suspendu : désactivé sauf réarmement explicite (évitait 40s de timeout par page)
+  if (Deno.env.get('FLY_RENDER_ENABLED') !== 'true') return null;
   if (!flyUrl) return null;
 
   try {
