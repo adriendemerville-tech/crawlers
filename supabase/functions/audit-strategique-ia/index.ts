@@ -310,7 +310,10 @@ Deno.serve(handleRequest(async (req) => {
         extraSignals: [...socialProofSignals, ...layer2],
       });
     }
-    console.log(`⭐ Preuve sociale: statut=${socialProof.status}, avis=${socialProof.reviewCount ?? 'n/a'}, note=${socialProof.rating ?? 'n/a'}, plateformes=${socialProof.platforms.join(',') || 'aucune'}`);
+    console.log(`⭐ Preuve sociale: statut=${socialProof.status}, avis=${socialProof.reviewCount ?? 'n/a'}, note=${socialProof.rating ?? 'n/a'}, plateformes=${socialProof.platforms.join(',') || 'aucune'} | texte utile page=${renderedTextChars} car.`);
+    if (renderedTextChars > 0 && renderedTextChars < 300) {
+      console.warn(`⚠️ Contexte page très pauvre (${renderedTextChars} car.) — les conclusions LLM sur le contenu seront marquées comme non concluantes.`);
+    }
 
     const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData, rankingOverview, authorityData, founderInfo, llmData: effectiveToolsData.llm, gmbData, facebookPageInfo, preCrawlData: preCrawlResult || null, socialProof };
 
