@@ -24,8 +24,26 @@ export async function finalizeJob(
 ) {
   console.log(`[Worker] Finalizing job ${job.id}...`);
 
+  // Idempotence : un job déjà finalisé ne doit jamais être repassé en 'analyzing'
+  // (sinon un second passage tué par le wall-time laisse le crawl bloqué à 100 %).
+  const { data: existingJob } = await supabase
+    .from('crawl_jobs')
+    .select('status, completed_at')
+    .eq('id', job.id)
+    .maybeSingle();
+  if (existingJob?.completed_at || existingJob?.status === 'completed') {
+    console.log(`[Worker] Job ${job.id} déjà finalisé — abandon du second passage`);
+    await supabase
+      .from('site_crawls')
+      .update({ status: 'completed' })
+      .eq('id', job.crawl_id)
+      .neq('status', 'completed');
+    return;
+  }
+
   await supabase.from('crawl_jobs').update({ status: 'analyzing' }).eq('id', job.id);
   await supabase.from('site_crawls').update({ status: 'analyzing' }).eq('id', job.crawl_id);
+
 
   const { data: allPages } = await supabase
     .from('crawl_pages')
