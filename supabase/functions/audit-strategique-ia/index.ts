@@ -603,6 +603,19 @@ Deno.serve(handleRequest(async (req) => {
     if (!parsedAnalysis.expertise_sentiment) parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué' };
     if (!parsedAnalysis.red_teaming) parsedAnalysis.red_teaming = { objections: [] };
 
+    // ═══ RÈGLE DURE : la couche LLM ne peut pas infirmer la mesure (Lot 1) ═══
+    parsedAnalysis.expertise_sentiment = enforceSocialProofOnLlm(parsedAnalysis.expertise_sentiment, socialProof);
+    parsedAnalysis.social_proof_verified = {
+      status: socialProof.status,
+      review_count: socialProof.reviewCount,
+      rating: socialProof.rating,
+      has_aggregate_rating: socialProof.hasAggregateRating,
+      has_testimonials: socialProof.hasTestimonials,
+      platforms: socialProof.platforms,
+      summary: socialProof.summary,
+      sources: socialProof.signals.map((s) => s.source),
+    };
+
     // ═══ PONDÉRATION MARCHÉ DE LA PRIORISATION (déterministe, zéro coût LLM) ═══
     if (Array.isArray(parsedAnalysis.executive_roadmap) && parsedAnalysis.executive_roadmap.length > 0) {
       parsedAnalysis.executive_roadmap = applyMarketWeighting(parsedAnalysis.executive_roadmap, {
