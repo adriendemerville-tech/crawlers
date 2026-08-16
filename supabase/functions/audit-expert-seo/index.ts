@@ -1080,6 +1080,7 @@ async function checkSitemapRobotsCoherence(url: string, robotsContent: string, r
             method: 'GET',
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/2.0)' },
             redirect: 'follow',
+            signal: AbortSignal.timeout(6000),
           });
           if (pageResp.ok) {
             const pageHtml = await pageResp.text();
@@ -1093,7 +1094,12 @@ async function checkSitemapRobotsCoherence(url: string, robotsContent: string, r
         return null;
       });
       
-      const noindexResults = await Promise.all(checkPromises);
+      // Plafond global : même avec les timeouts unitaires, l'échantillonnage
+      // noindex ne doit jamais dépasser 15 s.
+      const noindexResults = await Promise.race([
+        Promise.all(checkPromises),
+        new Promise<(string | null)[]>((r) => setTimeout(() => r([]), 15000)),
+      ]);
       for (const result of noindexResults) {
         if (result) {
           noindexInSitemap++;
