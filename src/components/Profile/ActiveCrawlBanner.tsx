@@ -71,15 +71,25 @@ export function ActiveCrawlBanner() {
     if (!user) return;
 
     try {
-      const { data } = await supabase
+      const { data: raw } = await supabase
         .from('site_crawls')
-        .select('id, domain, status, crawled_pages, total_pages')
+        .select('id, domain, status, crawled_pages, total_pages, created_at, completed_at')
         .eq('user_id', user.id)
         .in('status', ['queued', 'mapping', 'crawling', 'analyzing'])
         .order('created_at', { ascending: false })
         .limit(5);
 
+      // Un crawl déjà daté de fin, ou muet depuis plus de 45 min, n'est plus "en cours" :
+      // son statut est resté bloqué côté backend, on ne l'affiche plus.
+      const STALE_MS = 45 * 60 * 1000;
+      const data = (raw || []).filter((d) => {
+        if (d.completed_at) return false;
+        const started = d.created_at ? new Date(d.created_at).getTime() : 0;
+        return !started || Date.now() - started < STALE_MS;
+      });
+
       if (data && data.length > 0) {
+
         hadActiveJobsRef.current = true;
         setActiveJobs(data.map(d => ({
           crawl_id: d.id,
