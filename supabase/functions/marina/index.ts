@@ -1298,7 +1298,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${buildModuleSection('Intelligence Marché', '📊', marketIntel)}
       ${buildCompetitiveLandscapeSection(competitive)}
       ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
-      ${buildModuleSection('Positionnement Mots-clés', '🔑', keywordPos)}
+      ${buildKeywordPositioningSection(keywordPos)}
       ${buildModuleSection('Données Marché', '📈', marketData)}
       <!--MARINA_LLM_START-->${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}<!--MARINA_LLM_END-->
       ${buildModuleSection('Quotabilité', '💬', quotability)}
