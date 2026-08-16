@@ -208,6 +208,8 @@ Deno.serve(handleRequest(async (req) => {
       brandSignals = metadataResult?.brandSignals || [];
       eeatSignals = metadataResult?.eeatSignals || { ...DEFAULT_EEAT_SIGNALS, linkedInUrls: [], detectedSocialUrls: [] };
       ctaSeoSignalsForJargon = metadataResult?.ctaSeoSignals || ctaSeoSignalsForJargon;
+      socialProofSignals = metadataResult?.socialProofSignals || [];
+      renderedTextChars = metadataResult?.usefulTextChars || 0;
       rankingOverview = rkOverviewResult;
       if (preCrawlContext) pageContentContext += '\n' + preCrawlContext;
 
