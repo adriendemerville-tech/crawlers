@@ -38,6 +38,10 @@ export interface VerdictSignals {
   contentGapKeywords?: number | null;
   /** Doublon d'hôte (www vs apex) sans redirection 301. */
   hostDuplication?: boolean | null;
+  /** Autorité de domaine (DataForSEO) — 0 / null si non mesurée. */
+  authorityScore?: number | null;
+  referringDomains?: number | null;
+  backlinkToxicity?: number | null;
   /** Blocages critiques restants dans le plan consolidé. */
   criticalCount?: number | null;
 }
@@ -115,6 +119,17 @@ function estimateGain(s: VerdictSignals): { low: number; high: number } | null {
   else if (thin > 0) { evidence++; low += 1; high += 3; }
 
   if (s.hostDuplication) { evidence++; low += 2; high += 5; }
+
+  // Autorité : un profil de liens faible plafonne les gains SEO, un profil
+  // toxique les détruit. Levier mesuré uniquement si DataForSEO a répondu.
+  const auth = n(s.authorityScore);
+  if (auth > 0) {
+    evidence++;
+    if (auth < 20) { low += 4; high += 10; }
+    else if (auth < 40) { low += 2; high += 6; }
+    else { low += 1; high += 3; }
+  }
+  if (n(s.backlinkToxicity) >= 35) { evidence++; low += 2; high += 6; }
 
   // Sans au moins deux signaux mesurés, on n'avance pas de fourchette.
   if (evidence < 2 || high <= 0) return null;
@@ -213,6 +228,23 @@ export function buildStrategicVerdict(
       `rationaliser l'hôte servi avec une redirection 301 définitive (www ou apex, pas les deux)`,
       `consolidate the served host with a permanent 301 redirect (www or apex, not both)`,
       `consolidar el host servido con una redirección 301 (www o apex)`,
+    ));
+  }
+  const auth = n(signals.authorityScore);
+  const refDomains = n(signals.referringDomains);
+  const tox = n(signals.backlinkToxicity);
+  if (auth > 0 && auth < 40) {
+    seo.push(t(
+      `renforcer l'autorité du domaine (Authority Score ${auth}/100${refDomains ? `, ${refDomains} domaine${refDomains > 1 ? 's' : ''} référent${refDomains > 1 ? 's' : ''}`  : ''}) par des liens éditoriaux thématiques`,
+      `strengthen domain authority (Authority Score ${auth}/100${refDomains ? `, ${refDomains} referring domain(s)` : ''}) through topical editorial links`,
+      `reforzar la autoridad del dominio (Authority Score ${auth}/100) con enlaces editoriales temáticos`,
+    ));
+  }
+  if (tox >= 35) {
+    seo.push(t(
+      `assainir le profil de liens (toxicité mesurée ${tox}/100 : ancres trop répétitives ou référents de faible qualité)`,
+      `clean up the backlink profile (measured toxicity ${tox}/100: over-repeated anchors or low-quality referrers)`,
+      `sanear el perfil de enlaces (toxicidad ${tox}/100)`,
     ));
   }
 

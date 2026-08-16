@@ -3775,8 +3775,35 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           .filter((r: any) => /eeat|e-e-a-t|autorit|expertise|trust/i.test(`${r.category || ''} ${r.title || ''}`))
           .map((r: any) => ({
             title: r.title || '', description: r.description || '',
-            priority: r.priority, category: 'eeat', fixes: r.fixes,
-          }));
+             priority: r.priority, category: 'eeat', fixes: r.fixes,
+           }));
+        // Autorité / backlinks : le bloc était calculé et affiché mais ne
+        // produisait aucune action. Il alimente désormais le plan consolidé
+        // (donc la conclusion 0-30/30-60/60-90 et le Workbench).
+        {
+          const da: any = strategicData?.domain_authority;
+          if (da && da.data_source === 'dataforseo') {
+            const score = Number(da.authority_score) || 0;
+            const refs = Number(da.referring_domains) || 0;
+            const tox = Number(da.toxicity?.toxicity_score) || 0;
+            if (score > 0 && score < 40) {
+              eeatFindings.push({
+                title: `Autorité de domaine faible (Authority Score ${score}/100)`,
+                description: `${refs} domaine(s) référent(s) mesuré(s). Acquérir des liens éditoriaux thématiques (relations presse, partenariats sectoriels, contenus citables) pour lever le plafond de positions atteignable.`,
+                priority: score < 20 ? 'important' : 'suggestion',
+                category: 'eeat',
+              } as RawFinding);
+            }
+            if (tox >= 35) {
+              eeatFindings.push({
+                title: `Profil de liens à assainir (toxicité ${tox}/100 — ${da.toxicity?.verdict || ''})`,
+                description: da.toxicity?.recommendation || 'Diversifier les ancres et désavouer les référents de faible qualité.',
+                priority: tox >= 60 ? 'critical' : 'important',
+                category: 'eeat',
+              } as RawFinding);
+            }
+          }
+        }
         const cocoonFindings: RawFinding[] = (cocoonResult?._stratege_recommendations || []).map((r: any) => ({
           title: r.title || '', description: r.description || '',
           priority: /1/.test(r.priority || '') ? 'critical' : /2/.test(r.priority || '') ? 'important' : 'suggestion',
@@ -3946,6 +3973,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
                 quickWinKeywords: (strategicData?.keyword_positioning?.quick_wins || []).length,
                 contentGapKeywords: (strategicData?.keyword_positioning?.content_gaps || []).length,
                 hostDuplication: Boolean(hostDuplication?.detected),
+                // Autorité / backlinks : intégrée au verdict et à la fourchette
+                // de gain, uniquement si DataForSEO a réellement répondu.
+                authorityScore: strategicData?.domain_authority?.data_source === 'dataforseo'
+                  ? Number(strategicData.domain_authority.authority_score) || null
+                  : null,
+                referringDomains: strategicData?.domain_authority?.data_source === 'dataforseo'
+                  ? Number(strategicData.domain_authority.referring_domains) || null
+                  : null,
+                backlinkToxicity: Number(strategicData?.domain_authority?.toxicity?.toxicity_score) || null,
               },
             }),
 
