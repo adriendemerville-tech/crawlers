@@ -619,7 +619,32 @@ function buildKeywordPositioningSection(kp: any, rankingOverview?: any): string 
   const ranked = main.filter((k) => num(k?.current_rank ?? k?.position));
   const positions = (ranked.length ? ranked : main).slice(0, 15);
 
+  // Vue d'ensemble chiffrée issue de DataForSEO (ranking_overview) : jusqu'ici
+  // produite par la chaîne stratégique mais jamais affichée dans Marina.
+  const ro = rankingOverview || null;
+  const roNum = (v: any) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  const roStats = ro
+    ? [
+        roNum(ro.total_ranked_keywords) != null ? ['Mots-clés positionnés', roNum(ro.total_ranked_keywords)!.toLocaleString('fr-FR')] : null,
+        roNum(ro.average_position_global) != null ? ['Position moyenne', String(Math.round(roNum(ro.average_position_global)!))] : null,
+        roNum(ro.average_position_top10) != null ? ['Position moyenne du top 10', String(Math.round(roNum(ro.average_position_top10)!))] : null,
+        roNum(ro.etv) != null ? ['Trafic organique estimé', `${Math.round(roNum(ro.etv)!).toLocaleString('fr-FR')} visites/mois`] : null,
+      ].filter(Boolean) as string[][]
+    : [];
+  const roTop: any[] = Array.isArray(ro?.top_keywords) ? ro!.top_keywords : [];
+  const overviewHtml = ro && (roStats.length || roTop.length)
+    ? sub(
+        'Vue d’ensemble des positions',
+        'Volumétrie mesurée sur la SERP : combien de mots-clés le domaine capte déjà et à quelle profondeur.',
+        `${roStats.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:10px;">${roStats
+            .map(([l, v]) => `<div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;"><div style="font-size:16px;font-weight:700;color:#111827;">${v}</div><div style="font-size:11px;color:#6b7280;">${l}</div></div>`)
+            .join('')}</div>` : ''}
+         ${roTop.length ? roTop.slice(0, 10).map((k: any) => row(k)).join('') : ''}`,
+      )
+    : '';
+
   const html = [
+    overviewHtml,
     sub(
       'Positions actuelles',
       'Mots-clés sur lesquels le domaine est déjà positionné dans les résultats Google.',
@@ -636,6 +661,7 @@ function buildKeywordPositioningSection(kp: any, rankingOverview?: any): string 
       gaps.slice(0, 15).map((k) => row(k, k?.priority ? [`Priorité : <strong>${esc(k.priority)}</strong>`] : [])).join(''),
     ),
   ].join('');
+
 
   // Le reste du module (densité sémantique, termes manquants, recommandations…)
   // garde le rendu générique, sans les trois clés déjà traitées ci-dessus.
