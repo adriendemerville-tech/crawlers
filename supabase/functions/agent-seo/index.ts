@@ -496,6 +496,10 @@ Deno.serve(handleRequest(async (req) => {
 
     console.log(`[AGENT-SEO] 🎯 Cible: ${target.type} — ${target.slug} (${target.url})`);
 
+    // Gouvernance v2 : contrôle de réversibilité avant tout nouveau contenu
+    const unpublishedCount = await autoUnpublishDegraded(supabase);
+
+
     // Fetch site identity card + page content + enriched context + admin directives in parallel
     // For blog pages, read content from DB (SPA won't render for server-side fetch)
     const fetchContent = async (): Promise<{ html: string; textContent: string } | null> => {
