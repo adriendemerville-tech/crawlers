@@ -402,11 +402,18 @@ function buildGroup(def: ArchetypeDef, pages: ArchetypePageInput[]): ArchetypeGr
     if (ha !== hb) return hb - ha;
     return Number(b.word_count || 0) - Number(a.word_count || 0);
   });
-  const examples: ArchetypeExample[] = ranked.slice(0, 3).map((p) => ({
-    url: p.url,
-    h1: p.h1 || null,
-    title: p.title || null,
-  }));
+  // Déduplication : une même page peut avoir été crawlée sous plusieurs
+  // variantes d'hôte/protocole (www vs apex, http vs https) ou de slash final.
+  // On ne montre jamais deux fois la même page dans les exemples.
+  const seenExampleKeys = new Set<string>();
+  const examples: ArchetypeExample[] = [];
+  for (const p of ranked) {
+    const key = crawlUrlKey(p.url);
+    if (seenExampleKeys.has(key)) continue;
+    seenExampleKeys.add(key);
+    examples.push({ url: p.url, h1: p.h1 || null, title: p.title || null });
+    if (examples.length >= 3) break;
+  }
 
   return {
     key: def.key,
