@@ -4,6 +4,7 @@ import {
   buildConsolidatedActionPlan,
   renderTopPrioritiesHTML,
   renderConsolidatedPlanHTML,
+  splitLongTitle,
   type SectionTopPriorities,
   type RawFinding,
   type WorkbenchTask,
