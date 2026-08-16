@@ -230,8 +230,7 @@ Analyse et propose des améliorations SEO incrémentales ciblées.`;
 // ─── Fetch rendered HTML of a page (landing pages, SSR) ──────────────
 async function fetchPageHtml(url: string): Promise<{ html: string; textContent: string } | null> {
   try {
-    const resp = await stealthFetch(url, { timeoutMs: 25_000 });
-    const html = typeof resp === 'string' ? resp : (resp?.html || resp?.body || '');
+    const { text: html } = await stealthFetchText(url, { timeout: 25_000 });
     if (!html || html.length < 200) return null;
     return { html, textContent: extractTextContent(html).substring(0, 20000) };
   } catch (e) {
