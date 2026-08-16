@@ -2,11 +2,12 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
-import { stealthFetch } from '../_shared/stealthFetch.ts';
+import { stealthFetchText } from '../_shared/stealthFetch.ts';
 import { callLovableAI } from '../_shared/lovableAI.ts';
 import { getAgentContext } from '../_shared/getAgentContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { computeSeoScoreV2, extractTextContent, TOXIC_ANCHORS, type SeoScoreV2, type HeadingHierarchy, type ContentDensity, type LinkProfile, type JsonLdAnalysis, type EEATSignals } from '../_shared/seoScoringV2.ts';
+import { runPruneMergePass } from './pruneMerge.ts';
 
 /**
  * Agent SEO Autonome v2
@@ -224,6 +225,18 @@ Analyse et propose des améliorations SEO incrémentales ciblées.`;
   }
 
   return { improvements: content, confidence, tokens };
+}
+
+// ─── Fetch rendered HTML of a page (landing pages, SSR) ──────────────
+async function fetchPageHtml(url: string): Promise<{ html: string; textContent: string } | null> {
+  try {
+    const { text: html } = await stealthFetchText(url, { timeout: 25_000 });
+    if (!html || html.length < 200) return null;
+    return { html, textContent: extractTextContent(html).substring(0, 20000) };
+  } catch (e) {
+    console.error('[AGENT-SEO] fetchPageHtml error:', e);
+    return null;
+  }
 }
 
 // ─── Get blog articles from DB ───────────────────────────────────────
@@ -548,6 +561,22 @@ Deno.serve(handleRequest(async (req) => {
       console.log(`[AGENT-SEO] 📇 Carte d'identité chargée (confiance: ${siteContext.identity_confidence || 0})`);
     }
 
+    // ── Pruning / consolidation (déterministe, 0 token) ─────────────────
+    // Dépublie les pages mortes et consolide les quasi-doublons produits par
+    // l'agent ; les contenus humains partent en constat Workbench uniquement.
+    const pruneMerge = body.skip_pruning
+      ? null
+      : await runPruneMergePass(supabase, siteContext ? {
+          domain: 'crawlers.fr',
+          site_name: siteContext.site_name,
+          market_sector: siteContext.market_sector,
+          business_type: siteContext.business_type,
+          entity_type: siteContext.entity_type,
+          commercial_model: siteContext.commercial_model,
+          target_audience: siteContext.target_audience,
+        } : null);
+
+
     // ── Run audit-expert-seo + check-eeat + strategic-orchestrator in parallel for deep signals ──
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -805,6 +834,23 @@ Deno.serve(handleRequest(async (req) => {
     const { error: logError } = await supabase.from('seo_agent_logs').insert(logEntry);
     if (logError) console.error('[AGENT-SEO] Log error:', logError);
 
+    // Journal dédié au pruning : sert aussi de compteur pour le plafond hebdo.
+    if (pruneMerge && (pruneMerge.decisions.length > 0 || pruneMerge.analyzed > 0)) {
+      await supabase.from('seo_agent_logs').insert({
+        page_type: 'site',
+        page_slug: 'crawlers.fr',
+        page_url: 'https://crawlers.fr',
+        action_type: 'content_pruning',
+        changes_summary: `Pruning/consolidation : ${pruneMerge.pruned} dépublication(s), ${pruneMerge.merged} consolidation(s) sur ${pruneMerge.analyzed} pages analysées.`,
+        changes_detail: pruneMerge,
+        confidence_score: 100,
+        status: pruneMerge.pruned + pruneMerge.merged > 0 ? 'applied' : 'pending_review',
+        model_used: 'deterministic',
+        tokens_used: { input: 0, output: 0 },
+      }).then(({ error }: any) => { if (error) console.error('[AGENT-SEO] Log pruning error:', error); });
+    }
+
+
     await trackTokenUsage('agent-seo', 'google/gemini-3-flash-preview', { prompt_tokens: tokens.input, completion_tokens: tokens.output, total_tokens: tokens.input + tokens.output }).catch(() => {});
 
     console.log(`[AGENT-SEO] ✅ ${target.slug} — score ${scoreBefore.overall} → ${estimatedScoreAfter} (confiance: ${confidence}%) | ${parsedImprovements?.improvements?.length || 0} améliorations | ${scoreBefore.issues.length} problèmes`);
@@ -823,6 +869,15 @@ Deno.serve(handleRequest(async (req) => {
       proposals_created: proposalsCreated,
       page_drafts_created: pageDraftsCreated,
       pages_auto_unpublished: unpublishedCount,
+      pruning: pruneMerge ? {
+        analyzed: pruneMerge.analyzed,
+        pruned: pruneMerge.pruned,
+        merged: pruneMerge.merged,
+        workbench_findings: pruneMerge.workbenchFindings,
+        weekly_cap_reached: pruneMerge.weeklyCapReached,
+        decisions: pruneMerge.decisions.slice(0, 20),
+      } : null,
+
 
       priority_fixes: parsedImprovements?.priority_fixes || [],
       status: logEntry.status,
