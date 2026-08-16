@@ -73,6 +73,16 @@ export interface LovableAIOptions {
   noFallback?: boolean;
   /** Name of the calling edge function (for usage tracking) */
   callerFunction?: string;
+  /**
+   * Garde-fou d'entrée (Lot 2) : contexte de page utile requis. Si le texte
+   * fourni est vide ou trop court, l'appel est refusé (InsufficientContextError)
+   * au lieu de laisser le modèle inventer.
+   */
+  requireContext?: { text: string | null | undefined; minChars?: number; label?: string };
+  /** Désactive le nettoyage des fuites de gabarit en sortie (déconseillé). */
+  skipLeakFilter?: boolean;
+  /** N'injecte pas l'année courante dans le prompt système. */
+  skipYearInjection?: boolean;
 }
 
 export interface LovableAIResponse {
