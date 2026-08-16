@@ -38,6 +38,10 @@ export interface VerdictSignals {
   contentGapKeywords?: number | null;
   /** Doublon d'hôte (www vs apex) sans redirection 301. */
   hostDuplication?: boolean | null;
+  /** Autorité de domaine (DataForSEO) — 0 / null si non mesurée. */
+  authorityScore?: number | null;
+  referringDomains?: number | null;
+  backlinkToxicity?: number | null;
   /** Blocages critiques restants dans le plan consolidé. */
   criticalCount?: number | null;
 }
