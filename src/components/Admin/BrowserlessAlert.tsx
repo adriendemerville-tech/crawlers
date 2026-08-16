@@ -192,26 +192,36 @@ export function BrowserlessAlert() {
             )}
           </p>
 
-          {/* Fly.io fallback status */}
-          <div className={`flex items-center gap-1.5 text-xs font-medium mt-1.5 ${flyActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive/70'}`}>
-            {flyActive ? (
+          {/* Spider.cloud fallback status */}
+          <div className={`flex items-center gap-1.5 text-xs font-medium mt-1.5 ${spiderActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive/70'}`}>
+            {spiderActive ? (
               <>
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 {t3(language,
-                  `✅ Fly.io Playwright a pris le relais — ${error.flyFallbackCount} rendu${error.flyFallbackCount > 1 ? 's' : ''} réussi${error.flyFallbackCount > 1 ? 's' : ''}`,
-                  `✅ Fly.io Playwright took over — ${error.flyFallbackCount} successful render${error.flyFallbackCount > 1 ? 's' : ''}`,
-                  `✅ Fly.io Playwright tomó el relevo — ${error.flyFallbackCount} renderizado${error.flyFallbackCount > 1 ? 's' : ''} exitoso${error.flyFallbackCount > 1 ? 's' : ''}`
+                  `Spider.cloud a pris le relais — ${error.spiderFallbackCount} rendu${error.spiderFallbackCount > 1 ? 's' : ''} réussi${error.spiderFallbackCount > 1 ? 's' : ''}`,
+                  `Spider.cloud took over — ${error.spiderFallbackCount} successful render${error.spiderFallbackCount > 1 ? 's' : ''}`,
+                  `Spider.cloud tomó el relevo — ${error.spiderFallbackCount} renderizado${error.spiderFallbackCount > 1 ? 's' : ''} exitoso${error.spiderFallbackCount > 1 ? 's' : ''}`
                 )}
-                {error.flyFallbackLastAt && (
+                {error.spiderFallbackLastAt && (
                   <span className="text-muted-foreground font-normal ml-1">
-                    ({t3(language, 'dernier', 'last', 'último')} {new Date(error.flyFallbackLastAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })})
+                    ({t3(language, 'dernier', 'last', 'último')} {new Date(error.spiderFallbackLastAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })})
                   </span>
                 )}
               </>
             ) : (
-              <FlyForceButton language={language} onSuccess={fetchErrors} />
+              <>
+                <XCircle className="h-3.5 w-3.5" />
+                <span>
+                  {t3(language,
+                    'Spider.cloud — aucun rendu de secours détecté sur la dernière heure',
+                    'Spider.cloud — no fallback renders detected in the last hour',
+                    'Spider.cloud — sin renderizados de respaldo en la última hora'
+                  )}
+                </span>
+              </>
             )}
           </div>
+
 
           <p className="text-xs text-muted-foreground">
             {t3(language, 'Dernier incident', 'Last incident', 'Último incidente')} : {new Date(error.lastAt).toLocaleString(locale)}
