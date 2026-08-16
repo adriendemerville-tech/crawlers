@@ -430,6 +430,7 @@ ${head}
 </head>
 <body>
 ${cover}
+${globalSummary}
 ${sharedSection}
 ${sections}
 ${disclosureSection}
