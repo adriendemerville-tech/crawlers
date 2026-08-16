@@ -379,10 +379,24 @@ export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: s
        </section>`
     : '';
 
+  const metas = splits.map(s => s.meta).filter((m): m is PageMeta => Boolean(m));
+  const domainVerdict = splits.map(s => s.domainVerdict).find(Boolean) || null;
+  const globalSummary = mutualised
+    ? buildGlobalSummary(domain, metas, domainVerdict, parts.length)
+    : '';
+
   const sections = parts
     .map((p, i) => {
       const split = splits[i];
-      const content = split.tagged ? split.pageBlocks.join('\n') : extractBody(p.html);
+      // La conclusion intermédiaire de l'URL ouvre toujours sa fiche. La synthèse
+      // exécutive de périmètre page est retirée : son verdict domaine est remonté
+      // dans la synthèse globale, ses scores sont dans la conclusion intermédiaire.
+      const hasVerdict = split.pageBlocks.some(b => b.id === 'page-verdict');
+      const ordered = [
+        ...split.pageBlocks.filter(b => b.id === 'page-verdict'),
+        ...split.pageBlocks.filter(b => b.id !== 'page-verdict' && !(hasVerdict && b.id === 'summary')),
+      ];
+      const content = split.tagged ? ordered.map(b => b.html).join('\n') : extractBody(p.html);
       return `
       <section class="marina-batch-part" style="page-break-before:always;">
         <div style="padding:24px 32px 0 32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
