@@ -234,7 +234,7 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
         console.log(`[renderPage] ⚠️ Browserless error: ${response.status}`);
         await logBrowserlessError(response.status, `HTTP ${response.status}`, url);
         if (response.status === 429 || response.status >= 500) {
-          return await renderWithFlyThenSpider(url);
+          return await renderFallback(url);
         }
         return null;
       }
@@ -242,9 +242,9 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
       const msg = err instanceof Error ? err.message : String(err);
       console.log('[renderPage] ⚠️ Browserless failed:', msg);
       await logBrowserlessError(0, msg, url);
-      return await renderWithFlyThenSpider(url);
+      return await renderFallback(url);
     }
-  }, `renderPage:${url}`) ?? await renderWithFlyThenSpider(url);
+  }, `renderPage:${url}`) ?? await renderFallback(url);
 }
 
 /**
@@ -489,7 +489,7 @@ export async function fetchAndRenderPage(
       rendered = await renderWithBrowserless(url, renderingKey);
     } else {
       console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured — going straight to Fly.io/Spider');
-      rendered = await renderWithFlyThenSpider(url);
+      rendered = await renderFallback(url);
     }
 
     // Tier 2: Spider.cloud safety net (Browserless returned null without triggering a fallback)
