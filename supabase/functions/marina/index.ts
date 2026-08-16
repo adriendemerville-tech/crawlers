@@ -2847,6 +2847,13 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         throw new Error('Phase 2: intermediate data not found — phase 1 may have failed');
       }
 
+      // Un crawl long (ou une reprise après kill) peut dépasser la fenêtre
+      // initiale : on repousse l'expiration à chaque tour pour que les données
+      // de phase 1 restent disponibles jusqu'à la fin du pipeline.
+      await sb.from('audit_cache').update({
+        expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
+      }).eq('cache_key', `marina_intermediate_${jobId}`);
+
       const { domain, detectedLang } = cached.result_data as any;
 
       // ─── Attente du crawl découpée en tours courts ───
