@@ -251,10 +251,35 @@ export function buildStrategicVerdict(
     t(`Après analyse, il ressort de notre audit que ${posture}`, `After analysis, our audit finds that ${posture}`, `Tras el análisis, nuestra auditoría concluye que ${posture}`),
   ];
   if (seo.length) {
+    // L'amorce SEO suit la posture mesurée : « rationaliser » ne vaut que pour un
+    // site en surproduction (volume + redondance), pas pour un périmètre restreint.
+    const seoOpening = volumeStrategy
+      ? t(
+          `doit désormais réfléchir à une stratégie de rationalisation de sa présence en ligne`,
+          `should now rationalise its online presence`,
+          `debe racionalizar su presencia en línea`,
+        )
+      : narrow
+      ? t(
+          `doit d'abord élargir son périmètre éditorial avant d'espérer un gain de volume`,
+          `should first widen its editorial perimeter before expecting volume gains`,
+          `debe primero ampliar su perímetro editorial`,
+        )
+      : wideThin
+      ? t(
+          `doit consolider en profondeur les pages déjà en place plutôt qu'en produire de nouvelles`,
+          `should deepen the pages already in place rather than produce new ones`,
+          `debe consolidar en profundidad las páginas existentes`,
+        )
+      : t(
+          `doit concentrer son effort sur les pages existantes à plus fort potentiel`,
+          `should focus its effort on the highest-potential existing pages`,
+          `debe concentrar su esfuerzo en las páginas existentes con más potencial`,
+        );
     sentences.push(t(
-      `En SEO, ${domain} doit désormais réfléchir à une stratégie de rationalisation de sa présence en ligne : ${list(seo)}.`,
-      `On SEO, ${domain} should now rationalise its online presence: ${list(seo)}.`,
-      `En SEO, ${domain} debe racionalizar su presencia en línea: ${list(seo)}.`,
+      `En SEO, ${domain} ${seoOpening} : ${list(seo)}.`,
+      `On SEO, ${domain} ${seoOpening}: ${list(seo)}.`,
+      `En SEO, ${domain} ${seoOpening}: ${list(seo)}.`,
     ));
   }
   if (geoLevers.length) {
