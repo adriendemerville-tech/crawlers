@@ -158,22 +158,36 @@ export function MarinaConsoleTab() {
 
   useEffect(() => { loadKeys(); }, [loadKeys]);
 
-  useEffect(() => {
+  const loadJobs = useCallback(async () => {
     if (!user) return;
-    const loadJobs = async () => {
-      setJobsLoading(true);
-      const { data } = await supabase
-        .from('async_jobs')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('function_name', 'marina')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      setJobs(data || []);
-      setJobsLoading(false);
-    };
-    loadJobs();
+    const { data } = await supabase
+      .from('async_jobs')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('function_name', 'marina')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    setJobs(data || []);
+    setJobsLoading(false);
   }, [user]);
+
+  useEffect(() => { loadJobs(); }, [loadJobs]);
+
+  // Un job "en cours" reste affiché tant qu'il n'est ni terminé ni trop ancien
+  // (au-delà de 45 min, un statut bloqué côté backend n'est plus considéré actif).
+  const runningJobs = jobs.filter(j => {
+    if (!isRunningStatus(j.status)) return false;
+    const started = j.created_at ? new Date(j.created_at).getTime() : 0;
+    return !started || Date.now() - started < 45 * 60 * 1000;
+  });
+
+  // Rafraîchissement uniquement quand un audit tourne
+  useEffect(() => {
+    if (runningJobs.length === 0) return;
+    const id = setInterval(loadJobs, 10000);
+    return () => clearInterval(id);
+  }, [runningJobs.length, loadJobs]);
+
 
   const createKey = async () => {
     if (!user || newServices.filter(s => DATA_SERVICES.includes(s)).length === 0) return;
