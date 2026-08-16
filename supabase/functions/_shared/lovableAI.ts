@@ -201,6 +201,20 @@ async function callGateway(
  * Call Lovable AI Gateway with automatic OpenRouter fallback and usage tracking.
  */
 export async function callLovableAI(opts: LovableAIOptions): Promise<LovableAIResponse> {
+  // ═══ GARDE-FOU D'ENTRÉE (Lot 2) : pas de contexte utile → pas d'appel ═══
+  if (opts.requireContext) {
+    const min = opts.requireContext.minChars ?? 300;
+    const chars = usefulTextLength(opts.requireContext.text);
+    if (chars < min) {
+      console.warn(`[lovableAI] Appel refusé — contexte insuffisant (${chars}/${min}) pour ${opts.requireContext.label || opts.callerFunction || 'module'}`);
+      throw new InsufficientContextError(opts.requireContext.label || opts.callerFunction || 'module', chars, min);
+    }
+  }
+  // ═══ Année courante injectée dans le prompt système (défaut 19) ═══
+  if (opts.system && !opts.skipYearInjection) {
+    opts = { ...opts, system: injectCurrentYear(opts.system) };
+  }
+
   const model = opts.model ?? DEFAULT_MODEL;
   const openRouterKey = getOpenRouterKey();
   const allowFallback = !opts.noFallback;
