@@ -386,8 +386,11 @@ export async function runPruneMergePass(sb: any, identity?: SiteIdentity | null)
       .filter((c) => c.decision !== 'keep')
       .sort((a, b) => {
         if (a.decision !== b.decision) return a.decision === 'merge' ? -1 : 1;
-        return (b.thinScore + b.impressions90d === 0 ? 1 : 0) - (a.thinScore + a.impressions90d === 0 ? 1 : 0);
-      });
+        // Les pages les plus pauvres et les moins visibles d'abord.
+        return (b.thinScore - a.thinScore) || (a.impressions90d - b.impressions90d);
+      })
+      // Anti-bruit : au plus MAX_FINDINGS_PER_RUN constats poussés au Workbench.
+      .slice(0, MAX_FINDINGS_PER_RUN);
 
     for (const c of actionable) {
       // Le pruning sans preuve GSC est interdit ; la consolidation de doublons
