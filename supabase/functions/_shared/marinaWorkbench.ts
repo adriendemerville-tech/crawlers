@@ -23,7 +23,7 @@
  */
 
 import type { SectionTopPriorities, RawFinding, Severity } from './topPriorities.ts';
-import { normalizeSeverity } from './topPriorities.ts';
+import { normalizeSeverity, splitLongTitle } from './topPriorities.ts';
 
 type SectionKey = SectionTopPriorities['section'];
 
