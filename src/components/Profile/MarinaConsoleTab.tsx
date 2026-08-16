@@ -94,30 +94,37 @@ export function MarinaConsoleTab() {
   const [reports, setReports] = useState<any[]>([]);
   const [reportsLoading, setReportsLoading] = useState(true);
 
+  const [openingId, setOpeningId] = useState<string | null>(null);
+
+  // Source de vérité : les jobs Marina de l'utilisateur (UI + API + reprises),
+  // et non plus seulement les rapports archivés côté navigateur.
   const loadReports = useCallback(async () => {
     if (!user) return;
     setReportsLoading(true);
-    const { data } = await supabase
-      .from('saved_reports')
-      .select('id, title, url, report_data, created_at')
-      .eq('user_id', user.id)
-      .eq('report_type', 'marina' as any)
-      .eq('is_archived', false)
-      .order('created_at', { ascending: false })
-      .limit(50);
-    setReports(data || []);
+    try {
+      const audits = await listMyMarinaAudits();
+      setReports(audits.filter(a => a.hasReport));
+    } catch (e: any) {
+      toast.error(e?.message || 'Erreur de chargement des rapports Marina');
+      setReports([]);
+    }
     setReportsLoading(false);
   }, [user]);
 
   useEffect(() => { loadReports(); }, [loadReports]);
 
-  const deleteReport = async (id: string) => {
-    const { error } = await supabase.from('saved_reports').delete().eq('id', id);
-    if (!error) {
-      toast.success(t3(language, 'Rapport supprimé', 'Report deleted', 'Informe eliminado'));
-      loadReports();
+  const openReport = async (jobId: string) => {
+    setOpeningId(jobId);
+    try {
+      const { url } = await getMyMarinaReportUrl({ data: { jobId } });
+      if (url) window.open(url, '_blank', 'noopener');
+      else toast.error(t3(language, 'Rapport indisponible', 'Report unavailable', 'Informe no disponible'));
+    } catch (e: any) {
+      toast.error(e?.message || 'Erreur');
     }
+    setOpeningId(null);
   };
+
 
   const loadKeys = useCallback(async () => {
     if (!user) return;
