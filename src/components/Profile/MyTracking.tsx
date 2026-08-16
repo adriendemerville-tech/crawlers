@@ -862,9 +862,9 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                                 impressions: row.impressions,
                               }));
                               return (
-                                <div className="h-[18.5rem] w-[108%] -ml-[2%]">
-                                  <ResponsiveContainer width="100%" height="100%">
-                                    <ComposedChart data={chartRows} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
+                                 <div className="h-[18.5rem] w-full min-w-0 overflow-hidden">
+                                   <ResponsiveContainer width="100%" height="100%">
+                                     <ComposedChart data={chartRows} margin={{ left: 4, right: 12, top: 5, bottom: 5 }}>
                                       <defs>
                                         <linearGradient id="gscClicksStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="hsl(var(--primary))" /><stop offset="100%" stopColor="hsl(var(--primary))" /></linearGradient>
                                         <linearGradient id="gscClicksFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} /><stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} /></linearGradient>
