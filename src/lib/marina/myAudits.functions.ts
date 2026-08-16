@@ -27,7 +27,7 @@ export const listMyMarinaAudits = createServerFn({ method: 'GET' })
         createdAt: j.created_at as string,
         url: (payload.url || result.url || result.domain || '') as string,
         domain: (result.domain || payload.url || '') as string,
-        scanMode: (payload.scan_mode || payload.scanMode || null) as string | null,
+        scanMode: normalizeScanMode(payload.scan_mode ?? payload.scanMode ?? result.scan_mode),
         multipage: Boolean(payload.urls?.length || payload.multipage),
         viaApi: Boolean(payload.via_api || payload.source === 'api' || payload.api_key_id),
         hasReport: Boolean(result.report_path),
