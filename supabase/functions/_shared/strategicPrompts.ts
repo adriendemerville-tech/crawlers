@@ -323,7 +323,7 @@ RÈGLES:
 - quotability: phrases factuelles autonomes citables. +33pts/citation.
 - summary_resilience: résumé ≤10 mots. Score similarité H1/contenu.
 - lexical_footprint: jargonRatio+concreteRatio=100. ATTENTION: "jargon" = UNIQUEMENT les formules vides/corporate sans substance.
-- expertise_sentiment: 1(générique/IA) à 5(expert terrain). COHÉRENCE TONALE: ton générique/IA + prétention d'expertise → max 2. social_proof: vérifie la présence de témoignages/études de cas (has_testimonials), d'avis clients (has_reviews), de liens vers des réalisations concrètes/portfolio (has_portfolio_links). details = résumé de ce qui a été trouvé ou manque.
+- expertise_sentiment: 1(générique/IA) à 5(expert terrain). COHÉRENCE TONALE: ton générique/IA + prétention d'expertise → max 2. social_proof: RECOPIE le bloc « PREUVE SOCIALE (mesure déterministe) » fourni en contexte. Tu n'as PAS le droit de décider has_reviews : statut "confirmed" → has_reviews=true ; statut "inconclusive" → has_reviews=null et details précise que la mesure n'a pas pu être établie. Ton rôle se limite à qualifier la mise en valeur des avis (visibilité, balisage AggregateRating, fraîcheur).
 - red_team: 3 failles/objections client sceptique. INCLURE le paradoxe vendeur si détecté.
 - missing_terms: MIN 3 termes clés que les concurrents SERP utilisent mais absents du site.
 - semantic_density: comparer la richesse sémantique du site vs les 3 premiers concurrents SERP.
