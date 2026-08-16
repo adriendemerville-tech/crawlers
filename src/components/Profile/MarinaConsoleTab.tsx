@@ -76,6 +76,23 @@ function computeBundleCost(services: MarinaService[]): number {
   return services.reduce((sum, s) => sum + (SERVICE_META[s]?.credits || 0), 0);
 }
 
+const RUNNING_STATUSES = ['pending', 'queued', 'processing', 'running', 'in_progress'];
+const isRunningStatus = (status?: string | null) =>
+  !!status && RUNNING_STATUSES.includes(status);
+
+/** Domaine lisible d'un job Marina, pour la bannière et l'historique. */
+function jobLabel(job: any): string {
+  const payload = (job?.input_payload && typeof job.input_payload === 'object') ? job.input_payload : {};
+  const raw = payload.url || payload.urls?.[0] || job?.result_data?.domain || '';
+  if (!raw) return '';
+  try {
+    return new URL(raw.startsWith('http') ? raw : `https://${raw}`).hostname.replace(/^www\./, '');
+  } catch {
+    return String(raw);
+  }
+}
+
+
 export function MarinaConsoleTab() {
   const { user } = useAuth();
   const { balance, isAgencyPro } = useCredits();
