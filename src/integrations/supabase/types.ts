@@ -5293,6 +5293,39 @@ export type Database = {
           },
         ]
       }
+      external_render_cache: {
+        Row: {
+          created_at: string
+          engine: string
+          expires_at: string
+          html: string
+          id: string
+          updated_at: string
+          url: string
+          url_key: string
+        }
+        Insert: {
+          created_at?: string
+          engine: string
+          expires_at?: string
+          html: string
+          id?: string
+          updated_at?: string
+          url: string
+          url_key: string
+        }
+        Update: {
+          created_at?: string
+          engine?: string
+          expires_at?: string
+          html?: string
+          id?: string
+          updated_at?: string
+          url?: string
+          url_key?: string
+        }
+        Relationships: []
+      }
       false_positive_domains: {
         Row: {
           created_at: string
