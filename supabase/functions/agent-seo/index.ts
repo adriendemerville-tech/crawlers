@@ -380,6 +380,84 @@ async function createCodeProposals(supabase: any, target: PageTarget, score: Seo
   }
 }
 
+// ─── Autonomie contenu v2 : plafond 1 publication / 7 jours ───────────
+// Le code reste sous validation humaine (cto_code_proposals en 'pending').
+async function autonomousPublishAvailable(supabase: any): Promise<boolean> {
+  const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+  const { count, error } = await supabase
+    .from('seo_page_drafts')
+    .select('id', { count: 'exact', head: true })
+    .eq('domain', 'crawlers.fr')
+    .eq('status', 'published')
+    .contains('generation_context', { source: 'agent-seo' })
+    .gte('published_at', since);
+  if (error) {
+    console.error('[AGENT-SEO] Plafond hebdo indéterminé, repli sur brouillon:', error);
+    return false;
+  }
+  const used = count || 0;
+  console.log(`[AGENT-SEO] Plafond autonome hebdo: ${used}/1 utilisé`);
+  return used < 1;
+}
+
+// ─── Dépublication automatique sur dégradation de signaux ─────────────
+async function autoUnpublishDegraded(supabase: any): Promise<number> {
+  try {
+    const cutoff = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+    const { data: pages } = await supabase
+      .from('seo_page_drafts')
+      .select('id, title, target_keyword, published_at')
+      .eq('domain', 'crawlers.fr')
+      .eq('status', 'published')
+      .contains('generation_context', { source: 'agent-seo' })
+      .lt('published_at', cutoff)
+      .limit(20);
+
+    if (!pages?.length) return 0;
+
+    const d30 = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    const d60 = new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    let reverted = 0;
+
+    for (const page of pages) {
+      if (!page.target_keyword) continue;
+      const { data: rows } = await supabase
+        .from('gsc_daily_positions')
+        .select('position, clicks, date_val')
+        .eq('domain', 'crawlers.fr')
+        .eq('query', page.target_keyword)
+        .gte('date_val', d60);
+      if (!rows?.length) continue;
+
+      const recent = rows.filter((r: any) => r.date_val >= d30);
+      const previous = rows.filter((r: any) => r.date_val < d30);
+      if (recent.length < 5 || previous.length < 5) continue;
+
+      const avg = (arr: any[], k: string) => arr.reduce((s, r) => s + Number(r[k] || 0), 0) / arr.length;
+      const posDelta = avg(recent, 'position') - avg(previous, 'position'); // positif = dégradation
+      const clicksRecent = recent.reduce((s: number, r: any) => s + Number(r.clicks || 0), 0);
+
+      if (posDelta > 5 && clicksRecent <= 1) {
+        await supabase
+          .from('seo_page_drafts')
+          .update({
+            status: 'draft',
+            review_note: `Dépublication automatique (règle v2) : position moyenne dégradée de ${posDelta.toFixed(1)} rangs sur 30 j et ${clicksRecent} clic(s) sur "${page.target_keyword}".`,
+          })
+          .eq('id', page.id);
+        console.warn(`[AGENT-SEO] ⬇️ Dépubliée: "${page.title}" (Δpos +${posDelta.toFixed(1)}, clics ${clicksRecent})`);
+        reverted++;
+      }
+    }
+    return reverted;
+  } catch (e) {
+    console.error('[AGENT-SEO] Erreur dépublication auto:', e);
+    return 0;
+  }
+}
+
+
+
 // ─── Main handler ─────────────────────────────────────────────────────
 Deno.serve(handleRequest(async (req) => {
   if (req.method === 'OPTIONS') {
