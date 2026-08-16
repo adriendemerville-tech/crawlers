@@ -3836,11 +3836,36 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
         await updateProgress(90, 'generating_report');
 
+        // ─── Conclusion intermédiaire PROPRE À CETTE URL ───
+        // Le crawl et le graphe de cocon sont mutualisés au niveau du domaine,
+        // mais le score technique, le score GEO et les correctifs de maillage
+        // rendus ici ne concernent que l'URL auditée (0 token LLM).
+        const pageTech100 = Number(expertData?.totalScore || 0) > 0
+          ? Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 200) || 200)) * 100)
+          : null;
+        const pageGeo100 = strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null;
+        const urlKey = pageKey(url);
+        const pageScopedActions = (consolidatedPlan || []).filter((i: any) => {
+          const target = i?.target_url ? String(i.target_url) : '';
+          return target ? pageKey(target) === urlKey : false;
+        });
+        const pageVerdict = buildPageVerdictHTML(detectedLang, domain, url, {
+          techScore: pageTech100,
+          geoScore: pageGeo100,
+          criticalCount: (consolidatedPlan || []).filter((i: any) => i.severity === 'critical').length,
+          pageActions: (pageScopedActions.length ? pageScopedActions : (consolidatedPlan || []))
+            .map((i: any) => ({ severity: i.severity, title: splitLongTitle(String(i.title || ''), '').title })),
+          cocoonData: cocoonResult,
+        });
+        const cocoonPageHTML = buildCocoonPageFocusHTML(cocoonResult, url, detectedLang);
+
         html = compileMarinaReport(
           {
             crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML,
             indexation: indexationHTML || undefined, consolidatedPlan: consolidatedPlanHTML,
             ownerPerformance: ownerPerformanceHTML || undefined,
+            pageVerdict: pageVerdict.html,
+            cocoonPage: cocoonPageHTML || undefined,
             visual: buildVisualEvidenceHtml(visualCapture, detectedLang),
             summary: buildExecutiveSummaryHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
