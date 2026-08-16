@@ -540,9 +540,9 @@ export function MarinaConsoleTab() {
           <CardTitle className="text-base">{t3(language, 'Rapports Marina enregistrés', 'Saved Marina reports', 'Informes Marina guardados')}</CardTitle>
           <CardDescription className="text-xs">
             {t3(language,
-              'Chaque rapport généré alors que vous êtes connecté est archivé ici automatiquement',
-              'Every report generated while you are signed in is archived here automatically',
-              'Cada informe generado mientras está conectado se archiva aquí automáticamente'
+              'Tous vos audits Marina terminés, qu\'ils soient lancés depuis l\'interface ou via l\'API',
+              'All your completed Marina audits, launched from the UI or via the API',
+              'Todas sus auditorías Marina completadas, desde la interfaz o vía API'
             )}
           </CardDescription>
         </CardHeader>
@@ -563,33 +563,40 @@ export function MarinaConsoleTab() {
             </div>
           ) : (
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {reports.map((report) => {
-                const rd = (report.report_data || {}) as any;
-                const viewUrl = rd.report_view_url || rd.report_url || null;
-                return (
-                  <div key={report.id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm truncate">{report.title}</p>
-                      <p className="text-[10px] text-muted-foreground truncate font-mono">{report.url}</p>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {rd.scan_mode?.mode && (
-                        <Badge variant="outline" className="text-[10px]">{rd.scan_mode.mode}</Badge>
-                      )}
-                      {viewUrl && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(viewUrl, '_blank', 'noopener')} title={t3(language, 'Ouvrir', 'Open', 'Abrir')}>
-                          <ExternalLink className="h-3 w-3" />
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteReport(report.id)} title={t3(language, 'Supprimer', 'Delete', 'Eliminar')}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
+              {reports.map((report: any) => (
+                <div key={report.id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm truncate">{report.domain || report.url || '—'}</p>
+                    <p className="text-[10px] text-muted-foreground truncate font-mono">
+                      {new Date(report.createdAt).toLocaleString(language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'fr-FR')}
+                      {report.globalScore !== null ? ` · ${report.globalScore}/100` : ''}
+                    </p>
                   </div>
-                );
-              })}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {report.scanMode && (
+                      <Badge variant="outline" className="text-[10px]">{report.scanMode}</Badge>
+                    )}
+                    {report.viaApi && (
+                      <Badge variant="outline" className="text-[10px]">API</Badge>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={openingId === report.id}
+                      onClick={() => openReport(report.id)}
+                      title={t3(language, 'Ouvrir', 'Open', 'Abrir')}
+                    >
+                      {openingId === report.id
+                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        : <ExternalLink className="h-3 w-3" />}
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
+
         </CardContent>
       </Card>
 
