@@ -11,7 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from '@/lib/router-compat';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
-import { listMyMarinaAudits, getMyMarinaReportUrl } from '@/lib/marina/myAudits.functions';
+import { listMyMarinaAudits, getMyMarinaReportUrl, deleteMyMarinaAudit } from '@/lib/marina/myAudits.functions';
 import { normalizeScanMode } from '@/lib/marina/scanMode';
 
 
@@ -98,6 +98,7 @@ export function MarinaConsoleTab() {
   const [reportsLoading, setReportsLoading] = useState(true);
 
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Source de vérité : les jobs Marina de l'utilisateur (UI + API + reprises),
   // et non plus seulement les rapports archivés côté navigateur.
@@ -127,6 +128,20 @@ export function MarinaConsoleTab() {
     }
     setOpeningId(null);
   };
+
+  const deleteReport = async (jobId: string) => {
+    setDeletingId(jobId);
+    try {
+      await deleteMyMarinaAudit({ data: { jobId } });
+      setReports(prev => prev.filter(r => r.id !== jobId));
+      toast.success(t3(language, 'Rapport supprimé', 'Report deleted', 'Informe eliminado'));
+    } catch (e: any) {
+      toast.error(e?.message || 'Erreur de suppression');
+    }
+    setDeletingId(null);
+  };
+
+
 
 
   const loadKeys = useCallback(async () => {
@@ -567,7 +582,7 @@ export function MarinaConsoleTab() {
               {reports.map((report: any) => {
                 const scanMode = normalizeScanMode(report.scanMode);
                 return (
-                <div key={report.id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
+                <div key={report.id} className="group flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm truncate">{report.domain || report.url || '—'}</p>
                     <p className="text-[10px] text-muted-foreground truncate font-mono">
@@ -593,6 +608,18 @@ export function MarinaConsoleTab() {
                       {openingId === report.id
                         ? <Loader2 className="h-3 w-3 animate-spin" />
                         : <ExternalLink className="h-3 w-3" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-destructive"
+                      disabled={deletingId === report.id}
+                      onClick={() => deleteReport(report.id)}
+                      title={t3(language, 'Supprimer', 'Delete', 'Eliminar')}
+                    >
+                      {deletingId === report.id
+                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        : <Trash2 className="h-3 w-3" />}
                     </Button>
                   </div>
                 </div>
