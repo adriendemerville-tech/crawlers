@@ -282,7 +282,28 @@ Deno.serve(handleRequest(async (req) => {
     const humanBrandName = isConfidentBrand ? resolvedEntityName : humanizeBrandName(domainSlug);
     console.log(`🎯 Entité: "${resolvedEntityName}" (${(brandConfidence * 100).toFixed(0)}%)`);
 
-    const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData, rankingOverview, authorityData, founderInfo, llmData: effectiveToolsData.llm, gmbData, facebookPageInfo, preCrawlData: preCrawlResult || null };
+    // ═══ PREUVE SOCIALE DÉTERMINISTE (Lot 1) ═══
+    // Couche 1 (HTML) + couche 2 (fiche Google / Places). Le LLM ne pourra plus
+    // affirmer « aucun avis » quand des avis sont mesurés.
+    let socialProof: SocialProofResult;
+    if (useCache && cachedContext?.socialProof) {
+      socialProof = cachedContext.socialProof as SocialProofResult;
+    } else {
+      const layer2: SocialProofSignal[] = [...gmbToSocialProofSignals(gmbData)];
+      const layer1HasVolume = socialProofSignals.some((s) => typeof s.reviewCount === 'number' || typeof s.rating === 'number');
+      if (!isContentMode && !layer1HasVolume && layer2.length === 0) {
+        try {
+          layer2.push(...await fetchPlacesSocialProof(resolvedEntityName || humanBrandName, domainWithoutWww));
+        } catch { /* Places optionnel */ }
+      }
+      socialProof = resolveSocialProof({
+        pageContext: pageContentContext,
+        extraSignals: [...socialProofSignals, ...layer2],
+      });
+    }
+    console.log(`⭐ Preuve sociale: statut=${socialProof.status}, avis=${socialProof.reviewCount ?? 'n/a'}, note=${socialProof.rating ?? 'n/a'}, plateformes=${socialProof.platforms.join(',') || 'aucune'}`);
+
+    const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData, rankingOverview, authorityData, founderInfo, llmData: effectiveToolsData.llm, gmbData, facebookPageInfo, preCrawlData: preCrawlResult || null, socialProof };
 
     // ═══ CHECK DEADLINE ═══
     const remainingBeforeLLM = GLOBAL_DEADLINE - (Date.now() - startTime);
