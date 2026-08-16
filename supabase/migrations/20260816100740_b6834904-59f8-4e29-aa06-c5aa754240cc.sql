@@ -1,0 +1,1 @@
+DELETE FROM public.architect_workbench WHERE source_function='agent-seo' AND source_record_id LIKE 'prune_%';
