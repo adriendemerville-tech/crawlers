@@ -337,13 +337,17 @@ async function renderWithSpider(url: string): Promise<string | null> {
 }
 
 /**
- * Fly.io with automatic Spider.cloud fallback.
+ * Fallback renderer. Fly.io is DISABLED by default (service suspended: every call
+ * burned a 45s timeout before falling through). Set FLY_RENDER_ENABLED=true to re-arm it.
  */
-async function renderWithFlyThenSpider(url: string): Promise<string | null> {
-  const fly = await renderWithFlyPlaywright(url);
-  if (fly) return fly;
+async function renderFallback(url: string): Promise<string | null> {
+  if (Deno.env.get('FLY_RENDER_ENABLED') === 'true') {
+    const fly = await renderWithFlyPlaywright(url);
+    if (fly) return fly;
+  }
   return await renderWithSpider(url);
 }
+
 
 
 /**
