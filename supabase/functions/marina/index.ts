@@ -3756,7 +3756,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         );
 
 
-        const crawlHTML = generateCrawlSectionHTML(expertData, detectedLang, domain, url, crawlSnapshot, renderTopPrioritiesHTML(topSeo));
+        const crawlHTML = generateCrawlSectionHTML(
+          expertData, detectedLang, domain, url, crawlSnapshot,
+          renderTopPrioritiesHTML(topSeo),
+          hostDuplication ? buildHostDuplicationHTML(hostDuplication, domain) : '',
+        );
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
         const strategicHTML = generateStrategicSectionHTML(
           strategicData, detectedLang, domain, llmVisibilityData,
