@@ -94,9 +94,97 @@ function needsJSRendering(html: string, visibleText: string): boolean {
 }
 
 /**
+ * Internal auth-gated routes of crawlers.fr: rendering them is pointless
+ * (no session → empty shell → waitForSelector timeout → HTTP 500 + paid call for nothing).
+ */
+const AUTH_GATED_PATH_PATTERNS: RegExp[] = [
+  /^\/app(\/|$)/i,
+  /^\/cf-shield(\/|$)/i,
+  /^\/console(\/|$)/i,
+  /^\/auth(\/|$)/i,
+  /^\/admin(\/|$)/i,
+  /^\/profile(\/|$)/i,
+];
+
+const INTERNAL_HOSTS = ['crawlers.fr', 'www.crawlers.fr', 'crawlers.lovable.app'];
+
+export function isAuthGatedInternalUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase();
+    const isInternal = INTERNAL_HOSTS.includes(host) || host.endsWith('.lovable.app');
+    if (!isInternal) return false;
+    return AUTH_GATED_PATH_PATTERNS.some((re) => re.test(u.pathname));
+  } catch {
+    return false;
+  }
+}
+
+/** Canonical cache key: protocol/host-case/trailing-slash neutral. */
+function renderCacheKey(url: string): string {
+  try {
+    const u = new URL(url);
+    const path = u.pathname.replace(/\/+$/, '') || '/';
+    return `${u.hostname.toLowerCase().replace(/^www\./, '')}${path}${u.search}`;
+  } catch {
+    return url;
+  }
+}
+
+async function getCachedRender(url: string): Promise<string | null> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceKey) return null;
+  try {
+    const key = encodeURIComponent(renderCacheKey(url));
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/external_render_cache?url_key=eq.${key}&expires_at=gt.${new Date().toISOString()}&select=html&limit=1`,
+      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } },
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    const html = rows?.[0]?.html;
+    if (typeof html === 'string' && html.length > 500) {
+      console.log(`[renderPage] ♻️ Cache hit (24h) for ${url}`);
+      return html;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function setCachedRender(url: string, html: string, engine: string): Promise<void> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceKey || html.length < 500) return;
+  try {
+    await fetch(`${supabaseUrl}/rest/v1/external_render_cache?on_conflict=url_key`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        Prefer: 'resolution=merge-duplicates,return=minimal',
+      },
+      body: JSON.stringify({
+        url_key: renderCacheKey(url),
+        url,
+        html,
+        engine,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    });
+  } catch {
+    // Silent — cache is best effort
+  }
+}
+
+/**
  * Attempts to render a page using Browserless.io.
  * Returns rendered HTML or null on failure.
  */
+
 async function logBrowserlessError(statusCode: number, errorMessage: string, url: string): Promise<void> {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
