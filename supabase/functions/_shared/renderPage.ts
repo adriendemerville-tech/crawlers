@@ -104,6 +104,8 @@ const AUTH_GATED_PATH_PATTERNS: RegExp[] = [
   /^\/auth(\/|$)/i,
   /^\/admin(\/|$)/i,
   /^\/profile(\/|$)/i,
+  /^\/site-crawl(\/|$)/i,
+
 ];
 
 const INTERNAL_HOSTS = ['crawlers.fr', 'www.crawlers.fr', 'crawlers.lovable.app'];
