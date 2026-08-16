@@ -30,6 +30,7 @@ import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
 import { resolveScanMode, scanModeSentence, type ScanModeResolution } from '../_shared/marinaScanMode.ts';
 import { applyRoiWeighting, summarizeRoi, type RoiSummary } from '../_shared/roiWeighting.ts';
+import { buildPageVerdictHTML, buildCocoonPageFocusHTML, pageKey } from '../_shared/marinaPageVerdict.ts';
 
 import {
   fetchOwnerPerformanceData,
