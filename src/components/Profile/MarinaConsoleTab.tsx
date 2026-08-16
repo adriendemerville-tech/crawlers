@@ -98,6 +98,7 @@ export function MarinaConsoleTab() {
   const [reportsLoading, setReportsLoading] = useState(true);
 
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Source de vérité : les jobs Marina de l'utilisateur (UI + API + reprises),
   // et non plus seulement les rapports archivés côté navigateur.
