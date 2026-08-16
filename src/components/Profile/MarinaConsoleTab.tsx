@@ -258,6 +258,35 @@ export function MarinaConsoleTab() {
         )}
       </div>
 
+      {/* Bannière audit(s) Marina en cours */}
+      {runningJobs.length > 0 && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+              <p className="text-sm font-medium truncate">
+                {t3(language,
+                  `Audit Marina ${jobLabel(runningJobs[0])} en cours`,
+                  `Marina audit ${jobLabel(runningJobs[0])} in progress`,
+                  `Auditoría Marina ${jobLabel(runningJobs[0])} en curso`
+                )}
+                {typeof runningJobs[0].progress === 'number' ? ` · ${runningJobs[0].progress}%` : ''}
+              </p>
+            </div>
+            {runningJobs.length > 1 && (
+              <Badge className="bg-primary/15 text-primary border border-primary/40 text-[10px]">
+                {t3(language,
+                  `+${runningJobs.length - 1} autre${runningJobs.length > 2 ? 's' : ''} dans l'historique des appels`,
+                  `+${runningJobs.length - 1} more in call history`,
+                  `+${runningJobs.length - 1} más en el historial`
+                )}
+              </Badge>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+
       {/* Credit warning */}
       {balance <= 10 && (
         <Card className="border-amber-500/40 bg-amber-500/5">
