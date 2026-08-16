@@ -12,6 +12,13 @@
  *   const json = await callLovableAIJson<MyType>({ system: '...', user: '...' });
  */
 
+import {
+  InsufficientContextError, usefulTextLength, injectCurrentYear,
+  hasPromptLeak, stripPromptLeaks, stripPromptLeaksDeep,
+} from './llmGuards.ts';
+
+export { InsufficientContextError } from './llmGuards.ts';
+
 const GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const DEFAULT_MODEL = 'google/gemini-3-flash-preview';
