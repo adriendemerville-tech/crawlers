@@ -1102,7 +1102,7 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
 }
 
 // ─── Section 1: Crawl Report (standalone HTML) ───
-function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string, crawlSnapshot?: any, topHtml = ''): string {
+function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: string, url: string, crawlSnapshot?: any, topHtml = '', hostDupHtml = ''): string {
   const tr = getTranslations(lang);
   const scores = expertSeoData?.scores || {};
   const rawData = expertSeoData?.rawData || {};
