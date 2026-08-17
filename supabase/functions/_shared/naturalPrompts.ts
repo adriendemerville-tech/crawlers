@@ -137,7 +137,9 @@ const LOCAL_INELIGIBLE_BUSINESS_MODELS = new Set([
 
 const LOCAL_INELIGIBLE_ENTITY_TYPES = new Set(['saas', 'ecommerce', 'marketplace', 'media', 'blog']);
 
-const NON_LOCAL_AREA_RE = /\b(france|international|mondial|monde|europe|national|worldwide|global|en ligne|online|remote|à distance)\b/i;
+// « France » n'exclut le local que s'il est employé seul : « Île-de-France »
+// ou « Nouvelle-Aquitaine » restent des zones de chalandise valides.
+const NON_LOCAL_AREA_RE = /(?<![\w-])(france|international|mondial|monde|europe|national|worldwide|global|en ligne|online|remote|à distance)(?![\w-])/i;
 
 /** true si une question géolocalisée a un sens pour ce site. */
 export function isLocalQuestionRelevant(ctx: SiteContext): boolean {
@@ -271,6 +273,73 @@ function inferSectorFromDomain(domain: string, lang: PromptLang): string {
 }
 
 // ═══════════════════════════════════════════════
+// Lexique dérivé de la carte d'identité
+// Le mot employé dans la question doit correspondre à la nature de l'offre :
+// « outil » n'a de sens que pour un logiciel. Une entreprise classique se
+// cherche comme « entreprise / prestataire / artisan », sinon la mesure de
+// citabilité est faussée dès la question.
+// ═══════════════════════════════════════════════
+
+export interface PromptLexicon {
+  /** Groupe nominal indéfini : « un logiciel », « une entreprise »… */
+  seek: string;
+  /** Même notion au pluriel pour les comparatifs : « les meilleurs logiciels » */
+  comparePlural: string;
+  /** Nom nu employé après un déterminant interrogatif : « quel <noun> » */
+  noun: string;
+}
+
+type LexKey = 'software' | 'shop' | 'local_service' | 'agency' | 'nonprofit' | 'service';
+
+const LEXICONS: Record<PromptLang, Record<LexKey, PromptLexicon>> = {
+  fr: {
+    software:      { seek: 'un logiciel',    comparePlural: 'les meilleurs logiciels',    noun: 'logiciel' },
+    shop:          { seek: 'un site',        comparePlural: 'les meilleurs sites',        noun: 'site' },
+    local_service: { seek: 'une entreprise', comparePlural: 'les meilleures entreprises', noun: 'entreprise' },
+    agency:        { seek: 'un prestataire', comparePlural: 'les meilleurs prestataires', noun: 'prestataire' },
+    nonprofit:     { seek: 'une structure',  comparePlural: 'les meilleures structures',  noun: 'structure' },
+    service:       { seek: 'un prestataire', comparePlural: 'les meilleurs prestataires', noun: 'prestataire' },
+  },
+  en: {
+    software:      { seek: 'a software',       comparePlural: 'the best software',       noun: 'software' },
+    shop:          { seek: 'a website',       comparePlural: 'the best websites',       noun: 'website' },
+    local_service: { seek: 'a company',       comparePlural: 'the best companies',      noun: 'company' },
+    agency:        { seek: 'a provider',      comparePlural: 'the best providers',      noun: 'provider' },
+    nonprofit:     { seek: 'an organization', comparePlural: 'the best organizations',  noun: 'organization' },
+    service:       { seek: 'a provider',      comparePlural: 'the best providers',      noun: 'provider' },
+  },
+  es: {
+    software:      { seek: 'un software',     comparePlural: 'los mejores software',     noun: 'software' },
+    shop:          { seek: 'una tienda',      comparePlural: 'las mejores tiendas',      noun: 'tienda' },
+    local_service: { seek: 'una empresa',     comparePlural: 'las mejores empresas',     noun: 'empresa' },
+    agency:        { seek: 'un proveedor',    comparePlural: 'los mejores proveedores',  noun: 'proveedor' },
+    nonprofit:     { seek: 'una organización', comparePlural: 'las mejores organizaciones', noun: 'organización' },
+    service:       { seek: 'un proveedor',    comparePlural: 'los mejores proveedores',  noun: 'proveedor' },
+  },
+};
+
+function resolveLexKey(ctx: SiteContext): LexKey {
+  const model = (ctx.business_model || '').trim().toLowerCase();
+  const entity = (ctx.entity_type || '').trim().toLowerCase();
+
+  if (model.startsWith('saas')) return 'software';
+  if (model.startsWith('ecommerce') || model.startsWith('marketplace')) return 'shop';
+  if (model === 'service_local' || model === 'leadgen') return 'local_service';
+  if (model === 'service_agency') return 'agency';
+  if (model === 'nonprofit') return 'nonprofit';
+
+  if (entity === 'saas') return 'software';
+  if (entity === 'ecommerce' || entity === 'marketplace') return 'shop';
+  return 'service';
+}
+
+/** Lexique à employer dans les questions, dérivé de la carte d'identité. */
+export function resolveLexicon(ctx: SiteContext, lang: PromptLang = 'fr'): PromptLexicon {
+  return LEXICONS[lang][resolveLexKey(ctx)];
+}
+
+
+// ═══════════════════════════════════════════════
 // Prompt generation — French
 // ═══════════════════════════════════════════════
 
@@ -311,7 +380,12 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
       || sector
       || 'un service professionnel';
 
-    const noun = entityType === 'ecommerce' ? 'site' : entityType === 'saas' ? 'logiciel' : 'prestataire';
+    // Lexique dérivé de la carte d'identité : « logiciel » pour un SaaS,
+    // « entreprise » pour un service local, jamais « outil » pour une
+    // entreprise classique (la question serait hors sujet).
+    const lex = resolveLexicon(ctx, 'fr');
+    const noun = lex.noun;
+    const isShop = resolveLexKey(ctx) === 'shop';
 
     // ── Intentions contrastées : une seule question par intention, dans un
     // ordre qui garantit la diversité même quand maxPrompts vaut 3.
@@ -319,24 +393,31 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
     // 5. Prix        6. Preuve / avis
     const byIntent: Array<{ intent: string; text: string }> = [];
 
-    byIntent.push({ intent: 'discovery', text: `Je cherche un outil pour ${mainNeed}, t'as des idées ?` });
+    byIntent.push({
+      intent: 'discovery',
+      text: isShop
+        ? `Je cherche où acheter ${mainNeed}, t'as des idées ?`
+        : `Je cherche ${lex.seek} pour ${mainNeed}, t'as des idées ?`,
+    });
 
     byIntent.push({
       intent: 'comparison',
-      text: entityType === 'ecommerce'
+      text: isShop
         ? `Quels sites se valent pour acheter ${mainNeed} et lequel est le mieux ?`
-        : `Compare-moi les meilleures solutions pour ${mainNeed} : laquelle sort du lot ?`,
+        : `Compare-moi ${lex.comparePlural} pour ${mainNeed} : ${lex.comparePlural.startsWith('les meilleures') ? 'laquelle' : 'lequel'} sort du lot ?`,
     });
 
     if (localOk) {
-      byIntent.push({ intent: 'local', text: `Quel ${noun} pour ${mainNeed} à ${area} ?` });
+      const which = lex.seek.startsWith('une') ? 'Quelle' : 'Quel';
+      byIntent.push({ intent: 'local', text: `${which} ${noun} pour ${mainNeed} à ${area} ?` });
     } else if (target) {
-      byIntent.push({ intent: 'audience', text: `Je suis ${target} : quel ${noun} pour ${mainNeed} me conviendrait ?` });
+      byIntent.push({ intent: 'audience', text: `Je suis ${target} : ${lex.seek} pour ${mainNeed}, tu recommandes quoi ?` });
     }
 
     byIntent.push({ intent: 'alternative', text: `Quelles alternatives existent pour ${mainNeed}, à part les gros acteurs connus ?` });
 
-    byIntent.push({ intent: 'price', text: `Combien coûte ${mainNeed} et y a-t-il une option gratuite ou pas chère ?` });
+    byIntent.push({ intent: 'price', text: `Combien coûte ${mainNeed} et comment sont fixés les prix ?` });
+
 
     if (sector && sector !== mainNeed) {
       byIntent.push({ intent: 'sector', text: `J'ai besoin d'aide en ${sector}, tu recommandes quoi et pourquoi ?` });
@@ -407,17 +488,19 @@ function generatePromptsEn(ctx: SiteContext, season: string, maxPrompts: number)
       || sector
       || 'a professional service';
 
-    // Q1: Simple need
-    prompts.push(`I'm looking for a tool for ${mainNeed}, any ideas?`);
+    // Lexicon derived from the identity card ("software" only for a SaaS)
+    const lexEn = resolveLexicon(ctx, 'en');
+    const isShopEn = resolveLexKey(ctx) === 'shop';
 
-    // Q2: Simple alternative angle
-    if (entityType === 'ecommerce') {
-      prompts.push(`What's the best site to buy ${mainNeed}?`);
-    } else if (entityType === 'saas') {
-      prompts.push(`Do you know a good software for ${mainNeed}?`);
-    } else {
-      prompts.push(`What's the best option for ${mainNeed} right now?`);
-    }
+    // Q1: Simple need
+    prompts.push(isShopEn
+      ? `I'm looking for a place to buy ${mainNeed}, any ideas?`
+      : `I'm looking for ${lexEn.seek} for ${mainNeed}, any ideas?`);
+
+    // Q2: Comparison angle
+    prompts.push(isShopEn
+      ? `What's the best site to buy ${mainNeed}?`
+      : `Which of ${lexEn.comparePlural} for ${mainNeed} stands out?`);
 
     if (sector && sector !== mainNeed) {
       prompts.push(`I need help with ${sector}, what would you recommend?`);
@@ -468,8 +551,9 @@ function generatePromptsEs(ctx: SiteContext, season: string, maxPrompts: number)
     || sector
     || 'un servicio profesional';
 
-  prompts.push(`Busco una herramienta para ${mainNeed}, ¿alguna idea?`);
-  prompts.push(`¿Cuál es la mejor opción para ${mainNeed} ahora mismo?`);
+  const lexEs = resolveLexicon(ctx, 'es');
+  prompts.push(`Busco ${lexEs.seek} para ${mainNeed}, ¿alguna idea?`);
+  prompts.push(`¿Cuál de ${lexEs.comparePlural} para ${mainNeed} destaca más?`);
 
   if (sector && sector !== mainNeed) {
     prompts.push(`Necesito ayuda con ${sector}, ¿qué recomiendas?`);
