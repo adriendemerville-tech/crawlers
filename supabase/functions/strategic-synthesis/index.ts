@@ -408,23 +408,44 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       } catch { }
     }
 
-    // ── Deterministic founder injection (never let the LLM say "unknown" when we measured a name) ──
+    // ── Injection déterministe du porte-parole (le LLM ne décide ni du nom ni du rôle) ──
     if (founderInfo?.name && !founderInfo.geoMismatch) {
+      const ss = (parsedAnalysis as any).social_signals || {};
+      const tl = ss.thought_leadership || {};
+      const fi = founderInfo as any;
+      // Autorité dérivée de la corroboration mesurée, pas d'une estimation LLM.
+      const measuredAuthority = fi.confidence >= 0.8 && fi.platform === 'linkedin' ? 'high'
+        : fi.confidence >= 0.65 ? 'moderate' : 'low';
+      (parsedAnalysis as any).social_signals = {
+        ...ss,
+        thought_leadership: {
+          ...tl,
+          founder_name: founderInfo.name,
+          founder_role: fi.roleLabel || null,
+          founder_profile_url: founderInfo.profileUrl || null,
+          founder_platform: founderInfo.platform || null,
+          founder_confidence: fi.confidence ?? null,
+          founder_sources: fi.sources || [],
+          founder_resolution: fi.resolutionReason || null,
+          founder_alternatives: fi.alternatives || [],
+          founder_authority: measuredAuthority,
+        },
+      };
+    } else if ((founderInfo as any)?.resolutionStatus === 'unresolved') {
       const ss = (parsedAnalysis as any).social_signals || {};
       const tl = ss.thought_leadership || {};
       (parsedAnalysis as any).social_signals = {
         ...ss,
         thought_leadership: {
           ...tl,
-          founder_name: founderInfo.name,
-          founder_profile_url: founderInfo.profileUrl || null,
-          founder_platform: founderInfo.platform || null,
-          founder_authority: !tl.founder_authority || tl.founder_authority === 'unknown'
-            ? (founderInfo.platform === 'linkedin' ? 'moderate' : 'low')
-            : tl.founder_authority,
+          founder_name: null,
+          founder_role: null,
+          founder_authority: 'unknown',
+          founder_resolution: (founderInfo as any).resolutionReason || null,
         },
       };
     }
+
 
     // ── Build final result ──
     const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData: mktData, rankingOverview, founderInfo, llmData, gmbData, facebookPageInfo };
