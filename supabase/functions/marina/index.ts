@@ -14,6 +14,15 @@ import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis
 import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
 import { writeArchetypePrescriptions } from '../_shared/archetypeWorkbench.ts';
 import { buildAeoRewrites, writeAeoRewritePrescriptions } from '../_shared/aeoRewrites.ts';
+import {
+  clampScore,
+  resolvePerimeter,
+  resolveOrphanCount,
+  resolveToxicity,
+  assessIdentityUsability,
+  reconcileReportHtml,
+} from '../_shared/auditReconciliation.ts';
+
 
 import { buildMarketProfile, fetchArchetypeBenchmarks, writeMarketObservation } from '../_shared/marketObservations.ts';
 import {
@@ -1239,10 +1248,11 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Détail des scores</h3>
         <div class="stat-grid-4">
-          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.performance?.score || 0, scores?.performance?.maxScore || 40)}">${scores?.performance?.score || 0}</div><div class="label">Performance /${scores?.performance?.maxScore || 40}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.technical?.score || 0, scores?.technical?.maxScore || 50)}">${scores?.technical?.score || 0}</div><div class="label">Technique /${scores?.technical?.maxScore || 50}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.semantic?.score || 0, scores?.semantic?.maxScore || 60)}">${scores?.semantic?.score || 0}</div><div class="label">Sémantique /${scores?.semantic?.maxScore || 60}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.aiReady?.score || 0, scores?.aiReady?.maxScore || 30)}">${scores?.aiReady?.score || 0}</div><div class="label">IA-Ready /${scores?.aiReady?.maxScore || 30}</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.performance?.score, scores?.performance?.maxScore || 40) ?? 0, scores?.performance?.maxScore || 40)}">${clampScore(scores?.performance?.score, scores?.performance?.maxScore || 40) ?? 0}</div><div class="label">Performance /${scores?.performance?.maxScore || 40}</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.technical?.score, scores?.technical?.maxScore || 50) ?? 0, scores?.technical?.maxScore || 50)}">${clampScore(scores?.technical?.score, scores?.technical?.maxScore || 50) ?? 0}</div><div class="label">Technique /${scores?.technical?.maxScore || 50}</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.semantic?.score, scores?.semantic?.maxScore || 60) ?? 0, scores?.semantic?.maxScore || 60)}">${clampScore(scores?.semantic?.score, scores?.semantic?.maxScore || 60) ?? 0}</div><div class="label">Sémantique /${scores?.semantic?.maxScore || 60}</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.aiReady?.score, scores?.aiReady?.maxScore || 30) ?? 0, scores?.aiReady?.maxScore || 30)}">${clampScore(scores?.aiReady?.score, scores?.aiReady?.maxScore || 30) ?? 0}</div><div class="label">IA-Ready /${scores?.aiReady?.maxScore || 30}</div></div>
+
         </div>
       </div>
     </div>`;
@@ -1872,11 +1882,17 @@ function buildReportIntroHTML(
   const isEs = lang === 'es';
   const t = (fr: string, en: string, es: string) => (isEn ? en : isEs ? es : fr);
 
-  const pagesAnalyzed = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pagesFound || null;
-  const pagesKnown = ctx.crawlSnapshot?.total_pages || null;
-  const coverage = pagesAnalyzed && pagesKnown && pagesKnown > 0
-    ? Math.min(100, Math.round((pagesAnalyzed / pagesKnown) * 100))
-    : null;
+  // Lot 4 : source unique de vérité pour le périmètre (crawlées / découvertes /
+  // sitemap), afin que toutes les sections affichent les mêmes nombres.
+  const perimeter = resolvePerimeter({
+    crawledPages: ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pagesFound,
+    discoveredUrls: ctx.crawlSnapshot?.total_pages,
+    sitemapUrls: ctx.crawlSnapshot?.sitemap_urls_count ?? ctx.crawlSnapshot?.sitemapUrlsCount,
+  });
+  const pagesAnalyzed = perimeter.crawled;
+  const pagesKnown = perimeter.reference;
+  const coverage = perimeter.coveragePct;
+
 
   const tools: string[] = [];
   tools.push(t(
@@ -4052,6 +4068,25 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         );
         console.warn(`[Marina] Strategic layer degraded for ${domain}: ${strategicDegradation.reasons.join(' | ')}`);
       }
+
+      // ─── Lot 4 : réconciliation finale des chiffres et des conclusions ───
+      // Le graphe cocoon fait foi pour les pages orphelines, et la conclusion
+      // « profil de liens sain / aucun désaveu » est interdite dès qu'une
+      // toxicité est mesurée sur le profil de backlinks.
+      {
+        const orphanCount = resolveOrphanCount(cocoonResult);
+        const toxicity = resolveToxicity(strategicData?.domain_authority);
+        const identityUsability = assessIdentityUsability(revisedIdentity ?? null);
+        if (!identityUsability.usable) {
+          console.log(`[Marina] Identité partiellement résolue : ${identityUsability.notes.join(' | ')}`);
+        }
+        html = reconcileReportHtml(html, { orphanCount, toxicity });
+        console.log(
+          `[Marina] Réconciliation : orphelines=${orphanCount ?? 'n/d'}, toxicité=${toxicity.score ?? 'n/d'} (désaveu interdit: ${toxicity.disavowClaimForbidden})`,
+        );
+      }
+
+
 
 
       // ─── Step 5: Store in shared-reports bucket ───
