@@ -598,6 +598,15 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
     const llmResults = await Promise.all(llmPromises)
 
+    const sentimentOf = (list: PromptScore[]): string => {
+      if (list.length === 0) return 'neutral'
+      const pos = list.filter(d => d.sentiment === 'recommended' || d.sentiment === 'positive').length
+      const neg = list.filter(d => d.sentiment === 'negative').length
+      if (pos > list.length / 2) return 'positive'
+      if (neg > list.length / 2) return 'negative'
+      return 'neutral'
+    }
+
     const scores = llmResults.map(r => ({
       llm_name: r.llm_name,
       score_percentage: r.score,
@@ -605,33 +614,79 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       measured_prompts: r.measured_prompts,
       total_prompts: r.total_prompts,
       measurement_error: r.error,
-      response_excerpt: r.responseTexts?.[0]?.slice(0, 300) || '',
-      overall_sentiment: r.promptDetails.length > 0
-        ? (r.promptDetails.filter(d => d.sentiment === 'recommended' || d.sentiment === 'positive').length > r.promptDetails.length / 2 ? 'positive' : r.promptDetails.filter(d => d.sentiment === 'negative').length > r.promptDetails.length / 2 ? 'negative' : 'neutral')
-        : 'neutral',
-      details: r.promptDetails.map((ps, i) => ({
+      response_excerpt: r.responseTexts?.find(t => t)?.slice(0, 300) || '',
+      overall_sentiment: sentimentOf(r.promptDetails),
+      details: r.alignedScores.flatMap((ps, i) => ps === null ? [] : [{
         prompt: prompts[i],
+        intent: flatPrompts[i].intent,
+        benchmark_id: flatPrompts[i].benchmarkId,
         iteration_found: ps.iterationFound,
         position_rank: ps.positionRank,
         sentiment: ps.sentiment,
         richness_bonus: ps.richnessBonus,
         composite_score: ps.compositeScore,
         response_excerpt: r.responseTexts?.[i]?.slice(0, 200) || '',
-      })),
+      }]),
     }))
+
+    // ── Trois benchmarks distincts : un score et une carte par intention ──
+    const benchmarkResults = benchmarks.map((b) => {
+      const idx = flatPrompts.map((p, i) => ({ p, i })).filter(x => x.p.benchmarkId === b.id).map(x => x.i)
+      const modelScores = llmResults.map(r => {
+        const own = idx.map(i => r.alignedScores[i]).filter((s): s is PromptScore => s !== null)
+        const score = own.length > 0 ? aggregateLLMScore(own) : null
+        return {
+          llm_name: r.llm_name,
+          score_percentage: score,
+          measurement_status: own.length === 0 ? 'unmeasured' : (own.length < idx.length ? 'partial' : 'measured'),
+          measured_prompts: own.length,
+          total_prompts: idx.length,
+          overall_sentiment: sentimentOf(own),
+          details: idx.flatMap(i => {
+            const ps = r.alignedScores[i]
+            return ps === null ? [] : [{
+              prompt: prompts[i],
+              intent: flatPrompts[i].intent,
+              iteration_found: ps.iterationFound,
+              position_rank: ps.positionRank,
+              sentiment: ps.sentiment,
+              composite_score: ps.compositeScore,
+              response_excerpt: r.responseTexts?.[i]?.slice(0, 200) || '',
+            }]
+          }),
+        }
+      })
+      const measured = modelScores.filter(m => m.score_percentage !== null)
+      return {
+        id: b.id,
+        label: b.label,
+        description: b.description,
+        prompts: b.prompts,
+        scores: modelScores,
+        cited_models: measured.filter(m => (m.score_percentage || 0) > 0).length,
+        measured_models: measured.length,
+        total_models: modelScores.length,
+        score: measured.length > 0
+          ? Math.round(measured.reduce((s, m) => s + (m.score_percentage || 0), 0) / measured.length)
+          : null,
+      }
+    })
 
     const unmeasured = scores.filter(s => s.measurement_status === 'unmeasured').map(s => s.llm_name)
     console.log(`[llm-vis] ✅ ${site.domain} complete: ${scores.map(s => `${s.llm_name}=${s.score_percentage === null ? 'n/m' : s.score_percentage + '%'}`).join(', ')}${unmeasured.length ? ` — non mesurés: ${unmeasured.join(', ')}` : ''}`)
+    console.log(`[llm-vis] benchmarks: ${benchmarkResults.map(b => `${b.id}=${b.score === null ? 'n/m' : b.score + '%'} (${b.cited_models}/${b.measured_models} citent)`).join(' | ')}`)
 
     // ── Write to shared domain cache (2h TTL — Pro Agency+ can refresh unlimited but backend throttles to every 2h) ──
     const cachePayload = {
       scores,
+      benchmarks: benchmarkResults,
       week_start_date: weekStart,
       unmeasured_models: unmeasured,
       measured_models: scores.length - unmeasured.length,
       total_models: scores.length,
       prompts_fingerprint: promptsFingerprint,
     }
+
 
     await supabase.from('domain_data_cache').upsert({
       domain: site.domain,
