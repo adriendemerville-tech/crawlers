@@ -20,6 +20,8 @@
  * met à jour la même ligne. Échec toujours non bloquant.
  */
 
+import { buildBoilerplateSet, stripBoilerplate } from './contentIntegrity/normalize.ts';
+
 export interface AeoPageInput {
   url: string;
   title?: string | null;
