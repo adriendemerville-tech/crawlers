@@ -34,6 +34,12 @@ export interface RoiScorable {
   severity?: string;
   category?: string;
   pages_affected?: number;
+  /** Lot 5 : écart relatif au seuil mesuré (0 = au seuil, 1 = 100 % sous le seuil). */
+  gap_ratio?: number;
+  /** Lot 5 : volume de recherche mensuel du cluster visé. */
+  keyword_volume?: number;
+  /** Lot 5 : position moyenne mesurée sur la requête / le cluster visé. */
+  current_position?: number;
 }
 
 export interface RoiContext {
