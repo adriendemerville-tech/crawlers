@@ -404,7 +404,7 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
       intent: 'comparison',
       text: isShop
         ? `Quels sites se valent pour acheter ${mainNeed} et lequel est le mieux ?`
-        : `Compare-moi ${lex.comparePlural} pour ${mainNeed} : lequel sort du lot ?`,
+        : `Compare-moi ${lex.comparePlural} pour ${mainNeed} : ${lex.comparePlural.startsWith('les meilleures') ? 'laquelle' : 'lequel'} sort du lot ?`,
     });
 
     if (localOk) {
