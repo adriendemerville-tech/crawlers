@@ -1004,8 +1004,16 @@ function buildSocialSignalsSection(data: any): string {
         const who = tl.founder_name
           ? (tl.founder_profile_url ? `<a href="${tl.founder_profile_url}" style="color:#7c3aed;">${tl.founder_name}</a>` : tl.founder_name)
           : null;
-        return `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Autorité fondateur:</strong> ${who ? `${who} — autorité ${lvl || 'non mesurée'}` : lvl}</div>`;
+        const role = tl.founder_role ? ` (${tl.founder_role})` : '';
+        const conf = tl.founder_confidence != null ? ` — confiance ${Math.round(Number(tl.founder_confidence) * 100)}%` : '';
+        const head = `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Porte-parole identifié:</strong> ${who ? `${who}${role} — autorité ${lvl || 'non mesurée'}${conf}` : `non résolu (autorité ${lvl})`}</div>`;
+        const why = tl.founder_resolution ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">${tl.founder_resolution}</div>` : '';
+        const alts = Array.isArray(tl.founder_alternatives) && tl.founder_alternatives.length > 0
+          ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Autres personnes rattachées : ${tl.founder_alternatives.slice(0, 3).map((a: any) => `${a.name}${a.role && a.role !== 'inconnu' ? ` (${a.role})` : ''}`).join(', ')}</div>`
+          : '';
+        return head + why + alts;
       })()}
+
       ${tl.entity_recognition ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Reconnaissance entité:</strong> ${tl.entity_recognition}</div>` : ''}
       ${eeat != null ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Score E-E-A-T:</strong> <span style="font-weight:700;color:${eeat >= 7 ? '#22c55e' : eeat >= 4 ? '#f59e0b' : '#ef4444'};">${eeat}/10</span></div>` : ''}
       ${tl.analysis ? `<div style="font-size:12px;color:#6b7280;line-height:1.5;margin-top:4px;">${tl.analysis}</div>` : ''}

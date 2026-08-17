@@ -96,7 +96,16 @@ export interface FounderInfo {
   isInfluencer: boolean;
   geoMismatch: boolean;
   detectedCountry: string | null;
+  /** Champs de résolution (personAuthority.ts) — optionnels pour compatibilité. */
+  role?: string | null;
+  roleLabel?: string | null;
+  confidence?: number;
+  resolutionStatus?: 'resolved' | 'unresolved';
+  resolutionReason?: string;
+  sources?: string[];
+  alternatives?: Array<{ name: string; role: string; profileUrl?: string | null }>;
 }
+
 
 export interface FacebookPageInfo {
   pageUrl: string | null;

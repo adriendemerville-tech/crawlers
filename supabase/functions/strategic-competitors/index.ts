@@ -9,7 +9,11 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
-import { validateFounderCandidate } from '../_shared/founderNameValidation.ts';
+import {
+  serpItemToCandidate, pickSpokesperson, toFounderInfo, fetchLegalPagePersons,
+  type PersonCandidate,
+} from '../_shared/personAuthority.ts';
+
 
 const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
@@ -110,47 +114,53 @@ async function findLocalCompetitors(domain: string, sector: string, locationCode
   return [...scoreMap.values()].sort((a, b) => b.score - a.score).slice(0, 3);
 }
 
+/**
+ * Résolution du porte-parole : corroboration on-site (mentions légales)
+ * + SERP sociale, arbitrage et seuil de confiance via personAuthority.ts.
+ */
 async function searchFounderProfile(domain: string, targetLocation: string, brandName = '') {
-  const result = { name: null as string | null, profileUrl: null as string | null, platform: null as string | null, isInfluencer: false, geoMismatch: false, detectedCountry: null as string | null };
-  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return result;
   const dc = domain.replace(/^www\./, '');
   const locInfo = KNOWN_LOCATIONS[targetLocation.toLowerCase()] || KNOWN_LOCATIONS['france'];
   const brand = (brandName || '').trim();
-  const queries = [
-    { q: `"${dc}" fondateur OR CEO OR founder OR dirigeant site:linkedin.com/in`, platform: 'linkedin' },
-    ...(brand && brand.toLowerCase() !== dc.split('.')[0].toLowerCase()
-      ? [{ q: `"${brand}" fondateur OR CEO OR gérant OR dirigeant site:linkedin.com/in`, platform: 'linkedin' }]
-      : []),
-    { q: `"${dc}" fondateur OR CEO OR founder site:instagram.com`, platform: 'instagram' },
-    { q: `"${dc}" fondateur OR CEO OR founder site:youtube.com`, platform: 'youtube' },
-  ];
-  try {
-    const results = (await Promise.all(queries.map(async ({ q, platform }) => {
+  const candidates: PersonCandidate[] = await fetchLegalPagePersons(dc).catch(() => [] as PersonCandidate[]);
+  let geoMismatch = false;
+  let detectedCountry: string | null = null;
+
+  if (DATAFORSEO_LOGIN && DATAFORSEO_PASSWORD) {
+    const queries = [
+      { q: `"${dc}" fondateur OR gérant OR dirigeant OR CEO site:linkedin.com/in`, platform: 'linkedin' },
+      ...(brand && brand.toLowerCase() !== dc.split('.')[0].toLowerCase()
+        ? [{ q: `"${brand}" fondateur OR gérant OR dirigeant site:linkedin.com/in`, platform: 'linkedin' }]
+        : []),
+      { q: `"${dc}" fondateur OR gérant OR CEO site:instagram.com`, platform: 'instagram' },
+      { q: `"${dc}" fondateur OR gérant OR CEO site:youtube.com`, platform: 'youtube' },
+    ];
+    const serp = (await Promise.all(queries.map(async ({ q, platform }) => {
       try {
         const r = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
           method: 'POST', headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
           body: JSON.stringify([{ keyword: q, location_code: locInfo.code, language_code: locInfo.lang, depth: 10 }]),
           signal: AbortSignal.timeout(8000),
         });
-        if (!r.ok) { await r.text(); return null; }
+        if (!r.ok) { await r.text(); return [] as PersonCandidate[]; }
         const data = await r.json();
         const items = (data.tasks?.[0]?.result?.[0]?.items || []).filter((i: any) => i.type === 'organic' && i.url);
-        // Scan every organic result, keep the first that is a real person profile
-        for (const item of items) {
-          const validated = validateFounderCandidate({ title: item.title, url: item.url, platform }, dc);
-          if (validated) return { name: validated, url: item.url as string, platform, snippet: item.description || item.title || '' };
-        }
-        return null;
-      } catch { return null; }
-    }))).filter(Boolean);
-    if (results.length === 0) { console.log(`👤 No valid founder profile for ${dc}`); return result; }
-    const best = results.find(r => r!.platform === 'linkedin') || results[0]!;
-    result.name = best!.name; result.profileUrl = best!.url; result.platform = best!.platform; result.isInfluencer = results.length >= 1;
-    if (best!.platform === 'linkedin' && best!.snippet) { const geo = verifyFounderGeo(best!.snippet, targetLocation); result.geoMismatch = geo.mismatch; result.detectedCountry = geo.detectedCountry; }
-    console.log(`👤 Founder validated for ${dc}: ${result.name} (${result.platform})`);
-    return result;
-  } catch { return result; }
+        return items.map((i: any) => serpItemToCandidate(i, platform, dc, brand)).filter(Boolean) as PersonCandidate[];
+      } catch { return [] as PersonCandidate[]; }
+    }))).flat();
+    candidates.push(...serp);
+    const li = serp.find((c) => c.platform === 'linkedin' && c.brandCorroborated) || serp.find((c) => c.platform === 'linkedin');
+    if (li?.snippet && !candidates.some((c) => c.source !== 'serp_social')) {
+      const geo = verifyFounderGeo(li.snippet, targetLocation);
+      geoMismatch = geo.mismatch; detectedCountry = geo.detectedCountry;
+    }
+  }
+
+  const resolution = pickSpokesperson({ domain: dc, brandName: brand, candidates, geoMismatch, detectedCountry });
+  console.log(`👤 ${dc} → ${resolution.status === 'resolved' ? `${resolution.name} (${resolution.roleLabel}, conf. ${resolution.confidence})` : `non résolu — ${resolution.reason}`}`);
+  return toFounderInfo(resolution);
 }
+
 
 async function detectGMB(domain: string, brandName: string, locationCode: number, langCode: string) {
   const cd = domain.replace(/^www\./, '');

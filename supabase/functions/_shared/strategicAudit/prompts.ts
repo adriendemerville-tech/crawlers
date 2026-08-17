@@ -231,11 +231,17 @@ export function buildUserPrompt(
   let founderSection = '';
   if (!contentMode) {
     if (founderInfo?.name && !founderInfo.geoMismatch) {
-      founderSection = `\n👤 FONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''} Social:${founderInfo.isInfluencer ? 'actif' : 'non'}. Cite ce nom dans thought_leadership.analysis.`;
+      const role = (founderInfo as any).roleLabel || 'dirigeant';
+      const conf = (founderInfo as any).confidence;
+      const srcs = ((founderInfo as any).sources || []).join('+');
+      founderSection = `\n👤 PORTE-PAROLE (${role}): ${founderInfo.name} (${founderInfo.platform || 'sans profil social'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''} Social:${founderInfo.isInfluencer ? 'actif' : 'non'}${conf != null ? ` Confiance:${conf}` : ''}${srcs ? ` Sources:${srcs}` : ''}. Cite ce nom ET son rôle dans thought_leadership.analysis. N'invente aucun autre nom.`;
     } else if (founderInfo?.geoMismatch) {
       founderSection = `\n⚠️ Fondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner. founder_authority="unknown".`;
+    } else if ((founderInfo as any)?.resolutionStatus === 'unresolved') {
+      founderSection = `\n👤 Fondateur / gérant NON RÉSOLU (aucune corroboration fiable). N'invente AUCUN nom, écris « dirigeant non identifié » et founder_authority="unknown".`;
     }
   }
+
 
   const toolsMarkdown = formatToolsDataToMarkdown(toolsData);
 
