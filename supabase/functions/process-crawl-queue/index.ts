@@ -25,8 +25,19 @@ import { filterCrawlablePublicUrls, isCrawlablePublicUrl, canonicalizeCrawlUrl, 
  * puis se re-déclenche (self-relay) sur le checkpoint persisté dans
  * `crawl_pages`. Un gros domaine est donc crawlé en N runs successifs de
  * 100-150 pages au lieu d'un run unique qui explose le wall-time.
+ *
+ * Sur les très gros domaines (> 3 000 URLs), le lot est abaissé à 80 pages :
+ * l'accumulation mémoire/CPU d'un run de 150 pages y provoquait des kills
+ * wall-time avant l'écriture du checkpoint (observé sur un site de ~6 800 URLs).
  */
 const PAGES_PER_RUN = 150;
+const LARGE_SITE_URL_THRESHOLD = 3000;
+const PAGES_PER_RUN_LARGE_SITE = 80;
+
+function pagesPerRunFor(totalCount: number | null | undefined): number {
+  const n = typeof totalCount === 'number' ? totalCount : 0;
+  return n > LARGE_SITE_URL_THRESHOLD ? PAGES_PER_RUN_LARGE_SITE : PAGES_PER_RUN;
+}
 
 Deno.serve(handleRequest(async (req) => {
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')!;
