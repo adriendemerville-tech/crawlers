@@ -300,7 +300,7 @@ export function pickSpokesperson(opts: ResolveOptions): SpokespersonResult {
     };
   }
 
-  const sources = sourcesFor(best.c.name, all);
+  const sources = sourcesFor(best.c.name, candidates);
   const hasSocial = sources.includes('serp_social');
   const legal = sources.includes('onsite_legal');
   const reasonParts: string[] = [];
