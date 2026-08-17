@@ -8,6 +8,7 @@ import {
   type SectionTopPriorities,
   type RawFinding,
   type WorkbenchTask,
+  type ConsolidatedPlanStats,
 } from '../_shared/topPriorities.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
