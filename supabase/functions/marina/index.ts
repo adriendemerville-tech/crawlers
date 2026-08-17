@@ -3929,27 +3929,28 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, renderTopPrioritiesHTML(topCocoon));
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
 
-        // Données propriétaires : uniquement si l'utilisateur possède une connexion
-        // Google vérifiée couvrant CE domaine. Sinon la section n'existe pas.
-        let ownerPerformance: OwnerPerformanceData | null = null;
-        try {
-          ownerPerformance = await fetchOwnerPerformanceData(sb, parentJob.user_id, domain);
-          console.log(
-            `[Marina] Données propriétaires ${ownerPerformance ? 'disponibles' : 'absentes'} pour ${domain}`,
-          );
-        } catch (ownerErr) {
-          console.warn('[Marina] Owner performance fetch failed (non-fatal):', ownerErr);
-        }
         const ownerPerformanceHTML = renderOwnerPerformanceHTML(ownerPerformance, '3b');
 
         // Pondération ROI diffuse (impact / effort, 0 token) : les blocages critiques
         // restent en tête, l'ordre interne suit le rendement.
-        const consolidatedPlan = applyRoiWeighting(rawConsolidatedPlan, {
-          pagesAnalyzed: crawlSnapshot?.crawled_pages || crawlSnapshot?.pages?.length || null,
+        // Lot 5 — l'impact est modulé par des signaux mesurés : volume du cluster
+        // pour les actions mots-clés, position moyenne mesurée si GSC est branché.
+        const measuredPosition = ownerPerformance?.gsc?.current?.position ?? null;
+        const planWithSignals = rawConsolidatedPlan.map((it) => ({
+          ...it,
+          keyword_volume: it.source_section === 'keywords' && trafficContext.keywordVolume
+            ? trafficContext.keywordVolume
+            : undefined,
+          current_position: measuredPosition && measuredPosition > 0
+            ? Math.round(measuredPosition * 10) / 10
+            : undefined,
+        }));
+        const consolidatedPlan = applyRoiWeighting(planWithSignals, {
+          pagesAnalyzed: trafficContext.pagesAnalyzed,
           hasOwnerPerformance: Boolean(ownerPerformance),
         });
         const roiSummary = summarizeRoi(consolidatedPlan, detectedLang);
-        const consolidatedPlanHTML = renderConsolidatedPlanHTML(consolidatedPlan);
+        const consolidatedPlanHTML = renderConsolidatedPlanHTML(consolidatedPlan, consolidatedPlanStats);
 
 
         const tempPrefix = `marina/tmp/${jobId}`;
