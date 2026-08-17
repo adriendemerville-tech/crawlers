@@ -17,6 +17,12 @@ const NON_PERSON_TOKENS = [
 
 const ROLE_WORDS = /\b(fondateur|fondatrice|founder|ceo|président|presidente|président[e]?|dirigeant[e]?|gérant[e]?|co-?founder|cto|coo)\b/i;
 
+/** Particules patronymiques admises en minuscule au milieu d'un nom. */
+const PARTICLES = new Set([
+  'de', 'di', 'du', 'des', 'da', 'do', 'dos', 'del', 'della', 'della',
+  'le', 'la', 'van', 'von', 'der', 'den', 'ter', 'bin', 'ben', 'el', 'al', 'y', 'e',
+]);
+
 /** Profile URL (not a post/reel/video) for the given platform. */
 export function isPersonProfileUrl(url: string, platform: string): boolean {
   const u = (url || '').toLowerCase();
