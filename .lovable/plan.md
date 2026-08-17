@@ -8,7 +8,12 @@ Une table dédiée `parmenion_targeting_lenses` (une ligne par cible Parménion)
 
 Champs : `target_id`, `lens_type` ('location' | 'persona' | 'cluster'), `enabled`, `values` (jsonb, tableau de valeurs cochées), `share_pct` (part des créations orientées), `proof_level` (calculé, lecture seule).
 
+Deux champs de destination, par lentille :
+- `publish_directory` (ex. `/blog`, `/services`) — répertoire où les pages issues de cette lentille sont créées. Détermine aussi le `page_type` par défaut du ContentBrief (`/blog` → article, `/services` → landing).
+- `conversion_target` (jsonb) — `{ mode: 'page' | 'directory' | 'free', value?: string }`. En `page`/`directory`, chaque page créée doit porter au moins un lien contextuel vers cette destination. En `free`, Parménion choisit lui-même la destination et **doit la justifier** dans la décision loggée.
+
 Règle non négociable : `share_pct` par défaut 30, plafonné à 50. Une lentille ne peut jamais consommer tout le budget contenu.
+
 
 ## 2. Menus déroulants auto-générés
 
