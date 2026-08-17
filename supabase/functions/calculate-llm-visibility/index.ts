@@ -437,7 +437,18 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       .gt('expires_at', new Date().toISOString())
       .maybeSingle()
 
-    if (cachedData?.result_data) {
+    // Empreinte des questions : si le lexique / la carte d'identité a changé
+    // depuis la mise en cache, les questions stockées ne sont plus celles qu'on
+    // poserait aujourd'hui — le cache est ignoré (sinon le rapport affiche des
+    // questions périmées type « un outil » pour une entreprise de travaux).
+    const promptsFingerprint = prompts.join('||')
+    const cachedFingerprint = (cachedData?.result_data as any)?.prompts_fingerprint
+    const fingerprintStale = !!cachedData?.result_data && cachedFingerprint !== promptsFingerprint
+    if (fingerprintStale) {
+      console.log(`[llm-vis] ⟳ ${site.domain} — cache ignoré : questions obsolètes (lexique mis à jour)`)
+    }
+
+    if (cachedData?.result_data && !fingerprintStale) {
       console.log(`[llm-vis] ♻️ ${site.domain} — cache hit for week ${weekStart}`)
       const cached = cachedData.result_data as { scores: any[]; week_start_date: string }
 
