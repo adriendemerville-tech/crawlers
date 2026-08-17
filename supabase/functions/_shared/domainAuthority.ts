@@ -135,6 +135,35 @@ function isUnnaturalAnchor(anchor: string): boolean {
 }
 
 /**
+ * Domaines référents dont la thématique est manifestement incompatible avec un
+ * lien éditorial légitime (paris, casino, adulte, fermes de fonds d'écran,
+ * miroirs et sites de téléchargement). Un seul de ces domaines interdit le
+ * verdict « profil sain » : c'est exactement ce qu'un consultant vérifie à la
+ * main avant de conclure.
+ */
+const SPAM_DOMAIN_PATTERNS: RegExp[] = [
+  /\b(bet|betting|bookmaker|casino|slot|poker|bahis|kumar)\w*/i,
+  /\b(mirror|mirrors)\b|mirror\.(com|net|org|info)/i,
+  /\b(porn|sex|escort|xxx|hentai)\w*/i,
+  /\b(wallpapers?|screensavers?|ringtones?)\b/i,
+  /\b(crack|keygen|torrent|warez|apk|hack)\w*/i,
+  /\b(pharma|viagra|cialis|casinos)\b/i,
+  /\b(loan|payday|crypto ?pump|forex ?signals)\b/i,
+];
+
+export function detectSuspiciousReferringDomains(
+  domains: { domain: string }[],
+): string[] {
+  const flagged: string[] = [];
+  for (const d of domains || []) {
+    const host = String(d?.domain || '').toLowerCase();
+    if (!host) continue;
+    if (SPAM_DOMAIN_PATTERNS.some((re) => re.test(host))) flagged.push(host);
+  }
+  return Array.from(new Set(flagged));
+}
+
+/**
  * Toxicité du profil de liens — 100 % déterministe, calculée depuis les données
  * déjà payées (summary + top domaines référents). Aucun appel supplémentaire.
  */
