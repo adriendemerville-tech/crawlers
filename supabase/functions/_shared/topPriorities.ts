@@ -356,6 +356,7 @@ export function buildConsolidatedActionPlan(
       templates: a.templates,
       occurrences: a.occurrences,
       pages_affected: a.pages_affected,
+      gap_ratio: a.gap_ratio,
       accountability: buildAccountability(
         { title: a.title, description: a.description, category: a.category, pages_affected: a.pages_affected },
         traffic,
