@@ -44,6 +44,13 @@ export interface PriorityAction {
   source_section: SectionKey;
   /** First fix as a one-line "next step", if available */
   next_step?: string;
+  /** Lot 5 : empreinte de consigne (déduplication inter-gabarits). */
+  fingerprint?: string;
+  /** Lot 5 : gabarits / répertoires regroupés sous cette action. */
+  templates?: string[];
+  /** Lot 5 : nombre de constats fusionnés. */
+  occurrences?: number;
+  pages_affected?: number;
 }
 
 export type SectionKey = 'seo' | 'geo' | 'keywords' | 'eeat' | 'cocoon';
@@ -54,6 +61,8 @@ export interface SectionTopPriorities {
   actions: PriorityAction[];   // 0..3 entries
   total_findings: number;      // findings considered before slicing to top-3
   has_blockers: boolean;       // true if ≥1 critical
+  /** Lot 5 : nombre de constats après fusion par empreinte. */
+  deduped_findings?: number;
 }
 
 export interface WorkbenchTask {
@@ -76,7 +85,23 @@ export interface ConsolidatedPlanItem {
   source: 'workbench' | 'newly_detected';
   source_section?: SectionKey;
   workbench_id?: string;
+  /** Lot 5 */
+  fingerprint?: string;
+  templates?: string[];
+  occurrences?: number;
+  pages_affected?: number;
+  accountability?: Accountability;
 }
+
+/** Lot 5 : décompte réel Workbench vs nouveautés, indépendant du tronquage. */
+export interface ConsolidatedPlanStats {
+  total_candidates: number;
+  workbench_open: number;
+  newly_detected: number;
+  displayed: number;
+  merged_duplicates: number;
+}
+
 
 // ─────────────────── Severity normalization ───────────────────
 
