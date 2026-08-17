@@ -40,15 +40,18 @@ const SENTIMENT_BONUS: Record<string, number> = {
 const MAX_RICHNESS_BONUS = 15
 
 // ─── LLM targets (via OpenRouter) ───
+// `models` = [primaire, secours]. Si le primaire échoue techniquement (id retiré
+// du catalogue, 404, timeout), on rejoue immédiatement sur le secours afin que
+// les 5 modèles affichés dans les rapports soient réellement mesurés.
 const LLM_TARGETS = [
-  { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-5.4-mini' },
-  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-3-flash-preview' },
-  { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar' },
-  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-3-haiku' },
-  { id: 'mistral',    name: 'Mistral',     model: 'mistralai/mistral-small-latest' },
+  { id: 'chatgpt',    name: 'ChatGPT',    models: ['openai/gpt-5.4-mini', 'openai/gpt-5.4-nano'] },
+  { id: 'gemini',     name: 'Gemini',     models: ['google/gemini-3-flash-preview', 'google/gemini-3.5-flash'] },
+  { id: 'perplexity', name: 'Perplexity', models: ['perplexity/sonar', 'perplexity/sonar-pro'] },
+  { id: 'claude',     name: 'Claude',     models: ['anthropic/claude-3-haiku', 'anthropic/claude-haiku-4.5'] },
+  { id: 'mistral',    name: 'Mistral',    models: ['mistralai/mistral-medium-3.1', 'mistralai/mistral-small-3.2-24b-instruct'] },
 ]
 
-const NUM_PROMPTS = 3 // reduced from 5 to fit within timeout
+const NUM_PROMPTS = 3 // 3 intentions contrastées (besoin, comparatif, local/audience)
 
 // ═══════════════════════════════════════════════
 // BRAND DETECTION
