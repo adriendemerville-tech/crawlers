@@ -16,3 +16,4 @@
 - [Marina multipages périmètre page](mem://features/marina/multipage-page-scope-fr) — Crawl mutualisé domaine mais score tech/GEO/cocon propres à chaque URL, conclusion intermédiaire par URL + synthèse exécutive globale du rapport fusionné
 - [Éditorialisation rapports (Lot 6)](mem://features/marina/editorialization-lot6-fr) — _shared/reportEditorial.ts : champs bruts traduits, sévérité en badge, tableaux tout-à-zéro supprimés, clusters nommés par terme dominant et clusters isolés regroupés
 - [Questions visibilité LLM](mem://features/geo/llm-visibility-prompt-rules-fr) — Censure marque/domaine dans les prompts + question locale réservée à service_local/leadgen/nonprofit
+- [Marina cohérence rapports](mem://features/marina/report-consistency-guards-fr) — Web Vitals canoniques (X,XX s), justifications par levier, toxicité si référents hors-sujet, concurrents marché dans la carte d'identité, disclaimer échantillon GEO
