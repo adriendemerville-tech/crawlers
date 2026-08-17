@@ -468,9 +468,12 @@ export function renderTopPrioritiesHTML(top: SectionTopPriorities): string {
 
 /**
  * Render the consolidated end-of-report action plan as HTML.
+ * Lot 5 : colonne « Pilote & KPI » (owner, KPI, gain estimé), gabarits
+ * regroupés visibles, et décompte réel Workbench / nouveautés.
  */
 export function renderConsolidatedPlanHTML(
   items: Array<ConsolidatedPlanItem & { roi?: RoiAnnotation }>,
+  stats?: ConsolidatedPlanStats,
 ): string {
   if (!items.length) {
     return `<div class="section">
@@ -489,36 +492,57 @@ export function renderConsolidatedPlanHTML(
       ? `<div><span style="background:${ROI_TIER_STYLE[it.roi.tier].bg};color:${ROI_TIER_STYLE[it.roi.tier].fg};padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">${escapeHtml(it.roi.tier_label)}</span></div>
          <div style="font-size:10.5px;color:#6b7280;margin-top:4px;">${escapeHtml(it.roi.effort_label)}</div>`
       : '<span style="font-size:11px;color:#9ca3af;">n/d</span>';
+    const acc = it.accountability;
+    const accCell = acc
+      ? `<div style="font-size:11.5px;color:#111827;font-weight:600;">${escapeHtml(acc.owner)}</div>
+         <div style="font-size:10.5px;color:#6b7280;margin-top:3px;">KPI : ${escapeHtml(acc.kpi)}</div>
+         <div style="font-size:10.5px;color:${acc.traffic_gain !== null ? '#4b5563' : '#9ca3af'};margin-top:3px;">${
+           acc.traffic_gain !== null
+             ? `+${acc.traffic_gain} visites/mois estimées`
+             : 'Gain non estimable'
+         }</div>`
+      : '<span style="font-size:11px;color:#9ca3af;">n/d</span>';
+    const scope = (it.templates && it.templates.length > 1)
+      ? `<div style="font-size:10.5px;color:#6b7280;margin-top:4px;">Gabarits concernés : ${escapeHtml(it.templates.slice(0, 8).join(', '))}</div>`
+      : '';
     return `<tr style="border-bottom:1px solid #e5e7eb;">
       <td style="padding:10px 12px;font-weight:700;color:#111827;font-size:13px;">${it.rank}</td>
       <td style="padding:10px 12px;">
         <div style="font-weight:600;font-size:13px;color:#111827;margin-bottom:3px;">${escapeHtml(title)}</div>
         ${description ? `<div style="font-size:12px;color:#4b5563;line-height:1.45;">${escapeHtml(description)}</div>` : ''}
-
+        ${scope}
         ${it.roi ? `<div style="font-size:11px;color:#6b7280;margin-top:5px;">${escapeHtml(it.roi.roi_note)}</div>` : ''}
+        ${acc ? `<div style="font-size:10.5px;color:#9ca3af;margin-top:4px;">Base de l'estimation : ${escapeHtml(acc.traffic_basis)}</div>` : ''}
       </td>
       <td style="padding:10px 12px;white-space:nowrap;">
         <span style="background:${badge.bg};color:${badge.fg};padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">${badge.label}</span>
       </td>
       <td style="padding:10px 12px;white-space:nowrap;">${roiCell}</td>
+      <td style="padding:10px 12px;">${accCell}</td>
       <td style="padding:10px 12px;white-space:nowrap;">${origin}</td>
     </tr>`;
   }).join('');
 
-  const wbCount = items.filter((i) => i.source === 'workbench').length;
-  const newCount = items.length - wbCount;
+  const wbCount = stats?.workbench_open ?? items.filter((i) => i.source === 'workbench').length;
+  const newCount = stats?.newly_detected ?? (items.length - items.filter((i) => i.source === 'workbench').length);
+  const total = stats?.total_candidates ?? items.length;
+  const merged = stats?.merged_duplicates ?? 0;
   const roiSummary = summarizeRoi(items as Array<{ title: string; roi?: RoiAnnotation }>);
 
   return `<div class="section">
     <div class="section-title">Plan d'action consolidé</div>
     <p style="font-size:12.5px;color:#4b5563;margin-bottom:6px;">
-      ${items.length} action${items.length > 1 ? 's' : ''} prioritaire${items.length > 1 ? 's' : ''} —
-      ${wbCount} déjà dans votre Workbench, ${newCount} nouvellement détectée${newCount > 1 ? 's' : ''} dans ce rapport.
+      ${total} action${total > 1 ? 's' : ''} distincte${total > 1 ? 's' : ''} retenue${total > 1 ? 's' : ''} —
+      ${wbCount} déjà ouverte${wbCount > 1 ? 's' : ''} dans votre Workbench, ${newCount} nouvellement détectée${newCount > 1 ? 's' : ''} dans ce rapport.
+      ${items.length < total ? `Les ${items.length} premières sont détaillées ci-dessous.` : ''}
+      ${merged > 0 ? `${merged} constat${merged > 1 ? 's' : ''} redondant${merged > 1 ? 's' : ''} ${merged > 1 ? 'ont' : 'a'} été fusionné${merged > 1 ? 's' : ''} dans l'action correspondante.` : ''}
     </p>
     <p style="font-size:12.5px;color:#4b5563;margin-bottom:12px;">
       ${roiSummary.sentence} Les blocages critiques restent en tête quel que soit leur rendement ;
-      à gravité égale, l'ordre suit le rapport impact / effort.
+      à gravité égale, l'ordre suit le rapport impact / effort. Chaque action porte un pilote,
+      un indicateur de suivi et, quand une donnée mesurée l'autorise, une estimation de gain.
     </p>
+
     <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
       <thead><tr style="background:#f9fafb;">
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">#</th>
