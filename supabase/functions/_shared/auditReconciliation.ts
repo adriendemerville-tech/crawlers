@@ -276,5 +276,10 @@ export function reconcileReportHtml(html: string, facts: ReconciliationFacts): s
     }
   }
 
+  // 3. Web Vitals : une mesure = un chiffre = un format, dans tout le document.
+  if (facts.webVitals) {
+    out = canonicalizeWebVitals(out, facts.webVitals);
+  }
+
   return out;
 }
