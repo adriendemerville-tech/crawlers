@@ -40,15 +40,18 @@ const SENTIMENT_BONUS: Record<string, number> = {
 const MAX_RICHNESS_BONUS = 15
 
 // ─── LLM targets (via OpenRouter) ───
+// `models` = [primaire, secours]. Si le primaire échoue techniquement (id retiré
+// du catalogue, 404, timeout), on rejoue immédiatement sur le secours afin que
+// les 5 modèles affichés dans les rapports soient réellement mesurés.
 const LLM_TARGETS = [
-  { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-5.4-mini' },
-  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-3-flash-preview' },
-  { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar' },
-  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-3-haiku' },
-  { id: 'mistral',    name: 'Mistral',     model: 'mistralai/mistral-small-latest' },
+  { id: 'chatgpt',    name: 'ChatGPT',    models: ['openai/gpt-5.4-mini', 'openai/gpt-5.4-nano'] },
+  { id: 'gemini',     name: 'Gemini',     models: ['google/gemini-3-flash-preview', 'google/gemini-3.5-flash'] },
+  { id: 'perplexity', name: 'Perplexity', models: ['perplexity/sonar', 'perplexity/sonar-pro'] },
+  { id: 'claude',     name: 'Claude',     models: ['anthropic/claude-3-haiku', 'anthropic/claude-haiku-4.5'] },
+  { id: 'mistral',    name: 'Mistral',    models: ['mistralai/mistral-medium-3.1', 'mistralai/mistral-small-3.2-24b-instruct'] },
 ]
 
-const NUM_PROMPTS = 3 // reduced from 5 to fit within timeout
+const NUM_PROMPTS = 3 // 3 intentions contrastées (besoin, comparatif, local/audience)
 
 // ═══════════════════════════════════════════════
 // BRAND DETECTION
@@ -323,6 +326,29 @@ async function queryWithIterations(
   return { iteration_found: 0, response_text: '', measured: !failure, error: failure }
 }
 
+/**
+ * Joue le prompt sur le modèle primaire ; si l'appel échoue techniquement
+ * (measured=false : id de modèle retiré, 404, timeout), rejoue sur le modèle de
+ * secours. Garantit que les 5 familles affichées dans le rapport sont mesurées.
+ */
+async function queryWithFallback(
+  apiKey: string,
+  models: string[],
+  prompt: string,
+  patterns: BrandPatterns,
+  domain: string,
+  followUpPrompts: string[],
+): Promise<{ iteration_found: number; response_text: string; measured: boolean; error?: string; model_used: string }> {
+  let last = { iteration_found: 0, response_text: '', measured: false, error: 'no_model', model_used: models[0] }
+  for (const model of models) {
+    const r = await queryWithIterations(apiKey, model, prompt, patterns, domain, followUpPrompts)
+    if (r.measured) return { ...r, model_used: model }
+    last = { ...r, model_used: model }
+    console.warn(`[llm-vis] ${domain}: ${model} non mesuré (${r.error}) → bascule modèle de secours`)
+  }
+  return last
+}
+
 // ═══════════════════════════════════════════════
 // AGGREGATE SCORE
 // ═══════════════════════════════════════════════
@@ -433,16 +459,16 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
       const followUps = getFollowUpPrompts(site)
       for (const prompt of prompts) {
-        const { iteration_found, response_text, measured, error } = await queryWithIterations(
+        const { iteration_found, response_text, measured, error, model_used } = await queryWithFallback(
           openrouterKey,
-          llm.model,
+          llm.models,
           prompt,
           patterns,
           site.domain,
           followUps,
         )
 
-        trackPaidApiCall('calculate-llm-visibility', 'openrouter', llm.model, site.domain)
+        trackPaidApiCall('calculate-llm-visibility', 'openrouter', model_used, site.domain)
 
         // P0-1 : un prompt non mesuré (panne modèle) est exclu du score et
         // n'est PAS enregistré comme « marque non trouvée ».

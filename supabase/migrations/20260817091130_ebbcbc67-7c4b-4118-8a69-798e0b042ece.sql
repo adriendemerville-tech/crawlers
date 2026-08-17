@@ -1,0 +1,1 @@
+delete from public.domain_data_cache where domain in ('crawlers.fr','www.crawlers.fr') and data_type = 'llm_visibility';

@@ -1184,7 +1184,7 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
           ${askedPrompts.map(p => `<li>« ${escapeHtmlText(p)} »</li>`).join('')}
         </ol>`
       : `<p style="font-size:12px;color:#6b7280;margin:0 0 8px;">Questions non enregistrées sur ce run.</p>`}
-    <p style="font-size:11px;color:#6b7280;margin:0;line-height:1.5;">Ces questions sont générées à partir du secteur et de l'offre du site, et ne mentionnent jamais la marque ni le domaine : la citation est détectée après coup dans la réponse. Chaque question est jouée en conversation (jusqu'à 3 relances) sur ${effectiveScores.length} modèles. Un modèle est « cité » si la marque apparaît dans au moins une réponse ; plus elle apparaît tôt et haut dans la liste, plus le score est élevé.</p>
+    <p style="font-size:11px;color:#6b7280;margin:0;line-height:1.5;">Ces questions couvrent des intentions volontairement contrastées (découverte, comparatif, recherche locale ou par profil, alternatives, prix, preuve) et ne mentionnent jamais la marque ni le domaine : la citation est détectée après coup dans la réponse. Chaque question est jouée en conversation sur ${effectiveScores.length} modèles, avec jusqu'à 3 « tours » : le tour 1 est la question initiale, les tours 2 et 3 sont des relances de l'internaute (« et si je précise ma ville », « lequel tu choisirais »). La conversation s'arrête dès que la marque apparaît. Une citation au tour 1 vaut 100, au tour 2 50, au tour 3 25, absente 0 — puis le score est modulé par le rang dans la liste, la tonalité et la richesse de la mention.</p>
   </div>`;
 
   return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
