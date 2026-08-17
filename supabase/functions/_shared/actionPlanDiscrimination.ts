@@ -290,6 +290,45 @@ const KPI_BY_FAMILY: Record<string, string> = {
   breadcrumb: 'Résultats enrichis fil d’Ariane',
 };
 
+/**
+ * Levier explicite de chaque famille : c'est ce qui distingue la justification
+ * d'une action de celle d'une autre, même quand la donnée d'entrée (volume,
+ * clics) est commune au domaine.
+ */
+const LEVER_BY_FAMILY: Record<string, string> = {
+  meta_description: 'hausse du taux de clic en SERP',
+  title_tag: 'hausse du taux de clic et pertinence de la requête',
+  h1: 'clarification du sujet principal de la page',
+  heading_structure: 'lisibilité de la hiérarchie pour les robots',
+  canonical: 'consolidation des signaux sur une URL unique',
+  robots: 'déblocage de l’exploration',
+  sitemap: 'accélération de la découverte des URL',
+  structured_data: 'éligibilité aux résultats enrichis et aux citations IA',
+  image_alt: 'visibilité sur Google Images',
+  image_weight: 'allègement du plus grand élément affiché',
+  web_vitals: 'réduction du temps d’affichage principal',
+  internal_linking: 'redistribution de l’autorité interne',
+  orphan_pages: 'raccordement de pages sans lien entrant',
+  cannibalization: 'désambiguïsation entre URL concurrentes',
+  duplicate_content: 'suppression de la dilution entre quasi-doublons',
+  thin_content: 'atteinte du seuil de contenu utile',
+  direct_answer: 'réponse directe en tête de page',
+  ai_citability: 'extraits reprenables par les moteurs de réponse',
+  faq: 'couverture des requêtes interrogatives',
+  eeat_author: 'attribution d’un auteur identifiable',
+  social_proof: 'preuve client vérifiable',
+  backlinks: 'gain d’autorité externe',
+  redirects: 'suppression des sauts de redirection',
+  broken_links: 'élimination des impasses d’exploration',
+  https: 'fiabilité du transport et confiance',
+  content_gap: 'ouverture de mots-clés non couverts',
+  new_content: 'création d’entrées sur le cluster visé',
+  semantic_cocoon: 'structuration en cocon thématique',
+  mobile: 'expérience mobile',
+  i18n: 'ciblage linguistique',
+  breadcrumb: 'contexte de navigation exposé aux robots',
+};
+
 export interface TrafficContext {
   /** Impressions mensuelles GSC du domaine, si l'utilisateur est propriétaire. */
   monthlyImpressions?: number | null;
@@ -359,12 +398,24 @@ export function buildAccountability(
   const impressions = Number(ctx.monthlyImpressions || 0) || 0;
   const volume = Number(ctx.keywordVolume || 0) || 0;
 
+  // Chaque action a son propre levier : la justification doit exposer le
+  // détail du calcul (levier, taux d'effet, périmètre), sinon deux actions
+  // sans rapport partagent la même phrase et l'estimation paraît templatée.
+  const leverLabel = LEVER_BY_FAMILY[fp] || kpi.toLowerCase();
+  const upliftPct = Math.round(uplift * 1000) / 10;
+  const scopePart = coverage < 1
+    ? ` × ${Math.round(coverage * 100)} % du périmètre (${pages} page${pages > 1 ? 's' : ''} sur ${scale})`
+    : pages > 0
+      ? ` sur ${pages} page${pages > 1 ? 's' : ''} concernée${pages > 1 ? 's' : ''}`
+      : '';
+  const formula = `levier « ${leverLabel} », effet attendu ${upliftPct} %${scopePart}`;
+
   if (clicks > 0) {
     const gain = Math.round(clicks * uplift * coverage);
     return {
       owner, kpi,
       traffic_gain: gain > 0 ? gain : null,
-      traffic_basis: `estimation depuis ${clicks} clics/mois mesurés (Search Console) × ${Math.round(uplift * 100)} % d'effet attendu${coverage < 1 ? ` × ${Math.round(coverage * 100)} % du périmètre` : ''}`,
+      traffic_basis: `${clicks} clics/mois mesurés (Search Console) — ${formula}`,
     };
   }
   if (impressions > 0) {
@@ -373,7 +424,7 @@ export function buildAccountability(
     return {
       owner, kpi,
       traffic_gain: gain > 0 ? gain : null,
-      traffic_basis: `estimation depuis ${impressions} impressions/mois mesurées (Search Console), CTR de référence 2 %`,
+      traffic_basis: `${impressions} impressions/mois mesurées (Search Console), CTR de référence 2 % — ${formula}`,
     };
   }
   if (volume > 0) {
@@ -381,7 +432,7 @@ export function buildAccountability(
     return {
       owner, kpi,
       traffic_gain: gain > 0 ? gain : null,
-      traffic_basis: `estimation depuis ${volume} recherches/mois sur le cluster visé (DataForSEO)`,
+      traffic_basis: `${volume} recherches/mois sur le cluster visé (DataForSEO), CTR cible 2 % — ${formula}`,
     };
   }
   return {

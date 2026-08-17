@@ -34,6 +34,7 @@ import {
   resolveToxicity,
   assessIdentityUsability,
   reconcileReportHtml,
+  formatVitalSeconds,
 } from '../_shared/auditReconciliation.ts';
 
 
@@ -1201,7 +1202,8 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
           ${askedPrompts.map(p => `<li>« ${escapeHtmlText(p)} »</li>`).join('')}
         </ol>`
       : `<p style="font-size:12px;color:#6b7280;margin:0 0 8px;">Questions non enregistrées sur ce run.</p>`}
-    <p style="font-size:11px;color:#6b7280;margin:0;line-height:1.5;">Ces questions couvrent des intentions volontairement contrastées (découverte, comparatif, recherche locale ou par profil, alternatives, prix, preuve) et ne mentionnent jamais la marque ni le domaine : la citation est détectée après coup dans la réponse. Chaque question est jouée en conversation sur ${effectiveScores.length} modèles, avec jusqu'à 3 « tours » : le tour 1 est la question initiale, les tours 2 et 3 sont des relances de l'internaute (« et si je précise ma ville », « lequel tu choisirais »). La conversation s'arrête dès que la marque apparaît. Une citation au tour 1 vaut 100, au tour 2 50, au tour 3 25, absente 0 — puis le score est modulé par le rang dans la liste, la tonalité et la richesse de la mention.</p>
+    <p style="font-size:11px;color:#6b7280;margin:0 0 8px;line-height:1.5;">Ces questions couvrent des intentions volontairement contrastées (découverte, comparatif, recherche locale ou par profil, alternatives, prix, preuve) et ne mentionnent jamais la marque ni le domaine : la citation est détectée après coup dans la réponse. Chaque question est jouée en conversation sur ${effectiveScores.length} modèles, avec jusqu'à 3 « tours » : le tour 1 est la question initiale, les tours 2 et 3 sont des relances de l'internaute (« et si je précise ma ville », « lequel tu choisirais »). La conversation s'arrête dès que la marque apparaît. Une citation au tour 1 vaut 100, au tour 2 50, au tour 3 25, absente 0 — puis le score est modulé par le rang dans la liste, la tonalité et la richesse de la mention.</p>
+    <p style="font-size:11px;color:#6b7280;margin:0;line-height:1.5;"><strong>Représentativité de l'échantillon :</strong> ${askedPrompts.length || 0} question${(askedPrompts.length || 0) > 1 ? 's' : ''} × ${effectiveScores.length} modèle${effectiveScores.length > 1 ? 's' : ''} = ${(askedPrompts.length || 0) * effectiveScores.length} interrogation${(askedPrompts.length || 0) * effectiveScores.length > 1 ? 's' : ''}.${(askedPrompts.length || 0) < 8 ? ` Sous 8 questions, ce score est un <strong>indicateur de tendance</strong>, pas une mesure de part de voix : les réponses des modèles varient d'un appel à l'autre et une question de plus peut déplacer le score de plusieurs points. À interpréter comme « cité / non cité sur ces intentions », et à retester dans le temps plutôt qu'à lire comme un pourcentage stable.` : ' Échantillon suffisant pour une lecture comparative dans le temps.'}</p>
   </div>`;
 
   return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
@@ -1314,10 +1316,10 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
         <div class="stat-grid-4">
           <div class="stat-card"><div class="value" style="color:${scoreColor(crawlMeta.performanceScore, 100)}">${crawlMeta.performanceScore}</div><div class="label">Performance mobile /100</div></div>
 
-          ${crawlMeta.lcp ? `<div class="stat-card"><div class="value">${Number(crawlMeta.lcp) > 60 ? (Number(crawlMeta.lcp) / 1000).toFixed(2) : Number(crawlMeta.lcp).toFixed(2)}s</div><div class="label">LCP</div></div>` : ''}
-          ${crawlMeta.tbt ? `<div class="stat-card"><div class="value">${Math.round(Number(crawlMeta.tbt))}ms</div><div class="label">TBT</div></div>` : ''}
+          ${crawlMeta.lcp ? `<div class="stat-card"><div class="value">${formatVitalSeconds(crawlMeta.lcp)}</div><div class="label">LCP</div></div>` : ''}
+          ${crawlMeta.tbt ? `<div class="stat-card"><div class="value">${formatVitalSeconds(crawlMeta.tbt)}</div><div class="label">TBT</div></div>` : ''}
           ${crawlMeta.cls !== null && crawlMeta.cls !== undefined ? `<div class="stat-card"><div class="value">${Number(crawlMeta.cls).toFixed(3)}</div><div class="label">CLS (score)</div></div>` : ''}
-          ${crawlMeta.fcp ? `<div class="stat-card"><div class="value">${Number(crawlMeta.fcp) > 60 ? (Number(crawlMeta.fcp) / 1000).toFixed(2) : Number(crawlMeta.fcp).toFixed(2)}s</div><div class="label">FCP</div></div>` : ''}
+          ${crawlMeta.fcp ? `<div class="stat-card"><div class="value">${formatVitalSeconds(crawlMeta.fcp)}</div><div class="label">FCP</div></div>` : ''}
         </div>
       </div>` : ''}
       <div style="margin-top:16px;">
@@ -4157,6 +4159,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
                   revisedIdentity,
                   detectedLang,
                   detectIdentityContradiction(revisedIdentity, archetypeAnalysis?.mix ?? null),
+                  // Concurrents détectés par l'analyse de marché : la carte ne peut
+                  // plus afficher « Non résolu » quand la section GEO en nomme.
+                  ['leader', 'direct_competitor', 'challenger', 'inspiration_source']
+                    .map((k) => strategicData?.competitive_landscape?.[k]?.name)
+                    .map((n: unknown) => (typeof n === 'string' ? n.trim() : ''))
+                    .filter(Boolean),
                 )
               : undefined,
             archetypes: archetypeAnalysis ? renderPageArchetypesHTML(archetypeAnalysis, domain) : undefined,
@@ -4219,7 +4227,16 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         if (!identityUsability.usable) {
           console.log(`[Marina] Identité partiellement résolue : ${identityUsability.notes.join(' | ')}`);
         }
-        html = reconcileReportHtml(html, { orphanCount, toxicity });
+        // Web Vitals : la mesure Lighthouse est la source unique, tout le
+        // document est réécrit au format canonique « X,XX s ».
+        const perf = expertData?.scores?.performance ?? null;
+        html = reconcileReportHtml(html, {
+          orphanCount,
+          toxicity,
+          webVitals: perf
+            ? { lcp: perf.lcp, fcp: perf.fcp, inp: perf.inp, tbt: perf.tbt, ttfb: perf.ttfb }
+            : null,
+        });
         console.log(
           `[Marina] Réconciliation : orphelines=${orphanCount ?? 'n/d'}, toxicité=${toxicity.score ?? 'n/d'} (désaveu interdit: ${toxicity.disavowClaimForbidden})`,
         );
