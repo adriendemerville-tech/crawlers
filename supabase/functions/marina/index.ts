@@ -4157,6 +4157,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
                   revisedIdentity,
                   detectedLang,
                   detectIdentityContradiction(revisedIdentity, archetypeAnalysis?.mix ?? null),
+                  // Concurrents détectés par l'analyse de marché : la carte ne peut
+                  // plus afficher « Non résolu » quand la section GEO en nomme.
+                  ['leader', 'direct_competitor', 'challenger', 'inspiration_source']
+                    .map((k) => strategicData?.competitive_landscape?.[k]?.name)
+                    .map((n: unknown) => (typeof n === 'string' ? n.trim() : ''))
+                    .filter(Boolean),
                 )
               : undefined,
             archetypes: archetypeAnalysis ? renderPageArchetypesHTML(archetypeAnalysis, domain) : undefined,
