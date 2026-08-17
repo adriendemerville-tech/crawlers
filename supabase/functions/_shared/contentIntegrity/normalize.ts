@@ -51,6 +51,72 @@ export function splitSegments(raw: string): string[] {
     .filter((s) => s.split(' ').filter(Boolean).length >= MIN_SEGMENT_WORDS);
 }
 
+/** Découpe en segments en conservant le texte d'origine (pour retirer le gabarit sans détruire la lisibilité). */
+export function splitSegmentsRaw(raw: string): Array<{ raw: string; norm: string }> {
+  return (raw || '')
+    .split(/(?:[.!?\n\r•|]|\s{2,})+/)
+    .map((s) => ({ raw: s.trim(), norm: normalizeText(s) }))
+    .filter((s) => s.norm.split(' ').filter(Boolean).length >= MIN_SEGMENT_WORDS);
+}
+
+/**
+ * Heuristique mono-page : un segment ressemble-t-il à de la navigation ?
+ * Menus et footers alignent des libellés courts sans ponctuation de phrase,
+ * souvent en capitalisation de titre ou séparés par des puces.
+ */
+export function looksLikeNavigation(raw: string): boolean {
+  const s = (raw || '').trim();
+  if (!s) return false;
+  const w = s.split(/\s+/).filter(Boolean);
+  if (w.length < 6) return false;
+  const sentenceEnders = (s.match(/[.!?]/g) || []).length;
+  const wordsPerSentence = w.length / (sentenceEnders + 1);
+  // Beaucoup de mots, aucune phrase : signature d'un méga-menu.
+  if (sentenceEnders === 0 && w.length > 25) return true;
+  const capitalized = w.filter((t) => /^[A-ZÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]/.test(t)).length;
+  if (wordsPerSentence > 40 && capitalized / w.length > 0.35) return true;
+  // Listes de libellés séparées par des puces / barres.
+  const separators = (s.match(/[•|·»–]/g) || []).length;
+  if (separators >= 3 && sentenceEnders <= 1) return true;
+  return false;
+}
+
+/**
+ * Segments de gabarit d'un corpus : présents sur plus de `BOILERPLATE_RATIO`
+ * des pages. Retourné sous forme normalisée, à passer à `stripBoilerplate`.
+ */
+export function buildBoilerplateSet(texts: string[]): Set<string> {
+  const total = texts.length;
+  const set = new Set<string>();
+  if (total < BOILERPLATE_MIN_PAGES) return set;
+  const docFreq = new Map<string, number>();
+  for (const t of texts) {
+    for (const seg of new Set(splitSegments(t || ''))) {
+      docFreq.set(seg, (docFreq.get(seg) || 0) + 1);
+    }
+  }
+  for (const [seg, freq] of docFreq) {
+    if (freq / total > BOILERPLATE_RATIO) set.add(seg);
+  }
+  return set;
+}
+
+/**
+ * Retire de `text` les segments de gabarit (corpus) et, à défaut de corpus,
+ * ceux qui ressemblent à de la navigation. Retourne le texte utile.
+ */
+export function stripBoilerplate(text: string, boilerplate?: Set<string> | null): string {
+  const segments = splitSegmentsRaw(text || '');
+  if (!segments.length) return (text || '').trim();
+  const kept = segments
+    .filter((s) => !(boilerplate && boilerplate.has(s.norm)))
+    .filter((s) => !looksLikeNavigation(s.raw))
+    .map((s) => s.raw);
+  // Ne jamais renvoyer du vide : sans segment utile, on conserve la source.
+  if (!kept.length) return (text || '').trim();
+  return kept.join('\n');
+}
+
 export interface RawPageText {
   url: string;
   text: string;
