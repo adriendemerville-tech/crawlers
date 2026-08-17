@@ -9,6 +9,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { validateFounderCandidate } from '../_shared/founderNameValidation.ts';
 
 const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
@@ -109,13 +110,17 @@ async function findLocalCompetitors(domain: string, sector: string, locationCode
   return [...scoreMap.values()].sort((a, b) => b.score - a.score).slice(0, 3);
 }
 
-async function searchFounderProfile(domain: string, targetLocation: string) {
+async function searchFounderProfile(domain: string, targetLocation: string, brandName = '') {
   const result = { name: null as string | null, profileUrl: null as string | null, platform: null as string | null, isInfluencer: false, geoMismatch: false, detectedCountry: null as string | null };
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return result;
   const dc = domain.replace(/^www\./, '');
   const locInfo = KNOWN_LOCATIONS[targetLocation.toLowerCase()] || KNOWN_LOCATIONS['france'];
+  const brand = (brandName || '').trim();
   const queries = [
-    { q: `"${dc}" fondateur OR CEO OR founder site:linkedin.com/in`, platform: 'linkedin' },
+    { q: `"${dc}" fondateur OR CEO OR founder OR dirigeant site:linkedin.com/in`, platform: 'linkedin' },
+    ...(brand && brand.toLowerCase() !== dc.split('.')[0].toLowerCase()
+      ? [{ q: `"${brand}" fondateur OR CEO OR gérant OR dirigeant site:linkedin.com/in`, platform: 'linkedin' }]
+      : []),
     { q: `"${dc}" fondateur OR CEO OR founder site:instagram.com`, platform: 'instagram' },
     { q: `"${dc}" fondateur OR CEO OR founder site:youtube.com`, platform: 'youtube' },
   ];
@@ -124,19 +129,25 @@ async function searchFounderProfile(domain: string, targetLocation: string) {
       try {
         const r = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
           method: 'POST', headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-          body: JSON.stringify([{ keyword: q, location_code: locInfo.code, language_code: locInfo.lang, depth: 5 }]),
+          body: JSON.stringify([{ keyword: q, location_code: locInfo.code, language_code: locInfo.lang, depth: 10 }]),
           signal: AbortSignal.timeout(8000),
         });
         if (!r.ok) { await r.text(); return null; }
-        const data = await r.json(); const organic = (data.tasks?.[0]?.result?.[0]?.items || []).find((i: any) => i.type === 'organic' && i.url);
-        if (organic) { let name = organic.title?.split(/\s*[-–|]\s*/)?.[0]?.trim()?.replace(/\s*\(.*\)/, '')?.replace(/\s*@.*/, '')?.trim() || null; return { name, url: organic.url, platform, snippet: organic.description || organic.title || '' }; }
+        const data = await r.json();
+        const items = (data.tasks?.[0]?.result?.[0]?.items || []).filter((i: any) => i.type === 'organic' && i.url);
+        // Scan every organic result, keep the first that is a real person profile
+        for (const item of items) {
+          const validated = validateFounderCandidate({ title: item.title, url: item.url, platform }, dc);
+          if (validated) return { name: validated, url: item.url as string, platform, snippet: item.description || item.title || '' };
+        }
         return null;
       } catch { return null; }
     }))).filter(Boolean);
-    if (results.length === 0) return result;
+    if (results.length === 0) { console.log(`👤 No valid founder profile for ${dc}`); return result; }
     const best = results.find(r => r!.platform === 'linkedin') || results[0]!;
     result.name = best!.name; result.profileUrl = best!.url; result.platform = best!.platform; result.isInfluencer = results.length >= 1;
     if (best!.platform === 'linkedin' && best!.snippet) { const geo = verifyFounderGeo(best!.snippet, targetLocation); result.geoMismatch = geo.mismatch; result.detectedCountry = geo.detectedCountry; }
+    console.log(`👤 Founder validated for ${dc}: ${result.name} (${result.platform})`);
     return result;
   } catch { return result; }
 }
@@ -229,7 +240,7 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
 
     const [competitors, founderInfo, gmbData, fbData] = await Promise.all([
       !skipExtra ? findLocalCompetitors(cleanDomain, sector, locationCode, languageCode, seDomain, siteCtx) : Promise.resolve(null),
-      !skipExtra ? searchFounderProfile(cleanDomain, location) : Promise.resolve({ name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null }),
+      !skipExtra ? searchFounderProfile(cleanDomain, location, brandName) : Promise.resolve({ name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null }),
       !skipExtra ? detectGMB(cleanDomain, brandName, locationCode, languageCode) : Promise.resolve(null),
       !skipExtra ? searchFacebookPage(brandName, sector, locationCode, languageCode) : Promise.resolve({ pageUrl: null, pageName: null, found: false }),
     ]);
