@@ -70,17 +70,19 @@ Dans `ParmenionTargetPanel` (onglet du site), un bloc « Lentilles de ciblage »
 Boutons sans fond, bordure + texte, conformément au design système.
 
 
-## 5. Sécurité et cohérence
+## 6. Sécurité et cohérence
 
 - RLS sur `parmenion_targeting_lenses` via `auth.uid()` (+ GRANT `authenticated` / `service_role`).
-- Aucune lentille n'autorise une action destructive : pruning et merge restent hors périmètre.
+- Aucune lentille n'autorise une action destructive : pruning et merge restent hors périmètre des lentilles.
 - `proof_level` recalculé à chaque cycle : si les signaux disparaissent, la lentille passe en mode « contexte injecté » automatiquement.
+- `publish_directory` validé contre les répertoires existants du crawl ; un répertoire inconnu est refusé.
 
-## 6. Découpage
+## 7. Découpage
 
-- **Sprint 1** — table + RLS, `parmenion-lens-options`, UI de configuration (aucun effet moteur). Vérifiable immédiatement sur Dictadevi : la liste PACA se remplit ou non.
+- **Sprint 1** — table + RLS, `parmenion-lens-options` (options + répertoires détectés), UI de configuration (aucun effet moteur). Vérifiable immédiatement sur Dictadevi : la liste PACA se remplit ou non.
 - **Sprint 2** — branchement scoring (`lens_bonus`) et quota de slots dans l'orchestrateur, avec log par cycle du nombre de slots orientés.
-- **Sprint 3** — ContentBrief local/persona, hiérarchie région/ville et garde anti-cannibalisation géo.
+- **Sprint 3** — ContentBrief local/persona, `publish_directory` transmis aux exécuteurs CMS, lien de conversion obligatoire, hiérarchie région/ville et garde anti-cannibalisation géo.
+
 
 ## Détails techniques
 
