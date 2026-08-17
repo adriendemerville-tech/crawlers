@@ -8,7 +8,9 @@ import {
   type SectionTopPriorities,
   type RawFinding,
   type WorkbenchTask,
+  type ConsolidatedPlanStats,
 } from '../_shared/topPriorities.ts';
+import { severityFromSignal } from '../_shared/actionPlanDiscrimination.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
 import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
@@ -3803,19 +3805,24 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             const refs = Number(da.referring_domains) || 0;
             const tox = Number(da.toxicity?.toxicity_score) || 0;
             if (score > 0 && score < 40) {
+              // Lot 5 — la sévérité vient de l'écart mesuré au seuil, pas d'une constante.
+              const sig = severityFromSignal({ value: score, threshold: 40, direction: 'below', coverage: 1 });
               eeatFindings.push({
                 title: `Autorité de domaine faible (Authority Score ${score}/100)`,
-                description: `${refs} domaine(s) référent(s) mesuré(s). Acquérir des liens éditoriaux thématiques (relations presse, partenariats sectoriels, contenus citables) pour lever le plafond de positions atteignable.`,
-                priority: score < 20 ? 'important' : 'suggestion',
+                description: `${refs} domaine(s) référent(s) mesuré(s) — ${sig.basis}. Acquérir des liens éditoriaux thématiques (relations presse, partenariats sectoriels, contenus citables) pour lever le plafond de positions atteignable.`,
+                priority: sig.severity === 'critical' ? 'critical' : sig.severity === 'important' ? 'important' : 'suggestion',
                 category: 'eeat',
+                gap_ratio: sig.gapRatio,
               } as RawFinding);
             }
             if (tox >= 35) {
+              const sigTox = severityFromSignal({ value: tox, threshold: 35, direction: 'above', coverage: 1 });
               eeatFindings.push({
                 title: `Profil de liens à assainir (toxicité ${tox}/100 — ${da.toxicity?.verdict || ''})`,
-                description: da.toxicity?.recommendation || 'Diversifier les ancres et désavouer les référents de faible qualité.',
-                priority: tox >= 60 ? 'critical' : 'important',
+                description: `${da.toxicity?.recommendation || 'Diversifier les ancres et désavouer les référents de faible qualité.'} (${sigTox.basis})`,
+                priority: sigTox.severity === 'critical' ? 'critical' : 'important',
                 category: 'eeat',
+                gap_ratio: sigTox.gapRatio,
               } as RawFinding);
             }
           }
@@ -3871,10 +3878,44 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         } catch (wbErr) {
           console.warn('[Marina] Workbench fetch failed (non-fatal):', wbErr);
         }
+        // ─── Données propriétaires (avant le plan : elles servent à estimer le trafic) ───
+        // Uniquement si l'utilisateur possède une connexion Google vérifiée
+        // couvrant CE domaine. Sinon la section n'existe pas et l'estimation
+        // de gain reste explicitement « non estimable ».
+        let ownerPerformance: OwnerPerformanceData | null = null;
+        try {
+          ownerPerformance = await fetchOwnerPerformanceData(sb, parentJob.user_id, domain);
+          console.log(
+            `[Marina] Données propriétaires ${ownerPerformance ? 'disponibles' : 'absentes'} pour ${domain}`,
+          );
+        } catch (ownerErr) {
+          console.warn('[Marina] Owner performance fetch failed (non-fatal):', ownerErr);
+        }
+
+        // Lot 5 — contexte de trafic mesuré : clics/impressions GSC si le domaine
+        // est vérifié, sinon volume de recherche DataForSEO du périmètre visé.
+        const kpForVolume: any = strategicData?.keyword_positioning || strategicData?.keywordPositioning || {};
+        const measuredKeywordVolume = [
+          ...(Array.isArray(kpForVolume.quick_wins) ? kpForVolume.quick_wins : []),
+          ...(Array.isArray(kpForVolume.content_gaps) ? kpForVolume.content_gaps : []),
+        ].reduce((acc: number, k: any) => acc + (Number(k?.volume) || 0), 0);
+
+        const trafficContext = {
+          monthlyClicks: ownerPerformance?.gsc?.current?.clicks ?? null,
+          monthlyImpressions: ownerPerformance?.gsc?.current?.impressions ?? null,
+          keywordVolume: measuredKeywordVolume > 0 ? measuredKeywordVolume : null,
+          pagesAnalyzed: crawlSnapshot?.crawled_pages || crawlSnapshot?.pages?.length || null,
+        };
+
+        let consolidatedPlanStats: ConsolidatedPlanStats | undefined;
         const rawConsolidatedPlan = buildConsolidatedActionPlan(
           workbenchTasks,
           [topSeo, topGeo, topKw, topEeat, topCocoon],
-          { maxItems: 12 },
+          {
+            maxItems: 12,
+            traffic: trafficContext,
+            onStats: (s) => { consolidatedPlanStats = s; },
+          },
         );
 
 
@@ -3895,27 +3936,28 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, renderTopPrioritiesHTML(topCocoon));
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
 
-        // Données propriétaires : uniquement si l'utilisateur possède une connexion
-        // Google vérifiée couvrant CE domaine. Sinon la section n'existe pas.
-        let ownerPerformance: OwnerPerformanceData | null = null;
-        try {
-          ownerPerformance = await fetchOwnerPerformanceData(sb, parentJob.user_id, domain);
-          console.log(
-            `[Marina] Données propriétaires ${ownerPerformance ? 'disponibles' : 'absentes'} pour ${domain}`,
-          );
-        } catch (ownerErr) {
-          console.warn('[Marina] Owner performance fetch failed (non-fatal):', ownerErr);
-        }
         const ownerPerformanceHTML = renderOwnerPerformanceHTML(ownerPerformance, '3b');
 
         // Pondération ROI diffuse (impact / effort, 0 token) : les blocages critiques
         // restent en tête, l'ordre interne suit le rendement.
-        const consolidatedPlan = applyRoiWeighting(rawConsolidatedPlan, {
-          pagesAnalyzed: crawlSnapshot?.crawled_pages || crawlSnapshot?.pages?.length || null,
+        // Lot 5 — l'impact est modulé par des signaux mesurés : volume du cluster
+        // pour les actions mots-clés, position moyenne mesurée si GSC est branché.
+        const measuredPosition = ownerPerformance?.gsc?.current?.position ?? null;
+        const planWithSignals = rawConsolidatedPlan.map((it) => ({
+          ...it,
+          keyword_volume: it.source_section === 'keywords' && trafficContext.keywordVolume
+            ? trafficContext.keywordVolume
+            : undefined,
+          current_position: measuredPosition && measuredPosition > 0
+            ? Math.round(measuredPosition * 10) / 10
+            : undefined,
+        }));
+        const consolidatedPlan = applyRoiWeighting(planWithSignals, {
+          pagesAnalyzed: trafficContext.pagesAnalyzed,
           hasOwnerPerformance: Boolean(ownerPerformance),
         });
         const roiSummary = summarizeRoi(consolidatedPlan, detectedLang);
-        const consolidatedPlanHTML = renderConsolidatedPlanHTML(consolidatedPlan);
+        const consolidatedPlanHTML = renderConsolidatedPlanHTML(consolidatedPlan, consolidatedPlanStats);
 
 
         const tempPrefix = `marina/tmp/${jobId}`;

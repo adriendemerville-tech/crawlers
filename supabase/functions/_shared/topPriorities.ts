@@ -15,6 +15,15 @@
  */
 
 import { ROI_TIER_STYLE, summarizeRoi, type RoiAnnotation } from './roiWeighting.ts';
+import {
+  fingerprintFinding,
+  dedupeByFingerprint,
+  scopeSentence,
+  buildAccountability,
+  formatAccountability,
+  type Accountability,
+  type TrafficContext,
+} from './actionPlanDiscrimination.ts';
 
 // ───────────────────────── Types ─────────────────────────
 
@@ -33,6 +42,8 @@ export interface RawFinding {
   expected_roi?: string;
   effort?: string;
   pages_affected?: number;
+  /** Lot 5 : écart relatif au seuil mesuré, fourni par severityFromSignal(). */
+  gap_ratio?: number;
 }
 
 export interface PriorityAction {
@@ -44,6 +55,15 @@ export interface PriorityAction {
   source_section: SectionKey;
   /** First fix as a one-line "next step", if available */
   next_step?: string;
+  /** Lot 5 : empreinte de consigne (déduplication inter-gabarits). */
+  fingerprint?: string;
+  /** Lot 5 : gabarits / répertoires regroupés sous cette action. */
+  templates?: string[];
+  /** Lot 5 : nombre de constats fusionnés. */
+  occurrences?: number;
+  pages_affected?: number;
+  /** Lot 5 : écart mesuré au seuil (module l'impact ROI). */
+  gap_ratio?: number;
 }
 
 export type SectionKey = 'seo' | 'geo' | 'keywords' | 'eeat' | 'cocoon';
@@ -54,6 +74,8 @@ export interface SectionTopPriorities {
   actions: PriorityAction[];   // 0..3 entries
   total_findings: number;      // findings considered before slicing to top-3
   has_blockers: boolean;       // true if ≥1 critical
+  /** Lot 5 : nombre de constats après fusion par empreinte. */
+  deduped_findings?: number;
 }
 
 export interface WorkbenchTask {
@@ -76,7 +98,24 @@ export interface ConsolidatedPlanItem {
   source: 'workbench' | 'newly_detected';
   source_section?: SectionKey;
   workbench_id?: string;
+  /** Lot 5 */
+  fingerprint?: string;
+  templates?: string[];
+  occurrences?: number;
+  pages_affected?: number;
+  gap_ratio?: number;
+  accountability?: Accountability;
 }
+
+/** Lot 5 : décompte réel Workbench vs nouveautés, indépendant du tronquage. */
+export interface ConsolidatedPlanStats {
+  total_candidates: number;
+  workbench_open: number;
+  newly_detected: number;
+  displayed: number;
+  merged_duplicates: number;
+}
+
 
 // ─────────────────── Severity normalization ───────────────────
 
@@ -127,43 +166,66 @@ const SECTION_LABELS: Record<SectionKey, string> = {
 
 /**
  * Extract the top-3 actions from a list of raw findings.
- * Stable sort: severity desc, then severity weight desc, then original index.
+ *
+ * Lot 5 : les constats sont d'abord fusionnés par empreinte de consigne, pour
+ * qu'une même action déclinée sur plusieurs gabarits n'occupe pas les trois
+ * places du Top 3. La portée mesurée (pages, gabarits) est reversée en
+ * description.
  */
 export function extractTopPriorities(
   section: SectionKey,
   findings: RawFinding[],
 ): SectionTopPriorities {
-  const cleaned = (findings || [])
-    .filter((f) => f && (f.title || f.description))
-    .map((f, idx) => ({
-      idx,
-      severity: normalizeSeverity(f.priority || f.severity),
-      raw: f,
-    }));
+  const rawCount = (findings || []).filter((f) => f && (f.title || f.description)).length;
+
+  const grouped = dedupeByFingerprint(
+    (findings || []).filter((f) => f && (f.title || f.description)) as Array<RawFinding & Record<string, unknown>>,
+  );
+
+  const cleaned = grouped.map((g, idx) => ({
+    idx,
+    severity: normalizeSeverity(g.item.priority || g.item.severity),
+    group: g,
+  }));
 
   cleaned.sort((a, b) => {
     const w = SEVERITY_WEIGHT[b.severity] - SEVERITY_WEIGHT[a.severity];
     if (w !== 0) return w;
+    // À gravité égale, l'action qui couvre le plus de pages/gabarits passe devant.
+    const scope = (b.group.pages_affected + b.group.templates.length)
+      - (a.group.pages_affected + a.group.templates.length);
+    if (scope !== 0) return scope;
     return a.idx - b.idx;
   });
 
-  const top = cleaned.slice(0, 3).map((c, i): PriorityAction => ({
-    rank: (i + 1) as 1 | 2 | 3,
-    severity: c.severity,
-    title: c.raw.title || '(sans titre)',
-    description: c.raw.description || '',
-    category: c.raw.category,
-    source_section: section,
-    next_step: Array.isArray(c.raw.fixes) && c.raw.fixes.length > 0 ? c.raw.fixes[0] : undefined,
-  }));
+  const top = cleaned.slice(0, 3).map((c, i): PriorityAction => {
+    const raw = c.group.item;
+    const scope = scopeSentence(c.group);
+    return {
+      rank: (i + 1) as 1 | 2 | 3,
+      severity: c.severity,
+      title: raw.title || '(sans titre)',
+      description: [raw.description || '', scope].filter(Boolean).join(' '),
+      category: raw.category,
+      source_section: section,
+      next_step: Array.isArray(raw.fixes) && raw.fixes.length > 0 ? raw.fixes[0] : undefined,
+      fingerprint: c.group.fingerprint,
+      templates: c.group.templates,
+      occurrences: c.group.occurrences,
+      pages_affected: c.group.pages_affected || raw.pages_affected,
+      gap_ratio: typeof raw.gap_ratio === 'number' ? raw.gap_ratio : undefined,
+    };
+  });
 
   return {
     section,
     section_label: SECTION_LABELS[section],
     actions: top,
-    total_findings: cleaned.length,
+    total_findings: rawCount,
+    deduped_findings: cleaned.length,
     has_blockers: cleaned.some((c) => c.severity === 'critical'),
   };
+
 }
 
 // ─────────────────── Semantic dedup (lightweight) ───────────────────
@@ -192,16 +254,26 @@ export function titleSignature(title: string): string {
 /**
  * Build the final action plan shown at the bottom of the report.
  *
- * Rule (chosen by user): Workbench tasks first (open ones), then enrich with
- * any section Top-3 that the workbench hasn't picked up yet. The latter are
- * flagged source='newly_detected' so users can see what's fresh.
+ * Workbench tasks first (open ones), then enrich with any section Top-3 that
+ * the workbench hasn't picked up yet, flagged source='newly_detected'.
+ *
+ * Lot 5 :
+ *  - déduplication par empreinte de consigne (et non par titre), donc une même
+ *    action déclinée par gabarit n'apparaît qu'une fois, avec ses gabarits ;
+ *  - `owner`, `kpi` et estimation de trafic renseignés sur chaque action ;
+ *  - décompte réel Workbench / nouveautés remonté via `options.onStats`.
  */
 export function buildConsolidatedActionPlan(
   workbench: WorkbenchTask[],
   sections: SectionTopPriorities[],
-  options: { maxItems?: number } = {},
+  options: {
+    maxItems?: number;
+    traffic?: TrafficContext;
+    onStats?: (stats: ConsolidatedPlanStats) => void;
+  } = {},
 ): ConsolidatedPlanItem[] {
   const maxItems = options.maxItems ?? 12;
+  const traffic = options.traffic || {};
 
   // Open workbench tasks first, ranked by severity then created order (assumed in input order)
   const openWb = (workbench || []).filter((w) => (w.status || 'open') !== 'done');
@@ -211,40 +283,67 @@ export function buildConsolidatedActionPlan(
     return sb - sa;
   });
 
-  const seenSignatures = new Set<string>();
+  // Fusion des tâches Workbench par empreinte : les runs successifs de Marina
+  // créent des variantes de la même consigne sur des URL différentes.
+  const wbGroups = dedupeByFingerprint(
+    wbRanked.map((w) => ({
+      ...w,
+      title: w.title,
+      description: w.description || '',
+      category: w.finding_category || undefined,
+    })) as Array<Record<string, unknown> & { title: string }>,
+  );
+
+  const seenFingerprints = new Set<string>();
   const items: ConsolidatedPlanItem[] = [];
   let rank = 1;
+  let mergedDuplicates = 0;
 
-  for (const w of wbRanked) {
-    if (items.length >= maxItems) break;
-    const sig = titleSignature(w.title);
-    if (sig) seenSignatures.add(sig);
+  for (const g of wbGroups) {
+    mergedDuplicates += g.occurrences - 1;
+    seenFingerprints.add(g.fingerprint);
+    if (items.length >= maxItems) continue;
+    const w = g.item as unknown as WorkbenchTask;
+    const scope = scopeSentence(g);
+    const base = {
+      title: w.title,
+      description: w.description || '',
+      category: w.finding_category || undefined,
+      pages_affected: g.pages_affected,
+    };
     items.push({
       rank: rank++,
       severity: normalizeSeverity(w.severity),
       title: w.title,
-      description: w.description || '',
+      description: [w.description || '', scope].filter(Boolean).join(' '),
       category: w.finding_category || undefined,
       source: 'workbench',
       workbench_id: w.id,
+      fingerprint: g.fingerprint,
+      templates: g.templates,
+      occurrences: g.occurrences,
+      pages_affected: g.pages_affected,
+      accountability: buildAccountability(base, traffic, g.fingerprint),
     });
   }
 
   // Now inject section Top-3 that aren't already covered, ordered by severity
-  const sectionPool: Array<PriorityAction & { _sig: string }> = [];
+  const sectionPool: Array<PriorityAction & { _fp: string }> = [];
   for (const s of sections) {
     for (const a of s.actions) {
-      sectionPool.push({ ...a, _sig: titleSignature(a.title) });
+      sectionPool.push({ ...a, _fp: a.fingerprint || fingerprintFinding(a) });
     }
   }
   sectionPool.sort(
     (a, b) => SEVERITY_WEIGHT[b.severity] - SEVERITY_WEIGHT[a.severity],
   );
 
+  let newlyDetected = 0;
   for (const a of sectionPool) {
-    if (items.length >= maxItems) break;
-    if (a._sig && seenSignatures.has(a._sig)) continue;   // already in workbench
-    seenSignatures.add(a._sig);
+    if (a._fp && seenFingerprints.has(a._fp)) { mergedDuplicates++; continue; }
+    seenFingerprints.add(a._fp);
+    newlyDetected++;
+    if (items.length >= maxItems) continue;
     items.push({
       rank: rank++,
       severity: a.severity,
@@ -253,11 +352,30 @@ export function buildConsolidatedActionPlan(
       category: a.category,
       source: 'newly_detected',
       source_section: a.source_section,
+      fingerprint: a._fp,
+      templates: a.templates,
+      occurrences: a.occurrences,
+      pages_affected: a.pages_affected,
+      gap_ratio: a.gap_ratio,
+      accountability: buildAccountability(
+        { title: a.title, description: a.description, category: a.category, pages_affected: a.pages_affected },
+        traffic,
+        a._fp,
+      ),
     });
   }
 
+  options.onStats?.({
+    total_candidates: wbGroups.length + newlyDetected,
+    workbench_open: wbGroups.length,
+    newly_detected: newlyDetected,
+    displayed: items.length,
+    merged_duplicates: mergedDuplicates,
+  });
+
   return items;
 }
+
 
 // ─────────────────── HTML helpers (used by Marina) ───────────────────
 
@@ -357,9 +475,12 @@ export function renderTopPrioritiesHTML(top: SectionTopPriorities): string {
 
 /**
  * Render the consolidated end-of-report action plan as HTML.
+ * Lot 5 : colonne « Pilote & KPI » (owner, KPI, gain estimé), gabarits
+ * regroupés visibles, et décompte réel Workbench / nouveautés.
  */
 export function renderConsolidatedPlanHTML(
   items: Array<ConsolidatedPlanItem & { roi?: RoiAnnotation }>,
+  stats?: ConsolidatedPlanStats,
 ): string {
   if (!items.length) {
     return `<div class="section">
@@ -378,42 +499,64 @@ export function renderConsolidatedPlanHTML(
       ? `<div><span style="background:${ROI_TIER_STYLE[it.roi.tier].bg};color:${ROI_TIER_STYLE[it.roi.tier].fg};padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">${escapeHtml(it.roi.tier_label)}</span></div>
          <div style="font-size:10.5px;color:#6b7280;margin-top:4px;">${escapeHtml(it.roi.effort_label)}</div>`
       : '<span style="font-size:11px;color:#9ca3af;">n/d</span>';
+    const acc = it.accountability;
+    const accCell = acc
+      ? `<div style="font-size:11.5px;color:#111827;font-weight:600;">${escapeHtml(acc.owner)}</div>
+         <div style="font-size:10.5px;color:#6b7280;margin-top:3px;">KPI : ${escapeHtml(acc.kpi)}</div>
+         <div style="font-size:10.5px;color:${acc.traffic_gain !== null ? '#4b5563' : '#9ca3af'};margin-top:3px;">${
+           acc.traffic_gain !== null
+             ? `+${acc.traffic_gain} visites/mois estimées`
+             : 'Gain non estimable'
+         }</div>`
+      : '<span style="font-size:11px;color:#9ca3af;">n/d</span>';
+    const scope = (it.templates && it.templates.length > 1)
+      ? `<div style="font-size:10.5px;color:#6b7280;margin-top:4px;">Gabarits concernés : ${escapeHtml(it.templates.slice(0, 8).join(', '))}</div>`
+      : '';
     return `<tr style="border-bottom:1px solid #e5e7eb;">
       <td style="padding:10px 12px;font-weight:700;color:#111827;font-size:13px;">${it.rank}</td>
       <td style="padding:10px 12px;">
         <div style="font-weight:600;font-size:13px;color:#111827;margin-bottom:3px;">${escapeHtml(title)}</div>
         ${description ? `<div style="font-size:12px;color:#4b5563;line-height:1.45;">${escapeHtml(description)}</div>` : ''}
-
+        ${scope}
         ${it.roi ? `<div style="font-size:11px;color:#6b7280;margin-top:5px;">${escapeHtml(it.roi.roi_note)}</div>` : ''}
+        ${acc ? `<div style="font-size:10.5px;color:#9ca3af;margin-top:4px;">Base de l'estimation : ${escapeHtml(acc.traffic_basis)}</div>` : ''}
       </td>
       <td style="padding:10px 12px;white-space:nowrap;">
         <span style="background:${badge.bg};color:${badge.fg};padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">${badge.label}</span>
       </td>
       <td style="padding:10px 12px;white-space:nowrap;">${roiCell}</td>
+      <td style="padding:10px 12px;">${accCell}</td>
       <td style="padding:10px 12px;white-space:nowrap;">${origin}</td>
     </tr>`;
   }).join('');
 
-  const wbCount = items.filter((i) => i.source === 'workbench').length;
-  const newCount = items.length - wbCount;
+  const wbCount = stats?.workbench_open ?? items.filter((i) => i.source === 'workbench').length;
+  const newCount = stats?.newly_detected ?? (items.length - items.filter((i) => i.source === 'workbench').length);
+  const total = stats?.total_candidates ?? items.length;
+  const merged = stats?.merged_duplicates ?? 0;
   const roiSummary = summarizeRoi(items as Array<{ title: string; roi?: RoiAnnotation }>);
 
   return `<div class="section">
     <div class="section-title">Plan d'action consolidé</div>
     <p style="font-size:12.5px;color:#4b5563;margin-bottom:6px;">
-      ${items.length} action${items.length > 1 ? 's' : ''} prioritaire${items.length > 1 ? 's' : ''} —
-      ${wbCount} déjà dans votre Workbench, ${newCount} nouvellement détectée${newCount > 1 ? 's' : ''} dans ce rapport.
+      ${total} action${total > 1 ? 's' : ''} distincte${total > 1 ? 's' : ''} retenue${total > 1 ? 's' : ''} —
+      ${wbCount} déjà ouverte${wbCount > 1 ? 's' : ''} dans votre Workbench, ${newCount} nouvellement détectée${newCount > 1 ? 's' : ''} dans ce rapport.
+      ${items.length < total ? `Les ${items.length} premières sont détaillées ci-dessous.` : ''}
+      ${merged > 0 ? `${merged} constat${merged > 1 ? 's' : ''} redondant${merged > 1 ? 's' : ''} ${merged > 1 ? 'ont' : 'a'} été fusionné${merged > 1 ? 's' : ''} dans l'action correspondante.` : ''}
     </p>
     <p style="font-size:12.5px;color:#4b5563;margin-bottom:12px;">
       ${roiSummary.sentence} Les blocages critiques restent en tête quel que soit leur rendement ;
-      à gravité égale, l'ordre suit le rapport impact / effort.
+      à gravité égale, l'ordre suit le rapport impact / effort. Chaque action porte un pilote,
+      un indicateur de suivi et, quand une donnée mesurée l'autorise, une estimation de gain.
     </p>
+
     <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
       <thead><tr style="background:#f9fafb;">
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">#</th>
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Action</th>
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Sévérité</th>
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Rendement</th>
+        <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Pilote &amp; KPI</th>
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Origine</th>
       </tr></thead>
       <tbody>${rows}</tbody>
