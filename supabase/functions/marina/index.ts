@@ -1239,10 +1239,11 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Détail des scores</h3>
         <div class="stat-grid-4">
-          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.performance?.score || 0, scores?.performance?.maxScore || 40)}">${scores?.performance?.score || 0}</div><div class="label">Performance /${scores?.performance?.maxScore || 40}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.technical?.score || 0, scores?.technical?.maxScore || 50)}">${scores?.technical?.score || 0}</div><div class="label">Technique /${scores?.technical?.maxScore || 50}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.semantic?.score || 0, scores?.semantic?.maxScore || 60)}">${scores?.semantic?.score || 0}</div><div class="label">Sémantique /${scores?.semantic?.maxScore || 60}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(scores?.aiReady?.score || 0, scores?.aiReady?.maxScore || 30)}">${scores?.aiReady?.score || 0}</div><div class="label">IA-Ready /${scores?.aiReady?.maxScore || 30}</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.performance?.score, scores?.performance?.maxScore || 40) ?? 0, scores?.performance?.maxScore || 40)}">${clampScore(scores?.performance?.score, scores?.performance?.maxScore || 40) ?? 0}</div><div class="label">Performance /${scores?.performance?.maxScore || 40}</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.technical?.score, scores?.technical?.maxScore || 50) ?? 0, scores?.technical?.maxScore || 50)}">${clampScore(scores?.technical?.score, scores?.technical?.maxScore || 50) ?? 0}</div><div class="label">Technique /${scores?.technical?.maxScore || 50}</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.semantic?.score, scores?.semantic?.maxScore || 60) ?? 0, scores?.semantic?.maxScore || 60)}">${clampScore(scores?.semantic?.score, scores?.semantic?.maxScore || 60) ?? 0}</div><div class="label">Sémantique /${scores?.semantic?.maxScore || 60}</div></div>
+          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.aiReady?.score, scores?.aiReady?.maxScore || 30) ?? 0, scores?.aiReady?.maxScore || 30)}">${clampScore(scores?.aiReady?.score, scores?.aiReady?.maxScore || 30) ?? 0}</div><div class="label">IA-Ready /${scores?.aiReady?.maxScore || 30}</div></div>
+
         </div>
       </div>
     </div>`;
