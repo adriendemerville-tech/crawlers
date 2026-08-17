@@ -459,16 +459,16 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
       const followUps = getFollowUpPrompts(site)
       for (const prompt of prompts) {
-        const { iteration_found, response_text, measured, error } = await queryWithIterations(
+        const { iteration_found, response_text, measured, error, model_used } = await queryWithFallback(
           openrouterKey,
-          llm.model,
+          llm.models,
           prompt,
           patterns,
           site.domain,
           followUps,
         )
 
-        trackPaidApiCall('calculate-llm-visibility', 'openrouter', llm.model, site.domain)
+        trackPaidApiCall('calculate-llm-visibility', 'openrouter', model_used, site.domain)
 
         // P0-1 : un prompt non mesuré (panne modèle) est exclu du score et
         // n'est PAS enregistré comme « marque non trouvée ».
