@@ -62,6 +62,8 @@ export interface PriorityAction {
   /** Lot 5 : nombre de constats fusionnés. */
   occurrences?: number;
   pages_affected?: number;
+  /** Lot 5 : écart mesuré au seuil (module l'impact ROI). */
+  gap_ratio?: number;
 }
 
 export type SectionKey = 'seo' | 'geo' | 'keywords' | 'eeat' | 'cocoon';
