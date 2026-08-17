@@ -2164,6 +2164,17 @@ Deno.serve(handleRequest(async (req) => {
     
     // Step 3: DOM-based HTML analysis
     const htmlAnalysis = analyzeHtmlWithDOM(smartFetchResult.html, normalizedUrl);
+
+    // Step 3b: Preuve sociale déterministe (couche 1 HTML + couche 2 fiche Google)
+    let socialProof;
+    try {
+      const placesSignals = await fetchPlacesSocialProof(domain.replace(/^www\./, '').split('.')[0], domain);
+      socialProof = resolveSocialProof({ html: smartFetchResult.html, extraSignals: placesSignals });
+    } catch (e) {
+      console.warn('[SocialProof] échec résolution:', e instanceof Error ? e.message : e);
+      socialProof = resolveSocialProof({ html: smartFetchResult.html });
+    }
+    console.log(`[SocialProof] statut=${socialProof.status} avis=${socialProof.reviewCount ?? 'n/a'} note=${socialProof.rating ?? 'n/a'}`);
     
     // Gestion gracieuse si PageSpeed a échoué (psiData peut être null)
     const psiAvailable = psiData?.lighthouseResult?.categories?.performance != null;
