@@ -9,7 +9,11 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
-import { validateFounderCandidate } from '../_shared/founderNameValidation.ts';
+import {
+  serpItemToCandidate, pickSpokesperson, toFounderInfo, fetchLegalPagePersons,
+  type PersonCandidate,
+} from '../_shared/personAuthority.ts';
+
 
 const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
