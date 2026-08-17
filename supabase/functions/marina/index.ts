@@ -34,6 +34,7 @@ import {
   resolveToxicity,
   assessIdentityUsability,
   reconcileReportHtml,
+  formatVitalSeconds,
 } from '../_shared/auditReconciliation.ts';
 
 
