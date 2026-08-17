@@ -248,16 +248,26 @@ export function titleSignature(title: string): string {
 /**
  * Build the final action plan shown at the bottom of the report.
  *
- * Rule (chosen by user): Workbench tasks first (open ones), then enrich with
- * any section Top-3 that the workbench hasn't picked up yet. The latter are
- * flagged source='newly_detected' so users can see what's fresh.
+ * Workbench tasks first (open ones), then enrich with any section Top-3 that
+ * the workbench hasn't picked up yet, flagged source='newly_detected'.
+ *
+ * Lot 5 :
+ *  - déduplication par empreinte de consigne (et non par titre), donc une même
+ *    action déclinée par gabarit n'apparaît qu'une fois, avec ses gabarits ;
+ *  - `owner`, `kpi` et estimation de trafic renseignés sur chaque action ;
+ *  - décompte réel Workbench / nouveautés remonté via `options.onStats`.
  */
 export function buildConsolidatedActionPlan(
   workbench: WorkbenchTask[],
   sections: SectionTopPriorities[],
-  options: { maxItems?: number } = {},
+  options: {
+    maxItems?: number;
+    traffic?: TrafficContext;
+    onStats?: (stats: ConsolidatedPlanStats) => void;
+  } = {},
 ): ConsolidatedPlanItem[] {
   const maxItems = options.maxItems ?? 12;
+  const traffic = options.traffic || {};
 
   // Open workbench tasks first, ranked by severity then created order (assumed in input order)
   const openWb = (workbench || []).filter((w) => (w.status || 'open') !== 'done');
@@ -267,40 +277,67 @@ export function buildConsolidatedActionPlan(
     return sb - sa;
   });
 
-  const seenSignatures = new Set<string>();
+  // Fusion des tâches Workbench par empreinte : les runs successifs de Marina
+  // créent des variantes de la même consigne sur des URL différentes.
+  const wbGroups = dedupeByFingerprint(
+    wbRanked.map((w) => ({
+      ...w,
+      title: w.title,
+      description: w.description || '',
+      category: w.finding_category || undefined,
+    })) as Array<Record<string, unknown> & { title: string }>,
+  );
+
+  const seenFingerprints = new Set<string>();
   const items: ConsolidatedPlanItem[] = [];
   let rank = 1;
+  let mergedDuplicates = 0;
 
-  for (const w of wbRanked) {
-    if (items.length >= maxItems) break;
-    const sig = titleSignature(w.title);
-    if (sig) seenSignatures.add(sig);
+  for (const g of wbGroups) {
+    mergedDuplicates += g.occurrences - 1;
+    seenFingerprints.add(g.fingerprint);
+    if (items.length >= maxItems) continue;
+    const w = g.item as unknown as WorkbenchTask;
+    const scope = scopeSentence(g);
+    const base = {
+      title: w.title,
+      description: w.description || '',
+      category: w.finding_category || undefined,
+      pages_affected: g.pages_affected,
+    };
     items.push({
       rank: rank++,
       severity: normalizeSeverity(w.severity),
       title: w.title,
-      description: w.description || '',
+      description: [w.description || '', scope].filter(Boolean).join(' '),
       category: w.finding_category || undefined,
       source: 'workbench',
       workbench_id: w.id,
+      fingerprint: g.fingerprint,
+      templates: g.templates,
+      occurrences: g.occurrences,
+      pages_affected: g.pages_affected,
+      accountability: buildAccountability(base, traffic, g.fingerprint),
     });
   }
 
   // Now inject section Top-3 that aren't already covered, ordered by severity
-  const sectionPool: Array<PriorityAction & { _sig: string }> = [];
+  const sectionPool: Array<PriorityAction & { _fp: string }> = [];
   for (const s of sections) {
     for (const a of s.actions) {
-      sectionPool.push({ ...a, _sig: titleSignature(a.title) });
+      sectionPool.push({ ...a, _fp: a.fingerprint || fingerprintFinding(a) });
     }
   }
   sectionPool.sort(
     (a, b) => SEVERITY_WEIGHT[b.severity] - SEVERITY_WEIGHT[a.severity],
   );
 
+  let newlyDetected = 0;
   for (const a of sectionPool) {
-    if (items.length >= maxItems) break;
-    if (a._sig && seenSignatures.has(a._sig)) continue;   // already in workbench
-    seenSignatures.add(a._sig);
+    if (a._fp && seenFingerprints.has(a._fp)) { mergedDuplicates++; continue; }
+    seenFingerprints.add(a._fp);
+    newlyDetected++;
+    if (items.length >= maxItems) continue;
     items.push({
       rank: rank++,
       severity: a.severity,
@@ -309,11 +346,29 @@ export function buildConsolidatedActionPlan(
       category: a.category,
       source: 'newly_detected',
       source_section: a.source_section,
+      fingerprint: a._fp,
+      templates: a.templates,
+      occurrences: a.occurrences,
+      pages_affected: a.pages_affected,
+      accountability: buildAccountability(
+        { title: a.title, description: a.description, category: a.category, pages_affected: a.pages_affected },
+        traffic,
+        a._fp,
+      ),
     });
   }
 
+  options.onStats?.({
+    total_candidates: wbGroups.length + newlyDetected,
+    workbench_open: wbGroups.length,
+    newly_detected: newlyDetected,
+    displayed: items.length,
+    merged_duplicates: mergedDuplicates,
+  });
+
   return items;
 }
+
 
 // ─────────────────── HTML helpers (used by Marina) ───────────────────
 
