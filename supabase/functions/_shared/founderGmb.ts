@@ -6,6 +6,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { trackPaidApiCall } from './tokenTracker.ts';
 import { type FounderInfo, type GMBData, type FacebookPageInfo, KNOWN_LOCATIONS } from './textUtils.ts';
+import { validateFounderCandidate } from './founderNameValidation.ts';
 
 const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
@@ -89,12 +90,12 @@ export async function searchFounderProfile(domain: string, targetLocation: strin
         });
         if (!resp.ok) { await resp.text(); return null; }
         const data = await resp.json();
-        const items = data.tasks?.[0]?.result?.[0]?.items || [];
-        const organic = items.find((i: any) => i.type === 'organic' && i.url);
-        if (organic) {
-          let name = organic.title?.split(/\s*[-–|]\s*/)?.[0]?.trim() || null;
-          if (name) name = name.replace(/\s*\(.*\)/, '').replace(/\s*@.*/, '').trim();
-          return { name, url: organic.url, platform, title: organic.title, snippet: organic.description || organic.title || '' };
+        const items = (data.tasks?.[0]?.result?.[0]?.items || []).filter((i: any) => i.type === 'organic' && i.url);
+        for (const item of items) {
+          const validated = validateFounderCandidate({ title: item.title, url: item.url, platform }, domainClean);
+          if (validated) {
+            return { name: validated, url: item.url, platform, title: item.title, snippet: item.description || item.title || '' };
+          }
         }
         return null;
       } catch { return null; }

@@ -1,0 +1,1 @@
+DELETE FROM public.audit_cache WHERE function_name IN ('strategic-competitors','audit-strategique-ia');

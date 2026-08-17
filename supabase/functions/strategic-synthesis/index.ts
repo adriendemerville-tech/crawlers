@@ -404,6 +404,24 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       } catch { }
     }
 
+    // ── Deterministic founder injection (never let the LLM say "unknown" when we measured a name) ──
+    if (founderInfo?.name && !founderInfo.geoMismatch) {
+      const ss = (parsedAnalysis as any).social_signals || {};
+      const tl = ss.thought_leadership || {};
+      (parsedAnalysis as any).social_signals = {
+        ...ss,
+        thought_leadership: {
+          ...tl,
+          founder_name: founderInfo.name,
+          founder_profile_url: founderInfo.profileUrl || null,
+          founder_platform: founderInfo.platform || null,
+          founder_authority: !tl.founder_authority || tl.founder_authority === 'unknown'
+            ? (founderInfo.platform === 'linkedin' ? 'moderate' : 'low')
+            : tl.founder_authority,
+        },
+      };
+    }
+
     // ── Build final result ──
     const cachedContextOut = { pageContentContext, brandSignals, eeatSignals, marketData: mktData, rankingOverview, founderInfo, llmData, gmbData, facebookPageInfo };
     const result = {

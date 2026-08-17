@@ -996,7 +996,15 @@ function buildSocialSignalsSection(data: any): string {
     const eeat = tl.eeat_score ?? null;
     leadershipHtml = `<div style="padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:12px;text-align:left;">
       <div style="font-weight:600;font-size:13px;margin-bottom:6px;">🏛️ Thought Leadership</div>
-      ${tl.founder_authority ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Autorité fondateur:</strong> ${tl.founder_authority}</div>` : ''}
+      ${(() => {
+        const LABELS: Record<string, string> = { high: 'forte', moderate: 'modérée', low: 'faible', unknown: 'non mesurée sur ce run' };
+        const lvl = tl.founder_authority ? (LABELS[String(tl.founder_authority)] || String(tl.founder_authority)) : null;
+        if (!lvl && !tl.founder_name) return '';
+        const who = tl.founder_name
+          ? (tl.founder_profile_url ? `<a href="${tl.founder_profile_url}" style="color:#7c3aed;">${tl.founder_name}</a>` : tl.founder_name)
+          : null;
+        return `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Autorité fondateur:</strong> ${who ? `${who} — autorité ${lvl || 'non mesurée'}` : lvl}</div>`;
+      })()}
       ${tl.entity_recognition ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Reconnaissance entité:</strong> ${tl.entity_recognition}</div>` : ''}
       ${eeat != null ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Score E-E-A-T:</strong> <span style="font-weight:700;color:${eeat >= 7 ? '#22c55e' : eeat >= 4 ? '#f59e0b' : '#ef4444'};">${eeat}/10</span></div>` : ''}
       ${tl.analysis ? `<div style="font-size:12px;color:#6b7280;line-height:1.5;margin-top:4px;">${tl.analysis}</div>` : ''}

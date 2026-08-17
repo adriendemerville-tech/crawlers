@@ -7,6 +7,7 @@ import { trackPaidApiCall } from '../tokenTracker.ts';
 import { getDataForSeoAuthHeader, hasDataForSeoCredentials, isNonCompetitorDomain } from './dataForSeo.ts';
 import { KNOWN_LOCATIONS } from './businessContext.ts';
 import type { GMBData, FounderInfo, FacebookPageInfo } from './types.ts';
+import { validateFounderCandidate } from '../founderNameValidation.ts';
 
 // ==================== GOOGLE MY BUSINESS DETECTION ====================
 
@@ -142,13 +143,13 @@ export async function searchFounderProfile(domain: string, targetLocation: strin
         });
         if (!resp.ok) { await resp.text(); return null; }
         const data = await resp.json();
-        const items = data.tasks?.[0]?.result?.[0]?.items || [];
-        const organic = items.find((i: any) => i.type === 'organic' && i.url);
-        if (organic) {
-          let name = organic.title?.split(/\s*[-–|]\s*/)?.[0]?.trim() || null;
-          if (name) name = name.replace(/\s*\(.*\)/, '').replace(/\s*@.*/, '').trim();
-          const snippet = organic.description || organic.title || '';
-          return { name, url: organic.url, platform, title: organic.title, snippet };
+        const items = (data.tasks?.[0]?.result?.[0]?.items || []).filter((i: any) => i.type === 'organic' && i.url);
+        // Scan all organic results and keep the first that is a real person profile
+        for (const item of items) {
+          const validated = validateFounderCandidate({ title: item.title, url: item.url, platform }, domainClean);
+          if (validated) {
+            return { name: validated, url: item.url, platform, title: item.title, snippet: item.description || item.title || '' };
+          }
         }
         return null;
       } catch { return null; }
