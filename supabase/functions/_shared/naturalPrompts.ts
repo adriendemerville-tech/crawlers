@@ -304,9 +304,9 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
     );
   } else {
     // ── Core need: extract the simplest possible need ──
-    const mainNeed = products
-      ? products.split(',')[0].trim()  // Only first product/service
-      : sector || 'un service professionnel';
+    const mainNeed = (products.split(',')[0] || '').trim()
+      || sector
+      || 'un service professionnel';
 
     const noun = entityType === 'ecommerce' ? 'site' : entityType === 'saas' ? 'logiciel' : 'prestataire';
 
