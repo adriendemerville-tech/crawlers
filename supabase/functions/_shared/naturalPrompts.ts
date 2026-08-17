@@ -378,7 +378,12 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
       || sector
       || 'un service professionnel';
 
-    const noun = entityType === 'ecommerce' ? 'site' : entityType === 'saas' ? 'logiciel' : 'prestataire';
+    // Lexique dérivé de la carte d'identité : « logiciel » pour un SaaS,
+    // « entreprise » pour un service local, jamais « outil » pour une
+    // entreprise classique (la question serait hors sujet).
+    const lex = resolveLexicon(ctx, 'fr');
+    const noun = lex.noun;
+    const isShop = resolveLexKey(ctx) === 'shop';
 
     // ── Intentions contrastées : une seule question par intention, dans un
     // ordre qui garantit la diversité même quand maxPrompts vaut 3.
@@ -386,24 +391,30 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
     // 5. Prix        6. Preuve / avis
     const byIntent: Array<{ intent: string; text: string }> = [];
 
-    byIntent.push({ intent: 'discovery', text: `Je cherche un outil pour ${mainNeed}, t'as des idées ?` });
+    byIntent.push({
+      intent: 'discovery',
+      text: isShop
+        ? `Je cherche où acheter ${mainNeed}, t'as des idées ?`
+        : `Je cherche ${lex.seek} pour ${mainNeed}, t'as des idées ?`,
+    });
 
     byIntent.push({
       intent: 'comparison',
-      text: entityType === 'ecommerce'
+      text: isShop
         ? `Quels sites se valent pour acheter ${mainNeed} et lequel est le mieux ?`
-        : `Compare-moi les meilleures solutions pour ${mainNeed} : laquelle sort du lot ?`,
+        : `Compare-moi ${lex.comparePlural} pour ${mainNeed} : lequel sort du lot ?`,
     });
 
     if (localOk) {
-      byIntent.push({ intent: 'local', text: `Quel ${noun} pour ${mainNeed} à ${area} ?` });
+      byIntent.push({ intent: 'local', text: `Quelle ${noun === 'entreprise' ? 'entreprise' : noun} pour ${mainNeed} à ${area} ?`.replace('Quelle prestataire', 'Quel prestataire').replace('Quelle logiciel', 'Quel logiciel').replace('Quelle site', 'Quel site') });
     } else if (target) {
-      byIntent.push({ intent: 'audience', text: `Je suis ${target} : quel ${noun} pour ${mainNeed} me conviendrait ?` });
+      byIntent.push({ intent: 'audience', text: `Je suis ${target} : ${lex.seek} pour ${mainNeed}, tu recommandes quoi ?` });
     }
 
     byIntent.push({ intent: 'alternative', text: `Quelles alternatives existent pour ${mainNeed}, à part les gros acteurs connus ?` });
 
-    byIntent.push({ intent: 'price', text: `Combien coûte ${mainNeed} et y a-t-il une option gratuite ou pas chère ?` });
+    byIntent.push({ intent: 'price', text: `Combien coûte ${mainNeed} et comment sont fixés les prix ?` });
+
 
     if (sector && sector !== mainNeed) {
       byIntent.push({ intent: 'sector', text: `J'ai besoin d'aide en ${sector}, tu recommandes quoi et pourquoi ?` });
