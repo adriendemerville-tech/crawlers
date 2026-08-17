@@ -7,6 +7,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { resolveSocialProof, gmbToSocialProofSignals, fetchPlacesSocialProof, formatSocialProofForPrompt } from '../_shared/socialProof.ts';
 
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -458,6 +459,23 @@ async function runEeatPipeline(
   const gbpData = await fetchGbpData(supabase, domain, trackedSiteId);
   if (jobId) await supabase.from('async_jobs').update({ progress: 50 }).eq('id', jobId);
 
+  // ── Phase 2.65: Preuve sociale déterministe (couches 1 & 2) ──
+  const pageContext = (preCrawlResult.pages || [])
+    .map((p: any) => `${p.url}\n${p.bodyTextTruncated || ''}\n${(p.schemaTypes || []).join(' ')}`)
+    .join('\n\n')
+    .slice(0, 200_000);
+  let extraSocialSignals = gmbToSocialProofSignals(
+    gbpData.available ? { title: gbpData.locationName, rating: gbpData.avgRating, reviews_count: gbpData.totalReviews } : null
+  );
+  if (!extraSocialSignals.length) {
+    try {
+      extraSocialSignals = await fetchPlacesSocialProof(domain.replace(/^www\./, '').split('.')[0], domain);
+    } catch { /* couche 2 optionnelle */ }
+  }
+  const socialProof = resolveSocialProof({ pageContext, extraSignals: extraSocialSignals });
+  console.log(`[check-eeat] ⭐ Preuve sociale: ${socialProof.status} (avis=${socialProof.reviewCount ?? 'n/a'}, note=${socialProof.rating ?? 'n/a'})`);
+
+
   // ── Phase 2.7: Fetch domain age from site identity card ──
   console.log(`[check-eeat] 📅 Phase 2.7: Fetching domain age...`);
   const domainAgeInfo = await fetchDomainAge(supabase, effectiveDomain, trackedSiteId);
@@ -548,6 +566,7 @@ Nombre de pages crawlées: ${pagesCount} (source: ${preCrawlResult.source === 'c
 - Page CGV/CGU détectée: ${aggregated.hasTermsPage ? 'Oui' : 'Non'}
 - Blog/actualités détecté: ${aggregated.hasBlogSection ? 'Oui' : 'Non'}
 - Témoignages/avis détectés: ${aggregated.hasTestimonials ? 'Oui' : 'Non'}${aggregated.hasTestimonials ? ` (vérifiables: ${aggregated.testimonialsVerifiable ? 'Oui — noms propres, entreprises ou chiffres détectés' : 'Non — génériques, sans noms ni preuves concrètes'})` : ''}
+${formatSocialProofForPrompt(socialProof)}
 - Page À propos avec incarnation humaine: ${aggregated.aboutPageHasIncarnation ? 'Oui — fondateur/équipe nommés' : (aggregated.hasAboutPage ? 'Non — page exists mais sans personnes identifiées' : 'Page absente')}
 - HTTPS: ${aggregated.isHttps ? 'Oui' : 'Non'}
 - URLs totales dans le sitemap: ${preCrawlResult.totalSitemapUrls}
@@ -788,6 +807,7 @@ Réponds UNIQUEMENT en JSON valide :
       blogSection: aggregated.hasBlogSection,
       testimonials: aggregated.hasTestimonials,
       testimonialsVerifiable: aggregated.testimonialsVerifiable,
+      socialProofVerified: socialProof,
     },
     trustSignals: analysis.trust_signals || [],
     missingSignals: analysis.missing_signals || [],

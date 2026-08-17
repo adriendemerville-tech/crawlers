@@ -8,6 +8,7 @@ import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { resolveSocialProof, fetchPlacesSocialProof, formatSocialProofForPrompt, type SocialProofResult } from '../_shared/socialProof.ts';
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
@@ -1958,7 +1959,8 @@ async function generateNarrativeIntroduction(
   htmlAnalysis: HtmlAnalysis,
   insights: ExpertInsights,
   meta: AuditMeta,
-  lang: string = 'fr'
+  lang: string = 'fr',
+  socialProof?: SocialProofResult | null
 ): Promise<{ presentation: string; strengths: string; improvement: string } | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   
@@ -1991,6 +1993,8 @@ DONNÉES TECHNIQUES:
 - Technique: ${scores.technical.score}/50
 - Sémantique: ${scores.semantic.score}/60 (Mots: ${htmlAnalysis.wordCount})
 - IA/GEO: ${scores.aiReady.score}/30 (Schema: ${htmlAnalysis.schemaTypes.join(', ') || 'aucun'})
+${socialProof ? formatSocialProofForPrompt(socialProof) : ''}
+
 
 INSIGHTS EXPERTS:
 - Ratio code/texte: ${insights.contentDensity.ratio}% (${insights.contentDensity.verdict})
@@ -2164,6 +2168,17 @@ Deno.serve(handleRequest(async (req) => {
     
     // Step 3: DOM-based HTML analysis
     const htmlAnalysis = analyzeHtmlWithDOM(smartFetchResult.html, normalizedUrl);
+
+    // Step 3b: Preuve sociale déterministe (couche 1 HTML + couche 2 fiche Google)
+    let socialProof;
+    try {
+      const placesSignals = await fetchPlacesSocialProof(domain.replace(/^www\./, '').split('.')[0], domain);
+      socialProof = resolveSocialProof({ html: smartFetchResult.html, extraSignals: placesSignals });
+    } catch (e) {
+      console.warn('[SocialProof] échec résolution:', e instanceof Error ? e.message : e);
+      socialProof = resolveSocialProof({ html: smartFetchResult.html });
+    }
+    console.log(`[SocialProof] statut=${socialProof.status} avis=${socialProof.reviewCount ?? 'n/a'} note=${socialProof.rating ?? 'n/a'}`);
     
     // Gestion gracieuse si PageSpeed a échoué (psiData peut être null)
     const psiAvailable = psiData?.lighthouseResult?.categories?.performance != null;
@@ -2283,7 +2298,7 @@ Deno.serve(handleRequest(async (req) => {
     
     // Generate AI narrative
     const introduction = await generateNarrativeIntroduction(
-      domain, normalizedUrl, totalScore, scores, htmlAnalysis, enrichedInsights, meta, outputLang
+      domain, normalizedUrl, totalScore, scores, htmlAnalysis, enrichedInsights, meta, outputLang, socialProof
     );
     
     console.log('='.repeat(60));
@@ -2300,6 +2315,7 @@ Deno.serve(handleRequest(async (req) => {
         maxScore: 200,
         scores,
         insights: enrichedInsights,
+        social_proof_verified: socialProof,
         recommendations,
         introduction,
         rawData: {
