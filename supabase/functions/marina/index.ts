@@ -14,6 +14,15 @@ import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis
 import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
 import { writeArchetypePrescriptions } from '../_shared/archetypeWorkbench.ts';
 import { buildAeoRewrites, writeAeoRewritePrescriptions } from '../_shared/aeoRewrites.ts';
+import {
+  clampScore,
+  resolvePerimeter,
+  resolveOrphanCount,
+  resolveToxicity,
+  assessIdentityUsability,
+  reconcileReportHtml,
+} from '../_shared/auditReconciliation.ts';
+
 
 import { buildMarketProfile, fetchArchetypeBenchmarks, writeMarketObservation } from '../_shared/marketObservations.ts';
 import {
