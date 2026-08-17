@@ -3871,10 +3871,44 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         } catch (wbErr) {
           console.warn('[Marina] Workbench fetch failed (non-fatal):', wbErr);
         }
+        // ─── Données propriétaires (avant le plan : elles servent à estimer le trafic) ───
+        // Uniquement si l'utilisateur possède une connexion Google vérifiée
+        // couvrant CE domaine. Sinon la section n'existe pas et l'estimation
+        // de gain reste explicitement « non estimable ».
+        let ownerPerformance: OwnerPerformanceData | null = null;
+        try {
+          ownerPerformance = await fetchOwnerPerformanceData(sb, parentJob.user_id, domain);
+          console.log(
+            `[Marina] Données propriétaires ${ownerPerformance ? 'disponibles' : 'absentes'} pour ${domain}`,
+          );
+        } catch (ownerErr) {
+          console.warn('[Marina] Owner performance fetch failed (non-fatal):', ownerErr);
+        }
+
+        // Lot 5 — contexte de trafic mesuré : clics/impressions GSC si le domaine
+        // est vérifié, sinon volume de recherche DataForSEO du périmètre visé.
+        const kpForVolume: any = strategicData?.keyword_positioning || strategicData?.keywordPositioning || {};
+        const measuredKeywordVolume = [
+          ...(Array.isArray(kpForVolume.quick_wins) ? kpForVolume.quick_wins : []),
+          ...(Array.isArray(kpForVolume.content_gaps) ? kpForVolume.content_gaps : []),
+        ].reduce((acc: number, k: any) => acc + (Number(k?.volume) || 0), 0);
+
+        const trafficContext = {
+          monthlyClicks: ownerPerformance?.gsc?.current?.clicks ?? null,
+          monthlyImpressions: ownerPerformance?.gsc?.current?.impressions ?? null,
+          keywordVolume: measuredKeywordVolume > 0 ? measuredKeywordVolume : null,
+          pagesAnalyzed: crawlSnapshot?.crawled_pages || crawlSnapshot?.pages?.length || null,
+        };
+
+        let consolidatedPlanStats: ConsolidatedPlanStats | undefined;
         const rawConsolidatedPlan = buildConsolidatedActionPlan(
           workbenchTasks,
           [topSeo, topGeo, topKw, topEeat, topCocoon],
-          { maxItems: 12 },
+          {
+            maxItems: 12,
+            traffic: trafficContext,
+            onStats: (s) => { consolidatedPlanStats = s; },
+          },
         );
 
 
