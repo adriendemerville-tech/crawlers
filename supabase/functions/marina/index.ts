@@ -4258,7 +4258,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         domain,
         language: detectedLang,
         report_url: signedUrlData?.signedUrl || null,
-        report_view_url: signedUrlData?.signedUrl || null,
+        // Lecteur HTML sur notre domaine : les URLs signées Storage sont servies
+        // en text/plain + nosniff et afficheraient le code source du rapport.
+        report_view_url: `https://crawlers.fr/api/public/marina-report?id=${jobId}`,
         report_path: fileName,
         expert_seo_score: expertData.totalScore,
         expert_seo_max: expertData.maxScore,

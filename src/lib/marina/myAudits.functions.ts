@@ -59,11 +59,9 @@ export const getMyMarinaReportUrl = createServerFn({ method: 'POST' })
     const path = (job as any)?.result_data?.report_path as string | undefined;
     if (!path) return { url: null as string | null };
 
-    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-    const { data: signed } = await supabaseAdmin.storage
-      .from('shared-reports')
-      .createSignedUrl(path, 60 * 60 * 24 * 7);
-    return { url: signed?.signedUrl || null };
+    // On sert le HTML via notre propre domaine : les URLs signées Storage
+    // renvoient text/plain + nosniff, ce qui affiche le code source du rapport.
+    return { url: `/api/public/marina-report?id=${data.jobId}` };
   });
 
 /**
