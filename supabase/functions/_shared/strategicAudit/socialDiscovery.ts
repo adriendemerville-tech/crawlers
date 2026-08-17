@@ -7,7 +7,11 @@ import { trackPaidApiCall } from '../tokenTracker.ts';
 import { getDataForSeoAuthHeader, hasDataForSeoCredentials, isNonCompetitorDomain } from './dataForSeo.ts';
 import { KNOWN_LOCATIONS } from './businessContext.ts';
 import type { GMBData, FounderInfo, FacebookPageInfo } from './types.ts';
-import { validateFounderCandidate } from '../founderNameValidation.ts';
+import {
+  extractPersonsFromText, extractPersonsFromJsonLd, serpItemToCandidate,
+  pickSpokesperson, toFounderInfo, type PersonCandidate,
+} from '../personAuthority.ts';
+
 
 // ==================== GOOGLE MY BUSINESS DETECTION ====================
 
