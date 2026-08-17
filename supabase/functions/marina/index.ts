@@ -1882,11 +1882,17 @@ function buildReportIntroHTML(
   const isEs = lang === 'es';
   const t = (fr: string, en: string, es: string) => (isEn ? en : isEs ? es : fr);
 
-  const pagesAnalyzed = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pagesFound || null;
-  const pagesKnown = ctx.crawlSnapshot?.total_pages || null;
-  const coverage = pagesAnalyzed && pagesKnown && pagesKnown > 0
-    ? Math.min(100, Math.round((pagesAnalyzed / pagesKnown) * 100))
-    : null;
+  // Lot 4 : source unique de vérité pour le périmètre (crawlées / découvertes /
+  // sitemap), afin que toutes les sections affichent les mêmes nombres.
+  const perimeter = resolvePerimeter({
+    crawledPages: ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pagesFound,
+    discoveredUrls: ctx.crawlSnapshot?.total_pages,
+    sitemapUrls: ctx.crawlSnapshot?.sitemap_urls_count ?? ctx.crawlSnapshot?.sitemapUrlsCount,
+  });
+  const pagesAnalyzed = perimeter.crawled;
+  const pagesKnown = perimeter.reference;
+  const coverage = perimeter.coveragePct;
+
 
   const tools: string[] = [];
   tools.push(t(
