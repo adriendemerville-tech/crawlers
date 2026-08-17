@@ -1085,6 +1085,71 @@ function escapeHtmlText(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// ─── Cartes « modèle interrogé » (réutilisées par le score global et par chaque benchmark) ───
+function renderLlmModelCards(scoreList: any[]): string {
+  return scoreList.map((s: any) => {
+    const name = s.llm_name || 'Unknown';
+    const raw = s.score_percentage ?? s.score ?? 0;
+    const unmeasured = raw === null || raw === undefined || s.measurement_status === 'unmeasured';
+    const score = unmeasured ? 0 : raw;
+    const cited = !unmeasured && score > 0;
+
+    let sentiment: string;
+    if (unmeasured || !cited) sentiment = 'not_found';
+    else if (s.overall_sentiment) sentiment = s.overall_sentiment;
+    else if (score >= 60) sentiment = 'positive';
+    else if (score >= 30) sentiment = 'neutral';
+    else sentiment = 'negative';
+
+    const borderColor = unmeasured ? '#9ca3af' : cited ? '#22c55e' : '#ef4444';
+    const bgColor = unmeasured ? '#9ca3af08' : cited ? '#22c55e08' : '#ef444408';
+    const statusLabel = unmeasured ? 'NON MESURÉ' : cited ? 'CITÉ' : 'NON CITÉ';
+    const statusColor = unmeasured ? '#6b7280' : cited ? '#22c55e' : '#ef4444';
+
+    const sentimentLabels: Record<string, { label: string; color: string }> = {
+      'positive':    { label: 'Positif', color: '#22c55e' },
+      'recommended': { label: 'Recommandé', color: '#22c55e' },
+      'neutral':     { label: 'Neutre', color: '#6b7280' },
+      'negative':    { label: 'Négatif', color: '#ef4444' },
+      'not_found':   { label: '', color: '#9ca3af' },
+    };
+    const sentimentInfo = sentimentLabels[sentiment] || sentimentLabels.neutral;
+
+    return `<div style="padding:16px;border-radius:10px;border:1px solid ${borderColor}30;background:${bgColor};text-align:center;">
+      <div style="font-weight:700;font-size:14px;color:#1f2937;margin-bottom:8px;">${name}</div>
+      <div style="font-weight:700;font-size:12px;color:${statusColor};text-transform:uppercase;letter-spacing:0.5px;">${statusLabel}</div>
+      ${cited && sentimentInfo.label ? `<div style="font-size:11px;margin-top:6px;padding:2px 10px;border-radius:12px;display:inline-block;background:${sentimentInfo.color}15;color:${sentimentInfo.color};font-weight:600;">${sentimentInfo.label}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ─── Trois benchmarks distincts : une section de résultats par intention ───
+function renderLlmBenchmarkSections(benchmarks: any[]): string {
+  if (!Array.isArray(benchmarks) || benchmarks.length === 0) return '';
+  return benchmarks.map((b: any) => {
+    const prompts: any[] = Array.isArray(b?.prompts) ? b.prompts : [];
+    const scoreList: any[] = Array.isArray(b?.scores) ? b.scores : [];
+    const measured = Number(b?.measured_models ?? scoreList.length) || 0;
+    const cited = Number(b?.cited_models ?? 0) || 0;
+    const score = b?.score;
+    const scoreColor = score === null || score === undefined ? '#6b7280' : score >= 60 ? '#22c55e' : score >= 30 ? '#f59e0b' : '#ef4444';
+    return `<div style="margin-top:16px;padding:14px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;page-break-inside:avoid;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;">
+        <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin:0;text-align:left;">${escapeHtmlText(String(b?.label || 'Benchmark'))}</h4>
+        <span style="font-size:12px;font-weight:700;color:${scoreColor};white-space:nowrap;">${score === null || score === undefined ? 'Non mesuré' : score + '/100'}</span>
+      </div>
+      <p style="font-size:11px;color:#6b7280;margin:0 0 8px;line-height:1.5;text-align:left;">${escapeHtmlText(String(b?.description || ''))}</p>
+      <p style="font-size:12px;color:#374151;margin:0 0 6px;text-align:left;"><strong>${cited}/${measured}</strong> modèle${measured > 1 ? 's' : ''} citent le site sur cette intention.</p>
+      ${prompts.length ? `<ol style="margin:0 0 10px 18px;padding:0;font-size:12px;color:#374151;line-height:1.6;text-align:left;">
+        ${prompts.map((p: any) => `<li>« ${escapeHtmlText(String(p?.text || p))} »</li>`).join('')}
+      </ol>` : ''}
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        ${renderLlmModelCards(scoreList)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
 // ─── Dedicated renderer for LLM Visibility with 6 individual model cards ───
 function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
   // ALWAYS render this section — LLM visibility cards must appear in every report
