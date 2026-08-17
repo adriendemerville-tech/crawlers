@@ -290,6 +290,45 @@ const KPI_BY_FAMILY: Record<string, string> = {
   breadcrumb: 'Résultats enrichis fil d’Ariane',
 };
 
+/**
+ * Levier explicite de chaque famille : c'est ce qui distingue la justification
+ * d'une action de celle d'une autre, même quand la donnée d'entrée (volume,
+ * clics) est commune au domaine.
+ */
+const LEVER_BY_FAMILY: Record<string, string> = {
+  meta_description: 'hausse du taux de clic en SERP',
+  title_tag: 'hausse du taux de clic et pertinence de la requête',
+  h1: 'clarification du sujet principal de la page',
+  heading_structure: 'lisibilité de la hiérarchie pour les robots',
+  canonical: 'consolidation des signaux sur une URL unique',
+  robots: 'déblocage de l’exploration',
+  sitemap: 'accélération de la découverte des URL',
+  structured_data: 'éligibilité aux résultats enrichis et aux citations IA',
+  image_alt: 'visibilité sur Google Images',
+  image_weight: 'allègement du plus grand élément affiché',
+  web_vitals: 'réduction du temps d’affichage principal',
+  internal_linking: 'redistribution de l’autorité interne',
+  orphan_pages: 'raccordement de pages sans lien entrant',
+  cannibalization: 'désambiguïsation entre URL concurrentes',
+  duplicate_content: 'suppression de la dilution entre quasi-doublons',
+  thin_content: 'atteinte du seuil de contenu utile',
+  direct_answer: 'réponse directe en tête de page',
+  ai_citability: 'extraits reprenables par les moteurs de réponse',
+  faq: 'couverture des requêtes interrogatives',
+  eeat_author: 'attribution d’un auteur identifiable',
+  social_proof: 'preuve client vérifiable',
+  backlinks: 'gain d’autorité externe',
+  redirects: 'suppression des sauts de redirection',
+  broken_links: 'élimination des impasses d’exploration',
+  https: 'fiabilité du transport et confiance',
+  content_gap: 'ouverture de mots-clés non couverts',
+  new_content: 'création d’entrées sur le cluster visé',
+  semantic_cocoon: 'structuration en cocon thématique',
+  mobile: 'expérience mobile',
+  i18n: 'ciblage linguistique',
+  breadcrumb: 'contexte de navigation exposé aux robots',
+};
+
 export interface TrafficContext {
   /** Impressions mensuelles GSC du domaine, si l'utilisateur est propriétaire. */
   monthlyImpressions?: number | null;
