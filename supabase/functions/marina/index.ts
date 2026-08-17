@@ -79,6 +79,7 @@ import { sanitizeReportData } from '../_shared/llmGuards.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { captureSiteVisual, buildVisualEvidenceHtml, type VisualCapture } from '../_shared/pageboltCapture.ts';
 import { buildStrategicVerdict, type VerdictSignals } from '../_shared/strategicVerdict.ts';
+import { narrateStrategicVerdict } from '../_shared/verdictNarration.ts';
 import {
   analyzeHostDuplication,
   probeHostRedirect,
