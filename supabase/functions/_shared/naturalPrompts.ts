@@ -271,6 +271,73 @@ function inferSectorFromDomain(domain: string, lang: PromptLang): string {
 }
 
 // ═══════════════════════════════════════════════
+// Lexique dérivé de la carte d'identité
+// Le mot employé dans la question doit correspondre à la nature de l'offre :
+// « outil » n'a de sens que pour un logiciel. Une entreprise classique se
+// cherche comme « entreprise / prestataire / artisan », sinon la mesure de
+// citabilité est faussée dès la question.
+// ═══════════════════════════════════════════════
+
+export interface PromptLexicon {
+  /** Groupe nominal indéfini : « un logiciel », « une entreprise »… */
+  seek: string;
+  /** Même notion au pluriel pour les comparatifs : « les meilleurs logiciels » */
+  comparePlural: string;
+  /** Nom nu employé après un déterminant interrogatif : « quel <noun> » */
+  noun: string;
+}
+
+type LexKey = 'software' | 'shop' | 'local_service' | 'agency' | 'nonprofit' | 'service';
+
+const LEXICONS: Record<PromptLang, Record<LexKey, PromptLexicon>> = {
+  fr: {
+    software:      { seek: 'un logiciel',    comparePlural: 'les meilleurs logiciels',    noun: 'logiciel' },
+    shop:          { seek: 'un site',        comparePlural: 'les meilleurs sites',        noun: 'site' },
+    local_service: { seek: 'une entreprise', comparePlural: 'les meilleures entreprises', noun: 'entreprise' },
+    agency:        { seek: 'un prestataire', comparePlural: 'les meilleurs prestataires', noun: 'prestataire' },
+    nonprofit:     { seek: 'une structure',  comparePlural: 'les meilleures structures',  noun: 'structure' },
+    service:       { seek: 'un prestataire', comparePlural: 'les meilleurs prestataires', noun: 'prestataire' },
+  },
+  en: {
+    software:      { seek: 'a software',       comparePlural: 'the best software',       noun: 'software' },
+    shop:          { seek: 'a website',       comparePlural: 'the best websites',       noun: 'website' },
+    local_service: { seek: 'a company',       comparePlural: 'the best companies',      noun: 'company' },
+    agency:        { seek: 'a provider',      comparePlural: 'the best providers',      noun: 'provider' },
+    nonprofit:     { seek: 'an organization', comparePlural: 'the best organizations',  noun: 'organization' },
+    service:       { seek: 'a provider',      comparePlural: 'the best providers',      noun: 'provider' },
+  },
+  es: {
+    software:      { seek: 'un software',     comparePlural: 'los mejores software',     noun: 'software' },
+    shop:          { seek: 'una tienda',      comparePlural: 'las mejores tiendas',      noun: 'tienda' },
+    local_service: { seek: 'una empresa',     comparePlural: 'las mejores empresas',     noun: 'empresa' },
+    agency:        { seek: 'un proveedor',    comparePlural: 'los mejores proveedores',  noun: 'proveedor' },
+    nonprofit:     { seek: 'una organización', comparePlural: 'las mejores organizaciones', noun: 'organización' },
+    service:       { seek: 'un proveedor',    comparePlural: 'los mejores proveedores',  noun: 'proveedor' },
+  },
+};
+
+function resolveLexKey(ctx: SiteContext): LexKey {
+  const model = (ctx.business_model || '').trim().toLowerCase();
+  const entity = (ctx.entity_type || '').trim().toLowerCase();
+
+  if (model.startsWith('saas')) return 'software';
+  if (model.startsWith('ecommerce') || model.startsWith('marketplace')) return 'shop';
+  if (model === 'service_local' || model === 'leadgen') return 'local_service';
+  if (model === 'service_agency') return 'agency';
+  if (model === 'nonprofit') return 'nonprofit';
+
+  if (entity === 'saas') return 'software';
+  if (entity === 'ecommerce' || entity === 'marketplace') return 'shop';
+  return 'service';
+}
+
+/** Lexique à employer dans les questions, dérivé de la carte d'identité. */
+export function resolveLexicon(ctx: SiteContext, lang: PromptLang = 'fr'): PromptLexicon {
+  return LEXICONS[lang][resolveLexKey(ctx)];
+}
+
+
+// ═══════════════════════════════════════════════
 // Prompt generation — French
 // ═══════════════════════════════════════════════
 
