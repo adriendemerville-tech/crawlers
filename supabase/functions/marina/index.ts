@@ -1972,9 +1972,12 @@ function buildExecutiveSummaryHTML(
     </div>
     ${ctx.roi ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;">${ctx.roi.sentence}${ctx.roi.topQuickWins.length ? ` ${t('À traiter en premier', 'Start with', 'Empezar por')} : ${ctx.roi.topQuickWins.join(' ; ')}.` : ''}</p>` : ''}
 
-    ${ctx.verdictSignals
+    ${ctx.verdictHtml
+      ? ctx.verdictHtml
+      : ctx.verdictSignals
       ? buildStrategicVerdict(domain, { ...ctx.verdictSignals, criticalCount: ctx.criticalCount, geoScore: geo100, techScore: tech100, pagesAnalyzed: pages }, lang).html
       : ''}
+
 
 
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
