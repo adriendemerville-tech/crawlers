@@ -406,7 +406,8 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
     });
 
     if (localOk) {
-      byIntent.push({ intent: 'local', text: `Quelle ${noun === 'entreprise' ? 'entreprise' : noun} pour ${mainNeed} à ${area} ?`.replace('Quelle prestataire', 'Quel prestataire').replace('Quelle logiciel', 'Quel logiciel').replace('Quelle site', 'Quel site') });
+      const which = lex.seek.startsWith('une') ? 'Quelle' : 'Quel';
+      byIntent.push({ intent: 'local', text: `${which} ${noun} pour ${mainNeed} à ${area} ?` });
     } else if (target) {
       byIntent.push({ intent: 'audience', text: `Je suis ${target} : ${lex.seek} pour ${mainNeed}, tu recommandes quoi ?` });
     }
