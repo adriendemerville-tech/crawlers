@@ -419,14 +419,6 @@ export async function resolveIdentityCard(
     return emptyIdentityCard(domain, trackedSiteId, notes);
   }
 
-  // Fusion : l'inférence complète la carte existante, elle ne l'écrase pas.
-  const merged: Record<string, unknown> = { ...(row || {}) };
-  for (const [k, v] of Object.entries(inference.fields)) {
-    if (v === null || v === undefined || v === '') continue;
-    if (Array.isArray(v) && v.length === 0) continue;
-    // On complète uniquement les champs vides : ni la saisie manuelle
-    // ni une inférence antérieure déjà résolue ne sont écrasées.
-    const existing = merged[k];
   // Fusion : l'inférence complète la carte existante. Elle CORRIGE en revanche les
   // champs d'activité issus d'une inférence non ancrée (nom de domaine seul), car
   // l'inférence courante est fondée sur des pages réellement lues.
@@ -445,9 +437,17 @@ export async function resolveIdentityCard(
     notes.push("La carte d'identité enregistrée provenait d'une inférence sur le nom de domaine : elle a été recalculée sur le contenu réellement lu.");
   }
 
+  const card = buildCard(domain, trackedSiteId, merged, {
+    source: 'llm_inference',
+    reused: false,
+    confidence: inference.pagesUsed.length >= 3 ? 70 : inference.pagesUsed.length === 2 ? 60 : 45,
+    pagesUsed: inference.pagesUsed,
+    notes: [
+      `Modèle d'affaires inféré avant l'audit à partir de ${inference.pagesUsed.length} page(s) réellement lue(s).`,
       ...notes,
     ],
   });
+
 
   // 3) Écriture via le gateway (user_manual protégé, champs critiques en suggestion).
   if (trackedSiteId) {
