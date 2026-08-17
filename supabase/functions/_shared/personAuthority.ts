@@ -352,26 +352,60 @@ const LEGAL_PATHS = [
   '/legal', '/a-propos', '/qui-sommes-nous', '/notre-equipe', '/equipe',
 ];
 
+const LEGAL_LINK_RE = /(mention|legal|propos|equipe|équipe|qui-sommes|direction|notre-histoire|about)/i;
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<(script|style|nav|footer)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/\s+/g, ' ');
+}
+
+async function fetchText(url: string): Promise<string | null> {
+  try {
+    const resp = await fetch(url, {
+      redirect: 'follow',
+      headers: { 'User-Agent': 'CrawlersBot/1.0 (+https://crawlers.fr)' },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!resp.ok) return null;
+    return await resp.text();
+  } catch { return null; }
+}
+
 /**
  * Va chercher le gérant / dirigeant sur les pages institutionnelles du site.
- * C'est la source la plus fiable pour le rattachement légal, et elle ne coûte
- * aucun crédit API. Timeout court, arrêt au premier succès.
+ * Source la plus fiable pour le rattachement légal, et gratuite (aucun crédit API).
+ * Les chemins sont DÉCOUVERTS depuis les liens de la page d'accueil — les sites
+ * réels utilisent souvent des URLs non standard (« /qui-sommes-nous/ ») — puis
+ * complétés par les chemins conventionnels. Arrêt au premier succès.
  */
 export async function fetchLegalPagePersons(domain: string, maxPages = 4): Promise<PersonCandidate[]> {
   const base = `https://${domain.replace(/^https?:\/\//, '').replace(/\/$/, '')}`;
   const out: PersonCandidate[] = [];
-  for (const path of LEGAL_PATHS.slice(0, maxPages)) {
-    try {
-      const resp = await fetch(`${base}${path}`, {
-        redirect: 'follow',
-        headers: { 'User-Agent': 'CrawlersBot/1.0 (+https://crawlers.fr)' },
-        signal: AbortSignal.timeout(6000),
-      });
-      if (!resp.ok) continue;
-      const html = await resp.text();
-      const found = extractPersonsFromText(html, domain);
-      if (found.length > 0) { out.push(...found); break; }
-    } catch { continue; }
+
+  const paths: string[] = [];
+  const home = await fetchText(`${base}/`);
+  if (home) {
+    for (const m of home.matchAll(/href="([^"#?]+)"/gi)) {
+      const href = m[1];
+      if (!LEGAL_LINK_RE.test(href)) continue;
+      let path: string | null = null;
+      if (href.startsWith('/')) path = href;
+      else if (href.startsWith(base)) path = href.slice(base.length) || '/';
+      if (path && !paths.includes(path)) paths.push(path);
+    }
+  }
+  for (const p of LEGAL_PATHS) if (!paths.includes(p)) paths.push(p);
+
+  for (const path of paths.slice(0, maxPages)) {
+    const html = await fetchText(`${base}${path}`);
+    if (!html) continue;
+    const found = extractPersonsFromText(stripHtml(html), domain);
+    if (found.length > 0) { out.push(...found); break; }
   }
   return dedupeCandidates(out);
 }
+
