@@ -343,12 +343,18 @@ export async function ensureSiteContext(
   const siteName = (site.site_name as string) || ''
   const siteId = site.id as string
 
-  console.log(`[enrich-site] 🔍 ${domain} needs ${enrichmentType} enrichment, calling LLM...`)
+  console.log(`[enrich-site] 🔍 ${domain} needs ${enrichmentType} enrichment, fetching homepage evidence...`)
+
+  const evidence = await fetchHomepageEvidence(domain)
+  if (!evidence) {
+    console.warn(`[enrich-site] ⚠️ No onsite evidence for ${domain} — degraded inference`)
+  }
 
   const inferred = await inferContextFromDomain(
     domain,
     siteName,
     enrichmentType === 'refresh' ? currentContext : undefined,
+    evidence,
   )
 
   if (!inferred) {
@@ -357,19 +363,21 @@ export async function ensureSiteContext(
     return currentContext
   }
 
-  // Determine source: if this is a refresh of existing LLM data, mark as verified
-  const previousSource = (site.identity_source as string) || 'none'
-  const newSource = enrichmentType === 'refresh' && previousSource === 'llm_auto'
-    ? 'llm_verified'
-    : 'llm_auto'
+  // Source quality depends on evidence: only onsite-grounded inference is "verified"
+  const newSource = evidence ? 'llm_verified' : 'llm_auto'
 
-  // Merge: for refresh, only overwrite empty fields (don't destroy user edits)
+  // With onsite evidence, the LLM output is authoritative over previous LLM guesses
+  // (user_manual data stays protected downstream by the Identity Gateway).
+  const authoritative = enrichmentType === 'full' || !!evidence
+  const pick = (fresh?: string, current?: string) =>
+    authoritative ? (fresh || current) : (current || fresh)
+
   const merged: SiteContext = {
-    market_sector: (enrichmentType === 'full' ? inferred.market_sector : (currentContext.market_sector || inferred.market_sector)),
-    products_services: (enrichmentType === 'full' ? inferred.products_services : (currentContext.products_services || inferred.products_services)),
-    target_audience: (enrichmentType === 'full' ? inferred.target_audience : (currentContext.target_audience || inferred.target_audience)),
-    commercial_area: (enrichmentType === 'full' ? inferred.commercial_area : (currentContext.commercial_area || inferred.commercial_area)),
-    company_size: (enrichmentType === 'full' ? inferred.company_size : (currentContext.company_size || inferred.company_size)),
+    market_sector: pick(inferred.market_sector, currentContext.market_sector),
+    products_services: pick(inferred.products_services, currentContext.products_services),
+    target_audience: pick(inferred.target_audience, currentContext.target_audience),
+    commercial_area: pick(inferred.commercial_area, currentContext.commercial_area),
+    company_size: pick(inferred.company_size, currentContext.company_size),
     site_name: inferred.site_name && (!siteName || siteName === domain) ? inferred.site_name : siteName,
     address: currentContext.address,
     entity_type: inferred.entity_type || currentContext.entity_type || 'business',
@@ -377,6 +385,7 @@ export async function ensureSiteContext(
     commercial_model: inferred.commercial_model || currentContext.commercial_model,
     nonprofit_type: inferred.nonprofit_type || currentContext.nonprofit_type,
   }
+
 
   // Persist enriched data via Identity Gateway (single write point)
   if (siteId) {
