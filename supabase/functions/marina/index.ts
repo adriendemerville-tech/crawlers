@@ -3659,6 +3659,41 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // Wait for LLM visibility if still running
       await llmVisibilityPromise;
 
+      // ─── Filet de sécurité : la fonction visibilité LLM peut terminer son écriture
+      // dans domain_data_cache alors que l'appel HTTP a déjà échoué/été coupé.
+      // Sans ce read-back, le rapport tombe sur le rendu dégradé (1 seul bloc au lieu
+      // des 3 benchmarks). On repolle le cache domaine quelques secondes.
+      if (!llmVisibilityData?.scores && !llmVisibilityData?.data?.scores) {
+        for (let attempt = 0; attempt < 6; attempt++) {
+          try {
+            const { data: cached } = await sb
+              .from('domain_data_cache')
+              .select('result_data, expires_at')
+              .eq('data_type', 'llm_visibility')
+              .in('domain', [domain, `www.${domain}`, domain.replace(/^www\./, '')])
+              .gt('expires_at', new Date().toISOString())
+              .order('week_start_date', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            const payload = (cached as any)?.result_data;
+            if (payload?.scores?.length) {
+              llmVisibilityData = { data: payload };
+              console.log(`[Marina] ♻️ Visibilité LLM récupérée depuis domain_data_cache (${payload.benchmarks?.length || 0} benchmarks)`);
+              await writeSiteScopeCache(sb, domain, parentJob.user_id, { llmVisibility: llmVisibilityData });
+              break;
+            }
+          } catch (e) {
+            console.warn('[Marina] read-back visibilité LLM échoué (non-fatal):', e);
+            break;
+          }
+          await new Promise((r) => setTimeout(r, 5_000));
+        }
+        if (!llmVisibilityData) {
+          console.warn(`[Marina] Visibilité LLM indisponible pour ${domain} — rendu dégradé (pas de blocs benchmark)`);
+        }
+      }
+
+
       let crawlSnapshot: any = null;
       let hostDuplication: HostDuplicationResult | null = null;
       let archetypeAnalysis: ArchetypeAnalysis | null = null;
