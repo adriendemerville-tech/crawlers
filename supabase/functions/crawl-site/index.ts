@@ -474,7 +474,8 @@ Deno.serve(handleRequest(async (req) => {
       const { data: inFlightRows } = await supabase
         .from('site_crawls')
         .select('id, total_pages, status, created_at')
-        .eq('domain', domain)
+        .in('domain', [domain.replace(/^www\./, ''), `www.${domain.replace(/^www\./, '')}`])
+
         .eq('user_id', userId)
         .in('status', ['mapping', 'pending', 'queued', 'running', 'crawling', 'processing', 'analyzing'])
         .gte('created_at', inFlightWindow)
