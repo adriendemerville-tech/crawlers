@@ -144,6 +144,10 @@ export async function searchFounderProfile(
   const candidates: PersonCandidate[] = [];
   if (siteContext.siteText) candidates.push(...extractPersonsFromText(siteContext.siteText, domainClean));
   if (siteContext.jsonLd?.length) candidates.push(...extractPersonsFromJsonLd(siteContext.jsonLd, domainClean));
+  // Mentions légales : source de rattachement la plus fiable pour un gérant.
+  const legalPersons = await fetchLegalPagePersons(domainClean).catch(() => [] as PersonCandidate[]);
+  candidates.push(...legalPersons);
+
 
   let geoMismatch = false;
   let detectedCountry: string | null = null;
