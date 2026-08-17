@@ -33,6 +33,14 @@ import { filterCrawlablePublicUrls, isCrawlablePublicUrl, canonicalizeCrawlUrl, 
 const PAGES_PER_RUN = 150;
 const LARGE_SITE_URL_THRESHOLD = 3000;
 const PAGES_PER_RUN_LARGE_SITE = 80;
+/**
+ * Budget d'octets HTML parsés par run. Sur des sites à pages très lourdes
+ * (~350 kB de HTML par page, observé sur www.arti-box.fr), le coût CPU de
+ * l'extraction dépasse le quota bien avant le quota de pages : le run est tué
+ * ("CPU Time exceeded") avant d'écrire le checkpoint. On coupe donc aussi sur
+ * le volume traité, puis on relaie le run suivant.
+ */
+const BYTES_PER_RUN = 12 * 1024 * 1024;
 
 function pagesPerRunFor(totalCount: number | null | undefined): number {
   const n = typeof totalCount === 'number' ? totalCount : 0;
@@ -63,11 +71,13 @@ Deno.serve(handleRequest(async (req) => {
 
     console.log(`[Worker] Found ${jobs.length} active jobs`);
     let globalPagesProcessed = 0;
+    let runBytesProcessed = 0;
     const failedUrlsByJob = new Map<string, Array<{ url: string; reason: string }>>();
 
     for (const job of jobs) {
-      if (globalPagesProcessed >= PAGES_PER_RUN || isTimeUp()) {
+      if (globalPagesProcessed >= PAGES_PER_RUN || runBytesProcessed >= BYTES_PER_RUN || isTimeUp()) {
         if (isTimeUp()) console.log(`[Worker] ⏱️ Watchdog triggered after ${Math.round((Date.now() - startTime) / 1000)}s — stopping gracefully`);
+        else if (runBytesProcessed >= BYTES_PER_RUN) console.log(`[Worker] Budget d'octets du run atteint (${Math.round(runBytesProcessed / 1024 / 1024)} Mo) — relais sur le checkpoint`);
         else console.log(`[Worker] Quota de pages du run atteint (${PAGES_PER_RUN}) — relais sur le checkpoint`);
         break;
       }
@@ -187,7 +197,7 @@ Deno.serve(handleRequest(async (req) => {
       const processedUrls = new Set<string>(urlsToProcess.map(u => crawlUrlKey(u)));
 
       // ── INNER LOOP: keep processing pages while time allows ──
-      while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < PAGES_PER_RUN && jobPagesProcessed < jobQuota) {
+      while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < PAGES_PER_RUN && runBytesProcessed < BYTES_PER_RUN && jobPagesProcessed < jobQuota) {
         // Check if crawl was stopped by user
         const { data: crawlCheck } = await supabase
           .from('site_crawls')
@@ -238,6 +248,10 @@ Deno.serve(handleRequest(async (req) => {
         if (validResults.length > 0) {
           const rows = validResults.map(p => ({ crawl_id: job.crawl_id, ...p }));
           await supabase.from('crawl_pages').upsert(rows, { onConflict: 'crawl_id,url', ignoreDuplicates: true });
+          runBytesProcessed += validResults.reduce(
+            (sum, p) => sum + Number((p as any).html_size_bytes || 0),
+            0,
+          );
         }
 
         // ── PASS 2: RECURSIVE LINK DISCOVERY ──
