@@ -284,8 +284,11 @@ export function pickSpokesperson(opts: ResolveOptions): SpokespersonResult {
     return { ...base, reason: 'Le seul profil trouvé est localisé dans un autre pays que l’entité : homonyme probable, non retenu.' };
   }
 
-  const scored = all.map((c) => ({ c, score: scoreSpokesperson(c, all) }))
+  // La corroboration se compte sur la liste BRUTE : la déduplication fusionne
+  // le même nom vu sur plusieurs sources et masquerait le bonus multi-sources.
+  const scored = all.map((c) => ({ c, score: scoreSpokesperson(c, candidates) }))
     .sort((a, b) => b.score - a.score);
+
   const best = scored[0];
 
   if (best.score < minConfidence) {
