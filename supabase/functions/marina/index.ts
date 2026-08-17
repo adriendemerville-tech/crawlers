@@ -11,6 +11,17 @@ import {
   type ConsolidatedPlanStats,
 } from '../_shared/topPriorities.ts';
 import { severityFromSignal } from '../_shared/actionPlanDiscrimination.ts';
+import {
+  humanizeKey,
+  humanizeValue,
+  severityBadgeHTML,
+  splitTrailingSeverity,
+  clusterDisplayName,
+  consolidateClusters,
+  clusterSize,
+  isolatedClustersNoteHTML,
+  isFillerTable,
+} from '../_shared/reportEditorial.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
 import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
@@ -175,28 +186,45 @@ function resolveReportLanguage(explicitLang: string | undefined, expertData: any
 // ─── Helper: render any object/array as structured HTML ───
 function renderJsonSection(data: any, depth = 0): string {
   if (data === null || data === undefined) return '';
-  if (typeof data === 'string') return `<p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:8px;">${data}</p>`;
-  if (typeof data === 'number' || typeof data === 'boolean') return `<span style="font-weight:600;color:#3b82f6;">${data}</span>`;
+  if (typeof data === 'string') {
+    // Lot 6 — une sévérité collée en fin de phrase devient un badge.
+    const { text, severity } = splitTrailingSeverity(data);
+    const badge = severityBadgeHTML(severity);
+    return `<p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:8px;">${text}${badge ? ` ${badge}` : ''}</p>`;
+  }
+  if (typeof data === 'number' || typeof data === 'boolean') return `<span style="font-weight:600;color:#3b82f6;">${humanizeValue(data)}</span>`;
   if (Array.isArray(data)) {
     if (data.length === 0) return '';
     // If array of strings
     if (typeof data[0] === 'string') {
-      return `<ul style="margin:8px 0;padding-left:20px;">${data.map(item => `<li style="font-size:13px;color:#374151;margin-bottom:4px;">${item}</li>`).join('')}</ul>`;
+      return `<ul style="margin:8px 0;padding-left:20px;">${data.map(item => {
+        const { text, severity } = splitTrailingSeverity(String(item));
+        const badge = severityBadgeHTML(severity);
+        return `<li style="font-size:13px;color:#374151;margin-bottom:4px;">${text}${badge ? ` ${badge}` : ''}</li>`;
+      }).join('')}</ul>`;
     }
+    // Lot 6 — un tableau d'objets dont toutes les valeurs numériques sont à zéro
+    // est un remplissage : on ne le rend pas.
+    if (data.every((it) => it && typeof it === 'object') && isFillerTable(data as Array<Record<string, unknown>>)) return '';
     // Array of objects
-    return data.map((item, i) => {
+    return data.map((item) => {
       if (typeof item === 'string') return `<div style="padding:6px 12px;margin-bottom:4px;background:#f9fafb;border-radius:4px;font-size:13px;">${item}</div>`;
-      const title = item.title || item.name || item.label || item.keyword || item.action || item.prescriptive_action || item.action_concrete || '';
+      const rawTitle = item.title || item.name || item.label || item.keyword || item.action || item.prescriptive_action || item.action_concrete || '';
       const desc = item.description || item.detail || item.rationale || item.evidence || item.explanation || item.strategic_goal || '';
-      const score = item.score ?? item.confidence ?? item.priority ?? '';
-      return `<div style="padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid ${item.priority === 'Prioritaire' || item.priority === 'critical' ? '#ef4444' : item.priority === 'Important' ? '#f59e0b' : '#3b82f6'};border-radius:4px;">
-        ${score ? `<span style="font-size:11px;color:#6b7280;font-weight:600;">${score}</span> ` : ''}
+      const split = splitTrailingSeverity(String(rawTitle || ''));
+      const title = split.text;
+      const badge = severityBadgeHTML(item.severity ?? item.priority ?? split.severity);
+      const score = item.score ?? item.confidence ?? '';
+      const accent = badge && String(item.severity ?? item.priority ?? split.severity ?? '').toLowerCase().match(/crit|priorit/) ? '#ef4444'
+        : badge ? '#f59e0b' : '#3b82f6';
+      return `<div style="padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid ${accent};border-radius:4px;">
+        ${badge || score !== '' ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">${badge}${score !== '' ? `<span style="font-size:11px;color:#6b7280;font-weight:600;">${humanizeValue(score)}</span>` : ''}</div>` : ''}
         ${title ? `<div style="font-weight:500;margin-top:2px;">${title}</div>` : ''}
-        ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${desc}</div>` : ''}
-        ${Object.entries(item).filter(([k]) => !['title','name','label','keyword','description','detail','rationale','evidence','explanation','score','confidence','priority','action','prescriptive_action','action_concrete','strategic_goal'].includes(k)).map(([k, v]) => {
+        ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${splitTrailingSeverity(String(desc)).text}</div>` : ''}
+        ${Object.entries(item).filter(([k]) => !['title','name','label','keyword','description','detail','rationale','evidence','explanation','score','confidence','priority','severity','action','prescriptive_action','action_concrete','strategic_goal'].includes(k)).map(([k, v]) => {
           if (v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0)) return '';
           if (typeof v === 'object') return '';
-          return `<div style="font-size:12px;color:#6b7280;margin-top:2px;"><strong>${k}:</strong> ${v}</div>`;
+          return `<div style="font-size:12px;color:#6b7280;margin-top:2px;"><strong>${humanizeKey(k)} :</strong> ${humanizeValue(v)}</div>`;
         }).join('')}
       </div>`;
     }).join('');
@@ -204,19 +232,24 @@ function renderJsonSection(data: any, depth = 0): string {
   if (typeof data === 'object') {
     return Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)).map(([key, val]) => {
       if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
+        const isSeverityField = /^(severity|priority|sévérité|priorité)$/i.test(key);
+        const rendered = isSeverityField
+          ? (severityBadgeHTML(val) || humanizeValue(val))
+          : humanizeValue(val);
         return `<div style="padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:13px;text-align:left;">
-          <span style="color:#6b7280;margin-right:8px;">${key.replace(/_/g, ' ')}:</span>
-          <span style="font-weight:500;color:#1e293b;">${val}</span>
+          <span style="color:#6b7280;margin-right:8px;">${humanizeKey(key)} :</span>
+          <span style="font-weight:500;color:#1e293b;">${rendered}</span>
         </div>`;
       }
       if (depth < 2) {
-        return `<div style="margin-top:12px;text-align:left;"><h4 style="font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;text-transform:capitalize;">${key.replace(/_/g, ' ')}</h4>${renderJsonSection(val, depth + 1)}</div>`;
+        return `<div style="margin-top:12px;text-align:left;"><h4 style="font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">${humanizeKey(key)}</h4>${renderJsonSection(val, depth + 1)}</div>`;
       }
       return '';
     }).join('');
   }
   return '';
 }
+
 
 // ─── Shared styles & helpers for report sections ───
 function getMarinaStyles(): string {
@@ -1287,19 +1320,22 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
       ${techRecommendations.length > 0 ? `
       <h3 style="font-size:14px;font-weight:600;margin:16px 0 8px;">${tr.recommendations} (${techRecommendations.length})</h3>
       ${techRecommendations.map((r: any) => {
-        const title = typeof r === 'string' ? r : r.title || r.label || '';
+        const rawTitle = typeof r === 'string' ? r : r.title || r.label || '';
+        const split = splitTrailingSeverity(String(rawTitle));
+        const title = split.text;
         const desc = typeof r === 'string' ? '' : r.description || r.detail || '';
-        const priority = typeof r === 'string' ? '' : r.priority || '';
+        const priority = typeof r === 'string' ? (split.severity || '') : (r.priority || r.severity || split.severity || '');
         const category = typeof r === 'string' ? '' : r.category || '';
         const color = priority === 'critical' ? '#ef4444' : priority === 'important' ? '#f59e0b' : '#3b82f6';
         return `<div class="reco-card" style="border-left-color:${color}">
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
-            ${priority ? `<span style="font-size:11px;color:${color};font-weight:600;text-transform:uppercase;">${priority}</span>` : ''}
-            ${category ? `<span style="font-size:11px;color:#6b7280;background:#f3f4f6;padding:1px 6px;border-radius:4px;">${category}</span>` : ''}
+            ${severityBadgeHTML(priority)}
+            ${category ? `<span style="font-size:11px;color:#6b7280;background:#f3f4f6;padding:1px 6px;border-radius:4px;">${humanizeKey(String(category))}</span>` : ''}
           </div>
           <div style="font-weight:500;">${title}</div>
-          ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${desc}</div>` : ''}
+          ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${splitTrailingSeverity(String(desc)).text}</div>` : ''}
         </div>`;
+
       }).join('')}` : ''}
     </div>`;
 
@@ -1359,8 +1395,8 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
            l'objet même de l'audit stratégique. ── -->
       ${buildModuleSection('Citabilité par les moteurs de réponse IA', '🌍', geoCitability)}
       <!--MARINA_LLM_START-->${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}<!--MARINA_LLM_END-->
-      ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
-      ${buildModuleSection('Quotabilité', '💬', quotability)}
+      ${buildModuleSection('Maturité GEO', '🌍', geoReadiness)}
+      ${buildModuleSection('Citabilité : extraits reprenables', '💬', quotability)}
       ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
       ${buildModuleSection('Intention conversationnelle', '💭', conversationalIntent)}
       ${buildModuleSection('Risque zéro-clic', '🚫', zeroClickRisk)}
@@ -1378,7 +1414,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${buildCompetitiveLandscapeSection(competitive)}
       ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
       ${buildModuleSection("Sentiment d'Expertise", '🎯', expertiseSentiment)}
-      ${buildModuleSection('Red Team (Adversarial)', '🔴', redTeam)}
+      ${buildModuleSection('Test adversarial (résistance aux contre-arguments)', '🔴', redTeam)}
       ${buildModuleSection('Google My Business', '📍', gmb)}
       ${buildModuleSection('Cibles Clients', '👥', clientTargets)}
 
@@ -1461,6 +1497,15 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const thinContentPages = cocoonGraphDetails?.thin_content_pages || [];
   const strategeRecos: Array<{ title: string; description: string; priority: string }> = cocoonData?._stratege_recommendations || [];
 
+  // Lot 6 — nommage lisible des clusters + regroupement des thématiques isolées
+  // (un cluster à une page n'a aucune valeur de lecture en tant que cadre).
+  const clusterEntries: any[] = cocoonClusters && typeof cocoonClusters === 'object'
+    ? Object.entries(cocoonClusters).map(([key, val]: [string, any]) => ({ cluster_id: key, ...(val || {}) }))
+    : (clusterDetails || []);
+  const { clusters: namedClusters, isolatedCount: isolatedClusters } = consolidateClusters(clusterEntries as any[]);
+
+
+
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
@@ -1478,32 +1523,26 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
         <div class="stat-card"><div class="value">${cocoonStats.avg_roi || '-'}</div><div class="label">ROI Moy.</div></div>
         <div class="stat-card"><div class="value">${cocoonStats.links_density || '-'}%</div><div class="label">Densité liens</div></div>
       </div>` : ''}
-      ${cocoonClusters && typeof cocoonClusters === 'object' ? `
+      ${(namedClusters.length > 0 || isolatedClusters > 0) ? `
       <div style="margin-top:16px;">
-        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Clusters identifiés</h3>
-        ${Object.entries(cocoonClusters).map(([key, val]: [string, any]) => `
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Thématiques identifiées${namedClusters.length > 0 ? ` (${namedClusters.length})` : ''}</h3>
+        ${namedClusters.map((val: any, i: number) => `
           <div style="padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid #3b82f6;border-radius:6px;">
-            <div style="font-weight:600;font-size:14px;">${val?.label || val?.name || key}</div>
+            <div style="font-weight:600;font-size:14px;">${clusterDisplayName(val, i)}</div>
             <div style="font-size:12px;color:#6b7280;margin-top:4px;">
-              ${val?.count || val?.pages_count || ''} pages
-              ${val?.avg_geo ? ` · Geo: ${Math.round(val.avg_geo)}` : ''}
-              ${val?.avg_roi ? ` · ROI: ${Math.round(val.avg_roi)}` : ''}
-              ${val?.total_traffic ? ` · Trafic: ${val.total_traffic}` : ''}
-              ${val?.dominant_intent ? ` · Intent: ${val.dominant_intent}` : ''}
+              ${clusterSize(val)} pages
+              ${val?.avg_geo ? ` · Score GEO moyen : ${Math.round(val.avg_geo)}` : ''}
+              ${val?.avg_seo_score ? ` · Score SEO moyen : ${Math.round(val.avg_seo_score)}` : ''}
+              ${val?.avg_word_count ? ` · ${Math.round(val.avg_word_count)} mots en moyenne` : ''}
+              ${val?.avg_roi ? ` · ROI moyen : ${Math.round(val.avg_roi)}` : ''}
+              ${val?.total_traffic ? ` · Trafic estimé : ${val.total_traffic}` : ''}
+              ${val?.dominant_intent ? ` · Intention dominante : ${humanizeValue(val.dominant_intent)}` : ''}
             </div>
           </div>
         `).join('')}
+        ${isolatedClustersNoteHTML(isolatedClusters)}
       </div>` : ''}
-      ${!cocoonClusters && clusterDetails.length > 0 ? `
-      <div style="margin-top:16px;">
-        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Clusters identifiés</h3>
-        ${clusterDetails.map((cluster: any) => `
-          <div style="padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid #3b82f6;border-radius:6px;">
-            <div style="font-weight:600;font-size:14px;">${cluster?.top_keywords?.join(', ') || cluster?.cluster_id || 'Cluster'}</div>
-            <div style="font-size:12px;color:#6b7280;margin-top:4px;">${cluster?.size || 0} pages · SEO moyen ${cluster?.avg_seo_score || '-'} · ${cluster?.avg_word_count || '-'} mots</div>
-          </div>
-        `).join('')}
-      </div>` : ''}
+
       ${orphanPages.length > 0 ? `
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Pages orphelines (${orphanPages.length})</h3>
@@ -1576,16 +1615,17 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
         <h3 style="font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
           🎯 ${lang === 'fr' ? 'Recommandations Stratège' : lang === 'es' ? 'Recomendaciones Estratégicas' : 'Strategic Recommendations'}
         </h3>
-        ${strategeRecos.map((r, i) => {
-          const prioColor = r.priority === 'critique' || r.priority === 'critical' ? '#ef4444' : r.priority === 'important' ? '#f59e0b' : '#22c55e';
+        ${strategeRecos.map((r) => {
+          const split = splitTrailingSeverity(String(r.title || ''));
+          const prio = r.priority || split.severity || '';
+          const prioColor = prio === 'critique' || prio === 'critical' ? '#ef4444' : prio === 'important' ? '#f59e0b' : '#22c55e';
           return `<div style="padding:12px;margin-bottom:8px;background:white;border-left:3px solid ${prioColor};border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-              <span style="font-size:11px;color:${prioColor};font-weight:700;text-transform:uppercase;">${r.priority}</span>
-            </div>
-            <div style="font-weight:600;font-size:14px;">${r.title}</div>
-            <div style="font-size:13px;color:#4b5563;margin-top:4px;line-height:1.6;">${r.description}</div>
+            ${severityBadgeHTML(prio) ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">${severityBadgeHTML(prio)}</div>` : ''}
+            <div style="font-weight:600;font-size:14px;">${split.text}</div>
+            <div style="font-size:13px;color:#4b5563;margin-top:4px;line-height:1.6;">${splitTrailingSeverity(String(r.description || '')).text}</div>
           </div>`;
         }).join('')}
+
       </div>` : ''}
     </div>`;
 
