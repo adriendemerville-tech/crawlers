@@ -18,3 +18,4 @@
 - [Questions visibilité LLM](mem://features/geo/llm-visibility-prompt-rules-fr) — Censure marque/domaine dans les prompts + question locale réservée à service_local/leadgen/nonprofit
 - [Marina cohérence rapports](mem://features/marina/report-consistency-guards-fr) — Web Vitals canoniques (X,XX s), justifications par levier, toxicité si référents hors-sujet, concurrents marché dans la carte d'identité, disclaimer échantillon GEO
 - [Lentilles de ciblage Parménion](mem://tech/autopilot/targeting-lenses-fr) — Sprint 2 : lens_bonus max +8 sur items de création (cluster/persona/localisation), quota de slots contenu via share_pct plafonné 50%, cap 2/cluster prioritaire
+- [Identité ancrée contenu](mem://tech/architecture/identity-grounding-fr) — Interdiction d'inférer l'activité depuis le nom de domaine ; réutilisation de carte limitée aux sources ancrées (marina/crawl/user)
