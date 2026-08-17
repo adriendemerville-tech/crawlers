@@ -599,6 +599,11 @@ export function ParmenionTargetPanel({
         </CardContent>
       </Card>
 
+      {/* Lentilles de ciblage (localisation / persona / thématique) */}
+      <ParmenionTargetingLenses targetDomain={targetDomain} />
+
+
+
       {/* Status cards */}
       <div className={cn("grid gap-3", isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-6")}>
         <Card className="py-2">
