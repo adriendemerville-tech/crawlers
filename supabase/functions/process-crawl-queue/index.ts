@@ -286,6 +286,7 @@ Deno.serve(handleRequest(async (req) => {
         const attemptedCount = batch.length;
         const newProcessedCount = Math.min(job.total_count, alreadyProcessed + attemptedCount);
         globalPagesProcessed += attemptedCount;
+        jobPagesProcessed += attemptedCount;
         alreadyProcessed = newProcessedCount;
 
         await supabase.from('crawl_jobs').update({ processed_count: newProcessedCount }).eq('id', job.id);
