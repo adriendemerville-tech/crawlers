@@ -324,7 +324,7 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
         : `Compare-moi les meilleures solutions pour ${mainNeed} : laquelle sort du lot ?`,
     });
 
-    if (area) {
+    if (localOk) {
       byIntent.push({ intent: 'local', text: `Quel ${noun} pour ${mainNeed} à ${area} ?` });
     } else if (target) {
       byIntent.push({ intent: 'audience', text: `Je suis ${target} : quel ${noun} pour ${mainNeed} me conviendrait ?` });
@@ -345,9 +345,10 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
 
     // ── Follow-ups: drip-feed details one by one ──
     // Each follow-up adds ONE precision, like a real conversation
-    if (area) {
+    if (localOk) {
       followUps.push(`Et ${area}, tu connais des bons ?`);
     }
+
     if (target) {
       followUps.push(`Je suis ${target}, ça change quelque chose ?`);
     }
