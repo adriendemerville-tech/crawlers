@@ -9,8 +9,9 @@ import { KNOWN_LOCATIONS } from './businessContext.ts';
 import type { GMBData, FounderInfo, FacebookPageInfo } from './types.ts';
 import {
   extractPersonsFromText, extractPersonsFromJsonLd, serpItemToCandidate,
-  pickSpokesperson, toFounderInfo, type PersonCandidate,
+  pickSpokesperson, toFounderInfo, fetchLegalPagePersons, type PersonCandidate,
 } from '../personAuthority.ts';
+
 
 
 // ==================== GOOGLE MY BUSINESS DETECTION ====================
