@@ -9564,6 +9564,59 @@ export type Database = {
           },
         ]
       }
+      parmenion_targeting_lenses: {
+        Row: {
+          conversion_target: Json
+          created_at: string
+          enabled: boolean
+          id: string
+          lens_type: string
+          proof_level: string
+          proof_signals: Json
+          publish_directory: string | null
+          share_pct: number
+          target_id: string
+          updated_at: string
+          values: Json
+        }
+        Insert: {
+          conversion_target?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          lens_type: string
+          proof_level?: string
+          proof_signals?: Json
+          publish_directory?: string | null
+          share_pct?: number
+          target_id: string
+          updated_at?: string
+          values?: Json
+        }
+        Update: {
+          conversion_target?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          lens_type?: string
+          proof_level?: string
+          proof_signals?: Json
+          publish_directory?: string | null
+          share_pct?: number
+          target_id?: string
+          updated_at?: string
+          values?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parmenion_targeting_lenses_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "parmenion_targets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parmenion_targets: {
         Row: {
           api_key_name: string | null

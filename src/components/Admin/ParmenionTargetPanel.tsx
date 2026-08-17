@@ -11,6 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { ParmenionTargetingLenses } from './ParmenionTargetingLenses';
+
 
 interface DecisionLog {
   id: string;
@@ -598,6 +600,11 @@ export function ParmenionTargetPanel({
           )}
         </CardContent>
       </Card>
+
+      {/* Lentilles de ciblage (localisation / persona / thématique) */}
+      <ParmenionTargetingLenses targetDomain={targetDomain} />
+
+
 
       {/* Status cards */}
       <div className={cn("grid gap-3", isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-6")}>
