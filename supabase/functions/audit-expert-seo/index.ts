@@ -2315,6 +2315,7 @@ Deno.serve(handleRequest(async (req) => {
         maxScore: 200,
         scores,
         insights: enrichedInsights,
+        social_proof_verified: socialProof,
         recommendations,
         introduction,
         rawData: {
