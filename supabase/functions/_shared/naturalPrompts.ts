@@ -486,17 +486,19 @@ function generatePromptsEn(ctx: SiteContext, season: string, maxPrompts: number)
       || sector
       || 'a professional service';
 
-    // Q1: Simple need
-    prompts.push(`I'm looking for a tool for ${mainNeed}, any ideas?`);
+    // Lexicon derived from the identity card ("software" only for a SaaS)
+    const lexEn = resolveLexicon(ctx, 'en');
+    const isShopEn = resolveLexKey(ctx) === 'shop';
 
-    // Q2: Simple alternative angle
-    if (entityType === 'ecommerce') {
-      prompts.push(`What's the best site to buy ${mainNeed}?`);
-    } else if (entityType === 'saas') {
-      prompts.push(`Do you know a good software for ${mainNeed}?`);
-    } else {
-      prompts.push(`What's the best option for ${mainNeed} right now?`);
-    }
+    // Q1: Simple need
+    prompts.push(isShopEn
+      ? `I'm looking for a place to buy ${mainNeed}, any ideas?`
+      : `I'm looking for ${lexEn.seek} for ${mainNeed}, any ideas?`);
+
+    // Q2: Comparison angle
+    prompts.push(isShopEn
+      ? `What's the best site to buy ${mainNeed}?`
+      : `Which of ${lexEn.comparePlural} for ${mainNeed} stands out?`);
 
     if (sector && sector !== mainNeed) {
       prompts.push(`I need help with ${sector}, what would you recommend?`);
