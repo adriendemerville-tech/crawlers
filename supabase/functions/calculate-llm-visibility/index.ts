@@ -494,13 +494,16 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
     // ── Run ALL LLMs in parallel ──
     const llmPromises = LLM_TARGETS.map(async (llm) => {
-      const promptScores: PromptScore[] = []
-      const responseTexts: string[] = []
+      // Aligné sur flatPrompts : null = prompt non mesuré (panne modèle),
+      // jamais confondu avec « marque non citée ».
+      const alignedScores: Array<PromptScore | null> = new Array(prompts.length).fill(null)
+      const responseTexts: string[] = new Array(prompts.length).fill('')
       let failedPrompts = 0
       let lastError: string | undefined
 
       const followUps = getFollowUpPrompts(site)
-      for (const prompt of prompts) {
+      for (let i = 0; i < flatPrompts.length; i++) {
+        const prompt = flatPrompts[i].text
         const { iteration_found, response_text, measured, error, model_used } = await queryWithFallback(
           openrouterKey,
           llm.models,
@@ -517,14 +520,12 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         if (!measured) {
           failedPrompts++
           lastError = error
-          responseTexts.push('')
           console.warn(`[llm-vis] ${site.domain} × ${llm.name}: prompt non mesuré (${error})`)
           continue
         }
 
-        const ps = scorePromptResult(iteration_found, response_text, patterns)
-        promptScores.push(ps)
-        responseTexts.push(response_text.slice(0, 500))
+        alignedScores[i] = scorePromptResult(iteration_found, response_text, patterns)
+        responseTexts[i] = response_text.slice(0, 500)
 
         // Store raw execution
         await supabase.from('llm_test_executions').insert({
@@ -539,6 +540,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         })
       }
 
+      const promptScores = alignedScores.filter((s): s is PromptScore => s !== null)
       const measuredPrompts = promptScores.length
       const score = measuredPrompts > 0 ? aggregateLLMScore(promptScores) : null
 
@@ -586,8 +588,11 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         measurement_status: measuredPrompts === 0 ? 'unmeasured' : (failedPrompts > 0 ? 'partial' : 'measured'),
         error: measuredPrompts === 0 ? (lastError || 'model_unavailable') : undefined,
         promptDetails: promptScores,
+        alignedScores,
         responseTexts,
       }
+
+
 
 })
 
