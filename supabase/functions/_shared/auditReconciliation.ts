@@ -169,6 +169,78 @@ export interface ReconciliationFacts {
   perimeter?: Perimeter | null;
   orphanCount?: number | null;
   toxicity?: ToxicityState | null;
+  /** Web Vitals mesurés : source unique de vérité pour tout le rapport. */
+  webVitals?: WebVitalsFacts | null;
+}
+
+// ─────────────── Web Vitals : une valeur, un format ───────────────
+
+export interface WebVitalsFacts {
+  /** Largest Contentful Paint en millisecondes (ou en secondes si < 60). */
+  lcp?: unknown;
+  fcp?: unknown;
+  inp?: unknown;
+  tbt?: unknown;
+  ttfb?: unknown;
+}
+
+/** Normalise une durée hétérogène (s ou ms) en millisecondes. */
+export function toMilliseconds(value: unknown): number | null {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n < 60 ? Math.round(n * 1000) : Math.round(n);
+}
+
+/**
+ * Format canonique d'une durée de Web Vital : toujours en secondes, deux
+ * décimales, virgule française. Fin des « 5.5s / 5.4s / 5.48s / 5776ms »
+ * pour une seule et même mesure.
+ */
+export function formatVitalSeconds(value: unknown, locale = 'fr-FR'): string | null {
+  const ms = toMilliseconds(value);
+  if (ms === null) return null;
+  const seconds = ms / 1000;
+  return `${seconds.toFixed(2).replace('.', locale.startsWith('fr') ? ',' : '.')} s`;
+}
+
+const VITAL_ALIASES: Array<{ key: keyof WebVitalsFacts; re: string }> = [
+  { key: 'lcp', re: '(?:LCP|Largest\\s+Contentful\\s+Paint)' },
+  { key: 'fcp', re: '(?:FCP|First\\s+Contentful\\s+Paint)' },
+  { key: 'inp', re: '(?:INP|Interaction\\s+to\\s+Next\\s+Paint)' },
+  { key: 'tbt', re: '(?:TBT|Total\\s+Blocking\\s+Time)' },
+  { key: 'ttfb', re: '(?:TTFB|Time\\s+To\\s+First\\s+Byte)' },
+];
+
+/**
+ * Réécrit toute mention chiffrée d'un Web Vital dans le HTML pour qu'elle
+ * corresponde à la mesure retenue, au format canonique. On ne touche qu'aux
+ * durées situées à proximité immédiate du nom de la métrique, jamais aux
+ * seuils de référence (« sous les 2,5 s ») qui ne sont pas des mesures.
+ */
+export function canonicalizeWebVitals(html: string, vitals: WebVitalsFacts, locale = 'fr-FR'): string {
+  let out = html || '';
+  for (const { key, re } of VITAL_ALIASES) {
+    const canonical = formatVitalSeconds(vitals[key], locale);
+    if (!canonical) continue;
+    const measured = toMilliseconds(vitals[key])!;
+    const pattern = new RegExp(
+      `(${re}[^<>{}]{0,80}?)(\\d{1,5}(?:[.,]\\d{1,3})?)\\s*(millisecondes|ms|secondes?|s)\\b`,
+      'giu',
+    );
+    out = out.replace(pattern, (full, prefix: string, num: string, unit: string) => {
+      const asMs = /^m/i.test(unit) ? Number(num.replace(',', '.')) : Number(num.replace(',', '.')) * 1000;
+      if (!Number.isFinite(asMs)) return full;
+      // Seuil de référence cité (2,5 s pour LCP, 200 ms pour INP…) : on ne le
+      // remplace pas, seule la mesure du site est normalisée.
+      const isThreshold = /(?:seuil|recommand|sous (?:la barre des|les)|below|inférieur)/i.test(prefix);
+      if (isThreshold) return full;
+      // Tolérance de 20 % : au-delà, il s'agit d'une autre mesure (autre page,
+      // autre profil) et non d'un arrondi divergent.
+      if (Math.abs(asMs - measured) / measured > 0.2) return full;
+      return `${prefix}${canonical}`;
+    });
+  }
+  return out;
 }
 
 const HEALTHY_LINK_CLAIMS: RegExp[] = [
