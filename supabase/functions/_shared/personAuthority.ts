@@ -341,3 +341,34 @@ export function toFounderInfo(r: SpokespersonResult) {
     alternatives: r.alternatives,
   };
 }
+
+// ─────────────────── Couche légale on-site (0 appel payant) ───────────────────
+
+const LEGAL_PATHS = [
+  '/mentions-legales', '/mentions-legales/', '/mentions-legales.html',
+  '/legal', '/a-propos', '/qui-sommes-nous', '/notre-equipe', '/equipe',
+];
+
+/**
+ * Va chercher le gérant / dirigeant sur les pages institutionnelles du site.
+ * C'est la source la plus fiable pour le rattachement légal, et elle ne coûte
+ * aucun crédit API. Timeout court, arrêt au premier succès.
+ */
+export async function fetchLegalPagePersons(domain: string, maxPages = 4): Promise<PersonCandidate[]> {
+  const base = `https://${domain.replace(/^https?:\/\//, '').replace(/\/$/, '')}`;
+  const out: PersonCandidate[] = [];
+  for (const path of LEGAL_PATHS.slice(0, maxPages)) {
+    try {
+      const resp = await fetch(`${base}${path}`, {
+        redirect: 'follow',
+        headers: { 'User-Agent': 'CrawlersBot/1.0 (+https://crawlers.fr)' },
+        signal: AbortSignal.timeout(6000),
+      });
+      if (!resp.ok) continue;
+      const html = await resp.text();
+      const found = extractPersonsFromText(html, domain);
+      if (found.length > 0) { out.push(...found); break; }
+    } catch { continue; }
+  }
+  return dedupeCandidates(out);
+}
