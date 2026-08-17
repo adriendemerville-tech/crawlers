@@ -424,8 +424,30 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     }
 
     const patterns = buildBrandPatterns(enrichedSite)
-    const prompts = generatePrompts(enrichedSite)
+    // 3 benchmarks × 3 questions sur des intentions différentes.
+    // Chaque benchmark est scoré séparément (carte de résultats dédiée).
+    const benchmarks = buildLlmBenchmarks(
+      {
+        market_sector: enrichedSite.market_sector,
+        products_services: enrichedSite.products_services,
+        target_audience: enrichedSite.target_audience,
+        commercial_area: enrichedSite.commercial_area,
+        entity_type: enrichedSite.entity_type,
+        media_specialties: enrichedSite.media_specialties,
+        business_model: enrichedSite.business_model,
+        brand_name: enrichedSite.brand_name,
+        site_name: enrichedSite.site_name,
+        domain: enrichedSite.domain,
+      },
+      'fr',
+    )
+    const flatPrompts: Array<{ text: string; intent: string; benchmarkId: string }> = []
+    for (const b of benchmarks) {
+      for (const p of b.prompts) flatPrompts.push({ text: p.text, intent: p.intent, benchmarkId: b.id })
+    }
+    const prompts = flatPrompts.map(p => p.text)
     const weekStart = getWeekStart()
+
 
     // ── Check shared domain cache first ──
     const { data: cachedData } = await supabase
