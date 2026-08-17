@@ -1181,7 +1181,7 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
     <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Questions posées aux modèles</div>
     ${askedPrompts.length > 0
       ? `<ol style="margin:0 0 8px 18px;padding:0;font-size:12px;color:#374151;line-height:1.6;">
-          ${askedPrompts.map(p => `<li>« ${escapeHtml(p)} »</li>`).join('')}
+          ${askedPrompts.map(p => `<li>« ${escapeHtmlText(p)} »</li>`).join('')}
         </ol>`
       : `<p style="font-size:12px;color:#6b7280;margin:0 0 8px;">Questions non enregistrées sur ce run.</p>`}
     <p style="font-size:11px;color:#6b7280;margin:0;line-height:1.5;">Ces questions sont générées à partir du secteur et de l'offre du site, et ne mentionnent jamais la marque ni le domaine : la citation est détectée après coup dans la réponse. Chaque question est jouée en conversation (jusqu'à 3 relances) sur ${effectiveScores.length} modèles. Un modèle est « cité » si la marque apparaît dans au moins une réponse ; plus elle apparaît tôt et haut dans la liste, plus le score est élevé.</p>
