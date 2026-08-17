@@ -2809,11 +2809,24 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       await updateProgress(5, 'crawling');
       
       // ─── Step 1: Technical SEO Audit (includes crawl) ───
+      // Retry borné : un rendu vide (Browserless saturé, fallback froid) faisait
+      // échouer tout l'audit dès le premier appel raté. 3 tentatives espacées
+      // suffisent à absorber une indisponibilité passagère du rendu.
       console.log(`[Marina] Phase 1 Step 1: audit-expert-seo for ${url}`);
-      const expertResult = await callFunction('audit-expert-seo', { url, lang });
-      
+      let expertResult: any = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        expertResult = await callFunction('audit-expert-seo', { url, lang });
+        if (expertResult?.success && expertResult?.data) break;
+        console.warn(
+          `[Marina] audit-expert-seo tentative ${attempt}/3 échouée: ${expertResult?.error || 'No data returned'}`,
+        );
+        if (attempt < 3) await new Promise((r) => setTimeout(r, attempt * 8000));
+      }
+
       if (!expertResult?.success || !expertResult?.data) {
-        throw new Error(`Expert SEO audit failed: ${expertResult?.error || 'No data returned'}`);
+        throw new Error(
+          `Expert SEO audit failed after 3 attempts: ${expertResult?.error || 'No data returned'}`,
+        );
       }
       
       // Normalisation obligatoire : les actions identity_* et tracked_sites stockent le
