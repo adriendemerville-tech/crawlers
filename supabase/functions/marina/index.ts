@@ -3129,14 +3129,20 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         // 2) crawl déjà en vol (< 30 min) → on s'y raccroche au lieu d'en lancer un second
         // 3) sinon → un seul crawl est lancé (la 1re URL du batch)
         const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+        // `site_crawls.domain` est stocké tel que résolu par crawl-site (avec ou
+        // sans `www.`) : on interroge les deux variantes, sinon on ne retrouve
+        // jamais le crawl mutualisé et on en relance un à chaque tour d'attente.
+        const apexDomain = domain.replace(/^www\./, '');
+        const domainVariants = [apexDomain, `www.${apexDomain}`];
         const { data: existingCrawls, error: existingCrawlError } = await sb
           .from('site_crawls' as any)
           .select('id, crawled_pages, total_pages, status, created_at')
-          .eq('domain', domain)
+          .in('domain', domainVariants)
           .eq('user_id', parentJob.user_id)
           .gte('created_at', twelveHoursAgo)
           .order('created_at', { ascending: false })
           .limit(10);
+
 
         if (existingCrawlError) {
           console.warn(`[Marina] Existing crawl lookup failed for ${domain}: ${existingCrawlError.message}`);
@@ -3388,8 +3394,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       if (phase0Identity) {
         try {
           const { data: lastCrawl } = await sb
-            .from('site_crawls').select('id').eq('domain', domain)
+            .from('site_crawls').select('id')
+            .in('domain', [domain.replace(/^www\./, ''), `www.${domain.replace(/^www\./, '')}`])
             .order('created_at', { ascending: false }).limit(1);
+
           const crawlId = lastCrawl?.[0]?.id;
           if (crawlId) {
             const { data: corpusPages } = await sb
@@ -3654,7 +3662,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const { data: recentCrawls, error: crawlLookupError } = await sb
           .from('site_crawls' as any)
           .select('id, crawled_pages, total_pages, avg_score, created_at, content_integrity')
-          .eq('domain', domain)
+          .in('domain', [domain.replace(/^www\./, ''), `www.${domain.replace(/^www\./, '')}`])
+
           .eq('user_id', parentJob.user_id)
           .eq('status', 'completed')
           .order('created_at', { ascending: false })
