@@ -276,6 +276,7 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
   const products = (ctx.products_services || '').trim();
   const target = (ctx.target_audience || '').trim();
   const area = (ctx.commercial_area || '').trim();
+  const localOk = isLocalQuestionRelevant(ctx);
   const entityType = (ctx.entity_type || 'business').trim();
   const specialties = (ctx.media_specialties || []) as string[];
   const isMedia = entityType === 'media' || entityType === 'blog';
