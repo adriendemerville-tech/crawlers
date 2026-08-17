@@ -326,6 +326,29 @@ async function queryWithIterations(
   return { iteration_found: 0, response_text: '', measured: !failure, error: failure }
 }
 
+/**
+ * Joue le prompt sur le modèle primaire ; si l'appel échoue techniquement
+ * (measured=false : id de modèle retiré, 404, timeout), rejoue sur le modèle de
+ * secours. Garantit que les 5 familles affichées dans le rapport sont mesurées.
+ */
+async function queryWithFallback(
+  apiKey: string,
+  models: string[],
+  prompt: string,
+  patterns: BrandPatterns,
+  domain: string,
+  followUpPrompts: string[],
+): Promise<{ iteration_found: number; response_text: string; measured: boolean; error?: string; model_used: string }> {
+  let last = { iteration_found: 0, response_text: '', measured: false, error: 'no_model', model_used: models[0] }
+  for (const model of models) {
+    const r = await queryWithIterations(apiKey, model, prompt, patterns, domain, followUpPrompts)
+    if (r.measured) return { ...r, model_used: model }
+    last = { ...r, model_used: model }
+    console.warn(`[llm-vis] ${domain}: ${model} non mesuré (${r.error}) → bascule modèle de secours`)
+  }
+  return last
+}
+
 // ═══════════════════════════════════════════════
 // AGGREGATE SCORE
 // ═══════════════════════════════════════════════
