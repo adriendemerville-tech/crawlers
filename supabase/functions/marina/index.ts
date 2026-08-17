@@ -10,6 +10,7 @@ import {
   type WorkbenchTask,
   type ConsolidatedPlanStats,
 } from '../_shared/topPriorities.ts';
+import { severityFromSignal } from '../_shared/actionPlanDiscrimination.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
 import { fetchSitemapUrls } from '../_shared/sitemapUrls.ts';
