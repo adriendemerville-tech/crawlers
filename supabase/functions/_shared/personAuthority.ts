@@ -291,6 +291,22 @@ export function pickSpokesperson(opts: ResolveOptions): SpokespersonResult {
 
   const best = scored[0];
 
+  const bestSources = sourcesFor(best.c.name, candidates);
+  const bestOnsite = bestSources.some((s) => s !== 'serp_social');
+
+  // Garde-fou anti-fabrication : un nom issu d'un seul extrait de SERP sociale,
+  // sans aucune trace sur le site ni seconde source, n'est JAMAIS publié comme
+  // porte-parole — c'est ce qui produisait des dirigeants inexistants dans les
+  // rapports. Il est rétrogradé en piste à vérifier.
+  if (!bestOnsite && bestSources.length < 2) {
+    return {
+      ...base,
+      confidence: Number(best.score.toFixed(2)),
+      reason: `Piste non vérifiée (« ${best.c.name} ») : issue d’un seul profil social public, sans confirmation sur le site (mentions légales, données structurées, contenu éditorial). Fondateur / gérant déclaré non résolu — à vérifier manuellement avant toute publication de son nom.`,
+      alternatives: scored.slice(0, 3).map(({ c }) => ({ name: c.name, role: c.role, profileUrl: c.profileUrl ?? null })),
+    };
+  }
+
   if (best.score < minConfidence) {
     return {
       ...base,
@@ -299,6 +315,7 @@ export function pickSpokesperson(opts: ResolveOptions): SpokespersonResult {
       alternatives: scored.slice(0, 3).map(({ c }) => ({ name: c.name, role: c.role, profileUrl: c.profileUrl ?? null })),
     };
   }
+
 
   const sources = sourcesFor(best.c.name, candidates);
   const hasSocial = sources.includes('serp_social');
