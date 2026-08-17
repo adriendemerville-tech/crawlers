@@ -19,6 +19,7 @@ import { preCrawlForAudit, formatPreCrawlForPrompt, type PreCrawlResult } from '
 import { handleRequest } from '../_shared/serveHandler.ts';
 import { applyMarketWeighting } from '../_shared/marketPriority.ts';
 import { buildAeoRewrite, writeAeoRewritePrescriptions } from '../_shared/aeoRewrites.ts';
+import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
 
 
 // ── Shared strategic audit modules ──
