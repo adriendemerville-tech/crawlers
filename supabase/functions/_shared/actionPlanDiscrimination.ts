@@ -359,12 +359,24 @@ export function buildAccountability(
   const impressions = Number(ctx.monthlyImpressions || 0) || 0;
   const volume = Number(ctx.keywordVolume || 0) || 0;
 
+  // Chaque action a son propre levier : la justification doit exposer le
+  // détail du calcul (levier, taux d'effet, périmètre), sinon deux actions
+  // sans rapport partagent la même phrase et l'estimation paraît templatée.
+  const leverLabel = LEVER_BY_FAMILY[fp] || kpi.toLowerCase();
+  const upliftPct = Math.round(uplift * 1000) / 10;
+  const scopePart = coverage < 1
+    ? ` × ${Math.round(coverage * 100)} % du périmètre (${pages} page${pages > 1 ? 's' : ''} sur ${scale})`
+    : pages > 0
+      ? ` sur ${pages} page${pages > 1 ? 's' : ''} concernée${pages > 1 ? 's' : ''}`
+      : '';
+  const formula = `levier « ${leverLabel} », effet attendu ${upliftPct} %${scopePart}`;
+
   if (clicks > 0) {
     const gain = Math.round(clicks * uplift * coverage);
     return {
       owner, kpi,
       traffic_gain: gain > 0 ? gain : null,
-      traffic_basis: `estimation depuis ${clicks} clics/mois mesurés (Search Console) × ${Math.round(uplift * 100)} % d'effet attendu${coverage < 1 ? ` × ${Math.round(coverage * 100)} % du périmètre` : ''}`,
+      traffic_basis: `${clicks} clics/mois mesurés (Search Console) — ${formula}`,
     };
   }
   if (impressions > 0) {
@@ -373,7 +385,7 @@ export function buildAccountability(
     return {
       owner, kpi,
       traffic_gain: gain > 0 ? gain : null,
-      traffic_basis: `estimation depuis ${impressions} impressions/mois mesurées (Search Console), CTR de référence 2 %`,
+      traffic_basis: `${impressions} impressions/mois mesurées (Search Console), CTR de référence 2 % — ${formula}`,
     };
   }
   if (volume > 0) {
@@ -381,7 +393,7 @@ export function buildAccountability(
     return {
       owner, kpi,
       traffic_gain: gain > 0 ? gain : null,
-      traffic_basis: `estimation depuis ${volume} recherches/mois sur le cluster visé (DataForSEO)`,
+      traffic_basis: `${volume} recherches/mois sur le cluster visé (DataForSEO), CTR cible 2 % — ${formula}`,
     };
   }
   return {
