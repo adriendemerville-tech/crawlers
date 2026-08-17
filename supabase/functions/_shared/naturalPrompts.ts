@@ -137,7 +137,9 @@ const LOCAL_INELIGIBLE_BUSINESS_MODELS = new Set([
 
 const LOCAL_INELIGIBLE_ENTITY_TYPES = new Set(['saas', 'ecommerce', 'marketplace', 'media', 'blog']);
 
-const NON_LOCAL_AREA_RE = /\b(france|international|mondial|monde|europe|national|worldwide|global|en ligne|online|remote|à distance)\b/i;
+// « France » n'exclut le local que s'il est employé seul : « Île-de-France »
+// ou « Nouvelle-Aquitaine » restent des zones de chalandise valides.
+const NON_LOCAL_AREA_RE = /(?<![\w-])(france|international|mondial|monde|europe|national|worldwide|global|en ligne|online|remote|à distance)(?![\w-])/i;
 
 /** true si une question géolocalisée a un sens pour ce site. */
 export function isLocalQuestionRelevant(ctx: SiteContext): boolean {
