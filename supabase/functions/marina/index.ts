@@ -1375,7 +1375,11 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 }
 
 // ─── Section 3: Strategic GEO Audit (standalone HTML) ───
-function generateStrategicSectionHTML(strategicData: any, lang: string, domain: string, llmRealData?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = '', hasConsolidatedPlan = false): string {
+function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domain: string, llmRealDataRaw?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = '', hasConsolidatedPlan = false): string {
+  // Garde-fou de rendu : aucune fuite de gabarit de prompt ne doit atteindre le
+  // rapport, y compris via des données mises en cache avant les garde-fous.
+  const strategicData = sanitizeReportData(strategicDataRaw);
+  const llmRealData = sanitizeReportData(llmRealDataRaw);
   const tr = getTranslations(lang);
   const stratScore = strategicData?.overallScore || 0;
   const stratIntro = strategicData?.introduction || {};
