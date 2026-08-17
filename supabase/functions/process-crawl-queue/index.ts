@@ -85,6 +85,13 @@ Deno.serve(handleRequest(async (req) => {
       const urlFilter: string | null = job.url_filter || null;
       let alreadyProcessed = job.processed_count || 0;
 
+      // Quota de pages propre à ce job (abaissé sur les très gros domaines).
+      const jobQuota = pagesPerRunFor(job.total_count);
+      let jobPagesProcessed = 0;
+      if (jobQuota !== PAGES_PER_RUN) {
+        console.log(`[Worker] Job ${job.id}: gros domaine (${job.total_count} URLs) — lot réduit à ${jobQuota} pages/run`);
+      }
+
       // ── Checkpoint reconciliation ──
       const { count: persistedPageCount } = await supabase
         .from('crawl_pages')
