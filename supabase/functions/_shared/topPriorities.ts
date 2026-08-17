@@ -42,6 +42,8 @@ export interface RawFinding {
   expected_roi?: string;
   effort?: string;
   pages_affected?: number;
+  /** Lot 5 : écart relatif au seuil mesuré, fourni par severityFromSignal(). */
+  gap_ratio?: number;
 }
 
 export interface PriorityAction {
