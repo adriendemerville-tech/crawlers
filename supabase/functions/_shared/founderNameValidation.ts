@@ -17,6 +17,12 @@ const NON_PERSON_TOKENS = [
 
 const ROLE_WORDS = /\b(fondateur|fondatrice|founder|ceo|président|presidente|président[e]?|dirigeant[e]?|gérant[e]?|co-?founder|cto|coo)\b/i;
 
+/** Particules patronymiques admises en minuscule au milieu d'un nom. */
+const PARTICLES = new Set([
+  'de', 'di', 'du', 'des', 'da', 'do', 'dos', 'del', 'della', 'della',
+  'le', 'la', 'van', 'von', 'der', 'den', 'ter', 'bin', 'ben', 'el', 'al', 'y', 'e',
+]);
+
 /** Profile URL (not a post/reel/video) for the given platform. */
 export function isPersonProfileUrl(url: string, platform: string): boolean {
   const u = (url || '').toLowerCase();
@@ -48,9 +54,15 @@ export function isPlausiblePersonName(raw: string | null | undefined, domain = '
   if (domainRoot && lower.includes(domainRoot)) return false;
   if (domainRoot.split(' ').some(part => part.length > 3 && lower.includes(part))) return false;
   if (NON_PERSON_TOKENS.some(tok => lower.includes(tok))) return false;
-  // Each word must start with an uppercase letter (accents included)
-  return words.every(w => /^[\p{Lu}]/u.test(w) && /^[\p{L}'’-]+$/u.test(w));
+  // Chaque mot commence par une majuscule, sauf les particules nobiliaires/patronymiques
+  // (« Michael Di Luca », « Adrien de Volontat », « Luis van der Berg »).
+  return words.every((w, i) => {
+    if (!/^[\p{L}'’-]+$/u.test(w)) return false;
+    if (i > 0 && i < words.length - 1 && PARTICLES.has(w.toLowerCase())) return true;
+    return /^[\p{Lu}]/u.test(w);
+  });
 }
+
 
 /** Extract a candidate person name from a SERP title, stripping role suffixes. */
 export function extractPersonName(title: string | null | undefined, url = '', platform = ''): string | null {
