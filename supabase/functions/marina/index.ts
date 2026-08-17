@@ -1494,6 +1494,15 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const thinContentPages = cocoonGraphDetails?.thin_content_pages || [];
   const strategeRecos: Array<{ title: string; description: string; priority: string }> = cocoonData?._stratege_recommendations || [];
 
+  // Lot 6 — nommage lisible des clusters + regroupement des thématiques isolées
+  // (un cluster à une page n'a aucune valeur de lecture en tant que cadre).
+  const clusterEntries: any[] = cocoonClusters && typeof cocoonClusters === 'object'
+    ? Object.entries(cocoonClusters).map(([key, val]: [string, any]) => ({ cluster_id: key, ...(val || {}) }))
+    : (clusterDetails || []);
+  const { clusters: namedClusters, isolatedCount: isolatedClusters } = consolidateClusters(clusterEntries as any[]);
+
+
+
   const content = `
     <div class="section">
       <div class="section-title"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
