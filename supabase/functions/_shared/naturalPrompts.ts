@@ -19,6 +19,11 @@ export interface SiteContext {
   entity_type?: string;         // 'business' | 'media' | 'blog' | 'ecommerce' | 'saas'
   media_specialties?: string[];
   founding_year?: number;
+  /** Modèle d'affaires résolu (carte d'identité) — arbitre l'éligibilité aux questions locales */
+  business_model?: string | null;
+  /** Noms de marque à ne JAMAIS faire apparaître dans les questions */
+  brand_name?: string | null;
+  site_name?: string | null;
 }
 
 export type PromptLang = 'fr' | 'en' | 'es';
@@ -34,6 +39,8 @@ export interface NaturalPromptsOptions {
   currentMonth?: number;
   /** Domain name (used ONLY for sector inference when no site context) */
   domain?: string;
+  /** Noms de marque additionnels à censurer dans les questions */
+  brandNames?: string[];
 }
 
 export interface GeneratedPrompts {
@@ -42,6 +49,114 @@ export interface GeneratedPrompts {
   /** Follow-up prompts for multi-turn conversations */
   followUps: string[];
 }
+
+// ═══════════════════════════════════════════════
+// Brand scrubbing — la marque/le domaine ne doit JAMAIS apparaître
+// ═══════════════════════════════════════════════
+
+const GENERIC_BRAND_STOPWORDS = new Set([
+  'web', 'site', 'shop', 'store', 'group', 'groupe', 'agence', 'agency', 'france',
+  'pro', 'app', 'online', 'digital', 'the', 'les', 'des', 'and', 'plus',
+]);
+
+/** Construit la liste de termes de marque à retirer de toute question. */
+export function buildBrandScrubTerms(domain?: string, extraNames?: (string | null | undefined)[]): string[] {
+  const terms = new Set<string>();
+  const push = (t?: string | null) => {
+    const v = (t || '').trim().toLowerCase();
+    if (v.length >= 3 && !GENERIC_BRAND_STOPWORDS.has(v)) terms.add(v);
+  };
+
+  if (domain) {
+    const clean = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].toLowerCase();
+    push(clean);                                  // avenir-renovations.fr
+    const base = clean.split('.')[0];
+    push(base);                                   // avenir-renovations
+    push(base.replace(/[-_]/g, ' '));             // avenir renovations
+    push(base.replace(/[-_]/g, ''));              // avenirrenovations
+    for (const word of base.split(/[-_]/)) {
+      if (word.length >= 5) push(word);           // renovations (mots courts ignorés : trop génériques)
+    }
+  }
+  for (const n of extraNames || []) {
+    const v = (n || '').trim();
+    if (!v) continue;
+    push(v);
+    push(v.replace(/[\s\-_]+/g, ''));
+  }
+  // Termes longs d'abord pour éviter les retraits partiels
+  return [...terms].sort((a, b) => b.length - a.length);
+}
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Retire toute mention de marque/domaine d'un texte et nettoie la ponctuation orpheline. */
+export function scrubBrandFromText(text: string, terms: string[]): string {
+  let out = text;
+  for (const t of terms) {
+    const re = new RegExp(`(?:\\b|\\s)(?:chez\\s+|de\\s+|by\\s+)?${escapeRe(t)}\\b`, 'gi');
+    out = out.replace(re, ' ');
+  }
+  return out
+    // connecteurs orphelins laissés par le retrait de la marque
+    .replace(/\s+(avec|chez|par|de|du|des|sur|pour|with|by|from|con|por)\s*(?=[,.;:!?]|$)/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([,.;:])/g, '$1')
+    .replace(/([«(])\s+/g, '$1')
+    .replace(/\s+([»)])/g, '$1')
+    .replace(/(^|\s)[,;:]\s*/g, '$1')
+    .trim();
+}
+
+
+// ═══════════════════════════════════════════════
+// Éligibilité des questions locales (selon la carte d'identité)
+// ═══════════════════════════════════════════════
+
+/**
+ * Seuls les modèles d'affaires réellement ancrés dans un territoire justifient
+ * une question locale (« quel prestataire à Lyon ? »).
+ * Un SaaS, une marketplace, un e-commerce ou un média est servi partout :
+ * une question locale y produit une mesure fausse.
+ */
+const LOCAL_ELIGIBLE_BUSINESS_MODELS = new Set([
+  'service_local',   // artisan, commerce, cabinet, clinique, restaurant, garage…
+  'leadgen',         // génération de leads sur une zone de chalandise
+  'nonprofit',       // association / structure implantée localement
+]);
+
+const LOCAL_INELIGIBLE_BUSINESS_MODELS = new Set([
+  'saas_b2b', 'saas_b2c',
+  'marketplace_b2b', 'marketplace_b2c', 'marketplace_b2b2c',
+  'ecommerce_b2c', 'ecommerce_b2b',
+  'media_publisher',
+  'service_agency',
+]);
+
+const LOCAL_INELIGIBLE_ENTITY_TYPES = new Set(['saas', 'ecommerce', 'marketplace', 'media', 'blog']);
+
+const NON_LOCAL_AREA_RE = /\b(france|international|mondial|monde|europe|national|worldwide|global|en ligne|online|remote|à distance)\b/i;
+
+/** true si une question géolocalisée a un sens pour ce site. */
+export function isLocalQuestionRelevant(ctx: SiteContext): boolean {
+  const area = (ctx.commercial_area || '').trim();
+  if (!area) return false;
+  if (NON_LOCAL_AREA_RE.test(area)) return false;
+
+  const model = (ctx.business_model || '').trim().toLowerCase();
+  if (model) {
+    if (LOCAL_INELIGIBLE_BUSINESS_MODELS.has(model)) return false;
+    return LOCAL_ELIGIBLE_BUSINESS_MODELS.has(model);
+  }
+
+  // Sans modèle d'affaires résolu : on retombe sur le type d'entité
+  const entity = (ctx.entity_type || 'business').trim().toLowerCase();
+  if (LOCAL_INELIGIBLE_ENTITY_TYPES.has(entity)) return false;
+  return true;
+}
+
 
 // ═══════════════════════════════════════════════
 // Seasonality mapping
@@ -164,6 +279,7 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
   const products = (ctx.products_services || '').trim();
   const target = (ctx.target_audience || '').trim();
   const area = (ctx.commercial_area || '').trim();
+  const localOk = isLocalQuestionRelevant(ctx);
   const entityType = (ctx.entity_type || 'business').trim();
   const specialties = (ctx.media_specialties || []) as string[];
   const isMedia = entityType === 'media' || entityType === 'blog';
@@ -191,9 +307,9 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
     );
   } else {
     // ── Core need: extract the simplest possible need ──
-    const mainNeed = products
-      ? products.split(',')[0].trim()  // Only first product/service
-      : sector || 'un service professionnel';
+    const mainNeed = (products.split(',')[0] || '').trim()
+      || sector
+      || 'un service professionnel';
 
     const noun = entityType === 'ecommerce' ? 'site' : entityType === 'saas' ? 'logiciel' : 'prestataire';
 
@@ -212,7 +328,7 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
         : `Compare-moi les meilleures solutions pour ${mainNeed} : laquelle sort du lot ?`,
     });
 
-    if (area) {
+    if (localOk) {
       byIntent.push({ intent: 'local', text: `Quel ${noun} pour ${mainNeed} à ${area} ?` });
     } else if (target) {
       byIntent.push({ intent: 'audience', text: `Je suis ${target} : quel ${noun} pour ${mainNeed} me conviendrait ?` });
@@ -233,9 +349,10 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
 
     // ── Follow-ups: drip-feed details one by one ──
     // Each follow-up adds ONE precision, like a real conversation
-    if (area) {
+    if (localOk) {
       followUps.push(`Et ${area}, tu connais des bons ?`);
     }
+
     if (target) {
       followUps.push(`Je suis ${target}, ça change quelque chose ?`);
     }
@@ -270,6 +387,7 @@ function generatePromptsEn(ctx: SiteContext, season: string, maxPrompts: number)
   const products = (ctx.products_services || '').trim();
   const target = (ctx.target_audience || '').trim();
   const area = (ctx.commercial_area || '').trim();
+  const localOk = isLocalQuestionRelevant(ctx);
   const entityType = (ctx.entity_type || 'business').trim();
   const isMedia = entityType === 'media' || entityType === 'blog';
 
@@ -285,9 +403,9 @@ function generatePromptsEn(ctx: SiteContext, season: string, maxPrompts: number)
       "Which websites or media outlets would you recommend to follow this?",
     );
   } else {
-    const mainNeed = products
-      ? products.split(',')[0].trim()
-      : sector || 'a professional service';
+    const mainNeed = (products.split(',')[0] || '').trim()
+      || sector
+      || 'a professional service';
 
     // Q1: Simple need
     prompts.push(`I'm looking for a tool for ${mainNeed}, any ideas?`);
@@ -306,7 +424,7 @@ function generatePromptsEn(ctx: SiteContext, season: string, maxPrompts: number)
     }
 
     // Follow-ups: drip-feed one detail at a time
-    if (area) {
+    if (localOk) {
       followUps.push(`What about in ${area}, any good ones?`);
     }
     if (target) {
@@ -341,13 +459,14 @@ function generatePromptsEs(ctx: SiteContext, season: string, maxPrompts: number)
   const products = (ctx.products_services || '').trim();
   const target = (ctx.target_audience || '').trim();
   const area = (ctx.commercial_area || '').trim();
+  const localOk = isLocalQuestionRelevant(ctx);
 
   const prompts: string[] = [];
   const followUps: string[] = [];
 
-  const mainNeed = products
-    ? products.split(',')[0].trim()
-    : sector || 'un servicio profesional';
+  const mainNeed = (products.split(',')[0] || '').trim()
+    || sector
+    || 'un servicio profesional';
 
   prompts.push(`Busco una herramienta para ${mainNeed}, ¿alguna idea?`);
   prompts.push(`¿Cuál es la mejor opción para ${mainNeed} ahora mismo?`);
@@ -356,7 +475,7 @@ function generatePromptsEs(ctx: SiteContext, season: string, maxPrompts: number)
     prompts.push(`Necesito ayuda con ${sector}, ¿qué recomiendas?`);
   }
 
-  if (area) {
+  if (localOk) {
     followUps.push(`¿Y en ${area}, conoces buenos?`);
   }
   if (target) {
@@ -411,12 +530,40 @@ export function generateNaturalPrompts(options: NaturalPromptsOptions = {}): Gen
     }
   }
 
-  switch (lang) {
-    case 'en': return generatePromptsEn(ctx, season, maxPrompts);
-    case 'es': return generatePromptsEs(ctx, season, maxPrompts);
-    default:   return generatePromptsFr(ctx, season, maxPrompts);
+  // Censure marque/domaine EN AMONT : les champs de la carte d'identité
+  // contiennent souvent le nom commercial (products_services, market_sector…).
+  const scrubTerms = buildBrandScrubTerms(options.domain, [
+    ctx.brand_name,
+    ctx.site_name,
+    ...(options.brandNames || []),
+  ]);
+  if (scrubTerms.length) {
+    ctx = {
+      ...ctx,
+      market_sector: ctx.market_sector ? scrubBrandFromText(ctx.market_sector, scrubTerms) : ctx.market_sector,
+      products_services: ctx.products_services ? scrubBrandFromText(ctx.products_services, scrubTerms) : ctx.products_services,
+      target_audience: ctx.target_audience ? scrubBrandFromText(ctx.target_audience, scrubTerms) : ctx.target_audience,
+      media_specialties: ctx.media_specialties?.map(s => scrubBrandFromText(s, scrubTerms)).filter(Boolean),
+    };
   }
+
+  let out: GeneratedPrompts;
+  switch (lang) {
+    case 'en': out = generatePromptsEn(ctx, season, maxPrompts); break;
+    case 'es': out = generatePromptsEs(ctx, season, maxPrompts); break;
+    default:   out = generatePromptsFr(ctx, season, maxPrompts);
+  }
+
+  // Filet de sécurité final : aucune question ne sort avec une mention de marque.
+  if (scrubTerms.length) {
+    out = {
+      prompts: out.prompts.map(p => scrubBrandFromText(p, scrubTerms)).filter(p => p.length > 10),
+      followUps: out.followUps.map(p => scrubBrandFromText(p, scrubTerms)).filter(p => p.length > 5),
+    };
+  }
+  return out;
 }
+
 
 // ═══════════════════════════════════════════════
 // Brand pattern builder (also shared)
