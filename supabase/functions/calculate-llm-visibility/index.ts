@@ -242,6 +242,9 @@ function generatePrompts(site: any): string[] {
     commercial_area: site.commercial_area,
     entity_type: site.entity_type,
     media_specialties: site.media_specialties,
+    business_model: site.business_model,
+    brand_name: site.brand_name,
+    site_name: site.site_name,
   }
   const { prompts } = generateNaturalPrompts({ site: ctx, lang: 'fr', maxPrompts: NUM_PROMPTS, domain: site.domain })
   return prompts
@@ -251,10 +254,16 @@ function getFollowUpPrompts(site: any): string[] {
   const ctx: NaturalSiteContext = {
     entity_type: site.entity_type,
     media_specialties: site.media_specialties,
+    commercial_area: site.commercial_area,
+    target_audience: site.target_audience,
+    business_model: site.business_model,
+    brand_name: site.brand_name,
+    site_name: site.site_name,
   }
   const { followUps } = generateNaturalPrompts({ site: ctx, lang: 'fr', maxPrompts: 1, domain: site.domain })
   return followUps
 }
+
 
 async function queryWithIterations(
   apiKey: string,
