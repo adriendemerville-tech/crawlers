@@ -549,8 +549,9 @@ function generatePromptsEs(ctx: SiteContext, season: string, maxPrompts: number)
     || sector
     || 'un servicio profesional';
 
-  prompts.push(`Busco una herramienta para ${mainNeed}, ¿alguna idea?`);
-  prompts.push(`¿Cuál es la mejor opción para ${mainNeed} ahora mismo?`);
+  const lexEs = resolveLexicon(ctx, 'es');
+  prompts.push(`Busco ${lexEs.seek} para ${mainNeed}, ¿alguna idea?`);
+  prompts.push(`¿Cuál de ${lexEs.comparePlural} para ${mainNeed} destaca más?`);
 
   if (sector && sector !== mainNeed) {
     prompts.push(`Necesito ayuda con ${sector}, ¿qué recomiendas?`);
