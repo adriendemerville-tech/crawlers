@@ -107,12 +107,73 @@ function needsEnrichment(site: Record<string, unknown>): 'full' | 'refresh' | fa
 }
 
 /**
- * Call LLM to deduce site context from domain name
+ * Fetch real onsite evidence from the homepage (title, meta, headings, visible text).
+ * Without this, the LLM can only guess from the domain name — which produced
+ * hallucinated identity cards (e.g. dictadevi.io read as a transcription service
+ * instead of a construction/renovation software platform).
+ */
+export interface OnsiteEvidence {
+  title?: string
+  description?: string
+  headings: string[]
+  text: string
+}
+
+export async function fetchHomepageEvidence(domain: string): Promise<OnsiteEvidence | null> {
+  const clean = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+  const urls = [`https://${clean}`, `https://www.${clean}`]
+
+  for (const url of urls) {
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 8000)
+      const resp = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersBot/1.0; +https://crawlers.fr)' },
+        redirect: 'follow',
+        signal: controller.signal,
+      })
+      clearTimeout(timeout)
+      if (!resp.ok) continue
+      const html = (await resp.text()).slice(0, 400_000)
+
+      const title = html.match(/<title[^>]*>([\s\S]{0,300}?)<\/title>/i)?.[1]?.trim()
+      const description =
+        html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([\s\S]{0,400}?)["']/i)?.[1]?.trim() ||
+        html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([\s\S]{0,400}?)["']/i)?.[1]?.trim()
+
+      const headings: string[] = []
+      for (const m of html.matchAll(/<h[1-3][^>]*>([\s\S]{0,200}?)<\/h[1-3]>/gi)) {
+        const h = m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+        if (h.length > 2 && headings.length < 25) headings.push(h)
+      }
+
+      const text = html
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 3500)
+
+      if (!title && !description && headings.length === 0 && text.length < 200) continue
+      return { title, description, headings, text }
+    } catch {
+      continue
+    }
+  }
+  return null
+}
+
+/**
+ * Call LLM to deduce site context — from real onsite content when available,
+ * otherwise (degraded) from the domain name.
  */
 async function inferContextFromDomain(
   domain: string,
   siteName: string,
   existingContext?: SiteContext,
+  evidence?: OnsiteEvidence | null,
 ): Promise<SiteContext | null> {
   const lovableKey = Deno.env.get('LOVABLE_API_KEY')
   const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
@@ -121,7 +182,7 @@ async function inferContextFromDomain(
 
   // If we have existing context, ask LLM to verify/improve it
   const existingHint = existingContext?.market_sector
-    ? `\n\nContexte existant (à vérifier et améliorer si nécessaire) :
+    ? `\n\nContexte existant (à VÉRIFIER contre le contenu réel, et à corriger s'il est faux) :
 - Secteur: ${existingContext.market_sector || '?'}
 - Produits/Services: ${existingContext.products_services || '?'}
 - Cible: ${existingContext.target_audience || '?'}
@@ -129,7 +190,20 @@ async function inferContextFromDomain(
 - Taille: ${existingContext.company_size || '?'}`
     : ''
 
-  const prompt = `Analyse le domaine "${domain}" (nom du site : "${siteName || domain}").${existingHint}
+  const evidenceBlock = evidence
+    ? `\n\nCONTENU RÉEL DE LA PAGE D'ACCUEIL (source de vérité, prioritaire sur toute intuition liée au nom de domaine) :
+Title: ${evidence.title || '—'}
+Meta description: ${evidence.description || '—'}
+Titres (H1-H3): ${evidence.headings.slice(0, 20).join(' | ') || '—'}
+Texte visible: ${evidence.text}
+
+Règles impératives :
+- Déduis le secteur, les produits/services et la cible EXCLUSIVEMENT de ce contenu.
+- N'interprète JAMAIS le nom de domaine pour inventer une activité (ex: un domaine contenant "dicta" ne signifie pas que le site vend de la transcription).
+- Si le contexte existant contredit ce contenu, corrige-le.`
+    : `\n\nAucun contenu de page n'a pu être récupéré : reste très générique, ne devine pas une activité précise à partir du nom de domaine.`
+
+  const prompt = `Analyse le site "${domain}" (nom du site : "${siteName || domain}").${evidenceBlock}${existingHint}
 
 Déduis les informations suivantes sur cette entreprise/ce site web. Sois précis et concret.
 
@@ -138,10 +212,10 @@ Réponds UNIQUEMENT en JSON valide avec ces champs :
   "entity_type": "Le type d'entité : 'business' (entreprise qui vend produits/services), 'media' (site d'information, journal, magazine), 'blog' (blog personnel ou thématique), 'institutional' (administration, gouvernement, association). IMPORTANT: un média/blog ne vend PAS de produits/services, il produit du contenu.",
   "commercial_model": "'commercial' si l'entité vend des produits/services à but lucratif, 'non_commercial' si c'est un service public, une association, une ONG, une fédération sportive, un syndicat ou toute organisation sans but lucratif.",
   "nonprofit_type": "Si commercial_model est 'non_commercial', précise le sous-type parmi : 'service_public' (mairie, préfecture, ministère, hôpital public, école publique), 'association_locale' (association loi 1901, club local, comité de quartier), 'ong' (ONG humanitaire, caritative, environnementale), 'organisation_internationale' (ONU, UNESCO, Croix-Rouge internationale), 'federation_sportive' (fédération, ligue, comité olympique), 'syndicat' (syndicat professionnel, patronal, interprofessionnel), 'autre' (fondation, mutuelle, coopérative). Si commercial_model est 'commercial', mettre null.",
-  "media_specialties": ["Si entity_type est 'media' ou 'blog', liste les domaines de spécialité. Ex: ['politique', 'économie', 'tech', 'sport']. Pour 'business', mettre []"],
+  "media_specialties": ["Si entity_type est 'media' ou 'blog', liste les domaines de spécialité. Ex: ['politique', 'économie', 'tech']. Pour 'business', mettre []"],
   "market_sector": "Le secteur d'activité principal (ex: 'E-commerce culturel', 'Information politique', 'Blog tech')",
   "products_services": "Pour un business: les produits/services vendus. Pour un média/blog: les sujets couverts formulés comme des requêtes utilisateur (ex: 'actualité politique française, débats parlementaires, interviews ministres'). Pour un non_commercial: les services rendus ou missions principales.",
-  "target_audience": "La cible principale (ex: 'Grand public', 'Citoyens français intéressés par la politique')",
+  "target_audience": "La cible principale, telle qu'elle apparaît dans le contenu (ex: 'Artisans du bâtiment', 'Grand public')",
   "commercial_area": "La zone géographique couverte",
   "company_size": "Estimation de la taille",
   "site_name": "Le vrai nom de la marque/entreprise/média/organisation"
@@ -150,9 +224,10 @@ Réponds UNIQUEMENT en JSON valide avec ces champs :
 Si tu ne connais pas un champ, mets une valeur générique raisonnable. Ne laisse aucun champ vide.`
 
   const messages = [
-    { role: 'system', content: 'Tu es un analyste de marché expert. Tu connais très bien les entreprises et marques du web. Réponds uniquement en JSON valide.' },
+    { role: 'system', content: 'Tu es un analyste de marché expert. Tu te fondes uniquement sur les preuves fournies (contenu de la page) et jamais sur une intuition tirée du nom de domaine. Réponds uniquement en JSON valide.' },
     { role: 'user', content: prompt },
   ]
+
 
   // Try Lovable AI first, then OpenRouter
   const attempts: Array<{ url: string; headers: Record<string, string>; model: string }> = []
@@ -268,12 +343,18 @@ export async function ensureSiteContext(
   const siteName = (site.site_name as string) || ''
   const siteId = site.id as string
 
-  console.log(`[enrich-site] 🔍 ${domain} needs ${enrichmentType} enrichment, calling LLM...`)
+  console.log(`[enrich-site] 🔍 ${domain} needs ${enrichmentType} enrichment, fetching homepage evidence...`)
+
+  const evidence = await fetchHomepageEvidence(domain)
+  if (!evidence) {
+    console.warn(`[enrich-site] ⚠️ No onsite evidence for ${domain} — degraded inference`)
+  }
 
   const inferred = await inferContextFromDomain(
     domain,
     siteName,
     enrichmentType === 'refresh' ? currentContext : undefined,
+    evidence,
   )
 
   if (!inferred) {
@@ -282,19 +363,21 @@ export async function ensureSiteContext(
     return currentContext
   }
 
-  // Determine source: if this is a refresh of existing LLM data, mark as verified
-  const previousSource = (site.identity_source as string) || 'none'
-  const newSource = enrichmentType === 'refresh' && previousSource === 'llm_auto'
-    ? 'llm_verified'
-    : 'llm_auto'
+  // Source quality depends on evidence: only onsite-grounded inference is "verified"
+  const newSource = evidence ? 'llm_verified' : 'llm_auto'
 
-  // Merge: for refresh, only overwrite empty fields (don't destroy user edits)
+  // With onsite evidence, the LLM output is authoritative over previous LLM guesses
+  // (user_manual data stays protected downstream by the Identity Gateway).
+  const authoritative = enrichmentType === 'full' || !!evidence
+  const pick = (fresh?: string, current?: string) =>
+    authoritative ? (fresh || current) : (current || fresh)
+
   const merged: SiteContext = {
-    market_sector: (enrichmentType === 'full' ? inferred.market_sector : (currentContext.market_sector || inferred.market_sector)),
-    products_services: (enrichmentType === 'full' ? inferred.products_services : (currentContext.products_services || inferred.products_services)),
-    target_audience: (enrichmentType === 'full' ? inferred.target_audience : (currentContext.target_audience || inferred.target_audience)),
-    commercial_area: (enrichmentType === 'full' ? inferred.commercial_area : (currentContext.commercial_area || inferred.commercial_area)),
-    company_size: (enrichmentType === 'full' ? inferred.company_size : (currentContext.company_size || inferred.company_size)),
+    market_sector: pick(inferred.market_sector, currentContext.market_sector),
+    products_services: pick(inferred.products_services, currentContext.products_services),
+    target_audience: pick(inferred.target_audience, currentContext.target_audience),
+    commercial_area: pick(inferred.commercial_area, currentContext.commercial_area),
+    company_size: pick(inferred.company_size, currentContext.company_size),
     site_name: inferred.site_name && (!siteName || siteName === domain) ? inferred.site_name : siteName,
     address: currentContext.address,
     entity_type: inferred.entity_type || currentContext.entity_type || 'business',
@@ -302,6 +385,7 @@ export async function ensureSiteContext(
     commercial_model: inferred.commercial_model || currentContext.commercial_model,
     nonprofit_type: inferred.nonprofit_type || currentContext.nonprofit_type,
   }
+
 
   // Persist enriched data via Identity Gateway (single write point)
   if (siteId) {

@@ -369,11 +369,19 @@ export async function resolveIdentityCard(
     notes.push('Lecture de la carte d’identité impossible : ' + String((e as Error)?.message || e));
   }
 
-  // 1) Carte existante fraîche et exploitable → réutilisation, 0 token.
+  // 1) Carte existante fraîche, exploitable ET ancrée sur du contenu réellement lu
+  //    → réutilisation, 0 token.
   // Une carte verrouillée manuellement (user_manual) prime toujours : ni la
   // fraîcheur ni un forceRefresh ne peuvent déclencher une réinférence dessus.
+  // En revanche, une carte issue d'une inférence sur le seul NOM DE DOMAINE
+  // (identity_source 'llm_auto' / 'llm_verified') n'est jamais réutilisée :
+  // c'est la source des identités hallucinées (ex. un domaine contenant "dicta"
+  // décrit à tort comme un service de transcription). On la réinfère depuis les pages.
   const isManual = String(row?.['identity_source'] || '') === 'user_manual';
-  if (row && ((isManual && isUsable(row)) || (!opts.forceRefresh && isUsable(row) && isFresh(row)))) {
+  const cardSource = String(row?.['identity_source'] || '');
+  const GROUNDED_SOURCES = ['user_manual', 'user_voice', 'marina', 'crawl', 'gmb'];
+  const isGrounded = GROUNDED_SOURCES.includes(cardSource);
+  if (row && ((isManual && isUsable(row)) || (!opts.forceRefresh && isGrounded && isUsable(row) && isFresh(row)))) {
     const manual = isManual;
 
     return buildCard(domain, trackedSiteId, row, {
@@ -383,9 +391,10 @@ export async function resolveIdentityCard(
       resolvedAt: String(row['identity_enriched_at'] || new Date().toISOString()),
       notes: manual
         ? ['Carte renseignée manuellement : elle prime sur toute inférence automatique.']
-        : ['Carte déjà résolue et jugée à jour (moins de 30 jours) : aucun nouvel appel de modèle.'],
+        : ['Carte déjà résolue sur contenu réel et jugée à jour (moins de 30 jours) : aucun nouvel appel de modèle.'],
     });
   }
+
 
   // 2) Sinon : inférence légère (home + 2-3 pages clés, 1 appel court).
   let inference: InferenceResult | null = null;
@@ -410,17 +419,22 @@ export async function resolveIdentityCard(
     return emptyIdentityCard(domain, trackedSiteId, notes);
   }
 
-  // Fusion : l'inférence complète la carte existante, elle ne l'écrase pas.
+  // Fusion : l'inférence complète la carte existante. Elle CORRIGE en revanche les
+  // champs d'activité issus d'une inférence non ancrée (nom de domaine seul), car
+  // l'inférence courante est fondée sur des pages réellement lues.
+  const CORRECTABLE = ['market_sector', 'products_services', 'target_audience', 'commercial_area', 'entity_type', 'commercial_model'];
+  const canCorrect = !isManual && !isGrounded && inference.pagesUsed.length > 0;
   const merged: Record<string, unknown> = { ...(row || {}) };
   for (const [k, v] of Object.entries(inference.fields)) {
     if (v === null || v === undefined || v === '') continue;
     if (Array.isArray(v) && v.length === 0) continue;
-    // On complète uniquement les champs vides : ni la saisie manuelle
-    // ni une inférence antérieure déjà résolue ne sont écrasées.
     const existing = merged[k];
     const isEmpty = existing === null || existing === undefined || existing === ''
       || (Array.isArray(existing) && existing.length === 0);
-    if (isEmpty) merged[k] = v;
+    if (isEmpty || (canCorrect && CORRECTABLE.includes(k))) merged[k] = v;
+  }
+  if (canCorrect && row && (txt(row['market_sector']) || txt(row['target_audience']))) {
+    notes.push("La carte d'identité enregistrée provenait d'une inférence sur le nom de domaine : elle a été recalculée sur le contenu réellement lu.");
   }
 
   const card = buildCard(domain, trackedSiteId, merged, {
@@ -433,6 +447,7 @@ export async function resolveIdentityCard(
       ...notes,
     ],
   });
+
 
   // 3) Écriture via le gateway (user_manual protégé, champs critiques en suggestion).
   if (trackedSiteId) {
