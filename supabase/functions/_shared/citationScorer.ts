@@ -122,17 +122,37 @@ function scoreStructuredData(crawlData?: CrawlToolsData | null): number | null {
   const sdScore = crawlData.scores?.structured_data ?? crawlData.scores?.structuredData;
   if (typeof sdScore === 'number') return Math.min(100, Math.round(sdScore));
 
-  // Fallback: check raw HTML analysis
-  const sd = crawlData.rawData?.htmlAnalysis?.structuredData;
-  if (!sd) return 10; // No structured data info = poor
+  // Fallback : lecture des types réellement détectés au crawl, quelle que soit la
+  // forme du payload (htmlAnalysis.structuredData, htmlAnalysis.schemaTypes,
+  // scores.aiReady.schemaTypes). Sans information, on renvoie null (inconnu)
+  // plutôt qu'un 10/100 qui contredit l'audit technique.
+  const rawHtml: any = crawlData.rawData?.htmlAnalysis;
+  const aiReady: any = (crawlData.scores as any)?.aiReady;
+  const sd: any = rawHtml?.structuredData;
+
+  const schemaTypes: string[] = [
+    ...(Array.isArray(sd?.schemaTypes) ? sd.schemaTypes : []),
+    ...(Array.isArray(rawHtml?.schemaTypes) ? rawHtml.schemaTypes : []),
+    ...(Array.isArray(aiReady?.schemaTypes) ? aiReady.schemaTypes : []),
+  ].filter((t): t is string => typeof t === 'string' && t.length > 0);
+  const uniqueTypes = [...new Set(schemaTypes)];
+
+  const hasJsonLd = Boolean(
+    sd?.hasJsonLd || (Array.isArray(sd?.jsonLd) && sd.jsonLd.length > 0) ||
+    rawHtml?.hasSchemaOrg || aiReady?.hasSchemaOrg || uniqueTypes.length > 0
+  );
+
+  const hasAnyInfo = sd || rawHtml || aiReady;
+  if (!hasAnyInfo) return null; // Aucune donnée : indicateur non mesuré
+  if (!hasJsonLd && uniqueTypes.length === 0) return 10; // Mesuré et absent
 
   let score = 0;
-  if (sd.hasJsonLd || (sd.jsonLd && sd.jsonLd.length > 0)) score += 40;
-  if (sd.schemaTypes && sd.schemaTypes.length > 0) {
-    score += Math.min(40, sd.schemaTypes.length * 10);
+  if (hasJsonLd) score += 40;
+  if (uniqueTypes.length > 0) {
+    score += Math.min(40, uniqueTypes.length * 10);
     // Bonus for high-value schema types
     const highValue = ['FAQPage', 'HowTo', 'Product', 'LocalBusiness', 'Organization', 'Person', 'Article'];
-    const hasHighValue = sd.schemaTypes.some((t: string) => highValue.some(hv => t.includes(hv)));
+    const hasHighValue = uniqueTypes.some((t) => highValue.some(hv => t.includes(hv)));
     if (hasHighValue) score += 20;
   }
 
