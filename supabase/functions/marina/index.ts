@@ -1085,45 +1085,26 @@ function escapeHtmlText(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// ─── Dedicated renderer for LLM Visibility with 6 individual model cards ───
-function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
-  // ALWAYS render this section — LLM visibility cards must appear in every report
-  const LLM_NAMES = ['ChatGPT', 'Gemini', 'Perplexity', 'Claude', 'Mistral', 'Meta Llama'];
-
-  const scores = rawData?.scores || rawData?.data?.scores || [];
-  
-  // If no real scores, generate 6 placeholder "not cited" cards so the section ALWAYS appears
-  const effectiveScores = (Array.isArray(scores) && scores.length > 0) 
-    ? scores 
-    : LLM_NAMES.map(name => ({ llm_name: name, score_percentage: 0, score: 0 }));
-  
-  // If we only have strategic text and no scores at all, still show 6 cards + analysis
-  const analysis = strategicData?.analysis || strategicData?.llm_analysis || null;
-
-  // Build 6 cards — cited (green) or not cited (red), with sentiment if cited
-  const cardsHtml = effectiveScores.map((s: any) => {
+// ─── Cartes « modèle interrogé » (réutilisées par le score global et par chaque benchmark) ───
+function renderLlmModelCards(scoreList: any[]): string {
+  return scoreList.map((s: any) => {
     const name = s.llm_name || 'Unknown';
-    const score = s.score_percentage ?? s.score ?? 0;
-    const cited = score > 0;
-    
-    // Determine sentiment from score or explicit field
-    let sentiment: string;
-    if (!cited) {
-      sentiment = 'not_found';
-    } else if (s.overall_sentiment) {
-      sentiment = s.overall_sentiment;
-    } else if (score >= 60) {
-      sentiment = 'positive';
-    } else if (score >= 30) {
-      sentiment = 'neutral';
-    } else {
-      sentiment = 'negative';
-    }
+    const raw = s.score_percentage ?? s.score ?? 0;
+    const unmeasured = raw === null || raw === undefined || s.measurement_status === 'unmeasured';
+    const score = unmeasured ? 0 : raw;
+    const cited = !unmeasured && score > 0;
 
-    const borderColor = cited ? '#22c55e' : '#ef4444';
-    const bgColor = cited ? '#22c55e08' : '#ef444408';
-    const statusLabel = cited ? 'CITÉ' : 'NON CITÉ';
-    const statusColor = cited ? '#22c55e' : '#ef4444';
+    let sentiment: string;
+    if (unmeasured || !cited) sentiment = 'not_found';
+    else if (s.overall_sentiment) sentiment = s.overall_sentiment;
+    else if (score >= 60) sentiment = 'positive';
+    else if (score >= 30) sentiment = 'neutral';
+    else sentiment = 'negative';
+
+    const borderColor = unmeasured ? '#9ca3af' : cited ? '#22c55e' : '#ef4444';
+    const bgColor = unmeasured ? '#9ca3af08' : cited ? '#22c55e08' : '#ef444408';
+    const statusLabel = unmeasured ? 'NON MESURÉ' : cited ? 'CITÉ' : 'NON CITÉ';
+    const statusColor = unmeasured ? '#6b7280' : cited ? '#22c55e' : '#ef4444';
 
     const sentimentLabels: Record<string, { label: string; color: string }> = {
       'positive':    { label: 'Positif', color: '#22c55e' },
@@ -1140,6 +1121,57 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
       ${cited && sentimentInfo.label ? `<div style="font-size:11px;margin-top:6px;padding:2px 10px;border-radius:12px;display:inline-block;background:${sentimentInfo.color}15;color:${sentimentInfo.color};font-weight:600;">${sentimentInfo.label}</div>` : ''}
     </div>`;
   }).join('');
+}
+
+// ─── Trois benchmarks distincts : une section de résultats par intention ───
+function renderLlmBenchmarkSections(benchmarks: any[]): string {
+  if (!Array.isArray(benchmarks) || benchmarks.length === 0) return '';
+  return benchmarks.map((b: any) => {
+    const prompts: any[] = Array.isArray(b?.prompts) ? b.prompts : [];
+    const scoreList: any[] = Array.isArray(b?.scores) ? b.scores : [];
+    const measured = Number(b?.measured_models ?? scoreList.length) || 0;
+    const cited = Number(b?.cited_models ?? 0) || 0;
+    const score = b?.score;
+    const scoreColor = score === null || score === undefined ? '#6b7280' : score >= 60 ? '#22c55e' : score >= 30 ? '#f59e0b' : '#ef4444';
+    return `<div style="margin-top:16px;padding:14px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;page-break-inside:avoid;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;">
+        <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin:0;text-align:left;">${escapeHtmlText(String(b?.label || 'Benchmark'))}</h4>
+        <span style="font-size:12px;font-weight:700;color:${scoreColor};white-space:nowrap;">${score === null || score === undefined ? 'Non mesuré' : score + '/100'}</span>
+      </div>
+      <p style="font-size:11px;color:#6b7280;margin:0 0 8px;line-height:1.5;text-align:left;">${escapeHtmlText(String(b?.description || ''))}</p>
+      <p style="font-size:12px;color:#374151;margin:0 0 6px;text-align:left;"><strong>${cited}/${measured}</strong> modèle${measured > 1 ? 's' : ''} citent le site sur cette intention.</p>
+      ${prompts.length ? `<ol style="margin:0 0 10px 18px;padding:0;font-size:12px;color:#374151;line-height:1.6;text-align:left;">
+        ${prompts.map((p: any) => `<li>« ${escapeHtmlText(String(p?.text || p))} »</li>`).join('')}
+      </ol>` : ''}
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        ${renderLlmModelCards(scoreList)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Dedicated renderer for LLM Visibility with 6 individual model cards ───
+function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
+  // ALWAYS render this section — LLM visibility cards must appear in every report
+  const LLM_NAMES = ['ChatGPT', 'Gemini', 'Perplexity', 'Claude', 'Mistral', 'Meta Llama'];
+
+  const scores = rawData?.scores || rawData?.data?.scores || [];
+  
+  // If no real scores, generate 6 placeholder "not cited" cards so the section ALWAYS appears
+  const effectiveScores = (Array.isArray(scores) && scores.length > 0) 
+    ? scores 
+    : LLM_NAMES.map(name => ({ llm_name: name, score_percentage: 0, score: 0 }));
+  
+  // If we only have strategic text and no scores at all, still show 6 cards + analysis
+  const analysis = strategicData?.analysis || strategicData?.llm_analysis || null;
+
+  // Cartes par modèle (score global, toutes intentions confondues)
+  const cardsHtml = renderLlmModelCards(effectiveScores);
+
+  // Trois benchmarks distincts (découverte / comparaison / usage & preuve)
+  const benchmarks = rawData?.benchmarks || rawData?.data?.benchmarks || [];
+  const benchmarksHtml = renderLlmBenchmarkSections(benchmarks);
+
 
   // Strategic analysis below cards
   let strategicHtml = '';
@@ -1189,32 +1221,45 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
 
   // ── Questions réellement posées aux LLM (méthodologie visible dans chaque rapport) ──
   const askedPrompts: string[] = [];
+  for (const b of (Array.isArray(benchmarks) ? benchmarks : [])) {
+    for (const p of (Array.isArray(b?.prompts) ? b.prompts : [])) {
+      const t = typeof p?.text === 'string' ? p.text.trim() : typeof p === 'string' ? p.trim() : '';
+      if (t && !askedPrompts.includes(t)) askedPrompts.push(t);
+    }
+  }
   for (const s of effectiveScores) {
     for (const d of (Array.isArray(s?.details) ? s.details : [])) {
       const p = typeof d?.prompt === 'string' ? d.prompt.trim() : '';
       if (p && !askedPrompts.includes(p)) askedPrompts.push(p);
     }
   }
+  const hasBenchmarks = !!benchmarksHtml;
+  const nbQuestions = askedPrompts.length;
+  const interrogations = nbQuestions * effectiveScores.length;
   const promptsHtml = `<div style="padding:12px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;margin-bottom:16px;text-align:left;">
-    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Questions posées aux modèles</div>
-    ${askedPrompts.length > 0
-      ? `<ol style="margin:0 0 8px 18px;padding:0;font-size:12px;color:#374151;line-height:1.6;">
-          ${askedPrompts.map(p => `<li>« ${escapeHtmlText(p)} »</li>`).join('')}
-        </ol>`
-      : `<p style="font-size:12px;color:#6b7280;margin:0 0 8px;">Questions non enregistrées sur ce run.</p>`}
-    <p style="font-size:11px;color:#6b7280;margin:0 0 8px;line-height:1.5;">Ces questions couvrent des intentions volontairement contrastées (découverte, comparatif, recherche locale ou par profil, alternatives, prix, preuve) et ne mentionnent jamais la marque ni le domaine : la citation est détectée après coup dans la réponse. Chaque question est jouée en conversation sur ${effectiveScores.length} modèles, avec jusqu'à 3 « tours » : le tour 1 est la question initiale, les tours 2 et 3 sont des relances de l'internaute (« et si je précise ma ville », « lequel tu choisirais »). La conversation s'arrête dès que la marque apparaît. Une citation au tour 1 vaut 100, au tour 2 50, au tour 3 25, absente 0 — puis le score est modulé par le rang dans la liste, la tonalité et la richesse de la mention.</p>
-    <p style="font-size:11px;color:#6b7280;margin:0;line-height:1.5;"><strong>Représentativité de l'échantillon :</strong> ${askedPrompts.length || 0} question${(askedPrompts.length || 0) > 1 ? 's' : ''} × ${effectiveScores.length} modèle${effectiveScores.length > 1 ? 's' : ''} = ${(askedPrompts.length || 0) * effectiveScores.length} interrogation${(askedPrompts.length || 0) * effectiveScores.length > 1 ? 's' : ''}.${(askedPrompts.length || 0) < 8 ? ` Sous 8 questions, ce score est un <strong>indicateur de tendance</strong>, pas une mesure de part de voix : les réponses des modèles varient d'un appel à l'autre et une question de plus peut déplacer le score de plusieurs points. À interpréter comme « cité / non cité sur ces intentions », et à retester dans le temps plutôt qu'à lire comme un pourcentage stable.` : ' Échantillon suffisant pour une lecture comparative dans le temps.'}</p>
+    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Méthode de mesure</div>
+    ${hasBenchmarks
+      ? `<p style="font-size:11px;color:#6b7280;margin:0 0 8px;line-height:1.5;">La mesure est découpée en <strong>${benchmarks.length} benchmarks indépendants</strong> de 3 questions chacun, sur des intentions différentes (découverte du besoin, comparaison et arbitrage, contexte d'usage et preuve). Chaque benchmark est scoré séparément et affiché ci-dessous avec ses questions et ses modèles interrogés : une marque peut être citée en comparatif et invisible en découverte, ce qu'un score unique masquait.</p>`
+      : (nbQuestions > 0
+        ? `<ol style="margin:0 0 8px 18px;padding:0;font-size:12px;color:#374151;line-height:1.6;">
+            ${askedPrompts.map(p => `<li>« ${escapeHtmlText(p)} »</li>`).join('')}
+          </ol>`
+        : `<p style="font-size:12px;color:#6b7280;margin:0 0 8px;">Questions non enregistrées sur ce run.</p>`)}
+    <p style="font-size:11px;color:#6b7280;margin:0 0 8px;line-height:1.5;">Aucune question ne mentionne la marque ni le domaine : la citation est détectée après coup dans la réponse. Chaque question est jouée en conversation sur ${effectiveScores.length} modèles, avec jusqu'à 3 « tours » : le tour 1 est la question initiale, les tours 2 et 3 sont des relances de l'internaute. La conversation s'arrête dès que la marque apparaît. Une citation au tour 1 vaut 100, au tour 2 50, au tour 3 25, absente 0 — puis le score est modulé par le rang dans la liste, la tonalité et la richesse de la mention.</p>
+    <p style="font-size:11px;color:#6b7280;margin:0;line-height:1.5;"><strong>Représentativité de l'échantillon :</strong> ${nbQuestions} question${nbQuestions > 1 ? 's' : ''} × ${effectiveScores.length} modèle${effectiveScores.length > 1 ? 's' : ''} = ${interrogations} interrogation${interrogations > 1 ? 's' : ''}.${nbQuestions < 8 ? ` Sous 8 questions, ce score est un <strong>indicateur de tendance</strong>, pas une mesure de part de voix : les réponses des modèles varient d'un appel à l'autre. À interpréter comme « cité / non cité sur ces intentions », et à retester dans le temps.` : ' Échantillon suffisant pour une lecture comparative dans le temps.'}</p>
   </div>`;
 
   return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
     <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;text-align:left;">Visibilité LLM — Benchmark en temps réel</h3>
-    <p style="font-size:12px;color:#6b7280;margin-bottom:16px;">${citedCount}/${effectiveScores.length} LLMs vous citent</p>
+    <p style="font-size:12px;color:#6b7280;margin-bottom:16px;">${citedCount}/${effectiveScores.length} LLMs vous citent, toutes intentions confondues</p>
     ${promptsHtml}
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
       ${cardsHtml}
     </div>
+    ${benchmarksHtml}
     ${strategicHtml}
   </div>`;
+
 }
 
 // ─── Section 1: Crawl Report (standalone HTML) ───

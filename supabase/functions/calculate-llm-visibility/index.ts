@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 import { generateNaturalPrompts, type SiteContext as NaturalSiteContext } from '../_shared/naturalPrompts.ts'
+import { buildLlmBenchmarks } from '../_shared/llmBenchmarks.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
@@ -231,24 +232,11 @@ function scorePromptResult(
 }
 
 // ═══════════════════════════════════════════════
-// PROMPT GENERATION — delegated to shared module
+// PROMPT GENERATION — 3 benchmarks × 3 questions (voir _shared/llmBenchmarks.ts)
+// Les relances de conversation restent issues de naturalPrompts.
 // ═══════════════════════════════════════════════
 
-function generatePrompts(site: any): string[] {
-  const ctx: NaturalSiteContext = {
-    market_sector: site.market_sector,
-    products_services: site.products_services,
-    target_audience: site.target_audience,
-    commercial_area: site.commercial_area,
-    entity_type: site.entity_type,
-    media_specialties: site.media_specialties,
-    business_model: site.business_model,
-    brand_name: site.brand_name,
-    site_name: site.site_name,
-  }
-  const { prompts } = generateNaturalPrompts({ site: ctx, lang: 'fr', maxPrompts: NUM_PROMPTS, domain: site.domain })
-  return prompts
-}
+
 
 function getFollowUpPrompts(site: any): string[] {
   const ctx: NaturalSiteContext = {
@@ -348,7 +336,8 @@ async function queryWithFallback(
   domain: string,
   followUpPrompts: string[],
 ): Promise<{ iteration_found: number; response_text: string; measured: boolean; error?: string; model_used: string }> {
-  let last = { iteration_found: 0, response_text: '', measured: false, error: 'no_model', model_used: models[0] }
+  let last: { iteration_found: number; response_text: string; measured: boolean; error?: string; model_used: string } =
+    { iteration_found: 0, response_text: '', measured: false, error: 'no_model', model_used: models[0] }
   for (const model of models) {
     const r = await queryWithIterations(apiKey, model, prompt, patterns, domain, followUpPrompts)
     if (r.measured) return { ...r, model_used: model }
@@ -424,8 +413,30 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     }
 
     const patterns = buildBrandPatterns(enrichedSite)
-    const prompts = generatePrompts(enrichedSite)
+    // 3 benchmarks × 3 questions sur des intentions différentes.
+    // Chaque benchmark est scoré séparément (carte de résultats dédiée).
+    const benchmarks = buildLlmBenchmarks(
+      {
+        market_sector: enrichedSite.market_sector,
+        products_services: enrichedSite.products_services,
+        target_audience: enrichedSite.target_audience,
+        commercial_area: enrichedSite.commercial_area,
+        entity_type: enrichedSite.entity_type,
+        media_specialties: enrichedSite.media_specialties,
+        business_model: enrichedSite.business_model,
+        brand_name: enrichedSite.brand_name,
+        site_name: enrichedSite.site_name,
+        domain: enrichedSite.domain,
+      },
+      'fr',
+    )
+    const flatPrompts: Array<{ text: string; intent: string; benchmarkId: string }> = []
+    for (const b of benchmarks) {
+      for (const p of b.prompts) flatPrompts.push({ text: p.text, intent: p.intent, benchmarkId: b.id })
+    }
+    const prompts = flatPrompts.map(p => p.text)
     const weekStart = getWeekStart()
+
 
     // ── Check shared domain cache first ──
     const { data: cachedData } = await supabase
@@ -472,13 +483,16 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
     // ── Run ALL LLMs in parallel ──
     const llmPromises = LLM_TARGETS.map(async (llm) => {
-      const promptScores: PromptScore[] = []
-      const responseTexts: string[] = []
+      // Aligné sur flatPrompts : null = prompt non mesuré (panne modèle),
+      // jamais confondu avec « marque non citée ».
+      const alignedScores: Array<PromptScore | null> = new Array(prompts.length).fill(null)
+      const responseTexts: string[] = new Array(prompts.length).fill('')
       let failedPrompts = 0
       let lastError: string | undefined
 
       const followUps = getFollowUpPrompts(site)
-      for (const prompt of prompts) {
+      for (let i = 0; i < flatPrompts.length; i++) {
+        const prompt = flatPrompts[i].text
         const { iteration_found, response_text, measured, error, model_used } = await queryWithFallback(
           openrouterKey,
           llm.models,
@@ -495,14 +509,12 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         if (!measured) {
           failedPrompts++
           lastError = error
-          responseTexts.push('')
           console.warn(`[llm-vis] ${site.domain} × ${llm.name}: prompt non mesuré (${error})`)
           continue
         }
 
-        const ps = scorePromptResult(iteration_found, response_text, patterns)
-        promptScores.push(ps)
-        responseTexts.push(response_text.slice(0, 500))
+        alignedScores[i] = scorePromptResult(iteration_found, response_text, patterns)
+        responseTexts[i] = response_text.slice(0, 500)
 
         // Store raw execution
         await supabase.from('llm_test_executions').insert({
@@ -517,6 +529,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         })
       }
 
+      const promptScores = alignedScores.filter((s): s is PromptScore => s !== null)
       const measuredPrompts = promptScores.length
       const score = measuredPrompts > 0 ? aggregateLLMScore(promptScores) : null
 
@@ -564,12 +577,24 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         measurement_status: measuredPrompts === 0 ? 'unmeasured' : (failedPrompts > 0 ? 'partial' : 'measured'),
         error: measuredPrompts === 0 ? (lastError || 'model_unavailable') : undefined,
         promptDetails: promptScores,
+        alignedScores,
         responseTexts,
       }
+
+
 
 })
 
     const llmResults = await Promise.all(llmPromises)
+
+    const sentimentOf = (list: PromptScore[]): string => {
+      if (list.length === 0) return 'neutral'
+      const pos = list.filter(d => d.sentiment === 'recommended' || d.sentiment === 'positive').length
+      const neg = list.filter(d => d.sentiment === 'negative').length
+      if (pos > list.length / 2) return 'positive'
+      if (neg > list.length / 2) return 'negative'
+      return 'neutral'
+    }
 
     const scores = llmResults.map(r => ({
       llm_name: r.llm_name,
@@ -578,33 +603,79 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       measured_prompts: r.measured_prompts,
       total_prompts: r.total_prompts,
       measurement_error: r.error,
-      response_excerpt: r.responseTexts?.[0]?.slice(0, 300) || '',
-      overall_sentiment: r.promptDetails.length > 0
-        ? (r.promptDetails.filter(d => d.sentiment === 'recommended' || d.sentiment === 'positive').length > r.promptDetails.length / 2 ? 'positive' : r.promptDetails.filter(d => d.sentiment === 'negative').length > r.promptDetails.length / 2 ? 'negative' : 'neutral')
-        : 'neutral',
-      details: r.promptDetails.map((ps, i) => ({
+      response_excerpt: r.responseTexts?.find(t => t)?.slice(0, 300) || '',
+      overall_sentiment: sentimentOf(r.promptDetails),
+      details: r.alignedScores.flatMap((ps, i) => ps === null ? [] : [{
         prompt: prompts[i],
+        intent: flatPrompts[i].intent,
+        benchmark_id: flatPrompts[i].benchmarkId,
         iteration_found: ps.iterationFound,
         position_rank: ps.positionRank,
         sentiment: ps.sentiment,
         richness_bonus: ps.richnessBonus,
         composite_score: ps.compositeScore,
         response_excerpt: r.responseTexts?.[i]?.slice(0, 200) || '',
-      })),
+      }]),
     }))
+
+    // ── Trois benchmarks distincts : un score et une carte par intention ──
+    const benchmarkResults = benchmarks.map((b) => {
+      const idx = flatPrompts.map((p, i) => ({ p, i })).filter(x => x.p.benchmarkId === b.id).map(x => x.i)
+      const modelScores = llmResults.map(r => {
+        const own = idx.map(i => r.alignedScores[i]).filter((s): s is PromptScore => s !== null)
+        const score = own.length > 0 ? aggregateLLMScore(own) : null
+        return {
+          llm_name: r.llm_name,
+          score_percentage: score,
+          measurement_status: own.length === 0 ? 'unmeasured' : (own.length < idx.length ? 'partial' : 'measured'),
+          measured_prompts: own.length,
+          total_prompts: idx.length,
+          overall_sentiment: sentimentOf(own),
+          details: idx.flatMap(i => {
+            const ps = r.alignedScores[i]
+            return ps === null ? [] : [{
+              prompt: prompts[i],
+              intent: flatPrompts[i].intent,
+              iteration_found: ps.iterationFound,
+              position_rank: ps.positionRank,
+              sentiment: ps.sentiment,
+              composite_score: ps.compositeScore,
+              response_excerpt: r.responseTexts?.[i]?.slice(0, 200) || '',
+            }]
+          }),
+        }
+      })
+      const measured = modelScores.filter(m => m.score_percentage !== null)
+      return {
+        id: b.id,
+        label: b.label,
+        description: b.description,
+        prompts: b.prompts,
+        scores: modelScores,
+        cited_models: measured.filter(m => (m.score_percentage || 0) > 0).length,
+        measured_models: measured.length,
+        total_models: modelScores.length,
+        score: measured.length > 0
+          ? Math.round(measured.reduce((s, m) => s + (m.score_percentage || 0), 0) / measured.length)
+          : null,
+      }
+    })
 
     const unmeasured = scores.filter(s => s.measurement_status === 'unmeasured').map(s => s.llm_name)
     console.log(`[llm-vis] ✅ ${site.domain} complete: ${scores.map(s => `${s.llm_name}=${s.score_percentage === null ? 'n/m' : s.score_percentage + '%'}`).join(', ')}${unmeasured.length ? ` — non mesurés: ${unmeasured.join(', ')}` : ''}`)
+    console.log(`[llm-vis] benchmarks: ${benchmarkResults.map(b => `${b.id}=${b.score === null ? 'n/m' : b.score + '%'} (${b.cited_models}/${b.measured_models} citent)`).join(' | ')}`)
 
     // ── Write to shared domain cache (2h TTL — Pro Agency+ can refresh unlimited but backend throttles to every 2h) ──
     const cachePayload = {
       scores,
+      benchmarks: benchmarkResults,
       week_start_date: weekStart,
       unmeasured_models: unmeasured,
       measured_models: scores.length - unmeasured.length,
       total_models: scores.length,
       prompts_fingerprint: promptsFingerprint,
     }
+
 
     await supabase.from('domain_data_cache').upsert({
       domain: site.domain,
