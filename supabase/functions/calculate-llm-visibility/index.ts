@@ -336,7 +336,8 @@ async function queryWithFallback(
   domain: string,
   followUpPrompts: string[],
 ): Promise<{ iteration_found: number; response_text: string; measured: boolean; error?: string; model_used: string }> {
-  let last = { iteration_found: 0, response_text: '', measured: false, error: 'no_model', model_used: models[0] }
+  let last: { iteration_found: number; response_text: string; measured: boolean; error?: string; model_used: string } =
+    { iteration_found: 0, response_text: '', measured: false, error: 'no_model', model_used: models[0] }
   for (const model of models) {
     const r = await queryWithIterations(apiKey, model, prompt, patterns, domain, followUpPrompts)
     if (r.measured) return { ...r, model_used: model }
