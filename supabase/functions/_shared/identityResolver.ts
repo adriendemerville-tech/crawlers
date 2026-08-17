@@ -515,13 +515,31 @@ export function detectIdentityContradiction(
 
 // ─── Rendu rapport ───
 
-export function renderIdentityCardHTML(card: IdentityCard, lang = 'fr', contradiction: IdentityContradiction | null = null): string {
+export function renderIdentityCardHTML(
+  card: IdentityCard,
+  lang = 'fr',
+  contradiction: IdentityContradiction | null = null,
+  /**
+   * Concurrents identifiés par l'analyse de marché (SERP / DataForSEO / paysage
+   * concurrentiel). Distincts de ceux cités par le site : sans cette ligne, la
+   * carte affichait « Non résolu » alors que la section GEO en listait quatre.
+   */
+  marketCompetitors: string[] = [],
+): string {
   const isEn = (lang || 'fr').startsWith('en');
   const isEs = (lang || 'fr').startsWith('es');
   const t = (fr: string, en: string, es: string) => (isEn ? en : isEs ? es : fr);
   const esc = (v: string) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   const dash = t('Non résolu', 'Unresolved', 'No resuelto');
+  const market = Array.from(new Set((marketCompetitors || []).map((c) => String(c).trim()).filter(Boolean))).slice(0, 6);
+  const citedBySite = card.competitors.length
+    ? esc(card.competitors.join(', '))
+    : t(
+        'Aucun concurrent nommé dans les pages explorées',
+        'No competitor named in the crawled pages',
+        'Ningún competidor citado en las páginas rastreadas',
+      );
   const rows: Array<[string, string]> = [
     [t('Ce qui est vendu', 'What is sold', 'Qué se vende'), card.productsServices ? esc(card.productsServices) : dash],
     [t('Modèle d’affaires retenu', 'Business model used', 'Modelo de negocio'), card.commercialModel === 'unknown' ? dash : esc(card.commercialModelLabelText)],
@@ -529,7 +547,13 @@ export function renderIdentityCardHTML(card: IdentityCard, lang = 'fr', contradi
     [t('Cible principale', 'Primary audience', 'Público principal'), card.targetAudience ? esc(card.targetAudience) : dash],
     [t('Cible secondaire', 'Secondary audience', 'Público secundario'), card.secondaryAudience ? esc(card.secondaryAudience) : dash],
     [t('Zone commerciale', 'Commercial area', 'Zona comercial'), card.commercialArea ? esc(card.commercialArea) : dash],
-    [t('Concurrents cités par le site', 'Competitors named by the site', 'Competidores citados'), card.competitors.length ? esc(card.competitors.join(', ')) : dash],
+    [t('Concurrents cités par le site', 'Competitors named by the site', 'Competidores citados'), citedBySite],
+    [
+      t('Concurrents identifiés par l’analyse de marché', 'Competitors identified by market analysis', 'Competidores identificados por el análisis de mercado'),
+      market.length
+        ? `${esc(market.join(', '))} <span style="color:#6b7280;">(${t('détail dans la section GEO', 'detail in the GEO section', 'detalle en la sección GEO')})</span>`
+        : dash,
+    ],
   ];
 
   const originLabel = card.source === 'identity_card'
