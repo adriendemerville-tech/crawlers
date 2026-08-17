@@ -96,17 +96,20 @@ function escapeRe(s: string): string {
 export function scrubBrandFromText(text: string, terms: string[]): string {
   let out = text;
   for (const t of terms) {
-    const re = new RegExp(`(\\b|\\s)(?:chez\\s+|de\\s+|by\\s+)?${escapeRe(t)}\\b`, 'gi');
+    const re = new RegExp(`(?:\\b|\\s)(?:chez\\s+|de\\s+|by\\s+)?${escapeRe(t)}\\b`, 'gi');
     out = out.replace(re, ' ');
   }
   return out
+    // connecteurs orphelins laissés par le retrait de la marque
+    .replace(/\s+(avec|chez|par|de|du|des|sur|pour|with|by|from|con|por)\s*(?=[,.;:!?]|$)/gi, '')
     .replace(/\s{2,}/g, ' ')
-    .replace(/\s+([,.;:!?])/g, '$1')
+    .replace(/\s+([,.;:])/g, '$1')
     .replace(/([«(])\s+/g, '$1')
     .replace(/\s+([»)])/g, '$1')
     .replace(/(^|\s)[,;:]\s*/g, '$1')
     .trim();
 }
+
 
 // ═══════════════════════════════════════════════
 // Éligibilité des questions locales (selon la carte d'identité)
