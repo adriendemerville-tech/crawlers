@@ -527,12 +527,40 @@ export function generateNaturalPrompts(options: NaturalPromptsOptions = {}): Gen
     }
   }
 
-  switch (lang) {
-    case 'en': return generatePromptsEn(ctx, season, maxPrompts);
-    case 'es': return generatePromptsEs(ctx, season, maxPrompts);
-    default:   return generatePromptsFr(ctx, season, maxPrompts);
+  // Censure marque/domaine EN AMONT : les champs de la carte d'identité
+  // contiennent souvent le nom commercial (products_services, market_sector…).
+  const scrubTerms = buildBrandScrubTerms(options.domain, [
+    ctx.brand_name,
+    ctx.site_name,
+    ...(options.brandNames || []),
+  ]);
+  if (scrubTerms.length) {
+    ctx = {
+      ...ctx,
+      market_sector: ctx.market_sector ? scrubBrandFromText(ctx.market_sector, scrubTerms) : ctx.market_sector,
+      products_services: ctx.products_services ? scrubBrandFromText(ctx.products_services, scrubTerms) : ctx.products_services,
+      target_audience: ctx.target_audience ? scrubBrandFromText(ctx.target_audience, scrubTerms) : ctx.target_audience,
+      media_specialties: ctx.media_specialties?.map(s => scrubBrandFromText(s, scrubTerms)).filter(Boolean),
+    };
   }
+
+  let out: GeneratedPrompts;
+  switch (lang) {
+    case 'en': out = generatePromptsEn(ctx, season, maxPrompts); break;
+    case 'es': out = generatePromptsEs(ctx, season, maxPrompts); break;
+    default:   out = generatePromptsFr(ctx, season, maxPrompts);
+  }
+
+  // Filet de sécurité final : aucune question ne sort avec une mention de marque.
+  if (scrubTerms.length) {
+    out = {
+      prompts: out.prompts.map(p => scrubBrandFromText(p, scrubTerms)).filter(p => p.length > 10),
+      followUps: out.followUps.map(p => scrubBrandFromText(p, scrubTerms)).filter(p => p.length > 5),
+    };
+  }
+  return out;
 }
+
 
 // ═══════════════════════════════════════════════
 // Brand pattern builder (also shared)
