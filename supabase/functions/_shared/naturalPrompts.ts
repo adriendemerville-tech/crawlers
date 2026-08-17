@@ -195,22 +195,41 @@ function generatePromptsFr(ctx: SiteContext, season: string, maxPrompts: number)
       ? products.split(',')[0].trim()  // Only first product/service
       : sector || 'un service professionnel';
 
-    // Q1: Ultra-simple, like a real user would type
-    prompts.push(`Je cherche un outil pour ${mainNeed}, t'as des idées ?`);
+    const noun = entityType === 'ecommerce' ? 'site' : entityType === 'saas' ? 'logiciel' : 'prestataire';
 
-    // Q2: Slightly different angle, still simple
-    if (entityType === 'ecommerce') {
-      prompts.push(`C'est quoi le meilleur site pour acheter ${mainNeed} ?`);
-    } else if (entityType === 'saas') {
-      prompts.push(`Tu connais un bon logiciel pour ${mainNeed} ?`);
-    } else {
-      prompts.push(`C'est quoi le mieux pour ${mainNeed} en ce moment ?`);
+    // ── Intentions contrastées : une seule question par intention, dans un
+    // ordre qui garantit la diversité même quand maxPrompts vaut 3.
+    // 1. Découverte  2. Comparatif  3. Local ou audience  4. Alternatives
+    // 5. Prix        6. Preuve / avis
+    const byIntent: Array<{ intent: string; text: string }> = [];
+
+    byIntent.push({ intent: 'discovery', text: `Je cherche un outil pour ${mainNeed}, t'as des idées ?` });
+
+    byIntent.push({
+      intent: 'comparison',
+      text: entityType === 'ecommerce'
+        ? `Quels sites se valent pour acheter ${mainNeed} et lequel est le mieux ?`
+        : `Compare-moi les meilleures solutions pour ${mainNeed} : laquelle sort du lot ?`,
+    });
+
+    if (area) {
+      byIntent.push({ intent: 'local', text: `Quel ${noun} pour ${mainNeed} à ${area} ?` });
+    } else if (target) {
+      byIntent.push({ intent: 'audience', text: `Je suis ${target} : quel ${noun} pour ${mainNeed} me conviendrait ?` });
     }
 
-    // Q3: Alternative simple angle
+    byIntent.push({ intent: 'alternative', text: `Quelles alternatives existent pour ${mainNeed}, à part les gros acteurs connus ?` });
+
+    byIntent.push({ intent: 'price', text: `Combien coûte ${mainNeed} et y a-t-il une option gratuite ou pas chère ?` });
+
     if (sector && sector !== mainNeed) {
-      prompts.push(`J'ai besoin d'aide en ${sector}, tu recommandes quoi ?`);
+      byIntent.push({ intent: 'sector', text: `J'ai besoin d'aide en ${sector}, tu recommandes quoi et pourquoi ?` });
     }
+
+    byIntent.push({ intent: 'proof', text: `Sur quels retours d'expérience ou avis clients tu te bases pour ${mainNeed} ?` });
+
+    for (const p of byIntent) prompts.push(p.text);
+
 
     // ── Follow-ups: drip-feed details one by one ──
     // Each follow-up adds ONE precision, like a real conversation
