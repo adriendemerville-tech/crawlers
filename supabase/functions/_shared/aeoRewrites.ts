@@ -20,6 +20,8 @@
  * met à jour la même ligne. Échec toujours non bloquant.
  */
 
+import { buildBoilerplateSet, stripBoilerplate } from './contentIntegrity/normalize.ts';
+
 export interface AeoPageInput {
   url: string;
   title?: string | null;
@@ -159,9 +161,11 @@ function buildAnswer(question: string, paragraph: string, page: AeoPageInput): s
 }
 
 /** Une prescription pour une page donnée, ou null si le texte est trop pauvre pour être exploitable. */
-export function buildAeoRewrite(page: AeoPageInput): AeoRewrite | null {
+export function buildAeoRewrite(page: AeoPageInput, boilerplate?: Set<string> | null): AeoRewrite | null {
   if (!page?.url || !page.text) return null;
-  const paragraphs = splitParagraphs(page.text);
+  // Lot 3 : le gabarit (méga-menu, header, footer) ne doit jamais être pris pour
+  // le paragraphe d'ouverture — sinon on prescrit la réécriture d'un menu.
+  const paragraphs = splitParagraphs(stripBoilerplate(page.text, boilerplate));
   if (!paragraphs.length) return null;
   const paragraph = pickParagraph(paragraphs);
   if (!paragraph) return null;
@@ -202,10 +206,11 @@ export function buildAeoRewrite(page: AeoPageInput): AeoRewrite | null {
  */
 export function buildAeoRewrites(pages: AeoPageInput[], maxItems = 6): AeoRewrite[] {
   const byBucket = new Map<string, AeoRewrite>();
+  const boilerplate = buildBoilerplateSet((pages || []).map((p) => p?.text || ''));
   for (const p of pages || []) {
     if (!p?.url) continue;
     if ((p.word_count ?? 0) > 0 && (p.word_count as number) < 80) continue;
-    const rewrite = buildAeoRewrite(p);
+    const rewrite = buildAeoRewrite(p, boilerplate);
     if (!rewrite) continue;
     let bucket = p.archetype_key || '';
     if (!bucket) {

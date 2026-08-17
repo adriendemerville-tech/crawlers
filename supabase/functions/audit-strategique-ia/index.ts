@@ -19,6 +19,7 @@ import { preCrawlForAudit, formatPreCrawlForPrompt, type PreCrawlResult } from '
 import { handleRequest } from '../_shared/serveHandler.ts';
 import { applyMarketWeighting } from '../_shared/marketPriority.ts';
 import { buildAeoRewrite, writeAeoRewritePrescriptions } from '../_shared/aeoRewrites.ts';
+import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
 
 
 // ── Shared strategic audit modules ──
@@ -544,7 +545,10 @@ Deno.serve(handleRequest(async (req) => {
       const h1Match = (pageContentContext || '').match(/H1="([^"]+)"/);
       const titleMatch = (pageContentContext || '').match(/Titre="([^"]+)"/);
       const originalH1 = h1Match?.[1] || titleMatch?.[1] || 'Non détecté';
-      const paragraphs = rawText.split(/\n+/).filter(p => p.trim().length > 50);
+      // Lot 3 : gabarit (nav/menu/footer) retiré avant l'extraction du paragraphe
+      // d'ouverture, sinon le méga-menu est pris pour la réponse directe.
+      const usefulText = stripBoilerplate(rawText);
+      const paragraphs = usefulText.split(/\n+/).filter(p => p.trim().length > 50);
       const firstParagraph = paragraphs[0] || '';
       const h1Terms = originalH1.toLowerCase().split(/\s+/).filter(w => w.length > 3);
       const contentLower = (firstParagraph + ' ' + rawText.slice(0, 1000)).toLowerCase();

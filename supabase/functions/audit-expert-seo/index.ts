@@ -9,6 +9,7 @@ import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { resolveSocialProof, fetchPlacesSocialProof, formatSocialProofForPrompt, type SocialProofResult } from '../_shared/socialProof.ts';
+import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
@@ -724,16 +725,26 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
   // === ÉTAPE 5 : Nettoyage du DOM pour calcul du texte ===
   const scriptsAndStyles = doc.querySelectorAll('script, style, noscript, template');
   scriptsAndStyles.forEach(el => (el as Element).remove());
-  
+
+  // Lot 3 : retrait du gabarit (nav, header, footer, aside, menus ARIA) avant
+  // tout calcul de mots utiles et de ratio texte/code — un méga-menu ne doit
+  // pas être compté comme du contenu.
+  const boilerplateNodes = doc.querySelectorAll(
+    'nav, header, footer, aside, [role="navigation"], [role="banner"], [role="contentinfo"], .menu, .navbar, .breadcrumb, .cookie, #cookie'
+  );
+  boilerplateNodes.forEach(el => (el as Element).remove());
+
   // === ÉTAPE 6 : Calcul du word count sur le texte propre ===
   const bodyText = doc.body?.textContent || '';
-  const cleanText = bodyText.replace(/\s+/g, ' ').trim();
+  let cleanText = bodyText.replace(/\s+/g, ' ').trim();
+  // Filet de sécurité : segments résiduels ressemblant à de la navigation.
+  cleanText = stripBoilerplate(cleanText).replace(/\s+/g, ' ').trim();
   const wordCount = cleanText.split(' ').filter(w => w.length > 2).length;
   
   // Semantic consistency (title vs H1)
   const semanticConsistency = analyzeSemanticConsistency(titleContent, h1Contents[0] || '');
   
-  // Content density (code vs text ratio)
+  // Content density (code vs text ratio) — mesurée sur le texte utile
   const contentDensity = analyzeContentDensity(html, cleanText);
 
   // Heading hierarchy analysis (before DOM cleanup removed headings)
