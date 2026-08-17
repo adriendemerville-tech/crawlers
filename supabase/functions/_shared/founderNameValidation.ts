@@ -48,9 +48,15 @@ export function isPlausiblePersonName(raw: string | null | undefined, domain = '
   if (domainRoot && lower.includes(domainRoot)) return false;
   if (domainRoot.split(' ').some(part => part.length > 3 && lower.includes(part))) return false;
   if (NON_PERSON_TOKENS.some(tok => lower.includes(tok))) return false;
-  // Each word must start with an uppercase letter (accents included)
-  return words.every(w => /^[\p{Lu}]/u.test(w) && /^[\p{L}'’-]+$/u.test(w));
+  // Chaque mot commence par une majuscule, sauf les particules nobiliaires/patronymiques
+  // (« Michael Di Luca », « Adrien de Volontat », « Luis van der Berg »).
+  return words.every((w, i) => {
+    if (!/^[\p{L}'’-]+$/u.test(w)) return false;
+    if (i > 0 && i < words.length - 1 && PARTICLES.has(w.toLowerCase())) return true;
+    return /^[\p{Lu}]/u.test(w);
+  });
 }
+
 
 /** Extract a candidate person name from a SERP title, stripping role suffixes. */
 export function extractPersonName(title: string | null | undefined, url = '', platform = ''): string | null {
