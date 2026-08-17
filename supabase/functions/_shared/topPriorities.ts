@@ -411,24 +411,49 @@ export function splitLongTitle(
   if (title.length <= MAX_TITLE_CHARS) return { title, description };
 
   const head = title.slice(0, MAX_TITLE_CHARS + 20);
-  const breakers = [' : ', ' — ', ' – ', ' - ', ', ', ' afin ', ' pour ', ' ('];
+
+  // 1. Coupe idéale : une vraie fin de phrase. Le reste est déjà une phrase
+  //    autonome, on peut le passer en description sans le retoucher.
   let cut = -1;
-  for (const b of breakers) {
-    const idx = head.lastIndexOf(b);
-    if (idx >= 30 && idx > cut) cut = idx;
+  let atSentenceEnd = false;
+  const sentenceEnd = /[.!?](?=\s)/g;
+  let m: RegExpExecArray | null;
+  while ((m = sentenceEnd.exec(head)) !== null) {
+    if (m.index >= 30) { cut = m.index + 1; atSentenceEnd = true; }
   }
+
+  // 2. Sinon, coupe sur un séparateur de proposition (deux-points, tiret cadratin).
+  //    On exclut «, », « pour », « afin » : couper là fabrique une fausse phrase
+  //    (« … est un frein majeur à » / « L'expérience utilisateur et au SEO. »).
+  if (cut < 0) {
+    for (const b of [' : ', ' — ', ' – ']) {
+      const idx = head.lastIndexOf(b);
+      if (idx >= 30 && idx > cut) cut = idx;
+    }
+  }
+
+  // 3. Dernier recours : coupe sur un espace, et le reste est marqué comme
+  //    continuation (« … ») sans recapitalisation.
   if (cut < 0) {
     const space = title.lastIndexOf(' ', MAX_TITLE_CHARS);
     cut = space >= 30 ? space : MAX_TITLE_CHARS;
   }
 
   const shortTitle = title.slice(0, cut).replace(/[\s:,–—-]+$/, '');
-  const remainder = title.slice(cut).replace(/^[\s:,–—-]+/, '');
-  const sentence = remainder ? remainder.charAt(0).toUpperCase() + remainder.slice(1) : '';
-  const merged = [sentence ? (/[.!?]$/.test(sentence) ? sentence : `${sentence}.`) : '', description]
+  const remainder = title.slice(cut).replace(/^[\s:,–—-]+/, '').trim();
+  if (!remainder) return { title: shortTitle, description };
+
+  const sentence = atSentenceEnd
+    // Phrase complète : capitalisation légitime de son premier caractère.
+    ? remainder.charAt(0).toUpperCase() + remainder.slice(1)
+    // Fragment : on préserve la casse d'origine et on signale la continuation.
+    : `${shortTitle.replace(/[.…]+$/, '')}${/^[a-zà-öø-ÿ]/.test(remainder) ? ' ' : ' — '}${remainder}`;
+
+  const merged = [/[.!?…]$/.test(sentence) ? sentence : `${sentence}.`, description]
     .filter(Boolean)
     .join(' ');
-  return { title: shortTitle, description: merged };
+  const shortDisplay = atSentenceEnd ? shortTitle : `${shortTitle.replace(/[.…]+$/, '')}…`;
+  return { title: shortDisplay, description: merged };
 }
 
 /**
