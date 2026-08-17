@@ -1165,46 +1165,13 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
   // If we only have strategic text and no scores at all, still show 6 cards + analysis
   const analysis = strategicData?.analysis || strategicData?.llm_analysis || null;
 
-  // Build 6 cards — cited (green) or not cited (red), with sentiment if cited
-  const cardsHtml = effectiveScores.map((s: any) => {
-    const name = s.llm_name || 'Unknown';
-    const score = s.score_percentage ?? s.score ?? 0;
-    const cited = score > 0;
-    
-    // Determine sentiment from score or explicit field
-    let sentiment: string;
-    if (!cited) {
-      sentiment = 'not_found';
-    } else if (s.overall_sentiment) {
-      sentiment = s.overall_sentiment;
-    } else if (score >= 60) {
-      sentiment = 'positive';
-    } else if (score >= 30) {
-      sentiment = 'neutral';
-    } else {
-      sentiment = 'negative';
-    }
+  // Cartes par modèle (score global, toutes intentions confondues)
+  const cardsHtml = renderLlmModelCards(effectiveScores);
 
-    const borderColor = cited ? '#22c55e' : '#ef4444';
-    const bgColor = cited ? '#22c55e08' : '#ef444408';
-    const statusLabel = cited ? 'CITÉ' : 'NON CITÉ';
-    const statusColor = cited ? '#22c55e' : '#ef4444';
+  // Trois benchmarks distincts (découverte / comparaison / usage & preuve)
+  const benchmarks = rawData?.benchmarks || rawData?.data?.benchmarks || [];
+  const benchmarksHtml = renderLlmBenchmarkSections(benchmarks);
 
-    const sentimentLabels: Record<string, { label: string; color: string }> = {
-      'positive':    { label: 'Positif', color: '#22c55e' },
-      'recommended': { label: 'Recommandé', color: '#22c55e' },
-      'neutral':     { label: 'Neutre', color: '#6b7280' },
-      'negative':    { label: 'Négatif', color: '#ef4444' },
-      'not_found':   { label: '', color: '#9ca3af' },
-    };
-    const sentimentInfo = sentimentLabels[sentiment] || sentimentLabels.neutral;
-
-    return `<div style="padding:16px;border-radius:10px;border:1px solid ${borderColor}30;background:${bgColor};text-align:center;">
-      <div style="font-weight:700;font-size:14px;color:#1f2937;margin-bottom:8px;">${name}</div>
-      <div style="font-weight:700;font-size:12px;color:${statusColor};text-transform:uppercase;letter-spacing:0.5px;">${statusLabel}</div>
-      ${cited && sentimentInfo.label ? `<div style="font-size:11px;margin-top:6px;padding:2px 10px;border-radius:12px;display:inline-block;background:${sentimentInfo.color}15;color:${sentimentInfo.color};font-weight:600;">${sentimentInfo.label}</div>` : ''}
-    </div>`;
-  }).join('');
 
   // Strategic analysis below cards
   let strategicHtml = '';
