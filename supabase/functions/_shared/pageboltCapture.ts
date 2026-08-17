@@ -152,7 +152,8 @@ export async function captureSiteVisual(opts: CaptureOptions): Promise<VisualCap
       fullPage: true,
       blockAds: true,
       blockTrackers: true,
-      delay: 1200,
+      // 3,5 s : laisse les sections animées / lazy-load se peindre avant la capture
+      delay: 3500,
     }, timeoutMs),
     includeMobile
       ? pageboltScreenshot(apiKey, {
