@@ -603,6 +603,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       unmeasured_models: unmeasured,
       measured_models: scores.length - unmeasured.length,
       total_models: scores.length,
+      prompts_fingerprint: promptsFingerprint,
     }
 
     await supabase.from('domain_data_cache').upsert({
