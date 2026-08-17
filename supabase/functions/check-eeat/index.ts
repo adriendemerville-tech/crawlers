@@ -458,6 +458,23 @@ async function runEeatPipeline(
   const gbpData = await fetchGbpData(supabase, domain, trackedSiteId);
   if (jobId) await supabase.from('async_jobs').update({ progress: 50 }).eq('id', jobId);
 
+  // ── Phase 2.65: Preuve sociale déterministe (couches 1 & 2) ──
+  const pageContext = (preCrawlResult.pages || [])
+    .map((p: any) => `${p.url}\n${p.bodyTextTruncated || ''}\n${(p.schemaTypes || []).join(' ')}`)
+    .join('\n\n')
+    .slice(0, 200_000);
+  let extraSocialSignals = gmbToSocialProofSignals(
+    gbpData.available ? { title: gbpData.locationName, rating: gbpData.avgRating, reviews_count: gbpData.totalReviews } : null
+  );
+  if (!extraSocialSignals.length) {
+    try {
+      extraSocialSignals = await fetchPlacesSocialProof(domain.replace(/^www\./, '').split('.')[0], domain);
+    } catch { /* couche 2 optionnelle */ }
+  }
+  const socialProof = resolveSocialProof({ pageContext, extraSignals: extraSocialSignals });
+  console.log(`[check-eeat] ⭐ Preuve sociale: ${socialProof.status} (avis=${socialProof.reviewCount ?? 'n/a'}, note=${socialProof.rating ?? 'n/a'})`);
+
+
   // ── Phase 2.7: Fetch domain age from site identity card ──
   console.log(`[check-eeat] 📅 Phase 2.7: Fetching domain age...`);
   const domainAgeInfo = await fetchDomainAge(supabase, effectiveDomain, trackedSiteId);
