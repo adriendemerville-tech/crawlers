@@ -107,6 +107,25 @@ export function estimateImpact(item: RoiScorable, ctx: RoiContext = {}): number 
   if (pages > 0 && scale > 0) {
     impact += Math.min(15, Math.round((pages / scale) * 15));
   }
+  // Lot 5 — l'impact ne peut plus être une constante de gravité : il est modulé
+  // par le signal réellement mesuré (écart au seuil, volume, position).
+  const gap = Number(item.gap_ratio);
+  if (Number.isFinite(gap) && gap > 0) {
+    // Un écart de 100 % au seuil vaut +20 ; un écart de 10 % ne vaut que +2.
+    impact += Math.min(20, Math.round(gap * 20));
+  }
+  const volume = Number(item.keyword_volume || 0);
+  if (volume > 0) {
+    // Échelle logarithmique : 100 rech./mois → +6, 10 000 → +12.
+    impact += Math.min(12, Math.round(Math.log10(volume) * 3));
+  }
+  const pos = Number(item.current_position || 0);
+  if (pos > 0) {
+    // Positions 4-20 : zone de gain maximal. Top 3 ou au-delà de 30 : gain faible.
+    if (pos >= 4 && pos <= 20) impact += 10;
+    else if (pos <= 3) impact += 2;
+    else if (pos <= 30) impact += 5;
+  }
   // Un domaine qui capte déjà des impressions transforme plus vite une
   // optimisation en trafic mesurable.
   if (ctx.hasOwnerPerformance) impact += 5;
