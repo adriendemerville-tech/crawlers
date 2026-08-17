@@ -152,7 +152,8 @@ export async function captureSiteVisual(opts: CaptureOptions): Promise<VisualCap
       fullPage: true,
       blockAds: true,
       blockTrackers: true,
-      delay: 1200,
+      // 3,5 s : laisse les sections animées / lazy-load se peindre avant la capture
+      delay: 3500,
     }, timeoutMs),
     includeMobile
       ? pageboltScreenshot(apiKey, {
@@ -164,7 +165,7 @@ export async function captureSiteVisual(opts: CaptureOptions): Promise<VisualCap
           fullPage: false,
           blockAds: true,
           blockTrackers: true,
-          delay: 1200,
+          delay: 3500,
         }, timeoutMs)
       : Promise.resolve(null),
   ]);
@@ -200,15 +201,18 @@ export function buildVisualEvidenceHtml(capture: VisualCapture | null, lang = 'f
 
   const at = new Date(capture.captured_at).toLocaleString(lang === 'fr' ? 'fr-FR' : lang === 'es' ? 'es-ES' : 'en-US');
 
+  // Les captures fullPage contiennent souvent une longue zone vide en bas
+  // (sections lazy-load non déclenchées sans scroll). On plafonne la hauteur
+  // imprimée pour éviter les pages blanches dans les PDF.
   const desktopBlock = capture.desktop_url
     ? `<figure style="margin:0;flex:2 1 420px;">
-        <img src="${capture.desktop_url}" alt="${t.desktop} — ${capture.domain}" style="width:100%;border:1px solid #e5e7eb;border-radius:8px;display:block;" />
+        <img src="${capture.desktop_url}" alt="${t.desktop} — ${capture.domain}" style="width:100%;max-height:900px;object-fit:cover;object-position:top;border:1px solid #e5e7eb;border-radius:8px;display:block;" />
         <figcaption style="font-size:12px;color:#6b7280;margin-top:6px;">${t.desktop}</figcaption>
       </figure>` : '';
 
   const mobileBlock = capture.mobile_url
     ? `<figure style="margin:0;flex:1 1 200px;max-width:260px;">
-        <img src="${capture.mobile_url}" alt="${t.mobile} — ${capture.domain}" style="width:100%;border:1px solid #e5e7eb;border-radius:8px;display:block;" />
+        <img src="${capture.mobile_url}" alt="${t.mobile} — ${capture.domain}" style="width:100%;max-height:560px;object-fit:cover;object-position:top;border:1px solid #e5e7eb;border-radius:8px;display:block;" />
         <figcaption style="font-size:12px;color:#6b7280;margin-top:6px;">${t.mobile}</figcaption>
       </figure>` : '';
 
