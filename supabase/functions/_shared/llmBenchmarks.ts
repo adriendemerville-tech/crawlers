@@ -185,11 +185,12 @@ export function buildLlmBenchmarks(
     return out.slice(0, 3);
   };
 
-  return [
+  const all: LlmBenchmark[] = [
     { id: 'discovery', label: L.discovery.label, description: L.discovery.description, prompts: finalize(discovery) },
     { id: 'comparison', label: L.comparison.label, description: L.comparison.description, prompts: finalize(comparison) },
     { id: 'usage', label: L.usage.label, description: L.usage.description, prompts: finalize(usage) },
-  ].filter(b => b.prompts.length > 0);
+  ];
+  return all.filter(b => b.prompts.length > 0);
 }
 
 /** Empreinte de toutes les questions (invalidation du cache quand le lexique change). */
