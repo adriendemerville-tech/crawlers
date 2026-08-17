@@ -3804,19 +3804,24 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             const refs = Number(da.referring_domains) || 0;
             const tox = Number(da.toxicity?.toxicity_score) || 0;
             if (score > 0 && score < 40) {
+              // Lot 5 — la sévérité vient de l'écart mesuré au seuil, pas d'une constante.
+              const sig = severityFromSignal({ value: score, threshold: 40, direction: 'below', coverage: 1 });
               eeatFindings.push({
                 title: `Autorité de domaine faible (Authority Score ${score}/100)`,
-                description: `${refs} domaine(s) référent(s) mesuré(s). Acquérir des liens éditoriaux thématiques (relations presse, partenariats sectoriels, contenus citables) pour lever le plafond de positions atteignable.`,
-                priority: score < 20 ? 'important' : 'suggestion',
+                description: `${refs} domaine(s) référent(s) mesuré(s) — ${sig.basis}. Acquérir des liens éditoriaux thématiques (relations presse, partenariats sectoriels, contenus citables) pour lever le plafond de positions atteignable.`,
+                priority: sig.severity === 'critical' ? 'critical' : sig.severity === 'important' ? 'important' : 'suggestion',
                 category: 'eeat',
+                gap_ratio: sig.gapRatio,
               } as RawFinding);
             }
             if (tox >= 35) {
+              const sigTox = severityFromSignal({ value: tox, threshold: 35, direction: 'above', coverage: 1 });
               eeatFindings.push({
                 title: `Profil de liens à assainir (toxicité ${tox}/100 — ${da.toxicity?.verdict || ''})`,
-                description: da.toxicity?.recommendation || 'Diversifier les ancres et désavouer les référents de faible qualité.',
-                priority: tox >= 60 ? 'critical' : 'important',
+                description: `${da.toxicity?.recommendation || 'Diversifier les ancres et désavouer les référents de faible qualité.'} (${sigTox.basis})`,
+                priority: sigTox.severity === 'critical' ? 'critical' : 'important',
                 category: 'eeat',
+                gap_ratio: sigTox.gapRatio,
               } as RawFinding);
             }
           }
