@@ -1395,8 +1395,8 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
            l'objet même de l'audit stratégique. ── -->
       ${buildModuleSection('Citabilité par les moteurs de réponse IA', '🌍', geoCitability)}
       <!--MARINA_LLM_START-->${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}<!--MARINA_LLM_END-->
-      ${buildModuleSection('GEO Readiness', '🌍', geoReadiness)}
-      ${buildModuleSection('Quotabilité', '💬', quotability)}
+      ${buildModuleSection('Maturité GEO', '🌍', geoReadiness)}
+      ${buildModuleSection('Citabilité : extraits reprenables', '💬', quotability)}
       ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
       ${buildModuleSection('Intention conversationnelle', '💭', conversationalIntent)}
       ${buildModuleSection('Risque zéro-clic', '🚫', zeroClickRisk)}
