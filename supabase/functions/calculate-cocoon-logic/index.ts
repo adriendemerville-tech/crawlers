@@ -464,6 +464,13 @@ const ip = getClientIp(req);
     const nodeData: any[] = [];
     const tokenizedDocs: string[][] = [];
 
+    // Lot 3 : le gabarit (nav, méga-menu, footer) est retiré avant toute mesure
+    // de similarité — sinon toutes les pages se ressemblent par leur menu.
+    const cocoonBoilerplate = buildBoilerplateSet(
+      validPages.map((p: any) => (p.body_text_truncated || "").substring(0, 3000)),
+    );
+    console.log(`[Cocoon] Boilerplate: ${cocoonBoilerplate.size} segments de gabarit retirés du corpus`);
+
     for (const page of validPages) {
       const keywords = extractKeywords(page.title || "", page.h1 || "", page.meta_description || "");
       const intent = classifyIntent(page.title || "", page.h1 || "", keywords);
@@ -475,7 +482,7 @@ const ip = getClientIp(req);
         .filter((a: any) => a.type === "internal")
         .map((a: any) => a.text || "")
         .join(" ");
-      const bodyText = (page.body_text_truncated || "").substring(0, 3000);
+      const bodyText = stripBoilerplate((page.body_text_truncated || "").substring(0, 3000), cocoonBoilerplate);
       const fullBodyText = `${page.meta_description || ""} ${keywords.join(" ")} ${pathSegments} ${anchorTexts} ${bodyText}`;
       tokenizedDocs.push(tokenizeZoned({
         title: page.title || "",
