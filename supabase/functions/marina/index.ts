@@ -1414,7 +1414,7 @@ function generateStrategicSectionHTML(strategicData: any, lang: string, domain: 
       ${buildCompetitiveLandscapeSection(competitive)}
       ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
       ${buildModuleSection("Sentiment d'Expertise", '🎯', expertiseSentiment)}
-      ${buildModuleSection('Red Team (Adversarial)', '🔴', redTeam)}
+      ${buildModuleSection('Test adversarial (résistance aux contre-arguments)', '🔴', redTeam)}
       ${buildModuleSection('Google My Business', '📍', gmb)}
       ${buildModuleSection('Cibles Clients', '👥', clientTargets)}
 
