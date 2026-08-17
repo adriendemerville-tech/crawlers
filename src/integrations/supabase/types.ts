@@ -15024,6 +15024,7 @@ export type Database = {
         Returns: Json
       }
       resolve_job_priority: { Args: { p_user_id: string }; Returns: number }
+      resume_pending_async_jobs: { Args: never; Returns: number }
       retry_workbench_cluster_assignment: {
         Args: { p_limit?: number }
         Returns: number
