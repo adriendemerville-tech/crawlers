@@ -4069,6 +4069,25 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         console.warn(`[Marina] Strategic layer degraded for ${domain}: ${strategicDegradation.reasons.join(' | ')}`);
       }
 
+      // ─── Lot 4 : réconciliation finale des chiffres et des conclusions ───
+      // Le graphe cocoon fait foi pour les pages orphelines, et la conclusion
+      // « profil de liens sain / aucun désaveu » est interdite dès qu'une
+      // toxicité est mesurée sur le profil de backlinks.
+      {
+        const orphanCount = resolveOrphanCount(cocoonResult);
+        const toxicity = resolveToxicity(strategicData?.domain_authority);
+        const identityUsability = assessIdentityUsability(revisedIdentity ?? null);
+        if (!identityUsability.usable) {
+          console.log(`[Marina] Identité partiellement résolue : ${identityUsability.notes.join(' | ')}`);
+        }
+        html = reconcileReportHtml(html, { orphanCount, toxicity });
+        console.log(
+          `[Marina] Réconciliation : orphelines=${orphanCount ?? 'n/d'}, toxicité=${toxicity.score ?? 'n/d'} (désaveu interdit: ${toxicity.disavowClaimForbidden})`,
+        );
+      }
+
+
+
 
       // ─── Step 5: Store in shared-reports bucket ───
       const fileName = `marina/${jobId}.html`;
