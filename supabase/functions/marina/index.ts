@@ -74,6 +74,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
 import { callLovableAIText } from '../_shared/lovableAI.ts';
+import { sanitizeReportData } from '../_shared/llmGuards.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { captureSiteVisual, buildVisualEvidenceHtml, type VisualCapture } from '../_shared/pageboltCapture.ts';
 import { buildStrategicVerdict, type VerdictSignals } from '../_shared/strategicVerdict.ts';
@@ -1374,7 +1375,11 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 }
 
 // ─── Section 3: Strategic GEO Audit (standalone HTML) ───
-function generateStrategicSectionHTML(strategicData: any, lang: string, domain: string, llmRealData?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = '', hasConsolidatedPlan = false): string {
+function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domain: string, llmRealDataRaw?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = '', hasConsolidatedPlan = false): string {
+  // Garde-fou de rendu : aucune fuite de gabarit de prompt ne doit atteindre le
+  // rapport, y compris via des données mises en cache avant les garde-fous.
+  const strategicData = sanitizeReportData(strategicDataRaw);
+  const llmRealData = sanitizeReportData(llmRealDataRaw);
   const tr = getTranslations(lang);
   const stratScore = strategicData?.overallScore || 0;
   const stratIntro = strategicData?.introduction || {};

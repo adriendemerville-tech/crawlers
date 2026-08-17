@@ -89,6 +89,33 @@ export function stripPromptLeaksDeep<T>(value: T, depth = 0): T {
   return value;
 }
 
+/**
+ * Variante « rendu de rapport » : nettoie récursivement, puis SUPPRIME les
+ * chaînes devenues vides (une citation polluée ne doit pas apparaître comme
+ * puce vide dans le PDF) ainsi que les objets dont toutes les valeurs textuelles
+ * ont disparu. À appliquer juste avant la génération HTML, y compris sur des
+ * données issues d'un cache antérieur aux garde-fous.
+ */
+export function sanitizeReportData<T>(value: T, depth = 0): T {
+  if (depth > 10) return value;
+  if (typeof value === 'string') return stripPromptLeaks(value) as unknown as T;
+  if (Array.isArray(value)) {
+    return value
+      .map((v) => sanitizeReportData(v, depth + 1))
+      .filter((v) => !(typeof v === 'string' && v.trim() === '')) as unknown as T;
+  }
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      const cleaned = sanitizeReportData(v, depth + 1);
+      if (typeof cleaned === 'string' && cleaned.trim() === '') continue;
+      out[k] = cleaned;
+    }
+    return out as unknown as T;
+  }
+  return value;
+}
+
 /** Année courante (UTC) — jamais codée en dur dans un prompt. */
 export function currentYear(): number {
   return new Date().getUTCFullYear();
