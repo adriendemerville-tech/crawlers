@@ -635,7 +635,7 @@ export default function Marina() {
           );
           const data = await res.json();
           if (data.status === 'completed' || data.status === 'partial') {
-            setReportUrl(data.data?.report_url || null);
+            setReportUrl(toMarinaViewUrl(data.data?.report_url, jobId));
             // Auto-load into preview tab
             const viewUrl = data.data?.report_view_url || data.data?.report_url;
             if (viewUrl) {
