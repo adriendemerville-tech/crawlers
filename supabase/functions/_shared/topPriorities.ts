@@ -15,6 +15,15 @@
  */
 
 import { ROI_TIER_STYLE, summarizeRoi, type RoiAnnotation } from './roiWeighting.ts';
+import {
+  fingerprintFinding,
+  dedupeByFingerprint,
+  scopeSentence,
+  buildAccountability,
+  formatAccountability,
+  type Accountability,
+  type TrafficContext,
+} from './actionPlanDiscrimination.ts';
 
 // ───────────────────────── Types ─────────────────────────
 
