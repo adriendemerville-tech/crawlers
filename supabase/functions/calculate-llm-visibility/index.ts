@@ -232,24 +232,11 @@ function scorePromptResult(
 }
 
 // ═══════════════════════════════════════════════
-// PROMPT GENERATION — delegated to shared module
+// PROMPT GENERATION — 3 benchmarks × 3 questions (voir _shared/llmBenchmarks.ts)
+// Les relances de conversation restent issues de naturalPrompts.
 // ═══════════════════════════════════════════════
 
-function generatePrompts(site: any): string[] {
-  const ctx: NaturalSiteContext = {
-    market_sector: site.market_sector,
-    products_services: site.products_services,
-    target_audience: site.target_audience,
-    commercial_area: site.commercial_area,
-    entity_type: site.entity_type,
-    media_specialties: site.media_specialties,
-    business_model: site.business_model,
-    brand_name: site.brand_name,
-    site_name: site.site_name,
-  }
-  const { prompts } = generateNaturalPrompts({ site: ctx, lang: 'fr', maxPrompts: NUM_PROMPTS, domain: site.domain })
-  return prompts
-}
+
 
 function getFollowUpPrompts(site: any): string[] {
   const ctx: NaturalSiteContext = {
