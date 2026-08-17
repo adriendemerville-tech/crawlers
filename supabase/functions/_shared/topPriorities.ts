@@ -213,6 +213,7 @@ export function extractTopPriorities(
       templates: c.group.templates,
       occurrences: c.group.occurrences,
       pages_affected: c.group.pages_affected || raw.pages_affected,
+      gap_ratio: typeof raw.gap_ratio === 'number' ? raw.gap_ratio : undefined,
     };
   });
 
