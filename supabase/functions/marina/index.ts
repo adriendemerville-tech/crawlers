@@ -3926,7 +3926,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           .filter((it: any) => !/keyword|mots?-cl|content gap/i.test(`${it.category || ''} ${it.title || ''}`))
           .map((it: any) => ({
             title: it.prescriptive_action || it.title || it.action_concrete || '',
-            description: it.description || it.expected_roi || '',
+            // Ne JAMAIS retomber sur expected_roi ('High'/'Medium') : cette
+            // étiquette se collait en fin de phrase dans le rapport.
+            description: it.description || it.strategic_rationale || '',
+
             priority: it.priority, category: it.category,
           }));
         const kwFindings: RawFinding[] = [

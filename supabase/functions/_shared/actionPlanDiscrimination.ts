@@ -432,9 +432,13 @@ export function buildAccountability(
     return {
       owner, kpi,
       traffic_gain: gain > 0 ? gain : null,
-      traffic_basis: `${volume} recherches/mois sur le cluster visé (DataForSEO), CTR cible 2 % — ${formula}`,
+      // Ce volume est celui du périmètre analysé, pas celui d'un mot-clé propre à
+      // l'action : le dire explicitement évite de faire passer un ordre de
+      // grandeur commun à plusieurs actions pour un calcul dédié.
+      traffic_basis: `ordre de grandeur, non spécifique à cette action : ${volume} recherches/mois sur l’ensemble du périmètre mesuré (DataForSEO), CTR cible 2 % — ${formula}`,
     };
   }
+
   return {
     owner, kpi,
     traffic_gain: null,
