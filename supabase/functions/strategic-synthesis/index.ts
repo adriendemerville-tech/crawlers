@@ -164,10 +164,14 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
 
     let founderSection = '';
     if (!isContentMode && founderInfo?.name && !founderInfo.geoMismatch) {
-      founderSection = `\nFONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''}`;
+      const role = (founderInfo as any).roleLabel || 'dirigeant';
+      founderSection = `\nPORTE-PAROLE (${role}): ${founderInfo.name} (${founderInfo.platform || 'sans profil social'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''}${(founderInfo as any).confidence != null ? ` Confiance:${(founderInfo as any).confidence}` : ''}`;
     } else if (founderInfo?.geoMismatch) {
       founderSection = `\nFondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner.`;
+    } else if ((founderInfo as any)?.resolutionStatus === 'unresolved') {
+      founderSection = `\nFondateur / gérant non résolu — n'invente aucun nom.`;
     }
+
 
     const toolsMarkdown = formatToolsDataToMarkdown(toolsData || {});
 
