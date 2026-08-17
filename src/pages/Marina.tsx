@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 import { getMarinaShowcaseReport } from '@/lib/marina/showcase.functions';
+import { toMarinaViewUrl } from '@/lib/marina/reportUrl';
 import { MarinaMyAuditsTab } from '@/components/Marina/MarinaMyAuditsTab';
 import { MarinaRunningAuditsSection } from '@/components/Marina/MarinaRunningAuditsSection';
 
@@ -635,7 +636,7 @@ export default function Marina() {
           );
           const data = await res.json();
           if (data.status === 'completed' || data.status === 'partial') {
-            setReportUrl(data.data?.report_url || null);
+            setReportUrl(toMarinaViewUrl(data.data?.report_url, jobId));
             // Auto-load into preview tab
             const viewUrl = data.data?.report_view_url || data.data?.report_url;
             if (viewUrl) {
