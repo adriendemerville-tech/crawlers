@@ -161,43 +161,65 @@ const SECTION_LABELS: Record<SectionKey, string> = {
 
 /**
  * Extract the top-3 actions from a list of raw findings.
- * Stable sort: severity desc, then severity weight desc, then original index.
+ *
+ * Lot 5 : les constats sont d'abord fusionnés par empreinte de consigne, pour
+ * qu'une même action déclinée sur plusieurs gabarits n'occupe pas les trois
+ * places du Top 3. La portée mesurée (pages, gabarits) est reversée en
+ * description.
  */
 export function extractTopPriorities(
   section: SectionKey,
   findings: RawFinding[],
 ): SectionTopPriorities {
-  const cleaned = (findings || [])
-    .filter((f) => f && (f.title || f.description))
-    .map((f, idx) => ({
-      idx,
-      severity: normalizeSeverity(f.priority || f.severity),
-      raw: f,
-    }));
+  const rawCount = (findings || []).filter((f) => f && (f.title || f.description)).length;
+
+  const grouped = dedupeByFingerprint(
+    (findings || []).filter((f) => f && (f.title || f.description)) as Array<RawFinding & Record<string, unknown>>,
+  );
+
+  const cleaned = grouped.map((g, idx) => ({
+    idx,
+    severity: normalizeSeverity(g.item.priority || g.item.severity),
+    group: g,
+  }));
 
   cleaned.sort((a, b) => {
     const w = SEVERITY_WEIGHT[b.severity] - SEVERITY_WEIGHT[a.severity];
     if (w !== 0) return w;
+    // À gravité égale, l'action qui couvre le plus de pages/gabarits passe devant.
+    const scope = (b.group.pages_affected + b.group.templates.length)
+      - (a.group.pages_affected + a.group.templates.length);
+    if (scope !== 0) return scope;
     return a.idx - b.idx;
   });
 
-  const top = cleaned.slice(0, 3).map((c, i): PriorityAction => ({
-    rank: (i + 1) as 1 | 2 | 3,
-    severity: c.severity,
-    title: c.raw.title || '(sans titre)',
-    description: c.raw.description || '',
-    category: c.raw.category,
-    source_section: section,
-    next_step: Array.isArray(c.raw.fixes) && c.raw.fixes.length > 0 ? c.raw.fixes[0] : undefined,
-  }));
+  const top = cleaned.slice(0, 3).map((c, i): PriorityAction => {
+    const raw = c.group.item;
+    const scope = scopeSentence(c.group);
+    return {
+      rank: (i + 1) as 1 | 2 | 3,
+      severity: c.severity,
+      title: raw.title || '(sans titre)',
+      description: [raw.description || '', scope].filter(Boolean).join(' '),
+      category: raw.category,
+      source_section: section,
+      next_step: Array.isArray(raw.fixes) && raw.fixes.length > 0 ? raw.fixes[0] : undefined,
+      fingerprint: c.group.fingerprint,
+      templates: c.group.templates,
+      occurrences: c.group.occurrences,
+      pages_affected: c.group.pages_affected || raw.pages_affected,
+    };
+  });
 
   return {
     section,
     section_label: SECTION_LABELS[section],
     actions: top,
-    total_findings: cleaned.length,
+    total_findings: rawCount,
+    deduped_findings: cleaned.length,
     has_blockers: cleaned.some((c) => c.severity === 'critical'),
   };
+
 }
 
 // ─────────────────── Semantic dedup (lightweight) ───────────────────
