@@ -120,63 +120,74 @@ export function verifyFounderGeo(linkedinSnippet: string, targetLocation: string
   return { mismatch: false, detectedCountry: null };
 }
 
-export async function searchFounderProfile(domain: string, targetLocation: string = 'france'): Promise<FounderInfo> {
+/**
+ * Résolution du porte-parole (fondateur / gérant / dirigeant).
+ *
+ * `siteContext` permet la corroboration on-site : texte des mentions légales /
+ * « à propos » et blocs JSON-LD récupérés au crawl. Sans corroboration, un
+ * profil SERP isolé ne suffit plus à publier un nom (cf. personAuthority.ts).
+ */
+export async function searchFounderProfile(
+  domain: string,
+  targetLocation: string = 'france',
+  siteContext: { brandName?: string; siteText?: string; jsonLd?: unknown[] } = {},
+): Promise<FounderInfo> {
   const locInfo = KNOWN_LOCATIONS[targetLocation.toLowerCase()] || KNOWN_LOCATIONS['france'];
-  const result: FounderInfo = { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
-  if (!hasDataForSeoCredentials()) return result;
+  const brandName = siteContext.brandName || '';
   const domainClean = domain.replace(/^www\./, '');
 
-  try {
-    console.log(`👤 Searching founder for ${domainClean}...`);
+  // ── Couche 1 & 2 : on-site (0 appel payant) ──
+  const candidates: PersonCandidate[] = [];
+  if (siteContext.siteText) candidates.push(...extractPersonsFromText(siteContext.siteText, domainClean));
+  if (siteContext.jsonLd?.length) candidates.push(...extractPersonsFromJsonLd(siteContext.jsonLd, domainClean));
+
+  let geoMismatch = false;
+  let detectedCountry: string | null = null;
+
+  // ── Couche 3 : SERP sociale ──
+  if (hasDataForSeoCredentials()) {
+    const brandQuery = brandName && brandName.toLowerCase() !== domainClean.split('.')[0].toLowerCase()
+      ? [{ q: `"${brandName}" g[é]rant OR fondateur OR dirigeant site:linkedin.com/in`, platform: 'linkedin' }]
+      : [];
     const queries = [
-      { q: `"${domainClean}" fondateur OR CEO OR founder site:linkedin.com/in`, platform: 'linkedin' },
-      { q: `"${domainClean}" fondateur OR CEO OR founder site:instagram.com`, platform: 'instagram' },
-      { q: `"${domainClean}" fondateur OR CEO OR founder site:youtube.com`, platform: 'youtube' },
+      { q: `"${domainClean}" fondateur OR gérant OR dirigeant OR CEO site:linkedin.com/in`, platform: 'linkedin' },
+      ...brandQuery,
+      { q: `"${domainClean}" fondateur OR gérant OR CEO site:instagram.com`, platform: 'instagram' },
+      { q: `"${domainClean}" fondateur OR gérant OR CEO site:youtube.com`, platform: 'youtube' },
     ];
-    const searchPromises = queries.map(async ({ q, platform }) => {
+    const serpCandidates = (await Promise.all(queries.map(async ({ q, platform }) => {
       try {
         const resp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
           method: 'POST',
           headers: { 'Authorization': getDataForSeoAuthHeader(), 'Content-Type': 'application/json' },
-          body: JSON.stringify([{ keyword: q, location_code: locInfo.code, language_code: locInfo.lang, depth: 5 }]),
+          body: JSON.stringify([{ keyword: q, location_code: locInfo.code, language_code: locInfo.lang, depth: 10 }]),
           signal: AbortSignal.timeout(8000),
         });
-        if (!resp.ok) { await resp.text(); return null; }
+        if (!resp.ok) { await resp.text(); return []; }
         const data = await resp.json();
         const items = (data.tasks?.[0]?.result?.[0]?.items || []).filter((i: any) => i.type === 'organic' && i.url);
-        // Scan all organic results and keep the first that is a real person profile
-        for (const item of items) {
-          const validated = validateFounderCandidate({ title: item.title, url: item.url, platform }, domainClean);
-          if (validated) {
-            return { name: validated, url: item.url, platform, title: item.title, snippet: item.description || item.title || '' };
-          }
-        }
-        return null;
-      } catch { return null; }
-    });
+        // On collecte TOUS les profils plausibles : l'arbitrage se fait après.
+        return items.map((item: any) => serpItemToCandidate(item, platform, domainClean, brandName)).filter(Boolean) as PersonCandidate[];
+      } catch { return []; }
+    }))).flat();
+    candidates.push(...serpCandidates);
 
-    const results = (await Promise.all(searchPromises)).filter(Boolean);
-    if (results.length === 0) { console.log('👤 No founder profile found via SERP'); return result; }
-
-    const best = results.find(r => r!.platform === 'linkedin') || results[0]!;
-    result.name = best!.name;
-    result.profileUrl = best!.url;
-    result.platform = best!.platform;
-    result.isInfluencer = results.length >= 1;
-
-    if (best!.platform === 'linkedin' && best!.snippet) {
-      const geoCheck = verifyFounderGeo(best!.snippet, targetLocation);
-      if (geoCheck.mismatch) {
-        console.log(`👤 ⚠️ GEO MISMATCH: Founder "${result.name}" appears to be in "${geoCheck.detectedCountry}" but target company is in "${targetLocation}"`);
-        result.geoMismatch = true;
-        result.detectedCountry = geoCheck.detectedCountry;
-      } else { console.log(`👤 ✅ Geo-verification OK: founder location consistent with target "${targetLocation}"`); }
+    // Contrôle géographique sur le meilleur profil LinkedIn corroboré.
+    const li = serpCandidates.find((c) => c.platform === 'linkedin' && c.brandCorroborated) || serpCandidates.find((c) => c.platform === 'linkedin');
+    if (li?.snippet) {
+      const geoCheck = verifyFounderGeo(li.snippet, targetLocation);
+      if (geoCheck.mismatch && !candidates.some((c) => c.source !== 'serp_social')) {
+        geoMismatch = true;
+        detectedCountry = geoCheck.detectedCountry;
+      }
     }
+  }
 
-    console.log(`👤 Founder found: ${result.name} on ${result.platform} → ${result.profileUrl}${result.geoMismatch ? ' [GEO MISMATCH]' : ''}`);
-    return result;
-  } catch (error) { console.error('👤 Founder search error:', error); return result; }
+  const resolution = pickSpokesperson({ domain: domainClean, brandName, candidates, geoMismatch, detectedCountry });
+  console.log(`👤 ${domainClean} → ${resolution.status === 'resolved' ? `${resolution.name} (${resolution.roleLabel}, confiance ${resolution.confidence}, sources: ${resolution.sources.join('+')})` : `non résolu — ${resolution.reason}`}`);
+  return toFounderInfo(resolution) as FounderInfo;
 }
+
 
 // ==================== FACEBOOK PAGE DISCOVERY VIA SERP ====================
 
