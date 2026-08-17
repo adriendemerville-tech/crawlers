@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 import { generateNaturalPrompts, type SiteContext as NaturalSiteContext } from '../_shared/naturalPrompts.ts'
+import { buildLlmBenchmarks } from '../_shared/llmBenchmarks.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
