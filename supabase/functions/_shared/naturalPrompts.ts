@@ -421,7 +421,7 @@ function generatePromptsEn(ctx: SiteContext, season: string, maxPrompts: number)
     }
 
     // Follow-ups: drip-feed one detail at a time
-    if (area) {
+    if (localOk) {
       followUps.push(`What about in ${area}, any good ones?`);
     }
     if (target) {
@@ -472,7 +472,7 @@ function generatePromptsEs(ctx: SiteContext, season: string, maxPrompts: number)
     prompts.push(`Necesito ayuda con ${sector}, ¿qué recomiendas?`);
   }
 
-  if (area) {
+  if (localOk) {
     followUps.push(`¿Y en ${area}, conoces buenos?`);
   }
   if (target) {
