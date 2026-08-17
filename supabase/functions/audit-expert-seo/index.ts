@@ -2298,7 +2298,7 @@ Deno.serve(handleRequest(async (req) => {
     
     // Generate AI narrative
     const introduction = await generateNarrativeIntroduction(
-      domain, normalizedUrl, totalScore, scores, htmlAnalysis, enrichedInsights, meta, outputLang
+      domain, normalizedUrl, totalScore, scores, htmlAnalysis, enrichedInsights, meta, outputLang, socialProof
     );
     
     console.log('='.repeat(60));
