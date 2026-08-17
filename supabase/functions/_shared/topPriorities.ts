@@ -103,6 +103,7 @@ export interface ConsolidatedPlanItem {
   templates?: string[];
   occurrences?: number;
   pages_affected?: number;
+  gap_ratio?: number;
   accountability?: Accountability;
 }
 
