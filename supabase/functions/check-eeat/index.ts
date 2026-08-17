@@ -7,6 +7,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { resolveSocialProof, gmbToSocialProofSignals, fetchPlacesSocialProof, formatSocialProofForPrompt } from '../_shared/socialProof.ts';
 
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
 
