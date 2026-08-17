@@ -461,9 +461,9 @@ function generatePromptsEs(ctx: SiteContext, season: string, maxPrompts: number)
   const prompts: string[] = [];
   const followUps: string[] = [];
 
-  const mainNeed = products
-    ? products.split(',')[0].trim()
-    : sector || 'un servicio profesional';
+  const mainNeed = (products.split(',')[0] || '').trim()
+    || sector
+    || 'un servicio profesional';
 
   prompts.push(`Busco una herramienta para ${mainNeed}, ¿alguna idea?`);
   prompts.push(`¿Cuál es la mejor opción para ${mainNeed} ahora mismo?`);
