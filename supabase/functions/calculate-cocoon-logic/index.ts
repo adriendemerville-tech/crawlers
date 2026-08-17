@@ -5,6 +5,7 @@ import { trackEdgeFunctionError } from "../_shared/tokenTracker.ts";
 import { logSilentError } from "../_shared/silentErrorLogger.ts";
 import { checkFairUse } from "../_shared/fairUse.ts";
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { buildBoilerplateSet, stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
 
 /**
  * Edge Function: calculate-cocoon-logic
