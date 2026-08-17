@@ -1063,6 +1063,10 @@ function buildCompetitiveLandscapeSection(data: any): string {
   </div>`;
 }
 
+function escapeHtmlText(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // ─── Dedicated renderer for LLM Visibility with 6 individual model cards ───
 function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
   // ALWAYS render this section — LLM visibility cards must appear in every report
