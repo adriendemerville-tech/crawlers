@@ -15098,6 +15098,8 @@ export type Database = {
           finding_category: string
           item_id: string
           lane: string
+          lens_applied: Json
+          lens_bonus: number
           payload: Json
           priority_tag: string
           ring: number

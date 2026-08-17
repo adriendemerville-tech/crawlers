@@ -441,13 +441,44 @@ try {
       const techSlots = contentDisabled ? totalSlots : (forceContent ? 0 : totalSlots - contentSlots);
       
       const allocatedTech = techItems.slice(0, techSlots);
-      const allocatedContent = contentItems.slice(0, contentSlots);
+
+      // ═══ LENTILLES DE CIBLAGE : quota de slots orientés (Sprint 2) ═══
+      // Le share_pct de la lentille sous-divise les slots CONTENU uniquement.
+      // Si aucun item orienté n'est éligible, les slots retournent au pool général.
+      let lensShare = 0;
+      let activeLensTypes: string[] = [];
+      try {
+        const { data: lensRows } = await supabase
+          .from('parmenion_targeting_lenses')
+          .select('lens_type, share_pct, proof_level, enabled, parmenion_targets!inner(domain)')
+          .eq('enabled', true)
+          .eq('parmenion_targets.domain', domain);
+        const usable = (lensRows || []).filter((l: any) => ['weak', 'strong'].includes(l.proof_level));
+        if (usable.length > 0) {
+          lensShare = Math.min(50, Math.max(...usable.map((l: any) => l.share_pct || 0)));
+          activeLensTypes = usable.map((l: any) => l.lens_type);
+        }
+      } catch (e) {
+        console.warn('[Parménion] Lecture des lentilles échouée (non bloquant):', e instanceof Error ? e.message : e);
+      }
+
+      const orientedItems = (contentItems as any[]).filter((i) => Number(i.lens_bonus || 0) > 0);
+      const orientedSlots = lensShare > 0 ? Math.floor(contentSlots * lensShare / 100) : 0;
+      const pickedOriented = orientedItems.slice(0, orientedSlots);
+      const pickedIds = new Set(pickedOriented.map((i: any) => i.item_id));
+      const generalContent = (contentItems as any[]).filter((i) => !pickedIds.has(i.item_id));
+      const allocatedContent = [
+        ...pickedOriented,
+        ...generalContent.slice(0, Math.max(0, contentSlots - pickedOriented.length)),
+      ];
       scoredWorkbenchItems = [...allocatedTech, ...allocatedContent];
-      
+
       console.log(`[Parménion] 📊 Dual-lane scoring: ${allocatedTech.length}/${techItems.length} tech (${techSlots} slots) + ${allocatedContent.length}/${contentItems.length} content (${contentSlots} slots). Force content: ${forceContent}, Budget: ${budgetPct}%`);
+      console.log(`[Parménion] 🔎 Lentilles: ${activeLensTypes.length > 0 ? activeLensTypes.join('+') : 'aucune'} | share ${lensShare}% → ${orientedSlots} slot(s) réservé(s), ${pickedOriented.length} consommé(s) (${orientedItems.length} item(s) orienté(s) éligible(s))`);
       if (scoredWorkbenchItems.length > 0) {
         console.log(`[Parménion] 📊 Top tech: tier ${allocatedTech[0]?.tier ?? 'none'} spiral_score ${allocatedTech[0]?.spiral_score ?? 0} | Top content: tier ${allocatedContent[0]?.tier ?? 'none'} spiral_score ${allocatedContent[0]?.spiral_score ?? 0}`);
       }
+
     }
 
     // ═══ PHASE 3: Decision ═══
