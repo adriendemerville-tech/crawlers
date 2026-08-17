@@ -225,6 +225,9 @@ const clientIp = getClientIp(req);
         target_audience: externalContext.target_audience,
         commercial_area: externalContext.commercial_area,
         entity_type: externalContext.entity_type,
+        business_model: externalContext.business_model,
+        brand_name: externalContext.brand_name,
+        site_name: externalContext.site_name,
       };
       console.log(`[check-llm] Using caller-provided site context (sector: ${siteCtx.market_sector})`);
     } else {
@@ -238,6 +241,10 @@ const clientIp = getClientIp(req);
             products_services: ctx.products_services,
             target_audience: ctx.target_audience,
             commercial_area: ctx.commercial_area,
+            entity_type: (ctx as any).entity_type,
+            business_model: (ctx as any).business_model,
+            brand_name: (ctx as any).brand_name,
+            site_name: (ctx as any).site_name,
           };
           console.log(`[check-llm] Site context loaded from DB (confidence: ${ctx.identity_confidence || 0})`);
         }
@@ -245,6 +252,7 @@ const clientIp = getClientIp(req);
         console.warn('[check-llm] Could not fetch site context:', e);
       }
     }
+
 
     // Generate natural prompts via shared module (NO domain/brand mention)
     const promptLang: PromptLang = lang as PromptLang;
