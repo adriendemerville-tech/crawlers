@@ -465,6 +465,35 @@ Deno.serve(handleRequest(async (req) => {
     // Apply pageLimit AFTER filter
     urls = urls.slice(0, pageLimit);
 
+    // ─── Garde anti-doublon (mutualisation par domaine) ───
+    // Un même domaine peut être demandé plusieurs fois en quelques secondes
+    // (tours d'attente Marina, relances UI). On se raccroche alors au crawl
+    // déjà en vol au lieu d'empiler des jobs identiques qui saturent le worker.
+    {
+      const inFlightWindow = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const { data: inFlightRows } = await supabase
+        .from('site_crawls')
+        .select('id, total_pages, status, created_at')
+        .eq('domain', domain)
+        .eq('user_id', userId)
+        .in('status', ['mapping', 'pending', 'queued', 'running', 'crawling', 'processing', 'analyzing'])
+        .gte('created_at', inFlightWindow)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const inFlight = inFlightRows?.[0];
+      if (inFlight) {
+        console.log(`[${domain}] Crawl ${inFlight.id} déjà en vol (${inFlight.status}) — réutilisation au lieu d'un doublon`);
+        return new Response(JSON.stringify({
+          success: true,
+          crawlId: inFlight.id,
+          totalPages: inFlight.total_pages,
+          status: 'queued',
+          deduplicated: true,
+          message: 'Crawl déjà en cours pour ce domaine — suivi du crawl existant',
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
     // Create site_crawls row
     const { data: crawl, error: crawlError } = await supabase
       .from('site_crawls')

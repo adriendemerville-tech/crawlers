@@ -1,0 +1,2 @@
+update crawl_jobs set status='cancelled' where status in ('pending','processing') and crawl_id in (select id from site_crawls where domain='www.arti-box.fr' and status in ('queued','mapping'));
+update site_crawls set status='stopped', error_message='Doublon annulé (crawl mutualisé déjà terminé)' where domain='www.arti-box.fr' and status in ('queued','mapping');
