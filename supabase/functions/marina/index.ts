@@ -1615,16 +1615,17 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
         <h3 style="font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
           🎯 ${lang === 'fr' ? 'Recommandations Stratège' : lang === 'es' ? 'Recomendaciones Estratégicas' : 'Strategic Recommendations'}
         </h3>
-        ${strategeRecos.map((r, i) => {
-          const prioColor = r.priority === 'critique' || r.priority === 'critical' ? '#ef4444' : r.priority === 'important' ? '#f59e0b' : '#22c55e';
+        ${strategeRecos.map((r) => {
+          const split = splitTrailingSeverity(String(r.title || ''));
+          const prio = r.priority || split.severity || '';
+          const prioColor = prio === 'critique' || prio === 'critical' ? '#ef4444' : prio === 'important' ? '#f59e0b' : '#22c55e';
           return `<div style="padding:12px;margin-bottom:8px;background:white;border-left:3px solid ${prioColor};border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-              <span style="font-size:11px;color:${prioColor};font-weight:700;text-transform:uppercase;">${r.priority}</span>
-            </div>
-            <div style="font-weight:600;font-size:14px;">${r.title}</div>
-            <div style="font-size:13px;color:#4b5563;margin-top:4px;line-height:1.6;">${r.description}</div>
+            ${severityBadgeHTML(prio) ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">${severityBadgeHTML(prio)}</div>` : ''}
+            <div style="font-weight:600;font-size:14px;">${split.text}</div>
+            <div style="font-size:13px;color:#4b5563;margin-top:4px;line-height:1.6;">${splitTrailingSeverity(String(r.description || '')).text}</div>
           </div>`;
         }).join('')}
+
       </div>` : ''}
     </div>`;
 
