@@ -400,9 +400,9 @@ function generatePromptsEn(ctx: SiteContext, season: string, maxPrompts: number)
       "Which websites or media outlets would you recommend to follow this?",
     );
   } else {
-    const mainNeed = products
-      ? products.split(',')[0].trim()
-      : sector || 'a professional service';
+    const mainNeed = (products.split(',')[0] || '').trim()
+      || sector
+      || 'a professional service';
 
     // Q1: Simple need
     prompts.push(`I'm looking for a tool for ${mainNeed}, any ideas?`);
