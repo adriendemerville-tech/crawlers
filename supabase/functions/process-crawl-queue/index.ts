@@ -25,8 +25,19 @@ import { filterCrawlablePublicUrls, isCrawlablePublicUrl, canonicalizeCrawlUrl, 
  * puis se re-déclenche (self-relay) sur le checkpoint persisté dans
  * `crawl_pages`. Un gros domaine est donc crawlé en N runs successifs de
  * 100-150 pages au lieu d'un run unique qui explose le wall-time.
+ *
+ * Sur les très gros domaines (> 3 000 URLs), le lot est abaissé à 80 pages :
+ * l'accumulation mémoire/CPU d'un run de 150 pages y provoquait des kills
+ * wall-time avant l'écriture du checkpoint (observé sur un site de ~6 800 URLs).
  */
 const PAGES_PER_RUN = 150;
+const LARGE_SITE_URL_THRESHOLD = 3000;
+const PAGES_PER_RUN_LARGE_SITE = 80;
+
+function pagesPerRunFor(totalCount: number | null | undefined): number {
+  const n = typeof totalCount === 'number' ? totalCount : 0;
+  return n > LARGE_SITE_URL_THRESHOLD ? PAGES_PER_RUN_LARGE_SITE : PAGES_PER_RUN;
+}
 
 Deno.serve(handleRequest(async (req) => {
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')!;
@@ -73,6 +84,13 @@ Deno.serve(handleRequest(async (req) => {
       const maxDepth: number = job.max_depth || 0;
       const urlFilter: string | null = job.url_filter || null;
       let alreadyProcessed = job.processed_count || 0;
+
+      // Quota de pages propre à ce job (abaissé sur les très gros domaines).
+      const jobQuota = pagesPerRunFor(job.total_count);
+      let jobPagesProcessed = 0;
+      if (jobQuota !== PAGES_PER_RUN) {
+        console.log(`[Worker] Job ${job.id}: gros domaine (${job.total_count} URLs) — lot réduit à ${jobQuota} pages/run`);
+      }
 
       // ── Checkpoint reconciliation ──
       const { count: persistedPageCount } = await supabase
@@ -158,6 +176,7 @@ Deno.serve(handleRequest(async (req) => {
         await supabase.from('crawl_pages').upsert(rows, { onConflict: 'crawl_id,url', ignoreDuplicates: true });
         alreadyProcessed += 1;
         globalPagesProcessed += 1;
+        jobPagesProcessed += 1;
         await supabase.from('crawl_jobs').update({ processed_count: alreadyProcessed }).eq('id', job.id);
         await supabase.from('site_crawls').update({ crawled_pages: alreadyProcessed }).eq('id', job.crawl_id);
         remaining = remaining.slice(1);
@@ -168,7 +187,7 @@ Deno.serve(handleRequest(async (req) => {
       const processedUrls = new Set<string>(urlsToProcess.map(u => crawlUrlKey(u)));
 
       // ── INNER LOOP: keep processing pages while time allows ──
-      while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < PAGES_PER_RUN) {
+      while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < PAGES_PER_RUN && jobPagesProcessed < jobQuota) {
         // Check if crawl was stopped by user
         const { data: crawlCheck } = await supabase
           .from('site_crawls')
@@ -183,7 +202,7 @@ Deno.serve(handleRequest(async (req) => {
 
         // Dynamic batch sizing based on page weight
         const dynamicMax = probeSize > 150_000 ? 1 : probeSize > 100_000 ? 2 : probeSize > 50_000 ? 3 : 4;
-        const availableSlots = PAGES_PER_RUN - globalPagesProcessed;
+        const availableSlots = Math.min(PAGES_PER_RUN - globalPagesProcessed, jobQuota - jobPagesProcessed);
         const batchSize = Math.min(remaining.length, availableSlots, dynamicMax);
         const batch = remaining.slice(0, batchSize);
 
@@ -267,6 +286,7 @@ Deno.serve(handleRequest(async (req) => {
         const attemptedCount = batch.length;
         const newProcessedCount = Math.min(job.total_count, alreadyProcessed + attemptedCount);
         globalPagesProcessed += attemptedCount;
+        jobPagesProcessed += attemptedCount;
         alreadyProcessed = newProcessedCount;
 
         await supabase.from('crawl_jobs').update({ processed_count: newProcessedCount }).eq('id', job.id);
