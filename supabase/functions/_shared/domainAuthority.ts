@@ -226,13 +226,29 @@ export function computeBacklinkToxicity(input: {
     signals.push('quasi 100 % de liens dofollow — profil peu naturel');
   }
 
+  // Référents hors-sujet (paris, adulte, miroirs, fermes de contenu) : un seul
+  // suffit à interdire le verdict « sain ».
+  const suspicious = detectSuspiciousReferringDomains(input.topReferringDomains);
+  if (suspicious.length > 0) {
+    score += Math.min(30, 12 + suspicious.length * 6);
+    signals.push(
+      `${suspicious.length} domaine${suspicious.length > 1 ? 's' : ''} référent${suspicious.length > 1 ? 's' : ''} hors-sujet dans l'échantillon (${suspicious.slice(0, 4).join(', ')})`,
+    );
+  }
+
   const toxicity = Math.max(0, Math.min(100, score));
-  const verdict: BacklinkToxicity['verdict'] = toxicity >= 60 ? 'pollue' : toxicity >= 35 ? 'a_surveiller' : 'sain';
+  let verdict: BacklinkToxicity['verdict'] = toxicity >= 60 ? 'pollue' : toxicity >= 35 ? 'a_surveiller' : 'sain';
+  // Plancher : jamais « sain » quand des référents hors-sujet sont mesurés.
+  if (suspicious.length > 0 && verdict === 'sain') verdict = 'a_surveiller';
+
+  const suspiciousNote = suspicious.length > 0
+    ? ` Domaines à examiner en priorité : ${suspicious.slice(0, 6).join(', ')}.`
+    : '';
   const recommendation = verdict === 'pollue'
-    ? "Priorité au nettoyage : constituez un fichier de désaveu sur les domaines d'annuaire et MFA, et diversifiez les ancres avant tout nouvel achat de liens."
+    ? `Priorité au nettoyage : constituez un fichier de désaveu sur les domaines d'annuaire et MFA, et diversifiez les ancres avant tout nouvel achat de liens.${suspiciousNote}`
     : verdict === 'a_surveiller'
-      ? "Surveillez la répétition d'ancres et la qualité des nouveaux référents ; un désaveu ciblé peut être utile sur les domaines les plus faibles."
-      : 'Profil de liens cohérent : aucune action de désaveu nécessaire à ce stade.';
+      ? `Surveillez la répétition d'ancres et la qualité des nouveaux référents ; un désaveu ciblé peut être utile sur les domaines les plus faibles.${suspiciousNote}`
+      : "Aucun signal de manipulation sur l'échantillon reçu : pas de désaveu justifié à ce stade, l'échantillon reste toutefois limité aux principaux référents.";
 
   return {
     toxicity_score: toxicity,
