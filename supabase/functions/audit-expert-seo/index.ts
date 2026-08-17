@@ -1993,6 +1993,8 @@ DONNÉES TECHNIQUES:
 - Technique: ${scores.technical.score}/50
 - Sémantique: ${scores.semantic.score}/60 (Mots: ${htmlAnalysis.wordCount})
 - IA/GEO: ${scores.aiReady.score}/30 (Schema: ${htmlAnalysis.schemaTypes.join(', ') || 'aucun'})
+${socialProof ? formatSocialProofForPrompt(socialProof) : ''}
+
 
 INSIGHTS EXPERTS:
 - Ratio code/texte: ${insights.contentDensity.ratio}% (${insights.contentDensity.verdict})
