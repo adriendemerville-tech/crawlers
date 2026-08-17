@@ -79,6 +79,7 @@ import { sanitizeReportData } from '../_shared/llmGuards.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { captureSiteVisual, buildVisualEvidenceHtml, type VisualCapture } from '../_shared/pageboltCapture.ts';
 import { buildStrategicVerdict, type VerdictSignals } from '../_shared/strategicVerdict.ts';
+import { narrateStrategicVerdict } from '../_shared/verdictNarration.ts';
 import {
   analyzeHostDuplication,
   probeHostRedirect,
@@ -1894,7 +1895,7 @@ function sanitizeMarinaHtml(html: string, opts?: { keepColors?: boolean }): stri
 function buildExecutiveSummaryHTML(
   lang: string,
   domain: string,
-  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number; roi?: RoiSummary | null; verdictSignals?: VerdictSignals | null },
+  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number; roi?: RoiSummary | null; verdictSignals?: VerdictSignals | null; verdictHtml?: string | null },
 
 ): string {
   const isEn = lang === 'en';
@@ -1972,9 +1973,12 @@ function buildExecutiveSummaryHTML(
     </div>
     ${ctx.roi ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;">${ctx.roi.sentence}${ctx.roi.topQuickWins.length ? ` ${t('À traiter en premier', 'Start with', 'Empezar por')} : ${ctx.roi.topQuickWins.join(' ; ')}.` : ''}</p>` : ''}
 
-    ${ctx.verdictSignals
+    ${ctx.verdictHtml
+      ? ctx.verdictHtml
+      : ctx.verdictSignals
       ? buildStrategicVerdict(domain, { ...ctx.verdictSignals, criticalCount: ctx.criticalCount, geoScore: geo100, techScore: tech100, pagesAnalyzed: pages }, lang).html
       : ''}
+
 
 
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
@@ -4159,6 +4163,44 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         });
         const cocoonPageHTML = buildCocoonPageFocusHTML(cocoonResult, url, detectedLang);
 
+        // Signaux mesurés : source de vérité du verdict stratégique.
+        const verdictSignals: VerdictSignals = {
+          pagesKnown: crawlSnapshot?.total_pages || null,
+          pagesAnalyzed: crawlSnapshot?.crawled_pages || crawlSnapshot?.pages?.length || null,
+          techScore: pageTech100,
+          geoScore: pageGeo100,
+          criticalCount: (consolidatedPlan || []).filter((i: any) => i.severity === 'critical').length,
+          psiPerformanceMobile: expertData?.scores?.performance?.psiPerformance ?? null,
+          cannibalizationGroups: crawlSnapshot?.contentIntegrity?.cannibalizationGroups ?? null,
+          nearDuplicateGroups: crawlSnapshot?.contentIntegrity?.nearDuplicateGroups ?? null,
+          thinPages: crawlSnapshot?.contentIntegrity?.thinPages ?? null,
+          clusterCount: cocoonResult?.stats?.cluster_count ?? (cocoonResult?.cluster_summary?.length || null),
+          orphanPages: cocoonResult?.graph_details?.orphan_pages?.length ?? null,
+          hasSchema: crawlSnapshot?.hasSchema ?? null,
+          schemaTypesCount: (crawlSnapshot?.schemaTypes || []).length,
+          rankedKeywords: (strategicData?.keyword_positioning?.main_keywords || []).length,
+          quickWinKeywords: (strategicData?.keyword_positioning?.quick_wins || []).length,
+          contentGapKeywords: (strategicData?.keyword_positioning?.content_gaps || []).length,
+          hostDuplication: Boolean(hostDuplication?.detected),
+          // Autorité / backlinks : intégrée au verdict et à la fourchette
+          // de gain, uniquement si DataForSEO a réellement répondu.
+          authorityScore: strategicData?.domain_authority?.data_source === 'dataforseo'
+            ? Number(strategicData.domain_authority.authority_score) || null
+            : null,
+          referringDomains: strategicData?.domain_authority?.data_source === 'dataforseo'
+            ? Number(strategicData.domain_authority.referring_domains) || null
+            : null,
+          backlinkToxicity: Number(strategicData?.domain_authority?.toxicity?.toxicity_score) || null,
+        };
+
+        // Rédaction du verdict : les faits restent déterministes, la formulation
+        // varie d'un audit à l'autre (angle tiré au sort, chiffres contrôlés).
+        // Tout écart retombe automatiquement sur le paragraphe déterministe.
+        const narratedVerdict = await narrateStrategicVerdict(domain, verdictSignals, {
+          lang: detectedLang,
+          seed: `${url}|${crawlSnapshot?.id || ''}`,
+        });
+
         html = compileMarinaReport(
           {
             crawl: crawlHTML, tech: techHTML, strategic: strategicHTML, cocoon: cocoonHTML,
@@ -4171,33 +4213,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
               criticalCount: (consolidatedPlan || []).filter((i: any) => i.severity === 'critical').length,
               roi: roiSummary,
-              // Conclusion stratégique déterministe : chaque levier est adossé à
-              // un signal réellement mesuré dans ce run (0 token LLM).
-              verdictSignals: {
-                pagesKnown: crawlSnapshot?.total_pages || null,
-                psiPerformanceMobile: expertData?.scores?.performance?.psiPerformance ?? null,
-                cannibalizationGroups: crawlSnapshot?.contentIntegrity?.cannibalizationGroups ?? null,
-                nearDuplicateGroups: crawlSnapshot?.contentIntegrity?.nearDuplicateGroups ?? null,
-                thinPages: crawlSnapshot?.contentIntegrity?.thinPages ?? null,
-                clusterCount: cocoonResult?.stats?.cluster_count ?? (cocoonResult?.cluster_summary?.length || null),
-                orphanPages: cocoonResult?.graph_details?.orphan_pages?.length ?? null,
-                hasSchema: crawlSnapshot?.hasSchema ?? null,
-                schemaTypesCount: (crawlSnapshot?.schemaTypes || []).length,
-                rankedKeywords: (strategicData?.keyword_positioning?.main_keywords || []).length,
-                quickWinKeywords: (strategicData?.keyword_positioning?.quick_wins || []).length,
-                contentGapKeywords: (strategicData?.keyword_positioning?.content_gaps || []).length,
-                hostDuplication: Boolean(hostDuplication?.detected),
-                // Autorité / backlinks : intégrée au verdict et à la fourchette
-                // de gain, uniquement si DataForSEO a réellement répondu.
-                authorityScore: strategicData?.domain_authority?.data_source === 'dataforseo'
-                  ? Number(strategicData.domain_authority.authority_score) || null
-                  : null,
-                referringDomains: strategicData?.domain_authority?.data_source === 'dataforseo'
-                  ? Number(strategicData.domain_authority.referring_domains) || null
-                  : null,
-                backlinkToxicity: Number(strategicData?.domain_authority?.toxicity?.toxicity_score) || null,
-              },
+              verdictSignals,
+              verdictHtml: narratedVerdict.html,
             }),
+
 
             intro: buildReportIntroHTML(detectedLang, domain, {
               expertData, strategicData, crawlSnapshot, llmVisibilityData,
