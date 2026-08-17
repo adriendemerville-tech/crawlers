@@ -74,6 +74,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
 import { callLovableAIText } from '../_shared/lovableAI.ts';
+import { sanitizeReportData } from '../_shared/llmGuards.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { captureSiteVisual, buildVisualEvidenceHtml, type VisualCapture } from '../_shared/pageboltCapture.ts';
 import { buildStrategicVerdict, type VerdictSignals } from '../_shared/strategicVerdict.ts';
