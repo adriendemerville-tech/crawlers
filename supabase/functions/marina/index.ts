@@ -4225,7 +4225,16 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         if (!identityUsability.usable) {
           console.log(`[Marina] Identité partiellement résolue : ${identityUsability.notes.join(' | ')}`);
         }
-        html = reconcileReportHtml(html, { orphanCount, toxicity });
+        // Web Vitals : la mesure Lighthouse est la source unique, tout le
+        // document est réécrit au format canonique « X,XX s ».
+        const perf = expertData?.scores?.performance ?? null;
+        html = reconcileReportHtml(html, {
+          orphanCount,
+          toxicity,
+          webVitals: perf
+            ? { lcp: perf.lcp, fcp: perf.fcp, inp: perf.inp, tbt: perf.tbt, ttfb: perf.ttfb }
+            : null,
+        });
         console.log(
           `[Marina] Réconciliation : orphelines=${orphanCount ?? 'n/d'}, toxicité=${toxicity.score ?? 'n/d'} (désaveu interdit: ${toxicity.disavowClaimForbidden})`,
         );
