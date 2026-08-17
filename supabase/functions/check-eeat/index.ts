@@ -807,6 +807,7 @@ Réponds UNIQUEMENT en JSON valide :
       blogSection: aggregated.hasBlogSection,
       testimonials: aggregated.hasTestimonials,
       testimonialsVerifiable: aggregated.testimonialsVerifiable,
+      socialProofVerified: socialProof,
     },
     trustSignals: analysis.trust_signals || [],
     missingSignals: analysis.missing_signals || [],
