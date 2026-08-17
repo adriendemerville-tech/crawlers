@@ -176,6 +176,7 @@ Deno.serve(handleRequest(async (req) => {
         await supabase.from('crawl_pages').upsert(rows, { onConflict: 'crawl_id,url', ignoreDuplicates: true });
         alreadyProcessed += 1;
         globalPagesProcessed += 1;
+        jobPagesProcessed += 1;
         await supabase.from('crawl_jobs').update({ processed_count: alreadyProcessed }).eq('id', job.id);
         await supabase.from('site_crawls').update({ crawled_pages: alreadyProcessed }).eq('id', job.crawl_id);
         remaining = remaining.slice(1);
