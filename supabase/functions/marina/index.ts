@@ -1520,32 +1520,26 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
         <div class="stat-card"><div class="value">${cocoonStats.avg_roi || '-'}</div><div class="label">ROI Moy.</div></div>
         <div class="stat-card"><div class="value">${cocoonStats.links_density || '-'}%</div><div class="label">Densité liens</div></div>
       </div>` : ''}
-      ${cocoonClusters && typeof cocoonClusters === 'object' ? `
+      ${(namedClusters.length > 0 || isolatedClusters > 0) ? `
       <div style="margin-top:16px;">
-        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Clusters identifiés</h3>
-        ${Object.entries(cocoonClusters).map(([key, val]: [string, any]) => `
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Thématiques identifiées${namedClusters.length > 0 ? ` (${namedClusters.length})` : ''}</h3>
+        ${namedClusters.map((val: any, i: number) => `
           <div style="padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid #3b82f6;border-radius:6px;">
-            <div style="font-weight:600;font-size:14px;">${val?.label || val?.name || key}</div>
+            <div style="font-weight:600;font-size:14px;">${clusterDisplayName(val, i)}</div>
             <div style="font-size:12px;color:#6b7280;margin-top:4px;">
-              ${val?.count || val?.pages_count || ''} pages
-              ${val?.avg_geo ? ` · Geo: ${Math.round(val.avg_geo)}` : ''}
-              ${val?.avg_roi ? ` · ROI: ${Math.round(val.avg_roi)}` : ''}
-              ${val?.total_traffic ? ` · Trafic: ${val.total_traffic}` : ''}
-              ${val?.dominant_intent ? ` · Intent: ${val.dominant_intent}` : ''}
+              ${clusterSize(val)} pages
+              ${val?.avg_geo ? ` · Score GEO moyen : ${Math.round(val.avg_geo)}` : ''}
+              ${val?.avg_seo_score ? ` · Score SEO moyen : ${Math.round(val.avg_seo_score)}` : ''}
+              ${val?.avg_word_count ? ` · ${Math.round(val.avg_word_count)} mots en moyenne` : ''}
+              ${val?.avg_roi ? ` · ROI moyen : ${Math.round(val.avg_roi)}` : ''}
+              ${val?.total_traffic ? ` · Trafic estimé : ${val.total_traffic}` : ''}
+              ${val?.dominant_intent ? ` · Intention dominante : ${humanizeValue(val.dominant_intent)}` : ''}
             </div>
           </div>
         `).join('')}
+        ${isolatedClustersNoteHTML(isolatedClusters)}
       </div>` : ''}
-      ${!cocoonClusters && clusterDetails.length > 0 ? `
-      <div style="margin-top:16px;">
-        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Clusters identifiés</h3>
-        ${clusterDetails.map((cluster: any) => `
-          <div style="padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid #3b82f6;border-radius:6px;">
-            <div style="font-weight:600;font-size:14px;">${cluster?.top_keywords?.join(', ') || cluster?.cluster_id || 'Cluster'}</div>
-            <div style="font-size:12px;color:#6b7280;margin-top:4px;">${cluster?.size || 0} pages · SEO moyen ${cluster?.avg_seo_score || '-'} · ${cluster?.avg_word_count || '-'} mots</div>
-          </div>
-        `).join('')}
-      </div>` : ''}
+
       ${orphanPages.length > 0 ? `
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Pages orphelines (${orphanPages.length})</h3>
