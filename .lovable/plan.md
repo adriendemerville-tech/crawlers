@@ -8,7 +8,12 @@ Une table dédiée `parmenion_targeting_lenses` (une ligne par cible Parménion)
 
 Champs : `target_id`, `lens_type` ('location' | 'persona' | 'cluster'), `enabled`, `values` (jsonb, tableau de valeurs cochées), `share_pct` (part des créations orientées), `proof_level` (calculé, lecture seule).
 
+Deux champs de destination, par lentille :
+- `publish_directory` (ex. `/blog`, `/services`) — répertoire où les pages issues de cette lentille sont créées. Détermine aussi le `page_type` par défaut du ContentBrief (`/blog` → article, `/services` → landing).
+- `conversion_target` (jsonb) — `{ mode: 'page' | 'directory' | 'free', value?: string }`. En `page`/`directory`, chaque page créée doit porter au moins un lien contextuel vers cette destination. En `free`, Parménion choisit lui-même la destination et **doit la justifier** dans la décision loggée.
+
 Règle non négociable : `share_pct` par défaut 30, plafonné à 50. Une lentille ne peut jamais consommer tout le budget contenu.
+
 
 ## 2. Menus déroulants auto-générés
 
@@ -40,28 +45,44 @@ audit ─ diagnose ─ prescribe ────────────── exec
    - preuve forte (adresse + requêtes géo + mentions) → autorise une **page dédiée** ;
    - preuve faible → interdit la page dédiée, injecte seulement du **contexte local dans un article national**.
 5. **`cocoon-strategist` / anti-cannibalisation** — nouvelle règle de hiérarchie géo : une page région est un pilier, une page ville une fille transactionnelle. Interdiction de créer une ville avant l'existence du pilier régional, et blocage si deux villes visent la même intention sans différenciation d'intention (Know/Do/Buy).
-6. **`prescriptionWorkbench.ts`** — chaque item créé porte `lens_applied` (type + valeurs) pour traçabilité, et le backlog guard existant (pause > 5 décisions non exécutées) s'applique inchangé.
+6. **`prescriptionWorkbench.ts`** — chaque item créé porte `lens_applied` (type + valeurs + `publish_directory` + `conversion_target`) pour traçabilité, et le backlog guard existant (pause > 5 décisions non exécutées) s'applique inchangé.
+7. **Exécuteurs CMS (`cms-push-draft`, `dictadevi-actions`, `iktracker-actions`)** — le `publish_directory` est transmis comme préfixe de slug / catégorie CMS. Si la plateforme ne permet pas ce répertoire, la tâche échoue explicitement au lieu de publier ailleurs.
+8. **Maillage interne (`cocoon_auto_links`)** — la `conversion_target` devient un lien obligatoire du ContentBrief (`internal_links`, ancre variée via les `anchor_variants` existants). En mode `free`, Parménion sélectionne la page de destination la mieux placée du site (PageRank interne + intention Do/Buy) et l'inscrit dans la décision.
 
-## 4. UI
+## 4. Cycle de vie après création
+
+Point important : la lentille ne survit pas à la création. Une fois publiée, la page :
+- entre dans le crawl et le workbench comme n'importe quelle autre page (audit tech, meta, données structurées, refresh) ;
+- reste éligible au maillage, aux patchs et — si elle sous-performe durablement — au pruning ou au merge, sous les protections GSC existantes (clics, position ≤ 15, ≥ 20 impressions) ;
+- ne bénéficie d'aucun `lens_bonus` en tant que page existante (le bonus ne s'applique qu'aux items de création).
+
+`lens_applied` reste stocké pour l'analyse a posteriori : mesurer si les pages issues d'une lentille performent mieux ou moins bien que la trajectoire générale, et donc si la lentille mérite d'être maintenue.
+
+## 5. UI
 
 Dans `ParmenionTargetPanel` (onglet du site), un bloc « Lentilles de ciblage » :
 - 3 cases à cocher, chacune dépliant un multi-select des options auto-générées ;
 - un curseur `share_pct` par lentille (0–50 %) avec aperçu textuel : « ~1 création orientée sur 8 tâches » ;
+- un champ « répertoire de publication » alimenté par les répertoires réellement détectés au crawl (pas de saisie libre à l'aveugle) ;
+- un sélecteur de cible de conversion : page précise, répertoire, ou « libre — Parménion décide » ;
 - badges de preuve par option, et message explicite quand une lentille est indisponible faute de signaux.
 
 Boutons sans fond, bordure + texte, conformément au design système.
 
-## 5. Sécurité et cohérence
+
+## 6. Sécurité et cohérence
 
 - RLS sur `parmenion_targeting_lenses` via `auth.uid()` (+ GRANT `authenticated` / `service_role`).
-- Aucune lentille n'autorise une action destructive : pruning et merge restent hors périmètre.
+- Aucune lentille n'autorise une action destructive : pruning et merge restent hors périmètre des lentilles.
 - `proof_level` recalculé à chaque cycle : si les signaux disparaissent, la lentille passe en mode « contexte injecté » automatiquement.
+- `publish_directory` validé contre les répertoires existants du crawl ; un répertoire inconnu est refusé.
 
-## 6. Découpage
+## 7. Découpage
 
-- **Sprint 1** — table + RLS, `parmenion-lens-options`, UI de configuration (aucun effet moteur). Vérifiable immédiatement sur Dictadevi : la liste PACA se remplit ou non.
+- **Sprint 1** — table + RLS, `parmenion-lens-options` (options + répertoires détectés), UI de configuration (aucun effet moteur). Vérifiable immédiatement sur Dictadevi : la liste PACA se remplit ou non.
 - **Sprint 2** — branchement scoring (`lens_bonus`) et quota de slots dans l'orchestrateur, avec log par cycle du nombre de slots orientés.
-- **Sprint 3** — ContentBrief local/persona, hiérarchie région/ville et garde anti-cannibalisation géo.
+- **Sprint 3** — ContentBrief local/persona, `publish_directory` transmis aux exécuteurs CMS, lien de conversion obligatoire, hiérarchie région/ville et garde anti-cannibalisation géo.
+
 
 ## Détails techniques
 
