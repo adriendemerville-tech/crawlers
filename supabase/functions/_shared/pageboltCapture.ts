@@ -165,7 +165,7 @@ export async function captureSiteVisual(opts: CaptureOptions): Promise<VisualCap
           fullPage: false,
           blockAds: true,
           blockTrackers: true,
-          delay: 1200,
+          delay: 3500,
         }, timeoutMs)
       : Promise.resolve(null),
   ]);
