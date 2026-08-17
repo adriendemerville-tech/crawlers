@@ -123,6 +123,7 @@ import { Route as SCodeRouteImport } from './routes/s/$code'
 import { Route as TemporarylinkShareIdRouteImport } from './routes/temporarylink/$shareId'
 import { Route as TemporaryreportShareIdRouteImport } from './routes/temporaryreport/$shareId'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable/oauth/consent'
+import { Route as ApiPublicMarinaReportRouteImport } from './routes/api/public/marina-report'
 import { Route as AppRapportReportIdRouteImport } from './routes/app/rapport/$reportId'
 import { Route as AppRapportAuditRouteImport } from './routes/app/rapport/audit'
 import { Route as AppRapportCocoonRouteImport } from './routes/app/rapport/cocoon'
@@ -711,6 +712,11 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMarinaReportRoute = ApiPublicMarinaReportRouteImport.update({
+  id: '/api/public/marina-report',
+  path: '/api/public/marina-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRapportReportIdRoute = AppRapportReportIdRouteImport.update({
   id: '/app/rapport/$reportId',
   path: '/app/rapport/$reportId',
@@ -862,6 +868,7 @@ export interface FileRoutesByFullPath {
   '/lexique/': typeof LexiqueIndexRoute
   '/matrice/': typeof MatriceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/api/public/marina-report': typeof ApiPublicMarinaReportRoute
   '/app/rapport/$reportId': typeof AppRapportReportIdRoute
   '/app/rapport/audit': typeof AppRapportAuditRoute
   '/app/rapport/cocoon': typeof AppRapportCocoonRoute
@@ -985,6 +992,7 @@ export interface FileRoutesByTo {
   '/lexique': typeof LexiqueIndexRoute
   '/matrice': typeof MatriceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/api/public/marina-report': typeof ApiPublicMarinaReportRoute
   '/app/rapport/$reportId': typeof AppRapportReportIdRoute
   '/app/rapport/audit': typeof AppRapportAuditRoute
   '/app/rapport/cocoon': typeof AppRapportCocoonRoute
@@ -1109,6 +1117,7 @@ export interface FileRoutesById {
   '/lexique/': typeof LexiqueIndexRoute
   '/matrice/': typeof MatriceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/api/public/marina-report': typeof ApiPublicMarinaReportRoute
   '/app/rapport/$reportId': typeof AppRapportReportIdRoute
   '/app/rapport/audit': typeof AppRapportAuditRoute
   '/app/rapport/cocoon': typeof AppRapportCocoonRoute
@@ -1234,6 +1243,7 @@ export interface FileRouteTypes {
     | '/lexique/'
     | '/matrice/'
     | '/.lovable/oauth/consent'
+    | '/api/public/marina-report'
     | '/app/rapport/$reportId'
     | '/app/rapport/audit'
     | '/app/rapport/cocoon'
@@ -1357,6 +1367,7 @@ export interface FileRouteTypes {
     | '/lexique'
     | '/matrice'
     | '/.lovable/oauth/consent'
+    | '/api/public/marina-report'
     | '/app/rapport/$reportId'
     | '/app/rapport/audit'
     | '/app/rapport/cocoon'
@@ -1480,6 +1491,7 @@ export interface FileRouteTypes {
     | '/lexique/'
     | '/matrice/'
     | '/.lovable/oauth/consent'
+    | '/api/public/marina-report'
     | '/app/rapport/$reportId'
     | '/app/rapport/audit'
     | '/app/rapport/cocoon'
@@ -1604,6 +1616,7 @@ export interface RootRouteChildren {
   LexiqueIndexRoute: typeof LexiqueIndexRoute
   MatriceIndexRoute: typeof MatriceIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  ApiPublicMarinaReportRoute: typeof ApiPublicMarinaReportRoute
   AppRapportReportIdRoute: typeof AppRapportReportIdRoute
   AppRapportAuditRoute: typeof AppRapportAuditRoute
   AppRapportCocoonRoute: typeof AppRapportCocoonRoute
@@ -2413,6 +2426,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/marina-report': {
+      id: '/api/public/marina-report'
+      path: '/api/public/marina-report'
+      fullPath: '/api/public/marina-report'
+      preLoaderRoute: typeof ApiPublicMarinaReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/rapport/$reportId': {
       id: '/app/rapport/$reportId'
       path: '/app/rapport/$reportId'
@@ -2582,6 +2602,7 @@ const rootRouteChildren: RootRouteChildren = {
   LexiqueIndexRoute: LexiqueIndexRoute,
   MatriceIndexRoute: MatriceIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  ApiPublicMarinaReportRoute: ApiPublicMarinaReportRoute,
   AppRapportReportIdRoute: AppRapportReportIdRoute,
   AppRapportAuditRoute: AppRapportAuditRoute,
   AppRapportCocoonRoute: AppRapportCocoonRoute,
