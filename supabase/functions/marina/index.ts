@@ -1320,19 +1320,22 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
       ${techRecommendations.length > 0 ? `
       <h3 style="font-size:14px;font-weight:600;margin:16px 0 8px;">${tr.recommendations} (${techRecommendations.length})</h3>
       ${techRecommendations.map((r: any) => {
-        const title = typeof r === 'string' ? r : r.title || r.label || '';
+        const rawTitle = typeof r === 'string' ? r : r.title || r.label || '';
+        const split = splitTrailingSeverity(String(rawTitle));
+        const title = split.text;
         const desc = typeof r === 'string' ? '' : r.description || r.detail || '';
-        const priority = typeof r === 'string' ? '' : r.priority || '';
+        const priority = typeof r === 'string' ? (split.severity || '') : (r.priority || r.severity || split.severity || '');
         const category = typeof r === 'string' ? '' : r.category || '';
         const color = priority === 'critical' ? '#ef4444' : priority === 'important' ? '#f59e0b' : '#3b82f6';
         return `<div class="reco-card" style="border-left-color:${color}">
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
-            ${priority ? `<span style="font-size:11px;color:${color};font-weight:600;text-transform:uppercase;">${priority}</span>` : ''}
-            ${category ? `<span style="font-size:11px;color:#6b7280;background:#f3f4f6;padding:1px 6px;border-radius:4px;">${category}</span>` : ''}
+            ${severityBadgeHTML(priority)}
+            ${category ? `<span style="font-size:11px;color:#6b7280;background:#f3f4f6;padding:1px 6px;border-radius:4px;">${humanizeKey(String(category))}</span>` : ''}
           </div>
           <div style="font-weight:500;">${title}</div>
-          ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${desc}</div>` : ''}
+          ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${splitTrailingSeverity(String(desc)).text}</div>` : ''}
         </div>`;
+
       }).join('')}` : ''}
     </div>`;
 
