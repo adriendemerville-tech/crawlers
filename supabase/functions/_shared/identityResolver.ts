@@ -369,11 +369,19 @@ export async function resolveIdentityCard(
     notes.push('Lecture de la carte d’identité impossible : ' + String((e as Error)?.message || e));
   }
 
-  // 1) Carte existante fraîche et exploitable → réutilisation, 0 token.
+  // 1) Carte existante fraîche, exploitable ET ancrée sur du contenu réellement lu
+  //    → réutilisation, 0 token.
   // Une carte verrouillée manuellement (user_manual) prime toujours : ni la
   // fraîcheur ni un forceRefresh ne peuvent déclencher une réinférence dessus.
+  // En revanche, une carte issue d'une inférence sur le seul NOM DE DOMAINE
+  // (identity_source 'llm_auto' / 'llm_verified') n'est jamais réutilisée :
+  // c'est la source des identités hallucinées (ex. un domaine contenant "dicta"
+  // décrit à tort comme un service de transcription). On la réinfère depuis les pages.
   const isManual = String(row?.['identity_source'] || '') === 'user_manual';
-  if (row && ((isManual && isUsable(row)) || (!opts.forceRefresh && isUsable(row) && isFresh(row)))) {
+  const cardSource = String(row?.['identity_source'] || '');
+  const GROUNDED_SOURCES = ['user_manual', 'user_voice', 'marina', 'crawl', 'gmb'];
+  const isGrounded = GROUNDED_SOURCES.includes(cardSource);
+  if (row && ((isManual && isUsable(row)) || (!opts.forceRefresh && isGrounded && isUsable(row) && isFresh(row)))) {
     const manual = isManual;
 
     return buildCard(domain, trackedSiteId, row, {
@@ -383,9 +391,10 @@ export async function resolveIdentityCard(
       resolvedAt: String(row['identity_enriched_at'] || new Date().toISOString()),
       notes: manual
         ? ['Carte renseignée manuellement : elle prime sur toute inférence automatique.']
-        : ['Carte déjà résolue et jugée à jour (moins de 30 jours) : aucun nouvel appel de modèle.'],
+        : ['Carte déjà résolue sur contenu réel et jugée à jour (moins de 30 jours) : aucun nouvel appel de modèle.'],
     });
   }
+
 
   // 2) Sinon : inférence légère (home + 2-3 pages clés, 1 appel court).
   let inference: InferenceResult | null = null;
