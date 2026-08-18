@@ -197,6 +197,8 @@ async function inferContextFromDomain(
     ? `\n\nContexte existant (à VÉRIFIER contre le contenu réel, et à corriger s'il est faux) :
 - Secteur: ${existingContext.market_sector || '?'}
 - Produits/Services: ${existingContext.products_services || '?'}
+- Proposition de valeur centrale: ${existingContext.value_proposition || '?'}
+- Propositions secondaires: ${existingContext.secondary_propositions || '?'}
 - Cible: ${existingContext.target_audience || '?'}
 - Zone: ${existingContext.commercial_area || '?'}
 - Taille: ${existingContext.company_size || '?'}`
