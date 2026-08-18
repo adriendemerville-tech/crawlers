@@ -3,6 +3,8 @@ import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
+import { resolvePreLlmIdentity, type PreLlmIdentity } from '../_shared/preLlmIdentity.ts'
+import { computeCoverage, assessReliability } from '../_shared/llmVisibilityScore.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
@@ -675,6 +677,33 @@ Deno.serve(handleRequest(async (req) => {
       }
     }
 
+    // ── Carte d'identité résolue AVANT d'interroger les modèles ──
+    // Sans site suivi (analyse publique depuis la home), la séquence de prompts
+    // se rabattrait sur le nom de domaine : on mesurerait la visibilité sur un
+    // marché qui n'est pas celui du site. L'activité est donc inférée depuis les
+    // pages réellement lues, avec cache partagé 30 j (un appel de modèle par
+    // domaine et par mois).
+    let identityDisclosure: PreLlmIdentity['identity'] | null = null
+    let identityFingerprint = 'none'
+    if (!ctx.market_sector && !ctx.products_services) {
+      try {
+        const pre = await resolvePreLlmIdentity(getServiceClient(), { domain, userId: user_id || null })
+        identityDisclosure = pre.identity
+        identityFingerprint = pre.fingerprint
+        ctx = {
+          ...ctx,
+          ...(pre.market_sector ? { market_sector: pre.market_sector } : {}),
+          ...(pre.products_services ? { products_services: pre.products_services } : {}),
+          ...(pre.target_audience ? { target_audience: pre.target_audience } : {}),
+          ...(pre.commercial_area ? { commercial_area: pre.commercial_area } : {}),
+          ...(pre.entity_type ? { entity_type: pre.entity_type } : {}),
+        }
+        console.log(`[check-llm-depth] Identité pré-LLM: ${pre.identity.source} conf=${pre.identity.confidence} secteur="${pre.market_sector || 'n/r'}" fp=${pre.fingerprint}`)
+      } catch (e) {
+        console.warn('[check-llm-depth] Pre-LLM identity resolution failed:', e)
+      }
+    }
+
     // svcDesc is only used as fallback — prompts are now built naturally from ctx
     const svcDesc = service_description || ctx.products_services || ctx.market_sector || ''
 
@@ -695,9 +724,14 @@ Deno.serve(handleRequest(async (req) => {
       .gt('expires_at', new Date().toISOString())
       .maybeSingle()
 
-    if (cachedDepth?.result_data) {
+    // Un run mesuré sur une identité différente (activité corrigée depuis) ne
+    // décrit plus le même marché : il n'est pas servi.
+    const cachedFingerprint = String((cachedDepth?.result_data as any)?.identity_fingerprint || 'none')
+    const identityMatches = cachedFingerprint === identityFingerprint
+    if (cachedDepth?.result_data && identityMatches) {
       console.log(`[check-llm-depth] ♻️ ${domain} — cache hit`)
       const cached = cachedDepth.result_data as any
+
 
       // Still persist to user's tables so their dashboard works
       if (cached.results?.length > 0 && tracked_site_id && user_id) {
@@ -757,11 +791,20 @@ Deno.serve(handleRequest(async (req) => {
           await persistResults(sb, tracked_site_id || null, user_id || null, successResults)
         }
 
+        // Couverture : un modèle est une observation, une apparition de la marque
+        // est un hit. Les modèles en panne sont hors dénominateur.
+        const observations = successResults.length
+        const hits = successResults.filter(r => r.found).length
+
         const finalData = {
           brand,
           domain,
           avg_depth: allEmpty ? null : avgDepth,
           results: allEmpty ? [] : successResults,
+          coverage: allEmpty ? null : computeCoverage(hits, observations),
+          reliability: allEmpty ? null : assessReliability(observations, 1),
+          ...(identityDisclosure ? { identity: identityDisclosure } : {}),
+          identity_fingerprint: identityFingerprint,
           prompt_strategy: prompts.length + ' phases',
           measured_at: new Date().toISOString(),
           ...(allEmpty ? { error_code: 'credits_exhausted' } : {}),

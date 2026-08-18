@@ -5,6 +5,8 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
+import { resolvePreLlmIdentity, type PreLlmIdentity } from '../_shared/preLlmIdentity.ts';
+import { computeCoverage, assessReliability } from '../_shared/llmVisibilityScore.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import {
@@ -253,6 +255,35 @@ const clientIp = getClientIp(req);
       }
     }
 
+    // ── Carte d'identité AVANT interrogation des modèles ──
+    // Sans site suivi (cas du lead magnet public), la carte est absente et les
+    // prompts se rabattraient sur le nom de domaine — source des identités
+    // fausses. On résout l'activité sur les pages réellement lues, en cache
+    // partagé 30 j : un seul appel de modèle par domaine et par mois.
+    let identityDisclosure: PreLlmIdentity['identity'] | null = null;
+    let identityFingerprint = 'none';
+    if (!siteCtx.market_sector && !siteCtx.products_services) {
+      try {
+        const pre = await resolvePreLlmIdentity(getServiceClient(), { domain, url });
+        identityDisclosure = pre.identity;
+        identityFingerprint = pre.fingerprint;
+        siteCtx = {
+          ...siteCtx,
+          ...(pre.market_sector ? { market_sector: pre.market_sector } : {}),
+          ...(pre.products_services ? { products_services: pre.products_services } : {}),
+          ...(pre.target_audience ? { target_audience: pre.target_audience } : {}),
+          ...(pre.commercial_area ? { commercial_area: pre.commercial_area } : {}),
+          ...(pre.entity_type ? { entity_type: pre.entity_type } : {}),
+          ...(pre.business_model ? { business_model: pre.business_model } : {}),
+        };
+        console.log(`[check-llm] Identité pré-LLM: ${pre.identity.source} conf=${pre.identity.confidence} secteur="${pre.market_sector || 'n/r'}" fp=${pre.fingerprint}`);
+      } catch (e) {
+        console.warn('[check-llm] Pre-LLM identity resolution failed:', e);
+      }
+    }
+
+
+
 
     // Generate natural prompts via shared module (NO domain/brand mention)
     const promptLang: PromptLang = lang as PromptLang;
@@ -351,12 +382,21 @@ const clientIp = getClientIp(req);
       ? `${t.coreValueSummary.basedOn(citedCount)} ${overallSentiment === 'positive' ? t.coreValueSummary.positivePerception : overallSentiment === 'negative' ? t.coreValueSummary.negativePerception : t.coreValueSummary.neutralPerception}`
       : t.coreValueSummary.lowVisibility(domain);
 
+    // Couverture : les modèles en erreur sont exclus du dénominateur, jamais
+    // comptés comme des non-citations. Fourchette de Wilson obligatoire —
+    // 8 modèles sur un run, c'est une tendance, pas un chiffre stable.
+    const coverage = computeCoverage(citedCount, validCitations.length);
+    const reliability = assessReliability(validCitations.length, 1);
+
     const result = {
       url: `https://${domain}`,
       domain,
       scannedAt: new Date().toISOString(),
       overallScore,
       citationRate: { cited: citedCount, total: totalModels },
+      coverage,
+      reliability,
+      ...(identityDisclosure ? { identity: identityDisclosure, identity_fingerprint: identityFingerprint } : {}),
       invisibleList,
       averageIterationDepth: Math.round(avgIterationDepth * 10) / 10,
       overallSentiment,

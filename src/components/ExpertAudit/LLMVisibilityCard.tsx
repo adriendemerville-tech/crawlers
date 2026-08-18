@@ -73,8 +73,20 @@
                {data.citationRate.cited}/{data.citationRate.total} LLMs ({citationPercent}%)
              </span>
            </div>
-           <Progress value={citationPercent} className="h-2" />
-         </div>
+            <Progress value={citationPercent} className="h-2" />
+            {(data as any).coverage?.ci_low != null && (
+              <p className="text-xs text-muted-foreground">
+                Fourchette de confiance à 95 % : {(data as any).coverage.ci_low}–{(data as any).coverage.ci_high} %.
+                Mesure sur une seule interrogation par modèle : à lire comme une tendance, pas comme un chiffre stable.
+              </p>
+            )}
+            {(data as any).identity?.disclosure && (
+              <p className="text-xs text-muted-foreground border-l-2 border-border pl-2">
+                {(data as any).identity.disclosure}
+              </p>
+            )}
+          </div>
+
  
          {/* Overall Sentiment */}
          <div className={`flex items-center gap-3 p-3 rounded-lg ${sentimentConfig.bgColor}`}>
