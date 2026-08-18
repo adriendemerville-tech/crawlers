@@ -1497,13 +1497,28 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       </div>` : ''}
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Détail des scores</h3>
-        <div class="stat-grid-4">
-          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.performance?.score, scores?.performance?.maxScore || 40) ?? 0, scores?.performance?.maxScore || 40)}">${clampScore(scores?.performance?.score, scores?.performance?.maxScore || 40) ?? 0}</div><div class="label">Performance /${scores?.performance?.maxScore || 40}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.technical?.score, scores?.technical?.maxScore || 50) ?? 0, scores?.technical?.maxScore || 50)}">${clampScore(scores?.technical?.score, scores?.technical?.maxScore || 50) ?? 0}</div><div class="label">Technique /${scores?.technical?.maxScore || 50}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.semantic?.score, scores?.semantic?.maxScore || 60) ?? 0, scores?.semantic?.maxScore || 60)}">${clampScore(scores?.semantic?.score, scores?.semantic?.maxScore || 60) ?? 0}</div><div class="label">Sémantique /${scores?.semantic?.maxScore || 60}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.aiReady?.score, scores?.aiReady?.maxScore || 30) ?? 0, scores?.aiReady?.maxScore || 30)}">${clampScore(scores?.aiReady?.score, scores?.aiReady?.maxScore || 30) ?? 0}</div><div class="label">IA-Ready /${scores?.aiReady?.maxScore || 30}</div></div>
-
-        </div>
+        ${(() => {
+          const axes: Array<[string, any, number]> = [
+            ['Performance', scores?.performance, 40],
+            ['Technique', scores?.technical, 50],
+            ['Sémantique', scores?.semantic, 60],
+            ['IA-Ready', scores?.aiReady, 50],
+            ['Sécurité', scores?.security, 20],
+          ];
+          let sum = 0; let sumMax = 0;
+          const cards = axes.map(([label, axis, defMax]) => {
+            const max = Number(axis?.maxScore || defMax);
+            const val = clampScore(axis?.score, max) ?? 0;
+            sum += val; sumMax += max;
+            return `<div class="stat-card"><div class="value" style="color:${scoreColor(val, max)}">${val}</div><div class="label">${label} /${max}</div></div>`;
+          }).join('');
+          const total = Number(expertSeoData?.totalScore ?? sum);
+          const declaredMax = Number(expertSeoData?.maxScore || sumMax);
+          return `<div class="stat-grid-4">${cards}</div>
+        <p style="font-size:12px;color:#6b7280;margin:10px 0 0;">
+          Somme des cinq axes : <strong>${sum}/${sumMax}</strong>${total !== sum ? ` — le score global d'audit technique affiché ailleurs (${total}/${declaredMax}) intègre en plus les contrôles hors page d'accueil (sitemaps, robots.txt, llms.txt).` : `, soit le score global d'audit technique (${total}/${declaredMax}).`}
+          Le score sur 100 de la synthèse exécutive est cette même valeur ramenée en pourcentage : ${Math.round((total / (declaredMax || 1)) * 100)}/100.
+        </p>
       </div>
     </div>`;
 
