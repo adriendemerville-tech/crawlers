@@ -1184,6 +1184,58 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
   const benchmarks = rawData?.benchmarks || rawData?.data?.benchmarks || [];
   const benchmarksHtml = renderLlmBenchmarkSections(benchmarks);
 
+  // ── Agrégat : couverture + qualité pondérée par axe + fiabilité.
+  // Recalculé ici si le payload est antérieur à l'agrégat (rapports rejoués).
+  const aggregate = rawData?.aggregate || rawData?.data?.aggregate || (
+    Array.isArray(benchmarks) && benchmarks.some((b: any) => b?.coverage)
+      ? buildAggregate(benchmarks.map((b: any) => ({
+          id: String(b?.id || ''),
+          label: String(b?.label || ''),
+          score: b?.score ?? null,
+          hits: Number(b?.coverage?.hits ?? 0),
+          observations: Number(b?.coverage?.observations ?? 0),
+        })), 1)
+      : null
+  );
+
+  // ── Potentiel (score déterministe de citabilité) vs mesuré (taux observé).
+  // L'écart entre les deux est le constat le plus discriminant du rapport.
+  const gapHtml = (() => {
+    if (!aggregate?.coverage || aggregate.coverage.rate === null) return '';
+    const potential = strategicData?.citation_probability;
+    const cmp = comparePotentialVsMeasured(potential, aggregate.coverage.rate);
+    const cov = aggregate.coverage;
+    const quality = aggregate.quality_score;
+    const rel = aggregate.reliability;
+    const accent = cmp.verdict === 'notoriety_gap' ? '#f59e0b'
+      : cmp.verdict === 'structure_gap' ? '#7c3aed'
+      : cmp.verdict === 'both_low' ? '#ef4444'
+      : '#6b7280';
+    return `<div style="margin-top:16px;padding:14px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;border-left:3px solid ${accent};page-break-inside:avoid;text-align:left;">
+      <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin:0 0 8px;text-align:left;">Potentiel de citabilité vs citation réellement observée</h4>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;">
+        <div style="padding:10px;background:#f8fafc;border-radius:6px;">
+          <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Taux de citation mesuré</div>
+          <div style="font-size:18px;font-weight:700;color:#1f2937;">${cov.rate} %</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:2px;">${cov.hits}/${cov.observations} interrogations — fourchette ${cov.ci_low}–${cov.ci_high} %</div>
+        </div>
+        <div style="padding:10px;background:#f8fafc;border-radius:6px;">
+          <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Qualité de citation pondérée</div>
+          <div style="font-size:18px;font-weight:700;color:#1f2937;">${quality === null || quality === undefined ? 'n/m' : quality + '/100'}</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:2px;">Pondéré par axe : position SERP ×2,0 · cœur de marché ×1,5 · potentiel non capté ×1,0</div>
+        </div>
+        <div style="padding:10px;background:#f8fafc;border-radius:6px;">
+          <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;">Potentiel de citabilité</div>
+          <div style="font-size:18px;font-weight:700;color:#1f2937;">${cmp.potential === null ? 'n/m' : cmp.potential + '/100'}</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:2px;">Score déterministe : SERP, données structurées, fraîcheur, autorité</div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#374151;margin:0 0 6px;line-height:1.6;text-align:left;"><strong>${escapeHtmlText(cmp.label)}.</strong> ${escapeHtmlText(cmp.explanation)}</p>
+      <p style="font-size:11px;color:#6b7280;margin:0;line-height:1.5;text-align:left;">Le <strong>potentiel</strong> est calculé sur des signaux mesurables du site : il est stable d'un run à l'autre. Le <strong>taux de citation</strong> est une observation : il dépend de réponses non déterministes. Les deux ne mesurent pas la même chose et ne doivent pas être additionnés. ${escapeHtmlText(rel?.caveat || '')}</p>
+    </div>`;
+  })();
+
+
 
   // Strategic analysis below cards
   let strategicHtml = '';
