@@ -3491,6 +3491,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       // ─── LLM Visibility (parallel with cocoon) ───
       let llmVisibilityData: any = null;
+      // Modèles encore en attente de réponse au moment du rendu du rapport.
+      let llmPendingAtRender: string[] = [];
+
       let trackedSiteId: string | null = null;
       let identityRow: Record<string, any> | null = null;
       {
@@ -3703,16 +3706,32 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         return Array.isArray(b) && b.length >= 3;
       };
 
+      // Un payload « frais » peut encore être en cours de mesure : les questions
+      // sont persistées AVANT les appels modèles. Le rapport ne doit être ni rendu
+      // ni marqué terminé tant que toutes les réponses ne sont pas reçues et
+      // compilées dans les scores.
+      const llmPendingModels = (p: any): string[] => {
+        const d = unwrapFunctionPayload(p);
+        if (!d) return [];
+        const pendingTop = d.measurement_status === 'processing' ? ['*'] : [];
+        const pendingScores = (Array.isArray(d.scores) ? d.scores : [])
+          .filter((s: any) => s?.measurement_status === 'pending')
+          .map((s: any) => String(s.llm_name));
+        return pendingScores.length > 0 ? pendingScores : pendingTop;
+      };
+      const isSettledLlmPayload = (p: any): boolean =>
+        isFreshLlmPayload(p) && llmPendingModels(p).length === 0;
+
       const llmVisibilityPromise = (async () => {
         if (!trackedSiteId) return;
-        if (siteScope?.llmVisibility && isFreshLlmPayload(siteScope.llmVisibility)) {
+        if (siteScope?.llmVisibility && isSettledLlmPayload(siteScope.llmVisibility)) {
           llmVisibilityData = siteScope.llmVisibility;
           reusedFromCache.push('visibilité IA');
           console.log(`[Marina] ♻️ LLM visibility réutilisée depuis le cache domaine (${domain})`);
           return;
         }
         if (siteScope?.llmVisibility) {
-          console.log(`[Marina] ⚠️ Cache LLM obsolète (moins de 3 benchmarks) pour ${domain} → remesure`);
+          console.log(`[Marina] ⚠️ Cache LLM inutilisable (moins de 3 benchmarks ou mesure en cours) pour ${domain} → remesure`);
         }
         try {
           console.log(`[Marina] Phase 3: calculate-llm-visibility for ${domain}`);
@@ -3737,6 +3756,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           console.warn(`[Marina] LLM visibility failed (non-fatal):`, e);
         }
       })();
+
 
       // ─── Cocoon computation (mutualisé par domaine) ───
       let cocoonResult: any = null;
@@ -3797,12 +3817,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // Wait for LLM visibility if still running
       await llmVisibilityPromise;
 
-      // ─── Filet de sécurité : la fonction visibilité LLM peut terminer son écriture
-      // dans domain_data_cache alors que l'appel HTTP a déjà échoué/été coupé.
-      // Sans ce read-back, le rapport tombe sur le rendu dégradé (1 seul bloc au lieu
-      // des 3 benchmarks). On repolle le cache domaine quelques secondes.
-      if (!isFreshLlmPayload(llmVisibilityData)) {
-        for (let attempt = 0; attempt < 6; attempt++) {
+      // ─── Barrière de complétude visibilité LLM ───
+      // Deux cas à couvrir avant de rendre le rapport :
+      //  1. l'appel HTTP a été coupé alors que la fonction écrivait dans domain_data_cache ;
+      //  2. les questions sont persistées (3 benchmarks) mais des modèles répondent encore.
+      // Dans les deux cas on repolle le cache domaine jusqu'à obtenir un payload
+      // « settled » (statut != processing et aucun score pending), avec un budget borné.
+      const LLM_SETTLE_ATTEMPTS = 36; // 36 × 5s = 3 min max d'attente supplémentaire
+      if (!isSettledLlmPayload(llmVisibilityData)) {
+        for (let attempt = 0; attempt < LLM_SETTLE_ATTEMPTS; attempt++) {
           try {
             const { data: cached } = await sb
               .from('domain_data_cache')
@@ -3817,9 +3840,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             // Un payload legacy (sans les 3 benchmarks) ne doit pas écraser la mesure.
             if (payload?.scores?.length && Array.isArray(payload?.benchmarks) && payload.benchmarks.length >= 3) {
               llmVisibilityData = { data: payload };
-              console.log(`[Marina] ♻️ Visibilité LLM récupérée depuis domain_data_cache (${payload.benchmarks.length} benchmarks)`);
-              await writeSiteScopeCache(sb, domain, parentJob.user_id, { llmVisibility: llmVisibilityData });
-              break;
+              if (isSettledLlmPayload(llmVisibilityData)) {
+                console.log(`[Marina] ✅ Visibilité LLM complète (${payload.benchmarks.length} benchmarks, tous modèles compilés)`);
+                await writeSiteScopeCache(sb, domain, parentJob.user_id, { llmVisibility: llmVisibilityData });
+                break;
+              }
+              console.log(`[Marina] ⏳ Visibilité LLM encore en cours (${llmPendingModels(llmVisibilityData).join(', ')}) — attente ${attempt + 1}/${LLM_SETTLE_ATTEMPTS}`);
             }
           } catch (e) {
             console.warn('[Marina] read-back visibilité LLM échoué (non-fatal):', e);
@@ -3831,6 +3857,14 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           console.warn(`[Marina] Visibilité LLM indisponible pour ${domain} — rendu dégradé (pas de blocs benchmark)`);
         }
       }
+
+      // Trace du verdict de complétude : consommée à la finalisation du job pour
+      // interdire le passage en « terminé » avec des réponses manquantes.
+      llmPendingAtRender = llmPendingModels(llmVisibilityData);
+      if (llmPendingAtRender.length > 0) {
+        console.warn(`[Marina] ⚠️ Rapport rendu avec mesures LLM incomplètes : ${llmPendingAtRender.join(', ')}`);
+      }
+
 
 
       let crawlSnapshot: any = null;
@@ -4557,20 +4591,31 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         cocoon_clusters: cocoonResult?.stats?.clusters_count || null,
         visual_capture: visualCapture,
         strategic_layer: strategicDegradation.degraded ? 'unavailable' : 'ok',
-        partial: strategicDegradation.degraded,
-        degraded_reasons: strategicDegradation.degraded ? strategicDegradation.reasons : [],
+        partial: strategicDegradation.degraded || llmPendingAtRender.length > 0,
+        llm_measurement_complete: llmPendingAtRender.length === 0,
+        llm_pending_models: llmPendingAtRender,
+        degraded_reasons: [
+          ...(strategicDegradation.degraded ? strategicDegradation.reasons : []),
+          ...(llmPendingAtRender.length > 0
+            ? [`Réponses IA non compilées : ${llmPendingAtRender.join(', ')}`]
+            : []),
+        ],
         generated_at: new Date().toISOString(),
       };
 
+      // Un rapport dont les réponses IA ne sont ni reçues ni compilées dans les
+      // scores ne peut pas être déclaré « terminé » : il reste « partial ».
+      const isIncomplete = strategicDegradation.degraded || llmPendingAtRender.length > 0;
       await sb.from('async_jobs').update({
-        status: strategicDegradation.degraded ? 'partial' : 'completed',
+        status: isIncomplete ? 'partial' : 'completed',
         result_data: resultData,
         progress: 100,
-        error_message: strategicDegradation.degraded
-          ? `Couche stratégique indisponible — ${strategicDegradation.reasons.join(' | ')}`
+        error_message: isIncomplete
+          ? (resultData.degraded_reasons as string[]).join(' | ')
           : null,
         completed_at: new Date().toISOString(),
       }).eq('id', jobId);
+
 
       console.log(`[Marina] ✅ Phase 3 complete — pipeline finished for ${domain}`);
 
@@ -4586,7 +4631,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const callbackUrl = (completedJob?.input_payload as any)?.callback_url;
         if (callbackUrl) {
           console.log(`[Marina] 📡 Sending webhook to ${callbackUrl}`);
-          const eventName = strategicDegradation.degraded ? 'marina.report.partial' : 'marina.report.completed';
+          const eventName = isIncomplete ? 'marina.report.partial' : 'marina.report.completed';
           const webhookPayload = {
             event: eventName,
             job_id: jobId,
