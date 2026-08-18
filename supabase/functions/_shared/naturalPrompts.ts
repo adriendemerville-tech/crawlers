@@ -14,6 +14,10 @@
 export interface SiteContext {
   market_sector?: string;
   products_services?: string;
+  /** Proposition de valeur centrale (carte d'identité) */
+  value_proposition?: string | null;
+  /** Deux propositions de valeur secondaires, séparées par " ; " */
+  secondary_propositions?: string | null;
   target_audience?: string;
   commercial_area?: string;
   entity_type?: string;         // 'business' | 'media' | 'blog' | 'ecommerce' | 'saas'
