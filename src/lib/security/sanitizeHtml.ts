@@ -43,17 +43,3 @@ export const PURIFY_CONFIG = {
   FORBID_TAGS: ['style'],
 } as const;
 
-/** Passe DOMPurify, uniquement quand un DOM réel est disponible. */
-export function sanitizeWithPurify(html: string): string | null {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return null;
-  try {
-    // Import paresseux : jamais évalué pendant le rendu serveur.
-    const DOMPurify = (window as any).DOMPurify;
-    if (typeof DOMPurify?.sanitize === 'function') {
-      return DOMPurify.sanitize(html, PURIFY_CONFIG as unknown as Record<string, unknown>);
-    }
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
