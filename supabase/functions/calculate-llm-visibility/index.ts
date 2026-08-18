@@ -4,6 +4,7 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 import { generateNaturalPrompts, type SiteContext as NaturalSiteContext } from '../_shared/naturalPrompts.ts'
 import { buildLlmBenchmarks } from '../_shared/llmBenchmarks.ts'
+import { naturalizeBenchmarkQuestions } from '../_shared/benchmarkQuestionWriter.ts'
 import { selectQuestionTopics, isToolLikeSite } from '../_shared/questionTopics.ts'
 import { resolveIdentityCard } from '../_shared/identityResolver.ts'
 import { buildAggregate, computeCoverage } from '../_shared/llmVisibilityScore.ts'
@@ -480,7 +481,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     console.log(`[llm-visibility] question topics (${topicSelection.source}):`, topicSelection.selections?.map((s: any) => `${s.axis}:${s.topic}`) || topicSelection.topics)
     // 3 benchmarks = 3 zones de marché (couverte / mieux classée / non captée).
     // Dans chacun : découverte + comparaison + contexte (local si pertinent).
-    const benchmarks = buildLlmBenchmarks(
+    let benchmarks = buildLlmBenchmarks(
       {
         market_sector: enrichedSite.market_sector,
         products_services: enrichedSite.products_services,
@@ -498,6 +499,32 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       topicSelection.topics,
       topicSelection.selections || [],
     )
+
+    // Reformulation naturelle (1 seul appel LLM pour les 9 questions) : le
+    // besoin testé, l'axe de marché et l'intention restent déterministes, seule
+    // la phrase devient celle d'un vrai prospect. Tout échec ou toute sortie
+    // non conforme conserve la formulation déterministe, question par question.
+    try {
+      const naturalized = await naturalizeBenchmarkQuestions(
+        benchmarks,
+        {
+          market_sector: enrichedSite.market_sector,
+          products_services: enrichedSite.products_services,
+          target_audience: enrichedSite.target_audience,
+          commercial_area: enrichedSite.commercial_area,
+          entity_type: enrichedSite.entity_type,
+          business_model: enrichedSite.business_model,
+          brand_name: enrichedSite.brand_name,
+          site_name: enrichedSite.site_name,
+          domain: enrichedSite.domain,
+        },
+        'fr',
+      )
+      benchmarks = naturalized.benchmarks
+    } catch (e) {
+      console.warn('[llm-vis] réécriture des questions ignorée:', (e as Error).message)
+    }
+
 
     const flatPrompts: Array<{ text: string; intent: string; benchmarkId: string }> = []
     for (const b of benchmarks) {
