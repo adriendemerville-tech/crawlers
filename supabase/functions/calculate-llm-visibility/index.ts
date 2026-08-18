@@ -600,9 +600,14 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       let lastError: string | undefined
 
       const followUps = getFollowUpPrompts(site)
-      for (let i = 0; i < flatPrompts.length; i++) {
-        const prompt = flatPrompts[i].text
-        const { iteration_found, response_text, measured, error, model_used } = await queryWithFallback(
+      // Les neuf benchmarks sont indépendants. Les exécuter en série pouvait
+      // monopoliser jusqu'à 9 × 3 × 12 s pour une seule famille et faire couper
+      // toute la fonction avant l'écriture du cache final. La conversation reste
+      // séquentielle à l'intérieur de chaque question, mais les questions sont
+      // lancées ensemble : même nombre d'appels et de tokens, durée bornée par la
+      // question la plus lente plutôt que par leur somme.
+      const promptResults = await Promise.all(flatPrompts.map(async ({ text: prompt }, i) => {
+        const result = await queryWithFallback(
           openrouterKey,
           llm.models,
           prompt,
@@ -611,8 +616,12 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
           followUps,
         )
 
-        trackPaidApiCall('calculate-llm-visibility', 'openrouter', model_used, site.domain)
+        trackPaidApiCall('calculate-llm-visibility', 'openrouter', result.model_used, site.domain)
+        return { ...result, prompt, index: i }
+      }))
 
+      const executionRows: Array<Record<string, unknown>> = []
+      for (const { iteration_found, response_text, measured, error, prompt, index } of promptResults) {
         // P0-1 : un prompt non mesuré (panne modèle) est exclu du score et
         // n'est PAS enregistré comme « marque non trouvée ».
         if (!measured) {
@@ -622,11 +631,9 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
           continue
         }
 
-        alignedScores[i] = scorePromptResult(iteration_found, response_text, patterns)
-        responseTexts[i] = response_text.slice(0, 500)
-
-        // Store raw execution
-        await supabase.from('llm_test_executions').insert({
+        alignedScores[index] = scorePromptResult(iteration_found, response_text, patterns)
+        responseTexts[index] = response_text.slice(0, 500)
+        executionRows.push({
           tracked_site_id,
           user_id,
           llm_name: llm.name,
@@ -636,6 +643,9 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
           iteration_found,
           source_function: 'calculate-llm-visibility',
         })
+      }
+      if (executionRows.length > 0) {
+        await supabase.from('llm_test_executions').insert(executionRows)
       }
 
       const promptScores = alignedScores.filter((s): s is PromptScore => s !== null)
