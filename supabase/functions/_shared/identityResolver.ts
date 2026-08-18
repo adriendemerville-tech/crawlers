@@ -286,13 +286,18 @@ async function inferFromSite(url: string, domain: string): Promise<InferenceResu
     }
   }
   // Si la home est inaccessible, on tente l'URL soumise avant d'abandonner.
+  let fallbackHtml: string | null = null;
   if (!pages.length) {
-    const html = await fetchPage(url);
-    if (html) pages.push({ url, text: stripHtml(html).slice(0, PAGE_CHARS) });
+    fallbackHtml = await fetchPage(url);
+    if (fallbackHtml) pages.push({ url, text: stripHtml(fallbackHtml).slice(0, PAGE_CHARS) });
   }
   if (!pages.length) return null;
 
-  const userPrompt = `Domaine : ${domain}\n\n${pages
+  // Données structurées déclarées par le site (JSON-LD, microdata, manifeste, OG).
+  // Déterministe, 0 token, et prioritaire sur toute interprétation du LLM.
+  const structured = await extractStructuredIdentity(homeHtml || fallbackHtml || '', origin, { fetchManifest: true });
+
+  const userPrompt = `Domaine : ${domain}${renderStructuredEvidenceBlock(structured)}\n\n${pages
     .map((p, i) => `--- Page ${i + 1} (${p.url}) ---\n${p.text}`)
     .join('\n\n')}`;
 
