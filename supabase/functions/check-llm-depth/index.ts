@@ -791,11 +791,20 @@ Deno.serve(handleRequest(async (req) => {
           await persistResults(sb, tracked_site_id || null, user_id || null, successResults)
         }
 
+        // Couverture : un modèle est une observation, une apparition de la marque
+        // est un hit. Les modèles en panne sont hors dénominateur.
+        const observations = successResults.length
+        const hits = successResults.filter(r => r.found).length
+
         const finalData = {
           brand,
           domain,
           avg_depth: allEmpty ? null : avgDepth,
           results: allEmpty ? [] : successResults,
+          coverage: allEmpty ? null : computeCoverage(hits, observations),
+          reliability: allEmpty ? null : assessReliability(observations, 1),
+          ...(identityDisclosure ? { identity: identityDisclosure } : {}),
+          identity_fingerprint: identityFingerprint,
           prompt_strategy: prompts.length + ' phases',
           measured_at: new Date().toISOString(),
           ...(allEmpty ? { error_code: 'credits_exhausted' } : {}),
