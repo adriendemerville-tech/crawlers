@@ -4,7 +4,7 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 import { generateNaturalPrompts, type SiteContext as NaturalSiteContext } from '../_shared/naturalPrompts.ts'
 import { buildLlmBenchmarks } from '../_shared/llmBenchmarks.ts'
-import { selectQuestionTopics } from '../_shared/questionTopics.ts'
+import { selectQuestionTopics, isToolLikeSite } from '../_shared/questionTopics.ts'
 import { resolveIdentityCard } from '../_shared/identityResolver.ts'
 import { buildAggregate, computeCoverage } from '../_shared/llmVisibilityScore.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
