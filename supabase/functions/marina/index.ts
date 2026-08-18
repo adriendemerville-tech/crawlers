@@ -2046,7 +2046,7 @@ function buildExecutiveSummaryHTML(
   const t = (fr: string, en: string, es: string) => (isEn ? en : isEs ? es : fr);
 
   const techRaw = Number(ctx.expertData?.totalScore || 0);
-  const techMax = Number(ctx.expertData?.maxScore || 200) || 200;
+  const techMax = Number(ctx.expertData?.maxScore || 220) || 220;
   const tech100 = techRaw > 0 ? Math.round((techRaw / techMax) * 100) : null;
   const geo100 = ctx.strategicData?.overallScore ? Math.round(Number(ctx.strategicData.overallScore)) : null;
   const pages = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pages?.length || null;
