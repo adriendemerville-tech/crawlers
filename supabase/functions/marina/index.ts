@@ -17,6 +17,13 @@ import {
   isSuppressedByShell,
   type BotRenderingReport,
 } from '../_shared/botRenderingShell.ts';
+import {
+  riskClaimsFinding,
+  authorityMismatchFinding,
+  trustSignalsBlockHTML,
+} from '../_shared/trustClaims.ts';
+import { deadUrlFindings } from '../_shared/deadUrls.ts';
+
 
 import {
   humanizeKey,
@@ -867,14 +874,26 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
 function summarizeCrawlIntegrity(report: any) {
   if (!report || typeof report !== 'object') return null;
   const botRendering = report.bot_rendering || null;
+  // Lot A — signaux de confiance machine et URLs mortes : transportés tels
+  // quels (déjà compacts et bornés côté crawl).
+  const trust = {
+    riskClaims: report.risk_claims || null,
+    authorityMismatch: report.authority_mismatch || null,
+    deadUrls: report.dead_urls || null,
+  };
   if (!report.near_duplicate) {
-    return botRendering ? { analyzedPages: 0, botRendering } : null;
+    return botRendering || trust.riskClaims || trust.authorityMismatch || trust.deadUrls
+      ? { analyzedPages: 0, botRendering, ...trust }
+      : null;
   }
+
   const nd = report.near_duplicate;
   const thin = report.thin_content || { pages: [], count: 0, avg_thin_score: 0 };
   return {
     botRendering,
+    ...trust,
     analyzedPages: report.analyzed_pages || 0,
+
 
     nearDuplicateGroups: nd.clusters?.length || 0,
     cannibalizationGroups: nd.cannibalization_clusters || 0,
@@ -4205,16 +4224,27 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             ? findings.filter((f) => !isSuppressedByShell(String(f.title || ''), String(f.description || '')))
             : findings;
 
+        // ─── Lot A : signaux de confiance machine + URLs mortes (déterministes) ───
+        const riskClaimsReport = crawlSnapshot?.contentIntegrity?.riskClaims || null;
+        const authorityMismatchReport = crawlSnapshot?.contentIntegrity?.authorityMismatch || null;
+        const deadUrlsReport = crawlSnapshot?.contentIntegrity?.deadUrls || null;
+        const trustHtml = trustSignalsBlockHTML(riskClaimsReport, authorityMismatchReport);
+        const claimFinding = riskClaimsFinding(riskClaimsReport);
+        const authorityFinding = authorityMismatchFinding(authorityMismatchReport);
+        const deadFindings = deadUrlFindings(deadUrlsReport) as unknown as RawFinding[];
+
         // ─── Top-3 priorities per section + consolidated plan ───
         const hostDupFinding = hostDuplication ? hostDuplicationFinding(hostDuplication, domain) : null;
         const seoFindings: RawFinding[] = dropShellSymptoms([
           ...(renderBlocked ? [botRenderingFinding(botRendering!, domain) as unknown as RawFinding] : []),
           ...(hostDupFinding ? [hostDupFinding as RawFinding] : []),
+          ...deadFindings,
           ...(expertData?.recommendations || []).map((r: any) => ({
             id: r.id, title: r.title || r.label || '', description: r.description || r.detail || '',
             priority: r.priority || r.severity, category: r.category, fixes: r.fixes,
           })),
         ]);
+
 
         const roadmap = strategicData?.executive_roadmap || strategicData?.strategic_roadmap || [];
         const geoFindings: RawFinding[] = dropShellSymptoms(roadmap
@@ -4241,12 +4271,17 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               description: it.description || '', priority: it.priority, category: 'keywords',
             })),
         ];
-        const eeatFindings: RawFinding[] = (expertData?.recommendations || [])
-          .filter((r: any) => /eeat|e-e-a-t|autorit|expertise|trust/i.test(`${r.category || ''} ${r.title || ''}`))
-          .map((r: any) => ({
-            title: r.title || '', description: r.description || '',
-             priority: r.priority, category: 'eeat', fixes: r.fixes,
-           }));
+        const eeatFindings: RawFinding[] = [
+          ...(claimFinding ? [claimFinding as unknown as RawFinding] : []),
+          ...(authorityFinding ? [authorityFinding as unknown as RawFinding] : []),
+          ...(expertData?.recommendations || [])
+            .filter((r: any) => /eeat|e-e-a-t|autorit|expertise|trust/i.test(`${r.category || ''} ${r.title || ''}`))
+            .map((r: any) => ({
+              title: r.title || '', description: r.description || '',
+              priority: r.priority, category: 'eeat', fixes: r.fixes,
+            })),
+        ];
+
         // Autorité / backlinks : le bloc était calculé et affiché mais ne
         // produisait aucune action. Il alimente désormais le plan consolidé
         // (donc la conclusion 0-30/30-60/60-90 et le Workbench).
