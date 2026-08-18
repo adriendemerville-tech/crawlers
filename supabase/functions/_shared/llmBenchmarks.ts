@@ -276,7 +276,7 @@ export function buildLlmBenchmarks(
       id,
       label: `Benchmark ${i + 1} — ${meta.label} : « ${need} »`,
       description: `${meta.description}${evidenceOf(sel, lang)}`,
-      prompts: finalize(promptsFor(need)),
+      prompts: finalize(promptsFor(need, i)),
     });
   });
 
