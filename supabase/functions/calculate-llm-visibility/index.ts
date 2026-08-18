@@ -481,7 +481,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     console.log(`[llm-visibility] question topics (${topicSelection.source}):`, topicSelection.selections?.map((s: any) => `${s.axis}:${s.topic}`) || topicSelection.topics)
     // 3 benchmarks = 3 zones de marché (couverte / mieux classée / non captée).
     // Dans chacun : découverte + comparaison + contexte (local si pertinent).
-    const benchmarks = buildLlmBenchmarks(
+    let benchmarks = buildLlmBenchmarks(
       {
         market_sector: enrichedSite.market_sector,
         products_services: enrichedSite.products_services,
