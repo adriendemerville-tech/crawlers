@@ -6,6 +6,8 @@ import type { PageAnalysis, CustomSelector } from './types.ts';
 import { analyzeHtml, computePageScore } from './htmlAnalyzer.ts';
 import { trackPaidApiCall } from '../tokenTracker.ts';
 import { withBrowserlessSlot } from '../browserlessSemaphore.ts';
+import { detectShellHtml, renderRevealedContent, SHELL_ISSUE_MARKER } from '../botRenderingShell.ts';
+
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 const SPIDER_API = 'https://api.spider.cloud';
@@ -82,6 +84,12 @@ export async function scrapePage(
     let statusCode = 200;
     let responseTime: number | null = null;
     let redirectUrl: string | null = null;
+    // Coquille JS détectée sur le HTML servi (avant escalade) : sert à
+    // distinguer "site pauvre" de "site non rendu côté serveur".
+    let shellOnServedHtml: { words: number; reasons: string[] } | null = null;
+    let servedShellHtml = '';
+    let servedShellStatus = 200;
+    let renderRevealed = false;
 
     try {
       const renderStart = Date.now();
@@ -92,27 +100,51 @@ export async function scrapePage(
       });
 
       if (renderResult.html.length > 500) {
-        html = renderResult.html;
-        responseTime = Date.now() - renderStart;
-        if (typeof (renderResult as any).statusCode === 'number') {
-          statusCode = (renderResult as any).statusCode;
+        const shell = detectShellHtml(renderResult.html);
+        // Le seuil d'octets seul acceptait les coquilles SPA (15 Ko de HTML,
+        // 70 mots visibles). On n'accepte le HTML que s'il porte du contenu.
+        if (shell.isShell && !renderResult.usedRendering) {
+          shellOnServedHtml = { words: shell.visibleWords, reasons: shell.reasons };
+          servedShellHtml = renderResult.html;
+          if (typeof (renderResult as any).statusCode === 'number') servedShellStatus = (renderResult as any).statusCode;
+          console.log(`[Worker] ⚠️ Coquille JS détectée sur ${pageUrl} (${shell.visibleWords} mots visibles) — escalade rendu`);
+
+        } else {
+          html = renderResult.html;
+          responseTime = Date.now() - renderStart;
+          if (typeof (renderResult as any).statusCode === 'number') {
+            statusCode = (renderResult as any).statusCode;
+          }
+          console.log(
+            `[Worker] ${renderResult.usedRendering ? 'rendered' : 'fetched'} ${pageUrl} (${renderResult.html.length} chars${renderResult.framework ? `, ${renderResult.framework}` : ''}) ${responseTime}ms`
+          );
+          if (budget) budget.freePages += 1;
         }
-        console.log(
-          `[Worker] ${renderResult.usedRendering ? 'rendered' : 'fetched'} ${pageUrl} (${renderResult.html.length} chars${renderResult.framework ? `, ${renderResult.framework}` : ''}) ${responseTime}ms`
-        );
-        if (budget) budget.freePages += 1;
       }
     } catch (renderErr) {
       console.warn(`[Worker] fetchAndRenderPage failed for ${pageUrl}:`, renderErr);
     }
 
+    // ── Escalade rendu JS pour les coquilles, via Browserless si disponible ──
+    if (!html && shellOnServedHtml && renderingKey) {
+      const rendered = await renderWithBrowserless(pageUrl, renderingKey);
+      if (rendered.html && rendered.html.length > 500) {
+        const after = detectShellHtml(rendered.html);
+        html = rendered.html;
+        responseTime = rendered.responseTime;
+        renderRevealed = renderRevealedContent(shellOnServedHtml.words, after.visibleWords);
+      }
+    }
+
     // ── Spider.cloud PRIMARY → Firecrawl FALLBACK (1 seule tentative payante) ──
+    const needsPaidFetch = !html || html.length < 500;
     const budgetExhausted = !!budget && budget.paidCalls >= budget.max;
-    if ((!html || html.length < 500) && budgetExhausted) {
+    if (needsPaidFetch && budgetExhausted) {
       budget!.skipped += 1;
       console.warn(`[Worker] Budget payant épuisé (${budget!.paidCalls}/${budget!.max}), ${pageUrl} ignorée`);
     }
-    if ((!html || html.length < 500) && !budgetExhausted) {
+    if (needsPaidFetch && !budgetExhausted) {
+
       const spiderKey = Deno.env.get('SPIDER_API_KEY');
       let spiderAttempted = false;
 
@@ -176,13 +208,31 @@ export async function scrapePage(
       }
     }
 
+    // Une coquille non escaladable reste analysée (sinon la page disparaîtrait
+    // du crawl), mais elle est marquée comme non rendue côté serveur.
+    if (!html && shellOnServedHtml && servedShellHtml) {
+      html = servedShellHtml;
+      statusCode = servedShellStatus;
+    } else if (html && shellOnServedHtml && !renderRevealed) {
+      // Escalade réussie via une source payante : le contenu était bien masqué
+      // derrière le JS si le texte visible a nettement grossi.
+      renderRevealed = renderRevealedContent(shellOnServedHtml.words, detectShellHtml(html).visibleWords);
+    }
+
     if (!html) return null;
 
     const analysis = analyzeHtml(html, pageUrl, domain, responseTime, customSelectors, depth);
     analysis.http_status = statusCode;
     if (redirectUrl) analysis.redirect_url = redirectUrl;
+    if (shellOnServedHtml) {
+      const reason = shellOnServedHtml.reasons[0] || `${shellOnServedHtml.words} mots visibles dans le HTML servi`;
+      analysis.issues = [...(analysis.issues || []), `${SHELL_ISSUE_MARKER}:${reason}`];
+      (analysis as any).render_blocked = true;
+      (analysis as any).render_revealed_content = renderRevealed;
+    }
     const seo_score = computePageScore(analysis);
     return { ...analysis, seo_score } as PageAnalysis;
+
   } catch (e) {
     console.warn(`[Worker] Scrape error ${pageUrl}:`, e);
     return null;

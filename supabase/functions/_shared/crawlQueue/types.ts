@@ -37,7 +37,12 @@ export interface PageAnalysis {
   crawl_depth: number;
   html_size_bytes: number;
   body_text_truncated: string | null;
+  /** HTML servi sans contenu (coquille JS) : le contenu n'existe qu'après exécution du JS. */
+  render_blocked?: boolean;
+  /** Le rendu JS a fait apparaître le contenu (donc site non pauvre, mais non rendu serveur). */
+  render_revealed_content?: boolean;
 }
+
 
 export interface AnchorText {
   href: string;

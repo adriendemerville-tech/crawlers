@@ -13,6 +13,8 @@ import {
   type SiteIdentity,
 } from '../contentIntegrity/index.ts';
 import { writeIntegrityFindingsToWorkbench } from '../contentIntegrity/workbench.ts';
+import { aggregateBotRendering } from '../botRenderingShell.ts';
+
 
 
 
@@ -130,6 +132,16 @@ export async function finalizeJob(
     }
   }
 
+  // ── Rendu robots : le HTML servi porte-t-il le contenu ? ──
+  // Sans ce verdict, une SPA produisait une dizaine de faux constats de contenu.
+  const botRendering = aggregateBotRendering(pages as any[]);
+  if (botRendering.blocked) {
+    console.log(`[Worker] 🚫 Contenu non rendu côté serveur : ${botRendering.shell_pages}/${botRendering.analyzed_pages} pages en coquille JS`);
+  }
+  const integrityPayload: any = integrityReport
+    ? { ...(integrityReport as any), bot_rendering: botRendering }
+    : { bot_rendering: botRendering };
+
   // ── AI Summary ──
   let aiSummary = '';
   let aiRecommendations: any[] = [];
@@ -145,9 +157,11 @@ export async function finalizeJob(
     ai_summary: aiSummary,
     ai_recommendations: aiRecommendations,
     intent_distribution: intentDistribution,
-    content_integrity: integrityReport,
+    content_integrity: integrityPayload,
     completed_at: new Date().toISOString(),
   }).eq('id', job.crawl_id);
+
+
 
 
   // Save raw crawl data (fire-and-forget)

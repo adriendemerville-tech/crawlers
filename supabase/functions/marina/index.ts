@@ -12,6 +12,13 @@ import {
 } from '../_shared/topPriorities.ts';
 import { severityFromSignal } from '../_shared/actionPlanDiscrimination.ts';
 import {
+  botRenderingFinding,
+  botRenderingBlockHTML,
+  isSuppressedByShell,
+  type BotRenderingReport,
+} from '../_shared/botRenderingShell.ts';
+
+import {
   humanizeKey,
   humanizeValue,
   severityBadgeHTML,
@@ -858,11 +865,17 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
 
 /** Résumé compact (déterministe, 0 token) de l'intégrité du contenu pour les prompts Marina. */
 function summarizeCrawlIntegrity(report: any) {
-  if (!report || typeof report !== 'object' || !report.near_duplicate) return null;
+  if (!report || typeof report !== 'object') return null;
+  const botRendering = report.bot_rendering || null;
+  if (!report.near_duplicate) {
+    return botRendering ? { analyzedPages: 0, botRendering } : null;
+  }
   const nd = report.near_duplicate;
   const thin = report.thin_content || { pages: [], count: 0, avg_thin_score: 0 };
   return {
+    botRendering,
     analyzedPages: report.analyzed_pages || 0,
+
     nearDuplicateGroups: nd.clusters?.length || 0,
     cannibalizationGroups: nd.cannibalization_clusters || 0,
     watchGroups: nd.watch_clusters || 0,
@@ -4181,17 +4194,30 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       try {
         console.log(`[Marina] Phase 3 Step 4: Generating section HTMLs...`);
         
+        // ─── Verdict racine : contenu rendu pour les robots ? ───
+        // Si le HTML servi est une coquille JS, les constats de contenu ne
+        // mesurent que l'absence de rendu : un seul constat racine les remplace.
+        const botRendering: BotRenderingReport | null = crawlSnapshot?.contentIntegrity?.botRendering || null;
+        const renderBlocked = Boolean(botRendering?.blocked);
+        const botRenderingHtml = renderBlocked ? botRenderingBlockHTML(botRendering!, domain) : '';
+        const dropShellSymptoms = (findings: RawFinding[]): RawFinding[] =>
+          renderBlocked
+            ? findings.filter((f) => !isSuppressedByShell(String(f.title || ''), String(f.description || '')))
+            : findings;
+
         // ─── Top-3 priorities per section + consolidated plan ───
         const hostDupFinding = hostDuplication ? hostDuplicationFinding(hostDuplication, domain) : null;
-        const seoFindings: RawFinding[] = [
+        const seoFindings: RawFinding[] = dropShellSymptoms([
+          ...(renderBlocked ? [botRenderingFinding(botRendering!, domain) as unknown as RawFinding] : []),
           ...(hostDupFinding ? [hostDupFinding as RawFinding] : []),
           ...(expertData?.recommendations || []).map((r: any) => ({
             id: r.id, title: r.title || r.label || '', description: r.description || r.detail || '',
             priority: r.priority || r.severity, category: r.category, fixes: r.fixes,
           })),
-        ];
+        ]);
+
         const roadmap = strategicData?.executive_roadmap || strategicData?.strategic_roadmap || [];
-        const geoFindings: RawFinding[] = roadmap
+        const geoFindings: RawFinding[] = dropShellSymptoms(roadmap
           .filter((it: any) => !/keyword|mots?-cl|content gap/i.test(`${it.category || ''} ${it.title || ''}`))
           .map((it: any) => ({
             title: it.prescriptive_action || it.title || it.action_concrete || '',
@@ -4200,7 +4226,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             description: it.description || it.strategic_rationale || '',
 
             priority: it.priority, category: it.category,
-          }));
+          })));
+
         const kwFindings: RawFinding[] = [
           ...(strategicData?.keyword_positioning?.content_gaps || []).map((g: any) => ({
             title: `Content gap : ${g.keyword || g.term || g}`,
@@ -4252,11 +4279,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             }
           }
         }
-        const cocoonFindings: RawFinding[] = (cocoonResult?._stratege_recommendations || []).map((r: any) => ({
+        const cocoonFindings: RawFinding[] = dropShellSymptoms((cocoonResult?._stratege_recommendations || []).map((r: any) => ({
           title: r.title || '', description: r.description || '',
           priority: /1/.test(r.priority || '') ? 'critical' : /2/.test(r.priority || '') ? 'important' : 'suggestion',
           category: 'cocoon',
-        }));
+        })));
+
 
         const topSeo    = extractTopPriorities('seo', seoFindings);
         const topGeo    = extractTopPriorities('geo', geoFindings);
@@ -4352,7 +4380,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
         const crawlHTML = generateCrawlSectionHTML(
           expertData, detectedLang, domain, url, crawlSnapshot,
-          sectionTop(renderTopPrioritiesHTML(topSeo)),
+          botRenderingHtml + sectionTop(renderTopPrioritiesHTML(topSeo)),
           hostDuplication ? buildHostDuplicationHTML(hostDuplication, domain) : '',
         );
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
@@ -4364,7 +4392,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           hasPlan,
         );
 
-        const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, sectionTop(renderTopPrioritiesHTML(topCocoon)));
+        const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, botRenderingHtml + sectionTop(renderTopPrioritiesHTML(topCocoon)));
+
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
 
         const ownerPerformanceHTML = renderOwnerPerformanceHTML(ownerPerformance, '3b');
