@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ListTodo } from 'lucide-react';
 import { Recommendation } from '@/types/expertAudit';
@@ -6,7 +6,6 @@ import { ActionPlanCard } from './ActionPlanCard';
 import { ActionPlanProgress } from './ActionPlanProgress';
 import { ActionPlanSaveButton, ActionPlanTask } from './ActionPlanSaveButton';
 import { useAuth } from '@/contexts/AuthContext';
-import { autoSaveActionPlan } from '@/utils/autoSaveActionPlan';
 
 interface ActionPlanProps {
   recommendations: Recommendation[];
