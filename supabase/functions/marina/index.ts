@@ -966,7 +966,7 @@ function hydrateCocoonReportData(cocoonResult: any, semanticNodes: any[]) {
 
 // ─── Dedicated renderer for Social Signals with platform names & colors ───
 function buildSocialSignalsSection(data: any): string {
-  if (!data) return '';
+  // Pas de court-circuit : même sans signal social, la recommandation porte-parole doit sortir.
 
   const PLATFORM_COLORS: Record<string, { color: string; bg: string; icon: string }> = {
     linkedin:  { color: '#0a66c2', bg: '#0a66c212', icon: '💼' },
