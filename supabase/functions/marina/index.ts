@@ -2283,8 +2283,7 @@ function buildReportIntroHTML(
     </ul>
     ${takeaways ? `
     <h3 style="font-size:14px;font-weight:600;margin:0 0 8px 0;">${t('À retenir en priorité', 'Key takeaways', 'Puntos clave')}</h3>
-    <ol style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0 0 ${ctx.roi ? '10px' : '0'} 0;">${takeaways}</ol>
-    ${ctx.roi ? `<p style="font-size:13px;color:#374151;line-height:1.7;margin:0;">${ctx.roi.sentence}</p>` : ''}` : ''}
+    <ol style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0;">${takeaways}</ol>` : ''}
 
   </div>`;
 }
