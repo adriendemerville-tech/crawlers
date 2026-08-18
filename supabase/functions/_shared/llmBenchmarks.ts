@@ -199,6 +199,10 @@ export function buildLlmBenchmarks(
     return { need, audience: target };
   };
 
+  /** Élision française : « besoin de audit » → « besoin d'audit ». */
+  const deOf = (need: string): string =>
+    /^[aeiouyàâéèêëîïôöûüh]/i.test(need) ? `d'${need}` : `de ${need}`;
+
   /**
    * Les trois formes de question, sur un besoin donné.
    * `variant` (0-2) fait varier la formulation d'un benchmark à l'autre : sans
