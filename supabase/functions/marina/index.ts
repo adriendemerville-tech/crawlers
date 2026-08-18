@@ -4423,7 +4423,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           strategicData, detectedLang, domain, llmVisibilityData,
           sectionTop(renderTopPrioritiesHTML(topGeo)),
           sectionTop(renderTopPrioritiesHTML(topKw)),
-          sectionTop(renderTopPrioritiesHTML(topEeat)),
+          trustHtml + sectionTop(renderTopPrioritiesHTML(topEeat)),
           hasPlan,
         );
 
