@@ -446,6 +446,43 @@ export function buildAccountability(
   };
 }
 
+/**
+ * Un même levier (donc une même empreinte de famille) produit un gain de trafic
+ * unique : le recopier à l'identique sur chaque action de la famille laisse
+ * croire à un calcul par action et gonfle artificiellement le total. On répartit
+ * donc le gain de la famille entre ses actions, et on le dit dans la base de
+ * calcul. Déterministe, aucun appel LLM.
+ */
+export function distributeTrafficGains<
+  T extends { fingerprint?: string; accountability?: Accountability | null },
+>(items: T[] | null | undefined): T[] {
+  if (!Array.isArray(items) || items.length === 0) return items || [];
+  const groups = new Map<string, T[]>();
+  for (const it of items) {
+    const gain = it.accountability?.traffic_gain;
+    if (gain == null || gain <= 0) continue;
+    const key = `${it.fingerprint || 'divers'}::${gain}`;
+    const arr = groups.get(key);
+    if (arr) arr.push(it); else groups.set(key, [it]);
+  }
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    const total = Number(group[0].accountability!.traffic_gain);
+    const n = group.length;
+    const base = Math.floor(total / n);
+    let remainder = total - base * n;
+    group.forEach((it, i) => {
+      const share = base + (remainder-- > 0 ? 1 : 0);
+      it.accountability = {
+        ...it.accountability!,
+        traffic_gain: share > 0 ? share : null,
+        traffic_basis: `${it.accountability!.traffic_basis} — gain du levier (+${total} visites/mois) réparti entre les ${n} actions de la même famille, part de cette action n° ${i + 1}`,
+      };
+    });
+  }
+  return items;
+}
+
 /** Rendu court « owner · KPI · gain » pour les tableaux HTML. */
 export function formatAccountability(a: Accountability): string {
   const gain = a.traffic_gain !== null
