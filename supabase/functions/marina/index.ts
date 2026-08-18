@@ -82,8 +82,6 @@ import { buildStrategicVerdict, type VerdictSignals } from '../_shared/strategic
 import { narrateStrategicVerdict } from '../_shared/verdictNarration.ts';
 import { comparePotentialVsMeasured, buildAggregate, AXIS_WEIGHTS, axisWeight } from '../_shared/llmVisibilityScore.ts';
 
-/** Poids diagnostique affiché par axe de benchmark LLM (source : _shared/llmVisibilityScore.ts). */
-const AXIS_DISPLAY_WEIGHT: Record<string, number> = { ...AXIS_WEIGHTS };
 import {
   analyzeHostDuplication,
   probeHostRedirect,
@@ -91,6 +89,9 @@ import {
   buildHostDuplicationHTML,
   type HostDuplicationResult,
 } from '../_shared/hostDuplication.ts';
+
+/** Poids diagnostique affiché par axe de benchmark LLM (source : _shared/llmVisibilityScore.ts). */
+const AXIS_DISPLAY_WEIGHT: Record<string, number> = { ...AXIS_WEIGHTS };
 
 /**
  * Edge Function: Marina
