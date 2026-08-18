@@ -76,15 +76,24 @@ function tokensOf(t: string): Set<string> {
   );
 }
 
-function isRedundant(candidate: string, kept: string[]): boolean {
+/**
+ * `threshold` : part de mots pleins communs au-delà de laquelle deux besoins sont
+ * jugés redondants. La passe stricte (0.6) cherche trois zones réellement
+ * distinctes ; la passe de repli (0.9) n'écarte plus que les quasi-doublons, ce
+ * qui garantit trois benchmarks même sur un domaine mono-thématique (tous les
+ * besoins d'un rénovateur contiennent « rénovation » : à 0.6, un seul survivait
+ * et le rapport n'affichait qu'un benchmark au lieu de trois).
+ */
+function isRedundant(candidate: string, kept: string[], threshold = 0.6): boolean {
   const a = tokensOf(candidate);
   if (a.size === 0) return true;
   for (const k of kept) {
+    if (candidate === k) return true;
     const b = tokensOf(k);
     let common = 0;
     for (const w of a) if (b.has(w)) common++;
     const ratio = common / Math.min(a.size, b.size);
-    if (ratio >= 0.6) return true;
+    if (ratio >= threshold) return true;
   }
   return false;
 }
@@ -156,18 +165,18 @@ function pickCovered(cands: Candidate[]): Candidate | null {
 }
 
 /** Axe 2 : requête où le site est le mieux classé (volume en départage). */
-function pickRanked(cands: Candidate[], exclude: string[]): Candidate | null {
+function pickRanked(cands: Candidate[], exclude: string[], threshold?: number): Candidate | null {
   const pool = cands
-    .filter((c) => c.position !== null && !exclude.includes(c.topic) && !isRedundant(c.topic, exclude))
+    .filter((c) => c.position !== null && !exclude.includes(c.topic) && !isRedundant(c.topic, exclude, threshold))
     .sort((a, b) => (a.position! - b.position!) || (b.volume - a.volume));
   return pool[0] || null;
 }
 
 /** Axe 3 : requête la plus demandée que le site n'adresse pas (ou mal). */
-function pickDemand(cands: Candidate[], exclude: string[]): Candidate | null {
+function pickDemand(cands: Candidate[], exclude: string[], threshold?: number): Candidate | null {
   const notAddressed = cands.filter((c) => c.position === null || c.position > 30);
   const pool = (notAddressed.length ? notAddressed : cands)
-    .filter((c) => !exclude.includes(c.topic) && !isRedundant(c.topic, exclude))
+    .filter((c) => !exclude.includes(c.topic) && !isRedundant(c.topic, exclude, threshold))
     .sort((a, b) => b.volume - a.volume);
   return pool[0] || null;
 }
@@ -187,9 +196,9 @@ export async function selectQuestionTopics(
   const selections: TopicSelection[] = [];
   const kept: string[] = [];
 
-  const push = (c: Candidate | null, axis: TopicAxis) => {
+  const push = (c: Candidate | null, axis: TopicAxis, threshold?: number) => {
     if (!c || kept.length >= max) return;
-    if (kept.includes(c.topic) || isRedundant(c.topic, kept)) return;
+    if (kept.includes(c.topic) || isRedundant(c.topic, kept, threshold)) return;
     kept.push(c.topic);
     selections.push({
       topic: c.topic,
@@ -225,6 +234,19 @@ export async function selectQuestionTopics(
             push(c, 'demand');
           }
         }
+        // Passe de repli : sur un domaine mono-thématique, la règle de
+        // redondance stricte élimine tout et le rapport n'affiche qu'un seul
+        // benchmark. On ne rend jamais moins de `max` benchmarks quand des
+        // besoins non identiques existent : on relâche le seuil à 0.9.
+        if (kept.length < max) {
+          push(pickRanked(cands, kept, 0.9), 'ranked', 0.9);
+          push(pickDemand(cands, kept, 0.9), 'demand', 0.9);
+          const rest = cands.slice().sort((a, b) => b.volume - a.volume);
+          for (const c of rest) {
+            if (kept.length >= max) break;
+            push(c, 'demand', 0.9);
+          }
+        }
         if (kept.length > 0) {
           return { topics: [...kept], selections, source: 'keyword_universe' };
         }
@@ -242,7 +264,14 @@ export async function selectQuestionTopics(
   for (const p of parts) {
     push({ topic: p, volume: 0, position: null, intent: null }, 'identity');
   }
+  if (kept.length < max) {
+    for (const p of parts) {
+      if (kept.length >= max) break;
+      push({ topic: p, volume: 0, position: null, intent: null }, 'identity', 0.9);
+    }
+  }
   if (kept.length > 0) return { topics: [...kept], selections, source: 'identity' };
+
 
   const sector = normalizeTopic(String(identity.market_sector || ''));
   if (sector && isUsableTopic(sector, brandTerms)) {

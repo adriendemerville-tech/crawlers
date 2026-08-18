@@ -5,6 +5,7 @@ import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 import { generateNaturalPrompts, type SiteContext as NaturalSiteContext } from '../_shared/naturalPrompts.ts'
 import { buildLlmBenchmarks } from '../_shared/llmBenchmarks.ts'
 import { selectQuestionTopics } from '../_shared/questionTopics.ts'
+import { resolveIdentityCard } from '../_shared/identityResolver.ts'
 import { buildAggregate, computeCoverage } from '../_shared/llmVisibilityScore.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
@@ -400,7 +401,41 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     // ── Auto-enrich site identity card if context fields are empty ──
     const enrichedContext = await ensureSiteContext(site)
 
-    // Merge: caller-provided context > enriched context > site data (fallback chain)
+    // ── Garde d'identité : la ligne tracked_sites peut porter une identité
+    // inférée depuis le seul NOM DE DOMAINE (identity_source 'llm_auto' /
+    // 'llm_verified'). C'est la cause des mesures hors-sujet (un domaine
+    // contenant « dicta » testé comme service de transcription) : les questions
+    // portent alors sur un marché qui n'est pas celui du site, et la carte
+    // erronée est réutilisée d'un audit à l'autre. Quand la source n'est pas
+    // ancrée sur du contenu réellement lu, on réinfère AVANT de construire les
+    // questions. `resolveIdentityCard` réutilise sans coût une carte manuelle ou
+    // déjà ancrée : un seul appel de modèle, seulement quand c'est nécessaire.
+    const GROUNDED_IDENTITY = ['user_manual', 'user_voice', 'marina', 'crawl', 'gmb']
+    let groundedContext: Record<string, string> = {}
+    if (!GROUNDED_IDENTITY.includes(String(site.identity_source || ''))) {
+      try {
+        const card = await resolveIdentityCard(supabase, {
+          domain: String(site.domain || '').replace(/^www\./, ''),
+          url: site.url || `https://${site.domain}`,
+          userId: site.user_id,
+          trackedSiteId: site.id,
+        })
+        if (card.source !== 'unresolved' && (card.marketSector || card.productsServices)) {
+          groundedContext = {
+            ...(card.marketSector ? { market_sector: card.marketSector } : {}),
+            ...(card.productsServices ? { products_services: card.productsServices } : {}),
+            ...(card.targetAudience ? { target_audience: card.targetAudience } : {}),
+            ...(card.commercialArea ? { commercial_area: card.commercialArea } : {}),
+            ...(card.entityType ? { entity_type: card.entityType } : {}),
+          }
+          console.log(`[llm-vis] Identité réancrée (source ${card.source}, ${card.pagesUsed.length} page(s) lue(s)) : ${card.marketSector || card.productsServices}`)
+        }
+      } catch (e) {
+        console.warn('[llm-vis] Réancrage identité impossible (non bloquant) :', String((e as Error)?.message || e))
+      }
+    }
+
+    // Merge: identité réancrée > caller-provided context > enriched context > site data
     const enrichedSite = {
       ...site,
       ...enrichedContext,
@@ -409,10 +444,12 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       ...(externalContext?.target_audience ? { target_audience: externalContext.target_audience } : {}),
       ...(externalContext?.commercial_area ? { commercial_area: externalContext.commercial_area } : {}),
       ...(externalContext?.entity_type ? { entity_type: externalContext.entity_type } : {}),
+      ...groundedContext,
     }
     if (externalContext?.market_sector) {
       console.log(`[llm-vis] Using caller-provided context override (sector: ${externalContext.market_sector})`)
     }
+
 
     const patterns = buildBrandPatterns(enrichedSite)
     // Étape préalable déterministe : quels besoins concrets faut-il tester ?
