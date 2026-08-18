@@ -71,6 +71,7 @@ import {
 import { writeIntegrityFindingsToWorkbench } from '../_shared/contentIntegrity/workbench.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
+import { provenanceLegendHTML, metricBadge, provenanceBadge } from '../_shared/provenance.ts';
 import { resolveScanMode, scanModeSentence, type ScanModeResolution } from '../_shared/marinaScanMode.ts';
 import { applyRoiWeighting, summarizeRoi, type RoiSummary } from '../_shared/roiWeighting.ts';
 import { buildPageVerdictHTML, buildCocoonPageFocusHTML, pageKey } from '../_shared/marinaPageVerdict.ts';
@@ -726,10 +727,10 @@ function buildKeywordPositioningSection(kp: any, rankingOverview?: any): string 
   const roNum = (v: any) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
   const roStats = ro
     ? [
-        roNum(ro.total_ranked_keywords) != null ? ['Mots-clés positionnés', roNum(ro.total_ranked_keywords)!.toLocaleString('fr-FR')] : null,
-        roNum(ro.average_position_global) != null ? ['Position moyenne', String(Math.round(roNum(ro.average_position_global)!))] : null,
-        roNum(ro.average_position_top10) != null ? ['Position moyenne du top 10', String(Math.round(roNum(ro.average_position_top10)!))] : null,
-        roNum(ro.etv) != null ? ['Trafic organique estimé', `${Math.round(roNum(ro.etv)!).toLocaleString('fr-FR')} visites/mois`] : null,
+        roNum(ro.total_ranked_keywords) != null ? ['Mots-clés positionnés', roNum(ro.total_ranked_keywords)!.toLocaleString('fr-FR'), 'serp_position'] : null,
+        roNum(ro.average_position_global) != null ? ['Position moyenne', String(Math.round(roNum(ro.average_position_global)!)), 'serp_position'] : null,
+        roNum(ro.average_position_top10) != null ? ['Position moyenne du top 10', String(Math.round(roNum(ro.average_position_top10)!)), 'serp_position'] : null,
+        roNum(ro.etv) != null ? ['Trafic organique estimé', `${Math.round(roNum(ro.etv)!).toLocaleString('fr-FR')} visites/mois`, 'traffic_gain'] : null,
       ].filter(Boolean) as string[][]
     : [];
   const roTop: any[] = Array.isArray(ro?.top_keywords) ? ro!.top_keywords : [];
@@ -738,7 +739,7 @@ function buildKeywordPositioningSection(kp: any, rankingOverview?: any): string 
         'Vue d’ensemble des positions',
         'Volumétrie mesurée sur la SERP : combien de mots-clés le domaine capte déjà et à quelle profondeur.',
         `${roStats.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:10px;">${roStats
-            .map(([l, v]) => `<div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;"><div style="font-size:16px;font-weight:700;color:#111827;">${v}</div><div style="font-size:11px;color:#6b7280;">${l}</div></div>`)
+            .map(([l, v, m]) => `<div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;"><div style="font-size:16px;font-weight:700;color:#111827;">${v}</div><div style="font-size:11px;color:#6b7280;">${l}</div>${m ? `<div style="margin-top:4px;">${metricBadge(m, 'fr')}</div>` : ''}</div>`)
             .join('')}</div>` : ''}
          ${roTop.length ? roTop.slice(0, 10).map((k: any) => row(k)).join('') : ''}`,
       )
@@ -1411,7 +1412,7 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
   const nbQuestions = askedPrompts.length;
   const interrogations = nbQuestions * effectiveScores.length;
   const promptsHtml = `<div style="padding:12px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;margin-bottom:16px;text-align:left;">
-    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Méthode de mesure</div>
+    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Méthode de mesure ${provenanceBadge('test', 'fr')}</div>
     ${hasBenchmarks
       ? `<p style="font-size:11px;color:#6b7280;margin:0 0 8px;line-height:1.5;">La mesure est découpée en <strong>${benchmarks.length} benchmarks indépendants</strong>, chacun portant sur une <strong>zone de marché différente</strong>, déterminée à partir des positions réelles dans les résultats Google : le cœur de marché déjà couvert, le besoin sur lequel le site est le mieux classé, et le besoin fortement recherché qu'il n'adresse pas. À l'intérieur de chaque benchmark, trois questions de forme différente sont posées : découverte du besoin, comparaison d'options, et contexte d'usage (géolocalisé lorsque l'activité a une zone de chalandise). Chaque benchmark est scoré séparément et affiché ci-dessous avec ses questions et ses modèles interrogés : une marque peut être citée sur son cœur de marché et invisible ailleurs, ce qu'un score unique masquait.</p>`
       : (nbQuestions > 0
@@ -2144,10 +2145,11 @@ function buildExecutiveSummaryHTML(
           `${domain} presenta un fallo crítico (${global}/100).`,
         );
 
-  const cell = (label: string, value: string) => `
+  const cell = (label: string, value: string, metric?: string) => `
     <div style="flex:1 1 140px;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;background:#ffffff;">
       <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">${label}</div>
       <div style="font-size:20px;font-weight:700;color:#111827;">${value}</div>
+      ${metric ? `<div style="margin-top:5px;">${metricBadge(metric, lang)}</div>` : ''}
     </div>`;
 
   return `
@@ -2155,11 +2157,11 @@ function buildExecutiveSummaryHTML(
     <h2 style="font-size:20px;margin:0 0 4px 0;">${t('Synthèse exécutive', 'Executive summary', 'Síntesis ejecutiva')}</h2>
     <p style="font-size:14px;line-height:1.7;color:#374151;margin:0 0 14px 0;"><strong>${verdict}</strong></p>
     <div style="display:flex;flex-wrap:wrap;gap:10px;">
-      ${cell(t('Score global', 'Global score', 'Puntuación global'), global === null ? 'n/d' : `${global}/100`)}
-      ${cell(t('SEO technique', 'Technical SEO', 'SEO técnico'), tech100 === null ? 'n/d' : `${tech100}/100`)}
-      ${cell(t('GEO / citabilité IA', 'GEO / AI citability', 'GEO / citabilidad IA'), geo100 === null ? 'n/d' : `${geo100}/100`)}
-      ${cell(t('Pages explorées', 'Pages crawled', 'Páginas rastreadas'), pages ? String(pages) : 'n/d')}
-      ${ctx.roi ? cell(t('Gains rapides', 'Quick wins', 'Ganancias rápidas'), `${ctx.roi.quickWins}${ctx.roi.quickWinDays ? ` · ~${ctx.roi.quickWinDays} j` : ''}`) : ''}
+      ${cell(t('Score global', 'Global score', 'Puntuación global'), global === null ? 'n/d' : `${global}/100`, 'global_score')}
+      ${cell(t('SEO technique', 'Technical SEO', 'SEO técnico'), tech100 === null ? 'n/d' : `${tech100}/100`, 'seo_score')}
+      ${cell(t('GEO / citabilité IA', 'GEO / AI citability', 'GEO / citabilidad IA'), geo100 === null ? 'n/d' : `${geo100}/100`, 'geo_score')}
+      ${cell(t('Pages explorées', 'Pages crawled', 'Páginas rastreadas'), pages ? String(pages) : 'n/d', 'pages_crawled')}
+      ${ctx.roi ? cell(t('Gains rapides', 'Quick wins', 'Ganancias rápidas'), `${ctx.roi.quickWins}${ctx.roi.quickWinDays ? ` · ~${ctx.roi.quickWinDays} j` : ''}`, 'quick_win_days') : ''}
     </div>
     ${ctx.roi ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;">${ctx.roi.sentence}${ctx.roi.topQuickWins.length ? ` ${t('À traiter en premier', 'Start with', 'Empezar por')} : ${ctx.roi.topQuickWins.join(' ; ')}.` : ''}</p>` : ''}
 
@@ -2299,9 +2301,9 @@ function buildReportIntroHTML(
         `Existen tres modos de escaneo con conmutación automática: Profundo (≤ 120 URL), Estándar (≤ 1 000 URL) y Muestra (> 1 000 URL, 60 páginas).`,
       ))}
       ${li(t(
-        `Les scores sont mesurés, pas estimés : ils portent sur l'état du site au moment du crawl et ne prédisent pas un volume de trafic.`,
-        `Scores are measured, not estimated: they describe the site at crawl time and do not predict traffic volume.`,
-        `Las puntuaciones son medidas, no estimadas.`,
+        `Les scores ne sont ni de simples mesures ni de simples estimations : ils sont <strong>déduits</strong> par des règles fixes à partir de faits mesurés au moment du crawl. Ils décrivent l'état du site, ils ne prédisent aucun volume de trafic. Le statut exact de chaque chiffre est indiqué par une pastille (voir ci-dessous).`,
+        `Scores are neither raw measurements nor mere estimates: they are <strong>inferred</strong> by fixed rules from facts measured at crawl time. They describe the state of the site and predict no traffic volume. Each figure's exact status is shown by a badge (see below).`,
+        `Las puntuaciones son <strong>deducidas</strong> mediante reglas fijas a partir de hechos medidos: describen el estado del sitio, no predicen tráfico.`,
       ))}
       ${li(t(
         `Les données de marché et de backlinks proviennent de bases tierces mises à jour périodiquement : un écart de quelques jours avec la réalité est normal.`,
@@ -2324,6 +2326,7 @@ function buildReportIntroHTML(
         `El esfuerzo mostrado es un orden de magnitud, no un presupuesto.`,
       ))}
     </ul>
+    ${provenanceLegendHTML(lang)}
     <h3 style="font-size:14px;font-weight:600;margin:0 0 8px 0;">${t('Sources et outils mobilisés', 'Sources and tools used', 'Fuentes y herramientas')}</h3>
     <ul style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0 0 ${takeaways ? '14px' : '0'} 0;">
       ${tools.map(li).join('')}
