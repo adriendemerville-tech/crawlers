@@ -714,6 +714,8 @@ export async function reviseIdentityAfterCrawl(
     let sector = card.sector;
     const notes = [...card.notes];
     let confidence = card.confidence;
+    /** Le corpus crawlé a renversé le secteur : produits/cible doivent suivre. */
+    let forceRewrite = false;
 
     if (sector === 'unknown' && crawlSector !== 'unknown') {
       sector = crawlSector;
