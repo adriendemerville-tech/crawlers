@@ -575,7 +575,7 @@ export function renderConsolidatedPlanHTML(
       ${merged > 0 ? `${merged} constat${merged > 1 ? 's' : ''} redondant${merged > 1 ? 's' : ''} ${merged > 1 ? 'ont' : 'a'} été fusionné${merged > 1 ? 's' : ''} dans l'action correspondante.` : ''}
     </p>
     <p style="font-size:12.5px;color:#4b5563;margin-bottom:12px;">
-      ${roiSummary.sentence} Les blocages critiques restent en tête quel que soit leur rendement ;
+      Les blocages critiques restent en tête quel que soit leur rendement ;
       à gravité égale, l'ordre suit le rapport impact / effort. Chaque action porte un pilote,
       un indicateur de suivi et, quand une donnée mesurée l'autorise, une estimation de gain.
     </p>
