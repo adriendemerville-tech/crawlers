@@ -1518,7 +1518,8 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
         <p style="font-size:12px;color:#6b7280;margin:10px 0 0;">
           Somme des cinq axes : <strong>${sum}/${sumMax}</strong>${total !== sum ? ` — le score global d'audit technique affiché ailleurs (${total}/${declaredMax}) intègre en plus les contrôles hors page d'accueil (sitemaps, robots.txt, llms.txt).` : `, soit le score global d'audit technique (${total}/${declaredMax}).`}
           Le score sur 100 de la synthèse exécutive est cette même valeur ramenée en pourcentage : ${Math.round((total / (declaredMax || 1)) * 100)}/100.
-        </p>
+        </p>`;
+        })()}
       </div>
     </div>`;
 
