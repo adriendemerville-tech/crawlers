@@ -899,6 +899,7 @@ function summarizeCrawlIntegrity(report: any) {
   const thin = report.thin_content || { pages: [], count: 0, avg_thin_score: 0 };
   return {
     botRendering,
+    absenceVerification,
     ...trust,
     analyzedPages: report.analyzed_pages || 0,
 
