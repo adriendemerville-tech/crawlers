@@ -29,6 +29,10 @@ import {
   absenceReliabilityBlockHTML,
   type AbsenceVerificationReport,
 } from '../_shared/absenceVerification.ts';
+import { buildGeoSubSignals, geoSubSignalsBlockHTML } from '../_shared/geoSubSignals.ts';
+import { verdictsFromCocoonRisks, pillarSatelliteBlockHTML } from '../_shared/pillarSatelliteVerdict.ts';
+
+
 
 
 import {
@@ -873,9 +877,28 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     robotsPermissive: scores?.aiReady?.robotsPermissive || false,
     isHttps: scores?.technical?.isHttps || false,
     httpStatus: scores?.technical?.httpStatus || 200,
+    // Lot B — agrégats de mise en forme des réponses (sous-signal GEO déduit).
+    // Une composante non collectée reste `null` : elle est alors exclue du calcul
+    // au lieu d'être lue comme une absence de balisage.
+    answerFormatting: (() => {
+      const has = (k: string) => crawlPages.some((p) => p && p[k] !== undefined && p[k] !== null);
+      const count = (fn: (p: any) => boolean) => crawlPages.filter((p) => { try { return fn(p); } catch { return false; } }).length;
+      return {
+        pagesAnalyzed: crawlPages.length || null,
+        pagesWithH1: crawlPages.length ? count((p) => Boolean(String(p?.h1 ?? '').trim())) : null,
+        pagesWithFaq: (has('has_faq') || has('faq_count') || has('has_faq_schema'))
+          ? count((p) => Boolean(p?.has_faq || p?.has_faq_schema || Number(p?.faq_count) > 0))
+          : null,
+        pagesWithLists: (has('lists_count') || has('has_lists') || has('ul_count'))
+          ? count((p) => Boolean(p?.has_lists) || Number(p?.lists_count) > 0 || Number(p?.ul_count) > 0)
+          : null,
+        avgWordCount: crawlPages.length ? Math.round(totalWordCount / crawlPages.length) : null,
+      };
+    })(),
     contentIntegrity: summarizeCrawlIntegrity(crawl?.content_integrity),
   };
 }
+
 
 /** Résumé compact (déterministe, 0 token) de l'intégrité du contenu pour les prompts Marina. */
 function summarizeCrawlIntegrity(report: any) {
@@ -1622,7 +1645,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 }
 
 // ─── Section 3: Strategic GEO Audit (standalone HTML) ───
-function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domain: string, llmRealDataRaw?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = '', hasConsolidatedPlan = false): string {
+function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domain: string, llmRealDataRaw?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = '', hasConsolidatedPlan = false, geoSubSignalsHtml = ''): string {
   // Garde-fou de rendu : aucune fuite de gabarit de prompt ne doit atteindre le
   // rapport, y compris via des données mises en cache avant les garde-fous.
   const strategicData = sanitizeReportData(strategicDataRaw);
@@ -1677,7 +1700,9 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       <!-- ── Bloc GEO / citabilité IA : remonté en tête de la section, c'est
            l'objet même de l'audit stratégique. ── -->
       ${buildModuleSection('Citabilité par les moteurs de réponse IA', '🌍', geoCitability)}
+      ${geoSubSignalsHtml}
       <!--MARINA_LLM_START-->${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}<!--MARINA_LLM_END-->
+
       ${buildModuleSection('Maturité GEO', '🌍', geoReadiness)}
       ${buildModuleSection('Citabilité : extraits reprenables', '💬', quotability)}
       ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
@@ -1780,6 +1805,14 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const thinContentPages = cocoonGraphDetails?.thin_content_pages || [];
   const strategeRecos: Array<{ title: string; description: string; priority: string }> = cocoonData?._stratege_recommendations || [];
 
+  // Lot B — verdict pilier / satellite : « /a ↔ /b » n'indique pas quelle page
+  // garder. Chaque groupe reçoit donc un verdict déterministe et une action unique.
+  // Repli sur la liste brute si les métriques de nœuds manquent.
+  const pillarSatelliteHtml = pillarSatelliteBlockHTML(
+    verdictsFromCocoonRisks(cannibalizationRisks, cocoonNodes, 5),
+  );
+
+
   // Lot 6 — nommage lisible des clusters + regroupement des thématiques isolées
   // (un cluster à une page n'a aucune valeur de lecture en tant que cadre).
   const clusterEntries: any[] = cocoonClusters && typeof cocoonClusters === 'object'
@@ -1833,16 +1866,16 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
           ${orphanPages.slice(0, 10).map((page: any) => `<li style="margin-bottom:4px;">${page.url} ${page.word_count ? `(${page.word_count} mots)` : ''}</li>`).join('')}
         </ul>
       </div>` : ''}
-      ${cannibalizationRisks.length > 0 ? `
+      ${cannibalizationRisks.length > 0 ? (pillarSatelliteHtml || `
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Risques de cannibalisation (${cannibalizationRisks.length})</h3>
         ${cannibalizationRisks.slice(0, 5).map((risk: any) => `
-          <div style="padding:12px;margin-bottom:8px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:6px;">
+          <div style="padding:12px;margin-bottom:8px;border:1px solid #e5e7eb;border-left:3px solid #8a6d1f;border-radius:6px;">
             <div style="font-weight:600;font-size:13px;">${(risk?.urls || []).join(' ↔ ')}</div>
             <div style="font-size:12px;color:#6b7280;margin-top:4px;">Mots-clés partagés : ${(risk?.shared_keywords || []).join(', ') || '-'}</div>
           </div>
         `).join('')}
-      </div>` : ''}
+      </div>`) : ''}
       ${thinContentPages.length > 0 ? `
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Pages à contenu faible (${thinContentPages.length})</h3>
@@ -4445,13 +4478,34 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           hostDuplication ? buildHostDuplicationHTML(hostDuplication, domain) : '',
         );
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
+
+        // ─── Lot B : le GEO décomposé en 10 sous-signaux (compréhension / autorité) ───
+        // Un score GEO global masque deux causes opposées. La décomposition est
+        // déterministe (0 token) : elle réagrège des signaux déjà mesurés ailleurs
+        // et produit un verdict d'écart entre les deux familles.
+        const tlSignals = strategicData?.social_signals?.thought_leadership || null;
+        const geoSubSignalsReport = buildGeoSubSignals({
+          breakdown: strategicData?.citation_breakdown || null,
+          isBotShell: botRendering ? Boolean(botRendering.blocked) : null,
+          botOnlyAbsences: absenceReport ? (absenceReport.bot_only_signals?.length ?? 0) : null,
+          crawlFormatting: crawlSnapshot?.answerFormatting || null,
+          founderResolved: tlSignals ? Boolean(tlSignals.founder_name) : null,
+          founderCorroborated: tlSignals
+            ? Boolean(tlSignals.founder_profile_url) ||
+              ['strong', 'high', 'confirmed', 'corroborated'].includes(String(tlSignals.founder_authority || '').toLowerCase())
+            : null,
+        });
+        const geoSubSignalsHtml = geoSubSignalsBlockHTML(geoSubSignalsReport, detectedLang);
+
         const strategicHTML = generateStrategicSectionHTML(
           strategicData, detectedLang, domain, llmVisibilityData,
           sectionTop(renderTopPrioritiesHTML(topGeo)),
           sectionTop(renderTopPrioritiesHTML(topKw)),
           trustHtml + sectionTop(renderTopPrioritiesHTML(topEeat)),
           hasPlan,
+          geoSubSignalsHtml,
         );
+
 
         const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, botRenderingHtml + sectionTop(renderTopPrioritiesHTML(topCocoon)));
 
