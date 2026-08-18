@@ -14,13 +14,14 @@
  *     (flagged "newly_detected" so the user can spot fresh findings).
  */
 
-import { ROI_TIER_STYLE, summarizeRoi, type RoiAnnotation } from './roiWeighting.ts';
+import { ROI_TIER_STYLE, type RoiAnnotation } from './roiWeighting.ts';
 import {
   fingerprintFinding,
   dedupeByFingerprint,
   scopeSentence,
   buildAccountability,
   formatAccountability,
+  distributeTrafficGains,
   type Accountability,
   type TrafficContext,
 } from './actionPlanDiscrimination.ts';
@@ -373,6 +374,10 @@ export function buildConsolidatedActionPlan(
     merged_duplicates: mergedDuplicates,
   });
 
+  // Un gain de trafic identique recopié sur plusieurs actions du même levier
+  // n'est pas une estimation : on le répartit entre les actions concernées.
+  distributeTrafficGains(items as Array<{ fingerprint?: string; accountability?: Accountability | null }>);
+
   return items;
 }
 
@@ -559,7 +564,7 @@ export function renderConsolidatedPlanHTML(
   const newCount = stats?.newly_detected ?? (items.length - items.filter((i) => i.source === 'workbench').length);
   const total = stats?.total_candidates ?? items.length;
   const merged = stats?.merged_duplicates ?? 0;
-  const roiSummary = summarizeRoi(items as Array<{ title: string; roi?: RoiAnnotation }>);
+  
 
   return `<div class="section">
     <div class="section-title">Plan d'action consolidé</div>
@@ -570,7 +575,7 @@ export function renderConsolidatedPlanHTML(
       ${merged > 0 ? `${merged} constat${merged > 1 ? 's' : ''} redondant${merged > 1 ? 's' : ''} ${merged > 1 ? 'ont' : 'a'} été fusionné${merged > 1 ? 's' : ''} dans l'action correspondante.` : ''}
     </p>
     <p style="font-size:12.5px;color:#4b5563;margin-bottom:12px;">
-      ${roiSummary.sentence} Les blocages critiques restent en tête quel que soit leur rendement ;
+      Les blocages critiques restent en tête quel que soit leur rendement ;
       à gravité égale, l'ordre suit le rapport impact / effort. Chaque action porte un pilote,
       un indicateur de suivi et, quand une donnée mesurée l'autorise, une estimation de gain.
     </p>

@@ -2946,7 +2946,10 @@ Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1
         domain,
         scannedAt: new Date().toISOString(),
         totalScore,
-        maxScore: 200,
+        // Somme réelle des cinq axes (40 + 50 + 60 + 50 + 20). Le barème annoncé
+        // était 200 alors que le total atteignable est 220 : les scores affichés
+        // ne se recoupaient pas avec le détail par axe.
+        maxScore: 220,
         isSPA,
         scores,
         recommendations,

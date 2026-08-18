@@ -30,7 +30,7 @@ export interface ExpertAuditScores {
   };
   aiReady: {
     score: number;
-    maxScore: 30;
+    maxScore: number;
     hasSchemaOrg: boolean;
     schemaTypes: string[];
     isSchemaJsGenerated?: boolean;
@@ -696,7 +696,7 @@ export interface ExpertAuditResult {
   domain: string;
   scannedAt: string;
   totalScore: number;
-  maxScore: 200;
+  maxScore: number;
   isSPA?: boolean;
   meta?: AuditMeta;
   scores: ExpertAuditScores;

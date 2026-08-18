@@ -50,12 +50,15 @@ export interface RoiContext {
   hasOwnerPerformance?: boolean;
 }
 
+// Base de gravité volontairement basse : elle doit laisser de la place aux
+// modulateurs mesurés (écart au seuil, volume, position, périmètre). Une base à
+// 100 saturait le score et rendait toutes les actions « impact 100/100 ».
 const SEVERITY_IMPACT: Record<string, number> = {
-  critical: 100,
-  important: 65,
-  suggestion: 35,
-  optional: 30,
-  low: 20,
+  critical: 58,
+  important: 40,
+  suggestion: 24,
+  optional: 20,
+  low: 14,
 };
 
 const QUICK_PATTERNS = [
@@ -129,7 +132,8 @@ export function estimateImpact(item: RoiScorable, ctx: RoiContext = {}): number 
   // Un domaine qui capte déjà des impressions transforme plus vite une
   // optimisation en trafic mesurable.
   if (ctx.hasOwnerPerformance) impact += 5;
-  return Math.max(5, Math.min(100, impact));
+  // Plafond 97 : aucune action ne peut afficher un impact « parfait ».
+  return Math.max(5, Math.min(97, impact));
 }
 
 function effortLabel(days: number): string {

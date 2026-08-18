@@ -1058,9 +1058,15 @@ function buildSocialSignalsSection(data: any): string {
         const conf = tl.founder_confidence != null ? ` — confiance ${Math.round(Number(tl.founder_confidence) * 100)}%` : '';
         const head = `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Porte-parole identifié:</strong> ${who ? `${who}${role} — autorité ${lvl || 'non mesurée'}${conf}` : `non résolu (autorité ${lvl})`}</div>`;
         const why = tl.founder_resolution ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">${tl.founder_resolution}</div>` : '';
-        const alts = Array.isArray(tl.founder_alternatives) && tl.founder_alternatives.length > 0
-          ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Autres personnes rattachées : ${tl.founder_alternatives.slice(0, 3).map((a: any) => `${a.name}${a.role && a.role !== 'inconnu' ? ` (${a.role})` : ''}`).join(', ')}</div>`
-          : '';
+        // Tant qu'aucun porte-parole n'est corroboré, aucun nom de candidat
+        // n'est cité : une piste non vérifiée lue dans le corps du rapport passe
+        // pour une affirmation.
+        const altList = Array.isArray(tl.founder_alternatives) ? tl.founder_alternatives : [];
+        const alts = altList.length === 0
+          ? ''
+          : tl.founder_name
+            ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Autres personnes rattachées : ${altList.slice(0, 3).map((a: any) => `${a.name}${a.role && a.role !== 'inconnu' ? ` (${a.role})` : ''}`).join(', ')}</div>`
+            : `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">${altList.length} nom${altList.length > 1 ? 's' : ''} candidat${altList.length > 1 ? 's' : ''} ${altList.length > 1 ? 'ont' : 'a'} été repéré${altList.length > 1 ? 's' : ''} hors du site mais aucun n'est corroboré par une page du domaine : ils ne sont pas cités ici.</div>`;
         return head + why + alts;
       })()}
 
@@ -1497,13 +1503,29 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       </div>` : ''}
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Détail des scores</h3>
-        <div class="stat-grid-4">
-          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.performance?.score, scores?.performance?.maxScore || 40) ?? 0, scores?.performance?.maxScore || 40)}">${clampScore(scores?.performance?.score, scores?.performance?.maxScore || 40) ?? 0}</div><div class="label">Performance /${scores?.performance?.maxScore || 40}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.technical?.score, scores?.technical?.maxScore || 50) ?? 0, scores?.technical?.maxScore || 50)}">${clampScore(scores?.technical?.score, scores?.technical?.maxScore || 50) ?? 0}</div><div class="label">Technique /${scores?.technical?.maxScore || 50}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.semantic?.score, scores?.semantic?.maxScore || 60) ?? 0, scores?.semantic?.maxScore || 60)}">${clampScore(scores?.semantic?.score, scores?.semantic?.maxScore || 60) ?? 0}</div><div class="label">Sémantique /${scores?.semantic?.maxScore || 60}</div></div>
-          <div class="stat-card"><div class="value" style="color:${scoreColor(clampScore(scores?.aiReady?.score, scores?.aiReady?.maxScore || 30) ?? 0, scores?.aiReady?.maxScore || 30)}">${clampScore(scores?.aiReady?.score, scores?.aiReady?.maxScore || 30) ?? 0}</div><div class="label">IA-Ready /${scores?.aiReady?.maxScore || 30}</div></div>
-
-        </div>
+        ${(() => {
+          const axes: Array<[string, any, number]> = [
+            ['Performance', scores?.performance, 40],
+            ['Technique', scores?.technical, 50],
+            ['Sémantique', scores?.semantic, 60],
+            ['IA-Ready', scores?.aiReady, 50],
+            ['Sécurité', scores?.security, 20],
+          ];
+          let sum = 0; let sumMax = 0;
+          const cards = axes.map(([label, axis, defMax]) => {
+            const max = Number(axis?.maxScore || defMax);
+            const val = clampScore(axis?.score, max) ?? 0;
+            sum += val; sumMax += max;
+            return `<div class="stat-card"><div class="value" style="color:${scoreColor(val, max)}">${val}</div><div class="label">${label} /${max}</div></div>`;
+          }).join('');
+          const total = Number(expertSeoData?.totalScore ?? sum);
+          const declaredMax = Number(expertSeoData?.maxScore || sumMax);
+          return `<div class="stat-grid-4">${cards}</div>
+        <p style="font-size:12px;color:#6b7280;margin:10px 0 0;">
+          Somme des cinq axes : <strong>${sum}/${sumMax}</strong>${total !== sum ? ` — le score global d'audit technique affiché ailleurs (${total}/${declaredMax}) intègre en plus les contrôles hors page d'accueil (sitemaps, robots.txt, llms.txt).` : `, soit le score global d'audit technique (${total}/${declaredMax}).`}
+          Le score sur 100 de la synthèse exécutive est cette même valeur ramenée en pourcentage : ${Math.round((total / (declaredMax || 1)) * 100)}/100.
+        </p>`;
+        })()}
       </div>
     </div>`;
 
@@ -1514,7 +1536,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
 function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string, topHtml = ''): string {
   const tr = getTranslations(lang);
   const techScore = expertSeoData?.totalScore || 0;
-  const techMaxScore = expertSeoData?.maxScore || 200;
+  const techMaxScore = expertSeoData?.maxScore || 220;
   const techRecommendations = expertSeoData?.recommendations || [];
   const techIntro = expertSeoData?.introduction || '';
 
@@ -2030,7 +2052,7 @@ function buildExecutiveSummaryHTML(
   const t = (fr: string, en: string, es: string) => (isEn ? en : isEs ? es : fr);
 
   const techRaw = Number(ctx.expertData?.totalScore || 0);
-  const techMax = Number(ctx.expertData?.maxScore || 200) || 200;
+  const techMax = Number(ctx.expertData?.maxScore || 220) || 220;
   const tech100 = techRaw > 0 ? Math.round((techRaw / techMax) * 100) : null;
   const geo100 = ctx.strategicData?.overallScore ? Math.round(Number(ctx.strategicData.overallScore)) : null;
   const pages = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pages?.length || null;
@@ -2267,8 +2289,7 @@ function buildReportIntroHTML(
     </ul>
     ${takeaways ? `
     <h3 style="font-size:14px;font-weight:600;margin:0 0 8px 0;">${t('À retenir en priorité', 'Key takeaways', 'Puntos clave')}</h3>
-    <ol style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0 0 ${ctx.roi ? '10px' : '0'} 0;">${takeaways}</ol>
-    ${ctx.roi ? `<p style="font-size:13px;color:#374151;line-height:1.7;margin:0;">${ctx.roi.sentence}</p>` : ''}` : ''}
+    <ol style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0;">${takeaways}</ol>` : ''}
 
   </div>`;
 }
@@ -4323,21 +4344,27 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         );
 
 
+        // Quand un plan d'action consolidé existe, il contient déjà — fusionnées,
+        // dédoublonnées et pondérées — les actions des Top-3 de section. Les
+        // réinjecter dans chaque section produisait la même liste 4 à 5 fois.
+        const hasPlan = rawConsolidatedPlan.length > 0;
+        const sectionTop = (html: string) => (hasPlan ? '' : html);
+
         const crawlHTML = generateCrawlSectionHTML(
           expertData, detectedLang, domain, url, crawlSnapshot,
-          renderTopPrioritiesHTML(topSeo),
+          sectionTop(renderTopPrioritiesHTML(topSeo)),
           hostDuplication ? buildHostDuplicationHTML(hostDuplication, domain) : '',
         );
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
         const strategicHTML = generateStrategicSectionHTML(
           strategicData, detectedLang, domain, llmVisibilityData,
-          renderTopPrioritiesHTML(topGeo),
-          renderTopPrioritiesHTML(topKw),
-          renderTopPrioritiesHTML(topEeat),
-          rawConsolidatedPlan.length > 0,
+          sectionTop(renderTopPrioritiesHTML(topGeo)),
+          sectionTop(renderTopPrioritiesHTML(topKw)),
+          sectionTop(renderTopPrioritiesHTML(topEeat)),
+          hasPlan,
         );
 
-        const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, renderTopPrioritiesHTML(topCocoon));
+        const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, sectionTop(renderTopPrioritiesHTML(topCocoon)));
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
 
         const ownerPerformanceHTML = renderOwnerPerformanceHTML(ownerPerformance, '3b');
@@ -4389,7 +4416,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         // mais le score technique, le score GEO et les correctifs de maillage
         // rendus ici ne concernent que l'URL auditée (0 token LLM).
         const pageTech100 = Number(expertData?.totalScore || 0) > 0
-          ? Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 200) || 200)) * 100)
+          ? Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 220) || 220)) * 100)
           : null;
         const pageGeo100 = strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null;
         const urlKey = pageKey(url);

@@ -233,7 +233,49 @@ export function clusterDisplayName(c: ClusterLike, fallbackIndex?: number): stri
     return `Thématique « ${main} »`;
   }
   if (explicit) return `Thématique « ${explicit.trim()} »`;
+  const derived = deriveClusterTermsFromPages(c);
+  if (derived.length > 0) return `Thématique « ${derived.join(", ")} »`;
   return fallbackIndex != null ? `Thématique non nommée ${fallbackIndex + 1}` : "Thématique non nommée";
+}
+
+const CLUSTER_STOP_WORDS = new Set([
+  "le", "la", "les", "un", "une", "des", "du", "de", "et", "ou", "en", "au", "aux", "pour",
+  "par", "sur", "avec", "sans", "dans", "que", "qui", "quoi", "est", "sont", "votre", "vos",
+  "nos", "notre", "son", "ses", "plus", "tout", "tous", "toute", "chez", "www", "http", "https",
+  "html", "php", "index", "page", "blog", "com", "fr", "net", "org",
+]);
+
+/**
+ * Dernier recours déterministe : dériver un nom de thématique des URL et titres
+ * des pages du cluster (aucun appel LLM) plutôt que d'afficher « non nommée ».
+ */
+function deriveClusterTermsFromPages(c: ClusterLike): string[] {
+  const raw = (c?.pages ?? c?.urls ?? c?.nodes ?? c?.members) as unknown;
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+  const counts = new Map<string, number>();
+  for (const entry of raw.slice(0, 40)) {
+    let text = "";
+    if (typeof entry === "string") text = entry;
+    else if (entry && typeof entry === "object") {
+      const o = entry as Record<string, unknown>;
+      text = [o.title, o.h1, o.url, o.path, o.slug]
+        .filter((v) => typeof v === "string")
+        .join(" ");
+    }
+    if (!text) continue;
+    const tokens = text
+      .toLowerCase()
+      .replace(/https?:\/\/[^/]+/g, " ")
+      .replace(/[^a-zà-ÿ0-9]+/gi, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 3 && !CLUSTER_STOP_WORDS.has(w) && !/^\d+$/.test(w));
+    for (const w of new Set(tokens)) counts.set(w, (counts.get(w) || 0) + 1);
+  }
+  return [...counts.entries()]
+    .filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 3)
+    .map(([w]) => w);
 }
 
 /**
