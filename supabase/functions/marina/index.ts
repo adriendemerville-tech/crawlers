@@ -3573,13 +3573,24 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       const siteScope = await readSiteScopeCache(sb, domain, parentJob.user_id);
       const reusedFromCache: string[] = [];
 
+      // Garde de cohérence du cache : un payload antérieur à l'architecture
+      // « triple benchmark » ne contient pas les 3 blocs (ni les questions
+      // groundées sur les besoins réels). On le rejette et on remesure.
+      const isFreshLlmPayload = (p: any): boolean => {
+        const b = p?.benchmarks || p?.data?.benchmarks;
+        return Array.isArray(b) && b.length >= 3;
+      };
+
       const llmVisibilityPromise = (async () => {
         if (!trackedSiteId) return;
-        if (siteScope?.llmVisibility) {
+        if (siteScope?.llmVisibility && isFreshLlmPayload(siteScope.llmVisibility)) {
           llmVisibilityData = siteScope.llmVisibility;
           reusedFromCache.push('visibilité IA');
           console.log(`[Marina] ♻️ LLM visibility réutilisée depuis le cache domaine (${domain})`);
           return;
+        }
+        if (siteScope?.llmVisibility) {
+          console.log(`[Marina] ⚠️ Cache LLM obsolète (moins de 3 benchmarks) pour ${domain} → remesure`);
         }
         try {
           console.log(`[Marina] Phase 3: calculate-llm-visibility for ${domain}`);
@@ -3663,7 +3674,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // dans domain_data_cache alors que l'appel HTTP a déjà échoué/été coupé.
       // Sans ce read-back, le rapport tombe sur le rendu dégradé (1 seul bloc au lieu
       // des 3 benchmarks). On repolle le cache domaine quelques secondes.
-      if (!llmVisibilityData?.scores && !llmVisibilityData?.data?.scores) {
+      if (!isFreshLlmPayload(llmVisibilityData)) {
         for (let attempt = 0; attempt < 6; attempt++) {
           try {
             const { data: cached } = await sb
@@ -3676,9 +3687,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               .limit(1)
               .maybeSingle();
             const payload = (cached as any)?.result_data;
-            if (payload?.scores?.length) {
+            // Un payload legacy (sans les 3 benchmarks) ne doit pas écraser la mesure.
+            if (payload?.scores?.length && Array.isArray(payload?.benchmarks) && payload.benchmarks.length >= 3) {
               llmVisibilityData = { data: payload };
-              console.log(`[Marina] ♻️ Visibilité LLM récupérée depuis domain_data_cache (${payload.benchmarks?.length || 0} benchmarks)`);
+              console.log(`[Marina] ♻️ Visibilité LLM récupérée depuis domain_data_cache (${payload.benchmarks.length} benchmarks)`);
               await writeSiteScopeCache(sb, domain, parentJob.user_id, { llmVisibility: llmVisibilityData });
               break;
             }

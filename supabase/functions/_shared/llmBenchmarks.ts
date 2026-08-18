@@ -88,11 +88,16 @@ function mainNeedOf(ctx: SiteContext, lang: PromptLang): string {
 /**
  * Génère 3 benchmarks × 3 questions. Les questions sont déterministes
  * (0 token LLM) et dérivées de la carte d'identité.
+ *
+ * `topics` (voir _shared/questionTopics.ts) contient les besoins concrets
+ * réellement recherchés sur le marché : un besoin différent par benchmark,
+ * au lieu de répéter la première valeur brute de `products_services`.
  */
 export function buildLlmBenchmarks(
   site: SiteContext & { domain?: string },
   lang: PromptLang = 'fr',
   extraBrandNames: (string | null | undefined)[] = [],
+  topics: string[] = [],
 ): LlmBenchmark[] {
   const scrubTerms = buildBrandScrubTerms(site.domain, [site.brand_name, site.site_name, ...extraBrandNames]);
   const clean = (t?: string | null) => {
@@ -108,7 +113,13 @@ export function buildLlmBenchmarks(
   };
 
   const lex = resolveLexicon(ctx, lang);
-  const need = mainNeedOf(ctx, lang);
+  const cleanTopics = (topics || []).map((t) => (t || '').trim()).filter(Boolean)
+    .map((t) => (scrubTerms.length ? scrubBrandFromText(t, scrubTerms) : t).trim())
+    .filter((t) => t.length >= 5);
+  const need = cleanTopics[0] || mainNeedOf(ctx, lang);
+  // Un besoin distinct par benchmark quand le marché en fournit plusieurs.
+  const need2 = cleanTopics[1] || need;
+  const need3 = cleanTopics[2] || need2;
   const sector = (ctx.market_sector || '').trim();
   const target = (ctx.target_audience || '').trim();
   const area = (ctx.commercial_area || '').trim();
@@ -126,49 +137,49 @@ export function buildLlmBenchmarks(
     discovery.push({ intent: 'sector', text: `I need help with ${sector || need} — who should I turn to and why?` });
     discovery.push({ intent: 'criteria', text: `What criteria matter when choosing ${lex.seek} for ${need}?` });
 
-    comparison.push({ intent: 'comparison', text: `Compare ${lex.comparePlural} for ${need}: which one stands out?` });
-    comparison.push({ intent: 'alternative', text: `What alternatives exist for ${need}, beyond the big well-known players?` });
-    comparison.push({ intent: 'price', text: `How much does ${need} cost and how is pricing usually set?` });
+    comparison.push({ intent: 'comparison', text: `Compare ${lex.comparePlural} for ${need2}: which one stands out?` });
+    comparison.push({ intent: 'alternative', text: `What alternatives exist for ${need2}, beyond the big well-known players?` });
+    comparison.push({ intent: 'price', text: `How much does ${need2} cost and how is pricing usually set?` });
 
     usage.push(localOk
-      ? { intent: 'local', text: `Which ${lex.noun} handles ${need} in ${area}?` }
+      ? { intent: 'local', text: `Which ${lex.noun} handles ${need3} in ${area}?` }
       : target
-        ? { intent: 'audience', text: `I'm a ${target}: which ${lex.noun} for ${need} would you recommend?` }
-        : { intent: 'usecase', text: `In which situations is ${lex.seek} for ${need} genuinely worth it?` });
-    usage.push({ intent: 'proof', text: `What customer feedback or reviews do you rely on to recommend ${need}?` });
-    usage.push({ intent: 'decision', text: `If you had to recommend only one option for ${need}, which one and why?` });
+        ? { intent: 'audience', text: `I'm a ${target}: which ${lex.noun} for ${need3} would you recommend?` }
+        : { intent: 'usecase', text: `In which situations is ${lex.seek} for ${need3} genuinely worth it?` });
+    usage.push({ intent: 'proof', text: `What customer feedback or reviews do you rely on to recommend ${need3}?` });
+    usage.push({ intent: 'decision', text: `If you had to recommend only one option for ${need3}, which one and why?` });
   } else if (lang === 'es') {
     discovery.push({ intent: 'discovery', text: `Busco ${lex.seek} para ${need}, ¿alguna idea?` });
     discovery.push({ intent: 'sector', text: `Necesito ayuda con ${sector || need}, ¿a quién puedo dirigirme y por qué?` });
     discovery.push({ intent: 'criteria', text: `¿Qué criterios hay que mirar para elegir ${lex.seek} para ${need}?` });
 
-    comparison.push({ intent: 'comparison', text: `Compara ${lex.comparePlural} para ${need}: ¿cuál destaca?` });
-    comparison.push({ intent: 'alternative', text: `¿Qué alternativas existen para ${need}, aparte de los grandes conocidos?` });
-    comparison.push({ intent: 'price', text: `¿Cuánto cuesta ${need} y cómo se fijan los precios?` });
+    comparison.push({ intent: 'comparison', text: `Compara ${lex.comparePlural} para ${need2}: ¿cuál destaca?` });
+    comparison.push({ intent: 'alternative', text: `¿Qué alternativas existen para ${need2}, aparte de los grandes conocidos?` });
+    comparison.push({ intent: 'price', text: `¿Cuánto cuesta ${need2} y cómo se fijan los precios?` });
 
     usage.push(localOk
-      ? { intent: 'local', text: `¿Qué ${lex.noun} se encarga de ${need} en ${area}?` }
+      ? { intent: 'local', text: `¿Qué ${lex.noun} se encarga de ${need3} en ${area}?` }
       : target
-        ? { intent: 'audience', text: `Soy ${target}: ¿qué ${lex.noun} para ${need} recomiendas?` }
-        : { intent: 'usecase', text: `¿En qué casos merece la pena ${lex.seek} para ${need}?` });
-    usage.push({ intent: 'proof', text: `¿En qué opiniones o experiencias de clientes te basas para recomendar ${need}?` });
-    usage.push({ intent: 'decision', text: `Si solo pudieras recomendar uno para ${need}, ¿cuál y por qué?` });
+        ? { intent: 'audience', text: `Soy ${target}: ¿qué ${lex.noun} para ${need3} recomiendas?` }
+        : { intent: 'usecase', text: `¿En qué casos merece la pena ${lex.seek} para ${need3}?` });
+    usage.push({ intent: 'proof', text: `¿En qué opiniones o experiencias de clientes te basas para recomendar ${need3}?` });
+    usage.push({ intent: 'decision', text: `Si solo pudieras recomendar uno para ${need3}, ¿cuál y por qué?` });
   } else {
     discovery.push({ intent: 'discovery', text: `Je cherche ${lex.seek} pour ${need}, t'as des idées ?` });
     discovery.push({ intent: 'sector', text: `J'ai besoin d'aide en ${sector || need} : à qui s'adresser et pourquoi ?` });
     discovery.push({ intent: 'criteria', text: `Quels critères regarder pour bien choisir ${lex.seek} pour ${need} ?` });
 
-    comparison.push({ intent: 'comparison', text: `Compare-moi ${lex.comparePlural} pour ${need} : ${feminine ? 'laquelle' : 'lequel'} sort du lot ?` });
-    comparison.push({ intent: 'alternative', text: `Quelles alternatives existent pour ${need}, à part les gros acteurs connus ?` });
-    comparison.push({ intent: 'price', text: `Combien coûte ${need} et comment sont fixés les prix ?` });
+    comparison.push({ intent: 'comparison', text: `Compare-moi ${lex.comparePlural} pour ${need2} : ${feminine ? 'laquelle' : 'lequel'} sort du lot ?` });
+    comparison.push({ intent: 'alternative', text: `Quelles alternatives existent pour ${need2}, à part les gros acteurs connus ?` });
+    comparison.push({ intent: 'price', text: `Combien coûte ${need2} et comment sont fixés les prix ?` });
 
     usage.push(localOk
-      ? { intent: 'local', text: `${feminine ? 'Quelle' : 'Quel'} ${lex.noun} pour ${need} à ${area} ?` }
+      ? { intent: 'local', text: `${feminine ? 'Quelle' : 'Quel'} ${lex.noun} pour ${need3} à ${area} ?` }
       : target
-        ? { intent: 'audience', text: `Je suis ${target} : ${lex.seek} pour ${need}, tu recommandes quoi ?` }
-        : { intent: 'usecase', text: `Dans quels cas ${lex.seek} pour ${need} est-${feminine ? 'elle' : 'il'} vraiment utile ?` });
-    usage.push({ intent: 'proof', text: `Sur quels retours d'expérience ou avis clients tu te bases pour recommander ${need} ?` });
-    usage.push({ intent: 'decision', text: `Si tu devais n'en recommander qu'un seul pour ${need}, lequel et pourquoi ?` });
+        ? { intent: 'audience', text: `Je suis ${target} : ${lex.seek} pour ${need3}, tu recommandes quoi ?` }
+        : { intent: 'usecase', text: `Dans quels cas ${lex.seek} pour ${need3} est-${feminine ? 'elle' : 'il'} vraiment utile ?` });
+    usage.push({ intent: 'proof', text: `Sur quels retours d'expérience ou avis clients tu te bases pour recommander ${need3} ?` });
+    usage.push({ intent: 'decision', text: `Si tu devais n'en recommander qu'un seul pour ${need3}, lequel et pourquoi ?` });
   }
 
   const finalize = (prompts: BenchmarkPrompt[]): BenchmarkPrompt[] => {
