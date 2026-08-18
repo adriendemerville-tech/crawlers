@@ -229,6 +229,8 @@ Réponds UNIQUEMENT en JSON valide avec ces champs :
   "media_specialties": ["Si entity_type est 'media' ou 'blog', liste les domaines de spécialité. Ex: ['politique', 'économie', 'tech']. Pour 'business', mettre []"],
   "market_sector": "Le secteur d'activité principal (ex: 'E-commerce culturel', 'Information politique', 'Blog tech')",
   "products_services": "Pour un business: les produits/services vendus. Pour un média/blog: les sujets couverts formulés comme des requêtes utilisateur (ex: 'actualité politique française, débats parlementaires, interviews ministres'). Pour un non_commercial: les services rendus ou missions principales.",
+  "value_proposition": "LA proposition de valeur CENTRALE : une phrase courte et concrète décrivant le besoin n°1 que l'entité résout pour son client, formulée du point de vue du client, SANS nommer la marque ni le site. Ex: 'auditer et piloter le référencement SEO et GEO d'un site', 'rénover une salle de bain clé en main', 'acheter et faire livrer un bouquet de fleurs'.",
+  "secondary_propositions": ["Deux propositions de valeur SECONDAIRES, réellement distinctes de la centrale, même format court, sans nom de marque"],
   "target_audience": "La cible principale, telle qu'elle apparaît dans le contenu (ex: 'Artisans du bâtiment', 'Grand public')",
   "commercial_area": "La zone géographique couverte",
   "company_size": "Estimation de la taille",
