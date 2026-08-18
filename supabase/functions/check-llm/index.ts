@@ -382,12 +382,21 @@ const clientIp = getClientIp(req);
       ? `${t.coreValueSummary.basedOn(citedCount)} ${overallSentiment === 'positive' ? t.coreValueSummary.positivePerception : overallSentiment === 'negative' ? t.coreValueSummary.negativePerception : t.coreValueSummary.neutralPerception}`
       : t.coreValueSummary.lowVisibility(domain);
 
+    // Couverture : les modèles en erreur sont exclus du dénominateur, jamais
+    // comptés comme des non-citations. Fourchette de Wilson obligatoire —
+    // 8 modèles sur un run, c'est une tendance, pas un chiffre stable.
+    const coverage = computeCoverage(citedCount, validCitations.length);
+    const reliability = assessReliability(validCitations.length, 1);
+
     const result = {
       url: `https://${domain}`,
       domain,
       scannedAt: new Date().toISOString(),
       overallScore,
       citationRate: { cited: citedCount, total: totalModels },
+      coverage,
+      reliability,
+      ...(identityDisclosure ? { identity: identityDisclosure, identity_fingerprint: identityFingerprint } : {}),
       invisibleList,
       averageIterationDepth: Math.round(avgIterationDepth * 10) / 10,
       overallSentiment,
