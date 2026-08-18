@@ -5,6 +5,8 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
+import { resolvePreLlmIdentity, type PreLlmIdentity } from '../_shared/preLlmIdentity.ts';
+import { computeCoverage, assessReliability } from '../_shared/llmVisibilityScore.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import {
