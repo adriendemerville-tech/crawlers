@@ -28,15 +28,20 @@ interface LLMProvider {
 }
 
 const LLM_PROVIDERS: LLMProvider[] = [
-  { id: 'gpt4', name: 'GPT-4', company: 'OpenAI', model: 'openai/gpt-4-turbo' },
-  { id: 'gpt4o', name: 'GPT-4o', company: 'OpenAI', model: 'openai/gpt-5.4' },
+  // GPT-4 Turbo retiré : modèle déprécié, ~14× le coût d'un flash sans apport
+  // d'information. La couverture OpenAI est assurée par GPT-5.4 + GPT-5.4-mini
+  // (deux modèles distincts : ne jamais pointer deux entrées sur le même id,
+  // cela double la facture sans ajouter d'observation).
+  { id: 'gpt54', name: 'GPT-5.4', company: 'OpenAI', model: 'openai/gpt-5.4' },
+  { id: 'gpt54mini', name: 'GPT-5.4 mini', company: 'OpenAI', model: 'openai/gpt-5.4-mini' },
   { id: 'claude35', name: 'Claude 3.5 Sonnet', company: 'Anthropic', model: 'anthropic/claude-3.5-sonnet' },
   { id: 'claude3opus', name: 'Claude 3.7 Sonnet', company: 'Anthropic', model: 'anthropic/claude-3.7-sonnet' },
-  { id: 'gemini', name: 'Gemini 2.5 Pro', company: 'Google', model: 'google/gemini-3.1-pro-preview-preview' },
-  { id: 'gemini2', name: 'Gemini 2.0 Flash', company: 'Google', model: 'google/gemini-3-flash-preview' },
+  { id: 'gemini', name: 'Gemini 3.1 Pro', company: 'Google', model: 'google/gemini-3.1-pro-preview' },
+  { id: 'gemini2', name: 'Gemini 3 Flash', company: 'Google', model: 'google/gemini-3-flash-preview' },
   { id: 'perplexity', name: 'Perplexity Sonar', company: 'Perplexity', model: 'perplexity/sonar' },
   { id: 'mistral', name: 'Mistral Large', company: 'Mistral AI', model: 'mistralai/mistral-large' },
 ];
+
 
 function extractDomain(url: string): string {
   try {
