@@ -31,10 +31,41 @@ const INTENT_ROLE: Record<string, string> = {
 };
 
 const AXIS_ROLE: Record<string, string> = {
+  value_prop: "proposition de valeur centrale de l'entreprise : la question doit porter DIRECTEMENT sur cette offre",
   covered: "besoin déjà couvert par le site dans Google",
   ranked: "besoin sur lequel le site est le mieux classé dans Google",
   demand: "besoin très recherché que le site n'adresse pas",
   identity: "besoin déclaré dans la carte d'identité",
+};
+
+type QuestionArchetype = 'local_commerce' | 'local_service' | 'software' | 'ecommerce' | 'agency' | 'generic';
+
+/** Archétype de question, déduit du modèle d'affaires et de la zone de chalandise. */
+function resolveArchetype(site: Record<string, any>): QuestionArchetype {
+  const model = String(site.business_model || '').toLowerCase();
+  const entity = String(site.entity_type || '').toLowerCase();
+  const hasArea = !!String(site.commercial_area || '').trim();
+  if (model.startsWith('saas') || entity === 'saas') return 'software';
+  if (model.startsWith('ecommerce') || model.startsWith('marketplace') || entity === 'ecommerce') return 'ecommerce';
+  if (model === 'service_agency') return 'agency';
+  if (model === 'commerce_local' || model === 'retail' || model === 'restaurant') return hasArea ? 'local_commerce' : 'generic';
+  if (model === 'service_local' || model === 'leadgen' || model === 'artisan') return hasArea ? 'local_service' : 'generic';
+  return hasArea ? 'local_service' : 'generic';
+}
+
+const ARCHETYPE_DIRECTIVE: Record<QuestionArchetype, string> = {
+  local_commerce:
+    "Commerce de proximité : les questions doivent être TRÈS directes et géolocalisées, comme « je cherche un fleuriste à Aix-en-Provence » ou « quel fleuriste ouvert près d'Aix-en-Provence me conseilles-tu ? ». Pas de mise en contexte longue, pas de vocabulaire d'entreprise.",
+  local_service:
+    "Service ou artisan intervenant sur une zone : questions directes du type « je cherche une entreprise de rénovation de salle de bain à Marseille » ou « qui peut refaire ma toiture près de Marseille ? ». Le lieu doit apparaître dans la question.",
+  software:
+    "Logiciel / service en ligne : la question doit nommer la TÂCHE à accomplir, comme « quel outil pour piloter mon SEO et ma visibilité dans les IA ? ». Pas de lieu, pas de nom de produit.",
+  ecommerce:
+    "Vente en ligne : questions d'achat du type « où acheter <produit> en ligne, en qui avoir confiance ? ». Pas de lieu.",
+  agency:
+    "Agence / prestataire B2B : questions du type « quelle agence pour <mission> ? », en précisant le profil du demandeur quand c'est utile.",
+  generic:
+    "Prestataire généraliste : questions de recommandation simples, à la première personne, sans lieu si la zone n'est pas connue.",
 };
 
 /** Marqueurs d'une sortie polluée (fuite de prompt, champ brut, méta-discours). */
