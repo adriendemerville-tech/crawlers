@@ -4411,7 +4411,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         // mais le score technique, le score GEO et les correctifs de maillage
         // rendus ici ne concernent que l'URL auditée (0 token LLM).
         const pageTech100 = Number(expertData?.totalScore || 0) > 0
-          ? Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 200) || 200)) * 100)
+          ? Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 220) || 220)) * 100)
           : null;
         const pageGeo100 = strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null;
         const urlKey = pageKey(url);
