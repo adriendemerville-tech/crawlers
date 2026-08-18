@@ -4631,7 +4631,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const callbackUrl = (completedJob?.input_payload as any)?.callback_url;
         if (callbackUrl) {
           console.log(`[Marina] 📡 Sending webhook to ${callbackUrl}`);
-          const eventName = strategicDegradation.degraded ? 'marina.report.partial' : 'marina.report.completed';
+          const eventName = isIncomplete ? 'marina.report.partial' : 'marina.report.completed';
           const webhookPayload = {
             event: eventName,
             job_id: jobId,
