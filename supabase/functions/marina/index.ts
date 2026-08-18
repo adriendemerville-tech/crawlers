@@ -1058,9 +1058,15 @@ function buildSocialSignalsSection(data: any): string {
         const conf = tl.founder_confidence != null ? ` — confiance ${Math.round(Number(tl.founder_confidence) * 100)}%` : '';
         const head = `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Porte-parole identifié:</strong> ${who ? `${who}${role} — autorité ${lvl || 'non mesurée'}${conf}` : `non résolu (autorité ${lvl})`}</div>`;
         const why = tl.founder_resolution ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">${tl.founder_resolution}</div>` : '';
-        const alts = Array.isArray(tl.founder_alternatives) && tl.founder_alternatives.length > 0
-          ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Autres personnes rattachées : ${tl.founder_alternatives.slice(0, 3).map((a: any) => `${a.name}${a.role && a.role !== 'inconnu' ? ` (${a.role})` : ''}`).join(', ')}</div>`
-          : '';
+        // Tant qu'aucun porte-parole n'est corroboré, aucun nom de candidat
+        // n'est cité : une piste non vérifiée lue dans le corps du rapport passe
+        // pour une affirmation.
+        const altList = Array.isArray(tl.founder_alternatives) ? tl.founder_alternatives : [];
+        const alts = altList.length === 0
+          ? ''
+          : tl.founder_name
+            ? `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Autres personnes rattachées : ${altList.slice(0, 3).map((a: any) => `${a.name}${a.role && a.role !== 'inconnu' ? ` (${a.role})` : ''}`).join(', ')}</div>`
+            : `<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">${altList.length} nom${altList.length > 1 ? 's' : ''} candidat${altList.length > 1 ? 's' : ''} ${altList.length > 1 ? 'ont' : 'a'} été repéré${altList.length > 1 ? 's' : ''} hors du site mais aucun n'est corroboré par une page du domaine : ils ne sont pas cités ici.</div>`;
         return head + why + alts;
       })()}
 
