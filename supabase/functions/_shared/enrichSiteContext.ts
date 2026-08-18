@@ -419,6 +419,8 @@ export async function ensureSiteContext(
       const fields: Record<string, unknown> = {}
       if (merged.market_sector) fields.market_sector = merged.market_sector
       if (merged.products_services) fields.products_services = merged.products_services
+      if (merged.value_proposition) fields.value_proposition = merged.value_proposition
+      if (merged.secondary_propositions) fields.secondary_propositions = merged.secondary_propositions
       if (merged.target_audience) fields.target_audience = merged.target_audience
       if (merged.commercial_area) fields.commercial_area = merged.commercial_area
       if (merged.company_size) fields.company_size = merged.company_size
