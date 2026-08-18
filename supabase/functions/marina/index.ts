@@ -4323,21 +4323,27 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         );
 
 
+        // Quand un plan d'action consolidé existe, il contient déjà — fusionnées,
+        // dédoublonnées et pondérées — les actions des Top-3 de section. Les
+        // réinjecter dans chaque section produisait la même liste 4 à 5 fois.
+        const hasPlan = rawConsolidatedPlan.length > 0;
+        const sectionTop = (html: string) => (hasPlan ? '' : html);
+
         const crawlHTML = generateCrawlSectionHTML(
           expertData, detectedLang, domain, url, crawlSnapshot,
-          renderTopPrioritiesHTML(topSeo),
+          sectionTop(renderTopPrioritiesHTML(topSeo)),
           hostDuplication ? buildHostDuplicationHTML(hostDuplication, domain) : '',
         );
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
         const strategicHTML = generateStrategicSectionHTML(
           strategicData, detectedLang, domain, llmVisibilityData,
-          renderTopPrioritiesHTML(topGeo),
-          renderTopPrioritiesHTML(topKw),
-          renderTopPrioritiesHTML(topEeat),
-          rawConsolidatedPlan.length > 0,
+          sectionTop(renderTopPrioritiesHTML(topGeo)),
+          sectionTop(renderTopPrioritiesHTML(topKw)),
+          sectionTop(renderTopPrioritiesHTML(topEeat)),
+          hasPlan,
         );
 
-        const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, renderTopPrioritiesHTML(topCocoon));
+        const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, sectionTop(renderTopPrioritiesHTML(topCocoon)));
         const indexationHTML = indexationData.length > 0 ? generateIndexationSectionHTML(indexationData, detectedLang, domain) : '';
 
         const ownerPerformanceHTML = renderOwnerPerformanceHTML(ownerPerformance, '3b');
