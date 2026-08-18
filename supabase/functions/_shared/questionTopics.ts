@@ -107,6 +107,27 @@ function isUsableTopic(t: string, brandTerms: string[]): boolean {
   return true;
 }
 
+/**
+ * Requêtes qui désignent un TYPE DE PRESTATAIRE (« agence de référencement
+ * naturel », « consultant netlinking », « freelance seo ») et non une tâche.
+ * Pour un éditeur de logiciel, ces requêtes décrivent son AUDIENCE, jamais son
+ * besoin : « Je cherche un logiciel pour agence de référencement naturel » ne
+ * teste rien. On les rétrograde derrière les besoins-tâches, et on les
+ * réemploie comme contexte d'audience (voir llmBenchmarks.ts).
+ */
+const ACTOR_TOPIC_RE = /^(agence|agences|consultant|consultante|consultants|freelance|freelances|prestataire|prestataires|expert|experts|cabinet|société|societe|entreprise|entreprises|studio|indépendant|independant)\b/i;
+
+export function isActorTopic(topic: string): boolean {
+  return ACTOR_TOPIC_RE.test((topic || '').trim());
+}
+
+/** Le site vend-il un produit/outil (par opposition à une prestation locale) ? */
+export function isToolLikeSite(ctx: { entity_type?: string | null; business_model?: string | null }): boolean {
+  const e = (ctx.entity_type || '').toLowerCase();
+  const m = (ctx.business_model || '').toLowerCase();
+  return e === 'saas' || e === 'marketplace' || m.startsWith('saas') || m.startsWith('marketplace');
+}
+
 interface KwRow {
   keyword: string;
   search_volume: number | null;
