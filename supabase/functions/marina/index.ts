@@ -1858,16 +1858,16 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
           ${orphanPages.slice(0, 10).map((page: any) => `<li style="margin-bottom:4px;">${page.url} ${page.word_count ? `(${page.word_count} mots)` : ''}</li>`).join('')}
         </ul>
       </div>` : ''}
-      ${cannibalizationRisks.length > 0 ? `
+      ${cannibalizationRisks.length > 0 ? (pillarSatelliteHtml || `
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Risques de cannibalisation (${cannibalizationRisks.length})</h3>
         ${cannibalizationRisks.slice(0, 5).map((risk: any) => `
-          <div style="padding:12px;margin-bottom:8px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:6px;">
+          <div style="padding:12px;margin-bottom:8px;border:1px solid #e5e7eb;border-left:3px solid #8a6d1f;border-radius:6px;">
             <div style="font-weight:600;font-size:13px;">${(risk?.urls || []).join(' ↔ ')}</div>
             <div style="font-size:12px;color:#6b7280;margin-top:4px;">Mots-clés partagés : ${(risk?.shared_keywords || []).join(', ') || '-'}</div>
           </div>
         `).join('')}
-      </div>` : ''}
+      </div>`) : ''}
       ${thinContentPages.length > 0 ? `
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Pages à contenu faible (${thinContentPages.length})</h3>
