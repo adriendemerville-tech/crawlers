@@ -117,6 +117,8 @@ export interface OnsiteEvidence {
   description?: string
   headings: string[]
   text: string
+  /** Signaux déclarés par le site : JSON-LD, microdata, manifeste web, Open Graph. */
+  structured?: StructuredIdentitySignals | null
 }
 
 export async function fetchHomepageEvidence(domain: string): Promise<OnsiteEvidence | null> {
