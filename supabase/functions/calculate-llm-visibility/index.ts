@@ -499,6 +499,32 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       topicSelection.selections || [],
     )
 
+    // Reformulation naturelle (1 seul appel LLM pour les 9 questions) : le
+    // besoin testé, l'axe de marché et l'intention restent déterministes, seule
+    // la phrase devient celle d'un vrai prospect. Tout échec ou toute sortie
+    // non conforme conserve la formulation déterministe, question par question.
+    try {
+      const naturalized = await naturalizeBenchmarkQuestions(
+        benchmarks,
+        {
+          market_sector: enrichedSite.market_sector,
+          products_services: enrichedSite.products_services,
+          target_audience: enrichedSite.target_audience,
+          commercial_area: enrichedSite.commercial_area,
+          entity_type: enrichedSite.entity_type,
+          business_model: enrichedSite.business_model,
+          brand_name: enrichedSite.brand_name,
+          site_name: enrichedSite.site_name,
+          domain: enrichedSite.domain,
+        },
+        'fr',
+      )
+      benchmarks = naturalized.benchmarks
+    } catch (e) {
+      console.warn('[llm-vis] réécriture des questions ignorée:', (e as Error).message)
+    }
+
+
     const flatPrompts: Array<{ text: string; intent: string; benchmarkId: string }> = []
     for (const b of benchmarks) {
       for (const p of b.prompts) flatPrompts.push({ text: p.text, intent: p.intent, benchmarkId: b.id })
