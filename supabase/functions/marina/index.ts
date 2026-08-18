@@ -4470,13 +4470,34 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           hostDuplication ? buildHostDuplicationHTML(hostDuplication, domain) : '',
         );
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
+
+        // ─── Lot B : le GEO décomposé en 10 sous-signaux (compréhension / autorité) ───
+        // Un score GEO global masque deux causes opposées. La décomposition est
+        // déterministe (0 token) : elle réagrège des signaux déjà mesurés ailleurs
+        // et produit un verdict d'écart entre les deux familles.
+        const tlSignals = strategicData?.social_signals?.thought_leadership || null;
+        const geoSubSignalsReport = buildGeoSubSignals({
+          breakdown: strategicData?.citation_breakdown || null,
+          isBotShell: botRendering ? Boolean(botRendering.blocked) : null,
+          botOnlyAbsences: absenceReport?.bot_only_count ?? null,
+          crawlFormatting: crawlSnapshot?.answerFormatting || null,
+          founderResolved: tlSignals ? Boolean(tlSignals.founder_name) : null,
+          founderCorroborated: tlSignals
+            ? Boolean(tlSignals.founder_profile_url) ||
+              ['strong', 'high', 'confirmed', 'corroborated'].includes(String(tlSignals.founder_authority || '').toLowerCase())
+            : null,
+        });
+        const geoSubSignalsHtml = geoSubSignalsBlockHTML(geoSubSignalsReport, detectedLang);
+
         const strategicHTML = generateStrategicSectionHTML(
           strategicData, detectedLang, domain, llmVisibilityData,
           sectionTop(renderTopPrioritiesHTML(topGeo)),
           sectionTop(renderTopPrioritiesHTML(topKw)),
           trustHtml + sectionTop(renderTopPrioritiesHTML(topEeat)),
           hasPlan,
+          geoSubSignalsHtml,
         );
+
 
         const cocoonHTML = generateCocoonSectionHTML(cocoonResult, detectedLang, domain, botRenderingHtml + sectionTop(renderTopPrioritiesHTML(topCocoon)));
 
