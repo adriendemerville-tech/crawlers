@@ -5,6 +5,7 @@ import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 import { generateNaturalPrompts, type SiteContext as NaturalSiteContext } from '../_shared/naturalPrompts.ts'
 import { buildLlmBenchmarks } from '../_shared/llmBenchmarks.ts'
 import { selectQuestionTopics } from '../_shared/questionTopics.ts'
+import { buildAggregate, computeCoverage } from '../_shared/llmVisibilityScore.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
@@ -664,6 +665,22 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         }
       })
       const measured = modelScores.filter(m => m.score_percentage !== null)
+
+      // ── Couverture brute de l'axe : une interrogation = une question × un
+      // modèle. Un « hit » est une apparition de la marque, quelle que soit
+      // l'itération. Les prompts non mesurés (panne modèle) sont exclus du
+      // dénominateur — jamais comptés comme des zéros.
+      let axisHits = 0
+      let axisObservations = 0
+      for (const r of llmResults) {
+        for (const i of idx) {
+          const ps = r.alignedScores[i]
+          if (ps === null) continue
+          axisObservations++
+          if (ps.iterationFound > 0) axisHits++
+        }
+      }
+
       return {
         id: b.id,
         label: b.label,
@@ -673,20 +690,37 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         cited_models: measured.filter(m => (m.score_percentage || 0) > 0).length,
         measured_models: measured.length,
         total_models: modelScores.length,
+        coverage: computeCoverage(axisHits, axisObservations),
         score: measured.length > 0
           ? Math.round(measured.reduce((s, m) => s + (m.score_percentage || 0), 0) / measured.length)
           : null,
       }
     })
 
+    // ── Agrégat : couverture globale + score de qualité PONDÉRÉ PAR AXE.
+    // Une absence sur « meilleure position SERP » pèse deux fois plus qu'une
+    // absence sur « potentiel non capté » (potentiel, pas échec).
+    const aggregate = buildAggregate(
+      benchmarkResults.map(b => ({
+        id: b.id,
+        label: b.label,
+        score: b.score,
+        hits: b.coverage.hits,
+        observations: b.coverage.observations,
+      })),
+      1,
+    )
+
     const unmeasured = scores.filter(s => s.measurement_status === 'unmeasured').map(s => s.llm_name)
     console.log(`[llm-vis] ✅ ${site.domain} complete: ${scores.map(s => `${s.llm_name}=${s.score_percentage === null ? 'n/m' : s.score_percentage + '%'}`).join(', ')}${unmeasured.length ? ` — non mesurés: ${unmeasured.join(', ')}` : ''}`)
-    console.log(`[llm-vis] benchmarks: ${benchmarkResults.map(b => `${b.id}=${b.score === null ? 'n/m' : b.score + '%'} (${b.cited_models}/${b.measured_models} citent)`).join(' | ')}`)
+    console.log(`[llm-vis] benchmarks: ${benchmarkResults.map(b => `${b.id}=${b.score === null ? 'n/m' : b.score + '%'} (${b.cited_models}/${b.measured_models} citent, couverture ${b.coverage.rate ?? 'n/m'}%)`).join(' | ')}`)
+    console.log(`[llm-vis] agrégat ${site.domain}: couverture ${aggregate.coverage.hits}/${aggregate.coverage.observations} = ${aggregate.coverage.rate}% [${aggregate.coverage.ci_low}–${aggregate.coverage.ci_high}%] — qualité pondérée ${aggregate.quality_score ?? 'n/m'}/100 (plate ${aggregate.flat_score ?? 'n/m'})`)
 
     // ── Write to shared domain cache (2h TTL — Pro Agency+ can refresh unlimited but backend throttles to every 2h) ──
     const cachePayload = {
       scores,
       benchmarks: benchmarkResults,
+      aggregate,
       week_start_date: weekStart,
       unmeasured_models: unmeasured,
       measured_models: scores.length - unmeasured.length,
