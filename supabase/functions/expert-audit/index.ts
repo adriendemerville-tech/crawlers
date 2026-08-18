@@ -151,10 +151,12 @@ interface HtmlAnalysis {
     hasBreadcrumb: boolean;
     hasPerson: boolean;
     hasProfilePage?: boolean;
+    hasAuthor?: boolean;
   };
   // Sécurité / entités déclarées (champs réellement produits par l'analyse)
   hasHSTS?: boolean;
   hasSameAs?: boolean;
+  hasWikidataSameAs?: boolean;
   hasAuthorInJsonLd?: boolean;
   // FAQ + FAQPage coupling
   hasFAQWithSchema?: boolean;
