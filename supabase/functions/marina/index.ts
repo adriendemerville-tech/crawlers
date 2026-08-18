@@ -5120,20 +5120,14 @@ Deno.serve(handleRequest(async (req) => {
       return json({ error: 'Failed to create job' }, 500);
     }
 
-    // ── Queue-aware launch: only self-invoke if no other job is processing ──
-    const { data: runningJobs } = await sb
-      .from('async_jobs')
-      .select('id')
-      .eq('function_name', 'marina')
-      .in('status', ['processing'])
-      .neq('id', job.id)
-      .limit(1);
+    // ── Queue-aware launch: jusqu'à MAX_CONCURRENT_MARINA jobs en parallèle ──
+    const globalRunning = await countProcessing(sb);
+    const userRunning = userId ? await countProcessing(sb, userId) : 0;
+    const mustQueue = globalRunning >= MAX_CONCURRENT_MARINA
+      || (userId ? userRunning >= MAX_CONCURRENT_PER_USER : false);
 
-    const hasRunningJob = runningJobs && runningJobs.length > 0;
-
-    if (hasRunningJob) {
-      console.log(`[Marina] 🔄 Queue: job ${job.id} queued (another job is processing)`);
-      // Count position in queue
+    if (mustQueue) {
+      console.log(`[Marina] 🔄 Queue: job ${job.id} en file (global ${globalRunning}/${MAX_CONCURRENT_MARINA}, user ${userRunning}/${MAX_CONCURRENT_PER_USER})`);
       const { count } = await sb
         .from('async_jobs')
         .select('id', { count: 'exact', head: true })
@@ -5143,6 +5137,7 @@ Deno.serve(handleRequest(async (req) => {
 
       return json({ job_id: job.id, status: 'queued', queue_position: count || 1 });
     }
+
 
     // No running job — start immediately
     fetch(`${SUPABASE_URL}/functions/v1/marina`, {
