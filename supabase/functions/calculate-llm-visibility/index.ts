@@ -70,8 +70,12 @@ function buildBrandPatterns(site: any): BrandPatterns {
   const exact: string[] = []
   const regex: RegExp[] = []
 
-  const siteName = (site.site_name || '').trim()
   const domain = (site.domain || '').trim()
+  // Les tracked_sites créés automatiquement par Marina peuvent porter un nom
+  // technique « Marina: domaine.tld ». Ce libellé n'est jamais une marque et
+  // ne doit pas entrer dans la détection des citations.
+  const rawSiteName = (site.site_name || '').trim()
+  const siteName = /^marina\s*:/i.test(rawSiteName) ? '' : rawSiteName
 
   if (siteName && siteName.length > 2) {
     exact.push(siteName.toLowerCase())
