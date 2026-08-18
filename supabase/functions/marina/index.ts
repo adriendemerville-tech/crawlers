@@ -880,6 +880,8 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
 function summarizeCrawlIntegrity(report: any) {
   if (!report || typeof report !== 'object') return null;
   const botRendering = report.bot_rendering || null;
+  // Lot 3 — contre-vérification des absences de balises (rendu complet).
+  const absenceVerification = report.absence_verification || null;
   // Lot A — signaux de confiance machine et URLs mortes : transportés tels
   // quels (déjà compacts et bornés côté crawl).
   const trust = {
@@ -888,8 +890,8 @@ function summarizeCrawlIntegrity(report: any) {
     deadUrls: report.dead_urls || null,
   };
   if (!report.near_duplicate) {
-    return botRendering || trust.riskClaims || trust.authorityMismatch || trust.deadUrls
-      ? { analyzedPages: 0, botRendering, ...trust }
+    return botRendering || absenceVerification || trust.riskClaims || trust.authorityMismatch || trust.deadUrls
+      ? { analyzedPages: 0, botRendering, absenceVerification, ...trust }
       : null;
   }
 
