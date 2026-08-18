@@ -1321,6 +1321,7 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
       ${cardsHtml}
     </div>
     ${benchmarksHtml}
+    ${gapHtml}
     ${strategicHtml}
   </div>`;
 
