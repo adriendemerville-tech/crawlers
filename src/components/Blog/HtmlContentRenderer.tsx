@@ -1,5 +1,7 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import DOMPurify from 'dompurify';
+import { sanitizeHtmlDeterministic, PURIFY_CONFIG } from '@/lib/security/sanitizeHtml';
+
 
 interface HtmlContentRendererProps {
   html: string;
