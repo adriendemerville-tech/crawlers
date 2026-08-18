@@ -137,17 +137,17 @@ export function buildLlmBenchmarks(
     discovery.push({ intent: 'sector', text: `I need help with ${sector || need} — who should I turn to and why?` });
     discovery.push({ intent: 'criteria', text: `What criteria matter when choosing ${lex.seek} for ${need}?` });
 
-    comparison.push({ intent: 'comparison', text: `Compare ${lex.comparePlural} for ${need}: which one stands out?` });
-    comparison.push({ intent: 'alternative', text: `What alternatives exist for ${need}, beyond the big well-known players?` });
-    comparison.push({ intent: 'price', text: `How much does ${need} cost and how is pricing usually set?` });
+    comparison.push({ intent: 'comparison', text: `Compare ${lex.comparePlural} for ${need2}: which one stands out?` });
+    comparison.push({ intent: 'alternative', text: `What alternatives exist for ${need2}, beyond the big well-known players?` });
+    comparison.push({ intent: 'price', text: `How much does ${need2} cost and how is pricing usually set?` });
 
     usage.push(localOk
-      ? { intent: 'local', text: `Which ${lex.noun} handles ${need} in ${area}?` }
+      ? { intent: 'local', text: `Which ${lex.noun} handles ${need3} in ${area}?` }
       : target
-        ? { intent: 'audience', text: `I'm a ${target}: which ${lex.noun} for ${need} would you recommend?` }
-        : { intent: 'usecase', text: `In which situations is ${lex.seek} for ${need} genuinely worth it?` });
-    usage.push({ intent: 'proof', text: `What customer feedback or reviews do you rely on to recommend ${need}?` });
-    usage.push({ intent: 'decision', text: `If you had to recommend only one option for ${need}, which one and why?` });
+        ? { intent: 'audience', text: `I'm a ${target}: which ${lex.noun} for ${need3} would you recommend?` }
+        : { intent: 'usecase', text: `In which situations is ${lex.seek} for ${need3} genuinely worth it?` });
+    usage.push({ intent: 'proof', text: `What customer feedback or reviews do you rely on to recommend ${need3}?` });
+    usage.push({ intent: 'decision', text: `If you had to recommend only one option for ${need3}, which one and why?` });
   } else if (lang === 'es') {
     discovery.push({ intent: 'discovery', text: `Busco ${lex.seek} para ${need}, ¿alguna idea?` });
     discovery.push({ intent: 'sector', text: `Necesito ayuda con ${sector || need}, ¿a quién puedo dirigirme y por qué?` });
