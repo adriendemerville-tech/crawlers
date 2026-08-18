@@ -322,16 +322,20 @@ Deno.serve(handleRequest(async (req) => {
         jobPagesProcessed += attemptedCount;
         alreadyProcessed = newProcessedCount;
 
-        await supabase.from('crawl_jobs').update({ processed_count: newProcessedCount }).eq('id', job.id);
-        await supabase.from('site_crawls').update({ crawled_pages: newProcessedCount }).eq('id', job.crawl_id);
+        await Promise.all([
+          supabase.from('crawl_jobs').update({ processed_count: newProcessedCount }).eq('id', job.id),
+          supabase.from('site_crawls').update({ crawled_pages: newProcessedCount }).eq('id', job.crawl_id),
+        ]);
 
         console.log(`[Worker] Job ${job.id}: ${newProcessedCount}/${job.total_count} pages done`);
 
         remaining = remaining.slice(batchSize);
 
         if (validResults.length > 0) {
-          probeSize = validResults[validResults.length - 1].html_size_bytes || probeSize;
+          const batchAvg = validResults.reduce((s, p) => s + Number(p.html_size_bytes || 0), 0) / validResults.length;
+          weightEma = weightEma > 0 ? Math.round(weightEma * 0.6 + batchAvg * 0.4) : Math.round(batchAvg);
         }
+
       }
 
       console.log(`[Worker] Job ${job.id}: coût scraping — ${budgetSummary(paidBudget)}`);
