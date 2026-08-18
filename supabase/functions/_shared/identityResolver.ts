@@ -317,25 +317,58 @@ async function inferFromSite(url: string, domain: string): Promise<InferenceResu
     }),
   });
 
-  if (!res.ok) return null;
+  const notes: string[] = [];
+  const declaredFallback = (): Record<string, unknown> | null => {
+    // Le LLM a échoué : les faits déclarés suffisent parfois à ne pas rester vide.
+    if (!hasStructuredEvidence(structured)) return null;
+    notes.push("Carte d'identité établie à partir des seules données structurées déclarées par le site (JSON-LD, manifeste), l'analyse du contenu n'ayant pas abouti.");
+    return {
+      market_sector: structured.declaredTopics[0] || structured.declaredDescription,
+      products_services: structured.declaredOffers.join(', ') || structured.declaredDescription,
+      target_audience: structured.declaredAudience,
+      commercial_area: structured.declaredArea,
+      entity_type: structured.entityTypeHint,
+      is_local_business: structured.isLocalBusinessHint,
+    };
+  };
+
+  const finish = (fields: Record<string, unknown>): InferenceResult => {
+    // Les faits déclarés ne complètent que les trous, sauf pour le type d'entité
+    // et le caractère local, où la déclaration schema.org fait foi.
+    if (structured.entityTypeHint) fields['entity_type'] = structured.entityTypeHint;
+    if (structured.isLocalBusinessHint !== null) fields['is_local_business'] = structured.isLocalBusinessHint;
+    if (!fields['commercial_area'] && structured.declaredArea) fields['commercial_area'] = structured.declaredArea;
+    if (!fields['products_services'] && structured.declaredOffers.length) fields['products_services'] = structured.declaredOffers.join(', ');
+    if (!fields['target_audience'] && structured.declaredAudience) fields['target_audience'] = structured.declaredAudience;
+    if (hasStructuredEvidence(structured)) {
+      notes.push(
+        `Données structurées déclarées prises en compte${structured.schemaTypes.length ? ` (${structured.schemaTypes.slice(0, 6).join(', ')})` : ''}${structured.manifest ? ' et manifeste web lu' : ''}.`,
+      );
+    }
+    return { fields, pagesUsed: pages.map((p) => p.url), notes };
+  };
+
+  if (!res.ok) {
+    const fb = declaredFallback();
+    return fb ? finish(fb) : null;
+  }
   const json = await res.json().catch(() => null) as any;
   const content = json?.choices?.[0]?.message?.content;
-  if (typeof content !== 'string') return null;
-
-  const match = content.match(/\{[\s\S]*\}/);
-  if (!match) return null;
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(match[0]);
-  } catch {
-    return null;
+  const match = typeof content === 'string' ? content.match(/\{[\s\S]*\}/) : null;
+  let parsed: Record<string, unknown> | null = null;
+  if (match) {
+    try {
+      parsed = JSON.parse(match[0]);
+    } catch {
+      parsed = null;
+    }
+  }
+  if (!parsed) {
+    const fb = declaredFallback();
+    return fb ? finish(fb) : null;
   }
 
-  return {
-    fields: parsed,
-    pagesUsed: pages.map((p) => p.url),
-    notes: [],
-  };
+  return finish(parsed);
 }
 
 export interface ResolveIdentityOptions {
