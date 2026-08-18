@@ -564,7 +564,7 @@ export function renderConsolidatedPlanHTML(
   const newCount = stats?.newly_detected ?? (items.length - items.filter((i) => i.source === 'workbench').length);
   const total = stats?.total_candidates ?? items.length;
   const merged = stats?.merged_duplicates ?? 0;
-  const roiSummary = summarizeRoi(items as Array<{ title: string; roi?: RoiAnnotation }>);
+  
 
   return `<div class="section">
     <div class="section-title">Plan d'action consolidé</div>
