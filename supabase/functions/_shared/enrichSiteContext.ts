@@ -159,7 +159,8 @@ export async function fetchHomepageEvidence(domain: string): Promise<OnsiteEvide
         .slice(0, 3500)
 
       if (!title && !description && headings.length === 0 && text.length < 200) continue
-      return { title, description, headings, text }
+      const structured = await extractStructuredIdentity(html, new URL(url).origin, { fetchManifest: true })
+      return { title, description, headings, text, structured }
     } catch {
       continue
     }
