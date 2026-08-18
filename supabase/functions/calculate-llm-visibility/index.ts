@@ -426,9 +426,9 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       },
       { max: 3, brandTerms: [enrichedSite.brand_name, enrichedSite.site_name].filter(Boolean) as string[] },
     )
-    console.log(`[llm-visibility] question topics (${topicSelection.source}):`, topicSelection.topics)
-    // 3 benchmarks × 3 questions sur des intentions différentes.
-    // Chaque benchmark est scoré séparément (carte de résultats dédiée).
+    console.log(`[llm-visibility] question topics (${topicSelection.source}):`, topicSelection.selections?.map((s: any) => `${s.axis}:${s.topic}`) || topicSelection.topics)
+    // 3 benchmarks = 3 zones de marché (couverte / mieux classée / non captée).
+    // Dans chacun : découverte + comparaison + contexte (local si pertinent).
     const benchmarks = buildLlmBenchmarks(
       {
         market_sector: enrichedSite.market_sector,
@@ -445,7 +445,9 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       'fr',
       [],
       topicSelection.topics,
+      topicSelection.selections || [],
     )
+
     const flatPrompts: Array<{ text: string; intent: string; benchmarkId: string }> = []
     for (const b of benchmarks) {
       for (const p of b.prompts) flatPrompts.push({ text: p.text, intent: p.intent, benchmarkId: b.id })

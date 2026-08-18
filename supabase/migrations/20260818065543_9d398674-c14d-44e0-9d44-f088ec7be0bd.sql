@@ -1,0 +1,1 @@
+DELETE FROM public.domain_data_cache WHERE data_type IN ('llm_visibility','marina_site_scope');
