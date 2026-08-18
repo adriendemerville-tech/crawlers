@@ -3491,6 +3491,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
       // ─── LLM Visibility (parallel with cocoon) ───
       let llmVisibilityData: any = null;
+      // Modèles encore en attente de réponse au moment du rendu du rapport.
+      let llmPendingAtRender: string[] = [];
+
       let trackedSiteId: string | null = null;
       let identityRow: Record<string, any> | null = null;
       {
