@@ -1805,6 +1805,14 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const thinContentPages = cocoonGraphDetails?.thin_content_pages || [];
   const strategeRecos: Array<{ title: string; description: string; priority: string }> = cocoonData?._stratege_recommendations || [];
 
+  // Lot B — verdict pilier / satellite : « /a ↔ /b » n'indique pas quelle page
+  // garder. Chaque groupe reçoit donc un verdict déterministe et une action unique.
+  // Repli sur la liste brute si les métriques de nœuds manquent.
+  const pillarSatelliteHtml = pillarSatelliteBlockHTML(
+    verdictsFromCocoonRisks(cannibalizationRisks, cocoonNodes, 5),
+  );
+
+
   // Lot 6 — nommage lisible des clusters + regroupement des thématiques isolées
   // (un cluster à une page n'a aucune valeur de lecture en tant que cadre).
   const clusterEntries: any[] = cocoonClusters && typeof cocoonClusters === 'object'
