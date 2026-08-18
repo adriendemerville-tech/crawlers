@@ -142,6 +142,29 @@ export async function finalizeJob(
   if (botRendering.blocked) {
     console.log(`[Worker] 🚫 Contenu non rendu côté serveur : ${botRendering.shell_pages}/${botRendering.analyzed_pages} pages en coquille JS`);
   }
+
+  // ── Lot 3 : contre-vérification des absences ──
+  // On ne conclut pas « pas de H1 / pas de JSON-LD / pas de meta description »
+  // sur le seul HTML servi : 3 pages au plus sont re-testées en rendu complet
+  // pour distinguer une absence réelle d'une absence propre aux robots.
+  let absenceVerification: AbsenceVerificationReport | null = null;
+  try {
+    const { fetchAndRenderPage } = await import('../renderPage.ts');
+    absenceVerification = await verifyAbsences(pages as any[], async (url: string) => {
+      const r = await fetchAndRenderPage(url, { timeout: 15000, forceRender: true });
+      // Sans rendu effectif, le HTML est identique au HTML servi : aucune
+      // information nouvelle, on ne prétend donc pas avoir contre-vérifié.
+      if (!r.usedRendering) return { html: null, engine: '' };
+      return { html: r.html, engine: 'navigateur headless' };
+    });
+    console.log(
+      `[Worker] Lot 3 — absences contre-vérifiées sur ${absenceVerification.verified_pages}/${absenceVerification.candidate_pages} page(s) candidates ; `
+      + `robots seulement: ${absenceVerification.bot_only_signals.join(', ') || 'aucun'} ; confirmées: ${absenceVerification.confirmed_signals.join(', ') || 'aucune'}`,
+    );
+  } catch (e) {
+    console.warn('[Worker] absence verification failed:', (e as Error).message);
+  }
+
   // ── Lot A : signaux de confiance machine (0 token LLM) ──
   // Surclaims, autorité citée incohérente, URLs mortes encore liées.
   let riskClaims: any = null;
