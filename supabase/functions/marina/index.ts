@@ -3478,18 +3478,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const { data: cpRow } = await sb
           .from('audit_cache')
           .select('result_data')
-          .eq('cache_key', phaseCheckpointKey(jobId))
+          .eq('cache_key', `marina_phase3_restart_${jobId}`)
           .maybeSingle();
-        const restarts = Number((cpRow?.result_data as any)?.phase3_restarts || 0);
+        const restarts = Number((cpRow?.result_data as any)?.count || 0);
         if (restarts >= 1) {
           throw new Error('Phase 3: données intermédiaires introuvables après relance — pipeline interrompu');
         }
         await sb.from('audit_cache').upsert({
-          cache_key: phaseCheckpointKey(jobId),
+          cache_key: `marina_phase3_restart_${jobId}`,
           function_name: 'marina',
-          result_data: { ...((cpRow?.result_data as any) || {}), phase3_restarts: restarts + 1 },
+          result_data: { count: restarts + 1 },
           expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
         }, { onConflict: 'cache_key' });
+
         console.warn(`[Marina] Phase 3 sans données intermédiaires — relance depuis la phase 1 pour ${jobId}`);
         await updateProgress(10, 'phase1_restart');
         await selfInvokePhase(jobId, url, lang, 'phase1', {});
