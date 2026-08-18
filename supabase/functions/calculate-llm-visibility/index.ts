@@ -535,6 +535,54 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       return jsonOk({ data: cached })
     }
 
+    // Persistance AVANT les appels modèles : un fournisseur lent ou une coupure
+    // de l'exécution ne doit plus effacer les questions réellement envoyées.
+    // Le rapport peut ainsi afficher les 3 benchmarks avec un statut non mesuré,
+    // puis la ligne est remplacée par les scores complets en fin de traitement.
+    const pendingScores = LLM_TARGETS.map((llm) => ({
+      llm_name: llm.name,
+      score_percentage: null,
+      measurement_status: 'pending',
+      measured_prompts: 0,
+      total_prompts: prompts.length,
+      details: [],
+    }))
+    const pendingBenchmarks = benchmarks.map((benchmark) => ({
+      id: benchmark.id,
+      label: benchmark.label,
+      description: benchmark.description,
+      prompts: benchmark.prompts,
+      scores: LLM_TARGETS.map((llm) => ({
+        llm_name: llm.name,
+        score_percentage: null,
+        measurement_status: 'pending',
+        measured_prompts: 0,
+        total_prompts: benchmark.prompts.length,
+        details: [],
+      })),
+      cited_models: 0,
+      measured_models: 0,
+      total_models: LLM_TARGETS.length,
+      coverage: computeCoverage(0, 0),
+      score: null,
+    }))
+    await supabase.from('domain_data_cache').upsert({
+      domain: site.domain,
+      data_type: 'llm_visibility',
+      week_start_date: weekStart,
+      result_data: {
+        scores: pendingScores,
+        benchmarks: pendingBenchmarks,
+        aggregate: buildAggregate([], 1),
+        week_start_date: weekStart,
+        measured_models: 0,
+        total_models: LLM_TARGETS.length,
+        measurement_status: 'processing',
+        prompts_fingerprint: promptsFingerprint,
+      },
+      expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    }, { onConflict: 'domain,data_type,week_start_date' })
+
     console.log(`[llm-vis] 🔍 ${site.domain} — patterns: ${patterns.exact.join(', ')} — ${prompts.length} prompts × ${LLM_TARGETS.length} LLMs (parallel)`)
 
     // ── Run ALL LLMs in parallel ──

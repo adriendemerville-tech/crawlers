@@ -8,6 +8,7 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { logAIUsageFromResponse } from '../_shared/logAIUsage.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { resolveSocialProof, gmbToSocialProofSignals, fetchPlacesSocialProof, formatSocialProofForPrompt } from '../_shared/socialProof.ts';
+import { fetchLegalPagePersons, pickSpokesperson, toFounderInfo } from '../_shared/personAuthority.ts';
 
 const HEADERS = { ...corsHeaders, 'Content-Type': 'application/json' };
 
@@ -475,7 +476,6 @@ async function runEeatPipeline(
   const socialProof = resolveSocialProof({ pageContext, extraSignals: extraSocialSignals });
   console.log(`[check-eeat] ⭐ Preuve sociale: ${socialProof.status} (avis=${socialProof.reviewCount ?? 'n/a'}, note=${socialProof.rating ?? 'n/a'})`);
 
-
   // ── Phase 2.7: Fetch domain age from site identity card ──
   console.log(`[check-eeat] 📅 Phase 2.7: Fetching domain age...`);
   const domainAgeInfo = await fetchDomainAge(supabase, effectiveDomain, trackedSiteId);
@@ -495,6 +495,15 @@ async function runEeatPipeline(
     }
   }
   if (jobId) await supabase.from('async_jobs').update({ progress: 55 }).eq('id', jobId);
+
+  // Résolution déterministe du porte-parole : aucune recommandation ne doit
+  // publier un nom issu d'une simple supposition ou d'un profil social isolé.
+  const spokesperson = pickSpokesperson({
+    domain: effectiveDomain,
+    brandName: identityCard?.brand_name || '',
+    candidates: await fetchLegalPagePersons(effectiveDomain),
+  });
+  const spokespersonInfo = toFounderInfo(spokesperson);
 
   // ── Phase 3: LLM analysis with enriched context ──
   console.log(`[check-eeat] 🤖 Phase 3: LLM analysis...`);
@@ -670,6 +679,14 @@ Réponds UNIQUEMENT en JSON valide :
     };
   }
 
+  if (spokesperson.status === 'unresolved') {
+    const recommendation = `L’audit n’a identifié aucun porte-parole public et vérifié pour ${domain}. Cela affaiblit l’incarnation de l’expertise, l’autorité du domaine en SEO et sa citabilité dans les moteurs de réponse IA. Le dirigeant, gérant, CEO ou fondateur devrait devenir le porte-parole régulier de l’entreprise : page auteur et biographie vérifiable, contenus experts signés, profil professionnel relié par sameAs et prises de parole cohérentes dans le temps.`;
+    const existing = Array.isArray(analysis.recommendations) ? analysis.recommendations : [];
+    if (!existing.some((item: unknown) => /porte-parole/i.test(String(item)))) {
+      analysis.recommendations = [recommendation, ...existing];
+    }
+  }
+
   if (jobId) await supabase.from('async_jobs').update({ progress: 95 }).eq('id', jobId);
 
   // ── Weighted score calculation with multi-pillar penalties ──
@@ -808,6 +825,7 @@ Réponds UNIQUEMENT en JSON valide :
       testimonials: aggregated.hasTestimonials,
       testimonialsVerifiable: aggregated.testimonialsVerifiable,
       socialProofVerified: socialProof,
+      spokesperson: spokespersonInfo,
     },
     trustSignals: analysis.trust_signals || [],
     missingSignals: analysis.missing_signals || [],
