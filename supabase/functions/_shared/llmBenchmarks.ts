@@ -270,9 +270,9 @@ export function buildLlmBenchmarks(
         { intent: 'discovery', text: discovery[v] },
         { intent: 'comparison', text: comparison[v] },
         localOk
-          ? { intent: 'local', text: `Busco ${lex.seek} para ${need} en ${area}, ¿qué me recomiendas?` }
+          ? { intent: 'local', text: `Busco ${lex.seek} para ${framed} cerca de ${area}, ¿en quién puedo confiar?` }
           : audience
-            ? { intent: 'audience', text: `Soy ${audience} y necesito ${need}: ¿qué opción recomiendas y por qué?` }
+            ? { intent: 'audience', text: `Soy ${audience} y necesito ${framed}: ¿qué opción recomiendas y por qué?` }
             : { intent: 'usecase', text: `¿En qué casos merece la pena ${lex.seek} para ${need} y en quién confiar?` },
       ];
     }
