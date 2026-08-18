@@ -2144,10 +2144,11 @@ function buildExecutiveSummaryHTML(
           `${domain} presenta un fallo crítico (${global}/100).`,
         );
 
-  const cell = (label: string, value: string) => `
+  const cell = (label: string, value: string, metric?: string) => `
     <div style="flex:1 1 140px;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;background:#ffffff;">
       <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">${label}</div>
       <div style="font-size:20px;font-weight:700;color:#111827;">${value}</div>
+      ${metric ? `<div style="margin-top:5px;">${metricBadge(metric, lang)}</div>` : ''}
     </div>`;
 
   return `
@@ -2155,11 +2156,11 @@ function buildExecutiveSummaryHTML(
     <h2 style="font-size:20px;margin:0 0 4px 0;">${t('Synthèse exécutive', 'Executive summary', 'Síntesis ejecutiva')}</h2>
     <p style="font-size:14px;line-height:1.7;color:#374151;margin:0 0 14px 0;"><strong>${verdict}</strong></p>
     <div style="display:flex;flex-wrap:wrap;gap:10px;">
-      ${cell(t('Score global', 'Global score', 'Puntuación global'), global === null ? 'n/d' : `${global}/100`)}
-      ${cell(t('SEO technique', 'Technical SEO', 'SEO técnico'), tech100 === null ? 'n/d' : `${tech100}/100`)}
-      ${cell(t('GEO / citabilité IA', 'GEO / AI citability', 'GEO / citabilidad IA'), geo100 === null ? 'n/d' : `${geo100}/100`)}
-      ${cell(t('Pages explorées', 'Pages crawled', 'Páginas rastreadas'), pages ? String(pages) : 'n/d')}
-      ${ctx.roi ? cell(t('Gains rapides', 'Quick wins', 'Ganancias rápidas'), `${ctx.roi.quickWins}${ctx.roi.quickWinDays ? ` · ~${ctx.roi.quickWinDays} j` : ''}`) : ''}
+      ${cell(t('Score global', 'Global score', 'Puntuación global'), global === null ? 'n/d' : `${global}/100`, 'global_score')}
+      ${cell(t('SEO technique', 'Technical SEO', 'SEO técnico'), tech100 === null ? 'n/d' : `${tech100}/100`, 'seo_score')}
+      ${cell(t('GEO / citabilité IA', 'GEO / AI citability', 'GEO / citabilidad IA'), geo100 === null ? 'n/d' : `${geo100}/100`, 'geo_score')}
+      ${cell(t('Pages explorées', 'Pages crawled', 'Páginas rastreadas'), pages ? String(pages) : 'n/d', 'pages_crawled')}
+      ${ctx.roi ? cell(t('Gains rapides', 'Quick wins', 'Ganancias rápidas'), `${ctx.roi.quickWins}${ctx.roi.quickWinDays ? ` · ~${ctx.roi.quickWinDays} j` : ''}`, 'quick_win_days') : ''}
     </div>
     ${ctx.roi ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;">${ctx.roi.sentence}${ctx.roi.topQuickWins.length ? ` ${t('À traiter en premier', 'Start with', 'Empezar por')} : ${ctx.roi.topQuickWins.join(' ; ')}.` : ''}</p>` : ''}
 
