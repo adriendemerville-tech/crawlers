@@ -800,12 +800,19 @@ export async function reviseIdentityAfterCrawl(
               pagesUsed: card.pagesUsed,
               notes: [
                 ...notes,
-                `Carte d'identité déduite après le crawl (titres et H1 de ${texts.length} pages), la lecture de la home n'ayant pas permis de conclure.`,
+                forceRewrite
+                  ? `Activité, produits/services et cible recalculés après le crawl sur les titres et H1 de ${texts.length} pages : la lecture de la seule page d'accueil menait à une activité contredite par le site.`
+                  : `Carte d'identité déduite après le crawl (titres et H1 de ${texts.length} pages), la lecture de la home n'ayant pas permis de conclure.`,
               ],
             });
-            if (revised.sector !== 'unknown' || revised.commercialModel !== 'unknown') {
-              await persistRevision(sb, revised, opts.userId);
-              return revised;
+            // Si le modèle ne tranche pas, on garde au moins le secteur imposé
+            // par la dominance du corpus crawlé.
+            const finalCard: IdentityCard = revised.sector === 'unknown' && sector !== 'unknown'
+              ? { ...revised, sector, sectorLabelText: sectorLabel(sector) }
+              : revised;
+            if (finalCard.sector !== 'unknown' || finalCard.commercialModel !== 'unknown') {
+              await persistRevision(sb, finalCard, opts.userId);
+              return finalCard;
             }
           }
         }
