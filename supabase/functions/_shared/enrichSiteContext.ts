@@ -197,7 +197,7 @@ async function inferContextFromDomain(
     ? `\n\nCONTENU RÉEL DE LA PAGE D'ACCUEIL (source de vérité, prioritaire sur toute intuition liée au nom de domaine) :
 Title: ${evidence.title || '—'}
 Meta description: ${evidence.description || '—'}
-Titres (H1-H3): ${evidence.headings.slice(0, 20).join(' | ') || '—'}
+Titres (H1-H3): ${evidence.headings.slice(0, 20).join(' | ') || '—'}${renderStructuredEvidenceBlock(evidence.structured)}
 Texte visible: ${evidence.text}
 
 Règles impératives :
