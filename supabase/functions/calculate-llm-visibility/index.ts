@@ -413,6 +413,19 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     }
 
     const patterns = buildBrandPatterns(enrichedSite)
+    // Étape préalable déterministe : quels besoins concrets faut-il tester ?
+    // Priorité aux requêtes réelles du marché (keyword_universe), sinon
+    // carte d'identité. Évite les questions hors sol ("un outil pour Travaux…").
+    const topicSelection = await selectQuestionTopics(
+      supabase,
+      enrichedSite.domain || domain,
+      {
+        products_services: enrichedSite.products_services,
+        market_sector: enrichedSite.market_sector,
+      },
+      { max: 3, brandTerms: [enrichedSite.brand_name, enrichedSite.site_name].filter(Boolean) as string[] },
+    )
+    console.log(`[llm-visibility] question topics (${topicSelection.source}):`, topicSelection.topics)
     // 3 benchmarks × 3 questions sur des intentions différentes.
     // Chaque benchmark est scoré séparément (carte de résultats dédiée).
     const benchmarks = buildLlmBenchmarks(
@@ -429,6 +442,8 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         domain: enrichedSite.domain,
       },
       'fr',
+      [],
+      topicSelection.topics,
     )
     const flatPrompts: Array<{ text: string; intent: string; benchmarkId: string }> = []
     for (const b of benchmarks) {
