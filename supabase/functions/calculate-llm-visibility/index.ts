@@ -466,6 +466,8 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       {
         products_services: enrichedSite.products_services,
         market_sector: enrichedSite.market_sector,
+        value_proposition: (enrichedSite as any).value_proposition,
+        secondary_propositions: (enrichedSite as any).secondary_propositions,
       },
       {
         max: 3,
