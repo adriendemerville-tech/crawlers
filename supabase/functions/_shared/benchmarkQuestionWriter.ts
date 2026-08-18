@@ -104,13 +104,17 @@ export async function naturalizeBenchmarkQuestions(
 
   const scrubTerms = buildBrandScrubTerms(site.domain, [site.brand_name, site.site_name]);
 
+  const s = site as Record<string, any>;
+  const archetype = resolveArchetype(s);
   const identity = [
     site.market_sector ? `Secteur : ${site.market_sector}` : '',
+    s.value_proposition ? `PROPOSITION DE VALEUR CENTRALE (le besoin n°1 à tester) : ${s.value_proposition}` : '',
+    s.secondary_propositions ? `Propositions de valeur secondaires : ${s.secondary_propositions}` : '',
     site.products_services ? `Ce que l'entreprise vend : ${site.products_services}` : '',
     site.target_audience ? `Clients visés : ${site.target_audience}` : '',
     site.commercial_area ? `Zone de chalandise : ${site.commercial_area}` : '',
     site.entity_type ? `Type d'entité : ${site.entity_type}` : '',
-    (site as any).business_model ? `Modèle d'affaires : ${(site as any).business_model}` : '',
+    s.business_model ? `Modèle d'affaires : ${s.business_model}` : '',
   ].filter(Boolean).join('\n');
 
   const blocks = benchmarks.map((b, i) => ({
