@@ -4485,7 +4485,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         // et produit un verdict d'écart entre les deux familles.
         const tlSignals = strategicData?.social_signals?.thought_leadership || null;
         const geoSubSignalsReport = buildGeoSubSignals({
-          breakdown: strategicData?.citation_breakdown || null,
+          // Le breakdown est imbriqué sous llm_visibility dans l'objet d'audit
+          // stratégique ; l'accès direct renvoyait undefined et laissait les
+          // 8 sous-signaux correspondants en « non mesuré ».
+          breakdown:
+            strategicData?.llm_visibility?.citation_breakdown ||
+            strategicData?.llm_visibility_raw?.citation_breakdown ||
+            strategicData?.citation_breakdown ||
+            llmVisibilityData?.citation_breakdown ||
+            null,
           isBotShell: botRendering ? Boolean(botRendering.blocked) : null,
           botOnlyAbsences: absenceReport ? (absenceReport.bot_only_signals?.length ?? 0) : null,
           crawlFormatting: crawlSnapshot?.answerFormatting || null,
