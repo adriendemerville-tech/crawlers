@@ -4621,6 +4621,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         completed_at: new Date().toISOString(),
       }).eq('id', jobId);
 
+      // Nettoyage des checkpoints seulement après finalisation du rapport.
+      await sb.from('audit_cache').delete()
+        .in('cache_key', [`marina_intermediate_${jobId}`, `marina_phase1a_${jobId}`]);
 
       console.log(`[Marina] ✅ Phase 3 complete — pipeline finished for ${domain}`);
 
