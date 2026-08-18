@@ -88,11 +88,16 @@ function mainNeedOf(ctx: SiteContext, lang: PromptLang): string {
 /**
  * Génère 3 benchmarks × 3 questions. Les questions sont déterministes
  * (0 token LLM) et dérivées de la carte d'identité.
+ *
+ * `topics` (voir _shared/questionTopics.ts) contient les besoins concrets
+ * réellement recherchés sur le marché : un besoin différent par benchmark,
+ * au lieu de répéter la première valeur brute de `products_services`.
  */
 export function buildLlmBenchmarks(
   site: SiteContext & { domain?: string },
   lang: PromptLang = 'fr',
   extraBrandNames: (string | null | undefined)[] = [],
+  topics: string[] = [],
 ): LlmBenchmark[] {
   const scrubTerms = buildBrandScrubTerms(site.domain, [site.brand_name, site.site_name, ...extraBrandNames]);
   const clean = (t?: string | null) => {
