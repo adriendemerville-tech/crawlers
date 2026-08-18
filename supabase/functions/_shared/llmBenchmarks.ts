@@ -249,7 +249,7 @@ export function buildLlmBenchmarks(
         { intent: 'discovery', text: discovery[v] },
         { intent: 'comparison', text: comparison[v] },
         localOk
-          ? { intent: 'local', text: `I'm looking for ${lex.seek} for ${need} in ${area} — what would you recommend?` }
+          ? { intent: 'local', text: `I'm looking for ${lex.seek} for ${framed} near ${area} — who should I trust locally?` }
           : audience
             ? { intent: 'audience', text: `I'm a ${audience} and I need ${need}: which option would you recommend and why?` }
             : { intent: 'usecase', text: `In which situations is ${lex.seek} for ${need} genuinely worth it, and who should I trust?` },
