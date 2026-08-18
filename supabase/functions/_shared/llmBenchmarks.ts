@@ -81,6 +81,7 @@ const AXIS_LABELS: Record<PromptLang, Record<AxisKey, { label: string; descripti
     },
   },
   en: {
+    value_prop: VALUE_PROP_LABELS.en,
     covered: {
       label: 'Covered core market',
       description: 'A need the site already ranks for on Google: measures whether that SEO coverage turns into AI citations.',
