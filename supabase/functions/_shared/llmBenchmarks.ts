@@ -269,7 +269,7 @@ export function buildLlmBenchmarks(
       localOk
         ? { intent: 'local', text: `Je cherche ${lex.seek} pour ${need} à ${area}, que me recommandes-tu ?` }
         : audience
-          ? { intent: 'audience', text: `Je suis ${audience} et j'ai besoin de ${need} : tu me recommandes quoi et pourquoi ?` }
+          ? { intent: 'audience', text: `Je suis ${audience} et j'ai besoin ${deOf(need)} : tu me recommandes quoi et pourquoi ?` }
           : { intent: 'usecase', text: `Dans quels cas ${lex.seek} pour ${need} est-${feminine ? 'elle' : 'il'} vraiment utile, et à qui faire confiance ?` },
     ];
   };
