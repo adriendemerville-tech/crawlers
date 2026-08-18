@@ -43,10 +43,26 @@ export interface LlmBenchmark {
   prompts: BenchmarkPrompt[];
 }
 
-type AxisKey = 'covered' | 'ranked' | 'demand' | 'identity';
+type AxisKey = 'value_prop' | 'covered' | 'ranked' | 'demand' | 'identity';
+
+const VALUE_PROP_LABELS: Record<PromptLang, { label: string; description: string }> = {
+  fr: {
+    label: 'Proposition de valeur centrale',
+    description: "Offre n°1 déclarée dans la carte d'identité : mesure si les IA citent le site sur son cœur de proposition, indépendamment de son positionnement Google.",
+  },
+  en: {
+    label: 'Core value proposition',
+    description: 'The primary offer declared in the identity card: measures whether AI models cite the site on its core promise, independently of its Google ranking.',
+  },
+  es: {
+    label: 'Propuesta de valor central',
+    description: 'La oferta principal declarada en la ficha de identidad: mide si las IA citan el sitio en su promesa central, al margen de su posición en Google.',
+  },
+};
 
 const AXIS_LABELS: Record<PromptLang, Record<AxisKey, { label: string; description: string }>> = {
   fr: {
+    value_prop: VALUE_PROP_LABELS.fr,
     covered: {
       label: 'Cœur de marché couvert',
       description: "Besoin sur lequel le site est déjà présent dans les résultats Google : mesure si cette couverture SEO se traduit en citation par les IA.",
