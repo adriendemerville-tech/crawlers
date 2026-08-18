@@ -21,6 +21,7 @@ import {
   scopeSentence,
   buildAccountability,
   formatAccountability,
+  distributeTrafficGains,
   type Accountability,
   type TrafficContext,
 } from './actionPlanDiscrimination.ts';
