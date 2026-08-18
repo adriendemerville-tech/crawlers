@@ -196,27 +196,46 @@ Deno.serve(handleRequest(async (req) => {
       // ── Track discovered URLs to avoid re-crawling ──
       const processedUrls = new Set<string>(urlsToProcess.map(u => crawlUrlKey(u)));
 
+      // Poids de page lissé : moyenne exponentielle des tailles réellement
+      // observées, et non la taille de la dernière page. Une seule page lourde
+      // (une home de 200 kB) ne doit pas verrouiller tout le crawl sur des lots
+      // de 1 page — c'est ce qui faisait passer un site de 153 pages à ~10 min
+      // (3,8 s/page en série) alors qu'un site comparable tenait en 1 min 20.
+      let weightEma = probeSize || 0;
+      let batchIndex = 0;
+
       // ── INNER LOOP: keep processing pages while time allows ──
       while (remaining.length > 0 && !isTimeUp() && globalPagesProcessed < PAGES_PER_RUN && runBytesProcessed < BYTES_PER_RUN && jobPagesProcessed < jobQuota) {
-        // Check if crawl was stopped by user
-        const { data: crawlCheck } = await supabase
-          .from('site_crawls')
-          .select('status')
-          .eq('id', job.crawl_id)
-          .single();
-        if (crawlCheck?.status === 'stopped') {
-          console.log(`[Worker] Job ${job.id}: 🛑 Crawl stopped by user — preserving ${alreadyProcessed} cached pages`);
-          await supabase.from('crawl_jobs').update({ status: 'cancelled' }).eq('id', job.id);
-          break;
+        // Arrêt utilisateur : vérifié un lot sur quatre (le round-trip DB coûtait
+        // autant que le scraping quand les lots valaient 1 page).
+        if (batchIndex % 4 === 0) {
+          const { data: crawlCheck } = await supabase
+            .from('site_crawls')
+            .select('status')
+            .eq('id', job.crawl_id)
+            .single();
+          if (crawlCheck?.status === 'stopped') {
+            console.log(`[Worker] Job ${job.id}: crawl arrêté par l'utilisateur — ${alreadyProcessed} pages conservées`);
+            await supabase.from('crawl_jobs').update({ status: 'cancelled' }).eq('id', job.id);
+            break;
+          }
         }
+        batchIndex++;
 
-        // Dynamic batch sizing based on page weight
-        const dynamicMax = probeSize > 150_000 ? 1 : probeSize > 100_000 ? 2 : probeSize > 50_000 ? 3 : 4;
+        // Parallélisme dérivé du poids moyen lissé. Le garde-fou CPU réel reste
+        // BYTES_PER_RUN + le watchdog : on peut donc élargir les lots sans
+        // risquer le kill wall-time.
+        const dynamicMax = weightEma > 250_000 ? 2
+          : weightEma > 180_000 ? 3
+          : weightEma > 120_000 ? 5
+          : weightEma > 60_000 ? 7
+          : 10;
         const availableSlots = Math.min(PAGES_PER_RUN - globalPagesProcessed, jobQuota - jobPagesProcessed);
         const batchSize = Math.min(remaining.length, availableSlots, dynamicMax);
         const batch = remaining.slice(0, batchSize);
 
-        console.log(`[Worker] Job ${job.id}: batch=${batchSize} (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA]' : ''}`);
+        console.log(`[Worker] Job ${job.id}: batch=${batchSize} poids~${Math.round(weightEma / 1024)}KB (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA]' : ''}`);
+
 
         const scrapePromises = batch.map(async pageUrl => {
           const first = await scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url), paidBudget);
