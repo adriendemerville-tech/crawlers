@@ -4587,55 +4587,83 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
   }
 }
 
-// ─── Queue: trigger next pending Marina job ───
+// ─── Queue: concurrence Marina ───
+/** Nombre de jobs Marina exécutés simultanément (limité par les 7 slots Browserless). */
+const MAX_CONCURRENT_MARINA = 3;
+/** Plafond par utilisateur, pour qu'un compte ne monopolise pas la file. */
+const MAX_CONCURRENT_PER_USER = 2;
+
+async function countProcessing(sb: any, userId?: string | null): Promise<number> {
+  let q = sb
+    .from('async_jobs')
+    .select('id', { count: 'exact', head: true })
+    .eq('function_name', 'marina')
+    .eq('status', 'processing');
+  if (userId) q = q.eq('user_id', userId);
+  const { count } = await q;
+  return count || 0;
+}
+
+// ─── Queue: trigger next pending Marina job(s) ───
 async function triggerNextPendingJob() {
   try {
     const sb = getServiceClient();
-    // Check if any job is already processing
-    const { data: running } = await sb
-      .from('async_jobs')
-      .select('id')
-      .eq('function_name', 'marina')
-      .in('status', ['processing'])
-      .limit(1);
 
-    if (running && running.length > 0) {
-      console.log(`[Marina] 🔄 Queue: another job still processing (${running[0].id}), skipping`);
+    let freeSlots = MAX_CONCURRENT_MARINA - (await countProcessing(sb));
+    if (freeSlots <= 0) {
+      console.log('[Marina] 🔄 Queue: all slots busy, skipping');
       return;
     }
 
-    // Find oldest pending job
+    // Find oldest pending jobs
     const { data: next } = await sb
       .from('async_jobs')
-      .select('id, input_payload')
+      .select('id, user_id, input_payload')
       .eq('function_name', 'marina')
       .eq('status', 'pending')
       .order('created_at', { ascending: true })
-      .limit(1);
+      .limit(10);
 
     if (!next || next.length === 0) {
       console.log('[Marina] 🔄 Queue: no pending jobs');
       return;
     }
 
-    const nextJob = next[0];
-    const payload = nextJob.input_payload as any;
-    console.log(`[Marina] 🔄 Queue: starting next pending job ${nextJob.id} (${payload?.url})`);
+    const perUser = new Map<string, number>();
 
-    fetch(`${SUPABASE_URL}/functions/v1/marina`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${SERVICE_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ action: 'run_job', job_id: nextJob.id, url: payload?.url, lang: payload?.lang || null }),
-    }).catch(err => {
-      console.error('[Marina] Queue: self-invocation for next job failed:', err);
-    });
+    for (const nextJob of next) {
+      if (freeSlots <= 0) break;
+      const uid = String((nextJob as any).user_id || '');
+      if (uid) {
+        let used = perUser.get(uid);
+        if (used === undefined) {
+          used = await countProcessing(sb, uid);
+          perUser.set(uid, used);
+        }
+        if (used >= MAX_CONCURRENT_PER_USER) continue;
+        perUser.set(uid, used + 1);
+      }
+
+      const payload = (nextJob as any).input_payload as any;
+      console.log(`[Marina] 🔄 Queue: starting next pending job ${nextJob.id} (${payload?.url})`);
+      freeSlots--;
+
+      fetch(`${SUPABASE_URL}/functions/v1/marina`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SERVICE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'run_job', job_id: nextJob.id, url: payload?.url, lang: payload?.lang || null }),
+      }).catch(err => {
+        console.error('[Marina] Queue: self-invocation for next job failed:', err);
+      });
+    }
   } catch (e) {
     console.warn('[Marina] Queue: triggerNextPendingJob error:', e);
   }
 }
+
 
 // ─── Main server ───
 Deno.serve(handleRequest(async (req) => {
@@ -5043,18 +5071,9 @@ Deno.serve(handleRequest(async (req) => {
         }
       }
 
-      const { data: processingNow } = await sb
-        .from('async_jobs')
-        .select('id')
-        .eq('function_name', 'marina')
-        .eq('status', 'processing')
-        .limit(1);
+      // Des slots libres ? On remplit la file au lieu d'attendre.
+      await triggerNextPendingJob();
 
-      if (!processingNow || processingNow.length === 0) {
-        // File orpheline : plus rien ne tourne, on relance le plus ancien pending
-        // au lieu de l'échouer.
-        await triggerNextPendingJob();
-      }
     } catch (e) {
       console.warn('[Marina] Auto-cleanup failed:', e);
     }
@@ -5101,20 +5120,14 @@ Deno.serve(handleRequest(async (req) => {
       return json({ error: 'Failed to create job' }, 500);
     }
 
-    // ── Queue-aware launch: only self-invoke if no other job is processing ──
-    const { data: runningJobs } = await sb
-      .from('async_jobs')
-      .select('id')
-      .eq('function_name', 'marina')
-      .in('status', ['processing'])
-      .neq('id', job.id)
-      .limit(1);
+    // ── Queue-aware launch: jusqu'à MAX_CONCURRENT_MARINA jobs en parallèle ──
+    const globalRunning = await countProcessing(sb);
+    const userRunning = userId ? await countProcessing(sb, userId) : 0;
+    const mustQueue = globalRunning >= MAX_CONCURRENT_MARINA
+      || (userId ? userRunning >= MAX_CONCURRENT_PER_USER : false);
 
-    const hasRunningJob = runningJobs && runningJobs.length > 0;
-
-    if (hasRunningJob) {
-      console.log(`[Marina] 🔄 Queue: job ${job.id} queued (another job is processing)`);
-      // Count position in queue
+    if (mustQueue) {
+      console.log(`[Marina] 🔄 Queue: job ${job.id} en file (global ${globalRunning}/${MAX_CONCURRENT_MARINA}, user ${userRunning}/${MAX_CONCURRENT_PER_USER})`);
       const { count } = await sb
         .from('async_jobs')
         .select('id', { count: 'exact', head: true })
@@ -5124,6 +5137,7 @@ Deno.serve(handleRequest(async (req) => {
 
       return json({ job_id: job.id, status: 'queued', queue_position: count || 1 });
     }
+
 
     // No running job — start immediately
     fetch(`${SUPABASE_URL}/functions/v1/marina`, {
