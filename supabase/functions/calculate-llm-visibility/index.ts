@@ -47,7 +47,7 @@ const MAX_RICHNESS_BONUS = 15
 // du catalogue, 404, timeout), on rejoue immédiatement sur le secours afin que
 // les 5 modèles affichés dans les rapports soient réellement mesurés.
 const LLM_TARGETS = [
-  { id: 'chatgpt',    name: 'ChatGPT',    models: ['openai/gpt-5.4-mini', 'openai/gpt-5.4-nano'] },
+  { id: 'chatgpt',    name: 'ChatGPT',    models: ['openai/gpt-5.4', 'openai/gpt-5.4-mini'] },
   { id: 'gemini',     name: 'Gemini',     models: ['google/gemini-3-flash-preview', 'google/gemini-3.5-flash'] },
   { id: 'perplexity', name: 'Perplexity', models: ['perplexity/sonar', 'perplexity/sonar-pro'] },
   { id: 'claude',     name: 'Claude',     models: ['anthropic/claude-3-haiku', 'anthropic/claude-haiku-4.5'] },
