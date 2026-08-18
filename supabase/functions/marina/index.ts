@@ -3814,12 +3814,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // Wait for LLM visibility if still running
       await llmVisibilityPromise;
 
-      // ─── Filet de sécurité : la fonction visibilité LLM peut terminer son écriture
-      // dans domain_data_cache alors que l'appel HTTP a déjà échoué/été coupé.
-      // Sans ce read-back, le rapport tombe sur le rendu dégradé (1 seul bloc au lieu
-      // des 3 benchmarks). On repolle le cache domaine quelques secondes.
-      if (!isFreshLlmPayload(llmVisibilityData)) {
-        for (let attempt = 0; attempt < 6; attempt++) {
+      // ─── Barrière de complétude visibilité LLM ───
+      // Deux cas à couvrir avant de rendre le rapport :
+      //  1. l'appel HTTP a été coupé alors que la fonction écrivait dans domain_data_cache ;
+      //  2. les questions sont persistées (3 benchmarks) mais des modèles répondent encore.
+      // Dans les deux cas on repolle le cache domaine jusqu'à obtenir un payload
+      // « settled » (statut != processing et aucun score pending), avec un budget borné.
+      const LLM_SETTLE_ATTEMPTS = 36; // 36 × 5s = 3 min max d'attente supplémentaire
+      if (!isSettledLlmPayload(llmVisibilityData)) {
+        for (let attempt = 0; attempt < LLM_SETTLE_ATTEMPTS; attempt++) {
           try {
             const { data: cached } = await sb
               .from('domain_data_cache')
@@ -3834,9 +3837,12 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             // Un payload legacy (sans les 3 benchmarks) ne doit pas écraser la mesure.
             if (payload?.scores?.length && Array.isArray(payload?.benchmarks) && payload.benchmarks.length >= 3) {
               llmVisibilityData = { data: payload };
-              console.log(`[Marina] ♻️ Visibilité LLM récupérée depuis domain_data_cache (${payload.benchmarks.length} benchmarks)`);
-              await writeSiteScopeCache(sb, domain, parentJob.user_id, { llmVisibility: llmVisibilityData });
-              break;
+              if (isSettledLlmPayload(llmVisibilityData)) {
+                console.log(`[Marina] ✅ Visibilité LLM complète (${payload.benchmarks.length} benchmarks, tous modèles compilés)`);
+                await writeSiteScopeCache(sb, domain, parentJob.user_id, { llmVisibility: llmVisibilityData });
+                break;
+              }
+              console.log(`[Marina] ⏳ Visibilité LLM encore en cours (${llmPendingModels(llmVisibilityData).join(', ')}) — attente ${attempt + 1}/${LLM_SETTLE_ATTEMPTS}`);
             }
           } catch (e) {
             console.warn('[Marina] read-back visibilité LLM échoué (non-fatal):', e);
@@ -3848,6 +3854,14 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           console.warn(`[Marina] Visibilité LLM indisponible pour ${domain} — rendu dégradé (pas de blocs benchmark)`);
         }
       }
+
+      // Trace du verdict de complétude : consommée à la finalisation du job pour
+      // interdire le passage en « terminé » avec des réponses manquantes.
+      llmPendingAtRender = llmPendingModels(llmVisibilityData);
+      if (llmPendingAtRender.length > 0) {
+        console.warn(`[Marina] ⚠️ Rapport rendu avec mesures LLM incomplètes : ${llmPendingAtRender.join(', ')}`);
+      }
+
 
 
       let crawlSnapshot: any = null;
