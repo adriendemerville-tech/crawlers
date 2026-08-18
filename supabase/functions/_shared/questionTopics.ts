@@ -331,7 +331,12 @@ export async function selectQuestionTopics(
     }
   }
 
-  // ── 2. Repli : carte d'identité (chaque item est un besoin) ──
+  // ── 2. Repli : carte d'identité. Les deux propositions de valeur
+  // SECONDAIRES passent avant les items bruts de `products_services` : elles
+  // décrivent une offre, pas une liste de mots.
+  for (const p of secondaryProps) {
+    push({ topic: p, volume: 0, position: null, intent: null }, 'value_prop');
+  }
   const parts = String(identity.products_services || '')
     .split(/[,;]|\set\s/gi)
     .map(normalizeTopic)
