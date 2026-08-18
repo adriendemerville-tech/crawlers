@@ -29,7 +29,7 @@ import {
   type SiteContext,
   type PromptLang,
 } from './naturalPrompts.ts';
-import type { TopicSelection } from './questionTopics.ts';
+import { isActorTopic, isToolLikeSite, type TopicSelection } from './questionTopics.ts';
 
 export interface BenchmarkPrompt {
   intent: string;
@@ -109,6 +109,27 @@ function mainNeedOf(ctx: SiteContext, lang: PromptLang): string {
   return (products.split(',')[0] || '').trim() || sector || fallback;
 }
 
+/**
+ * Métier réel du produit, extrait de la carte d'identité (0 token LLM).
+ * « SaaS d'audit et d'optimisation SEO, GEO et AEO : … » → « audit et
+ * optimisation SEO, GEO et AEO ». Sert de besoin quand la requête retenue
+ * décrit une audience (« agence de référencement naturel ») et non une tâche.
+ */
+function coreJobOf(ctx: SiteContext): string {
+  const raw = (ctx.products_services || '').trim();
+  if (!raw) return '';
+  let job = raw.split(':')[0].trim();
+  job = job.replace(/^(saas|logiciels?|plateformes?|outils?|applications?|app|solutions?|services?)\s+(de\s+la\s+|du\s+|des\s+|de\s+|d'|pour\s+)/i, '');
+  job = job.replace(/\bet\s+d'/gi, 'et ').replace(/\s{2,}/g, ' ').trim();
+  if (job.length < 5) return '';
+  if (job.length > 90) {
+    const cut = job.slice(0, 90);
+    const stop = Math.max(cut.lastIndexOf(','), cut.lastIndexOf(' '));
+    job = (stop > 20 ? cut.slice(0, stop) : cut).trim();
+  }
+  return job.replace(/[.,;]+$/, '').trim();
+}
+
 /** Preuve chiffrée ajoutée à la description du benchmark (jamais inventée). */
 function evidenceOf(sel: TopicSelection | undefined, lang: PromptLang): string {
   if (!sel) return '';
@@ -163,37 +184,92 @@ export function buildLlmBenchmarks(
   const feminine = lex.seek.startsWith('une');
   const L = AXIS_LABELS[lang];
 
-  /** Les trois formes de question, sur un besoin donné. */
-  const promptsFor = (need: string): BenchmarkPrompt[] => {
+  /**
+   * Reformule un besoin issu de l'univers de mots-clés.
+   * Quand la requête désigne un TYPE DE PRESTATAIRE (« agence de référencement
+   * naturel ») et que le site vend un produit, ce n'est pas un besoin mais une
+   * audience : le besoin devient le métier réel du produit (carte d'identité)
+   * et le prestataire passe en contexte d'audience.
+   */
+  const framedNeed = (need: string): { need: string; audience: string } => {
+    if (isActorTopic(need) && isToolLikeSite(ctx)) {
+      const job = coreJobOf(ctx);
+      if (job) return { need: job, audience: need };
+    }
+    return { need, audience: target };
+  };
+
+  /** Élision française : « besoin de audit » → « besoin d'audit ». */
+  const deOf = (need: string): string =>
+    /^[aeiouyàâéèêëîïôöûüh]/i.test(need) ? `d'${need}` : `de ${need}`;
+
+  /**
+   * Les trois formes de question, sur un besoin donné.
+   * `variant` (0-2) fait varier la formulation d'un benchmark à l'autre : sans
+   * cela les trois blocs du rapport affichaient trois fois la même phrase.
+   */
+  const promptsFor = (rawNeed: string, variant = 0): BenchmarkPrompt[] => {
+    const { need, audience } = framedNeed(rawNeed);
+    const v = ((variant % 3) + 3) % 3;
     if (lang === 'en') {
+      const discovery = [
+        `I'm looking for ${lex.seek} for ${need} — what do you recommend?`,
+        `What is the best ${lex.noun} to handle ${need} today?`,
+        `Which ${lex.noun} would you actually trust for ${need}, and why?`,
+      ];
+      const comparison = [
+        `Compare ${lex.comparePlural} for ${need}: which one stands out and why?`,
+        `Shortlist three serious options for ${need} and explain what sets them apart.`,
+        `Between the well-known players and the specialists for ${need}, what do you recommend?`,
+      ];
       return [
-        { intent: 'discovery', text: `I'm looking for ${lex.seek} for ${need} — what do you recommend?` },
-        { intent: 'comparison', text: `Compare ${lex.comparePlural} for ${need}: which one stands out and why?` },
+        { intent: 'discovery', text: discovery[v] },
+        { intent: 'comparison', text: comparison[v] },
         localOk
           ? { intent: 'local', text: `I'm looking for ${lex.seek} for ${need} in ${area} — what would you recommend?` }
-          : target
-            ? { intent: 'audience', text: `I'm a ${target} and I need ${need}: which option would you recommend and why?` }
+          : audience
+            ? { intent: 'audience', text: `I'm a ${audience} and I need ${need}: which option would you recommend and why?` }
             : { intent: 'usecase', text: `In which situations is ${lex.seek} for ${need} genuinely worth it, and who should I trust?` },
       ];
     }
     if (lang === 'es') {
+      const discovery = [
+        `Busco ${lex.seek} para ${need}, ¿qué me recomiendas?`,
+        `¿Cuál es hoy ${lex.seek} de referencia para ${need}?`,
+        `¿En qué ${lex.noun} confiarías realmente para ${need} y por qué?`,
+      ];
+      const comparison = [
+        `Compara ${lex.comparePlural} para ${need}: ¿cuál destaca y por qué?`,
+        `Dame tres opciones serias para ${need} y explica qué las diferencia.`,
+        `Entre los grandes actores y los especialistas para ${need}, ¿qué recomiendas?`,
+      ];
       return [
-        { intent: 'discovery', text: `Busco ${lex.seek} para ${need}, ¿qué me recomiendas?` },
-        { intent: 'comparison', text: `Compara ${lex.comparePlural} para ${need}: ¿cuál destaca y por qué?` },
+        { intent: 'discovery', text: discovery[v] },
+        { intent: 'comparison', text: comparison[v] },
         localOk
           ? { intent: 'local', text: `Busco ${lex.seek} para ${need} en ${area}, ¿qué me recomiendas?` }
-          : target
-            ? { intent: 'audience', text: `Soy ${target} y necesito ${need}: ¿qué opción recomiendas y por qué?` }
+          : audience
+            ? { intent: 'audience', text: `Soy ${audience} y necesito ${need}: ¿qué opción recomiendas y por qué?` }
             : { intent: 'usecase', text: `¿En qué casos merece la pena ${lex.seek} para ${need} y en quién confiar?` },
       ];
     }
+    const discovery = [
+      `Je cherche ${lex.seek} pour ${need}, que me recommandes-tu ?`,
+      `Quel${feminine ? 'le' : ''} est aujourd'hui ${lex.seek} de référence pour ${need} ?`,
+      `À quel${feminine ? 'le' : ''} ${lex.noun} ferais-tu vraiment confiance pour ${need}, et pourquoi ?`,
+    ];
+    const comparison = [
+      `Compare-moi ${lex.comparePlural} pour ${need} : ${feminine ? 'laquelle' : 'lequel'} sort du lot et pourquoi ?`,
+      `Donne-moi trois options sérieuses pour ${need} et ce qui les différencie concrètement.`,
+      `Entre les gros acteurs connus et les spécialistes pour ${need}, tu recommandes quoi ?`,
+    ];
     return [
-      { intent: 'discovery', text: `Je cherche ${lex.seek} pour ${need}, que me recommandes-tu ?` },
-      { intent: 'comparison', text: `Compare-moi ${lex.comparePlural} pour ${need} : ${feminine ? 'laquelle' : 'lequel'} sort du lot et pourquoi ?` },
+      { intent: 'discovery', text: discovery[v] },
+      { intent: 'comparison', text: comparison[v] },
       localOk
         ? { intent: 'local', text: `Je cherche ${lex.seek} pour ${need} à ${area}, que me recommandes-tu ?` }
-        : target
-          ? { intent: 'audience', text: `Je suis ${target} et j'ai besoin de ${need} : tu me recommandes quoi et pourquoi ?` }
+        : audience
+          ? { intent: 'audience', text: `Je suis ${audience} et j'ai besoin ${deOf(need)} : tu me recommandes quoi et pourquoi ?` }
           : { intent: 'usecase', text: `Dans quels cas ${lex.seek} pour ${need} est-${feminine ? 'elle' : 'il'} vraiment utile, et à qui faire confiance ?` },
     ];
   };
@@ -223,9 +299,9 @@ export function buildLlmBenchmarks(
     usedIds.add(id);
     out.push({
       id,
-      label: `Benchmark ${i + 1} — ${meta.label} : « ${need} »`,
+      label: `Benchmark ${i + 1} — ${meta.label} : « ${framedNeed(need).need} »`,
       description: `${meta.description}${evidenceOf(sel, lang)}`,
-      prompts: finalize(promptsFor(need)),
+      prompts: finalize(promptsFor(need, i)),
     });
   });
 

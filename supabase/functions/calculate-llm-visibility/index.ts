@@ -4,7 +4,7 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 import { generateNaturalPrompts, type SiteContext as NaturalSiteContext } from '../_shared/naturalPrompts.ts'
 import { buildLlmBenchmarks } from '../_shared/llmBenchmarks.ts'
-import { selectQuestionTopics } from '../_shared/questionTopics.ts'
+import { selectQuestionTopics, isToolLikeSite } from '../_shared/questionTopics.ts'
 import { resolveIdentityCard } from '../_shared/identityResolver.ts'
 import { buildAggregate, computeCoverage } from '../_shared/llmVisibilityScore.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
@@ -466,7 +466,16 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         products_services: enrichedSite.products_services,
         market_sector: enrichedSite.market_sector,
       },
-      { max: 3, brandTerms: [enrichedSite.brand_name, enrichedSite.site_name].filter(Boolean) as string[] },
+      {
+        max: 3,
+        brandTerms: [enrichedSite.brand_name, enrichedSite.site_name].filter(Boolean) as string[],
+        // Éditeur de logiciel : tester des tâches (« audit seo technique »,
+        // « optimisation geo »), pas des types de prestataires qui sont sa cible.
+        preferTaskTopics: isToolLikeSite({
+          entity_type: enrichedSite.entity_type,
+          business_model: enrichedSite.business_model,
+        }),
+      },
     )
     console.log(`[llm-visibility] question topics (${topicSelection.source}):`, topicSelection.selections?.map((s: any) => `${s.axis}:${s.topic}`) || topicSelection.topics)
     // 3 benchmarks = 3 zones de marché (couverte / mieux classée / non captée).

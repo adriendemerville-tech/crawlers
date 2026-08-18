@@ -107,6 +107,27 @@ function isUsableTopic(t: string, brandTerms: string[]): boolean {
   return true;
 }
 
+/**
+ * Requêtes qui désignent un TYPE DE PRESTATAIRE (« agence de référencement
+ * naturel », « consultant netlinking », « freelance seo ») et non une tâche.
+ * Pour un éditeur de logiciel, ces requêtes décrivent son AUDIENCE, jamais son
+ * besoin : « Je cherche un logiciel pour agence de référencement naturel » ne
+ * teste rien. On les rétrograde derrière les besoins-tâches, et on les
+ * réemploie comme contexte d'audience (voir llmBenchmarks.ts).
+ */
+const ACTOR_TOPIC_RE = /^(agence|agences|consultant|consultante|consultants|freelance|freelances|prestataire|prestataires|expert|experts|cabinet|société|societe|entreprise|entreprises|studio|indépendant|independant)\b/i;
+
+export function isActorTopic(topic: string): boolean {
+  return ACTOR_TOPIC_RE.test((topic || '').trim());
+}
+
+/** Le site vend-il un produit/outil (par opposition à une prestation locale) ? */
+export function isToolLikeSite(ctx: { entity_type?: string | null; business_model?: string | null }): boolean {
+  const e = (ctx.entity_type || '').toLowerCase();
+  const m = (ctx.business_model || '').toLowerCase();
+  return e === 'saas' || e === 'marketplace' || m.startsWith('saas') || m.startsWith('marketplace');
+}
+
 interface KwRow {
   keyword: string;
   search_volume: number | null;
@@ -189,7 +210,7 @@ export async function selectQuestionTopics(
   sb: { from: (t: string) => any } | null,
   domain: string,
   identity: { products_services?: string | null; market_sector?: string | null },
-  opts: { max?: number; brandTerms?: string[] } = {},
+  opts: { max?: number; brandTerms?: string[]; preferTaskTopics?: boolean } = {},
 ): Promise<QuestionTopicsResult> {
   const max = opts.max ?? 3;
   const brandTerms = (opts.brandTerms || []).map((b) => (b || '').toLowerCase()).filter(Boolean);
@@ -220,7 +241,12 @@ export async function selectQuestionTopics(
         .order('search_volume', { ascending: false, nullsFirst: false })
         .limit(200);
 
-      const cands = toCandidates((data || []) as KwRow[], brandTerms);
+      const allCands = toCandidates((data || []) as KwRow[], brandTerms);
+      // Un éditeur de logiciel doit être testé sur des TÂCHES (« audit seo
+      // technique », « optimisation geo »), pas sur des types de prestataires
+      // (« agence de référencement naturel ») qui sont sa cible, pas son besoin.
+      const taskCands = allCands.filter((c) => !isActorTopic(c.topic));
+      const cands = opts.preferTaskTopics && taskCands.length > 0 ? taskCands : allCands;
       if (cands.length > 0) {
         push(pickCovered(cands), 'covered');
         push(pickRanked(cands, kept), 'ranked');
