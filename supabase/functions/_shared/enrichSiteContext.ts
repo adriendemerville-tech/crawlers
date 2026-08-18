@@ -335,6 +335,8 @@ export async function ensureSiteContext(
   const currentContext: SiteContext = {
     market_sector: site.market_sector as string | undefined,
     products_services: site.products_services as string | undefined,
+    value_proposition: site.value_proposition as string | undefined,
+    secondary_propositions: site.secondary_propositions as string | undefined,
     target_audience: site.target_audience as string | undefined,
     commercial_area: site.commercial_area as string | undefined,
     company_size: site.company_size as string | undefined,
