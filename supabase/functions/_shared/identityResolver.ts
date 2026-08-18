@@ -21,6 +21,11 @@
 import { aiGatewayFetch } from './aiGatewayFetch.ts';
 import { writeIdentity } from './identityGateway.ts';
 import {
+  extractStructuredIdentity,
+  hasStructuredEvidence,
+  renderStructuredEvidenceBlock,
+} from './structuredIdentity.ts';
+import {
   normalizeSector,
   sectorLabel,
   normalizeCommercialModel,
