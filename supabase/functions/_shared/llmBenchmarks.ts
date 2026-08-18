@@ -43,10 +43,26 @@ export interface LlmBenchmark {
   prompts: BenchmarkPrompt[];
 }
 
-type AxisKey = 'covered' | 'ranked' | 'demand' | 'identity';
+type AxisKey = 'value_prop' | 'covered' | 'ranked' | 'demand' | 'identity';
+
+const VALUE_PROP_LABELS: Record<PromptLang, { label: string; description: string }> = {
+  fr: {
+    label: 'Proposition de valeur centrale',
+    description: "Offre n°1 déclarée dans la carte d'identité : mesure si les IA citent le site sur son cœur de proposition, indépendamment de son positionnement Google.",
+  },
+  en: {
+    label: 'Core value proposition',
+    description: 'The primary offer declared in the identity card: measures whether AI models cite the site on its core promise, independently of its Google ranking.',
+  },
+  es: {
+    label: 'Propuesta de valor central',
+    description: 'La oferta principal declarada en la ficha de identidad: mide si las IA citan el sitio en su promesa central, al margen de su posición en Google.',
+  },
+};
 
 const AXIS_LABELS: Record<PromptLang, Record<AxisKey, { label: string; description: string }>> = {
   fr: {
+    value_prop: VALUE_PROP_LABELS.fr,
     covered: {
       label: 'Cœur de marché couvert',
       description: "Besoin sur lequel le site est déjà présent dans les résultats Google : mesure si cette couverture SEO se traduit en citation par les IA.",
@@ -65,6 +81,7 @@ const AXIS_LABELS: Record<PromptLang, Record<AxisKey, { label: string; descripti
     },
   },
   en: {
+    value_prop: VALUE_PROP_LABELS.en,
     covered: {
       label: 'Covered core market',
       description: 'A need the site already ranks for on Google: measures whether that SEO coverage turns into AI citations.',
@@ -83,6 +100,7 @@ const AXIS_LABELS: Record<PromptLang, Record<AxisKey, { label: string; descripti
     },
   },
   es: {
+    value_prop: VALUE_PROP_LABELS.es,
     covered: {
       label: 'Núcleo de mercado cubierto',
       description: 'Necesidad para la que el sitio ya aparece en Google: mide si esa cobertura SEO se traduce en citas por las IA.',
@@ -209,8 +227,13 @@ export function buildLlmBenchmarks(
    * cela les trois blocs du rapport affichaient trois fois la même phrase.
    */
   const promptsFor = (rawNeed: string, variant = 0): BenchmarkPrompt[] => {
-    const { need, audience } = framedNeed(rawNeed);
+    const { need: framed, audience } = framedNeed(rawNeed);
     const v = ((variant % 3) + 3) % 3;
+    // Commerce / service de proximité : la ville entre dès la question de
+    // découverte (« je cherche un fleuriste à Salon-de-Provence »), sinon la
+    // mesure ne reflète pas la vraie requête d'un prospect local.
+    const geo = localOk ? (lang === 'en' ? ` in ${area}` : lang === 'es' ? ` en ${area}` : ` à ${area}`) : '';
+    const need = `${framed}${geo}`;
     if (lang === 'en') {
       const discovery = [
         `I'm looking for ${lex.seek} for ${need} — what do you recommend?`,
@@ -226,9 +249,9 @@ export function buildLlmBenchmarks(
         { intent: 'discovery', text: discovery[v] },
         { intent: 'comparison', text: comparison[v] },
         localOk
-          ? { intent: 'local', text: `I'm looking for ${lex.seek} for ${need} in ${area} — what would you recommend?` }
+          ? { intent: 'local', text: `I'm looking for ${lex.seek} for ${framed} near ${area} — who should I trust locally?` }
           : audience
-            ? { intent: 'audience', text: `I'm a ${audience} and I need ${need}: which option would you recommend and why?` }
+            ? { intent: 'audience', text: `I'm a ${audience} and I need ${framed}: which option would you recommend and why?` }
             : { intent: 'usecase', text: `In which situations is ${lex.seek} for ${need} genuinely worth it, and who should I trust?` },
       ];
     }
@@ -247,9 +270,9 @@ export function buildLlmBenchmarks(
         { intent: 'discovery', text: discovery[v] },
         { intent: 'comparison', text: comparison[v] },
         localOk
-          ? { intent: 'local', text: `Busco ${lex.seek} para ${need} en ${area}, ¿qué me recomiendas?` }
+          ? { intent: 'local', text: `Busco ${lex.seek} para ${framed} cerca de ${area}, ¿en quién puedo confiar?` }
           : audience
-            ? { intent: 'audience', text: `Soy ${audience} y necesito ${need}: ¿qué opción recomiendas y por qué?` }
+            ? { intent: 'audience', text: `Soy ${audience} y necesito ${framed}: ¿qué opción recomiendas y por qué?` }
             : { intent: 'usecase', text: `¿En qué casos merece la pena ${lex.seek} para ${need} y en quién confiar?` },
       ];
     }
@@ -267,9 +290,9 @@ export function buildLlmBenchmarks(
       { intent: 'discovery', text: discovery[v] },
       { intent: 'comparison', text: comparison[v] },
       localOk
-        ? { intent: 'local', text: `Je cherche ${lex.seek} pour ${need} à ${area}, que me recommandes-tu ?` }
+        ? { intent: 'local', text: `Je cherche ${lex.seek} pour ${framed} à proximité de ${area} : à qui puis-je faire confiance ?` }
         : audience
-          ? { intent: 'audience', text: `Je suis ${audience} et j'ai besoin ${deOf(need)} : tu me recommandes quoi et pourquoi ?` }
+          ? { intent: 'audience', text: `Je suis ${audience} et j'ai besoin ${deOf(framed)} : tu me recommandes quoi et pourquoi ?` }
           : { intent: 'usecase', text: `Dans quels cas ${lex.seek} pour ${need} est-${feminine ? 'elle' : 'il'} vraiment utile, et à qui faire confiance ?` },
     ];
   };

@@ -31,10 +31,41 @@ const INTENT_ROLE: Record<string, string> = {
 };
 
 const AXIS_ROLE: Record<string, string> = {
+  value_prop: "proposition de valeur centrale de l'entreprise : la question doit porter DIRECTEMENT sur cette offre",
   covered: "besoin déjà couvert par le site dans Google",
   ranked: "besoin sur lequel le site est le mieux classé dans Google",
   demand: "besoin très recherché que le site n'adresse pas",
   identity: "besoin déclaré dans la carte d'identité",
+};
+
+type QuestionArchetype = 'local_commerce' | 'local_service' | 'software' | 'ecommerce' | 'agency' | 'generic';
+
+/** Archétype de question, déduit du modèle d'affaires et de la zone de chalandise. */
+function resolveArchetype(site: Record<string, any>): QuestionArchetype {
+  const model = String(site.business_model || '').toLowerCase();
+  const entity = String(site.entity_type || '').toLowerCase();
+  const hasArea = !!String(site.commercial_area || '').trim();
+  if (model.startsWith('saas') || entity === 'saas') return 'software';
+  if (model.startsWith('ecommerce') || model.startsWith('marketplace') || entity === 'ecommerce') return 'ecommerce';
+  if (model === 'service_agency') return 'agency';
+  if (model === 'commerce_local' || model === 'retail' || model === 'restaurant') return hasArea ? 'local_commerce' : 'generic';
+  if (model === 'service_local' || model === 'leadgen' || model === 'artisan') return hasArea ? 'local_service' : 'generic';
+  return hasArea ? 'local_service' : 'generic';
+}
+
+const ARCHETYPE_DIRECTIVE: Record<QuestionArchetype, string> = {
+  local_commerce:
+    "Commerce de proximité : les questions doivent être TRÈS directes et géolocalisées, comme « je cherche un fleuriste à Aix-en-Provence » ou « quel fleuriste ouvert près d'Aix-en-Provence me conseilles-tu ? ». Pas de mise en contexte longue, pas de vocabulaire d'entreprise.",
+  local_service:
+    "Service ou artisan intervenant sur une zone : questions directes du type « je cherche une entreprise de rénovation de salle de bain à Marseille » ou « qui peut refaire ma toiture près de Marseille ? ». Le lieu doit apparaître dans la question.",
+  software:
+    "Logiciel / service en ligne : la question doit nommer la TÂCHE à accomplir, comme « quel outil pour piloter mon SEO et ma visibilité dans les IA ? ». Pas de lieu, pas de nom de produit.",
+  ecommerce:
+    "Vente en ligne : questions d'achat du type « où acheter <produit> en ligne, en qui avoir confiance ? ». Pas de lieu.",
+  agency:
+    "Agence / prestataire B2B : questions du type « quelle agence pour <mission> ? », en précisant le profil du demandeur quand c'est utile.",
+  generic:
+    "Prestataire généraliste : questions de recommandation simples, à la première personne, sans lieu si la zone n'est pas connue.",
 };
 
 /** Marqueurs d'une sortie polluée (fuite de prompt, champ brut, méta-discours). */
@@ -73,13 +104,17 @@ export async function naturalizeBenchmarkQuestions(
 
   const scrubTerms = buildBrandScrubTerms(site.domain, [site.brand_name, site.site_name]);
 
+  const s = site as Record<string, any>;
+  const archetype = resolveArchetype(s);
   const identity = [
     site.market_sector ? `Secteur : ${site.market_sector}` : '',
+    s.value_proposition ? `PROPOSITION DE VALEUR CENTRALE (le besoin n°1 à tester) : ${s.value_proposition}` : '',
+    s.secondary_propositions ? `Propositions de valeur secondaires : ${s.secondary_propositions}` : '',
     site.products_services ? `Ce que l'entreprise vend : ${site.products_services}` : '',
     site.target_audience ? `Clients visés : ${site.target_audience}` : '',
     site.commercial_area ? `Zone de chalandise : ${site.commercial_area}` : '',
     site.entity_type ? `Type d'entité : ${site.entity_type}` : '',
-    (site as any).business_model ? `Modèle d'affaires : ${(site as any).business_model}` : '',
+    s.business_model ? `Modèle d'affaires : ${s.business_model}` : '',
   ].filter(Boolean).join('\n');
 
   const blocks = benchmarks.map((b, i) => ({
@@ -98,6 +133,8 @@ export async function naturalizeBenchmarkQuestions(
     "Ces questions servent à mesurer si une entreprise est citée spontanément par les IA : elles ne doivent donc JAMAIS nommer l'entreprise auditée, sa marque, ni son site.",
     "Contraintes absolues : tu conserves exactement le même nombre de blocs et de questions, le même besoin testé et la même intention pour chaque question. Tu ne fais que reformuler dans une langue naturelle, parlée, à la première personne.",
     "Une seule phrase interrogative par question, entre 20 et 200 caractères, sans liste, sans guillemets, sans jargon SEO, sans terme technique interne.",
+    `Type d'entreprise auditée : ${ARCHETYPE_DIRECTIVE[archetype]}`,
+    "Quand un bloc porte sur la proposition de valeur centrale, la question doit interroger cette offre de front, sans détour ni généralité.",
     lang === 'fr' ? "Rédige en français." : lang === 'es' ? "Escribe en español." : "Write in English.",
     "Réponds uniquement en JSON : {\"blocks\":[{\"index\":0,\"questions\":[\"…\",\"…\",\"…\"]}]}",
   ].join('\n');

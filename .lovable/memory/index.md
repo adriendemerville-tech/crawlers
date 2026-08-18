@@ -27,3 +27,4 @@
 - [GEO 10 sous-signaux Lot B](mem://tech/audit/geo-sub-signals-lot-b-fr) — GEO décomposé en compréhension machine (50) vs autorité perçue (50), verdict d'écart authority_lag/comprehension_lag/both_low, sous-signaux non mesurés exclus du dénominateur, verdict pilier/satellite (301, arbitrage, refonte, satellites légitimes) sur la cannibalisation
 - [Taxonomie de provenance](mem://tech/audit/provenance-taxonomy-fr) — Pastilles Mesuré/Testé/Déduit/Estimé via _shared/provenance.ts, table METRIC_PROVENANCE source unique de vérité, scores = Déduit (jamais « mesurés »), légende une seule fois par rapport
 
+- [Proposition de valeur & archétypes de questions](mem://features/identity/value-proposition-benchmarks-fr) — value_proposition + secondary_propositions dans la carte d'identité, axe value_prop réservé au benchmark n°1, questions directes géolocalisées pour les commerces/services locaux, directives par archétype dans le rédacteur LLM

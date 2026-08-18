@@ -19,7 +19,7 @@
  * Consommateurs : calculate-llm-visibility (puis llmBenchmarks).
  */
 
-export type TopicAxis = 'covered' | 'ranked' | 'demand' | 'identity';
+export type TopicAxis = 'value_prop' | 'covered' | 'ranked' | 'demand' | 'identity';
 
 export interface TopicSelection {
   topic: string;
@@ -203,13 +203,53 @@ function pickDemand(cands: Candidate[], exclude: string[], threshold?: number): 
 }
 
 /**
+ * Nettoie une proposition de valeur pour en faire un besoin testable :
+ * on retire la ponctuation finale, les préfixes d'offre et les mentions de
+ * marque, mais on tolère une phrase plus longue qu'un mot-clé SERP.
+ */
+export function normalizeValueProposition(raw: string, brandTerms: string[] = []): string {
+  let t = normalizeTopic(String(raw || ''));
+  if (!t) return '';
+  t = t.replace(/^(nous\s+|on\s+)?(proposons?|offrons?|vendons?|aidons?\s+à\s+)/i, '').trim();
+  t = t.replace(/^(permettre?\s+de\s+|aider\s+à\s+|pour\s+)/i, '').trim();
+  if (t.length > 90) {
+    const cut = t.slice(0, 90);
+    const stop = Math.max(cut.lastIndexOf(','), cut.lastIndexOf(' '));
+    t = (stop > 25 ? cut.slice(0, stop) : cut).trim();
+  }
+  if (t.length < 6) return '';
+  const low = t.toLowerCase();
+  if (brandTerms.some((b) => b.length >= 4 && low.includes(b.toLowerCase()))) return '';
+  return t;
+}
+
+/** Découpe le champ `secondary_propositions` (" ; " ou virgules) en deux besoins max. */
+export function splitSecondaryPropositions(raw?: string | null, brandTerms: string[] = []): string[] {
+  return String(raw || '')
+    .split(/\s*;\s*|\s*\|\s*|\n+/)
+    .map((v) => normalizeValueProposition(v, brandTerms))
+    .filter(Boolean)
+    .slice(0, 2);
+}
+
+/**
  * Sélectionne jusqu'à `max` besoins concrets pour construire les questions.
  * `sb` peut être null : on retombe alors directement sur la carte d'identité.
+ *
+ * La PROPOSITION DE VALEUR CENTRALE de la carte d'identité, quand elle existe,
+ * occupe TOUJOURS le premier benchmark (axe `value_prop`) : sans cela, un site
+ * dont la proposition centrale n'est pas encore positionnée dans la SERP n'était
+ * jamais testé sur son propre cœur d'offre (cas crawlers.fr / audit SEO-GEO).
  */
 export async function selectQuestionTopics(
   sb: { from: (t: string) => any } | null,
   domain: string,
-  identity: { products_services?: string | null; market_sector?: string | null },
+  identity: {
+    products_services?: string | null;
+    market_sector?: string | null;
+    value_proposition?: string | null;
+    secondary_propositions?: string | null;
+  },
   opts: { max?: number; brandTerms?: string[]; preferTaskTopics?: boolean } = {},
 ): Promise<QuestionTopicsResult> {
   const max = opts.max ?? 3;
@@ -229,6 +269,15 @@ export async function selectQuestionTopics(
       intent: c.intent,
     });
   };
+
+  // ── 0. Proposition de valeur centrale : benchmark n°1 réservé ──
+  const coreProp = normalizeValueProposition(String(identity.value_proposition || ''), brandTerms);
+  const secondaryProps = splitSecondaryPropositions(identity.secondary_propositions, brandTerms);
+  if (coreProp) {
+    kept.push(coreProp);
+    selections.push({ topic: coreProp, axis: 'value_prop', volume: null, position: null, intent: null });
+  }
+
 
   // ── 1. Univers de mots-clés : trois axes de marché distincts ──
   if (sb && domain) {
@@ -273,6 +322,14 @@ export async function selectQuestionTopics(
             push(c, 'demand', 0.9);
           }
         }
+        // Dernier complément : les propositions de valeur secondaires, quand la
+        // SERP ne fournit pas trois zones distinctes.
+        if (kept.length < max) {
+          for (const p of secondaryProps) {
+            if (kept.length >= max) break;
+            push({ topic: p, volume: 0, position: null, intent: null }, 'value_prop', 0.9);
+          }
+        }
         if (kept.length > 0) {
           return { topics: [...kept], selections, source: 'keyword_universe' };
         }
@@ -282,7 +339,12 @@ export async function selectQuestionTopics(
     }
   }
 
-  // ── 2. Repli : carte d'identité (chaque item est un besoin) ──
+  // ── 2. Repli : carte d'identité. Les deux propositions de valeur
+  // SECONDAIRES passent avant les items bruts de `products_services` : elles
+  // décrivent une offre, pas une liste de mots.
+  for (const p of secondaryProps) {
+    push({ topic: p, volume: 0, position: null, intent: null }, 'value_prop');
+  }
   const parts = String(identity.products_services || '')
     .split(/[,;]|\set\s/gi)
     .map(normalizeTopic)

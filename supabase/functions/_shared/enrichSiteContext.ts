@@ -26,6 +26,10 @@ const RE_ENRICH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000
 export interface SiteContext {
   market_sector?: string
   products_services?: string
+  /** Proposition de valeur CENTRALE : le besoin n°1 résolu, vu du client, sans nom de marque */
+  value_proposition?: string
+  /** Deux propositions de valeur SECONDAIRES, séparées par " ; " */
+  secondary_propositions?: string
   target_audience?: string
   commercial_area?: string
   company_size?: string
@@ -93,6 +97,11 @@ function needsEnrichment(site: Record<string, unknown>): 'full' | 'refresh' | fa
   const hasFields = !!(site.market_sector || site.products_services || site.target_audience)
   
   if (!hasFields) return 'full'
+
+  // Carte d'identité antérieure à la proposition de valeur : un rafraîchissement
+  // unique est nécessaire, sinon les benchmarks LLM ne testent jamais l'offre
+  // centrale du site.
+  if (!site.value_proposition && (site.identity_source as string) !== 'user_manual') return 'refresh'
 
   // If source is LLM and enrichment is stale, do a soft refresh
   const source = (site.identity_source as string) || 'none'
@@ -193,6 +202,8 @@ async function inferContextFromDomain(
     ? `\n\nContexte existant (à VÉRIFIER contre le contenu réel, et à corriger s'il est faux) :
 - Secteur: ${existingContext.market_sector || '?'}
 - Produits/Services: ${existingContext.products_services || '?'}
+- Proposition de valeur centrale: ${existingContext.value_proposition || '?'}
+- Propositions secondaires: ${existingContext.secondary_propositions || '?'}
 - Cible: ${existingContext.target_audience || '?'}
 - Zone: ${existingContext.commercial_area || '?'}
 - Taille: ${existingContext.company_size || '?'}`
@@ -223,6 +234,8 @@ Réponds UNIQUEMENT en JSON valide avec ces champs :
   "media_specialties": ["Si entity_type est 'media' ou 'blog', liste les domaines de spécialité. Ex: ['politique', 'économie', 'tech']. Pour 'business', mettre []"],
   "market_sector": "Le secteur d'activité principal (ex: 'E-commerce culturel', 'Information politique', 'Blog tech')",
   "products_services": "Pour un business: les produits/services vendus. Pour un média/blog: les sujets couverts formulés comme des requêtes utilisateur (ex: 'actualité politique française, débats parlementaires, interviews ministres'). Pour un non_commercial: les services rendus ou missions principales.",
+  "value_proposition": "LA proposition de valeur CENTRALE : une phrase courte et concrète décrivant le besoin n°1 que l'entité résout pour son client, formulée du point de vue du client, SANS nommer la marque ni le site. Ex: 'auditer et piloter le référencement SEO et GEO d'un site', 'rénover une salle de bain clé en main', 'acheter et faire livrer un bouquet de fleurs'.",
+  "secondary_propositions": ["Deux propositions de valeur SECONDAIRES, réellement distinctes de la centrale, même format court, sans nom de marque"],
   "target_audience": "La cible principale, telle qu'elle apparaît dans le contenu (ex: 'Artisans du bâtiment', 'Grand public')",
   "commercial_area": "La zone géographique couverte",
   "company_size": "Estimation de la taille",
@@ -327,6 +340,8 @@ export async function ensureSiteContext(
   const currentContext: SiteContext = {
     market_sector: site.market_sector as string | undefined,
     products_services: site.products_services as string | undefined,
+    value_proposition: site.value_proposition as string | undefined,
+    secondary_propositions: site.secondary_propositions as string | undefined,
     target_audience: site.target_audience as string | undefined,
     commercial_area: site.commercial_area as string | undefined,
     company_size: site.company_size as string | undefined,
@@ -383,6 +398,14 @@ export async function ensureSiteContext(
   const merged: SiteContext = {
     market_sector: pick(inferred.market_sector, currentContext.market_sector),
     products_services: pick(inferred.products_services, currentContext.products_services),
+    value_proposition: pick(inferred.value_proposition, currentContext.value_proposition),
+    secondary_propositions: pick(
+      Array.isArray((inferred as unknown as { secondary_propositions?: unknown }).secondary_propositions)
+        ? ((inferred as unknown as { secondary_propositions: string[] }).secondary_propositions)
+            .map((v) => String(v || '').trim()).filter(Boolean).slice(0, 2).join(' ; ')
+        : (inferred.secondary_propositions || undefined),
+      currentContext.secondary_propositions,
+    ),
     target_audience: pick(inferred.target_audience, currentContext.target_audience),
     commercial_area: pick(inferred.commercial_area, currentContext.commercial_area),
     company_size: pick(inferred.company_size, currentContext.company_size),
@@ -401,6 +424,8 @@ export async function ensureSiteContext(
       const fields: Record<string, unknown> = {}
       if (merged.market_sector) fields.market_sector = merged.market_sector
       if (merged.products_services) fields.products_services = merged.products_services
+      if (merged.value_proposition) fields.value_proposition = merged.value_proposition
+      if (merged.secondary_propositions) fields.secondary_propositions = merged.secondary_propositions
       if (merged.target_audience) fields.target_audience = merged.target_audience
       if (merged.commercial_area) fields.commercial_area = merged.commercial_area
       if (merged.company_size) fields.company_size = merged.company_size

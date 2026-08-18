@@ -26,6 +26,7 @@ const CRITICAL_FIELDS = new Set([
 
 const MINOR_FIELDS = new Set([
   'company_size', 'target_audience', 'commercial_area', 'products_services',
+  'value_proposition', 'secondary_propositions',
   'media_specialties', 'nonprofit_type', 'address',
   'is_seasonal', 'seasonality_profile', 'founding_year',
   'business_type', 'competitors', 'cms_platform',

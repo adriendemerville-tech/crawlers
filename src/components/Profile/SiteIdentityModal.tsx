@@ -33,6 +33,8 @@ const TAXONOMY_FIELDS = [
   { key: 'nonprofit_type', label: 'Type d\'organisation non marchande', hint: Object.keys(NONPROFIT_LABELS).join(', ') },
   { key: 'market_sector', label: "Secteur d'activité" },
   { key: 'products_services', label: 'Produits / Services' },
+  { key: 'value_proposition', label: 'Proposition de valeur centrale', hint: 'Le besoin n°1 résolu, vu du client, sans nom de marque' },
+  { key: 'secondary_propositions', label: 'Propositions de valeur secondaires', hint: 'Deux offres secondaires séparées par " ; "' },
   { key: 'target_audience', label: 'Audience cible' },
   { key: 'commercial_area', label: 'Zone commerciale' },
   { key: 'company_size', label: "Taille de l'entreprise" },
