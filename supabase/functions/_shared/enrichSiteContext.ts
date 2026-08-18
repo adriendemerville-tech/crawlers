@@ -393,6 +393,14 @@ export async function ensureSiteContext(
   const merged: SiteContext = {
     market_sector: pick(inferred.market_sector, currentContext.market_sector),
     products_services: pick(inferred.products_services, currentContext.products_services),
+    value_proposition: pick(inferred.value_proposition, currentContext.value_proposition),
+    secondary_propositions: pick(
+      Array.isArray((inferred as unknown as { secondary_propositions?: unknown }).secondary_propositions)
+        ? ((inferred as unknown as { secondary_propositions: string[] }).secondary_propositions)
+            .map((v) => String(v || '').trim()).filter(Boolean).slice(0, 2).join(' ; ')
+        : (inferred.secondary_propositions || undefined),
+      currentContext.secondary_propositions,
+    ),
     target_audience: pick(inferred.target_audience, currentContext.target_audience),
     commercial_area: pick(inferred.commercial_area, currentContext.commercial_area),
     company_size: pick(inferred.company_size, currentContext.company_size),
