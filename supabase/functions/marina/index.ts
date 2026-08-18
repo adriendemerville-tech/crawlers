@@ -472,10 +472,39 @@ function getToolbarHtml(domain: string, lang: string): string {
         label.textContent = '${tr.toolbarCopy}';
       }, 2000);
     }
+    function marinaPendingCount() {
+      return document.querySelectorAll('[data-llm-status="pending"]').length;
+    }
+    // Tant que des interrogations LLM sont en cours, l'export produirait un PDF incomplet.
+    function marinaSyncPdfAvailability() {
+      var btn = document.getElementById('marina-pdf-btn');
+      var label = document.getElementById('marina-pdf-label');
+      if (!btn || !label) return;
+      if (marinaPendingCount() > 0) {
+        btn.disabled = true;
+        btn.style.opacity = '0.55';
+        btn.title = 'Mesure LLM en cours — export disponible à la fin des interrogations';
+        label.textContent = 'Mesure LLM en cours…';
+      } else {
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.title = '${tr.toolbarPdf}';
+        label.textContent = '${tr.toolbarPdf}';
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', marinaSyncPdfAvailability);
+    } else { marinaSyncPdfAvailability(); }
+    setInterval(marinaSyncPdfAvailability, 5000);
+
     async function marinaDownloadPDF() {
       var btn = document.getElementById('marina-pdf-btn');
       var label = document.getElementById('marina-pdf-label');
       if (btn.disabled) return;
+      if (marinaPendingCount() > 0) {
+        alert('Les interrogations des modèles IA ne sont pas terminées. L’export PDF sera disponible dès que toutes les réponses seront enregistrées : rechargez la page dans quelques minutes.');
+        return;
+      }
       btn.disabled = true;
       label.textContent = '${tr.toolbarLoading || '…'}';
       try {
