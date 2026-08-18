@@ -23,6 +23,12 @@ import {
   trustSignalsBlockHTML,
 } from '../_shared/trustClaims.ts';
 import { deadUrlFindings } from '../_shared/deadUrls.ts';
+import {
+  isBotOnlyAbsence,
+  absenceVerificationFinding,
+  absenceReliabilityBlockHTML,
+  type AbsenceVerificationReport,
+} from '../_shared/absenceVerification.ts';
 
 
 import {
@@ -874,6 +880,8 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
 function summarizeCrawlIntegrity(report: any) {
   if (!report || typeof report !== 'object') return null;
   const botRendering = report.bot_rendering || null;
+  // Lot 3 — contre-vérification des absences de balises (rendu complet).
+  const absenceVerification = report.absence_verification || null;
   // Lot A — signaux de confiance machine et URLs mortes : transportés tels
   // quels (déjà compacts et bornés côté crawl).
   const trust = {
@@ -882,8 +890,8 @@ function summarizeCrawlIntegrity(report: any) {
     deadUrls: report.dead_urls || null,
   };
   if (!report.near_duplicate) {
-    return botRendering || trust.riskClaims || trust.authorityMismatch || trust.deadUrls
-      ? { analyzedPages: 0, botRendering, ...trust }
+    return botRendering || absenceVerification || trust.riskClaims || trust.authorityMismatch || trust.deadUrls
+      ? { analyzedPages: 0, botRendering, absenceVerification, ...trust }
       : null;
   }
 
@@ -891,6 +899,7 @@ function summarizeCrawlIntegrity(report: any) {
   const thin = report.thin_content || { pages: [], count: 0, avg_thin_score: 0 };
   return {
     botRendering,
+    absenceVerification,
     ...trust,
     analyzedPages: report.analyzed_pages || 0,
 
@@ -4219,10 +4228,23 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const botRendering: BotRenderingReport | null = crawlSnapshot?.contentIntegrity?.botRendering || null;
         const renderBlocked = Boolean(botRendering?.blocked);
         const botRenderingHtml = renderBlocked ? botRenderingBlockHTML(botRendering!, domain) : '';
-        const dropShellSymptoms = (findings: RawFinding[]): RawFinding[] =>
-          renderBlocked
-            ? findings.filter((f) => !isSuppressedByShell(String(f.title || ''), String(f.description || '')))
-            : findings;
+        // ─── Lot 3 : contre-vérification des absences de balises ───
+        // Une balise présente après rendu JS mais absente du HTML servi n'est
+        // pas un manque éditorial : le constat devient un défaut de rendu.
+        const absenceReport: AbsenceVerificationReport | null =
+          crawlSnapshot?.contentIntegrity?.absenceVerification || null;
+        const absenceHtml = absenceReliabilityBlockHTML(absenceReport);
+        const absenceFinding = absenceVerificationFinding(absenceReport) as unknown as RawFinding | null;
+
+        const dropShellSymptoms = (findings: RawFinding[]): RawFinding[] => {
+          let out = findings;
+          if (renderBlocked) {
+            out = out.filter((f) => !isSuppressedByShell(String(f.title || ''), String(f.description || '')));
+          }
+          // Absences démenties par le rendu complet : retirées quel que soit le
+          // verdict racine, elles décrivent le rendu et non le contenu.
+          return out.filter((f) => !isBotOnlyAbsence(absenceReport, String(f.title || ''), String(f.description || '')));
+        };
 
         // ─── Lot A : signaux de confiance machine + URLs mortes (déterministes) ───
         const riskClaimsReport = crawlSnapshot?.contentIntegrity?.riskClaims || null;
@@ -4237,6 +4259,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const hostDupFinding = hostDuplication ? hostDuplicationFinding(hostDuplication, domain) : null;
         const seoFindings: RawFinding[] = dropShellSymptoms([
           ...(renderBlocked ? [botRenderingFinding(botRendering!, domain) as unknown as RawFinding] : []),
+          ...(!renderBlocked && absenceFinding ? [absenceFinding] : []),
           ...(hostDupFinding ? [hostDupFinding as RawFinding] : []),
           ...deadFindings,
           ...(expertData?.recommendations || []).map((r: any) => ({
@@ -4415,7 +4438,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
         const crawlHTML = generateCrawlSectionHTML(
           expertData, detectedLang, domain, url, crawlSnapshot,
-          botRenderingHtml + sectionTop(renderTopPrioritiesHTML(topSeo)),
+          botRenderingHtml + absenceHtml + sectionTop(renderTopPrioritiesHTML(topSeo)),
           hostDuplication ? buildHostDuplicationHTML(hostDuplication, domain) : '',
         );
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
