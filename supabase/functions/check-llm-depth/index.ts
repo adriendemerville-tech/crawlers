@@ -675,6 +675,33 @@ Deno.serve(handleRequest(async (req) => {
       }
     }
 
+    // ── Carte d'identité résolue AVANT d'interroger les modèles ──
+    // Sans site suivi (analyse publique depuis la home), la séquence de prompts
+    // se rabattrait sur le nom de domaine : on mesurerait la visibilité sur un
+    // marché qui n'est pas celui du site. L'activité est donc inférée depuis les
+    // pages réellement lues, avec cache partagé 30 j (un appel de modèle par
+    // domaine et par mois).
+    let identityDisclosure: PreLlmIdentity['identity'] | null = null
+    let identityFingerprint = 'none'
+    if (!ctx.market_sector && !ctx.products_services) {
+      try {
+        const pre = await resolvePreLlmIdentity(getServiceClient(), { domain, userId: user_id || null })
+        identityDisclosure = pre.identity
+        identityFingerprint = pre.fingerprint
+        ctx = {
+          ...ctx,
+          ...(pre.market_sector ? { market_sector: pre.market_sector } : {}),
+          ...(pre.products_services ? { products_services: pre.products_services } : {}),
+          ...(pre.target_audience ? { target_audience: pre.target_audience } : {}),
+          ...(pre.commercial_area ? { commercial_area: pre.commercial_area } : {}),
+          ...(pre.entity_type ? { entity_type: pre.entity_type } : {}),
+        }
+        console.log(`[check-llm-depth] Identité pré-LLM: ${pre.identity.source} conf=${pre.identity.confidence} secteur="${pre.market_sector || 'n/r'}" fp=${pre.fingerprint}`)
+      } catch (e) {
+        console.warn('[check-llm-depth] Pre-LLM identity resolution failed:', e)
+      }
+    }
+
     // svcDesc is only used as fallback — prompts are now built naturally from ctx
     const svcDesc = service_description || ctx.products_services || ctx.market_sector || ''
 
