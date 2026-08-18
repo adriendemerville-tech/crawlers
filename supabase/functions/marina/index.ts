@@ -1032,9 +1032,14 @@ function buildSocialSignalsSection(data: any): string {
   // Recommandation indépendante du bloc Thought Leadership : elle doit apparaître
   // dès qu'aucun porte-parole n'est résolu, y compris si le module n'a rien renvoyé.
   const unresolvedSpokesperson = !tl?.founder_name;
-  const spokespersonRecommendation = unresolvedSpokesperson
+  const authorityLevel = String(tl?.founder_authority || 'unknown').toLowerCase();
+  const voiceNeedsStrengthening = unresolvedSpokesperson || authorityLevel === 'unknown' || authorityLevel === 'low';
+  const spokespersonRecommendation = voiceNeedsStrengthening
     ? `<div style="margin-top:10px;padding:10px;border-left:3px solid #f59e0b;background:#fffbeb;font-size:12px;color:#374151;line-height:1.6;">
-        <strong>Recommandation E-E-A-T :</strong> L’audit n’a identifié aucun porte-parole public et vérifié pour ce site. Cela affaiblit l’incarnation de l’expertise, l’autorité de l’entité en SEO et sa citabilité dans les moteurs de réponse IA. Le dirigeant, gérant, CEO ou fondateur devrait devenir le porte-parole régulier de l’entreprise : page auteur et biographie vérifiable sur le site, prises de parole expertes signées, profil professionnel relié par <code>sameAs</code> et contributions cohérentes dans le temps.
+        <strong>Recommandation E-E-A-T — voix experte :</strong> ${tl?.founder_name
+          ? `${tl.founder_name}${tl.founder_role ? ` (${tl.founder_role})` : ''} devrait devenir la voix experte et le porte-parole régulier de l’entreprise.`
+          : `L’audit n’a identifié aucun porte-parole public et vérifié. Le dirigeant, gérant, CEO ou fondateur devrait devenir la voix experte et le porte-parole régulier de l’entreprise.`}
+        Renforcer cette incarnation avec une page auteur et une biographie vérifiable sur le site, des contenus experts signés, un profil professionnel relié par <code>sameAs</code> et des prises de parole cohérentes dans le temps afin d’améliorer l’autorité SEO et la citabilité dans les moteurs de réponse IA.
       </div>`
     : '';
   if (tl) {
