@@ -11,6 +11,11 @@
  */
 
 import { writeIdentity } from './identityGateway.ts'
+import {
+  extractStructuredIdentity,
+  renderStructuredEvidenceBlock,
+  type StructuredIdentitySignals,
+} from './structuredIdentity.ts'
 
 const LOVABLE_AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
