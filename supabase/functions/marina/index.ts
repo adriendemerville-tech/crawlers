@@ -3484,8 +3484,13 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // manque : on le signale dans le rapport et on marque le job en `partial`.
       const strategicDegradation = detectStrategicDegradation(strategicData);
 
-      // Cleanup intermediate cache (fire-and-forget)
-      sb.from('audit_cache').delete().eq('cache_key', `marina_intermediate_${jobId}`).then(() => {});
+      // Le cache intermédiaire n'est PAS supprimé ici : la phase 3 peut être
+      // relancée (timeout d'edge function, reaper de jobs zombies). Le nettoyage
+      // se fait après la finalisation du job, une fois le rapport rendu.
+      await sb.from('audit_cache').update({
+        expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
+      }).eq('cache_key', `marina_intermediate_${jobId}`);
+
 
       await updateProgress(80, 'cocoon_analysis');
 
@@ -4616,6 +4621,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         completed_at: new Date().toISOString(),
       }).eq('id', jobId);
 
+      // Nettoyage des checkpoints seulement après finalisation du rapport.
+      await sb.from('audit_cache').delete()
+        .in('cache_key', [`marina_intermediate_${jobId}`, `marina_phase1a_${jobId}`]);
 
       console.log(`[Marina] ✅ Phase 3 complete — pipeline finished for ${domain}`);
 
