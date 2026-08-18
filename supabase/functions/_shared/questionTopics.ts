@@ -210,7 +210,7 @@ export async function selectQuestionTopics(
   sb: { from: (t: string) => any } | null,
   domain: string,
   identity: { products_services?: string | null; market_sector?: string | null },
-  opts: { max?: number; brandTerms?: string[] } = {},
+  opts: { max?: number; brandTerms?: string[]; preferTaskTopics?: boolean } = {},
 ): Promise<QuestionTopicsResult> {
   const max = opts.max ?? 3;
   const brandTerms = (opts.brandTerms || []).map((b) => (b || '').toLowerCase()).filter(Boolean);
