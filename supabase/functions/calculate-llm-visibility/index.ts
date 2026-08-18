@@ -500,39 +500,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       topicSelection.selections || [],
     )
 
-    // Reformulation naturelle (1 seul appel LLM pour les 9 questions) : le
-    // besoin testé, l'axe de marché et l'intention restent déterministes, seule
-    // la phrase devient celle d'un vrai prospect. Tout échec ou toute sortie
-    // non conforme conserve la formulation déterministe, question par question.
-    try {
-      const naturalized = await naturalizeBenchmarkQuestions(
-        benchmarks,
-        {
-          market_sector: enrichedSite.market_sector,
-          products_services: enrichedSite.products_services,
-          target_audience: enrichedSite.target_audience,
-          commercial_area: enrichedSite.commercial_area,
-          entity_type: enrichedSite.entity_type,
-          business_model: enrichedSite.business_model,
-          brand_name: enrichedSite.brand_name,
-          site_name: enrichedSite.site_name,
-          domain: enrichedSite.domain,
-        },
-        'fr',
-      )
-      benchmarks = naturalized.benchmarks
-    } catch (e) {
-      console.warn('[llm-vis] réécriture des questions ignorée:', (e as Error).message)
-    }
-
-
-    const flatPrompts: Array<{ text: string; intent: string; benchmarkId: string }> = []
-    for (const b of benchmarks) {
-      for (const p of b.prompts) flatPrompts.push({ text: p.text, intent: p.intent, benchmarkId: b.id })
-    }
-    const prompts = flatPrompts.map(p => p.text)
     const weekStart = getWeekStart()
-
 
     // ── Check shared domain cache first ──
     const { data: cachedData } = await supabase
@@ -548,7 +516,12 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     // depuis la mise en cache, les questions stockées ne sont plus celles qu'on
     // poserait aujourd'hui — le cache est ignoré (sinon le rapport affiche des
     // questions périmées type « un outil » pour une entreprise de travaux).
-    const promptsFingerprint = prompts.join('||')
+    // L'empreinte est calculée sur les questions DÉTERMINISTES (avant la
+    // reformulation LLM, non reproductible) : sinon le cache serait invalidé à
+    // chaque exécution et chaque audit repaierait les 45 appels modèles.
+    const promptsFingerprint = benchmarks
+      .flatMap((b) => b.prompts.map((p) => `${b.id}:${p.intent}:${p.text}`))
+      .join('||')
     const cachedFingerprint = (cachedData?.result_data as any)?.prompts_fingerprint
     const fingerprintStale = !!cachedData?.result_data && cachedFingerprint !== promptsFingerprint
     const cacheIsComplete = (cachedData?.result_data as any)?.measurement_status !== 'processing'
