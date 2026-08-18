@@ -12,6 +12,8 @@ import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { writeIdentity } from '../_shared/identityGateway.ts'
 import { classifyAndAssignRings } from '../_shared/spiralClassifier.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { writeExpertAuditFindingsToWorkbench } from '../_shared/expertAuditWorkbench.ts';
+
 
 // Mapping des recommandations vers les types de fix pour le générateur de code
 const RECOMMENDATION_TO_FIX_MAP: Record<string, { fixType: string | null; category: string }> = {
