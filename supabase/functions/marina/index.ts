@@ -4591,20 +4591,31 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         cocoon_clusters: cocoonResult?.stats?.clusters_count || null,
         visual_capture: visualCapture,
         strategic_layer: strategicDegradation.degraded ? 'unavailable' : 'ok',
-        partial: strategicDegradation.degraded,
-        degraded_reasons: strategicDegradation.degraded ? strategicDegradation.reasons : [],
+        partial: strategicDegradation.degraded || llmPendingAtRender.length > 0,
+        llm_measurement_complete: llmPendingAtRender.length === 0,
+        llm_pending_models: llmPendingAtRender,
+        degraded_reasons: [
+          ...(strategicDegradation.degraded ? strategicDegradation.reasons : []),
+          ...(llmPendingAtRender.length > 0
+            ? [`Réponses IA non compilées : ${llmPendingAtRender.join(', ')}`]
+            : []),
+        ],
         generated_at: new Date().toISOString(),
       };
 
+      // Un rapport dont les réponses IA ne sont ni reçues ni compilées dans les
+      // scores ne peut pas être déclaré « terminé » : il reste « partial ».
+      const isIncomplete = strategicDegradation.degraded || llmPendingAtRender.length > 0;
       await sb.from('async_jobs').update({
-        status: strategicDegradation.degraded ? 'partial' : 'completed',
+        status: isIncomplete ? 'partial' : 'completed',
         result_data: resultData,
         progress: 100,
-        error_message: strategicDegradation.degraded
-          ? `Couche stratégique indisponible — ${strategicDegradation.reasons.join(' | ')}`
+        error_message: isIncomplete
+          ? (resultData.degraded_reasons as string[]).join(' | ')
           : null,
         completed_at: new Date().toISOString(),
       }).eq('id', jobId);
+
 
       console.log(`[Marina] ✅ Phase 3 complete — pipeline finished for ${domain}`);
 
