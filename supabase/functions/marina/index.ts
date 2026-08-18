@@ -1530,7 +1530,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
 function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string, topHtml = ''): string {
   const tr = getTranslations(lang);
   const techScore = expertSeoData?.totalScore || 0;
-  const techMaxScore = expertSeoData?.maxScore || 200;
+  const techMaxScore = expertSeoData?.maxScore || 220;
   const techRecommendations = expertSeoData?.recommendations || [];
   const techIntro = expertSeoData?.introduction || '';
 
