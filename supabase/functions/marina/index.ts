@@ -1412,7 +1412,7 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
   const nbQuestions = askedPrompts.length;
   const interrogations = nbQuestions * effectiveScores.length;
   const promptsHtml = `<div style="padding:12px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;margin-bottom:16px;text-align:left;">
-    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Méthode de mesure</div>
+    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Méthode de mesure ${provenanceBadge('test', 'fr')}</div>
     ${hasBenchmarks
       ? `<p style="font-size:11px;color:#6b7280;margin:0 0 8px;line-height:1.5;">La mesure est découpée en <strong>${benchmarks.length} benchmarks indépendants</strong>, chacun portant sur une <strong>zone de marché différente</strong>, déterminée à partir des positions réelles dans les résultats Google : le cœur de marché déjà couvert, le besoin sur lequel le site est le mieux classé, et le besoin fortement recherché qu'il n'adresse pas. À l'intérieur de chaque benchmark, trois questions de forme différente sont posées : découverte du besoin, comparaison d'options, et contexte d'usage (géolocalisé lorsque l'activité a une zone de chalandise). Chaque benchmark est scoré séparément et affiché ci-dessous avec ses questions et ses modèles interrogés : une marque peut être citée sur son cœur de marché et invisible ailleurs, ce qu'un score unique masquait.</p>`
       : (nbQuestions > 0
