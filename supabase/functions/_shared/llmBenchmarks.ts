@@ -109,6 +109,27 @@ function mainNeedOf(ctx: SiteContext, lang: PromptLang): string {
   return (products.split(',')[0] || '').trim() || sector || fallback;
 }
 
+/**
+ * Métier réel du produit, extrait de la carte d'identité (0 token LLM).
+ * « SaaS d'audit et d'optimisation SEO, GEO et AEO : … » → « audit et
+ * optimisation SEO, GEO et AEO ». Sert de besoin quand la requête retenue
+ * décrit une audience (« agence de référencement naturel ») et non une tâche.
+ */
+function coreJobOf(ctx: SiteContext): string {
+  const raw = (ctx.products_services || '').trim();
+  if (!raw) return '';
+  let job = raw.split(':')[0].trim();
+  job = job.replace(/^(saas|logiciels?|plateformes?|outils?|applications?|app|solutions?|services?)\s+(de\s+la\s+|du\s+|des\s+|de\s+|d'|pour\s+)/i, '');
+  job = job.replace(/\bet\s+d'/gi, 'et ').replace(/\s{2,}/g, ' ').trim();
+  if (job.length < 5) return '';
+  if (job.length > 90) {
+    const cut = job.slice(0, 90);
+    const stop = Math.max(cut.lastIndexOf(','), cut.lastIndexOf(' '));
+    job = (stop > 20 ? cut.slice(0, stop) : cut).trim();
+  }
+  return job.replace(/[.,;]+$/, '').trim();
+}
+
 /** Preuve chiffrée ajoutée à la description du benchmark (jamais inventée). */
 function evidenceOf(sel: TopicSelection | undefined, lang: PromptLang): string {
   if (!sel) return '';
