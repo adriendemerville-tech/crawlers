@@ -217,21 +217,32 @@ function scoreBotAccessibility(i: GeoSignalInputs): number | null {
   return null;
 }
 
-/** Mise en forme des réponses : déduite d'agrégats de crawl. */
+/**
+ * Mise en forme des réponses : déduite d'agrégats de crawl. Les composantes
+ * absentes du crawl sont exclues du numérateur ET du dénominateur — une colonne
+ * non collectée ne doit pas être lue comme une absence de balisage.
+ */
 function scoreAnswerFormatting(i: GeoSignalInputs): number | null {
   const c = i.crawlFormatting;
   if (!c) return null;
   const pages = Number(c.pagesAnalyzed ?? 0) || 0;
   if (pages <= 0) return null;
-  const ratio = (v: unknown) => Math.max(0, Math.min(1, (Number(v ?? 0) || 0) / pages));
-  let score = 0;
-  score += ratio(c.pagesWithH1) * 40;
-  score += ratio(c.pagesWithFaq) * 30;
-  score += ratio(c.pagesWithLists) * 20;
-  const avg = Number(c.avgWordCount ?? 0) || 0;
-  score += avg >= 900 ? 10 : avg >= 500 ? 7 : avg >= 250 ? 4 : 0;
-  return clamp100(score);
+
+  const parts: { weight: number; value: number }[] = [];
+  const ratio = (v: unknown) => Math.max(0, Math.min(1, (Number(v) || 0) / pages)) * 100;
+  if (c.pagesWithH1 != null) parts.push({ weight: 40, value: ratio(c.pagesWithH1) });
+  if (c.pagesWithFaq != null) parts.push({ weight: 30, value: ratio(c.pagesWithFaq) });
+  if (c.pagesWithLists != null) parts.push({ weight: 20, value: ratio(c.pagesWithLists) });
+  if (c.avgWordCount != null) {
+    const avg = Number(c.avgWordCount) || 0;
+    parts.push({ weight: 10, value: avg >= 900 ? 100 : avg >= 500 ? 70 : avg >= 250 ? 40 : 10 });
+  }
+  if (parts.length === 0) return null;
+
+  const den = parts.reduce((s, p) => s + p.weight, 0);
+  return clamp100(parts.reduce((s, p) => s + p.weight * p.value, 0) / den);
 }
+
 
 /** Voix experte : nommée = 55, nommée et corroborée hors site = 90. */
 function scorePersonAuthority(i: GeoSignalInputs): number | null {
