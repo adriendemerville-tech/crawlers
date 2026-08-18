@@ -1134,14 +1134,20 @@ function renderLlmBenchmarkSections(benchmarks: any[]): string {
     const measured = Number(b?.measured_models ?? scoreList.length) || 0;
     const cited = Number(b?.cited_models ?? 0) || 0;
     const score = b?.score;
+    const weight = AXIS_DISPLAY_WEIGHT[String(b?.id || '')] ?? 1.0;
+    const cov = b?.coverage;
     const scoreColor = score === null || score === undefined ? '#6b7280' : score >= 60 ? '#22c55e' : score >= 30 ? '#f59e0b' : '#ef4444';
+    const covHtml = cov && cov.observations > 0
+      ? `<p style="font-size:12px;color:#374151;margin:0 0 6px;text-align:left;"><strong>Taux de citation : ${cov.rate} %</strong> — ${cov.hits} apparition${cov.hits > 1 ? 's' : ''} sur ${cov.observations} interrogation${cov.observations > 1 ? 's' : ''} mesurée${cov.observations > 1 ? 's' : ''} (fourchette de confiance ${cov.ci_low}–${cov.ci_high} %).</p>`
+      : '';
     return `<div style="margin-top:16px;padding:14px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;page-break-inside:avoid;">
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;">
         <h4 style="font-size:14px;font-weight:600;color:#1f2937;margin:0;text-align:left;">${escapeHtmlText(String(b?.label || 'Benchmark'))}</h4>
         <span style="font-size:12px;font-weight:700;color:${scoreColor};white-space:nowrap;">${score === null || score === undefined ? 'Non mesuré' : score + '/100'}</span>
       </div>
       <p style="font-size:11px;color:#6b7280;margin:0 0 8px;line-height:1.5;text-align:left;">${escapeHtmlText(String(b?.description || ''))}</p>
-      <p style="font-size:12px;color:#374151;margin:0 0 6px;text-align:left;"><strong>${cited}/${measured}</strong> modèle${measured > 1 ? 's' : ''} citent le site sur cette intention.</p>
+      ${covHtml}
+      <p style="font-size:12px;color:#374151;margin:0 0 6px;text-align:left;"><strong>${cited}/${measured}</strong> modèle${measured > 1 ? 's' : ''} citent le site sur cette intention. Poids de cet axe dans le score global : <strong>×${weight.toFixed(1)}</strong>.</p>
       ${prompts.length ? `<ol style="margin:0 0 10px 18px;padding:0;font-size:12px;color:#374151;line-height:1.6;text-align:left;">
         ${prompts.map((p: any) => `<li>« ${escapeHtmlText(String(p?.text || p))} »</li>`).join('')}
       </ol>` : ''}
