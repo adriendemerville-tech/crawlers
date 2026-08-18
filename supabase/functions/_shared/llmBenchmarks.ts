@@ -29,7 +29,7 @@ import {
   type SiteContext,
   type PromptLang,
 } from './naturalPrompts.ts';
-import type { TopicSelection } from './questionTopics.ts';
+import { isActorTopic, isToolLikeSite, type TopicSelection } from './questionTopics.ts';
 
 export interface BenchmarkPrompt {
   intent: string;
