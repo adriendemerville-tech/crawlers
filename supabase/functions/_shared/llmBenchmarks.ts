@@ -227,8 +227,13 @@ export function buildLlmBenchmarks(
    * cela les trois blocs du rapport affichaient trois fois la même phrase.
    */
   const promptsFor = (rawNeed: string, variant = 0): BenchmarkPrompt[] => {
-    const { need, audience } = framedNeed(rawNeed);
+    const { need: framed, audience } = framedNeed(rawNeed);
     const v = ((variant % 3) + 3) % 3;
+    // Commerce / service de proximité : la ville entre dès la question de
+    // découverte (« je cherche un fleuriste à Salon-de-Provence »), sinon la
+    // mesure ne reflète pas la vraie requête d'un prospect local.
+    const geo = localOk ? (lang === 'en' ? ` in ${area}` : lang === 'es' ? ` en ${area}` : ` à ${area}`) : '';
+    const need = `${framed}${geo}`;
     if (lang === 'en') {
       const discovery = [
         `I'm looking for ${lex.seek} for ${need} — what do you recommend?`,
