@@ -193,6 +193,7 @@ export async function finalizeJob(
   const integrityPayload: any = {
     ...(integrityReport ? (integrityReport as any) : {}),
     bot_rendering: botRendering,
+    absence_verification: absenceVerification,
     risk_claims: riskClaims,
     authority_mismatch: authorityMismatch,
     dead_urls: deadUrls,
