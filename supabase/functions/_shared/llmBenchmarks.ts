@@ -251,7 +251,7 @@ export function buildLlmBenchmarks(
         localOk
           ? { intent: 'local', text: `I'm looking for ${lex.seek} for ${framed} near ${area} — who should I trust locally?` }
           : audience
-            ? { intent: 'audience', text: `I'm a ${audience} and I need ${need}: which option would you recommend and why?` }
+            ? { intent: 'audience', text: `I'm a ${audience} and I need ${framed}: which option would you recommend and why?` }
             : { intent: 'usecase', text: `In which situations is ${lex.seek} for ${need} genuinely worth it, and who should I trust?` },
       ];
     }
