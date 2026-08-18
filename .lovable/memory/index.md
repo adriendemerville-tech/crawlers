@@ -22,3 +22,5 @@
 - [Lentilles de ciblage Parménion](mem://tech/autopilot/targeting-lenses-fr) — Sprint 2 : lens_bonus max +8 sur items de création (cluster/persona/localisation), quota de slots contenu via share_pct plafonné 50%, cap 2/cluster prioritaire
 - [Identité ancrée contenu](mem://tech/architecture/identity-grounding-fr) — Interdiction d'inférer l'activité depuis le nom de domaine ; réutilisation de carte limitée aux sources ancrées (marina/crawl/user)
 - [Score visibilité LLM](mem://tech/geo/llm-visibility-scoring-formula-fr) — Couverture binaire + Wilson 95%, qualité pondérée par axe (ranked ×2,0 / covered ×1,5 / demand ×1,0), fiabilité par nombre de runs, bloc potentiel GEO vs citation mesurée
+- [Signaux de confiance Lot A](mem://tech/audit/trust-signals-lot-a-fr) — Surclaims (5 catégories, critical si secteur régulé), autorité citée hors compétence (table curée DGFiP/URSSAF, CNIL/ANSSI…), URLs mortes priorisées (canonical mort > liens internes > pages mortes > liens cassés), calculés au crawl et restitués dans E-E-A-T Marina
+

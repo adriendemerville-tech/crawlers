@@ -14,6 +14,9 @@ import {
 } from '../contentIntegrity/index.ts';
 import { writeIntegrityFindingsToWorkbench } from '../contentIntegrity/workbench.ts';
 import { aggregateBotRendering } from '../botRenderingShell.ts';
+import { detectRiskClaims, detectAuthorityMismatch } from '../trustClaims.ts';
+import { analyzeDeadUrls } from '../deadUrls.ts';
+
 
 
 
@@ -138,9 +141,39 @@ export async function finalizeJob(
   if (botRendering.blocked) {
     console.log(`[Worker] 🚫 Contenu non rendu côté serveur : ${botRendering.shell_pages}/${botRendering.analyzed_pages} pages en coquille JS`);
   }
-  const integrityPayload: any = integrityReport
-    ? { ...(integrityReport as any), bot_rendering: botRendering }
-    : { bot_rendering: botRendering };
+  // ── Lot A : signaux de confiance machine (0 token LLM) ──
+  // Surclaims, autorité citée incohérente, URLs mortes encore liées.
+  let riskClaims: any = null;
+  let authorityMismatch: any = null;
+  let deadUrls: any = null;
+  try {
+    const domainKey = (job.domain || '')
+      .replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase();
+    const { data: siteSector } = await supabase
+      .from('tracked_sites')
+      .select('market_sector')
+      .eq('domain', domainKey)
+      .maybeSingle();
+    const textPages = pages.map((p: any) => ({ url: p.url, text: p.body_text_truncated || '' }));
+    riskClaims = detectRiskClaims(textPages, siteSector?.market_sector);
+    authorityMismatch = detectAuthorityMismatch(textPages);
+    deadUrls = analyzeDeadUrls(pages as any[]);
+    console.log(
+      `[Worker] Lot A — surclaims: ${riskClaims.count}, autorité incohérente: ${authorityMismatch.count}, `
+      + `pages mortes: ${deadUrls.dead_pages} (dont ${deadUrls.linked_dead_pages} encore liées)`,
+    );
+  } catch (e) {
+    console.warn('[Worker] trust signals failed:', (e as Error).message);
+  }
+
+  const integrityPayload: any = {
+    ...(integrityReport ? (integrityReport as any) : {}),
+    bot_rendering: botRendering,
+    risk_claims: riskClaims,
+    authority_mismatch: authorityMismatch,
+    dead_urls: deadUrls,
+  };
+
 
   // ── AI Summary ──
   let aiSummary = '';
