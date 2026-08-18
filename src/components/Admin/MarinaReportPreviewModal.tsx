@@ -105,6 +105,16 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
     }
   };
 
+  // Le rapport embarque sa propre barre d'actions (utile en plein écran/lien partagé),
+  // mais dans cette fenêtre elle doublonnait l'en-tête : on la masque côté iframe.
+  const embeddedHtml = htmlContent.includes('</head>')
+    ? htmlContent.replace(
+        '</head>',
+        '<style>.marina-toolbar{display:none !important}body{padding-top:0 !important}</style></head>',
+      )
+    : `<style>.marina-toolbar{display:none !important}</style>${htmlContent}`;
+
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col p-0 [&>button]:hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
@@ -149,10 +159,13 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
           </div>
         )}
 
-        {/* HTML Preview */}
+        {/* HTML Preview — la barre d'outils intégrée au rapport est masquée ici
+            pour ne pas doubler celle de l'en-tête de la fenêtre. */}
+
         <div className="flex-1 overflow-auto bg-muted/30">
-          <iframe srcDoc={htmlContent} className="w-full h-full min-h-[600px]" title="Marina Report Preview" />
+          <iframe srcDoc={embeddedHtml} className="w-full h-full min-h-[600px]" title="Marina Report Preview" />
         </div>
+
       </DialogContent>
     </Dialog>
   );
