@@ -241,7 +241,12 @@ export async function selectQuestionTopics(
         .order('search_volume', { ascending: false, nullsFirst: false })
         .limit(200);
 
-      const cands = toCandidates((data || []) as KwRow[], brandTerms);
+      const allCands = toCandidates((data || []) as KwRow[], brandTerms);
+      // Un éditeur de logiciel doit être testé sur des TÂCHES (« audit seo
+      // technique », « optimisation geo »), pas sur des types de prestataires
+      // (« agence de référencement naturel ») qui sont sa cible, pas son besoin.
+      const taskCands = allCands.filter((c) => !isActorTopic(c.topic));
+      const cands = opts.preferTaskTopics && taskCands.length > 0 ? taskCands : allCands;
       if (cands.length > 0) {
         push(pickCovered(cands), 'covered');
         push(pickRanked(cands, kept), 'ranked');
