@@ -511,6 +511,30 @@ Deno.serve(handleRequest(async (req) => {
       }
     }
 
+    // Le nom du porte-parole est une donnée déterministe issue de personAuthority,
+    // pas une sortie libre du LLM. Le renderer Marina consomme ces champs structurés.
+    if (parsedAnalysis.social_signals) {
+      const thoughtLeadership = parsedAnalysis.social_signals.thought_leadership || {};
+      parsedAnalysis.social_signals.thought_leadership = thoughtLeadership;
+      if (founderInfo?.resolutionStatus === 'resolved' && founderInfo.name && !founderInfo.geoMismatch) {
+        thoughtLeadership.founder_name = founderInfo.name;
+        thoughtLeadership.founder_role = founderInfo.roleLabel || founderInfo.role || 'dirigeant';
+        thoughtLeadership.founder_profile_url = founderInfo.profileUrl || null;
+        thoughtLeadership.founder_confidence = founderInfo.confidence ?? null;
+        thoughtLeadership.founder_resolution = founderInfo.resolutionReason || null;
+        thoughtLeadership.founder_alternatives = founderInfo.alternatives || [];
+      } else {
+        // Supprime tout nom éventuellement inventé par le modèle.
+        thoughtLeadership.founder_name = null;
+        thoughtLeadership.founder_role = null;
+        thoughtLeadership.founder_profile_url = null;
+        thoughtLeadership.founder_confidence = founderInfo?.confidence ?? 0;
+        thoughtLeadership.founder_resolution = founderInfo?.resolutionReason || 'Aucun porte-parole corroboré par une source fiable.';
+        thoughtLeadership.founder_alternatives = founderInfo?.alternatives || [];
+        thoughtLeadership.founder_authority = 'unknown';
+      }
+    }
+
     // Flag geo mismatch
     if (founderInfo?.geoMismatch && parsedAnalysis.social_signals) {
       parsedAnalysis.social_signals.founder_geo_mismatch = true;
