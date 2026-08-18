@@ -3,6 +3,8 @@ import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
+import { resolvePreLlmIdentity, type PreLlmIdentity } from '../_shared/preLlmIdentity.ts'
+import { computeCoverage, assessReliability } from '../_shared/llmVisibilityScore.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
