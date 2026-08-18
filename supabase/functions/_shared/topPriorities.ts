@@ -14,7 +14,7 @@
  *     (flagged "newly_detected" so the user can spot fresh findings).
  */
 
-import { ROI_TIER_STYLE, summarizeRoi, type RoiAnnotation } from './roiWeighting.ts';
+import { ROI_TIER_STYLE, type RoiAnnotation } from './roiWeighting.ts';
 import {
   fingerprintFinding,
   dedupeByFingerprint,
