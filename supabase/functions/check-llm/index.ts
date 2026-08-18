@@ -253,6 +253,35 @@ const clientIp = getClientIp(req);
       }
     }
 
+    // ── Carte d'identité AVANT interrogation des modèles ──
+    // Sans site suivi (cas du lead magnet public), la carte est absente et les
+    // prompts se rabattraient sur le nom de domaine — source des identités
+    // fausses. On résout l'activité sur les pages réellement lues, en cache
+    // partagé 30 j : un seul appel de modèle par domaine et par mois.
+    let identityDisclosure: PreLlmIdentity['identity'] | null = null;
+    let identityFingerprint = 'none';
+    if (!siteCtx.market_sector && !siteCtx.products_services) {
+      try {
+        const pre = await resolvePreLlmIdentity(getServiceClient(), { domain, url });
+        identityDisclosure = pre.identity;
+        identityFingerprint = pre.fingerprint;
+        siteCtx = {
+          ...siteCtx,
+          ...(pre.market_sector ? { market_sector: pre.market_sector } : {}),
+          ...(pre.products_services ? { products_services: pre.products_services } : {}),
+          ...(pre.target_audience ? { target_audience: pre.target_audience } : {}),
+          ...(pre.commercial_area ? { commercial_area: pre.commercial_area } : {}),
+          ...(pre.entity_type ? { entity_type: pre.entity_type } : {}),
+          ...(pre.business_model ? { business_model: pre.business_model } : {}),
+        };
+        console.log(`[check-llm] Identité pré-LLM: ${pre.identity.source} conf=${pre.identity.confidence} secteur="${pre.market_sector || 'n/r'}" fp=${pre.fingerprint}`);
+      } catch (e) {
+        console.warn('[check-llm] Pre-LLM identity resolution failed:', e);
+      }
+    }
+
+
+
 
     // Generate natural prompts via shared module (NO domain/brand mention)
     const promptLang: PromptLang = lang as PromptLang;
