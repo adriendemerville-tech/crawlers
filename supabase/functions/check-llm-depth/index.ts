@@ -724,9 +724,14 @@ Deno.serve(handleRequest(async (req) => {
       .gt('expires_at', new Date().toISOString())
       .maybeSingle()
 
-    if (cachedDepth?.result_data) {
+    // Un run mesuré sur une identité différente (activité corrigée depuis) ne
+    // décrit plus le même marché : il n'est pas servi.
+    const cachedFingerprint = String((cachedDepth?.result_data as any)?.identity_fingerprint || 'none')
+    const identityMatches = cachedFingerprint === identityFingerprint
+    if (cachedDepth?.result_data && identityMatches) {
       console.log(`[check-llm-depth] ♻️ ${domain} — cache hit`)
       const cached = cachedDepth.result_data as any
+
 
       // Still persist to user's tables so their dashboard works
       if (cached.results?.length > 0 && tracked_site_id && user_id) {
