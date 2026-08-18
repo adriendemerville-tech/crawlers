@@ -76,15 +76,24 @@ function tokensOf(t: string): Set<string> {
   );
 }
 
-function isRedundant(candidate: string, kept: string[]): boolean {
+/**
+ * `threshold` : part de mots pleins communs au-delà de laquelle deux besoins sont
+ * jugés redondants. La passe stricte (0.6) cherche trois zones réellement
+ * distinctes ; la passe de repli (0.9) n'écarte plus que les quasi-doublons, ce
+ * qui garantit trois benchmarks même sur un domaine mono-thématique (tous les
+ * besoins d'un rénovateur contiennent « rénovation » : à 0.6, un seul survivait
+ * et le rapport n'affichait qu'un benchmark au lieu de trois).
+ */
+function isRedundant(candidate: string, kept: string[], threshold = 0.6): boolean {
   const a = tokensOf(candidate);
   if (a.size === 0) return true;
   for (const k of kept) {
+    if (candidate === k) return true;
     const b = tokensOf(k);
     let common = 0;
     for (const w of a) if (b.has(w)) common++;
     const ratio = common / Math.min(a.size, b.size);
-    if (ratio >= 0.6) return true;
+    if (ratio >= threshold) return true;
   }
   return false;
 }
