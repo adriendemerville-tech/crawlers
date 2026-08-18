@@ -11,6 +11,11 @@
  */
 
 import { writeIdentity } from './identityGateway.ts'
+import {
+  extractStructuredIdentity,
+  renderStructuredEvidenceBlock,
+  type StructuredIdentitySignals,
+} from './structuredIdentity.ts'
 
 const LOVABLE_AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
@@ -117,6 +122,8 @@ export interface OnsiteEvidence {
   description?: string
   headings: string[]
   text: string
+  /** Signaux déclarés par le site : JSON-LD, microdata, manifeste web, Open Graph. */
+  structured?: StructuredIdentitySignals | null
 }
 
 export async function fetchHomepageEvidence(domain: string): Promise<OnsiteEvidence | null> {
@@ -157,7 +164,8 @@ export async function fetchHomepageEvidence(domain: string): Promise<OnsiteEvide
         .slice(0, 3500)
 
       if (!title && !description && headings.length === 0 && text.length < 200) continue
-      return { title, description, headings, text }
+      const structured = await extractStructuredIdentity(html, new URL(url).origin, { fetchManifest: true })
+      return { title, description, headings, text, structured }
     } catch {
       continue
     }
@@ -194,7 +202,7 @@ async function inferContextFromDomain(
     ? `\n\nCONTENU RÉEL DE LA PAGE D'ACCUEIL (source de vérité, prioritaire sur toute intuition liée au nom de domaine) :
 Title: ${evidence.title || '—'}
 Meta description: ${evidence.description || '—'}
-Titres (H1-H3): ${evidence.headings.slice(0, 20).join(' | ') || '—'}
+Titres (H1-H3): ${evidence.headings.slice(0, 20).join(' | ') || '—'}${renderStructuredEvidenceBlock(evidence.structured)}
 Texte visible: ${evidence.text}
 
 Règles impératives :

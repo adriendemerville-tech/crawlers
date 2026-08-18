@@ -21,6 +21,11 @@
 import { aiGatewayFetch } from './aiGatewayFetch.ts';
 import { writeIdentity } from './identityGateway.ts';
 import {
+  extractStructuredIdentity,
+  hasStructuredEvidence,
+  renderStructuredEvidenceBlock,
+} from './structuredIdentity.ts';
+import {
   normalizeSector,
   sectorLabel,
   normalizeCommercialModel,
@@ -286,13 +291,18 @@ async function inferFromSite(url: string, domain: string): Promise<InferenceResu
     }
   }
   // Si la home est inaccessible, on tente l'URL soumise avant d'abandonner.
+  let fallbackHtml: string | null = null;
   if (!pages.length) {
-    const html = await fetchPage(url);
-    if (html) pages.push({ url, text: stripHtml(html).slice(0, PAGE_CHARS) });
+    fallbackHtml = await fetchPage(url);
+    if (fallbackHtml) pages.push({ url, text: stripHtml(fallbackHtml).slice(0, PAGE_CHARS) });
   }
   if (!pages.length) return null;
 
-  const userPrompt = `Domaine : ${domain}\n\n${pages
+  // Données structurées déclarées par le site (JSON-LD, microdata, manifeste, OG).
+  // Déterministe, 0 token, et prioritaire sur toute interprétation du LLM.
+  const structured = await extractStructuredIdentity(homeHtml || fallbackHtml || '', origin, { fetchManifest: true });
+
+  const userPrompt = `Domaine : ${domain}${renderStructuredEvidenceBlock(structured)}\n\n${pages
     .map((p, i) => `--- Page ${i + 1} (${p.url}) ---\n${p.text}`)
     .join('\n\n')}`;
 
@@ -312,25 +322,58 @@ async function inferFromSite(url: string, domain: string): Promise<InferenceResu
     }),
   });
 
-  if (!res.ok) return null;
+  const notes: string[] = [];
+  const declaredFallback = (): Record<string, unknown> | null => {
+    // Le LLM a échoué : les faits déclarés suffisent parfois à ne pas rester vide.
+    if (!hasStructuredEvidence(structured)) return null;
+    notes.push("Carte d'identité établie à partir des seules données structurées déclarées par le site (JSON-LD, manifeste), l'analyse du contenu n'ayant pas abouti.");
+    return {
+      market_sector: structured.declaredTopics[0] || structured.declaredDescription,
+      products_services: structured.declaredOffers.join(', ') || structured.declaredDescription,
+      target_audience: structured.declaredAudience,
+      commercial_area: structured.declaredArea,
+      entity_type: structured.entityTypeHint,
+      is_local_business: structured.isLocalBusinessHint,
+    };
+  };
+
+  const finish = (fields: Record<string, unknown>): InferenceResult => {
+    // Les faits déclarés ne complètent que les trous, sauf pour le type d'entité
+    // et le caractère local, où la déclaration schema.org fait foi.
+    if (structured.entityTypeHint) fields['entity_type'] = structured.entityTypeHint;
+    if (structured.isLocalBusinessHint !== null) fields['is_local_business'] = structured.isLocalBusinessHint;
+    if (!fields['commercial_area'] && structured.declaredArea) fields['commercial_area'] = structured.declaredArea;
+    if (!fields['products_services'] && structured.declaredOffers.length) fields['products_services'] = structured.declaredOffers.join(', ');
+    if (!fields['target_audience'] && structured.declaredAudience) fields['target_audience'] = structured.declaredAudience;
+    if (hasStructuredEvidence(structured)) {
+      notes.push(
+        `Données structurées déclarées prises en compte${structured.schemaTypes.length ? ` (${structured.schemaTypes.slice(0, 6).join(', ')})` : ''}${structured.manifest ? ' et manifeste web lu' : ''}.`,
+      );
+    }
+    return { fields, pagesUsed: pages.map((p) => p.url), notes };
+  };
+
+  if (!res.ok) {
+    const fb = declaredFallback();
+    return fb ? finish(fb) : null;
+  }
   const json = await res.json().catch(() => null) as any;
   const content = json?.choices?.[0]?.message?.content;
-  if (typeof content !== 'string') return null;
-
-  const match = content.match(/\{[\s\S]*\}/);
-  if (!match) return null;
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(match[0]);
-  } catch {
-    return null;
+  const match = typeof content === 'string' ? content.match(/\{[\s\S]*\}/) : null;
+  let parsed: Record<string, unknown> | null = null;
+  if (match) {
+    try {
+      parsed = JSON.parse(match[0]);
+    } catch {
+      parsed = null;
+    }
+  }
+  if (!parsed) {
+    const fb = declaredFallback();
+    return fb ? finish(fb) : null;
   }
 
-  return {
-    fields: parsed,
-    pagesUsed: pages.map((p) => p.url),
-    notes: [],
-  };
+  return finish(parsed);
 }
 
 export interface ResolveIdentityOptions {
@@ -671,6 +714,8 @@ export async function reviseIdentityAfterCrawl(
     let sector = card.sector;
     const notes = [...card.notes];
     let confidence = card.confidence;
+    /** Le corpus crawlé a renversé le secteur : produits/cible doivent suivre. */
+    let forceRewrite = false;
 
     if (sector === 'unknown' && crawlSector !== 'unknown') {
       sector = crawlSector;
@@ -679,16 +724,40 @@ export async function reviseIdentityAfterCrawl(
         `Secteur déduit après le crawl à partir des titres et H1 de ${texts.length} pages réellement rendues, la home seule ne suffisant pas.`,
       );
     } else if (sector !== 'unknown' && crawlSector !== 'unknown' && crawlSector !== sector) {
-      notes.push(
-        `Le corpus de crawl orienterait plutôt vers « ${sectorLabel(crawlSector)} » : la carte retenue reste « ${sectorLabel(sector)} », à vérifier dans la carte d'identité du site.`,
-      );
+      // Le crawl peut CONTREDIRE la carte pré-crawl : la home seule est parfois
+      // allusive ou orientée marque, alors que des dizaines de pages réellement
+      // rendues disent autre chose. On n'accepte le renversement que sur une
+      // dominance nette, page par page (et jamais sur une carte manuelle).
+      let crawlVotes = 0;
+      let cardVotes = 0;
+      for (const t of texts) {
+        const s = normalizeSector(t);
+        if (s === crawlSector) crawlVotes++;
+        else if (s === sector) cardVotes++;
+      }
+      const dominant = crawlVotes >= 5 && crawlVotes >= Math.max(3, cardVotes * 2);
+      if (dominant) {
+        notes.push(
+          `Secteur corrigé après le crawl : « ${sectorLabel(sector)} » (déduit avant le crawl) est contredit par ${crawlVotes} pages sur ${texts.length} qui relèvent de « ${sectorLabel(crawlSector)} » (contre ${cardVotes}). La carte retenue est celle du corpus crawlé.`,
+        );
+        sector = crawlSector;
+        confidence = Math.max(50, Math.min(80, confidence));
+        forceRewrite = true;
+      } else {
+        notes.push(
+          `Le corpus de crawl orienterait plutôt vers « ${sectorLabel(crawlSector)} » (${crawlVotes} pages sur ${texts.length}) : la carte retenue reste « ${sectorLabel(sector)} », à vérifier dans la carte d'identité du site.`,
+        );
+      }
     } else if (sector !== 'unknown' && crawlSector === sector) {
       confidence = Math.min(90, confidence + 10);
       notes.push('Secteur confirmé par le corpus de pages crawlées.');
     }
 
-    // 2) Un seul appel court si le secteur reste indéterminé.
-    if (sector === 'unknown') {
+    // 2) Un seul appel court si le secteur reste indéterminé, ou si le corpus a
+    //    renversé le secteur : dans ce cas produits/services et cible issus de la
+    //    carte pré-crawl sont eux aussi suspects et doivent être recalculés,
+    //    puisque ce sont eux qui alimentent les prompts de visibilité LLM.
+    if (sector === 'unknown' || forceRewrite) {
       try {
         const res = await aiGatewayFetch({
           method: 'POST',
@@ -731,12 +800,19 @@ export async function reviseIdentityAfterCrawl(
               pagesUsed: card.pagesUsed,
               notes: [
                 ...notes,
-                `Carte d'identité déduite après le crawl (titres et H1 de ${texts.length} pages), la lecture de la home n'ayant pas permis de conclure.`,
+                forceRewrite
+                  ? `Activité, produits/services et cible recalculés après le crawl sur les titres et H1 de ${texts.length} pages : la lecture de la seule page d'accueil menait à une activité contredite par le site.`
+                  : `Carte d'identité déduite après le crawl (titres et H1 de ${texts.length} pages), la lecture de la home n'ayant pas permis de conclure.`,
               ],
             });
-            if (revised.sector !== 'unknown' || revised.commercialModel !== 'unknown') {
-              await persistRevision(sb, revised, opts.userId);
-              return revised;
+            // Si le modèle ne tranche pas, on garde au moins le secteur imposé
+            // par la dominance du corpus crawlé.
+            const finalCard: IdentityCard = revised.sector === 'unknown' && sector !== 'unknown'
+              ? { ...revised, sector, sectorLabelText: sectorLabel(sector) }
+              : revised;
+            if (finalCard.sector !== 'unknown' || finalCard.commercialModel !== 'unknown') {
+              await persistRevision(sb, finalCard, opts.userId);
+              return finalCard;
             }
           }
         }
@@ -765,6 +841,15 @@ export async function reviseIdentityAfterCrawl(
 async function persistRevision(sb: any, card: IdentityCard, userId: string): Promise<void> {
   if (!card.trackedSiteId) return;
   try {
+    // Une carte saisie ou dictée par l'utilisateur n'est jamais corrigée par le crawl.
+    const { data: row } = await sb
+      .from('tracked_sites')
+      .select('identity_source')
+      .eq('id', card.trackedSiteId)
+      .maybeSingle();
+    const src = (row as any)?.identity_source;
+    if (src === 'user_manual' || src === 'user_voice') return;
+
     const write: Record<string, unknown> = {};
     if (card.marketSector) write['market_sector'] = card.marketSector;
     if (card.productsServices) write['products_services'] = card.productsServices;
@@ -774,7 +859,9 @@ async function persistRevision(sb: any, card: IdentityCard, userId: string): Pro
     if (card.commercialModel !== 'unknown') write['commercial_model'] = card.commercialModel;
     if (typeof card.isLocalBusiness === 'boolean') write['is_local_business'] = card.isLocalBusiness;
     if (!Object.keys(write).length) return;
-    await writeIdentity({ siteId: card.trackedSiteId, fields: write, source: 'marina', userId });
+    // forceDirectWrite : une correction ancrée sur des dizaines de pages crawlées
+    // doit écraser le secteur erroné, pas atterrir dans une file de suggestions.
+    await writeIdentity({ siteId: card.trackedSiteId, fields: write, source: 'marina', userId, forceDirectWrite: true });
   } catch {
     /* non bloquant */
   }
