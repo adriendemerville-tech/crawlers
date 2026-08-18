@@ -726,10 +726,10 @@ function buildKeywordPositioningSection(kp: any, rankingOverview?: any): string 
   const roNum = (v: any) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
   const roStats = ro
     ? [
-        roNum(ro.total_ranked_keywords) != null ? ['Mots-clés positionnés', roNum(ro.total_ranked_keywords)!.toLocaleString('fr-FR')] : null,
-        roNum(ro.average_position_global) != null ? ['Position moyenne', String(Math.round(roNum(ro.average_position_global)!))] : null,
-        roNum(ro.average_position_top10) != null ? ['Position moyenne du top 10', String(Math.round(roNum(ro.average_position_top10)!))] : null,
-        roNum(ro.etv) != null ? ['Trafic organique estimé', `${Math.round(roNum(ro.etv)!).toLocaleString('fr-FR')} visites/mois`] : null,
+        roNum(ro.total_ranked_keywords) != null ? ['Mots-clés positionnés', roNum(ro.total_ranked_keywords)!.toLocaleString('fr-FR'), 'serp_position'] : null,
+        roNum(ro.average_position_global) != null ? ['Position moyenne', String(Math.round(roNum(ro.average_position_global)!)), 'serp_position'] : null,
+        roNum(ro.average_position_top10) != null ? ['Position moyenne du top 10', String(Math.round(roNum(ro.average_position_top10)!)), 'serp_position'] : null,
+        roNum(ro.etv) != null ? ['Trafic organique estimé', `${Math.round(roNum(ro.etv)!).toLocaleString('fr-FR')} visites/mois`, 'traffic_gain'] : null,
       ].filter(Boolean) as string[][]
     : [];
   const roTop: any[] = Array.isArray(ro?.top_keywords) ? ro!.top_keywords : [];
@@ -738,7 +738,7 @@ function buildKeywordPositioningSection(kp: any, rankingOverview?: any): string 
         'Vue d’ensemble des positions',
         'Volumétrie mesurée sur la SERP : combien de mots-clés le domaine capte déjà et à quelle profondeur.',
         `${roStats.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:10px;">${roStats
-            .map(([l, v]) => `<div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;"><div style="font-size:16px;font-weight:700;color:#111827;">${v}</div><div style="font-size:11px;color:#6b7280;">${l}</div></div>`)
+            .map(([l, v, m]) => `<div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;"><div style="font-size:16px;font-weight:700;color:#111827;">${v}</div><div style="font-size:11px;color:#6b7280;">${l}</div>${m ? `<div style="margin-top:4px;">${metricBadge(m, 'fr')}</div>` : ''}</div>`)
             .join('')}</div>` : ''}
          ${roTop.length ? roTop.slice(0, 10).map((k: any) => row(k)).join('') : ''}`,
       )
