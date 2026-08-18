@@ -1139,7 +1139,7 @@ function renderLlmModelCards(scoreList: any[]): string {
     };
     const sentimentInfo = sentimentLabels[sentiment] || sentimentLabels.neutral;
 
-    return `<div style="padding:16px;border-radius:10px;border:1px solid ${borderColor}30;background:${bgColor};text-align:center;">
+    return `<div data-llm-status="${s.measurement_status === 'pending' ? 'pending' : 'done'}" style="padding:16px;border-radius:10px;border:1px solid ${borderColor}30;background:${bgColor};text-align:center;">
       <div style="font-weight:700;font-size:14px;color:#1f2937;margin-bottom:8px;">${name}</div>
       <div style="font-weight:700;font-size:12px;color:${statusColor};text-transform:uppercase;letter-spacing:0.5px;">${statusLabel}</div>
       ${cited && sentimentInfo.label ? `<div style="font-size:11px;margin-top:6px;padding:2px 10px;border-radius:12px;display:inline-block;background:${sentimentInfo.color}15;color:${sentimentInfo.color};font-weight:600;">${sentimentInfo.label}</div>` : ''}
