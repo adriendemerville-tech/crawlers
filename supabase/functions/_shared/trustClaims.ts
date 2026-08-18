@@ -66,7 +66,7 @@ const CLAIM_RULES: ClaimRule[] = [
   },
   {
     category: 'validation',
-    pattern: /\b(accept[ée]|valid[ée]|reconnu[e]?|approuv[ée])\s+(par\s+)?(l['’]?\s*)?(administration|fisc|urssaf|dgfip|impôts|cnil|état)\b/i,
+    pattern: /\b(accept|valid|reconnu|approuv|homologu|agr[ée])[ée]{0,2}s?\s+(par\s+)?(l['’]?\s*)?(administration|fisc|urssaf|dgfip|imp[ôo]ts|cnil|[ée]tat)\b/i,
     label: 'Validation par une autorité publique suggérée',
     fix: 'Une administration ne valide pas un outil ou un prestataire : reformuler en « produit des justificatifs conformes aux exigences de X » avec la référence exacte.',
   },
