@@ -113,7 +113,13 @@ export function buildLlmBenchmarks(
   };
 
   const lex = resolveLexicon(ctx, lang);
-  const need = mainNeedOf(ctx, lang);
+  const cleanTopics = (topics || []).map((t) => (t || '').trim()).filter(Boolean)
+    .map((t) => (scrubTerms.length ? scrubBrandFromText(t, scrubTerms) : t).trim())
+    .filter((t) => t.length >= 5);
+  const need = cleanTopics[0] || mainNeedOf(ctx, lang);
+  // Un besoin distinct par benchmark quand le marché en fournit plusieurs.
+  const need2 = cleanTopics[1] || need;
+  const need3 = cleanTopics[2] || need2;
   const sector = (ctx.market_sector || '').trim();
   const target = (ctx.target_audience || '').trim();
   const area = (ctx.commercial_area || '').trim();
