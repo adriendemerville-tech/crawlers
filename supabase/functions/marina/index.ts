@@ -4438,7 +4438,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
         const crawlHTML = generateCrawlSectionHTML(
           expertData, detectedLang, domain, url, crawlSnapshot,
-          botRenderingHtml + sectionTop(renderTopPrioritiesHTML(topSeo)),
+          botRenderingHtml + absenceHtml + sectionTop(renderTopPrioritiesHTML(topSeo)),
           hostDuplication ? buildHostDuplicationHTML(hostDuplication, domain) : '',
         );
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
