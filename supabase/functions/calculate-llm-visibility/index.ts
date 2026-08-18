@@ -419,7 +419,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     // carte d'identité. Évite les questions hors sol ("un outil pour Travaux…").
     const topicSelection = await selectQuestionTopics(
       supabase,
-      enrichedSite.domain || domain,
+      enrichedSite.domain || site.domain || '',
       {
         products_services: enrichedSite.products_services,
         market_sector: enrichedSite.market_sector,
