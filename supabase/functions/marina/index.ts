@@ -4228,10 +4228,23 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const botRendering: BotRenderingReport | null = crawlSnapshot?.contentIntegrity?.botRendering || null;
         const renderBlocked = Boolean(botRendering?.blocked);
         const botRenderingHtml = renderBlocked ? botRenderingBlockHTML(botRendering!, domain) : '';
-        const dropShellSymptoms = (findings: RawFinding[]): RawFinding[] =>
-          renderBlocked
-            ? findings.filter((f) => !isSuppressedByShell(String(f.title || ''), String(f.description || '')))
-            : findings;
+        // ─── Lot 3 : contre-vérification des absences de balises ───
+        // Une balise présente après rendu JS mais absente du HTML servi n'est
+        // pas un manque éditorial : le constat devient un défaut de rendu.
+        const absenceReport: AbsenceVerificationReport | null =
+          crawlSnapshot?.contentIntegrity?.absenceVerification || null;
+        const absenceHtml = absenceReliabilityBlockHTML(absenceReport);
+        const absenceFinding = absenceVerificationFinding(absenceReport) as unknown as RawFinding | null;
+
+        const dropShellSymptoms = (findings: RawFinding[]): RawFinding[] => {
+          let out = findings;
+          if (renderBlocked) {
+            out = out.filter((f) => !isSuppressedByShell(String(f.title || ''), String(f.description || '')));
+          }
+          // Absences démenties par le rendu complet : retirées quel que soit le
+          // verdict racine, elles décrivent le rendu et non le contenu.
+          return out.filter((f) => !isBotOnlyAbsence(absenceReport, String(f.title || ''), String(f.description || '')));
+        };
 
         // ─── Lot A : signaux de confiance machine + URLs mortes (déterministes) ───
         const riskClaimsReport = crawlSnapshot?.contentIntegrity?.riskClaims || null;
@@ -4246,6 +4259,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const hostDupFinding = hostDuplication ? hostDuplicationFinding(hostDuplication, domain) : null;
         const seoFindings: RawFinding[] = dropShellSymptoms([
           ...(renderBlocked ? [botRenderingFinding(botRendering!, domain) as unknown as RawFinding] : []),
+          ...(!renderBlocked && absenceFinding ? [absenceFinding] : []),
           ...(hostDupFinding ? [hostDupFinding as RawFinding] : []),
           ...deadFindings,
           ...(expertData?.recommendations || []).map((r: any) => ({
