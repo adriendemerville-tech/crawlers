@@ -5071,18 +5071,9 @@ Deno.serve(handleRequest(async (req) => {
         }
       }
 
-      const { data: processingNow } = await sb
-        .from('async_jobs')
-        .select('id')
-        .eq('function_name', 'marina')
-        .eq('status', 'processing')
-        .limit(1);
+      // Des slots libres ? On remplit la file au lieu d'attendre.
+      await triggerNextPendingJob();
 
-      if (!processingNow || processingNow.length === 0) {
-        // File orpheline : plus rien ne tourne, on relance le plus ancien pending
-        // au lieu de l'échouer.
-        await triggerNextPendingJob();
-      }
     } catch (e) {
       console.warn('[Marina] Auto-cleanup failed:', e);
     }
