@@ -2325,6 +2325,7 @@ function buildReportIntroHTML(
         `El esfuerzo mostrado es un orden de magnitud, no un presupuesto.`,
       ))}
     </ul>
+    ${provenanceLegendHTML(lang)}
     <h3 style="font-size:14px;font-weight:600;margin:0 0 8px 0;">${t('Sources et outils mobilisés', 'Sources and tools used', 'Fuentes y herramientas')}</h3>
     <ul style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0 0 ${takeaways ? '14px' : '0'} 0;">
       ${tools.map(li).join('')}
