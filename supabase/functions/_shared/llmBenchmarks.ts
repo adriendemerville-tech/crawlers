@@ -169,17 +169,17 @@ export function buildLlmBenchmarks(
     discovery.push({ intent: 'sector', text: `J'ai besoin d'aide en ${sector || need} : à qui s'adresser et pourquoi ?` });
     discovery.push({ intent: 'criteria', text: `Quels critères regarder pour bien choisir ${lex.seek} pour ${need} ?` });
 
-    comparison.push({ intent: 'comparison', text: `Compare-moi ${lex.comparePlural} pour ${need} : ${feminine ? 'laquelle' : 'lequel'} sort du lot ?` });
-    comparison.push({ intent: 'alternative', text: `Quelles alternatives existent pour ${need}, à part les gros acteurs connus ?` });
-    comparison.push({ intent: 'price', text: `Combien coûte ${need} et comment sont fixés les prix ?` });
+    comparison.push({ intent: 'comparison', text: `Compare-moi ${lex.comparePlural} pour ${need2} : ${feminine ? 'laquelle' : 'lequel'} sort du lot ?` });
+    comparison.push({ intent: 'alternative', text: `Quelles alternatives existent pour ${need2}, à part les gros acteurs connus ?` });
+    comparison.push({ intent: 'price', text: `Combien coûte ${need2} et comment sont fixés les prix ?` });
 
     usage.push(localOk
-      ? { intent: 'local', text: `${feminine ? 'Quelle' : 'Quel'} ${lex.noun} pour ${need} à ${area} ?` }
+      ? { intent: 'local', text: `${feminine ? 'Quelle' : 'Quel'} ${lex.noun} pour ${need3} à ${area} ?` }
       : target
-        ? { intent: 'audience', text: `Je suis ${target} : ${lex.seek} pour ${need}, tu recommandes quoi ?` }
-        : { intent: 'usecase', text: `Dans quels cas ${lex.seek} pour ${need} est-${feminine ? 'elle' : 'il'} vraiment utile ?` });
-    usage.push({ intent: 'proof', text: `Sur quels retours d'expérience ou avis clients tu te bases pour recommander ${need} ?` });
-    usage.push({ intent: 'decision', text: `Si tu devais n'en recommander qu'un seul pour ${need}, lequel et pourquoi ?` });
+        ? { intent: 'audience', text: `Je suis ${target} : ${lex.seek} pour ${need3}, tu recommandes quoi ?` }
+        : { intent: 'usecase', text: `Dans quels cas ${lex.seek} pour ${need3} est-${feminine ? 'elle' : 'il'} vraiment utile ?` });
+    usage.push({ intent: 'proof', text: `Sur quels retours d'expérience ou avis clients tu te bases pour recommander ${need3} ?` });
+    usage.push({ intent: 'decision', text: `Si tu devais n'en recommander qu'un seul pour ${need3}, lequel et pourquoi ?` });
   }
 
   const finalize = (prompts: BenchmarkPrompt[]): BenchmarkPrompt[] => {
