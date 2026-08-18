@@ -149,8 +149,9 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
           </div>
         )}
 
-        {/* HTML Preview — la barre d'outils интégrée au rapport est masquée ici
+        {/* HTML Preview — la barre d'outils intégrée au rapport est masquée ici
             pour ne pas doubler celle de l'en-tête de la fenêtre. */}
+
         <div className="flex-1 overflow-auto bg-muted/30">
           <iframe srcDoc={embeddedHtml} className="w-full h-full min-h-[600px]" title="Marina Report Preview" />
         </div>
