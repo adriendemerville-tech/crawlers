@@ -4479,7 +4479,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const geoSubSignalsReport = buildGeoSubSignals({
           breakdown: strategicData?.citation_breakdown || null,
           isBotShell: botRendering ? Boolean(botRendering.blocked) : null,
-          botOnlyAbsences: absenceReport?.bot_only_count ?? null,
+          botOnlyAbsences: absenceReport ? (absenceReport.bot_only_signals?.length ?? 0) : null,
           crawlFormatting: crawlSnapshot?.answerFormatting || null,
           founderResolved: tlSignals ? Boolean(tlSignals.founder_name) : null,
           founderCorroborated: tlSignals
