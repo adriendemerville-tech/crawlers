@@ -19,7 +19,7 @@
  * Consommateurs : calculate-llm-visibility (puis llmBenchmarks).
  */
 
-export type TopicAxis = 'covered' | 'ranked' | 'demand' | 'identity';
+export type TopicAxis = 'value_prop' | 'covered' | 'ranked' | 'demand' | 'identity';
 
 export interface TopicSelection {
   topic: string;
