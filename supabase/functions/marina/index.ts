@@ -873,9 +873,28 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     robotsPermissive: scores?.aiReady?.robotsPermissive || false,
     isHttps: scores?.technical?.isHttps || false,
     httpStatus: scores?.technical?.httpStatus || 200,
+    // Lot B — agrégats de mise en forme des réponses (sous-signal GEO déduit).
+    // Une composante non collectée reste `null` : elle est alors exclue du calcul
+    // au lieu d'être lue comme une absence de balisage.
+    answerFormatting: (() => {
+      const has = (k: string) => crawlPages.some((p) => p && p[k] !== undefined && p[k] !== null);
+      const count = (fn: (p: any) => boolean) => crawlPages.filter((p) => { try { return fn(p); } catch { return false; } }).length;
+      return {
+        pagesAnalyzed: crawlPages.length || null,
+        pagesWithH1: crawlPages.length ? count((p) => Boolean(String(p?.h1 ?? '').trim())) : null,
+        pagesWithFaq: (has('has_faq') || has('faq_count') || has('has_faq_schema'))
+          ? count((p) => Boolean(p?.has_faq || p?.has_faq_schema || Number(p?.faq_count) > 0))
+          : null,
+        pagesWithLists: (has('lists_count') || has('has_lists') || has('ul_count'))
+          ? count((p) => Boolean(p?.has_lists) || Number(p?.lists_count) > 0 || Number(p?.ul_count) > 0)
+          : null,
+        avgWordCount: crawlPages.length ? Math.round(totalWordCount / crawlPages.length) : null,
+      };
+    })(),
     contentIntegrity: summarizeCrawlIntegrity(crawl?.content_integrity),
   };
 }
+
 
 /** Résumé compact (déterministe, 0 token) de l'intégrité du contenu pour les prompts Marina. */
 function summarizeCrawlIntegrity(report: any) {
