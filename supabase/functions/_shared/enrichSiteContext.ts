@@ -98,6 +98,11 @@ function needsEnrichment(site: Record<string, unknown>): 'full' | 'refresh' | fa
   
   if (!hasFields) return 'full'
 
+  // Carte d'identité antérieure à la proposition de valeur : un rafraîchissement
+  // unique est nécessaire, sinon les benchmarks LLM ne testent jamais l'offre
+  // centrale du site.
+  if (!site.value_proposition && (site.identity_source as string) !== 'user_manual') return 'refresh'
+
   // If source is LLM and enrichment is stale, do a soft refresh
   const source = (site.identity_source as string) || 'none'
   const enrichedAt = site.identity_enriched_at as string | null
