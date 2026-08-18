@@ -99,6 +99,7 @@ const AXIS_LABELS: Record<PromptLang, Record<AxisKey, { label: string; descripti
     },
   },
   es: {
+    value_prop: VALUE_PROP_LABELS.es,
     covered: {
       label: 'Núcleo de mercado cubierto',
       description: 'Necesidad para la que el sitio ya aparece en Google: mide si esa cobertura SEO se traduce en citas por las IA.',
