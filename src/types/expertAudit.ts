@@ -696,7 +696,7 @@ export interface ExpertAuditResult {
   domain: string;
   scannedAt: string;
   totalScore: number;
-  maxScore: 200;
+  maxScore: number;
   isSPA?: boolean;
   meta?: AuditMeta;
   scores: ExpertAuditScores;
