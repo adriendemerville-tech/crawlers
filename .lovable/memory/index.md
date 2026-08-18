@@ -23,4 +23,5 @@
 - [Identité ancrée contenu](mem://tech/architecture/identity-grounding-fr) — Interdiction d'inférer l'activité depuis le nom de domaine ; réutilisation de carte limitée aux sources ancrées (marina/crawl/user)
 - [Score visibilité LLM](mem://tech/geo/llm-visibility-scoring-formula-fr) — Couverture binaire + Wilson 95%, qualité pondérée par axe (ranked ×2,0 / covered ×1,5 / demand ×1,0), fiabilité par nombre de runs, bloc potentiel GEO vs citation mesurée
 - [Signaux de confiance Lot A](mem://tech/audit/trust-signals-lot-a-fr) — Surclaims (5 catégories, critical si secteur régulé), autorité citée hors compétence (table curée DGFiP/URSSAF, CNIL/ANSSI…), URLs mortes priorisées (canonical mort > liens internes > pages mortes > liens cassés), calculés au crawl et restitués dans E-E-A-T Marina
+- [Contre-vérification des absences Lot 3](mem://tech/audit/absence-verification-lot3-fr) — Aucune absence H1/JSON-LD/meta affirmée sans re-test en rendu complet (3 pages max), verdicts absent_partout vs absent_pour_les_bots, encart « Fiabilité des constats de contenu », sitemap découvert via robots.txt
 
