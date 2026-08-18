@@ -26,6 +26,10 @@ const RE_ENRICH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000
 export interface SiteContext {
   market_sector?: string
   products_services?: string
+  /** Proposition de valeur CENTRALE : le besoin n°1 résolu, vu du client, sans nom de marque */
+  value_proposition?: string
+  /** Deux propositions de valeur SECONDAIRES, séparées par " ; " */
+  secondary_propositions?: string
   target_audience?: string
   commercial_area?: string
   company_size?: string
