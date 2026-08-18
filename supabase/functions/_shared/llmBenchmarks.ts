@@ -193,7 +193,7 @@ export function buildLlmBenchmarks(
    */
   const framedNeed = (need: string): { need: string; audience: string } => {
     if (isActorTopic(need) && isToolLikeSite(ctx)) {
-      const job = coreJobOf(ctx, lang);
+      const job = coreJobOf(ctx);
       if (job) return { need: job, audience: need };
     }
     return { need, audience: target };
