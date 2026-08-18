@@ -1029,14 +1029,17 @@ function buildSocialSignalsSection(data: any): string {
   // Thought leadership
   let leadershipHtml = '';
   const tl = data?.thought_leadership;
+  // Recommandation indépendante du bloc Thought Leadership : elle doit apparaître
+  // dès qu'aucun porte-parole n'est résolu, y compris si le module n'a rien renvoyé.
+  const unresolvedSpokesperson = !tl?.founder_name;
+  const spokespersonRecommendation = unresolvedSpokesperson
+    ? `<div style="margin-top:10px;padding:10px;border-left:3px solid #f59e0b;background:#fffbeb;font-size:12px;color:#374151;line-height:1.6;">
+        <strong>Recommandation E-E-A-T :</strong> L’audit n’a identifié aucun porte-parole public et vérifié pour ce site. Cela affaiblit l’incarnation de l’expertise, l’autorité de l’entité en SEO et sa citabilité dans les moteurs de réponse IA. Le dirigeant, gérant, CEO ou fondateur devrait devenir le porte-parole régulier de l’entreprise : page auteur et biographie vérifiable sur le site, prises de parole expertes signées, profil professionnel relié par <code>sameAs</code> et contributions cohérentes dans le temps.
+      </div>`
+    : '';
   if (tl) {
     const eeat = tl.eeat_score ?? null;
-    const unresolvedSpokesperson = !tl.founder_name && (tl.founder_authority === 'unknown' || tl.founder_resolution);
-    const spokespersonRecommendation = unresolvedSpokesperson
-      ? `<div style="margin-top:10px;padding:10px;border-left:3px solid #f59e0b;background:#fffbeb;font-size:12px;color:#374151;line-height:1.6;">
-          <strong>Recommandation E-E-A-T :</strong> L’audit n’a identifié aucun porte-parole public et vérifié pour ce site. Cela affaiblit l’incarnation de l’expertise, l’autorité de l’entité en SEO et sa citabilité dans les moteurs de réponse IA. Le dirigeant, gérant, CEO ou fondateur devrait devenir le porte-parole régulier de l’entreprise : page auteur et biographie vérifiable sur le site, prises de parole expertes signées, profil professionnel relié par <code>sameAs</code> et contributions cohérentes dans le temps.
-        </div>`
-      : '';
+
     leadershipHtml = `<div style="padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:12px;text-align:left;">
       <div style="font-weight:600;font-size:13px;margin-bottom:6px;">🏛️ Thought Leadership</div>
       ${(() => {
