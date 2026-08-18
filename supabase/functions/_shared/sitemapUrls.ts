@@ -35,10 +35,38 @@ function extractLocs(xml: string): string[] {
   return out;
 }
 
+/**
+ * Sitemaps déclarés dans robots.txt. Sans cette lecture, un site qui expose son
+ * sitemap sur un chemin non standard (ex. /sitemap-0.xml, /wp-sitemap.xml) était
+ * considéré comme dépourvu de sitemap.
+ */
+export async function sitemapsFromRobots(base: string): Promise<string[]> {
+  const txt = await fetchText(`${base}/robots.txt`);
+  if (!txt) return [];
+  const out: string[] = [];
+  for (const line of txt.split(/\r?\n/)) {
+    const m = line.match(/^\s*sitemap\s*:\s*(\S+)\s*$/i);
+    if (!m) continue;
+    try {
+      out.push(new URL(m[1], `${base}/`).toString());
+    } catch { /* ligne invalide ignorée */ }
+  }
+  return Array.from(new Set(out)).slice(0, MAX_CHILD_SITEMAPS);
+}
+
 /** Retourne les URL de pages du sitemap (index de sitemaps suivi), ou [] si indisponible. */
 export async function fetchSitemapUrls(domain: string): Promise<string[]> {
   const base = domain.startsWith('http') ? domain.replace(/\/+$/, '') : `https://${domain}`;
-  const candidates = [`${base}/sitemap.xml`, `${base}/sitemap_index.xml`, `${base}/sitemap-index.xml`];
+  // robots.txt d'abord : c'est la déclaration faite par le site lui-même.
+  const declared = await sitemapsFromRobots(base);
+  const candidates = [
+    ...declared,
+    `${base}/sitemap.xml`,
+    `${base}/sitemap_index.xml`,
+    `${base}/sitemap-index.xml`,
+    `${base}/wp-sitemap.xml`,
+    `${base}/sitemap-0.xml`,
+  ].filter((u, i, arr) => arr.indexOf(u) === i);
 
   for (const candidate of candidates) {
     const xml = await fetchText(candidate);
