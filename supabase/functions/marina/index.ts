@@ -472,10 +472,39 @@ function getToolbarHtml(domain: string, lang: string): string {
         label.textContent = '${tr.toolbarCopy}';
       }, 2000);
     }
+    function marinaPendingCount() {
+      return document.querySelectorAll('[data-llm-status="pending"]').length;
+    }
+    // Tant que des interrogations LLM sont en cours, l'export produirait un PDF incomplet.
+    function marinaSyncPdfAvailability() {
+      var btn = document.getElementById('marina-pdf-btn');
+      var label = document.getElementById('marina-pdf-label');
+      if (!btn || !label) return;
+      if (marinaPendingCount() > 0) {
+        btn.disabled = true;
+        btn.style.opacity = '0.55';
+        btn.title = 'Mesure LLM en cours — export disponible à la fin des interrogations';
+        label.textContent = 'Mesure LLM en cours…';
+      } else {
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.title = '${tr.toolbarPdf}';
+        label.textContent = '${tr.toolbarPdf}';
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', marinaSyncPdfAvailability);
+    } else { marinaSyncPdfAvailability(); }
+    setInterval(marinaSyncPdfAvailability, 5000);
+
     async function marinaDownloadPDF() {
       var btn = document.getElementById('marina-pdf-btn');
       var label = document.getElementById('marina-pdf-label');
       if (btn.disabled) return;
+      if (marinaPendingCount() > 0) {
+        alert('Les interrogations des modèles IA ne sont pas terminées. L’export PDF sera disponible dès que toutes les réponses seront enregistrées : rechargez la page dans quelques minutes.');
+        return;
+      }
       btn.disabled = true;
       label.textContent = '${tr.toolbarLoading || '…'}';
       try {
@@ -937,7 +966,7 @@ function hydrateCocoonReportData(cocoonResult: any, semanticNodes: any[]) {
 
 // ─── Dedicated renderer for Social Signals with platform names & colors ───
 function buildSocialSignalsSection(data: any): string {
-  if (!data) return '';
+  // Pas de court-circuit : même sans signal social, la recommandation porte-parole doit sortir.
 
   const PLATFORM_COLORS: Record<string, { color: string; bg: string; icon: string }> = {
     linkedin:  { color: '#0a66c2', bg: '#0a66c212', icon: '💼' },
@@ -1000,14 +1029,17 @@ function buildSocialSignalsSection(data: any): string {
   // Thought leadership
   let leadershipHtml = '';
   const tl = data?.thought_leadership;
+  // Recommandation indépendante du bloc Thought Leadership : elle doit apparaître
+  // dès qu'aucun porte-parole n'est résolu, y compris si le module n'a rien renvoyé.
+  const unresolvedSpokesperson = !tl?.founder_name;
+  const spokespersonRecommendation = unresolvedSpokesperson
+    ? `<div style="margin-top:10px;padding:10px;border-left:3px solid #f59e0b;background:#fffbeb;font-size:12px;color:#374151;line-height:1.6;">
+        <strong>Recommandation E-E-A-T :</strong> L’audit n’a identifié aucun porte-parole public et vérifié pour ce site. Cela affaiblit l’incarnation de l’expertise, l’autorité de l’entité en SEO et sa citabilité dans les moteurs de réponse IA. Le dirigeant, gérant, CEO ou fondateur devrait devenir le porte-parole régulier de l’entreprise : page auteur et biographie vérifiable sur le site, prises de parole expertes signées, profil professionnel relié par <code>sameAs</code> et contributions cohérentes dans le temps.
+      </div>`
+    : '';
   if (tl) {
     const eeat = tl.eeat_score ?? null;
-    const unresolvedSpokesperson = !tl.founder_name && (tl.founder_authority === 'unknown' || tl.founder_resolution);
-    const spokespersonRecommendation = unresolvedSpokesperson
-      ? `<div style="margin-top:10px;padding:10px;border-left:3px solid #f59e0b;background:#fffbeb;font-size:12px;color:#374151;line-height:1.6;">
-          <strong>Recommandation E-E-A-T :</strong> L’audit n’a identifié aucun porte-parole public et vérifié pour ce site. Cela affaiblit l’incarnation de l’expertise, l’autorité de l’entité en SEO et sa citabilité dans les moteurs de réponse IA. Le dirigeant, gérant, CEO ou fondateur devrait devenir le porte-parole régulier de l’entreprise : page auteur et biographie vérifiable sur le site, prises de parole expertes signées, profil professionnel relié par <code>sameAs</code> et contributions cohérentes dans le temps.
-        </div>`
-      : '';
+
     leadershipHtml = `<div style="padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:12px;text-align:left;">
       <div style="font-weight:600;font-size:13px;margin-bottom:6px;">🏛️ Thought Leadership</div>
       ${(() => {
@@ -1030,6 +1062,12 @@ function buildSocialSignalsSection(data: any): string {
       ${tl.entity_recognition ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Reconnaissance entité:</strong> ${tl.entity_recognition}</div>` : ''}
       ${eeat != null ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Score E-E-A-T:</strong> <span style="font-weight:700;color:${eeat >= 7 ? '#22c55e' : eeat >= 4 ? '#f59e0b' : '#ef4444'};">${eeat}/10</span></div>` : ''}
       ${tl.analysis ? `<div style="font-size:12px;color:#6b7280;line-height:1.5;margin-top:4px;">${tl.analysis}</div>` : ''}
+      ${spokespersonRecommendation}
+    </div>`;
+  } else if (spokespersonRecommendation) {
+    leadershipHtml = `<div style="padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:12px;text-align:left;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:6px;">🏛️ Thought Leadership</div>
+      <div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Porte-parole identifié:</strong> non résolu</div>
       ${spokespersonRecommendation}
     </div>`;
   }
@@ -1139,7 +1177,7 @@ function renderLlmModelCards(scoreList: any[]): string {
     };
     const sentimentInfo = sentimentLabels[sentiment] || sentimentLabels.neutral;
 
-    return `<div style="padding:16px;border-radius:10px;border:1px solid ${borderColor}30;background:${bgColor};text-align:center;">
+    return `<div data-llm-status="${s.measurement_status === 'pending' ? 'pending' : 'done'}" style="padding:16px;border-radius:10px;border:1px solid ${borderColor}30;background:${bgColor};text-align:center;">
       <div style="font-weight:700;font-size:14px;color:#1f2937;margin-bottom:8px;">${name}</div>
       <div style="font-weight:700;font-size:12px;color:${statusColor};text-transform:uppercase;letter-spacing:0.5px;">${statusLabel}</div>
       ${cited && sentimentInfo.label ? `<div style="font-size:11px;margin-top:6px;padding:2px 10px;border-radius:12px;display:inline-block;background:${sentimentInfo.color}15;color:${sentimentInfo.color};font-weight:600;">${sentimentInfo.label}</div>` : ''}
