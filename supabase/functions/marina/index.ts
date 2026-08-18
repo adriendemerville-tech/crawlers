@@ -1700,7 +1700,9 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       <!-- ── Bloc GEO / citabilité IA : remonté en tête de la section, c'est
            l'objet même de l'audit stratégique. ── -->
       ${buildModuleSection('Citabilité par les moteurs de réponse IA', '🌍', geoCitability)}
+      ${geoSubSignalsHtml}
       <!--MARINA_LLM_START-->${buildLlmVisibilitySection(llmVisibility, llmVisibilityStrategic)}<!--MARINA_LLM_END-->
+
       ${buildModuleSection('Maturité GEO', '🌍', geoReadiness)}
       ${buildModuleSection('Citabilité : extraits reprenables', '💬', quotability)}
       ${buildModuleSection('Résilience des Résumés', '🛡️', summaryResilience)}
