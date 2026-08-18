@@ -14,6 +14,7 @@ import {
 } from '../contentIntegrity/index.ts';
 import { writeIntegrityFindingsToWorkbench } from '../contentIntegrity/workbench.ts';
 import { aggregateBotRendering } from '../botRenderingShell.ts';
+import { verifyAbsences, type AbsenceVerificationReport } from '../absenceVerification.ts';
 import { detectRiskClaims, detectAuthorityMismatch } from '../trustClaims.ts';
 import { analyzeDeadUrls } from '../deadUrls.ts';
 
