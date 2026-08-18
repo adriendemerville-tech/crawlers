@@ -1,0 +1,2 @@
+delete from public.domain_data_cache where domain in ('dictadevi.io','avenir-renovations.fr','www.avenir-renovations.fr') and data_type in ('pre_llm_identity','site_scope');
+update public.tracked_sites set identity_enriched_at = null where domain = 'dictadevi.io' and market_sector ilike '%transcription%';
