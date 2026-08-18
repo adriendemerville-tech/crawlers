@@ -1,5 +1,5 @@
 import { aiGatewayFetch } from '../_shared/aiGatewayFetch.ts';
-import { getUserClient } from '../_shared/supabaseClient.ts'
+import { getUserClient, getServiceClient } from '../_shared/supabaseClient.ts'
 import { trackTokenUsage, trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { fetchAndRenderPage } from '../_shared/renderPage.ts'
@@ -150,7 +150,12 @@ interface HtmlAnalysis {
     hasWebSite: boolean;
     hasBreadcrumb: boolean;
     hasPerson: boolean;
+    hasProfilePage?: boolean;
   };
+  // Sécurité / entités déclarées (champs réellement produits par l'analyse)
+  hasHSTS?: boolean;
+  hasSameAs?: boolean;
+  hasAuthorInJsonLd?: boolean;
   // FAQ + FAQPage coupling
   hasFAQWithSchema?: boolean;
   // E-E-A-T signals
@@ -2671,7 +2676,7 @@ Deno.serve(handleRequest(async (req) => {
     
     // ═══ FETCH IDENTITY CARD + GOOGLE SERVICES DATA ═══
     let identityBlock = '';
-    const authHeader = req.headers.get('Authorization') || '';
+    // authHeader déjà déclaré plus haut (rate limiting) — pas de redéclaration
     try {
       const sb = getUserClient(authHeader);
       const { data: { user } } = await sb.auth.getUser();
@@ -2880,8 +2885,8 @@ Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1
           }
 
           // H1 as keyword (if different from title)
-          if (htmlAnalysis.h1Content) {
-            const h1Kw = (Array.isArray(htmlAnalysis.h1Content) ? htmlAnalysis.h1Content[0] : htmlAnalysis.h1Content)?.trim().toLowerCase().substring(0, 100);
+          if (htmlAnalysis.h1Contents?.length) {
+            const h1Kw = htmlAnalysis.h1Contents[0]?.trim().toLowerCase().substring(0, 100);
             if (h1Kw && h1Kw.length > 3 && h1Kw !== htmlAnalysis.titleContent?.trim().toLowerCase()) {
               kwPayload.push({ keyword: h1Kw, search_volume: 0, position: null, intent: 'informational', target_url: normalizedUrl });
             }
@@ -2914,7 +2919,7 @@ Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1
               domain,
               kwUser.id,
               tsRow?.id || null,
-              kwPayload.map(kw => ({ keyword: kw.keyword, target_url: kw.target_url })),
+              kwPayload.map(kw => ({ keyword: String(kw.keyword), target_url: kw.target_url ? String(kw.target_url) : undefined })),
             ).catch(e => console.warn('[expert-audit] spiral classification failed (non-fatal):', e));
           }
         } catch (e) {
