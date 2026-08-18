@@ -153,17 +153,17 @@ export function buildLlmBenchmarks(
     discovery.push({ intent: 'sector', text: `Necesito ayuda con ${sector || need}, ¿a quién puedo dirigirme y por qué?` });
     discovery.push({ intent: 'criteria', text: `¿Qué criterios hay que mirar para elegir ${lex.seek} para ${need}?` });
 
-    comparison.push({ intent: 'comparison', text: `Compara ${lex.comparePlural} para ${need}: ¿cuál destaca?` });
-    comparison.push({ intent: 'alternative', text: `¿Qué alternativas existen para ${need}, aparte de los grandes conocidos?` });
-    comparison.push({ intent: 'price', text: `¿Cuánto cuesta ${need} y cómo se fijan los precios?` });
+    comparison.push({ intent: 'comparison', text: `Compara ${lex.comparePlural} para ${need2}: ¿cuál destaca?` });
+    comparison.push({ intent: 'alternative', text: `¿Qué alternativas existen para ${need2}, aparte de los grandes conocidos?` });
+    comparison.push({ intent: 'price', text: `¿Cuánto cuesta ${need2} y cómo se fijan los precios?` });
 
     usage.push(localOk
-      ? { intent: 'local', text: `¿Qué ${lex.noun} se encarga de ${need} en ${area}?` }
+      ? { intent: 'local', text: `¿Qué ${lex.noun} se encarga de ${need3} en ${area}?` }
       : target
-        ? { intent: 'audience', text: `Soy ${target}: ¿qué ${lex.noun} para ${need} recomiendas?` }
-        : { intent: 'usecase', text: `¿En qué casos merece la pena ${lex.seek} para ${need}?` });
-    usage.push({ intent: 'proof', text: `¿En qué opiniones o experiencias de clientes te basas para recomendar ${need}?` });
-    usage.push({ intent: 'decision', text: `Si solo pudieras recomendar uno para ${need}, ¿cuál y por qué?` });
+        ? { intent: 'audience', text: `Soy ${target}: ¿qué ${lex.noun} para ${need3} recomiendas?` }
+        : { intent: 'usecase', text: `¿En qué casos merece la pena ${lex.seek} para ${need3}?` });
+    usage.push({ intent: 'proof', text: `¿En qué opiniones o experiencias de clientes te basas para recomendar ${need3}?` });
+    usage.push({ intent: 'decision', text: `Si solo pudieras recomendar uno para ${need3}, ¿cuál y por qué?` });
   } else {
     discovery.push({ intent: 'discovery', text: `Je cherche ${lex.seek} pour ${need}, t'as des idées ?` });
     discovery.push({ intent: 'sector', text: `J'ai besoin d'aide en ${sector || need} : à qui s'adresser et pourquoi ?` });
