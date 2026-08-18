@@ -29,6 +29,10 @@ import {
   absenceReliabilityBlockHTML,
   type AbsenceVerificationReport,
 } from '../_shared/absenceVerification.ts';
+import { buildGeoSubSignals, geoSubSignalsBlockHTML } from '../_shared/geoSubSignals.ts';
+import { verdictsFromCocoonRisks, pillarSatelliteBlockHTML } from '../_shared/pillarSatelliteVerdict.ts';
+
+
 
 
 import {
