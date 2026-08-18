@@ -13561,6 +13561,7 @@ export type Database = {
           products_services: string | null
           seasonality_detected_at: string | null
           seasonality_profile: Json | null
+          secondary_propositions: string | null
           shared_with_team: boolean
           short_term_goal: string | null
           siren_siret: string | null
@@ -13570,6 +13571,7 @@ export type Database = {
           target_countries: string[]
           target_segment: string | null
           user_id: string
+          value_proposition: string | null
           voice_dna: Json | null
           weekly_refresh_enabled: boolean
         }
@@ -13633,6 +13635,7 @@ export type Database = {
           products_services?: string | null
           seasonality_detected_at?: string | null
           seasonality_profile?: Json | null
+          secondary_propositions?: string | null
           shared_with_team?: boolean
           short_term_goal?: string | null
           siren_siret?: string | null
@@ -13642,6 +13645,7 @@ export type Database = {
           target_countries?: string[]
           target_segment?: string | null
           user_id: string
+          value_proposition?: string | null
           voice_dna?: Json | null
           weekly_refresh_enabled?: boolean
         }
@@ -13705,6 +13709,7 @@ export type Database = {
           products_services?: string | null
           seasonality_detected_at?: string | null
           seasonality_profile?: Json | null
+          secondary_propositions?: string | null
           shared_with_team?: boolean
           short_term_goal?: string | null
           siren_siret?: string | null
@@ -13714,6 +13719,7 @@ export type Database = {
           target_countries?: string[]
           target_segment?: string | null
           user_id?: string
+          value_proposition?: string | null
           voice_dna?: Json | null
           weekly_refresh_enabled?: boolean
         }
