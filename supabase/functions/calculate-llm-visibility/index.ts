@@ -515,11 +515,12 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     const promptsFingerprint = prompts.join('||')
     const cachedFingerprint = (cachedData?.result_data as any)?.prompts_fingerprint
     const fingerprintStale = !!cachedData?.result_data && cachedFingerprint !== promptsFingerprint
+    const cacheIsComplete = (cachedData?.result_data as any)?.measurement_status !== 'processing'
     if (fingerprintStale) {
       console.log(`[llm-vis] ⟳ ${site.domain} — cache ignoré : questions obsolètes (lexique mis à jour)`)
     }
 
-    if (cachedData?.result_data && !fingerprintStale) {
+    if (cachedData?.result_data && !fingerprintStale && cacheIsComplete) {
       console.log(`[llm-vis] ♻️ ${site.domain} — cache hit for week ${weekStart}`)
       const cached = cachedData.result_data as { scores: any[]; week_start_date: string }
 
