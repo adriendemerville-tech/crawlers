@@ -30,7 +30,7 @@ export function mapStrategicData(
   return {
     url: normalizedUrl,
     domain,
-    totalScore: (data.overallScore ?? 0) * 2,
+    totalScore: Math.round((data.overallScore ?? 0) * 2.2),
     maxScore: 220,
     scores: {
       performance: { score: 0, maxScore: 40, psiPerformance: 0, lcp: 0, cls: 0, tbt: 0, fcp: 0 },
