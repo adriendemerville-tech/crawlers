@@ -322,6 +322,14 @@ export async function selectQuestionTopics(
             push(c, 'demand', 0.9);
           }
         }
+        // Dernier complément : les propositions de valeur secondaires, quand la
+        // SERP ne fournit pas trois zones distinctes.
+        if (kept.length < max) {
+          for (const p of secondaryProps) {
+            if (kept.length >= max) break;
+            push({ topic: p, volume: 0, position: null, intent: null }, 'value_prop', 0.9);
+          }
+        }
         if (kept.length > 0) {
           return { topics: [...kept], selections, source: 'keyword_universe' };
         }
