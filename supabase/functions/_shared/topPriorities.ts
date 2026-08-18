@@ -373,6 +373,10 @@ export function buildConsolidatedActionPlan(
     merged_duplicates: mergedDuplicates,
   });
 
+  // Un gain de trafic identique recopié sur plusieurs actions du même levier
+  // n'est pas une estimation : on le répartit entre les actions concernées.
+  distributeTrafficGains(items as Array<{ fingerprint?: string; accountability?: Accountability | null }>);
+
   return items;
 }
 
