@@ -3674,7 +3674,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // dans domain_data_cache alors que l'appel HTTP a déjà échoué/été coupé.
       // Sans ce read-back, le rapport tombe sur le rendu dégradé (1 seul bloc au lieu
       // des 3 benchmarks). On repolle le cache domaine quelques secondes.
-      if (!llmVisibilityData?.scores && !llmVisibilityData?.data?.scores) {
+      if (!isFreshLlmPayload(llmVisibilityData)) {
         for (let attempt = 0; attempt < 6; attempt++) {
           try {
             const { data: cached } = await sb
@@ -3687,9 +3687,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               .limit(1)
               .maybeSingle();
             const payload = (cached as any)?.result_data;
-            if (payload?.scores?.length) {
+            // Un payload legacy (sans les 3 benchmarks) ne doit pas écraser la mesure.
+            if (payload?.scores?.length && Array.isArray(payload?.benchmarks) && payload.benchmarks.length >= 3) {
               llmVisibilityData = { data: payload };
-              console.log(`[Marina] ♻️ Visibilité LLM récupérée depuis domain_data_cache (${payload.benchmarks?.length || 0} benchmarks)`);
+              console.log(`[Marina] ♻️ Visibilité LLM récupérée depuis domain_data_cache (${payload.benchmarks.length} benchmarks)`);
               await writeSiteScopeCache(sb, domain, parentJob.user_id, { llmVisibility: llmVisibilityData });
               break;
             }
