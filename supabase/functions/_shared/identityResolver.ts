@@ -722,16 +722,40 @@ export async function reviseIdentityAfterCrawl(
         `Secteur déduit après le crawl à partir des titres et H1 de ${texts.length} pages réellement rendues, la home seule ne suffisant pas.`,
       );
     } else if (sector !== 'unknown' && crawlSector !== 'unknown' && crawlSector !== sector) {
-      notes.push(
-        `Le corpus de crawl orienterait plutôt vers « ${sectorLabel(crawlSector)} » : la carte retenue reste « ${sectorLabel(sector)} », à vérifier dans la carte d'identité du site.`,
-      );
+      // Le crawl peut CONTREDIRE la carte pré-crawl : la home seule est parfois
+      // allusive ou orientée marque, alors que des dizaines de pages réellement
+      // rendues disent autre chose. On n'accepte le renversement que sur une
+      // dominance nette, page par page (et jamais sur une carte manuelle).
+      let crawlVotes = 0;
+      let cardVotes = 0;
+      for (const t of texts) {
+        const s = normalizeSector(t);
+        if (s === crawlSector) crawlVotes++;
+        else if (s === sector) cardVotes++;
+      }
+      const dominant = crawlVotes >= 5 && crawlVotes >= Math.max(3, cardVotes * 2);
+      if (dominant) {
+        notes.push(
+          `Secteur corrigé après le crawl : « ${sectorLabel(sector)} » (déduit avant le crawl) est contredit par ${crawlVotes} pages sur ${texts.length} qui relèvent de « ${sectorLabel(crawlSector)} » (contre ${cardVotes}). La carte retenue est celle du corpus crawlé.`,
+        );
+        sector = crawlSector;
+        confidence = Math.max(50, Math.min(80, confidence));
+        forceRewrite = true;
+      } else {
+        notes.push(
+          `Le corpus de crawl orienterait plutôt vers « ${sectorLabel(crawlSector)} » (${crawlVotes} pages sur ${texts.length}) : la carte retenue reste « ${sectorLabel(sector)} », à vérifier dans la carte d'identité du site.`,
+        );
+      }
     } else if (sector !== 'unknown' && crawlSector === sector) {
       confidence = Math.min(90, confidence + 10);
       notes.push('Secteur confirmé par le corpus de pages crawlées.');
     }
 
-    // 2) Un seul appel court si le secteur reste indéterminé.
-    if (sector === 'unknown') {
+    // 2) Un seul appel court si le secteur reste indéterminé, ou si le corpus a
+    //    renversé le secteur : dans ce cas produits/services et cible issus de la
+    //    carte pré-crawl sont eux aussi suspects et doivent être recalculés,
+    //    puisque ce sont eux qui alimentent les prompts de visibilité LLM.
+    if (sector === 'unknown' || forceRewrite) {
       try {
         const res = await aiGatewayFetch({
           method: 'POST',
