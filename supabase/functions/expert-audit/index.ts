@@ -12,6 +12,8 @@ import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { writeIdentity } from '../_shared/identityGateway.ts'
 import { classifyAndAssignRings } from '../_shared/spiralClassifier.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { writeExpertAuditFindingsToWorkbench } from '../_shared/expertAuditWorkbench.ts';
+
 
 // Mapping des recommandations vers les types de fix pour le générateur de code
 const RECOMMENDATION_TO_FIX_MAP: Record<string, { fixType: string | null; category: string }> = {
@@ -2829,6 +2831,35 @@ Réponds avec ce JSON exact (RÈGLE: présentation + strengths + improvement = 1
         'technical',
         recommendations
       ).catch(err => console.error('Erreur sauvegarde registre:', err));
+
+      // ═══ Propagation architect_workbench (serveur, idempotente) ═══
+      // Remplace l'insert client autoSaveActionPlan : clé stable
+      // expert_<domain>_<recId> + target_selector/operation exploitables
+      // par Parménion et Code Architect.
+      (async () => {
+        try {
+          const sbWb = getUserClient(registryAuthHeader);
+          const { data: { user: wbUser } } = await sbWb.auth.getUser();
+          if (!wbUser) return;
+          const { data: ts } = await sbWb
+            .from('tracked_sites')
+            .select('id')
+            .eq('user_id', wbUser.id)
+            .ilike('domain', `%${domain}%`)
+            .limit(1)
+            .maybeSingle();
+          await writeExpertAuditFindingsToWorkbench(sbWb, recommendations, {
+            domain,
+            url: normalizedUrl,
+            userId: wbUser.id,
+            trackedSiteId: ts?.id || null,
+          });
+        } catch (e) {
+          console.warn('[expert-audit] workbench propagation failed (non-fatal):', (e as Error).message);
+        }
+      })();
+
+
 
       // ═══ P1: FEED keyword_universe SSOT from expert-audit ═══
       (async () => {
