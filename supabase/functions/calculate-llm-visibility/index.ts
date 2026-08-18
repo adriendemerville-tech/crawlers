@@ -70,8 +70,12 @@ function buildBrandPatterns(site: any): BrandPatterns {
   const exact: string[] = []
   const regex: RegExp[] = []
 
-  const siteName = (site.site_name || '').trim()
   const domain = (site.domain || '').trim()
+  // Les tracked_sites créés automatiquement par Marina peuvent porter un nom
+  // technique « Marina: domaine.tld ». Ce libellé n'est jamais une marque et
+  // ne doit pas entrer dans la détection des citations.
+  const rawSiteName = (site.site_name || '').trim()
+  const siteName = /^marina\s*:/i.test(rawSiteName) ? '' : rawSiteName
 
   if (siteName && siteName.length > 2) {
     exact.push(siteName.toLowerCase())
@@ -511,11 +515,12 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     const promptsFingerprint = prompts.join('||')
     const cachedFingerprint = (cachedData?.result_data as any)?.prompts_fingerprint
     const fingerprintStale = !!cachedData?.result_data && cachedFingerprint !== promptsFingerprint
+    const cacheIsComplete = (cachedData?.result_data as any)?.measurement_status !== 'processing'
     if (fingerprintStale) {
       console.log(`[llm-vis] ⟳ ${site.domain} — cache ignoré : questions obsolètes (lexique mis à jour)`)
     }
 
-    if (cachedData?.result_data && !fingerprintStale) {
+    if (cachedData?.result_data && !fingerprintStale && cacheIsComplete) {
       console.log(`[llm-vis] ♻️ ${site.domain} — cache hit for week ${weekStart}`)
       const cached = cachedData.result_data as { scores: any[]; week_start_date: string }
 
@@ -534,6 +539,54 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
       return jsonOk({ data: cached })
     }
+
+    // Persistance AVANT les appels modèles : un fournisseur lent ou une coupure
+    // de l'exécution ne doit plus effacer les questions réellement envoyées.
+    // Le rapport peut ainsi afficher les 3 benchmarks avec un statut non mesuré,
+    // puis la ligne est remplacée par les scores complets en fin de traitement.
+    const pendingScores = LLM_TARGETS.map((llm) => ({
+      llm_name: llm.name,
+      score_percentage: null,
+      measurement_status: 'pending',
+      measured_prompts: 0,
+      total_prompts: prompts.length,
+      details: [],
+    }))
+    const pendingBenchmarks = benchmarks.map((benchmark) => ({
+      id: benchmark.id,
+      label: benchmark.label,
+      description: benchmark.description,
+      prompts: benchmark.prompts,
+      scores: LLM_TARGETS.map((llm) => ({
+        llm_name: llm.name,
+        score_percentage: null,
+        measurement_status: 'pending',
+        measured_prompts: 0,
+        total_prompts: benchmark.prompts.length,
+        details: [],
+      })),
+      cited_models: 0,
+      measured_models: 0,
+      total_models: LLM_TARGETS.length,
+      coverage: computeCoverage(0, 0),
+      score: null,
+    }))
+    await supabase.from('domain_data_cache').upsert({
+      domain: site.domain,
+      data_type: 'llm_visibility',
+      week_start_date: weekStart,
+      result_data: {
+        scores: pendingScores,
+        benchmarks: pendingBenchmarks,
+        aggregate: buildAggregate([], 1),
+        week_start_date: weekStart,
+        measured_models: 0,
+        total_models: LLM_TARGETS.length,
+        measurement_status: 'processing',
+        prompts_fingerprint: promptsFingerprint,
+      },
+      expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    }, { onConflict: 'domain,data_type,week_start_date' })
 
     console.log(`[llm-vis] 🔍 ${site.domain} — patterns: ${patterns.exact.join(', ')} — ${prompts.length} prompts × ${LLM_TARGETS.length} LLMs (parallel)`)
 
@@ -762,6 +815,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       unmeasured_models: unmeasured,
       measured_models: scores.length - unmeasured.length,
       total_models: scores.length,
+      measurement_status: 'completed',
       prompts_fingerprint: promptsFingerprint,
     }
 

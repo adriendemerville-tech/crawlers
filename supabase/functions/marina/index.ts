@@ -1002,6 +1002,12 @@ function buildSocialSignalsSection(data: any): string {
   const tl = data?.thought_leadership;
   if (tl) {
     const eeat = tl.eeat_score ?? null;
+    const unresolvedSpokesperson = !tl.founder_name && (tl.founder_authority === 'unknown' || tl.founder_resolution);
+    const spokespersonRecommendation = unresolvedSpokesperson
+      ? `<div style="margin-top:10px;padding:10px;border-left:3px solid #f59e0b;background:#fffbeb;font-size:12px;color:#374151;line-height:1.6;">
+          <strong>Recommandation E-E-A-T :</strong> L’audit n’a identifié aucun porte-parole public et vérifié pour ce site. Cela affaiblit l’incarnation de l’expertise, l’autorité de l’entité en SEO et sa citabilité dans les moteurs de réponse IA. Le dirigeant, gérant, CEO ou fondateur devrait devenir le porte-parole régulier de l’entreprise : page auteur et biographie vérifiable sur le site, prises de parole expertes signées, profil professionnel relié par <code>sameAs</code> et contributions cohérentes dans le temps.
+        </div>`
+      : '';
     leadershipHtml = `<div style="padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:12px;text-align:left;">
       <div style="font-weight:600;font-size:13px;margin-bottom:6px;">🏛️ Thought Leadership</div>
       ${(() => {
@@ -1024,6 +1030,7 @@ function buildSocialSignalsSection(data: any): string {
       ${tl.entity_recognition ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Reconnaissance entité:</strong> ${tl.entity_recognition}</div>` : ''}
       ${eeat != null ? `<div style="font-size:12px;color:#374151;margin-bottom:4px;"><strong>Score E-E-A-T:</strong> <span style="font-weight:700;color:${eeat >= 7 ? '#22c55e' : eeat >= 4 ? '#f59e0b' : '#ef4444'};">${eeat}/10</span></div>` : ''}
       ${tl.analysis ? `<div style="font-size:12px;color:#6b7280;line-height:1.5;margin-top:4px;">${tl.analysis}</div>` : ''}
+      ${spokespersonRecommendation}
     </div>`;
   }
 
@@ -1091,12 +1098,23 @@ function escapeHtmlText(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+/** Certains helpers HTTP enveloppent encore le résultat sous plusieurs clés `data`. */
+function unwrapFunctionPayload(payload: any): any {
+  let current = payload;
+  for (let depth = 0; depth < 4; depth++) {
+    if (!current || typeof current !== 'object' || !current.data || typeof current.data !== 'object') break;
+    if (Array.isArray(current.scores) || Array.isArray(current.benchmarks)) break;
+    current = current.data;
+  }
+  return current;
+}
+
 // ─── Cartes « modèle interrogé » (réutilisées par le score global et par chaque benchmark) ───
 function renderLlmModelCards(scoreList: any[]): string {
   return scoreList.map((s: any) => {
     const name = s.llm_name || 'Unknown';
     const raw = s.score_percentage ?? s.score ?? 0;
-    const unmeasured = raw === null || raw === undefined || s.measurement_status === 'unmeasured';
+    const unmeasured = raw === null || raw === undefined || s.measurement_status === 'unmeasured' || s.measurement_status === 'pending';
     const score = unmeasured ? 0 : raw;
     const cited = !unmeasured && score > 0;
 
@@ -1109,7 +1127,7 @@ function renderLlmModelCards(scoreList: any[]): string {
 
     const borderColor = unmeasured ? '#9ca3af' : cited ? '#22c55e' : '#ef4444';
     const bgColor = unmeasured ? '#9ca3af08' : cited ? '#22c55e08' : '#ef444408';
-    const statusLabel = unmeasured ? 'NON MESURÉ' : cited ? 'CITÉ' : 'NON CITÉ';
+    const statusLabel = s.measurement_status === 'pending' ? 'MESURE EN COURS' : unmeasured ? 'NON MESURÉ' : cited ? 'CITÉ' : 'NON CITÉ';
     const statusColor = unmeasured ? '#6b7280' : cited ? '#22c55e' : '#ef4444';
 
     const sentimentLabels: Record<string, { label: string; color: string }> = {
@@ -1167,7 +1185,9 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
   // ALWAYS render this section — LLM visibility cards must appear in every report
   const LLM_NAMES = ['ChatGPT', 'Gemini', 'Perplexity', 'Claude', 'Mistral', 'Meta Llama'];
 
-  const scores = rawData?.scores || rawData?.data?.scores || [];
+  const visibilityPayload = unwrapFunctionPayload(rawData);
+
+  const scores = visibilityPayload?.scores || [];
   
   // If no real scores, generate 6 placeholder "not cited" cards so the section ALWAYS appears
   const effectiveScores = (Array.isArray(scores) && scores.length > 0) 
@@ -1181,12 +1201,12 @@ function buildLlmVisibilitySection(rawData: any, strategicData: any): string {
   const cardsHtml = renderLlmModelCards(effectiveScores);
 
   // Trois benchmarks distincts (découverte / comparaison / usage & preuve)
-  const benchmarks = rawData?.benchmarks || rawData?.data?.benchmarks || [];
+  const benchmarks = visibilityPayload?.benchmarks || [];
   const benchmarksHtml = renderLlmBenchmarkSections(benchmarks);
 
   // ── Agrégat : couverture + qualité pondérée par axe + fiabilité.
   // Recalculé ici si le payload est antérieur à l'agrégat (rapports rejoués).
-  const aggregate = rawData?.aggregate || rawData?.data?.aggregate || (
+  const aggregate = visibilityPayload?.aggregate || (
     Array.isArray(benchmarks) && benchmarks.some((b: any) => b?.coverage)
       ? buildAggregate(benchmarks.map((b: any) => ({
           id: String(b?.id || ''),
@@ -3641,7 +3661,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // « triple benchmark » ne contient pas les 3 blocs (ni les questions
       // groundées sur les besoins réels). On le rejette et on remesure.
       const isFreshLlmPayload = (p: any): boolean => {
-        const b = p?.benchmarks || p?.data?.benchmarks;
+        const b = unwrapFunctionPayload(p)?.benchmarks;
         return Array.isArray(b) && b.length >= 3;
       };
 
@@ -3663,10 +3683,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             user_id: parentJob.user_id,
             ...(hasMarinaContext ? { siteContext: marinaSiteContext } : {}),
           });
-          if (result && !result.error && (result.scores || result.data?.scores)) {
-            llmVisibilityData = result;
-            console.log(`[Marina] LLM visibility done: ${result.scores?.length || 0} LLMs scored`);
-            await writeSiteScopeCache(sb, domain, parentJob.user_id, { llmVisibility: result });
+          const normalizedResult = unwrapFunctionPayload(result);
+          if (normalizedResult && !result?.error && Array.isArray(normalizedResult.scores)) {
+            llmVisibilityData = normalizedResult;
+            console.log(`[Marina] LLM visibility done: ${normalizedResult.scores.length} LLMs scored, ${normalizedResult.benchmarks?.length || 0} benchmarks persisted`);
+            await writeSiteScopeCache(sb, domain, parentJob.user_id, { llmVisibility: normalizedResult });
+          } else if (isFreshLlmPayload(siteScope?.llmVisibility)) {
+            // Ne jamais perdre les questions persistées si l'appel HTTP est coupé
+            // après le démarrage de la mesure.
+            llmVisibilityData = unwrapFunctionPayload(siteScope.llmVisibility);
           } else {
             console.warn(`[Marina] LLM visibility returned no scores: ${result?.error || 'empty'}`);
           }
