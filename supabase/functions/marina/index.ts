@@ -3703,16 +3703,32 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         return Array.isArray(b) && b.length >= 3;
       };
 
+      // Un payload « frais » peut encore être en cours de mesure : les questions
+      // sont persistées AVANT les appels modèles. Le rapport ne doit être ni rendu
+      // ni marqué terminé tant que toutes les réponses ne sont pas reçues et
+      // compilées dans les scores.
+      const llmPendingModels = (p: any): string[] => {
+        const d = unwrapFunctionPayload(p);
+        if (!d) return [];
+        const pendingTop = d.measurement_status === 'processing' ? ['*'] : [];
+        const pendingScores = (Array.isArray(d.scores) ? d.scores : [])
+          .filter((s: any) => s?.measurement_status === 'pending')
+          .map((s: any) => String(s.llm_name));
+        return pendingScores.length > 0 ? pendingScores : pendingTop;
+      };
+      const isSettledLlmPayload = (p: any): boolean =>
+        isFreshLlmPayload(p) && llmPendingModels(p).length === 0;
+
       const llmVisibilityPromise = (async () => {
         if (!trackedSiteId) return;
-        if (siteScope?.llmVisibility && isFreshLlmPayload(siteScope.llmVisibility)) {
+        if (siteScope?.llmVisibility && isSettledLlmPayload(siteScope.llmVisibility)) {
           llmVisibilityData = siteScope.llmVisibility;
           reusedFromCache.push('visibilité IA');
           console.log(`[Marina] ♻️ LLM visibility réutilisée depuis le cache domaine (${domain})`);
           return;
         }
         if (siteScope?.llmVisibility) {
-          console.log(`[Marina] ⚠️ Cache LLM obsolète (moins de 3 benchmarks) pour ${domain} → remesure`);
+          console.log(`[Marina] ⚠️ Cache LLM inutilisable (moins de 3 benchmarks ou mesure en cours) pour ${domain} → remesure`);
         }
         try {
           console.log(`[Marina] Phase 3: calculate-llm-visibility for ${domain}`);
@@ -3737,6 +3753,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           console.warn(`[Marina] LLM visibility failed (non-fatal):`, e);
         }
       })();
+
 
       // ─── Cocoon computation (mutualisé par domaine) ───
       let cocoonResult: any = null;
