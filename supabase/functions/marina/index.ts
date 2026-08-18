@@ -3467,11 +3467,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         .from('audit_cache')
         .select('result_data')
         .eq('cache_key', `marina_intermediate_${jobId}`)
-        .single();
+        .maybeSingle();
 
       if (!cached?.result_data) {
-        throw new Error('Phase 3: intermediate data not found — phase 1 may have failed');
+        // Le checkpoint intermédiaire a disparu (ancien run qui le supprimait au
+        // démarrage de la phase 3, purge de cache, TTL). Plutôt que d'échouer le
+        // job, on relance le pipeline depuis la phase 1 : les données coûteuses
+        // sont recalculées mais l'utilisateur obtient un rapport.
+        console.warn(`[Marina] Phase 3 sans données intermédiaires — relance depuis la phase 1 pour ${jobId}`);
+        await updateProgress(10, 'phase1_restart');
+        await selfInvokePhase(jobId, url, detectedLang, 'phase1', {});
+        return;
       }
+
 
       const { expertData, strategicData, domain, detectedLang, identityCard: identityCardRaw } = cached.result_data as any;
       const phase0Identity: IdentityCard | null = identityCardRaw ?? null;
