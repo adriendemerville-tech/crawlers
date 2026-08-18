@@ -1,5 +1,7 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import DOMPurify from 'dompurify';
+import { sanitizeHtmlDeterministic, PURIFY_CONFIG } from '@/lib/security/sanitizeHtml';
+
 
 interface HtmlContentRendererProps {
   html: string;
@@ -68,19 +70,30 @@ function optimizeImages(html: string): string {
 
 /**
  * Composant pour afficher du contenu HTML stocké en base de données.
- * Sécurisé via DOMPurify (protection XSS complète).
+ * Sanitisation isomorphe : nettoyage déterministe au rendu serveur ET au
+ * premier rendu client (donc aucune divergence d'hydratation, et le HTML
+ * servi aux robots contient bien le corps de l'article), puis passe
+ * DOMPurify après hydratation en défense en profondeur.
  */
 function HtmlContentRendererComponent({ html, className = '' }: HtmlContentRendererProps) {
-  // Sanitize with DOMPurify — blocks all XSS vectors (scripts, iframes, javascript: URIs, event handlers, etc.)
-  const sanitizedHtml = DOMPurify.sanitize(html, {
-    USE_PROFILES: { html: true },
-    ADD_ATTR: ['target', 'rel', 'loading', 'fetchpriority', 'decoding', 'srcset', 'sizes'],
-    FORBID_TAGS: ['style'],
-  });
+  const [sanitizedHtml, setSanitizedHtml] = useState(() => sanitizeHtmlDeterministic(html));
+
+  useEffect(() => {
+    const base = sanitizeHtmlDeterministic(html);
+    setSanitizedHtml(base);
+    try {
+      if (typeof DOMPurify?.sanitize === 'function') {
+        setSanitizedHtml(DOMPurify.sanitize(html, PURIFY_CONFIG as unknown as Record<string, unknown>));
+      }
+    } catch {
+      /* le nettoyage déterministe reste appliqué */
+    }
+  }, [html]);
 
   // Force links to open in new tab
   const linkedHtml = sanitizedHtml
     .replace(/<a\s+(?![^>]*target=)/gi, '<a target="_blank" rel="noopener noreferrer" ');
+
 
   // Optimize images
   const optimizedHtml = optimizeImages(linkedHtml);
