@@ -23,6 +23,12 @@ import {
   trustSignalsBlockHTML,
 } from '../_shared/trustClaims.ts';
 import { deadUrlFindings } from '../_shared/deadUrls.ts';
+import {
+  isBotOnlyAbsence,
+  absenceVerificationFinding,
+  absenceReliabilityBlockHTML,
+  type AbsenceVerificationReport,
+} from '../_shared/absenceVerification.ts';
 
 
 import {
