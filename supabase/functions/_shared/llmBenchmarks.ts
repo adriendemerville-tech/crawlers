@@ -299,7 +299,7 @@ export function buildLlmBenchmarks(
     usedIds.add(id);
     out.push({
       id,
-      label: `Benchmark ${i + 1} — ${meta.label} : « ${need} »`,
+      label: `Benchmark ${i + 1} — ${meta.label} : « ${framedNeed(need).need} »`,
       description: `${meta.description}${evidenceOf(sel, lang)}`,
       prompts: finalize(promptsFor(need, i)),
     });
