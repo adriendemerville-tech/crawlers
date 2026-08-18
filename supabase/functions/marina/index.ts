@@ -2300,9 +2300,9 @@ function buildReportIntroHTML(
         `Existen tres modos de escaneo con conmutación automática: Profundo (≤ 120 URL), Estándar (≤ 1 000 URL) y Muestra (> 1 000 URL, 60 páginas).`,
       ))}
       ${li(t(
-        `Les scores sont mesurés, pas estimés : ils portent sur l'état du site au moment du crawl et ne prédisent pas un volume de trafic.`,
-        `Scores are measured, not estimated: they describe the site at crawl time and do not predict traffic volume.`,
-        `Las puntuaciones son medidas, no estimadas.`,
+        `Les scores ne sont ni de simples mesures ni de simples estimations : ils sont <strong>déduits</strong> par des règles fixes à partir de faits mesurés au moment du crawl. Ils décrivent l'état du site, ils ne prédisent aucun volume de trafic. Le statut exact de chaque chiffre est indiqué par une pastille (voir ci-dessous).`,
+        `Scores are neither raw measurements nor mere estimates: they are <strong>inferred</strong> by fixed rules from facts measured at crawl time. They describe the state of the site and predict no traffic volume. Each figure's exact status is shown by a badge (see below).`,
+        `Las puntuaciones son <strong>deducidas</strong> mediante reglas fijas a partir de hechos medidos: describen el estado del sitio, no predicen tráfico.`,
       ))}
       ${li(t(
         `Les données de marché et de backlinks proviennent de bases tierces mises à jour périodiquement : un écart de quelques jours avec la réalité est normal.`,
