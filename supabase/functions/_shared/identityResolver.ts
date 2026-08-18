@@ -841,6 +841,15 @@ export async function reviseIdentityAfterCrawl(
 async function persistRevision(sb: any, card: IdentityCard, userId: string): Promise<void> {
   if (!card.trackedSiteId) return;
   try {
+    // Une carte saisie ou dictée par l'utilisateur n'est jamais corrigée par le crawl.
+    const { data: row } = await sb
+      .from('tracked_sites')
+      .select('identity_source')
+      .eq('id', card.trackedSiteId)
+      .maybeSingle();
+    const src = (row as any)?.identity_source;
+    if (src === 'user_manual' || src === 'user_voice') return;
+
     const write: Record<string, unknown> = {};
     if (card.marketSector) write['market_sector'] = card.marketSector;
     if (card.productsServices) write['products_services'] = card.productsServices;
@@ -850,7 +859,9 @@ async function persistRevision(sb: any, card: IdentityCard, userId: string): Pro
     if (card.commercialModel !== 'unknown') write['commercial_model'] = card.commercialModel;
     if (typeof card.isLocalBusiness === 'boolean') write['is_local_business'] = card.isLocalBusiness;
     if (!Object.keys(write).length) return;
-    await writeIdentity({ siteId: card.trackedSiteId, fields: write, source: 'marina', userId });
+    // forceDirectWrite : une correction ancrée sur des dizaines de pages crawlées
+    // doit écraser le secteur erroné, pas atterrir dans une file de suggestions.
+    await writeIdentity({ siteId: card.trackedSiteId, fields: write, source: 'marina', userId, forceDirectWrite: true });
   } catch {
     /* non bloquant */
   }
