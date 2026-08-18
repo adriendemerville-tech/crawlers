@@ -3573,13 +3573,24 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       const siteScope = await readSiteScopeCache(sb, domain, parentJob.user_id);
       const reusedFromCache: string[] = [];
 
+      // Garde de cohérence du cache : un payload antérieur à l'architecture
+      // « triple benchmark » ne contient pas les 3 blocs (ni les questions
+      // groundées sur les besoins réels). On le rejette et on remesure.
+      const isFreshLlmPayload = (p: any): boolean => {
+        const b = p?.benchmarks || p?.data?.benchmarks;
+        return Array.isArray(b) && b.length >= 3;
+      };
+
       const llmVisibilityPromise = (async () => {
         if (!trackedSiteId) return;
-        if (siteScope?.llmVisibility) {
+        if (siteScope?.llmVisibility && isFreshLlmPayload(siteScope.llmVisibility)) {
           llmVisibilityData = siteScope.llmVisibility;
           reusedFromCache.push('visibilité IA');
           console.log(`[Marina] ♻️ LLM visibility réutilisée depuis le cache domaine (${domain})`);
           return;
+        }
+        if (siteScope?.llmVisibility) {
+          console.log(`[Marina] ⚠️ Cache LLM obsolète (moins de 3 benchmarks) pour ${domain} → remesure`);
         }
         try {
           console.log(`[Marina] Phase 3: calculate-llm-visibility for ${domain}`);
