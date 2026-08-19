@@ -390,11 +390,15 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
         : `Les ${metas.length} URLs relèvent de ${families.length} gabarits sans déclinaison systématique :
            l'ensemble se lit comme un assemblage de pages hétérogènes plutôt que comme un réseau.`;
 
+  const globals = metas.map((m) => num(m.global)).filter((v): v is number => v !== null);
+  const spread = globals.length >= 2 ? Math.max(...globals) - Math.min(...globals) : null;
+
   const block2 = blockShell(
     2,
     'Ce que ces pages décrivent ensemble',
     'deduction',
-    `<p style="margin:0 0 8px 0;">${networkShape}</p>
+    `<p style="margin:0 0 8px 0;"><strong>Régime de lecture.</strong> ${cohesion.statement}</p>
+     <p style="margin:0 0 8px 0;">${cohesion.regime === 'assemblage' ? `Les ${metas.length} URLs sont donc traitées comme des cas indépendants : la valeur de ce rapport est comparative (quelle page tient, laquelle décroche, sur quel axe) et non structurelle.${spread !== null ? ` Écart de score global entre la meilleure et la moins bonne page : ${spread} points.` : ''}` : networkShape}</p>
      ${table(['Gabarit', 'Pages', 'Global', 'SEO', 'GEO', 'Mots (moy.)', 'LCP (moy.)'], rows2)}`,
   );
 
