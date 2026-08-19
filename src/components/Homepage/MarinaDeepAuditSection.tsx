@@ -93,7 +93,7 @@ export function MarinaDeepAuditSection() {
               </Button>
             </Link>
             <a
-              href="/marina-crawlers-sample.pdf"
+              href="/api/public/marina-report?id=11f1145d-adc8-4ba7-a9bb-d4647b95bd47"
               target="_blank"
               rel="noopener noreferrer"
               className="whitespace-nowrap text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
