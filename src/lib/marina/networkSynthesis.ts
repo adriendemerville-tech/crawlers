@@ -168,7 +168,87 @@ export function detectTemplates(metas: PageMeta[]): TemplateFamily[] {
     }
   }
 
-  return [...families.values()].sort((a, b) => b.pages.length - a.pages.length);
+  return splitFamiliesByContent([...families.values()]).sort((a, b) => b.pages.length - a.pages.length);
+}
+
+// ─────────────── Trou 9 — contrôle de contenu des gabarits ───────────────
+
+export type ContentCheck = 'confirme' | 'morphologique' | 'heterogene';
+
+/** Dispersion relative d'une série (écart-type / moyenne), null si non calculable. */
+function dispersion(values: number[]): number | null {
+  if (values.length < 2) return null;
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  if (mean <= 0) return null;
+  const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length;
+  return Math.sqrt(variance) / mean;
+}
+
+/**
+ * Un gabarit détecté sur la seule forme des URLs peut regrouper des pages qui
+ * n'ont rien à voir. Deux signaux de CONTENU tranchent, sans liste codée en dur :
+ *   - homogénéité de cluster sémantique (quand le cluster est remonté) ;
+ *   - dispersion du volume de contenu (au-delà de 70 % d'écart relatif, les
+ *     pages ne sortent visiblement pas du même moule).
+ *
+ * Le résultat qualifie le gabarit — confirmé par le contenu, purement
+ * morphologique faute de signal, ou hétérogène — et cette qualification est
+ * affichée : une moyenne de gabarit hétérogène ne se lit pas comme un défaut
+ * de gabarit.
+ */
+export function familyContentCheck(family: TemplateFamily): { status: ContentCheck; note: string } {
+  const clusters = family.pages.map((p) => (p.cluster ? String(p.cluster).toLowerCase() : null)).filter((c): c is string => Boolean(c));
+  const words = family.pages.map((p) => num(p.words)).filter((v): v is number => v !== null);
+  const spread = dispersion(words);
+  const distinct = new Set(clusters).size;
+  if (family.pages.length < 2) return { status: 'morphologique', note: 'gabarit à une seule page : rien à confirmer par le contenu' };
+  if (clusters.length >= 2 && distinct === 1 && (spread === null || spread <= 0.7)) {
+    return { status: 'confirme', note: 'gabarit confirmé par le contenu (même cluster sémantique, volumes comparables)' };
+  }
+  if ((clusters.length >= Math.ceil(family.pages.length / 2) && distinct >= 3) || (spread !== null && spread > 0.7)) {
+    return {
+      status: 'heterogene',
+      note:
+        spread !== null && spread > 0.7
+          ? `contenu hétérogène : ${Math.round(spread * 100)} % de dispersion sur le volume de texte, la moyenne du gabarit ne décrit pas un moule unique`
+          : `contenu hétérogène : ${distinct} clusters sémantiques différents dans le même gabarit`,
+    };
+  }
+  if (spread !== null && spread <= 0.35) {
+    return { status: 'confirme', note: `gabarit confirmé par le contenu (volumes homogènes, ${Math.round(spread * 100)} % de dispersion)` };
+  }
+  return { status: 'morphologique', note: 'gabarit reconstruit sur la forme des URLs uniquement, aucun signal de contenu disponible pour le confirmer' };
+}
+
+/**
+ * Sépare un gabarit dont les pages appartiennent à des clusters sémantiques
+ * nettement distincts : deux sous-groupes d'au moins deux pages suffisent. Évite
+ * de moyenner ensemble des pages de même forme et de thème étranger.
+ */
+function splitFamiliesByContent(families: TemplateFamily[]): TemplateFamily[] {
+  const out: TemplateFamily[] = [];
+  for (const fam of families) {
+    const groups = new Map<string, number[]>();
+    fam.pages.forEach((p, i) => {
+      const key = p.cluster ? String(p.cluster).toLowerCase() : '';
+      if (!key) return;
+      groups.set(key, [...(groups.get(key) || []), i]);
+    });
+    const covered = [...groups.values()].reduce((n, g) => n + g.length, 0);
+    const usable = [...groups.entries()].filter(([, g]) => g.length >= 2);
+    if (fam.pages.length < 4 || covered < fam.pages.length || usable.length < 2 || usable.length !== groups.size) {
+      out.push(fam);
+      continue;
+    }
+    for (const [cluster, idx] of usable) {
+      out.push({
+        pattern: `${fam.pattern} — ${cluster}`,
+        pages: idx.map((i) => fam.pages[i]),
+        variants: idx.map((i) => fam.variants[i]),
+      });
+    }
+  }
+  return out;
 }
 
 /**
@@ -304,6 +384,8 @@ interface FamilyStats {
   /** Trou 6 — couverture réelle de chaque métrique dans le gabarit. */
   coverage: { tech: Coverage; geo: Coverage; global: Coverage; words: Coverage; lcp: Coverage };
   solidity: Solidity;
+  /** Trou 9 — qualification du gabarit par le contenu, pas seulement par l'URL. */
+  contentCheck: { status: ContentCheck; note: string };
 }
 
 function familyStats(family: TemplateFamily): FamilyStats {
@@ -333,6 +415,7 @@ function familyStats(family: TemplateFamily): FamilyStats {
       lcp: { known: lcps.length, total: p.length },
     },
     solidity: solidity(p.length),
+    contentCheck: familyContentCheck(family),
   };
 }
 
@@ -351,18 +434,66 @@ function cell(value: number | null, cov: Coverage, format: (v: number) => string
 
 // ───────────────────────── Recommandations séquencées ─────────────────────────
 
+type Effort = 'faible' | 'moyen' | 'élevé';
+
 export interface NetworkRecommendation {
   /** Rang de rendement, 1 = meilleur rapport gain/effort. */
   rank: number;
   title: string;
   why: string;
-  effort: 'faible' | 'moyen' | 'élevé';
+  effort: Effort;
   level: Level;
+  /** Trou 7 — composantes du rendement, affichées pour être auditables. */
+  severity: number;
+  reach: number;
+  reachTotal: number;
+  confidence: number;
+  yield_: number;
+  /** Action de correction d'un défaut mesuré, ou action de développement. */
+  kind: 'correction' | 'developpement';
 }
 
-interface Candidate extends Omit<NetworkRecommendation, 'rank'> {
-  /** Poids de rendement déterministe : plus haut = traité en premier. */
-  yield_: number;
+interface Candidate extends Omit<NetworkRecommendation, 'rank' | 'yield_' | 'confidence'> {
+  /** Confiance dérivée du niveau de preuve et de l'effectif ; calculée si absente. */
+  solidity?: Solidity;
+}
+
+/**
+ * Trou 7 — le rendement n'est plus une constante choisie à la main par
+ * recommandation : c'est une formule unique, exposée dans le rapport, à quatre
+ * facteurs bornés.
+ *
+ *   rendement = gravité × portée × confiance × facilité
+ *
+ *   - gravité (0-100)  : ampleur du défaut réellement mesuré (écart de points,
+ *                        similarité relevée, dépassement de LCP…).
+ *   - portée           : part des URLs du lot qu'un même correctif couvre,
+ *                        ramenée à [0,55 ; 1] pour qu'une page unique reste
+ *                        traitable sans écraser un défaut de gabarit.
+ *   - confiance        : niveau de preuve (mesuré 1 / déduit 0,85 / estimé 0,6)
+ *                        pondéré par la solidité de l'effectif (Trou 5).
+ *   - facilité         : effort inversé (faible 1 / moyen 0,78 / élevé 0,55).
+ *
+ * Aucune de ces quantités n'est un gain de trafic : c'est un ordre de passage.
+ */
+const EFFORT_EASE: Record<Effort, number> = { faible: 1, moyen: 0.78, élevé: 0.55 };
+const LEVEL_TRUST: Record<Level, number> = { mesure: 1, deduction: 0.85, estimation: 0.6 };
+const SOLIDITY_TRUST: Record<Solidity, number> = { solide: 1, indicatif: 0.9, fragile: 0.75 };
+
+export function candidateConfidence(level: Level, sol: Solidity = 'solide'): number {
+  return Math.round(LEVEL_TRUST[level] * SOLIDITY_TRUST[sol] * 100) / 100;
+}
+
+export function candidateYield(c: Candidate): { yield_: number; confidence: number } {
+  const severity = Math.max(0, Math.min(100, c.severity));
+  const total = Math.max(1, c.reachTotal);
+  const reachShare = Math.max(0, Math.min(1, c.reach / total));
+  const reach = 0.55 + 0.45 * reachShare;
+  const confidence = candidateConfidence(c.level, c.solidity || 'solide');
+  return {
+    confidence,
+    yield_: Math.round(severity * reach * confidence * EFFORT_EASE[c.effort] * 10) / 10,
+  };
 }
 
 // ───────────────────────── Rendu ─────────────────────────
@@ -481,7 +612,13 @@ export function buildNetworkSynthesisHTML(
       s.solidity === 'solide'
         ? ''
         : `<span style="display:block;color:${MUTED};font-size:11px;font-weight:400;">${s.solidity === 'indicatif' ? 'effectif faible, valeur indicative' : 'effectif trop faible, non généralisable'}</span>`
-    }`,
+    }<span style="display:block;color:${MUTED};font-size:11px;font-weight:400;" title="${esc(s.contentCheck.note)}">${
+      s.contentCheck.status === 'confirme'
+        ? 'gabarit confirmé par le contenu'
+        : s.contentCheck.status === 'heterogene'
+          ? 'contenu hétérogène : moyenne à lire avec prudence'
+          : 'regroupement morphologique, non confirmé par le contenu'
+    }</span>`,
     String(s.count),
     cell(s.global, s.coverage.global, (v) => `${v}/100`),
     cell(s.tech, s.coverage.tech, (v) => String(v)),
@@ -556,7 +693,10 @@ export function buildNetworkSynthesisHTML(
         why: `${gap} points d'écart entre conformité technique (${techAvg}) et citabilité IA (${geoAvg}) : seul un contenu non duplicable fait bouger le GEO.`,
         effort: 'moyen',
         level: 'deduction',
-        yield_: 80 + Math.min(gap, 60),
+        kind: 'correction',
+        severity: Math.min(100, Math.round(gap * 1.6)),
+        reach: metas.length,
+        reachTotal: metas.length,
       });
     }
     block3Body = `<p style="margin:0 0 6px 0;">${verdict}</p>${
@@ -573,7 +713,10 @@ export function buildNetworkSynthesisHTML(
         why: 'Elles consomment du budget de crawl et diluent l\'intention du gabarit sans apporter de contenu propre.',
         effort: 'faible',
         level: 'deduction',
-        yield_: 60 + thinPages.length * 4,
+        kind: 'correction',
+        severity: Math.min(90, 42 + thinPages.length * 8),
+        reach: thinPages.length,
+        reachTotal: metas.length,
       });
     }
   }
@@ -656,7 +799,10 @@ export function buildNetworkSynthesisHTML(
         why: 'Plusieurs pages visent la même intention avec le même vocabulaire : fusion, ou canonical explicite plus contenu réellement différent.',
         effort: 'moyen',
         level: 'deduction',
-        yield_: 85 + collisions.length * 3,
+        kind: 'correction',
+        severity: Math.min(100, 70 + collisions.length * 6),
+        reach: collisions.reduce((n, [, arr]) => n + arr.length, 0),
+        reachTotal: metas.length,
       });
     }
     if (clusterCollisions.length) {
@@ -687,7 +833,10 @@ export function buildNetworkSynthesisHTML(
         why: `Similarité de contenu mesurée jusqu'à ${Math.max(...dupInScope.map((d) => d.similarity))} % : ce n'est pas une déduction d'URL, les moteurs voient bien deux fois la même page.`,
         effort: 'moyen',
         level: 'mesure',
-        yield_: 90 + dupInScope.length * 3,
+        kind: 'correction',
+        severity: Math.min(100, Math.max(...dupInScope.map((d) => d.similarity))),
+        reach: new Set(dupInScope.flatMap((d) => [normPath(d.a), normPath(d.b)])).size,
+        reachTotal: metas.length,
       });
     }
     if (dupOutScope.length) {
@@ -796,7 +945,10 @@ export function buildNetworkSynthesisHTML(
       why: "Aucun lien interne mesuré entre ces pages : sans liaison latérale, elles ne forment pas un ensemble identifiable et ne se transmettent aucune autorité.",
       effort: 'faible',
       level: 'mesure',
-      yield_: 88,
+      kind: 'correction',
+      severity: 85,
+      reach: withTargets.length,
+      reachTotal: metas.length,
     });
   } else if (meshMeasured && isolatedInLot.length >= 2) {
     candidates.push({
@@ -804,7 +956,10 @@ export function buildNetworkSynthesisHTML(
       why: `Mesuré : ces pages ne reçoivent ni n'émettent aucun lien vers les autres URLs auditées, alors que le reste du lot est déjà relié.`,
       effort: 'faible',
       level: 'mesure',
-      yield_: 78 + isolatedInLot.length,
+      kind: 'correction',
+      severity: 68,
+      reach: isolatedInLot.length,
+      reachTotal: metas.length,
     });
   }
   const hubList = (entries: [string, number][], tail: (count: number) => string) =>
@@ -838,7 +993,10 @@ export function buildNetworkSynthesisHTML(
         why: `${missingHubs[0][1]} pages filles auditées et aucune page pilier trouvée dans le crawl du site : c'est ce qui transforme des feuilles isolées en cocon à deux niveaux et crée l'entité citable.`,
         effort: 'moyen',
         level: 'deduction',
-        yield_: 100,
+        kind: 'correction',
+        severity: 96,
+        reach: missingHubs[0][1],
+        reachTotal: metas.length,
       });
     }
     if (existingHubs.length) {
@@ -853,7 +1011,10 @@ export function buildNetworkSynthesisHTML(
         why: `La page de regroupement existe déjà sur le site : le levier n'est pas sa création mais sa qualité et la convergence du maillage de ses ${existingHubs[0][1]} pages filles vers elle.`,
         effort: 'faible',
         level: 'deduction',
-        yield_: 95,
+        kind: 'correction',
+        severity: 82,
+        reach: existingHubs[0][1],
+        reachTotal: metas.length,
       });
     }
     if (unverifiedHubs.length) {
@@ -869,7 +1030,10 @@ export function buildNetworkSynthesisHTML(
         why: `${unverifiedHubs[0][1]} pages filles auditées sans pilier dans le lot. Le crawl du domaine n'étant pas disponible, l'action commence par un contrôle, pas par une création.`,
         effort: 'faible',
         level: 'deduction',
-        yield_: 92,
+        kind: 'correction',
+        severity: 74,
+        reach: unverifiedHubs[0][1],
+        reachTotal: metas.length,
       });
     }
     parts5.push(meshHtml);
@@ -919,7 +1083,11 @@ export function buildNetworkSynthesisHTML(
         why: `Pire cas mesuré ${seconds(slowest.worstLcpMs as number)} : au-delà de 4 s, la performance devient le facteur limitant du gabarit entier.`,
         effort: 'faible',
         level: 'mesure',
-        yield_: 70 + Math.min(Math.round((slowest.worstLcpMs as number) / 1000), 12),
+        kind: 'correction',
+        severity: Math.min(100, Math.round(((slowest.worstLcpMs as number) - 2500) / 25)),
+        reach: slowest.count,
+        reachTotal: metas.length,
+        solidity: slowest.solidity,
       });
     }
     if (weakest.geo !== null && weakest.geo < 60) {
@@ -933,7 +1101,11 @@ export function buildNetworkSynthesisHTML(
         level: 'deduction',
         // Trou 5 — un constat porté par une seule page ne remonte pas au même
         // rang qu'un défaut de gabarit vérifié sur plusieurs pages.
-        yield_: 75 + (60 - weakest.geo) - (weakest.count >= 5 ? 0 : weakest.count >= 3 ? 8 : 20),
+        kind: 'correction',
+        severity: Math.min(100, Math.round((60 - weakest.geo) * 1.7)),
+        reach: weakest.count,
+        reachTotal: metas.length,
+        solidity: weakest.solidity,
       });
     }
 
@@ -953,7 +1125,10 @@ export function buildNetworkSynthesisHTML(
       why: 'Elles reçoivent 2 liens internes ou moins : elles dépendent du sitemap pour être découvertes et ne transmettent aucune autorité au réseau.',
       effort: 'faible',
       level: 'mesure',
-      yield_: 65 + weakMesh.length * 2,
+      kind: 'correction',
+      severity: 58,
+      reach: weakMesh.length,
+      reachTotal: metas.length,
     });
   }
   const orphans = metas.filter((m) => m.isOrphan);
@@ -963,40 +1138,111 @@ export function buildNetworkSynthesisHTML(
       why: 'Aucun lien interne entrant détecté : la page est invisible pour la découverte comme pour la transmission d\'autorité.',
       effort: 'faible',
       level: 'mesure',
-      yield_: 90,
+      kind: 'correction',
+      severity: 88,
+      reach: orphans.length,
+      reachTotal: metas.length,
     });
+  }
+
+  /**
+   * Trou 8 — un lot propre ne doit pas déboucher sur « rien à faire ». Quand
+   * aucun défaut transverse n'est mesuré, la synthèse bascule sur des actions
+   * de DÉVELOPPEMENT, déduites elles aussi de faits du lot : un gabarit qui
+   * performe et mérite d'être étendu, un pilier existant à consolider, des
+   * pages solides qui n'exploitent pas encore le format citable. Elles sont
+   * marquées « développement » et jamais confondues avec un correctif.
+   */
+  const corrections = candidates.filter((c) => c.kind === 'correction');
+  if (corrections.length < 2) {
+    const bestFamily = [...stats]
+      .filter((s) => s.count >= 2 && s.geo !== null && s.family.pattern.includes('*'))
+      .sort((a, b) => (b.geo as number) - (a.geo as number))[0];
+    if (bestFamily) {
+      candidates.push({
+        title: `Étendre le gabarit ${bestFamily.family.pattern} à de nouvelles variantes`,
+        why: `C'est le gabarit décliné le mieux noté du lot (GEO moyen ${bestFamily.geo}/100 sur ${bestFamily.count} pages) : la mécanique tient, la marge est dans le nombre de variantes couvertes, pas dans une correction.`,
+        effort: 'moyen',
+        level: 'estimation',
+        kind: 'developpement',
+        severity: 60,
+        reach: bestFamily.count,
+        reachTotal: metas.length,
+        solidity: bestFamily.solidity,
+      });
+    }
+    const strongPages = metas.filter((m) => num(m.geo) !== null && (m.geo as number) >= 70);
+    if (strongPages.length >= 2) {
+      candidates.push({
+        title: `Passer les ${strongPages.length} pages les mieux notées au format directement citable`,
+        why: 'Ces pages sont déjà solides : réponse en une phrase en tête, données datées et sourcées, balisage question-réponse. Aucun défaut à corriger, un format à ajouter.',
+        effort: 'faible',
+        level: 'estimation',
+        kind: 'developpement',
+        severity: 55,
+        reach: strongPages.length,
+        reachTotal: metas.length,
+      });
+    }
+    if (cohesion.regime !== 'assemblage' && !missingHubs.length && !existingHubs.length && !unverifiedHubs.length) {
+      candidates.push({
+        title: "Créer l'échelon supérieur qui agrège ce lot en une entité citable",
+        why: "Aucun niveau de regroupement ne manque à l'intérieur du périmètre audité : le levier restant est au-dessus du lot, une page qui nomme et cadre l'ensemble pour les moteurs de réponse.",
+        effort: 'moyen',
+        level: 'estimation',
+        kind: 'developpement',
+        severity: 50,
+        reach: metas.length,
+        reachTotal: metas.length,
+      });
+    }
   }
 
   const seen = new Set<string>();
   const recommendations: NetworkRecommendation[] = candidates
     .filter((c) => (seen.has(c.title) ? false : (seen.add(c.title), true)))
+    .map((c) => ({ ...c, ...candidateYield(c) }))
     .sort((a, b) => b.yield_ - a.yield_)
     .slice(0, 6)
-    .map((c, i) => ({ rank: i + 1, title: c.title, why: c.why, effort: c.effort, level: c.level }));
+    .map((c, i) => ({ ...c, rank: i + 1 }));
 
+  const devOnly = recommendations.length > 0 && recommendations.every((r) => r.kind === 'developpement');
   const block7 = blockShell(
     7,
     'Recommandations séquencées par rendement',
     'deduction',
     recommendations.length
       ? `<p style="margin:0 0 8px 0;color:${MUTED};font-size:12.5px;">
-           Ordre de rendement décroissant, calculé sur l'ampleur du défaut mesuré et le nombre de pages couvertes
-           par un même correctif. À traiter dans cet ordre.
+           Ordre de passage calculé par une formule unique, identique d'un rapport à l'autre :
+           <strong>gravité mesurée × portée dans le lot × confiance × facilité</strong>. La gravité vient du relevé,
+           la portée du nombre d'URLs qu'un même correctif couvre, la confiance du niveau de preuve et de l'effectif.
+           Ce n'est pas une prévision de gain.
          </p>
+         ${
+           devOnly
+             ? `<p style="margin:0 0 8px 0;">Aucun défaut transverse mesuré sur ce lot : les actions ci-dessous sont des
+                actions de <strong>développement</strong> et non des correctifs. Elles visent la demande encore non couverte,
+                pas la réparation d'un problème constaté.</p>`
+             : ''
+         }
          <ol style="padding-left:20px;margin:0;">
            ${recommendations
              .map(
                (r) => `
              <li style="margin:0 0 10px 0;">
-               <strong>${esc(r.title)}</strong> ${badge(r.level)}
+               <strong>${esc(r.title)}</strong> ${badge(r.level)}${
+                 r.kind === 'developpement'
+                   ? `<span style="margin-left:6px;border:1px solid ${MUTED};color:${MUTED};border-radius:999px;padding:1px 7px;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;">développement</span>`
+                   : ''
+               }
                <span style="display:block;color:${BODY};">${esc(r.why)}</span>
-               <span style="display:block;color:${MUTED};font-size:12px;">Effort : ${esc(r.effort)}</span>
+               <span style="display:block;color:${MUTED};font-size:12px;">Effort : ${esc(r.effort)} · gravité ${r.severity}/100 · portée ${r.reach}/${r.reachTotal} URLs · confiance ${Math.round(r.confidence * 100)} % · rendement ${String(r.yield_).replace('.', ',')}</span>
              </li>`,
              )
              .join('')}
          </ol>`
       : noFact(
-          'Aucun défaut transverse suffisamment marqué pour justifier une action de niveau réseau : les correctifs restants sont propres à chaque page et figurent dans les fiches ci-après.',
+          "Aucune action de niveau réseau n'a pu être établie : ni défaut transverse mesuré, ni gabarit décliné assez fourni pour justifier une extension. Les correctifs restants sont propres à chaque page et figurent dans les fiches ci-après.",
         ),
   );
 
@@ -1045,6 +1291,15 @@ export function buildNetworkSynthesisHTML(
        }</li>
        <li style="margin:0 0 5px 0;">Le régime de lecture retenu est « ${cohesion.regime === 'reseau' ? 'réseau décliné' : cohesion.regime === 'mixte' ? 'mixte : noyau décliné et pages indépendantes' : cohesion.regime === 'arborescence' ? 'branche commune' : 'assemblage de pages indépendantes'} ». Dans un assemblage, les lectures de concurrence interne et de pilier manquant sont déclarées hors objet plutôt que forcées${cohesion.subLots ? `, et en régime mixte elles ne portent que sur les ${cohesion.subLots.networked.length} URLs du sous-lot réseau` : ''}.</li>
        <li style="margin:0 0 5px 0;">Aucune note globale de site n'est produite : les moyennes par gabarit servent à comparer, pas à noter.</li>
+       <li style="margin:0 0 5px 0;">${
+         (() => {
+           const conf = stats.filter((s) => s.contentCheck.status === 'confirme').length;
+           const het = stats.filter((s) => s.contentCheck.status === 'heterogene').length;
+           const morph = stats.length - conf - het;
+           return `Les gabarits sont d'abord reconstruits sur la forme des URLs, puis confrontés au contenu (cluster sémantique, dispersion du volume de texte) : ${conf} confirmé${conf > 1 ? 's' : ''} par le contenu, ${morph} non confirmé${morph > 1 ? 's' : ''} faute de signal, ${het} déclaré${het > 1 ? 's' : ''} hétérogène${het > 1 ? 's' : ''}. Un gabarit hétérogène ne prouve pas un défaut de gabarit.`;
+         })()
+       }</li>
+       <li style="margin:0 0 5px 0;">L'ordre des recommandations vient d'une formule unique et bornée — gravité mesurée × portée dans le lot × confiance (niveau de preuve et effectif) × facilité — et non d'un poids choisi action par action. Les quatre composantes sont affichées sous chaque action.${devOnly ? " Ce lot ne portant aucun défaut transverse mesuré, les actions listées sont des actions de développement : leur gravité est un potentiel estimé, pas un problème constaté." : ''}</li>
        <li style="margin:0;">Aucun gain de trafic, de position ou de revenu n'est promis ici : l'ordre des recommandations est un rendement relatif, pas une prévision.</li>
      </ul>`,
   );
