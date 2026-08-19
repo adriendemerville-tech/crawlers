@@ -559,6 +559,17 @@ export async function fetchDomainAuthority(
       dofollowRatio: dofollow,
     });
 
+    // Lot 2 : répartitions TLD / pays / plateformes (déjà dans le résumé, 0 appel
+    // supplémentaire) + pages cibles mesurées via `domain_pages`.
+    const linkedPages = pagesRes.status === 'fulfilled' ? extractLinkedPages(pagesRes.value) : [];
+    const distribution = computeBacklinkDistribution({
+      tld: extractDistribution(s.referring_links_tld),
+      countries: extractDistribution(s.referring_links_countries),
+      platformTypes: extractDistribution(s.referring_links_platform_types),
+      linkedPages,
+      referringDomains,
+    });
+
     // Confiance : la mesure vaut ce que vaut l'échantillon reçu.
     let confidence: AuthorityData['confidence'] = 'high';
     const missing: string[] = [];
@@ -567,6 +578,8 @@ export async function fetchDomainAuthority(
     if (anchorsSource === 'unavailable') missing.push("échantillon d'ancres absent");
     else if (anchorsSource === 'summary_sample') missing.push('ancres issues du résumé, endpoint dédié indisponible');
     if (!rawRank) missing.push('rank de domaine absent');
+    if (distribution.source === 'unavailable') missing.push('répartition (TLD, pays, pages cibles) non renvoyée');
+    else if (distribution.source === 'partial') missing.push('répartition partielle');
     if (missing.length >= 2) confidence = 'low';
     else if (missing.length === 1) confidence = 'medium';
 
