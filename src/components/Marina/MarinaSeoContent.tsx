@@ -1,7 +1,7 @@
 import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { MARINA_FREE_QUOTA } from '@/lib/marinaFree.constants';
-import ClaudeVerdictAnimation from '@/components/Marina/ClaudeVerdictAnimation';
+
 
 /**
  * Contenu éditorial rendu côté serveur sous le formulaire Marina.
@@ -89,18 +89,7 @@ export function MarinaSeoContent() {
           </p>
         </div>
 
-        <div className="mt-10">
-          <h3 className="text-xl font-bold text-foreground text-center mb-4">
-            Un LLM seul peut-il produire le même audit ?
-          </h3>
-          <p className="text-sm text-muted-foreground text-center mb-6 max-w-2xl mx-auto">
-            Nous avons soumis un rapport Marina à Claude en lui demandant s'il pouvait faire mieux. Sa réponse est
-            la démonstration la plus courte de la différence entre un avis générique et une mesure instrumentée.
-          </p>
-        </div>
       </div>
-
-      <ClaudeVerdictAnimation />
 
       <div className="mx-auto max-w-3xl px-4">
         <h3 className="text-xl font-bold text-foreground mt-14 mb-4">Questions fréquentes</h3>

@@ -34,6 +34,7 @@ import { toMarinaViewUrl } from '@/lib/marina/reportUrl';
 import { MarinaMyAuditsTab } from '@/components/Marina/MarinaMyAuditsTab';
 import { MarinaRunningAuditsSection } from '@/components/Marina/MarinaRunningAuditsSection';
 import { MarinaSeoContent } from '@/components/Marina/MarinaSeoContent';
+import { ClaudeVerdictBlock } from '@/components/Marina/ClaudeVerdictBlock';
 
 
 
@@ -986,6 +987,8 @@ export default function Marina() {
                     <Terminal className="w-4 h-4" /> {t.hero.apiDocLink}
                   </button>
                 </div>
+
+                <ClaudeVerdictBlock />
               </div>
 
 
