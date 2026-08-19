@@ -656,6 +656,25 @@ export function buildAuthorityPromptSection(a: AuthorityData | null): string {
       `- Action liens : ${t.recommendation}`,
     );
   }
+  const d = a.distribution;
+  if (d && d.source !== 'unavailable') {
+    const pct = (b: DistributionBucket) => `${b.key} ${Math.round(b.share * 100)} %`;
+    if (d.tld.length) lines.push(`- Répartition par TLD (mesurée) : ${d.tld.slice(0, 5).map(pct).join(', ')}`);
+    if (d.countries.length) lines.push(`- Répartition par pays (mesurée) : ${d.countries.slice(0, 5).map(pct).join(', ')}`);
+    if (d.platform_types.length) lines.push(`- Types de plateformes référentes : ${d.platform_types.slice(0, 5).map(pct).join(', ')}`);
+    if (a.top_linked_pages.length) {
+      lines.push(
+        `- Pages cibles les plus liées (${d.linked_pages_sampled} pages liées dans l'échantillon) : ${a.top_linked_pages.slice(0, 5).map(p => `${p.url} (${p.referring_domains} domaines)`).join(' ; ')}`,
+        `- Concentration sur la page la plus liée : ${Math.round(d.top_page_share * 100)} % des domaines référents`,
+      );
+    }
+    lines.push(
+      d.signals.length ? `- Signaux de répartition : ${d.signals.join(' ; ')}` : `- Signaux de répartition : aucun déséquilibre notable`,
+      `- Action répartition : ${d.recommendation}`,
+    );
+  } else {
+    lines.push(`- RÉPARTITION DU PROFIL (TLD, pays, pages cibles) : non mesurée dans cet audit. N'invente ni géographie ni page cible.`);
+  }
   const v = a.organic_visibility;
   if (v && v.source === 'dataforseo_labs') {
     lines.push(`- VISIBILITE ORGANIQUE : ${v.ranked_keywords ?? 'n/a'} mots-clés positionnés, trafic estimé ${v.estimated_traffic ?? 'n/a'}/mois, position moyenne ${v.average_position ?? 'n/a'}, top3=${v.top3 ?? 'n/a'}, top10=${v.top10 ?? 'n/a'}`);
