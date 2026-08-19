@@ -5,7 +5,7 @@ import { pageHead } from "@/lib/seo/pageHead";
 const URL = "https://crawlers.fr/marina";
 
 const FAQ: Array<[string, string]> = [
-  ["L'audit Marina est-il vraiment gratuit ?", "Oui. Les 2 premiers rapports sont offerts, sans carte bancaire ni abonnement : une adresse e-mail suffit. Au-delà, un rapport coûte 5 crédits."],
+  ["L'audit Marina est-il vraiment gratuit ?", "Oui. Les 2 premiers rapports sont offerts, sans carte bancaire ni abonnement : une adresse e-mail suffit. Au-delà, un rapport coûte 30 crédits."],
   ["Que contient le rapport d'audit SEO GEO gratuit ?", "40 pages et plus, une vingtaine de sous-audits : SEO technique (Core Web Vitals, robots.txt, sitemap, canonicals, JSON-LD, maillage interne, duplication, thin content), visibilité GEO mesurée, E-E-A-T, cocoon sémantique, mots-clés et quick wins, puis un plan d'action priorisé."],
   ["Comment la visibilité dans les IA est-elle mesurée ?", "Marina envoie 9 questions réelles (3 axes × 3 formulations) à ChatGPT, Gemini, Perplexity, Claude et Mistral et compte les citations obtenues. Chaque donnée est étiquetée Mesuré, Testé, Déduit ou Estimé."],
   ["Combien de temps prend un audit ?", "Environ 3 à 5 minutes, jusqu'à 10 000 URLs explorées sur les grands sites. Rapport consultable en ligne et exportable en PDF."],

@@ -544,7 +544,7 @@ Deno.serve(async (req) => {
           <h2 className="mb-4 text-2xl font-bold">12. Multipages</h2>
           <p className="text-muted-foreground">
             Il n'existe pas d'action batch côté API : un audit multipages est une <strong>boucle client</strong> sur
-            l'endpoint standard, une URL par job (jusqu'à 15 URLs dans l'interface Marina, 5 crédits par rapport).
+            l'endpoint standard, une URL par job (jusqu'à 15 URLs dans l'interface Marina, 30 crédits par rapport).
             Espacez les créations de jobs d'environ 20 secondes ; les jobs du même domaine sont mis en file et
             partagent le crawl en cours plutôt que de le relancer.
           </p>

@@ -10,7 +10,7 @@ const PAGES = [
   { route: "/pro-agency", title: "Pro Agency", desc: "Plan premium : audit illimité, Cocoon 3D, Content Architect, CMS Direct, Autopilote Parménion, GSC/GA4." },
   { route: "/blog", title: "Blog", desc: "Articles, guides et actualités SEO, GEO, visibilité IA, optimisation moteurs génératifs." },
   { route: "/lexique", title: "Lexique SEO & GEO", desc: "Glossaire complet de 150+ termes SEO et GEO avec définitions, exemples et conseils." },
-  { route: "/marina", title: "Marina API", desc: "API de génération de rapports SEO/GEO de 15+ pages en marque blanche. 5 crédits/rapport." },
+  { route: "/marina", title: "Marina API", desc: "API de génération de rapports SEO/GEO de 15+ pages en marque blanche. 30 crédits/rapport." },
   { route: "/matrice", title: "Matrice d'audit", desc: "Importez votre grille d'audit (Excel, CSV) et Crawlers analyse chaque critère automatiquement." },
   { route: "/content-architect", title: "Content Architect", desc: "Création de contenu IA optimisé SEO/GEO avec données structurées et maillage interne automatique." },
   { route: "/features/cocoon", title: "Cocoon 3D", desc: "Cocon sémantique 3D : graphe interactif, clusters thématiques, détection canibalisation, maillage IA." },
@@ -195,7 +195,7 @@ Crawlers.fr est la première plateforme française combinant :
 | Crawl multi-pages (jusqu'à 5 000 pages) | 5 crédits |
 | Crawl multi-pages (jusqu'à 50 000 pages) | 10 crédits |
 | Audit comparé (2 URLs) | 2 crédits |
-| Rapport Marina (15+ pages, marque blanche) | 5 crédits |
+| Rapport Marina (15+ pages, marque blanche) | 30 crédits |
 | Audit stratégique IA | 3 crédits |
 
 ### Conditions

@@ -39,7 +39,7 @@ import { ClaudeVerdictBlock } from '@/components/Marina/ClaudeVerdictBlock';
 
 
 const MARINA_API_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina`;
-const CREDIT_COST = 5;
+const CREDIT_COST = 30;
 
 /* ─── Translations ─── */
 const translations = {
@@ -47,7 +47,7 @@ const translations = {
     meta: {
       lang: 'fr',
       title: 'Marina — rapport SEO & GEO en 3 minutes | Crawlers',
-      description: 'Générez un rapport SEO & GEO professionnel de 15+ pages en 3 minutes. Audit technique 200 points, visibilité IA, cocoon sémantique. 5 crédits/rapport. API embed disponible.',
+      description: 'Générez un rapport SEO & GEO professionnel de 15+ pages en 3 minutes. Audit technique 200 points, visibilité IA, cocoon sémantique. 30 crédits/rapport. API embed disponible.',
       ogTitle: 'Marina — Rapport SEO & GEO automatisé | Crawlers.fr',
       ogDesc: 'Audit technique, stratégique, visibilité LLM et cocoon sémantique en un clic. Embarquez Marina sur votre site via l\'API.',
       twitterDesc: 'Rapport SEO/GEO de 15+ pages en 3 minutes. API embed pour agences.',
@@ -65,7 +65,7 @@ const translations = {
       balance: 'Solde',
       credits: 'crédits',
       loginCta: 'Connectez-vous pour lancer un rapport',
-      signupOffer: '5 crédits offerts à l\'inscription = 1 rapport gratuit',
+      signupOffer: '20 crédits offerts à l\'inscription',
       apiDocLink: 'Documentation API Marina',
     },
     toasts: {
@@ -114,7 +114,7 @@ const translations = {
     api: {
       badge: 'API',
       title: 'Embarquez Marina sur votre site',
-      subtitle: 'Utilisez l\'API Marina comme lead magnet pour vos prospects. Chaque rapport consomme 5 crédits de votre compte Crawlers.',
+      subtitle: 'Utilisez l\'API Marina comme lead magnet pour vos prospects. Chaque rapport consomme 30 crédits de votre compte Crawlers.',
       howTitle: 'Comment ça marche',
       steps: [
         { step: '1', title: 'Obtenez votre clé API', desc: 'Depuis votre console Crawlers, générez une clé API Marina.' },
@@ -123,7 +123,7 @@ const translations = {
         { step: '4', title: 'Impressionnez vos prospects', desc: 'Le rapport est prêt en ~3 min. 15+ pages de données actionnables.' },
       ],
       security: 'Sécurité',
-      securityDesc: 'Votre clé API est liée à votre compte. Chaque rapport généré via l\'API consomme 5 crédits de votre solde. Ne partagez jamais votre clé publiquement — faites les appels côté serveur uniquement.',
+      securityDesc: 'Votre clé API est liée à votre compte. Chaque rapport généré via l\'API consomme 30 crédits de votre solde. Ne partagez jamais votre clé publiquement — faites les appels côté serveur uniquement.',
       refTitle: 'Référence API',
       refEndpoint: 'Endpoint',
       refHeaders: 'Headers requis',
@@ -148,7 +148,7 @@ const translations = {
       refReportNote: 'Deux URLs sont fournies : report_url (téléchargement via URL signée, expire 7j) et report_view_url (affichage inline direct dans un navigateur ou iframe, sans workaround nécessaire). Utilisez report_view_url pour intégrer le rapport dans une iframe.',
       refLimits: 'Limites & comportement',
       refLimitsList: [
-        'Coût : 5 crédits par rapport',
+        'Coût : 30 crédits par rapport',
         'Durée : ~3 minutes par rapport',
         'Rate limit : 30 requêtes concurrentes max par IP',
         'Taille du site : pas de limite stricte, mais les sites > 500 pages peuvent allonger le temps de traitement',
@@ -193,10 +193,10 @@ const translations = {
       title: 'Tarification simple',
       unit: {
         title: 'À l\'unité',
-        price: '5 crédits',
+        price: '30 crédits',
         detail: 'par rapport Marina',
         cta: 'Acheter des crédits',
-        ctaSignup: 'S\'inscrire — 5 crédits offerts',
+        ctaSignup: 'S\'inscrire — 20 crédits offerts',
       },
       pro: {
         title: 'Pro Agency',
@@ -218,7 +218,7 @@ const translations = {
     meta: {
       lang: 'en',
       title: 'Marina — Automated SEO & GEO Report in 3 Minutes | Crawlers.fr',
-      description: 'Generate a professional 15+ page SEO & GEO report in 3 minutes. 200-point technical audit, AI visibility, semantic cocoon. 5 credits/report. Embed API available.',
+      description: 'Generate a professional 15+ page SEO & GEO report in 3 minutes. 200-point technical audit, AI visibility, semantic cocoon. 30 credits/report. Embed API available.',
       ogTitle: 'Marina — Automated SEO & GEO Report | Crawlers.fr',
       ogDesc: 'Technical, strategic, LLM visibility and semantic cocoon audit in one click. Embed Marina on your website via API.',
       twitterDesc: '15+ page SEO/GEO report in 3 minutes. Embed API for agencies.',
@@ -236,7 +236,7 @@ const translations = {
       balance: 'Balance',
       credits: 'credits',
       loginCta: 'Sign in to generate a report',
-      signupOffer: '5 free credits on signup = 1 free report',
+      signupOffer: '20 free credits on signup',
       apiDocLink: 'Marina API Documentation',
     },
     toasts: {
@@ -285,7 +285,7 @@ const translations = {
     api: {
       badge: 'API',
       title: 'Embed Marina on your website',
-      subtitle: 'Use the Marina API as a lead magnet for your prospects. Each report costs 5 credits from your Crawlers account.',
+      subtitle: 'Use the Marina API as a lead magnet for your prospects. Each report costs 30 credits from your Crawlers account.',
       howTitle: 'How it works',
       steps: [
         { step: '1', title: 'Get your API key', desc: 'From your Crawlers console, generate a Marina API key.' },
@@ -294,7 +294,7 @@ const translations = {
         { step: '4', title: 'Impress your prospects', desc: 'Report ready in ~3 min. 15+ pages of actionable data.' },
       ],
       security: 'Security',
-      securityDesc: 'Your API key is linked to your account. Each report generated via API costs 5 credits. Never share your key publicly — make calls server-side only.',
+      securityDesc: 'Your API key is linked to your account. Each report generated via API costs 30 credits. Never share your key publicly — make calls server-side only.',
       refTitle: 'API Reference',
       refEndpoint: 'Endpoint',
       refHeaders: 'Required headers',
@@ -319,7 +319,7 @@ const translations = {
       refReportNote: 'Two URLs are provided: report_url (download via signed URL, expires in 7 days) and report_view_url (direct inline display in a browser or iframe, no workaround needed). Use report_view_url to embed the report in an iframe.',
       refLimits: 'Limits & behavior',
       refLimitsList: [
-        'Cost: 5 credits per report',
+        'Cost: 30 credits per report',
         'Duration: ~3 minutes per report',
         'Rate limit: 30 concurrent requests max per IP',
         'Site size: no strict limit, but sites with 500+ pages may take longer',
@@ -364,10 +364,10 @@ const translations = {
       title: 'Simple pricing',
       unit: {
         title: 'Per report',
-        price: '5 credits',
+        price: '30 credits',
         detail: 'per Marina report',
         cta: 'Buy credits',
-        ctaSignup: 'Sign up — 5 free credits',
+        ctaSignup: 'Sign up — 20 free credits',
       },
       pro: {
         title: 'Pro Agency',
@@ -389,7 +389,7 @@ const translations = {
     meta: {
       lang: 'es',
       title: 'Marina — Informe SEO & GEO automatizado en 3 minutos | Crawlers.fr',
-      description: 'Genera un informe profesional SEO & GEO de 15+ páginas en 3 minutos. Auditoría técnica 200 puntos, visibilidad IA, cocoon semántico. 5 créditos/informe. API embed disponible.',
+      description: 'Genera un informe profesional SEO & GEO de 15+ páginas en 3 minutos. Auditoría técnica 200 puntos, visibilidad IA, cocoon semántico. 30 créditos/informe. API embed disponible.',
       ogTitle: 'Marina — Informe SEO & GEO automatizado | Crawlers.fr',
       ogDesc: 'Auditoría técnica, estratégica, visibilidad LLM y cocoon semántico en un clic. Integra Marina en tu sitio vía API.',
       twitterDesc: 'Informe SEO/GEO de 15+ páginas en 3 minutos. API embed para agencias.',
@@ -407,7 +407,7 @@ const translations = {
       balance: 'Saldo',
       credits: 'créditos',
       loginCta: 'Inicia sesión para generar un informe',
-      signupOffer: '5 créditos gratis al registrarte = 1 informe gratis',
+      signupOffer: '20 créditos gratis al registrarte',
       apiDocLink: 'Documentación API Marina',
     },
     toasts: {
@@ -456,7 +456,7 @@ const translations = {
     api: {
       badge: 'API',
       title: 'Integra Marina en tu sitio web',
-      subtitle: 'Usa la API Marina como lead magnet para tus prospectos. Cada informe cuesta 5 créditos de tu cuenta Crawlers.',
+      subtitle: 'Usa la API Marina como lead magnet para tus prospectos. Cada informe cuesta 30 créditos de tu cuenta Crawlers.',
       howTitle: 'Cómo funciona',
       steps: [
         { step: '1', title: 'Obtén tu clave API', desc: 'Desde tu consola Crawlers, genera una clave API Marina.' },
@@ -465,7 +465,7 @@ const translations = {
         { step: '4', title: 'Impresiona a tus prospectos', desc: 'Informe listo en ~3 min. 15+ páginas de datos accionables.' },
       ],
       security: 'Seguridad',
-      securityDesc: 'Tu clave API está vinculada a tu cuenta. Cada informe generado vía API consume 5 créditos. Nunca compartas tu clave públicamente — haz las llamadas solo del lado del servidor.',
+      securityDesc: 'Tu clave API está vinculada a tu cuenta. Cada informe generado vía API consume 30 créditos. Nunca compartas tu clave públicamente — haz las llamadas solo del lado del servidor.',
       refTitle: 'Referencia API',
       refEndpoint: 'Endpoint',
       refHeaders: 'Headers requeridos',
@@ -490,7 +490,7 @@ const translations = {
       refReportNote: 'Se proporcionan dos URLs: report_url (descarga con URL firmada, expira en 7 días) y report_view_url (visualización directa en navegador o iframe, sin workaround). Use report_view_url para incrustar el informe en un iframe.',
       refLimits: 'Límites y comportamiento',
       refLimitsList: [
-        'Costo: 5 créditos por informe',
+        'Costo: 30 créditos por informe',
         'Duración: ~3 minutos por informe',
         'Rate limit: 30 solicitudes concurrentes max por IP',
         'Tamaño del sitio: sin límite estricto, pero sitios con 500+ páginas pueden tardar más',
@@ -535,10 +535,10 @@ const translations = {
       title: 'Precios simples',
       unit: {
         title: 'Por unidad',
-        price: '5 créditos',
+        price: '30 créditos',
         detail: 'por informe Marina',
         cta: 'Comprar créditos',
-        ctaSignup: 'Registrarse — 5 créditos gratis',
+        ctaSignup: 'Registrarse — 20 créditos gratis',
       },
       pro: {
         title: 'Pro Agency',
@@ -839,7 +839,7 @@ export default function Marina() {
           "description": t.meta.schemaDesc,
           "url": "https://crawlers.fr/marina",
           "offers": [
-            { "@type": "Offer", "name": "Per report", "price": "2.50", "priceCurrency": "EUR", "description": "5 credits per report" },
+            { "@type": "Offer", "name": "Per report", "price": "9.00", "priceCurrency": "EUR", "description": "30 credits per report" },
             { "@type": "Offer", "name": "Pro Agency", "price": "29", "priceCurrency": "EUR", "description": "Marina included" },
           ],
           "featureList": [
