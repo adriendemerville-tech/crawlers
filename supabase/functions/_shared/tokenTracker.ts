@@ -10,6 +10,7 @@
  *    non mesurable car `analytics_events` timeout à l'agrégation).
  */
 import { getServiceClient } from './supabaseClient.ts';
+import { claimUsageWrite } from './aiUsageLog.ts';
 
 /** Prix estimés par 1M de tokens (USD). */
 const MODEL_COST: Record<string, { input: number; output: number }> = {
