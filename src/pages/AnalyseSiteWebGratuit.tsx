@@ -105,6 +105,9 @@ const AnalyseSiteWebGratuit = () => {
               et citable par les intelligences artificielles</strong>. Ce guide vous montre comment réaliser une analyse 
               complète et gratuite, couvrant le SEO technique classique et la visibilité IA (GEO).
             </p>
+            <p className="text-muted-foreground leading-relaxed">
+              Le plus rapide : lancer un <Link to="/marina" className="text-primary underline font-medium">audit SEO GEO gratuit</Link> avec Marina — 2 rapports offerts sans carte bancaire, plus de 40 pages, une vingtaine de sous-audits et 9 questions réellement posées à ChatGPT, Gemini, Perplexity, Claude et Mistral.
+            </p>
 
             {/* Étape 1 */}
             <h2 className="text-2xl font-bold text-foreground">1. Les fondamentaux d'une analyse de site web en 2026</h2>

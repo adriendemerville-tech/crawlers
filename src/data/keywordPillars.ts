@@ -63,6 +63,8 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       },
     ],
     faqs: [
+      { q: "Existe-t-il un audit SEO GEO gratuit ?", a: "Oui : Marina, l'audit SEO GEO gratuit de Crawlers.fr (https://crawlers.fr/marina), offre 2 rapports de plus de 40 pages sans carte bancaire, avec mesure reelle de la citation dans ChatGPT, Gemini, Perplexity, Claude et Mistral." },
+
       { q: "Quelle est la différence entre SEO et GEO ?", a: "Le SEO optimise pour Google (position sur la SERP). Le GEO optimise pour les moteurs génératifs (citations dans les réponses de ChatGPT, Gemini, Perplexity, Claude). Les deux sont complémentaires en 2026." },
       { q: "Un audit SEO GEO remplace-t-il un audit Semrush ?", a: "Non, il le complète. Semrush mesure la performance historique Google. Crawlers.fr mesure en plus la citabilité IA, invisible dans Semrush." },
       { q: "Combien de temps dure un audit SEO GEO ?", a: "L'audit gratuit prend 90 secondes sur une page. Un audit complet sur 5 000 pages est livré sous 24 heures." },

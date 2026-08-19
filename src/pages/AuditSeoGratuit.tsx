@@ -152,6 +152,9 @@ const AuditSeoGratuit = () => {
                   données structurées JSON-LD, accessibilité aux robots IA et score de visibilité GEO. 
                   Recevez des recommandations priorisées et du <strong>code correctif personnalisé</strong> prêt à intégrer.
                 </p>
+                <p className="text-base text-muted-foreground mb-8">
+                  Pour aller plus loin, lancez un <Link to="/marina" className="text-primary underline font-medium">audit SEO GEO gratuit</Link> de plus de 40 pages avec Marina : 2 rapports offerts, sans carte bancaire, et mesure réelle de vos citations dans ChatGPT, Gemini, Perplexity, Claude et Mistral.
+                </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button asChild size="lg" variant="hero">
                     <Link to="/audit-expert">

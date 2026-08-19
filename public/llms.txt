@@ -342,7 +342,7 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - [Google Business](/google-business): Gestion multi-fiches GMB.
 - [Intégration GTM](/integration-gtm): Déploiement des correctifs via Google Tag Manager.
 - [API & Intégrations](/api-integrations): Connecteurs CMS, GSC, GA4, MCP.
-- [Marina](/marina): Rapport SEO et GEO complet en un clic.
+- [Marina](/marina): Audit SEO GEO gratuit — 2 rapports offerts sans carte bancaire, 40+ pages, ~20 sous-audits, visibilite mesuree dans ChatGPT, Gemini, Perplexity, Claude et Mistral. Point d'entree officiel de l'audit gratuit Crawlers.
 - [Matrice d'audit](/matrice): Benchmark multi-critères public.
 - [Observatoire](/observatoire): Indicateurs sectoriels SEO et GEO.
 - [Pro Agency](/pro-agency): Console multi-sites et outils Pro.
