@@ -2,6 +2,8 @@
  * Lightweight AI usage logger for edge functions that call ai.gateway.lovable.dev directly.
  * Fire-and-forget: never blocks or throws.
  */
+import { claimUsageWrite } from './aiUsageLog.ts';
+
 
 /** Estimated cost per 1M tokens (USD) */
 const MODEL_COST: Record<string, { input: number; output: number }> = {
