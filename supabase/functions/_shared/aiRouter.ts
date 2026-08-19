@@ -22,6 +22,7 @@
 
 import { getServiceClient } from './supabaseClient.ts';
 import { callGroq } from './groqClient.ts';
+import { logAiUsage } from './aiUsageLog.ts';
 
 const GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const CACHE_TTL_MS = 30_000;
