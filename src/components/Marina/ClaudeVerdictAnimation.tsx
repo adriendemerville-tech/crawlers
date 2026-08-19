@@ -91,21 +91,21 @@ export function ClaudeVerdictAnimation() {
 
   return (
     <div ref={ref} className="mx-auto max-w-3xl px-4">
-      <div className="rounded-xl border border-border bg-card/60 overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-[#e3e1d7] bg-[#faf9f5] shadow-sm dark:border-[#3a3a37] dark:bg-[#262624]">
         {/* Barre de fenêtre */}
-        <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-          <span className="h-3 w-3 rounded-full bg-destructive/70" aria-hidden />
-          <span className="h-3 w-3 rounded-full bg-[hsl(var(--secondary))]" aria-hidden />
-          <span className="h-3 w-3 rounded-full bg-primary/70" aria-hidden />
-          <p className="ml-3 text-sm text-muted-foreground truncate">
+        <div className="flex items-center gap-2 border-b border-[#e3e1d7] px-4 py-3 dark:border-[#3a3a37]">
+          <span className="h-3 w-3 rounded-full bg-[#ff5f57]" aria-hidden />
+          <span className="h-3 w-3 rounded-full bg-[#febc2e]" aria-hidden />
+          <span className="h-3 w-3 rounded-full bg-[#28c840]" aria-hidden />
+          <p className="ml-3 truncate text-[13px] text-[#73726c] dark:text-[#a3a29c]">
             Capacité à reproduire un audit SEO GEO — conversation Claude
           </p>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-5">
+        <div className="space-y-6 px-5 py-6 sm:px-8 sm:py-8">
           {/* Question utilisateur */}
           <div className="flex justify-end">
-            <p className="max-w-[85%] rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
+            <p className="max-w-[85%] rounded-2xl bg-[#f0eee6] px-4 py-3 text-[15px] leading-[1.6] text-[#141413] dark:bg-[#30302e] dark:text-[#f5f4ef]">
               {phase === 'idle' ? QUESTION : typed}
               {phase === 'typing' && <span className="ml-0.5 animate-pulse">|</span>}
             </p>
@@ -113,13 +113,15 @@ export function ClaudeVerdictAnimation() {
 
           {/* Réponse */}
           <div className={showVerdict ? 'animate-fade-in' : 'opacity-0'}>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
+            <p className="mb-3 text-[13px] text-[#8a8981] dark:text-[#8f8e88]">
               {phase === 'thinking' ? 'A réfléchi pendant 20 s…' : 'A réfléchi pendant 20 s'}
             </p>
             {showVerdict && (
-              <p className="text-3xl font-bold text-primary mb-3">Non.</p>
+              <p className="mb-4 text-[22px] font-semibold tracking-[-0.01em] text-[#141413] dark:text-[#f5f4ef]">
+                Non.
+              </p>
             )}
-            <blockquote className="citable-passage border-l-4 border-primary bg-muted/30 pl-4 py-3 text-sm leading-relaxed text-foreground">
+            <blockquote className="citable-passage text-[16px] leading-[1.7] text-[#141413] dark:text-[#e8e6e1]">
               {phase === 'answer'
                 ? ANSWER.slice(0, answerLen)
                 : phase === 'idle'
