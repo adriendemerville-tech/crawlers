@@ -555,6 +555,7 @@ export type Database = {
           created_at: string
           edge_function: string | null
           estimated_cost_usd: number | null
+          feature: string | null
           gateway: string
           id: string
           is_fallback: boolean | null
@@ -569,6 +570,7 @@ export type Database = {
           created_at?: string
           edge_function?: string | null
           estimated_cost_usd?: number | null
+          feature?: string | null
           gateway?: string
           id?: string
           is_fallback?: boolean | null
@@ -583,6 +585,7 @@ export type Database = {
           created_at?: string
           edge_function?: string | null
           estimated_cost_usd?: number | null
+          feature?: string | null
           gateway?: string
           id?: string
           is_fallback?: boolean | null
