@@ -556,7 +556,11 @@ export function buildNetworkSynthesisHTML(
   const block4 = blockShell(4, 'Concurrence interne entre les pages auditées', 'deduction', block4Body);
 
   // ── 5. Hiérarchie : pilier présent ou manquant ────────────────────────────
-  const auditedPaths = new Set(metas.map((m) => m.path.toLowerCase()));
+  // Un pilier absent du LOT audité peut exister sur le site. On ne conclut à
+  // l'absence que si le crawl du domaine est disponible et ne le contient pas.
+  const auditedPaths = new Set(metas.map((m) => normPath(m.path)));
+  const knownPaths = new Set((site?.knownPaths || []).map(normPath));
+  const crawlUsable = Boolean(site && site.crawlPages > 0 && knownPaths.size > 0);
   const hubCandidates = new Map<string, number>();
   for (const m of metas) {
     const segs = segments(m.path);
@@ -565,44 +569,87 @@ export function buildNetworkSynthesisHTML(
       hubCandidates.set(prefix, (hubCandidates.get(prefix) || 0) + 1);
     }
   }
-  const missingHubs = [...hubCandidates.entries()]
-    .filter(([prefix, count]) => count >= 3 && !auditedPaths.has(prefix.toLowerCase()))
+  const hubGaps = [...hubCandidates.entries()]
+    .filter(([prefix, count]) => count >= 3 && !auditedPaths.has(normPath(prefix)))
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
+  /** Pilier existant sur le site mais hors du lot audité. */
+  const existingHubs = crawlUsable ? hubGaps.filter(([p]) => knownPaths.has(normPath(p))) : [];
+  /** Pilier vérifié absent du site (crawl disponible et muet sur ce chemin). */
+  const missingHubs = crawlUsable ? hubGaps.filter(([p]) => !knownPaths.has(normPath(p))) : [];
+  /** Pilier non auditĂ© et non vérifiable faute de crawl exploitable. */
+  const unverifiedHubs = crawlUsable ? [] : hubGaps;
   const linksIn = metas.map((m) => num(m.linksIn)).filter((v): v is number => v !== null);
   const meshAvg = avg(linksIn);
+  const meshNote = meshAvg !== null ? ` (maillage entrant moyen : ${meshAvg} liens)` : '';
+  const hubList = (entries: [string, number][], tail: (count: number) => string) =>
+    `<ul style="padding-left:20px;margin:0 0 8px 0;">${entries
+      .map(
+        ([prefix, count]) =>
+          `<li style="margin:0 0 4px 0;"><code style="font-size:12px;">${esc(prefix)}</code> — ${count} pages filles auditées, ${tail(count)}</li>`,
+      )
+      .join('')}</ul>`;
 
   let block5Body: string;
   if (cohesion.regime === 'assemblage') {
     block5Body = `<p style="margin:0;">Aucun pilier n'est attendu ici : les URLs auditées ne se rattachent pas à une branche
-      commune, il n'existe donc pas de niveau de regroupement à créer pour ce lot${
-        meshAvg !== null ? ` (maillage entrant moyen des pages auditées : ${meshAvg} liens)` : ''
-      }. La hiérarchie de chaque page est traitée dans sa fiche.</p>`;
-  } else if (!missingHubs.length) {
-    block5Body = `<p style="margin:0;">Aucun niveau intermédiaire manquant détecté sur le périmètre audité${
-      meshAvg !== null ? ` (maillage entrant moyen : ${meshAvg} liens)` : ''
-    }.</p>`;
+      commune, il n'existe donc pas de niveau de regroupement à créer pour ce lot${meshNote}. La hiérarchie de chaque
+      page est traitée dans sa fiche.</p>`;
+  } else if (!hubGaps.length) {
+    block5Body = `<p style="margin:0;">Aucun niveau intermédiaire manquant détecté sur le périmètre audité${meshNote}.</p>`;
   } else {
-    block5Body = `<p style="margin:0 0 6px 0;">
-      ${missingHubs.length === 1 ? 'Un niveau' : `${missingHubs.length} niveaux`} de regroupement ${missingHubs.length === 1 ? 'est' : 'sont'}
-      absent${missingHubs.length > 1 ? 's' : ''} du périmètre audité alors que plusieurs pages s'y rattachent :
-      </p>
-      <ul style="padding-left:20px;margin:0 0 8px 0;">${missingHubs
-        .map(
-          ([prefix, count]) =>
-            `<li style="margin:0 0 4px 0;"><code style="font-size:12px;">${esc(prefix)}</code> — ${count} pages filles auditées, aucune page de regroupement auditée à ce niveau.</li>`,
-        )
-        .join('')}</ul>
-      <p style="margin:0;">Sans cette page, les URLs auditées sont des feuilles sans branche : ni Google ni les moteurs
-      de réponse IA n'ont d'entité unique à citer pour l'ensemble.</p>`;
-    candidates.push({
-      title: `Créer la page de regroupement ${missingHubs[0][0]} et y faire converger le maillage`,
-      why: `${missingHubs[0][1]} pages filles auditées sans page pilier : c'est ce qui transforme des feuilles isolées en cocon à deux niveaux et crée l'entité citable.`,
-      effort: 'moyen',
-      level: 'deduction',
-      yield_: 100,
-    });
+    const parts5: string[] = [];
+    if (missingHubs.length) {
+      parts5.push(
+        `<p style="margin:0 0 6px 0;">${missingHubs.length === 1 ? 'Un niveau' : `${missingHubs.length} niveaux`} de regroupement
+         ${missingHubs.length === 1 ? 'est absent' : 'sont absents'} du site — vérifié sur les ${site!.crawlPages.toLocaleString('fr-FR')} pages
+         du dernier crawl${site?.crawlDate ? ` (${esc(new Date(site.crawlDate).toLocaleDateString('fr-FR'))})` : ''} :</p>`,
+        hubList(missingHubs, () => 'aucune page de regroupement à ce niveau, ni dans le lot ni dans le crawl du site.'),
+        `<p style="margin:0 0 6px 0;">Sans cette page, les URLs auditées sont des feuilles sans branche : ni Google ni les moteurs
+         de réponse IA n'ont d'entité unique à citer pour l'ensemble.</p>`,
+      );
+      candidates.push({
+        title: `Créer la page de regroupement ${missingHubs[0][0]} et y faire converger le maillage`,
+        why: `${missingHubs[0][1]} pages filles auditées et aucune page pilier trouvée dans le crawl du site : c'est ce qui transforme des feuilles isolées en cocon à deux niveaux et crée l'entité citable.`,
+        effort: 'moyen',
+        level: 'deduction',
+        yield_: 100,
+      });
+    }
+    if (existingHubs.length) {
+      parts5.push(
+        `<p style="margin:0 0 6px 0;">${existingHubs.length === 1 ? 'Un niveau' : `${existingHubs.length} niveaux`} de regroupement
+         existe${existingHubs.length > 1 ? 'nt' : ''} déjà sur le site mais ${existingHubs.length > 1 ? 'sont' : 'est'} hors du périmètre audité —
+         il n'y a donc rien à créer, mais son rôle de pilier reste à vérifier :</p>`,
+        hubList(existingHubs, () => 'page de regroupement présente sur le site, non auditée ici.'),
+      );
+      candidates.push({
+        title: `Auditer et renforcer le pilier existant ${existingHubs[0][0]}`,
+        why: `La page de regroupement existe déjà sur le site : le levier n'est pas sa création mais sa qualité et la convergence du maillage de ses ${existingHubs[0][1]} pages filles vers elle.`,
+        effort: 'faible',
+        level: 'deduction',
+        yield_: 95,
+      });
+    }
+    if (unverifiedHubs.length) {
+      parts5.push(
+        `<p style="margin:0 0 6px 0;">${unverifiedHubs.length === 1 ? 'Un niveau' : `${unverifiedHubs.length} niveaux`} de regroupement
+         ${unverifiedHubs.length === 1 ? 'est absent' : 'sont absents'} du périmètre audité. Faute de crawl exploitable du domaine,
+         leur existence ailleurs sur le site n'a pas pu être vérifiée : à contrôler avant toute création.</p>`,
+        hubList(unverifiedHubs, () => 'aucune page de regroupement auditée à ce niveau ; existence sur le site non vérifiée.'),
+      );
+      candidates.push({
+        title: `Vérifier l'existence du pilier ${unverifiedHubs[0][0]}, le créer s'il manque`,
+        why: `${unverifiedHubs[0][1]} pages filles auditées sans pilier dans le lot. Le crawl du domaine n'étant pas disponible, l'action commence par un contrôle, pas par une création.`,
+        effort: 'faible',
+        level: 'deduction',
+        yield_: 92,
+      });
+    }
+    parts5.push(`<p style="margin:0;color:${MUTED};font-size:12.5px;">Maillage${meshNote || ' entrant non mesuré sur ce lot'}.</p>`);
+    block5Body = parts5.join('');
   }
+
   const block5 = blockShell(5, 'Hiérarchie : pilier présent ou manquant', 'deduction', block5Body);
 
   // ── 6. Maillon le plus faible ─────────────────────────────────────────────
