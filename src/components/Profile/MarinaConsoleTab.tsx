@@ -843,18 +843,6 @@ export function MarinaConsoleTab() {
         </CardContent>
       </Card>
 
-      {/* Quick links */}
-      <div className="flex gap-3 flex-wrap">
-        <Button variant="outline" size="sm" onClick={() => navigate('/marina#api')} className="gap-2">
-          <ExternalLink className="h-4 w-4" />
-          {t3(language, 'Documentation API', 'API Documentation', 'Documentación API')}
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => navigate('/marina')} className="gap-2">
-          <Anchor className="h-4 w-4" />
-          {t3(language, 'Page Marina', 'Marina Page', 'Página Marina')}
-        </Button>
-      </div>
-
       {mergedReport && (
         <MarinaReportPreviewModal
           isOpen
