@@ -4728,6 +4728,84 @@ export type Database = {
         }
         Relationships: []
       }
+      domain_authority_snapshots: {
+        Row: {
+          authority_score: number | null
+          backlinks_total: number | null
+          broken_backlinks: number | null
+          calibration_version: number | null
+          confidence: string | null
+          created_at: string
+          distribution: Json | null
+          dofollow_ratio: number | null
+          domain: string
+          domain_rank: number | null
+          domain_rank_raw: number | null
+          history: Json | null
+          history_fetched_at: string | null
+          id: string
+          measured_at: string
+          referring_domains: number | null
+          referring_main_domains: number | null
+          snapshot_month: string
+          source: string
+          top_anchors: Json | null
+          toxicity_score: number | null
+          toxicity_verdict: string | null
+          updated_at: string
+        }
+        Insert: {
+          authority_score?: number | null
+          backlinks_total?: number | null
+          broken_backlinks?: number | null
+          calibration_version?: number | null
+          confidence?: string | null
+          created_at?: string
+          distribution?: Json | null
+          dofollow_ratio?: number | null
+          domain: string
+          domain_rank?: number | null
+          domain_rank_raw?: number | null
+          history?: Json | null
+          history_fetched_at?: string | null
+          id?: string
+          measured_at?: string
+          referring_domains?: number | null
+          referring_main_domains?: number | null
+          snapshot_month: string
+          source?: string
+          top_anchors?: Json | null
+          toxicity_score?: number | null
+          toxicity_verdict?: string | null
+          updated_at?: string
+        }
+        Update: {
+          authority_score?: number | null
+          backlinks_total?: number | null
+          broken_backlinks?: number | null
+          calibration_version?: number | null
+          confidence?: string | null
+          created_at?: string
+          distribution?: Json | null
+          dofollow_ratio?: number | null
+          domain?: string
+          domain_rank?: number | null
+          domain_rank_raw?: number | null
+          history?: Json | null
+          history_fetched_at?: string | null
+          id?: string
+          measured_at?: string
+          referring_domains?: number | null
+          referring_main_domains?: number | null
+          snapshot_month?: string
+          source?: string
+          top_anchors?: Json | null
+          toxicity_score?: number | null
+          toxicity_verdict?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       domain_data_cache: {
         Row: {
           created_at: string
