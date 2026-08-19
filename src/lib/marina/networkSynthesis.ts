@@ -151,8 +151,18 @@ export function detectTemplates(metas: PageMeta[]): TemplateFamily[] {
             const homogeneous =
                 depth > 0 ||
                 (siblingCount >= 3 && [...sibs].filter((s) => slugLike(s)).length / siblingCount >= 0.8);
+            // La forme d'un seul frère ne peut pas décider du sort de la fratrie :
+            // `/agence/marseille` et `/agence/aix-en-provence` sont deux instances
+            // du même gabarit. Dès qu'au moins la moitié des frères ressemble à un
+            // identifiant, tous les frères de ce niveau sont traités en variantes,
+            // sinon un lot de deux villes produisait deux gabarits d'une page.
+            const slugLikeShare = [...sibs].filter((s) => slugLike(s)).length / Math.max(siblingCount, 1);
             const variable =
-              homogeneous && siblingCount >= 2 && parentCount < 2 && (slugLike(seg) || siblingCount >= 3);
+              homogeneous &&
+              siblingCount >= 2 &&
+              parentCount < 2 &&
+              (slugLike(seg) || siblingCount >= 3 || slugLikeShare >= 0.5);
+
             if (!variable) return seg;
             variants.push(seg);
             return '*';
@@ -792,15 +802,28 @@ export function computeNetworkSynthesis(
    */
   const measuredDup: Array<{ a: string; b: string; similarity: number; verdict: string }> = [];
   const seenPair = new Set<string>();
+  /**
+   * Le détecteur de quasi-doublons émet une similarité en 0-1 (arrondie au
+   * centième) tandis que d'autres sources la donnent déjà en pourcentage. On
+   * ramène tout en points de pourcentage : sans cette normalisation, une paire
+   * mesurée à 0,93 se lisait « 0,93 % » et pesait 0,93 dans la priorisation,
+   * reléguant le constat le plus solide en dernière position du plan.
+   */
+  const asPercent = (raw: unknown): number => {
+    const v = Number(raw);
+    if (!Number.isFinite(v) || v <= 0) return 0;
+    return Math.round((v <= 1 ? v * 100 : v) * 10) / 10;
+  };
   for (const m of metas) {
     for (const d of m.nearDup || []) {
       const other = normPath(d.url);
       const pair = [normPath(m.path), other].sort().join('|');
       if (seenPair.has(pair)) continue;
       seenPair.add(pair);
-      measuredDup.push({ a: m.path, b: other, similarity: Number(d.similarity) || 0, verdict: d.verdict });
+      measuredDup.push({ a: m.path, b: other, similarity: asPercent(d.similarity), verdict: d.verdict });
     }
   }
+
   /** Paires mesurées dont les deux URLs sont dans le lot audité. */
   const dupInScope = measuredDup.filter((d) => auditedPaths.has(normPath(d.a)) && auditedPaths.has(normPath(d.b)));
   const dupOutScope = measuredDup.filter((d) => !dupInScope.includes(d));
@@ -859,13 +882,13 @@ export function computeNetworkSynthesis(
            .map(
              (d) =>
                `<li style="margin:0 0 4px 0;"><code style="font-size:12px;">${esc(d.a)}</code> ↔ <code style="font-size:12px;">${esc(d.b)}</code>
-                — ${d.similarity} % de similarité${d.verdict === 'cannibalization' ? ', qualifié cannibalisation' : ''}</li>`,
+                — ${String(d.similarity).replace('.', ',')} % de similarité${d.verdict === 'cannibalization' ? ', qualifié cannibalisation' : ''}</li>`,
            )
            .join('')}</ul>`,
       );
       candidates.push({
         title: `Fusionner ou différencier les ${dupInScope.length} paire(s) de pages mesurées quasi identiques`,
-        why: `Similarité de contenu mesurée jusqu'à ${Math.max(...dupInScope.map((d) => d.similarity))} % : ce n'est pas une déduction d'URL, les moteurs voient bien deux fois la même page.`,
+        why: `Similarité de contenu mesurée jusqu'à ${String(Math.max(...dupInScope.map((d) => d.similarity))).replace('.', ',')} % : ce n'est pas une déduction d'URL, les moteurs voient bien deux fois la même page.`,
         effort: 'moyen',
         level: 'mesure',
         kind: 'correction',
@@ -948,9 +971,29 @@ export function computeNetworkSynthesis(
       }
     }
   }
+  /**
+   * Une page n'est isolée que si elle n'émet ni ne reçoit de lien vers le lot.
+   * Le test porte sur TOUTES les pages du périmètre, pas seulement sur celles
+   * qui remontent des cibles : une page muette jamais citée par ses voisines
+   * est précisément le cas d'isolement à signaler. On distingue toutefois les
+   * pages sans cibles remontées, dont l'isolement n'est pas complètement
+   * mesuré, pour ne pas les compter comme un fait établi.
+   */
   const isolatedInLot = meshMeasured
-    ? withTargets.filter((m) => !linkedFrom.has(normPath(m.path)) && !linkedTo.has(normPath(m.path)))
+    ? scopeMetas.filter(
+        (m) =>
+          (m.internalTargets?.length || 0) > 0 &&
+          !linkedFrom.has(normPath(m.path)) &&
+          !linkedTo.has(normPath(m.path)),
+      )
     : [];
+  /** Pages jamais citées par le lot et dont les liens sortants ne sont pas remontés. */
+  const unmeasuredInLot = meshMeasured
+    ? scopeMetas.filter(
+        (m) => (m.internalTargets?.length || 0) === 0 && !linkedTo.has(normPath(m.path)),
+      )
+    : [];
+
   const density = meshMeasured && withTargets.length > 1
     ? Math.round((intraEdges.length / (withTargets.length * (withTargets.length - 1))) * 1000) / 10
     : null;
@@ -972,8 +1015,20 @@ export function computeNetworkSynthesis(
               .slice(0, 6)
               .map((m) => `<code style="font-size:12px;">${esc(m.path)}</code>`)
               .join(' · ')}`
-          : '. Toutes les pages du lot participent au maillage interne'
+          : '. Toutes les pages dont les liens sont remontés participent au maillage interne'
+      }${
+        unmeasuredInLot.length
+          ? `. ${unmeasuredInLot.length} page${unmeasuredInLot.length > 1 ? 's' : ''} du lot ne reçoi${
+              unmeasuredInLot.length > 1 ? 'vent' : 't'
+            } aucun lien des autres URLs auditées et ${
+              unmeasuredInLot.length > 1 ? 'leurs liens sortants ne sont pas remontés' : 'ses liens sortants ne sont pas remontés'
+            } : ${unmeasuredInLot
+              .slice(0, 6)
+              .map((m) => `<code style="font-size:12px;">${esc(m.path)}</code>`)
+              .join(' · ')} — rattachement à vérifier`
+          : ''
       }${meshNote}.</p>`;
+
   if (meshMeasured && intraEdges.length === 0 && cohesion.regime !== 'assemblage') {
     candidates.push({
       title: `Relier entre elles les ${withTargets.length} pages du lot`,
@@ -1064,7 +1119,9 @@ export function computeNetworkSynthesis(
         title: `Vérifier l'existence du pilier ${unverifiedHubs[0][0]}, le créer s'il manque`,
         why: `${unverifiedHubs[0][1]} pages filles auditées sans pilier dans le lot. Le crawl du domaine n'étant pas disponible, l'action commence par un contrôle, pas par une création.`,
         effort: 'faible',
-        level: 'deduction',
+        // Existence du pilier non vérifiable faute de crawl : le constat reste une
+        // hypothèse, sa confiance doit être celle d'une estimation.
+        level: 'estimation',
         kind: 'correction',
         severity: 74,
         reach: unverifiedHubs[0][1],

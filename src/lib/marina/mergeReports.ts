@@ -375,6 +375,26 @@ export function mergeMarinaReports(
        </ul>`
     : '';
 
+  const metas = splits.map(s => s.meta).filter((m): m is PageMeta => Boolean(m));
+  const domainVerdict = splits.map(s => s.domainVerdict).find(Boolean) || null;
+  const globalSummary = mutualised
+    ? buildGlobalSummary(domain, metas, domainVerdict, parts.length)
+    : '';
+  // Lecture d'ensemble normalisée : toujours en première position après la page
+  // de garde, avant la synthèse exécutive et les fiches par URL.
+  // Trou 10 — les faits de la synthèse sont exposés à l'appelant pour être
+  // archivés et poussés dans le Workbench, sans relecture du HTML.
+  const synthesis = computeNetworkSynthesis(domain, metas, opts?.site);
+  const networkSynthesis = synthesis.html;
+  if (opts?.onSynthesis) {
+    try {
+      opts.onSynthesis(synthesis.facts);
+    } catch {
+      /* la propagation ne doit jamais empêcher la fusion */
+    }
+  }
+
+
   const cover = `
     <section class="marina-batch-cover" style="page-break-after:always;padding:64px 48px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
       <p style="letter-spacing:.18em;text-transform:uppercase;font-size:12px;margin:0 0 18px 0;">Crawlers — Marina</p>
@@ -383,8 +403,12 @@ export function mergeMarinaReports(
       <p style="font-size:14px;opacity:.7;margin:0 0 30px 0;">${parts.length} pages auditées — ${generatedAt}</p>
       <h2 style="font-size:18px;margin:26px 0 10px 0;">Lecture d'ensemble</h2>
       <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
-        <li style="margin:0 0 8px 0;">Synthèse réseau — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés</li>
-        <li style="margin:0 0 8px 0;">Synthèse exécutive — verdict du domaine puis reprise page par page</li>
+        ${networkSynthesis
+          ? `<li style="margin:0 0 8px 0;">Synthèse réseau — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés</li>`
+          : ''}
+        ${globalSummary
+          ? `<li style="margin:0 0 8px 0;">Synthèse exécutive — verdict du domaine puis reprise page par page</li>`
+          : `<li style="margin:0 0 8px 0;">Reprise page par page — les rapports de ce lot ne portent pas les repères de synthèse</li>`}
       </ul>
       ${sharedToc}
       <h2 style="font-size:18px;margin:26px 0 10px 0;">Fiches par page</h2>
@@ -414,26 +438,6 @@ export function mergeMarinaReports(
          ${orderedSiteEntries.map(([, htmlBlock]) => htmlBlock).join('\n')}
        </section>`
     : '';
-
-  const metas = splits.map(s => s.meta).filter((m): m is PageMeta => Boolean(m));
-  const domainVerdict = splits.map(s => s.domainVerdict).find(Boolean) || null;
-  const globalSummary = mutualised
-    ? buildGlobalSummary(domain, metas, domainVerdict, parts.length)
-    : '';
-  // Lecture d'ensemble normalisée : toujours en première position après la page
-  // de garde, avant la synthèse exécutive et les fiches par URL.
-  // Trou 10 — les faits de la synthèse sont exposés à l'appelant pour être
-  // archivés et poussés dans le Workbench, sans relecture du HTML.
-  const synthesis = computeNetworkSynthesis(domain, metas, opts?.site);
-  const networkSynthesis = synthesis.html;
-  if (opts?.onSynthesis) {
-    try {
-      opts.onSynthesis(synthesis.facts);
-    } catch {
-      /* la propagation ne doit jamais empêcher la fusion */
-    }
-  }
-
 
 
   const sections = parts
