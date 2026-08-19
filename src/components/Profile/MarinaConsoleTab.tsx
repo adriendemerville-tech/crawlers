@@ -160,6 +160,20 @@ export function MarinaConsoleTab() {
     setDeletingId(null);
   };
 
+  /** Supprime tous les jobs d'un lot multipages en une action. */
+  const deleteBatch = async (jobIds: string[]) => {
+    setDeletingId(jobIds[0]);
+    try {
+      for (const jobId of jobIds) await deleteMyMarinaAudit({ data: { jobId } });
+      setReports(prev => prev.filter(r => !jobIds.includes(r.id)));
+      toast.success(t3(language, 'Rapport supprimé', 'Report deleted', 'Informe eliminado'));
+    } catch (e: any) {
+      toast.error(e?.message || 'Erreur de suppression');
+    }
+    setDeletingId(null);
+  };
+
+
 
 
 
