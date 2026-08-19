@@ -4797,17 +4797,18 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       }
 
 
-      // Now re-upload with the signed URL injected as meta tag for the "Copy link" button
+      // Lien court à partager : les URLs signées Storage font ~700 caractères
+      // (jeton JWT inclus) et sont illisibles. `/r/<8 premiers caractères de
+      // l'identifiant>` est servi par notre domaine en text/html.
+      const reportShortUrl = `https://crawlers.fr/r/${jobId.slice(0, 8)}`;
       const reportDownloadUrl = signedUrlData?.signedUrl || '';
-      if (reportDownloadUrl) {
-        html = html.replace('</head>', `<meta name="marina-report-url" content="${reportDownloadUrl}" />\n</head>`);
-        await sb.storage
-          .from('shared-reports')
-          .upload(fileName, new Blob([html], { type: 'text/html' }), {
-            contentType: 'text/html',
-            upsert: true,
-          });
-      }
+      html = html.replace('</head>', `<meta name="marina-report-url" content="${reportShortUrl}" />\n</head>`);
+      await sb.storage
+        .from('shared-reports')
+        .upload(fileName, new Blob([html], { type: 'text/html' }), {
+          contentType: 'text/html',
+          upsert: true,
+        });
 
       const resultData = {
         url,
@@ -4816,7 +4817,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         report_url: signedUrlData?.signedUrl || null,
         // Lecteur HTML sur notre domaine : les URLs signées Storage sont servies
         // en text/plain + nosniff et afficheraient le code source du rapport.
-        report_view_url: `https://crawlers.fr/api/public/marina-report?id=${jobId}`,
+        report_view_url: reportShortUrl,
+        report_long_view_url: `https://crawlers.fr/api/public/marina-report?id=${jobId}`,
+
         report_path: fileName,
         expert_seo_score: expertData.totalScore,
         expert_seo_max: expertData.maxScore,
