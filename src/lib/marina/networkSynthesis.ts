@@ -477,13 +477,17 @@ export function buildNetworkSynthesisHTML(
   for (const s of multiVariant) for (const v of s.family.variants) if (v && v !== '—') variantTokens.add(v.split('/')[0].toLowerCase());
 
   const rows2 = stats.map((s) => [
-    `<code style="font-size:12px;">${esc(s.family.pattern)}</code>`,
+    `<code style="font-size:12px;">${esc(s.family.pattern)}</code>${
+      s.solidity === 'solide'
+        ? ''
+        : `<span style="display:block;color:${MUTED};font-size:11px;font-weight:400;">${s.solidity === 'indicatif' ? 'effectif faible, valeur indicative' : 'effectif trop faible, non généralisable'}</span>`
+    }`,
     String(s.count),
-    s.global !== null ? `${s.global}/100` : 'n/d',
-    s.tech !== null ? String(s.tech) : 'n/d',
-    s.geo !== null ? String(s.geo) : 'n/d',
-    s.words !== null ? s.words.toLocaleString('fr-FR') : 'n/d',
-    s.lcpMs !== null ? seconds(s.lcpMs) : 'n/d',
+    cell(s.global, s.coverage.global, (v) => `${v}/100`),
+    cell(s.tech, s.coverage.tech, (v) => String(v)),
+    cell(s.geo, s.coverage.geo, (v) => String(v)),
+    cell(s.words, s.coverage.words, (v) => v.toLocaleString('fr-FR')),
+    cell(s.lcpMs, s.coverage.lcp, (v) => seconds(v)),
   ]);
 
   const networkShape =
@@ -502,14 +506,32 @@ export function buildNetworkSynthesisHTML(
   const globals = metas.map((m) => num(m.global)).filter((v): v is number => v !== null);
   const spread = globals.length >= 2 ? Math.max(...globals) - Math.min(...globals) : null;
 
+  // Trou 4 — en régime mixte, les deux sous-lots sont nommés explicitement pour
+  // que le lecteur sache à quelle moitié s'applique chaque constat qui suit.
+  const subLotHtml = cohesion.subLots
+    ? `<p style="margin:0 0 8px 0;"><strong>Sous-lot réseau</strong> (${cohesion.subLots.networked.length} URLs) : ${cohesion.subLots.networked
+        .slice(0, 6)
+        .map((m) => `<code style="font-size:12px;">${esc(m.path)}</code>`)
+        .join(' · ')}${cohesion.subLots.networked.length > 6 ? '…' : ''}.
+       Les blocs 4 à 6 (concurrence interne, pilier, maillage) portent sur ce sous-lot.<br>
+       <strong>Sous-lot pages indépendantes</strong> (${cohesion.subLots.standalone.length} URLs) : ${cohesion.subLots.standalone
+         .slice(0, 6)
+         .map((m) => `<code style="font-size:12px;">${esc(m.path)}</code>`)
+         .join(' · ')}${cohesion.subLots.standalone.length > 6 ? '…' : ''}.
+       Ces pages sont lues une par une dans leur fiche : aucune conclusion de réseau ne leur est appliquée.</p>`
+    : '';
+
   const block2 = blockShell(
     2,
     'Ce que ces pages décrivent ensemble',
     'deduction',
     `<p style="margin:0 0 8px 0;"><strong>Régime de lecture.</strong> ${cohesion.statement}</p>
+     ${subLotHtml}
      <p style="margin:0 0 8px 0;">${cohesion.regime === 'assemblage' ? `Les ${metas.length} URLs sont donc traitées comme des cas indépendants : la valeur de ce rapport est comparative (quelle page tient, laquelle décroche, sur quel axe) et non structurelle.${spread !== null ? ` Écart de score global entre la meilleure et la moins bonne page : ${spread} points.` : ''}` : networkShape}</p>
-     ${table(['Gabarit', 'Pages', 'Global', 'SEO', 'GEO', 'Mots (moy.)', 'LCP (moy.)'], rows2)}`,
+     ${table(['Gabarit', 'Pages', 'Global', 'SEO', 'GEO', 'Mots (moy.)', 'LCP (moy.)'], rows2)}
+     <p style="margin:6px 0 0 0;color:${MUTED};font-size:12px;">Une cellule suivie d'une fraction indique le nombre de pages du gabarit sur lesquelles la métrique a réellement été relevée ; sous la moitié, la moyenne est annoncée comme partielle.</p>`,
   );
+
 
   // ── 3. Conformité technique vs valeur sémantique ──────────────────────────
   let block3Body: string;
