@@ -362,6 +362,9 @@ Deno.serve(handleRequest(async (req) => {
 
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode, facebookPageInfo, authorityData);
     userPrompt = `${formatSocialProofForPrompt(socialProof)}\n\n` + userPrompt;
+    // Faits mesurés (lots 3 et 4) : le LLM ne doit ni les deviner ni les ignorer.
+    if (authorityTrend) userPrompt = `${buildAuthorityTrendPromptSection(authorityTrend)}\n\n` + userPrompt;
+    if (linkGapData) userPrompt = `${buildLinkGapPromptSection(linkGapData)}\n\n` + userPrompt;
     userPrompt = `LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
 
     const pageTypeLabels: Record<PageType, string> = { editorial: 'MODE ÉDITORIAL', product: 'MODE PRODUIT', deep: 'MODE PAGE PROFONDE', homepage: 'MODE PAGE D\'ACCUEIL' };
