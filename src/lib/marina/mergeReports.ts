@@ -411,7 +411,7 @@ export function mergeMarinaReports(
 
 
   const cover = `
-    <section class="marina-batch-cover" style="page-break-after:always;padding:64px 48px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+    <section class="marina-batch-cover" style="page-break-before:always;page-break-after:always;padding:64px 48px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
       <p style="letter-spacing:.18em;text-transform:uppercase;font-size:12px;margin:0 0 18px 0;">Crawlers — Marina</p>
       <h1 style="font-size:34px;line-height:1.2;margin:0 0 12px 0;">Rapport multipages</h1>
       <p style="font-size:18px;margin:0 0 6px 0;font-weight:600;">${escapeHtml(domain)}</p>
@@ -419,7 +419,7 @@ export function mergeMarinaReports(
       <h2 style="font-size:18px;margin:26px 0 10px 0;">Lecture d'ensemble</h2>
       <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
         ${networkSynthesis
-          ? `<li style="margin:0 0 8px 0;">Synthèse réseau — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés</li>`
+          ? `<li style="margin:0 0 8px 0;">Synthèse réseau, en ouverture de ce document — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés</li>`
           : ''}
         ${globalSummary
           ? `<li style="margin:0 0 8px 0;">Synthèse exécutive — verdict du domaine puis reprise page par page</li>`
@@ -495,12 +495,12 @@ ${head}
 <title>${escapeHtml(title)}</title>
 <style>
   .marina-batch-part, .marina-batch-shared, .marina-batch-disclosure { break-before: page; }
-  .marina-batch-cover { break-after: page; }
+  .marina-batch-cover { break-before: page; break-after: page; }
 </style>
 </head>
 <body>
-${cover}
 ${networkSynthesis}
+${cover}
 ${globalSummary}
 ${sharedSection}
 ${sections}
