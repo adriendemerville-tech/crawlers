@@ -15,6 +15,8 @@ import { writeIdentity } from '../_shared/identityGateway.ts';
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts';
 import { computeFactualCitationScores } from '../_shared/citationScorer.ts';
 import { fetchDomainAuthority, type AuthorityData } from '../_shared/domainAuthority.ts';
+import { persistAuthoritySnapshot, buildAuthorityTrendPromptSection, type AuthorityTrend } from '../_shared/authoritySnapshots.ts';
+import { fetchLinkGap, resolveCompetitorDomains, buildLinkGapPromptSection, writeLinkGapFindings, type LinkGapResult } from '../_shared/linkGap.ts';
 import { preCrawlForAudit, formatPreCrawlForPrompt, type PreCrawlResult } from '../_shared/preCrawlForAudit.ts';
 import { handleRequest } from '../_shared/serveHandler.ts';
 import { applyMarketWeighting } from '../_shared/marketPriority.ts';
