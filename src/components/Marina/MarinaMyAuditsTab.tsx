@@ -115,26 +115,39 @@ export function MarinaMyAuditsTab() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {audits.map(a => {
+            {groupAudits(audits).map(g => {
+              const a = g.main;
+              const isBatch = g.items.length > 1;
               const scanMode = normalizeScanMode(a.scanMode);
+              // Rapport ouvert : le premier du lot qui en possède un.
+              const target = g.items.find(i => i.hasReport) || a;
+              const doneCount = g.items.filter(i => i.status === 'completed' || i.status === 'partial').length;
+              const pendingCount = g.items.filter(i => i.status === 'processing' || i.status === 'pending').length;
+              const scores = g.items.map(i => i.globalScore).filter((s): s is number => s !== null);
+              const avgScore = scores.length
+                ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
+                : null;
               return (
-              <Card key={a.id}>
+              <Card key={g.key}>
                 <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium truncate">{a.domain || a.url || '—'}</span>
                       <Badge variant="outline" className="text-[10px]">
-                        {STATUS_LABEL[a.status] || a.status}
-                        {a.status === 'processing' ? ` · ${a.progress}%` : ''}
+                        {isBatch
+                          ? pendingCount > 0
+                            ? `En cours · ${doneCount}/${g.items.length}`
+                            : `Terminé · ${doneCount}/${g.items.length}`
+                          : `${STATUS_LABEL[a.status] || a.status}${a.status === 'processing' ? ` · ${a.progress}%` : ''}`}
                       </Badge>
                       {a.viaApi && (
                         <Badge variant="outline" className="text-[10px] gap-1">
                           <Terminal className="w-3 h-3" /> API
                         </Badge>
                       )}
-                      {a.multipage && (
+                      {(a.multipage || isBatch) && (
                         <Badge variant="outline" className="text-[10px] gap-1">
-                          <Layers className="w-3 h-3" /> Multipages
+                          <Layers className="w-3 h-3" /> Multipages · {g.items.length} pages
                         </Badge>
                       )}
                       {scanMode && (
@@ -143,18 +156,20 @@ export function MarinaMyAuditsTab() {
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {new Date(a.createdAt).toLocaleString('fr-FR')}
-                      {a.globalScore !== null ? ` · score ${a.globalScore}/100` : ''}
-                      {a.error ? ` · ${a.error}` : ''}
+                      {isBatch
+                        ? avgScore !== null ? ` · score moyen ${avgScore}/100` : ''
+                        : a.globalScore !== null ? ` · score ${a.globalScore}/100` : ''}
+                      {!isBatch && a.error ? ` · ${a.error}` : ''}
                     </p>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
                     className="gap-2"
-                    disabled={!a.hasReport || openingId === a.id}
-                    onClick={() => openReport(a.id)}
+                    disabled={!target.hasReport || openingId === target.id}
+                    onClick={() => openReport(target.id)}
                   >
-                    {openingId === a.id
+                    {openingId === target.id
                       ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       : <ExternalLink className="w-3.5 h-3.5" />}
                     Voir le rapport
@@ -164,6 +179,7 @@ export function MarinaMyAuditsTab() {
               );
             })}
           </div>
+
         )}
       </div>
     </section>
