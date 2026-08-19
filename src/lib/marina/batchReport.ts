@@ -1,5 +1,7 @@
 import { mergeMarinaReports } from './mergeReports';
 import { fetchSiteStructure } from './siteStructure';
+import { persistNetworkSynthesis } from './networkSynthesisPersist';
+
 
 export interface BatchReportItem {
   id: string;
