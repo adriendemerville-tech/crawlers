@@ -59,9 +59,10 @@ export const getMyMarinaReportUrl = createServerFn({ method: 'POST' })
     const path = (job as any)?.result_data?.report_path as string | undefined;
     if (!path) return { url: null as string | null };
 
-    // On sert le HTML via notre propre domaine : les URLs signées Storage
-    // renvoient text/plain + nosniff, ce qui affiche le code source du rapport.
-    return { url: `/api/public/marina-report?id=${data.jobId}` };
+    // Lien court servi par notre domaine : les URLs signées Storage renvoient
+    // text/plain + nosniff (code source affiché) et font ~700 caractères.
+    return { url: `/r/${data.jobId.slice(0, 8)}` };
+
   });
 
 /**
