@@ -533,7 +533,7 @@ export function buildLlmBenchmarks(
 
 
   const coverage = keywordCoverage(result, anchorKeywords);
-  console.log(`[llmBenchmarks] ancrage carte d'identité : ${coverage.covered}/${coverage.total} questions (${Math.round(coverage.ratio * 100)} %)${competitorOk ? ' · 1 question concurrent' : ''}`);
+  console.log(`[llmBenchmarks] ancrage carte d'identité : ${coverage.covered}/${coverage.total} questions (${Math.round(coverage.ratio * 100)} %)${competitorOk ? ' · 1 question concurrent' : ''}${reputationOk ? ' · 1 question réputation (page avis)' : ''}`);
 
   return result;
 }
