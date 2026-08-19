@@ -770,7 +770,7 @@ export default function Marina() {
   const handleGenerate = useCallback(async () => {
     if (!url.trim()) { toast.error(t.toasts.enterUrl); return; }
     if (!user) { await handleFreeGenerate(); return; }
-    if (credits < CREDIT_COST) { toast.error(`${t.toasts.insufficientCredits} (${CREDIT_COST} required)`); return; }
+    if (!hasUnlimitedCredits && credits < CREDIT_COST) { toast.error(`${t.toasts.insufficientCredits} (${CREDIT_COST} required)`); return; }
 
 
     setLoading(true);
