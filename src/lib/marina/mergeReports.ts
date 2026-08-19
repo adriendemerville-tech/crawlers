@@ -313,7 +313,13 @@ function buildGlobalSummary(domain: string, metas: PageMeta[], domainVerdict: st
  */
 export function mergeMarinaReports(
   parts: MarinaReportPart[],
-  opts?: { title?: string; site?: SiteStructureContext },
+  opts?: {
+    title?: string;
+    site?: SiteStructureContext;
+    /** Trou 10 — reçoit les faits de la synthèse réseau (nul sous 2 URLs). */
+    onSynthesis?: (facts: NetworkSynthesisFacts | null) => void;
+  },
+
 ): string {
   if (parts.length === 0) return '';
   if (parts.length === 1) return parts[0].html;
