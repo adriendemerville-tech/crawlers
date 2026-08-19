@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { usePaddleCheckout } from '@/hooks/usePaddleCheckout';
+import { supabase } from '@/integrations/supabase/client';
 import { createMarinaPaidPass, getMarinaPassStatus, startMarinaPaidAudit } from '@/lib/marinaFree.functions';
 
 const PASS_STORAGE_KEY = 'marina_paid_pass_token';
