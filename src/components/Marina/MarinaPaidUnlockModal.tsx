@@ -85,16 +85,22 @@ export function MarinaPaidUnlockModal({ open, onOpenChange, url, email, language
     const pass = await createMarinaPaidPass({ data: { email: localEmail.trim() } });
     if ('error' in pass) { toast.error(pass.message); return; }
     localStorage.setItem(PASS_STORAGE_KEY, pass.passToken);
+    setCheckoutLoading(true);
     try {
-      await openCheckout({
-        priceId: 'marina_oneshot',
-        quantity: 1,
-        customerEmail: localEmail.trim(),
-        customData: { kind: 'marina_oneshot', passToken: pass.passToken, email: localEmail.trim() },
-        successUrl: `${window.location.origin}/marina`,
+      // Stripe Checkout (même circuit que les crédits et abonnements)
+      const { data, error } = await supabase.functions.invoke('stripe-actions', {
+        body: {
+          action: 'marina-oneshot',
+          pass_token: pass.passToken,
+          email: localEmail.trim(),
+          url: url.trim(),
+        },
       });
-      watchPass(pass.passToken);
+      if (error || !data?.url) throw new Error(data?.error || error?.message || 'checkout_failed');
+      // Le pass reste en localStorage : au retour sur /marina, le polling reprend.
+      window.location.href = data.url as string;
     } catch {
+      setCheckoutLoading(false);
       toast.error('Impossible d\'ouvrir le paiement');
     }
   };
