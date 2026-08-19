@@ -172,6 +172,56 @@ export function DomainAuthorityCard({ authority }: Props) {
               </div>
             )}
 
+            {authority.distribution && authority.distribution.source !== 'unavailable' && (
+              <div className="space-y-3 rounded-lg border border-border p-3">
+                <div className="text-sm font-medium">Répartition du profil de liens</div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {([
+                    ['TLD', authority.distribution.tld],
+                    ['Pays', authority.distribution.countries],
+                    ['Plateformes', authority.distribution.platform_types],
+                  ] as const).map(([label, buckets]) =>
+                    buckets.length > 0 ? (
+                      <div key={label} className="space-y-1">
+                        <div className="text-xs text-muted-foreground">{label}</div>
+                        {buckets.slice(0, 4).map((b) => (
+                          <div key={b.key} className="flex items-center justify-between text-xs">
+                            <span className="truncate pr-2">{b.key}</span>
+                            <span className="shrink-0 text-muted-foreground">{Math.round(b.share * 100)} %</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null,
+                  )}
+                </div>
+
+                {authority.top_linked_pages && authority.top_linked_pages.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">
+                      Pages cibles les plus liées ({authority.distribution.linked_pages_sampled} pages liées ·{' '}
+                      {Math.round(authority.distribution.top_page_share * 100)} % des référents sur la première)
+                    </div>
+                    {authority.top_linked_pages.slice(0, 5).map((p) => (
+                      <div key={p.url} className="flex items-center justify-between text-xs">
+                        <span className="truncate pr-2">{p.url}</span>
+                        <span className="shrink-0 text-muted-foreground">{p.referring_domains} domaines</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {authority.distribution.signals.length > 0 && (
+                  <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+                    {authority.distribution.signals.map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-xs">{authority.distribution.recommendation}</p>
+              </div>
+            )}
+
+
             {authority.first_seen && (
               <p className="text-xs text-muted-foreground">
                 Premier backlink observé : {new Date(authority.first_seen).toLocaleDateString('fr-FR')} — un profil

@@ -19,12 +19,14 @@ const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
 
 /** Version de calibrage : invalide les entrées de cache produites avant le recalibrage. */
-export const AUTHORITY_CALIBRATION_VERSION = 3;
+export const AUTHORITY_CALIBRATION_VERSION = 4;
 
 /** Taille de l'échantillon de domaines référents analysé (affichage limité au top 10). */
 export const REFERRING_DOMAINS_SAMPLE_LIMIT = 200;
 /** Nombre d'ancres demandées à `backlinks/anchors/live`. */
 export const ANCHORS_SAMPLE_LIMIT = 100;
+/** Nombre de pages cibles demandées à `backlinks/domain_pages/live`. */
+export const LINKED_PAGES_SAMPLE_LIMIT = 50;
 
 export interface BacklinkToxicity {
   /** 0-100 : plus le score est haut, plus le profil est artificiel */
@@ -53,6 +55,40 @@ export interface OrganicVisibility {
   source: 'dataforseo_labs' | 'unavailable';
 }
 
+/** Une part de distribution mesurée (TLD, pays, type de plateforme). */
+export interface DistributionBucket {
+  key: string;
+  count: number;
+  /** Part 0-1 du total de l'échantillon */
+  share: number;
+}
+
+/** Page du domaine audité recevant des liens externes. */
+export interface LinkedPage {
+  url: string;
+  referring_domains: number;
+  backlinks: number;
+}
+
+/** Lecture déterministe de la répartition du profil de liens (lot 2). */
+export interface BacklinkDistribution {
+  tld: DistributionBucket[];
+  countries: DistributionBucket[];
+  platform_types: DistributionBucket[];
+  /** Part du TLD dominant (0-1) */
+  dominant_tld_share: number;
+  /** Part du pays dominant (0-1) */
+  dominant_country_share: number;
+  /** Part des domaines référents pointant la page la plus liée (0-1) */
+  top_page_share: number;
+  /** Nombre de pages du domaine recevant au moins un lien externe (échantillon) */
+  linked_pages_sampled: number;
+  signals: string[];
+  recommendation: string;
+  source: 'dataforseo' | 'partial' | 'unavailable';
+}
+
+
 export interface AuthorityData {
   domain: string;
   /** Authority Score maison sur 100 (rank normalisé + diversité, pénalisé par la toxicité) */
@@ -71,6 +107,10 @@ export interface AuthorityData {
   top_anchors: string[];
   top_anchors_detail: { anchor: string; count: number }[];
   toxicity: BacklinkToxicity | null;
+  /** Répartition mesurée du profil de liens + pages cibles (lot 2) */
+  distribution: BacklinkDistribution | null;
+  /** Pages du domaine les plus liées (top 10 de l'échantillon) */
+  top_linked_pages: LinkedPage[];
   organic_visibility?: OrganicVisibility | null;
   /** Nombre de domaines référents réellement analysés (échantillon, ≠ total) */
   referring_domains_sampled: number;
@@ -286,7 +326,7 @@ function unavailable(domain: string, reason: string): AuthorityData {
     domain, authority_score: 0, domain_rank: 0, domain_rank_raw: 0, referring_domains: 0,
     referring_main_domains: 0, backlinks_total: 0, dofollow_ratio: 0, broken_backlinks: 0,
     first_seen: null, top_referring_domains: [], top_anchors: [], top_anchors_detail: [],
-    toxicity: null, organic_visibility: null,
+    toxicity: null, distribution: null, top_linked_pages: [], organic_visibility: null,
     referring_domains_sampled: 0, anchors_sampled: 0, anchors_source: 'unavailable',
     confidence: 'low', confidence_reason: reason,
     calibration_version: AUTHORITY_CALIBRATION_VERSION,
@@ -333,6 +373,108 @@ export function extractAnchorsFromEndpoint(payload: unknown): { anchor: string; 
     .sort((a, b) => b.count - a.count);
 }
 
+/**
+ * Convertit une carte `clé → volume` du résumé DataForSEO (`referring_links_tld`,
+ * `referring_links_countries`, `referring_links_platform_types`) en distribution
+ * triée avec parts. Aucun appel supplémentaire : ces cartes sont déjà dans
+ * `backlinks/summary/live` (0 crédit dépensé en plus).
+ */
+export function extractDistribution(raw: unknown, limit = 8): DistributionBucket[] {
+  if (!raw || typeof raw !== 'object') return [];
+  const entries = Object.entries(raw as Record<string, unknown>)
+    .map(([key, count]) => ({ key: String(key).trim(), count: Number(count) || 0 }))
+    .filter((e) => e.key && e.count > 0);
+  const total = entries.reduce((sum, e) => sum + e.count, 0);
+  if (!total) return [];
+  return entries
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit)
+    .map((e) => ({ ...e, share: e.count / total }));
+}
+
+/** Pages cibles mesurées via `backlinks/domain_pages/live`. */
+export function extractLinkedPages(payload: unknown): LinkedPage[] {
+  const items = (payload as any)?.tasks?.[0]?.result?.[0]?.items;
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((i: any) => ({
+      url: String(i?.meta?.canonical || i?.page_address || i?.url || '').trim(),
+      referring_domains: Number(i?.referring_domains ?? 0) || 0,
+      backlinks: Number(i?.backlinks ?? 0) || 0,
+    }))
+    .filter((p) => p.url)
+    .sort((a, b) => b.referring_domains - a.referring_domains || b.backlinks - a.backlinks);
+}
+
+/**
+ * Verdict déterministe sur la répartition du profil : concentration
+ * géographique, monoculture de TLD, et dépendance à une seule page cible.
+ * Aucun token LLM.
+ */
+export function computeBacklinkDistribution(input: {
+  tld: DistributionBucket[];
+  countries: DistributionBucket[];
+  platformTypes: DistributionBucket[];
+  linkedPages: LinkedPage[];
+  referringDomains: number;
+}): BacklinkDistribution {
+  const { tld, countries, platformTypes, linkedPages, referringDomains } = input;
+  const dominantTldShare = tld[0]?.share ?? 0;
+  const dominantCountryShare = countries[0]?.share ?? 0;
+  const topPageRefs = linkedPages[0]?.referring_domains ?? 0;
+  const topPageShare = referringDomains > 0 ? Math.min(1, topPageRefs / referringDomains) : 0;
+
+  const signals: string[] = [];
+  if (tld.length && dominantTldShare >= 0.85) {
+    signals.push(`profil mono-TLD : ${Math.round(dominantTldShare * 100)} % des liens en .${tld[0].key.replace(/^\./, '')}`);
+  }
+  if (countries.length && dominantCountryShare >= 0.9) {
+    signals.push(`concentration géographique : ${Math.round(dominantCountryShare * 100)} % des liens depuis ${countries[0].key}`);
+  }
+  if (countries.length > 1 && dominantCountryShare < 0.4) {
+    signals.push(`dispersion géographique (pays dominant à ${Math.round(dominantCountryShare * 100)} % seulement)`);
+  }
+  if (linkedPages.length === 1 && referringDomains > 5) {
+    signals.push('une seule page du site reçoit des liens externes');
+  } else if (topPageShare >= 0.8 && linkedPages.length > 1) {
+    signals.push(`dépendance à une page unique : ${Math.round(topPageShare * 100)} % des référents pointent ${linkedPages[0].url}`);
+  }
+  const blogPlatform = platformTypes.find((p) => /blog|cms|forum/i.test(p.key));
+  if (blogPlatform && blogPlatform.share >= 0.7) {
+    signals.push(`${Math.round(blogPlatform.share * 100)} % des liens issus de plateformes « ${blogPlatform.key} »`);
+  }
+
+  let recommendation: string;
+  if (!tld.length && !countries.length && !linkedPages.length) {
+    recommendation = 'Répartition non mesurable : aucune distribution renvoyée par la source. Ne pas conclure sur la géographie des liens.';
+  } else if (topPageShare >= 0.8 && linkedPages.length <= 3) {
+    recommendation = `Diluer l'entonnoir de liens : ${Math.round(topPageShare * 100)} % de l'autorité arrive sur ${linkedPages[0]?.url || 'une seule page'}. Cibler en priorité 3 pages de conversion ou piliers secondaires dans les prochaines acquisitions de liens.`;
+  } else if (dominantCountryShare >= 0.9 && countries.length) {
+    recommendation = `Profil ancré sur ${countries[0].key} : cohérent pour une cible locale, limitant pour une ambition internationale. Aller chercher 5 à 10 domaines hors ${countries[0].key} si l'expansion est visée.`;
+  } else if (dominantTldShare >= 0.85 && tld.length) {
+    recommendation = `Élargir la nature des sources : ${Math.round(dominantTldShare * 100)} % des liens partagent le même TLD. Viser des .org / .edu / médias sectoriels pour crédibiliser le profil.`;
+  } else {
+    recommendation = 'Répartition équilibrée : conserver la même diversité de sources et de pages cibles lors des prochaines acquisitions.';
+  }
+
+  const measuredBlocks = [tld.length > 0, countries.length > 0, linkedPages.length > 0].filter(Boolean).length;
+  const source: BacklinkDistribution['source'] =
+    measuredBlocks === 0 ? 'unavailable' : measuredBlocks === 3 ? 'dataforseo' : 'partial';
+
+  return {
+    tld,
+    countries,
+    platform_types: platformTypes,
+    dominant_tld_share: dominantTldShare,
+    dominant_country_share: dominantCountryShare,
+    top_page_share: topPageShare,
+    linked_pages_sampled: linkedPages.length,
+    signals,
+    recommendation,
+    source,
+  };
+}
+
 
 /**
  * Récupère l'autorité de domaine + profil de backlinks.
@@ -355,7 +497,7 @@ export async function fetchDomainAuthority(
   }
 
   try {
-    const [summaryRes, refRes, anchorRes] = await Promise.allSettled([
+    const [summaryRes, refRes, anchorRes, pagesRes] = await Promise.allSettled([
       dfsPost('backlinks/summary/live', [{ target: domain, internal_list_limit: 10, include_subdomains: true }], 'backlinks/summary/live', domain),
       dfsPost(
         'backlinks/referring_domains/live',
@@ -367,6 +509,12 @@ export async function fetchDomainAuthority(
         'backlinks/anchors/live',
         [{ target: domain, limit: ANCHORS_SAMPLE_LIMIT, order_by: ['backlinks,desc'], internal_list_limit: 1 }],
         'backlinks/anchors/live',
+        domain,
+      ),
+      dfsPost(
+        'backlinks/domain_pages/live',
+        [{ target: domain, limit: LINKED_PAGES_SAMPLE_LIMIT, order_by: ['referring_domains,desc'], internal_list_limit: 1 }],
+        'backlinks/domain_pages/live',
         domain,
       ),
     ]);
@@ -411,6 +559,17 @@ export async function fetchDomainAuthority(
       dofollowRatio: dofollow,
     });
 
+    // Lot 2 : répartitions TLD / pays / plateformes (déjà dans le résumé, 0 appel
+    // supplémentaire) + pages cibles mesurées via `domain_pages`.
+    const linkedPages = pagesRes.status === 'fulfilled' ? extractLinkedPages(pagesRes.value) : [];
+    const distribution = computeBacklinkDistribution({
+      tld: extractDistribution(s.referring_links_tld),
+      countries: extractDistribution(s.referring_links_countries),
+      platformTypes: extractDistribution(s.referring_links_platform_types),
+      linkedPages,
+      referringDomains,
+    });
+
     // Confiance : la mesure vaut ce que vaut l'échantillon reçu.
     let confidence: AuthorityData['confidence'] = 'high';
     const missing: string[] = [];
@@ -419,6 +578,8 @@ export async function fetchDomainAuthority(
     if (anchorsSource === 'unavailable') missing.push("échantillon d'ancres absent");
     else if (anchorsSource === 'summary_sample') missing.push('ancres issues du résumé, endpoint dédié indisponible');
     if (!rawRank) missing.push('rank de domaine absent');
+    if (distribution.source === 'unavailable') missing.push('répartition (TLD, pays, pages cibles) non renvoyée');
+    else if (distribution.source === 'partial') missing.push('répartition partielle');
     if (missing.length >= 2) confidence = 'low';
     else if (missing.length === 1) confidence = 'medium';
 
@@ -440,6 +601,8 @@ export async function fetchDomainAuthority(
       top_anchors: anchors.slice(0, 8).map((a) => a.anchor),
       top_anchors_detail: anchors.slice(0, 10),
       toxicity,
+      distribution,
+      top_linked_pages: linkedPages.slice(0, 10),
       organic_visibility: opts?.organicVisibility ?? null,
       referring_domains_sampled: refSample.length,
       anchors_sampled: anchors.length,
@@ -492,6 +655,25 @@ export function buildAuthorityPromptSection(a: AuthorityData | null): string {
       t.signals.length ? `- Signaux de toxicité : ${t.signals.join(' ; ')}` : `- Signaux de toxicité : aucun`,
       `- Action liens : ${t.recommendation}`,
     );
+  }
+  const d = a.distribution;
+  if (d && d.source !== 'unavailable') {
+    const pct = (b: DistributionBucket) => `${b.key} ${Math.round(b.share * 100)} %`;
+    if (d.tld.length) lines.push(`- Répartition par TLD (mesurée) : ${d.tld.slice(0, 5).map(pct).join(', ')}`);
+    if (d.countries.length) lines.push(`- Répartition par pays (mesurée) : ${d.countries.slice(0, 5).map(pct).join(', ')}`);
+    if (d.platform_types.length) lines.push(`- Types de plateformes référentes : ${d.platform_types.slice(0, 5).map(pct).join(', ')}`);
+    if (a.top_linked_pages.length) {
+      lines.push(
+        `- Pages cibles les plus liées (${d.linked_pages_sampled} pages liées dans l'échantillon) : ${a.top_linked_pages.slice(0, 5).map(p => `${p.url} (${p.referring_domains} domaines)`).join(' ; ')}`,
+        `- Concentration sur la page la plus liée : ${Math.round(d.top_page_share * 100)} % des domaines référents`,
+      );
+    }
+    lines.push(
+      d.signals.length ? `- Signaux de répartition : ${d.signals.join(' ; ')}` : `- Signaux de répartition : aucun déséquilibre notable`,
+      `- Action répartition : ${d.recommendation}`,
+    );
+  } else {
+    lines.push(`- RÉPARTITION DU PROFIL (TLD, pays, pages cibles) : non mesurée dans cet audit. N'invente ni géographie ni page cible.`);
   }
   const v = a.organic_visibility;
   if (v && v.source === 'dataforseo_labs') {
