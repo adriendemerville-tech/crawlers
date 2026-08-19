@@ -107,6 +107,10 @@ export interface AuthorityData {
   top_anchors: string[];
   top_anchors_detail: { anchor: string; count: number }[];
   toxicity: BacklinkToxicity | null;
+  /** Répartition mesurée du profil de liens + pages cibles (lot 2) */
+  distribution: BacklinkDistribution | null;
+  /** Pages du domaine les plus liées (top 10 de l'échantillon) */
+  top_linked_pages: LinkedPage[];
   organic_visibility?: OrganicVisibility | null;
   /** Nombre de domaines référents réellement analysés (échantillon, ≠ total) */
   referring_domains_sampled: number;
