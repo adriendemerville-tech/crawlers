@@ -843,6 +843,15 @@ export function MarinaConsoleTab() {
           {t3(language, 'Page Marina', 'Marina Page', 'Página Marina')}
         </Button>
       </div>
+
+      {mergedReport && (
+        <MarinaReportPreviewModal
+          isOpen
+          onClose={() => setMergedReport(null)}
+          htmlContent={mergedReport.html}
+          domain={mergedReport.domain}
+        />
+      )}
     </div>
   );
 }
