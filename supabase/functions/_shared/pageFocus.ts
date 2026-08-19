@@ -180,18 +180,42 @@ export function derivePageFocus(
       locality: null,
       service: null,
       focusTerms: [],
+      kind: 'home',
+      secondaryAngle: null,
       title: meta.title ?? null,
       h1: meta.h1 ?? null,
     };
   }
 
+  // Page avis / témoignages : la réputation devient un angle secondaire, le
+  // focus est hérité du segment parent (agence ou prestation + ville).
+  const isReviewPage = segments.some((s) => REVIEW_SEGMENTS.test(s.replace(/\.(html?|php|aspx?)$/i, '')));
+
   // Dernier segment non structurel (« /services/salle-de-bain-marseille »).
   let slug = segments[segments.length - 1];
   for (let i = segments.length - 1; i >= 0; i--) {
-    if (!STRUCTURAL_SEGMENTS.test(segments[i]) && humanize(segments[i]).length >= 3) {
+    const seg = segments[i].replace(/\.(html?|php|aspx?)$/i, '');
+    if (STRUCTURAL_SEGMENTS.test(seg) || REVIEW_SEGMENTS.test(seg)) continue;
+    if (humanize(seg).length >= 3) {
       slug = segments[i];
       break;
     }
+  }
+  // /avis seul (aucun parent significatif) : on ne teste pas « avis », on
+  // retombe au niveau domaine plutôt que de produire un focus vide de sens.
+  if (isReviewPage && REVIEW_SEGMENTS.test(slug.replace(/\.(html?|php|aspx?)$/i, ''))) {
+    return {
+      path,
+      isHome: false,
+      slugPhrase: '',
+      locality: null,
+      service: null,
+      focusTerms: [],
+      kind: 'reviews',
+      secondaryAngle: 'reputation',
+      title: meta.title ?? null,
+      h1: meta.h1 ?? null,
+    };
   }
 
   const { locality, rest } = extractLocality(slug.replace(/\.(html?|php|aspx?)$/i, ''), meta.knownLocalities || []);
@@ -221,10 +245,13 @@ export function derivePageFocus(
     locality,
     service,
     focusTerms,
+    kind: isReviewPage ? 'reviews' : 'standard',
+    secondaryAngle: isReviewPage ? 'reputation' : null,
     title: meta.title ?? null,
     h1: meta.h1 ?? null,
   };
 }
+
 
 /**
  * Besoin testable porté par la page (« salle de bain à Marseille »).
