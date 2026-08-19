@@ -19,7 +19,7 @@
  * Consommateurs : calculate-llm-visibility (puis llmBenchmarks).
  */
 
-export type TopicAxis = 'value_prop' | 'covered' | 'ranked' | 'demand' | 'identity';
+export type TopicAxis = 'page_focus' | 'value_prop' | 'covered' | 'ranked' | 'demand' | 'identity';
 
 export interface TopicSelection {
   topic: string;
@@ -250,7 +250,21 @@ export async function selectQuestionTopics(
     value_proposition?: string | null;
     secondary_propositions?: string | null;
   },
-  opts: { max?: number; brandTerms?: string[]; preferTaskTopics?: boolean } = {},
+  opts: {
+    max?: number;
+    brandTerms?: string[];
+    preferTaskTopics?: boolean;
+    /**
+     * Focus de la PAGE auditée (URL profonde). Quand il est fourni :
+     *  - le besoin de la page occupe le benchmark n°1 (axe `page_focus`) à la
+     *    place de la proposition de valeur globale du domaine ;
+     *  - les requêtes de l'univers de mots-clés sont restreintes à celles qui
+     *    partagent au moins un terme de la page.
+     * Sans cela, /salle-de-bain-marseille et /saint-remy-de-provence recevaient
+     * exactement les mêmes neuf questions.
+     */
+    pageFocus?: { topic?: string | null; terms?: string[]; variants?: string[] } | null;
+  } = {},
 ): Promise<QuestionTopicsResult> {
   const max = opts.max ?? 3;
   const brandTerms = (opts.brandTerms || []).map((b) => (b || '').toLowerCase()).filter(Boolean);
@@ -270,10 +284,24 @@ export async function selectQuestionTopics(
     });
   };
 
-  // ── 0. Proposition de valeur centrale : benchmark n°1 réservé ──
+  // ── 0. Besoin porté par la page auditée (URL profonde) ──
+  const pageTopic = normalizeTopic(String(opts.pageFocus?.topic || ''));
+  const pageTerms = (opts.pageFocus?.terms || [])
+    .map((t) => String(t || '').toLowerCase().trim())
+    .filter((t) => t.length >= 3);
+  const hasPageScope = !!pageTopic || pageTerms.length > 0;
+  const pageVariants = (opts.pageFocus?.variants || [])
+    .map((v) => normalizeTopic(String(v || '')))
+    .filter((v) => v && v !== pageTopic && isUsableTopic(v, brandTerms));
+  if (pageTopic && isUsableTopic(pageTopic, brandTerms)) {
+    kept.push(pageTopic);
+    selections.push({ topic: pageTopic, axis: 'page_focus', volume: null, position: null, intent: null });
+  }
+
+  // ── 0 bis. Proposition de valeur centrale : benchmark n°1 réservé au domaine ──
   const coreProp = normalizeValueProposition(String(identity.value_proposition || ''), brandTerms);
   const secondaryProps = splitSecondaryPropositions(identity.secondary_propositions, brandTerms);
-  if (coreProp) {
+  if (coreProp && !hasPageScope) {
     kept.push(coreProp);
     selections.push({ topic: coreProp, axis: 'value_prop', volume: null, position: null, intent: null });
   }
@@ -295,7 +323,17 @@ export async function selectQuestionTopics(
       // technique », « optimisation geo »), pas sur des types de prestataires
       // (« agence de référencement naturel ») qui sont sa cible, pas son besoin.
       const taskCands = allCands.filter((c) => !isActorTopic(c.topic));
-      const cands = opts.preferTaskTopics && taskCands.length > 0 ? taskCands : allCands;
+      let cands = opts.preferTaskTopics && taskCands.length > 0 ? taskCands : allCands;
+      // Page profonde : ne tester que les requêtes qui partagent un terme avec
+      // la page (service et/ou localité). Une page « salle de bain marseille »
+      // ne doit pas être benchmarkée sur « rénovation énergétique lyon ».
+      if (pageTerms.length > 0) {
+        const scoped = cands.filter((c) => pageTerms.some((t) => c.topic.toLowerCase().includes(t)));
+        if (scoped.length > 0) {
+          console.log(`[questionTopics] scope page : ${scoped.length}/${cands.length} requêtes retenues (termes : ${pageTerms.join(', ')})`);
+          cands = scoped;
+        }
+      }
       if (cands.length > 0) {
         push(pickCovered(cands), 'covered');
         push(pickRanked(cands, kept), 'ranked');
@@ -322,9 +360,15 @@ export async function selectQuestionTopics(
             push(c, 'demand', 0.9);
           }
         }
-        // Dernier complément : les propositions de valeur secondaires, quand la
-        // SERP ne fournit pas trois zones distinctes.
+        // Dernier complément : variantes de la page auditée, puis propositions
+        // de valeur secondaires du domaine.
         if (kept.length < max) {
+          for (const p of pageVariants) {
+            if (kept.length >= max) break;
+            push({ topic: p, volume: 0, position: null, intent: null }, 'page_focus', 0.9);
+          }
+        }
+        if (kept.length < max && !hasPageScope) {
           for (const p of secondaryProps) {
             if (kept.length >= max) break;
             push({ topic: p, volume: 0, position: null, intent: null }, 'value_prop', 0.9);
@@ -339,11 +383,16 @@ export async function selectQuestionTopics(
     }
   }
 
-  // ── 2. Repli : carte d'identité. Les deux propositions de valeur
-  // SECONDAIRES passent avant les items bruts de `products_services` : elles
-  // décrivent une offre, pas une liste de mots.
-  for (const p of secondaryProps) {
-    push({ topic: p, volume: 0, position: null, intent: null }, 'value_prop');
+  // ── 2. Repli : page auditée d'abord (variantes déterministes du slug), puis
+  // carte d'identité du domaine. Les deux propositions de valeur SECONDAIRES
+  // passent avant les items bruts de `products_services`.
+  for (const p of pageVariants) {
+    push({ topic: p, volume: 0, position: null, intent: null }, 'page_focus');
+  }
+  if (!hasPageScope) {
+    for (const p of secondaryProps) {
+      push({ topic: p, volume: 0, position: null, intent: null }, 'value_prop');
+    }
   }
   const parts = String(identity.products_services || '')
     .split(/[,;]|\set\s/gi)

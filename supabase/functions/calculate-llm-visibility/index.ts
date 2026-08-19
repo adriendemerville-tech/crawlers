@@ -6,6 +6,7 @@ import { generateNaturalPrompts, type SiteContext as NaturalSiteContext } from '
 import { buildLlmBenchmarks } from '../_shared/llmBenchmarks.ts'
 import { naturalizeBenchmarkQuestions } from '../_shared/benchmarkQuestionWriter.ts'
 import { selectQuestionTopics, isToolLikeSite } from '../_shared/questionTopics.ts'
+import { derivePageFocus, pageFocusTopic } from '../_shared/pageFocus.ts'
 import { resolveIdentityCard } from '../_shared/identityResolver.ts'
 import { buildAggregate, computeCoverage } from '../_shared/llmVisibilityScore.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
@@ -387,7 +388,16 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
   const supabase = getServiceClient()
 
   try {
-    const { tracked_site_id, user_id, siteContext: externalContext } = await req.json()
+    const {
+      tracked_site_id,
+      user_id,
+      siteContext: externalContext,
+      // URL réellement auditée (peut être une page profonde) + métadonnées
+      // crawlées. Sans ça, /salle-de-bain-marseille et /saint-remy-de-provence
+      // recevaient les mêmes questions que la home.
+      pageUrl,
+      pageMeta,
+    } = await req.json()
 
     if (!tracked_site_id || !user_id) {
       return jsonError('Missing tracked_site_id or user_id', 400)
@@ -457,6 +467,39 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
 
     const patterns = buildBrandPatterns(enrichedSite)
+
+    // ── Carte d'identité de PAGE (déterministe, 0 token) ──
+    // L'URL auditée peut être une page profonde. Le slug (+ title/H1 crawlés)
+    // porte l'intention réelle : prestation et, souvent, localité. Deux pages
+    // d'un même domaine ne peuvent pas être testées avec les mêmes questions.
+    const auditedUrl = String(pageUrl || '').trim()
+    const pageFocus = auditedUrl
+      ? derivePageFocus(auditedUrl, {
+          title: pageMeta?.title ?? null,
+          h1: pageMeta?.h1 ?? null,
+          knownLocalities: [enrichedSite.commercial_area, (enrichedSite as any).city]
+            .filter(Boolean)
+            .map(String),
+        })
+      : null
+    const pageTopic = pageFocus && !pageFocus.isHome ? pageFocusTopic(pageFocus, 'fr') : ''
+    const pageScoped = !!pageTopic
+    if (pageScoped) {
+      console.log(`[llm-vis] scope page ${pageFocus!.path} → besoin « ${pageTopic} »` +
+        (pageFocus!.locality ? ` (localité ${pageFocus!.locality})` : ' (sans localité)'))
+    }
+    // Variantes déterministes pour compléter les 3 benchmarks d'une page :
+    // prestation seule, prestation + zone, localité + secteur.
+    const pageVariants = pageScoped
+      ? [
+          pageFocus!.service || '',
+          pageFocus!.locality && enrichedSite.market_sector
+            ? `${String(enrichedSite.market_sector).toLowerCase()} ${pageFocus!.locality}`
+            : '',
+          pageFocus!.slugPhrase,
+        ].filter((v) => v && v !== pageTopic)
+      : []
+
     // Étape préalable déterministe : quels besoins concrets faut-il tester ?
     // Priorité aux requêtes réelles du marché (keyword_universe), sinon
     // carte d'identité. Évite les questions hors sol ("un outil pour Travaux…").
@@ -478,6 +521,9 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
           entity_type: enrichedSite.entity_type,
           business_model: enrichedSite.business_model,
         }),
+        pageFocus: pageScoped
+          ? { topic: pageTopic, terms: pageFocus!.focusTerms, variants: pageVariants }
+          : null,
       },
     )
     console.log(`[llm-visibility] question topics (${topicSelection.source}):`, topicSelection.selections?.map((s: any) => `${s.axis}:${s.topic}`) || topicSelection.topics)
@@ -488,7 +534,9 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         market_sector: enrichedSite.market_sector,
         products_services: enrichedSite.products_services,
         target_audience: enrichedSite.target_audience,
-        commercial_area: enrichedSite.commercial_area,
+        // Page localisée : la question de contexte doit citer la ville de la
+        // page, pas la zone de chalandise globale du domaine.
+        commercial_area: (pageScoped && pageFocus!.locality) || enrichedSite.commercial_area,
         entity_type: enrichedSite.entity_type,
         media_specialties: enrichedSite.media_specialties,
         business_model: enrichedSite.business_model,
@@ -500,6 +548,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         brand_name: enrichedSite.brand_name,
         site_name: enrichedSite.site_name,
         domain: enrichedSite.domain,
+        page_keywords: pageScoped ? pageFocus!.focusTerms : [],
       },
       'fr',
       [],
@@ -509,11 +558,15 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
     const weekStart = getWeekStart()
 
+    // Une page profonde a ses propres questions : son cache doit être séparé de
+    // celui du domaine, sinon elle écrase (ou hérite de) la mesure de la home.
+    const cacheDomain = pageScoped ? `${site.domain}${pageFocus!.path}` : site.domain
+
     // ── Check shared domain cache first ──
     const { data: cachedData } = await supabase
       .from('domain_data_cache')
       .select('result_data, created_at')
-      .eq('domain', site.domain)
+      .eq('domain', cacheDomain)
       .eq('data_type', 'llm_visibility')
       .eq('week_start_date', weekStart)
       .gt('expires_at', new Date().toISOString())
@@ -568,7 +621,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
           market_sector: enrichedSite.market_sector,
           products_services: enrichedSite.products_services,
           target_audience: enrichedSite.target_audience,
-          commercial_area: enrichedSite.commercial_area,
+          commercial_area: (pageScoped && pageFocus!.locality) || enrichedSite.commercial_area,
           entity_type: enrichedSite.entity_type,
           business_model: enrichedSite.business_model,
           value_proposition: (enrichedSite as any).value_proposition,
@@ -576,7 +629,10 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
           brand_name: enrichedSite.brand_name,
           site_name: enrichedSite.site_name,
           domain: enrichedSite.domain,
-        },
+          page_focus: pageScoped
+            ? { topic: pageTopic, locality: pageFocus!.locality, terms: pageFocus!.focusTerms }
+            : null,
+        } as any,
         'fr',
       )
       benchmarks = naturalized.benchmarks
@@ -623,7 +679,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       score: null,
     }))
     await supabase.from('domain_data_cache').upsert({
-      domain: site.domain,
+      domain: cacheDomain,
       data_type: 'llm_visibility',
       week_start_date: weekStart,
       result_data: {
@@ -882,7 +938,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
 
     await supabase.from('domain_data_cache').upsert({
-      domain: site.domain,
+      domain: cacheDomain,
       data_type: 'llm_visibility',
       week_start_date: weekStart,
       result_data: cachePayload,
