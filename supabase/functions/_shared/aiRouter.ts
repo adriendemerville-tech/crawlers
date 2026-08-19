@@ -108,6 +108,13 @@ export async function callRoutedAI(
         response_format: opts.jsonMode ? { type: 'json_object' } : undefined,
         timeoutMs: opts.timeoutMs ?? 60_000,
       });
+      logAiUsage({
+        gateway: 'groq',
+        model: routing!.model,
+        edgeFunction: opts.edgeFunction,
+        feature,
+        usage: r.raw?.usage,
+      });
       return {
         content: r.content,
         tool_calls: r.tool_calls,
@@ -122,7 +129,17 @@ export async function callRoutedAI(
   }
 
   const model = routing?.original_model || opts.fallbackModel || 'google/gemini-3-flash-preview';
-  return await callLovable(model, messages, opts);
+  const result = await callLovable(model, messages, opts);
+  logAiUsage({
+    gateway: 'lovable',
+    model,
+    edgeFunction: opts.edgeFunction,
+    feature,
+    usage: result.raw?.usage,
+    // Un repli Groq → Lovable est un fallback à part entière.
+    isFallback: useGroq,
+  });
+  return result;
 }
 
 async function callLovable(
