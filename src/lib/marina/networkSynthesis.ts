@@ -384,6 +384,8 @@ interface FamilyStats {
   /** Trou 6 — couverture réelle de chaque métrique dans le gabarit. */
   coverage: { tech: Coverage; geo: Coverage; global: Coverage; words: Coverage; lcp: Coverage };
   solidity: Solidity;
+  /** Trou 9 — qualification du gabarit par le contenu, pas seulement par l'URL. */
+  contentCheck: { status: ContentCheck; note: string };
 }
 
 function familyStats(family: TemplateFamily): FamilyStats {
@@ -610,7 +612,13 @@ export function buildNetworkSynthesisHTML(
       s.solidity === 'solide'
         ? ''
         : `<span style="display:block;color:${MUTED};font-size:11px;font-weight:400;">${s.solidity === 'indicatif' ? 'effectif faible, valeur indicative' : 'effectif trop faible, non généralisable'}</span>`
-    }`,
+    }<span style="display:block;color:${MUTED};font-size:11px;font-weight:400;" title="${esc(s.contentCheck.note)}">${
+      s.contentCheck.status === 'confirme'
+        ? 'gabarit confirmé par le contenu'
+        : s.contentCheck.status === 'heterogene'
+          ? 'contenu hétérogène : moyenne à lire avec prudence'
+          : 'regroupement morphologique, non confirmé par le contenu'
+    }</span>`,
     String(s.count),
     cell(s.global, s.coverage.global, (v) => `${v}/100`),
     cell(s.tech, s.coverage.tech, (v) => String(v)),
