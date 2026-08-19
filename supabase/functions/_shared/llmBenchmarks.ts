@@ -292,6 +292,14 @@ export function buildLlmBenchmarks(
      * sur ceux de la home.
      */
     page_keywords?: string[];
+    /**
+     * Angle secondaire porté par la page auditée. `reputation` (pages avis /
+     * témoignages) remplace UNE question sur neuf par une question de preuve
+     * sociale : le but d'une page avis reste de vendre la prestation, la
+     * réputation n'en est que le levier.
+     */
+    page_secondary_angle?: 'reputation' | null;
+
   },
   lang: PromptLang = 'fr',
   extraBrandNames: (string | null | undefined)[] = [],
@@ -503,8 +511,32 @@ export function buildLlmBenchmarks(
     else last.prompts[last.prompts.length - 1] = prompt;
   }
 
+  // Page avis / témoignages : UNE question sur neuf passe en preuve sociale.
+  // Les huit autres restent des questions d'achat, car une page avis sert à
+  // vendre la prestation, pas à faire lire des avis.
+  const reputationOk = site.page_secondary_angle === 'reputation' && result.length > 0;
+  if (reputationOk) {
+    const first = result[0];
+    const need = framedNeed(needs[0]).need;
+    const placeRaw = (pageKeywords.find((k) => /^[A-ZÉÈÀÂÎÔÛ]/.test(k)) || (ctx.commercial_area || '').trim());
+    // Jamais deux fois la même ville : le besoin peut déjà la porter.
+    const place = placeRaw && !need.toLowerCase().includes(placeRaw.toLowerCase()) ? placeRaw : '';
+    const at = place ? (lang === 'en' ? ` in ${place}` : lang === 'es' ? ` en ${place}` : ` à ${place}`) : '';
+
+    const text = lang === 'en'
+      ? `Who has the best customer reviews for ${need}${at}, and are those reviews trustworthy?`
+      : lang === 'es'
+        ? `¿Quién tiene las mejores opiniones de clientes para ${need}${at} y son fiables?`
+        : `Qui a les meilleurs avis clients pour ${need}${at}, et ces avis sont-ils fiables ?`;
+    const prompt: BenchmarkPrompt = { intent: 'reputation', text };
+    const slot = first.prompts.findIndex((p) => p.intent === 'comparison');
+    if (slot >= 0) first.prompts[slot] = prompt;
+    else first.prompts[first.prompts.length - 1] = prompt;
+  }
+
+
   const coverage = keywordCoverage(result, anchorKeywords);
-  console.log(`[llmBenchmarks] ancrage carte d'identité : ${coverage.covered}/${coverage.total} questions (${Math.round(coverage.ratio * 100)} %)${competitorOk ? ' · 1 question concurrent' : ''}`);
+  console.log(`[llmBenchmarks] ancrage carte d'identité : ${coverage.covered}/${coverage.total} questions (${Math.round(coverage.ratio * 100)} %)${competitorOk ? ' · 1 question concurrent' : ''}${reputationOk ? ' · 1 question réputation (page avis)' : ''}`);
 
   return result;
 }

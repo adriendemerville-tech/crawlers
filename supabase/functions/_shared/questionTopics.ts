@@ -323,21 +323,34 @@ export async function selectQuestionTopics(
       // technique », « optimisation geo »), pas sur des types de prestataires
       // (« agence de référencement naturel ») qui sont sa cible, pas son besoin.
       const taskCands = allCands.filter((c) => !isActorTopic(c.topic));
-      let cands = opts.preferTaskTopics && taskCands.length > 0 ? taskCands : allCands;
-      // Page profonde : ne tester que les requêtes qui partagent un terme avec
-      // la page (service et/ou localité). Une page « salle de bain marseille »
-      // ne doit pas être benchmarkée sur « rénovation énergétique lyon ».
+      const broadCands = opts.preferTaskTopics && taskCands.length > 0 ? taskCands : allCands;
+      let cands = broadCands;
+      // Page profonde : les DEUX PREMIERS tiers des questions restent sur le
+      // thème de la page (requêtes partageant un terme avec le slug), le
+      // dernier tiers ouvre volontairement sur le marché du domaine. Une page
+      // ne se vend pas que sur son thème exact : un prospect arrive aussi par
+      // une requête plus large, et le tester uniquement sur son slug masque
+      // toute la demande adjacente.
+      let scopedCands: Candidate[] = [];
       if (pageTerms.length > 0) {
-        const scoped = cands.filter((c) => pageTerms.some((t) => c.topic.toLowerCase().includes(t)));
-        if (scoped.length > 0) {
-          console.log(`[questionTopics] scope page : ${scoped.length}/${cands.length} requêtes retenues (termes : ${pageTerms.join(', ')})`);
-          cands = scoped;
+        scopedCands = cands.filter((c) => pageTerms.some((t) => c.topic.toLowerCase().includes(t)));
+        if (scopedCands.length > 0) {
+          console.log(`[questionTopics] scope page : ${scopedCands.length}/${cands.length} requêtes retenues (termes : ${pageTerms.join(', ')}) · 1 benchmark sur 3 reste au niveau marché`);
+          cands = scopedCands;
         }
       }
       if (cands.length > 0) {
         push(pickCovered(cands), 'covered');
         push(pickRanked(cands, kept), 'ranked');
+        // Tiers « large » : requête du marché du domaine hors termes de page.
+        if (scopedCands.length > 0) {
+          const wide = broadCands.filter((c) => !pageTerms.some((t) => c.topic.toLowerCase().includes(t)));
+          if (wide.length > 0) {
+            push(pickDemand(wide, kept) || pickCovered(wide), 'demand');
+          }
+        }
         push(pickDemand(cands, kept), 'demand');
+
 
         // Repli interne : compléter avec les meilleurs volumes restants
         if (kept.length < max) {

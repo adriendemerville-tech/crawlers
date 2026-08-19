@@ -549,6 +549,10 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         site_name: enrichedSite.site_name,
         domain: enrichedSite.domain,
         page_keywords: pageScoped ? pageFocus!.focusTerms : [],
+        // Page avis / témoignages : 1 question sur 9 en preuve sociale, les
+        // 8 autres restent des questions d'achat sur la prestation.
+        page_secondary_angle: pageFocus?.secondaryAngle ?? null,
+
       },
       'fr',
       [],

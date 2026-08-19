@@ -19,6 +19,8 @@
  * marina (scoping du cache de visibilité IA par page).
  */
 
+export type PageKind = 'home' | 'reviews' | 'standard';
+
 export interface PageFocus {
   /** Chemin normalisé sans slash final (« /salle-de-bain-marseille »), '' pour la home. */
   path: string;
@@ -31,9 +33,17 @@ export interface PageFocus {
   service: string | null;
   /** Mots-clés d'ancrage spécifiques à la page (service + localité + title/H1). */
   focusTerms: string[];
+  /**
+   * Nature de la page. `reviews` = page avis / témoignages : son but reste de
+   * vendre la prestation, la réputation n'est qu'un angle secondaire.
+   */
+  kind: PageKind;
+  /** Angle secondaire à injecter dans UNE question sur neuf (réputation). */
+  secondaryAngle: 'reputation' | null;
   title?: string | null;
   h1?: string | null;
 }
+
 
 const SLUG_STOPWORDS = new Set([
   'de', 'du', 'des', 'la', 'le', 'les', 'un', 'une', 'et', 'ou', 'en', 'a', 'au', 'aux',
@@ -43,6 +53,15 @@ const SLUG_STOPWORDS = new Set([
 
 /** Segments de chemin purement structurels : on remonte au segment précédent. */
 const STRUCTURAL_SEGMENTS = /^(fr|en|es|blog|articles?|actualites?|news|services?|prestations?|realisations?|zones?|zone-d-intervention|villes?|agences?|categorie|category|c|p)$/i;
+
+/**
+ * Segments « avis / témoignages ». Une page avis ne vend pas des avis : elle
+ * vend la prestation de la page (ou de l'agence) parente. On la traite donc
+ * comme un segment structurel — le focus est hérité du segment précédent — et
+ * on ne garde la réputation que comme angle secondaire (1 question sur 9).
+ */
+const REVIEW_SEGMENTS = /^(avis|avis-clients?|avis-google|temoignages?|témoignages?|reviews?|testimonials?|notations?|notes|ratings?)$/i;
+
 
 /** Marqueurs de toponyme français (composition de nom de commune). */
 const LOCALITY_PATTERNS: RegExp[] = [
@@ -161,18 +180,42 @@ export function derivePageFocus(
       locality: null,
       service: null,
       focusTerms: [],
+      kind: 'home',
+      secondaryAngle: null,
       title: meta.title ?? null,
       h1: meta.h1 ?? null,
     };
   }
 
+  // Page avis / témoignages : la réputation devient un angle secondaire, le
+  // focus est hérité du segment parent (agence ou prestation + ville).
+  const isReviewPage = segments.some((s) => REVIEW_SEGMENTS.test(s.replace(/\.(html?|php|aspx?)$/i, '')));
+
   // Dernier segment non structurel (« /services/salle-de-bain-marseille »).
   let slug = segments[segments.length - 1];
   for (let i = segments.length - 1; i >= 0; i--) {
-    if (!STRUCTURAL_SEGMENTS.test(segments[i]) && humanize(segments[i]).length >= 3) {
+    const seg = segments[i].replace(/\.(html?|php|aspx?)$/i, '');
+    if (STRUCTURAL_SEGMENTS.test(seg) || REVIEW_SEGMENTS.test(seg)) continue;
+    if (humanize(seg).length >= 3) {
       slug = segments[i];
       break;
     }
+  }
+  // /avis seul (aucun parent significatif) : on ne teste pas « avis », on
+  // retombe au niveau domaine plutôt que de produire un focus vide de sens.
+  if (isReviewPage && REVIEW_SEGMENTS.test(slug.replace(/\.(html?|php|aspx?)$/i, ''))) {
+    return {
+      path,
+      isHome: false,
+      slugPhrase: '',
+      locality: null,
+      service: null,
+      focusTerms: [],
+      kind: 'reviews',
+      secondaryAngle: 'reputation',
+      title: meta.title ?? null,
+      h1: meta.h1 ?? null,
+    };
   }
 
   const { locality, rest } = extractLocality(slug.replace(/\.(html?|php|aspx?)$/i, ''), meta.knownLocalities || []);
@@ -202,10 +245,13 @@ export function derivePageFocus(
     locality,
     service,
     focusTerms,
+    kind: isReviewPage ? 'reviews' : 'standard',
+    secondaryAngle: isReviewPage ? 'reputation' : null,
     title: meta.title ?? null,
     h1: meta.h1 ?? null,
   };
 }
+
 
 /**
  * Besoin testable porté par la page (« salle de bain à Marseille »).
