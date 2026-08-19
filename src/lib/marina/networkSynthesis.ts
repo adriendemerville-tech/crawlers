@@ -746,7 +746,7 @@ export function buildNetworkSynthesisHTML(
    * autre URL du lot. Un lot de pages mutuellement isolées et un cocon complet
    * ne peuvent plus produire la même conclusion.
    */
-  const withTargets = metas.filter((m) => (m.internalTargets?.length || 0) > 0);
+  const withTargets = scopeMetas.filter((m) => (m.internalTargets?.length || 0) > 0);
   const meshMeasured = withTargets.length >= 2;
   const intraEdges: Array<{ from: string; to: string }> = [];
   const linkedFrom = new Set<string>();
