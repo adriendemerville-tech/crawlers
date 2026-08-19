@@ -152,6 +152,21 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       console.warn(`[strategic-synthesis] Autorité indisponible: ${authorityData?.unavailable_reason || 'non collectée'}`);
     }
 
+    // ── Lot 3 : historisation mensuelle du profil de liens (chemin principal).
+    // L'orchestrateur passe par cette fonction, pas par audit-strategique-ia :
+    // sans cet appel la table `domain_authority_snapshots` reste vide.
+    let authorityTrend: AuthorityTrend | null = null;
+    if (authorityData?.data_source === 'dataforseo') {
+      authorityTrend = await Promise.race([
+        persistAuthoritySnapshot(authorityData),
+        new Promise<null>((r) => setTimeout(() => r(null), 20_000)),
+      ]).catch(() => null);
+      if (authorityTrend) {
+        marketSection += `\n${buildAuthorityTrendPromptSection(authorityTrend)}`;
+        console.log(`[strategic-synthesis] Historique liens: ${authorityTrend.months_tracked} mois, verdict ${authorityTrend.verdict} (Δréf ${authorityTrend.delta_referring_domains ?? 'n/a'})`);
+      }
+    }
+
 
 
     let eeatSection = '';
