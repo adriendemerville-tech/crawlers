@@ -289,6 +289,30 @@ Deno.serve(handleRequest(async (req) => {
       }
       if (authorityData?.data_source === 'dataforseo') console.log(`🔗 Autorité: AS=${authorityData.authority_score}/100 (conf. ${authorityData.confidence}), toxicité=${authorityData.toxicity?.toxicity_score ?? 'n/a'}/100 (${authorityData.toxicity?.verdict ?? '—'}), ref_domains=${authorityData.referring_domains}, backlinks=${authorityData.backlinks_total}`);
       else console.warn(`⚠️ Autorité indisponible: ${authorityData?.unavailable_reason || 'non collectée'}`);
+
+      // ── Lot 3 : historisation mensuelle + tendance mesurée ──
+      // ── Lot 4 : link gap contre les concurrents déclarés (carte d'identité
+      //    d'abord, concurrents SERP détectés en repli) ──
+      if (!isContentMode && authorityData?.data_source === 'dataforseo') {
+        const competitorDomains = resolveCompetitorDomains(
+          {
+            identityCompetitors: (siteIdentityCtx as any)?.competitors,
+            competitorUrls: localCompetitorsAll.map((c: any) => c?.url || null),
+          },
+          domainWithoutWww,
+        );
+        const [trendRes, gapRes] = await Promise.allSettled([
+          withDeadline(persistAuthoritySnapshot(authorityData), 20_000, 'authority_snapshot'),
+          competitorDomains.length
+            ? withDeadline(fetchLinkGap(domainWithoutWww, competitorDomains), 30_000, 'link_gap')
+            : Promise.resolve(null),
+        ]);
+        authorityTrend = trendRes.status === 'fulfilled' ? trendRes.value : null;
+        linkGapData = gapRes.status === 'fulfilled' ? gapRes.value : null;
+        if (authorityTrend) console.log(`📈 Historique liens: ${authorityTrend.months_tracked} mois, verdict ${authorityTrend.verdict} (Δréf ${authorityTrend.delta_referring_domains ?? 'n/a'})`);
+        if (linkGapData) console.log(`🔎 Link gap: ${linkGapData.gap_count} domaines manquants (source ${linkGapData.source}, concurrents ${linkGapData.competitors.join(', ') || 'aucun'})`);
+        else if (competitorDomains.length === 0) console.log('🔎 Link gap ignoré : aucun domaine concurrent exploitable dans la carte d\'identité');
+      }
       console.log(`⏱️ Data collection done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
 
