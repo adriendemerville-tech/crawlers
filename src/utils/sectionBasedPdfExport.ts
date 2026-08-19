@@ -73,16 +73,30 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
 
   await new Promise((r) => setTimeout(r, renderDelay));
 
-  // Collect sections: prefer [data-pdf-section] for fine-grained control,
-  // fall back to direct children of .container
-  const container = iframeDoc.querySelector('.container') || iframeDoc.body;
+  // Collect sections.
+  // ATTENTION : certains rapports (Marina) ne balisent qu'une poignée de blocs
+  // avec [data-pdf-section]. Si on se contentait de ces blocs, le PDF ne
+  // contiendrait qu'une fraction du rapport. On parcourt donc TOUJOURS les
+  // enfants directs du conteneur, en descendant sur [data-pdf-section] quand
+  // un enfant en contient (contrôle fin), sinon on prend l'enfant lui-même.
+  const container = (iframeDoc.querySelector('.container') || iframeDoc.body) as HTMLElement;
 
-  let sections = Array.from(container.querySelectorAll('[data-pdf-section]')) as HTMLElement[];
+  const topLevel = Array.from(container.children) as HTMLElement[];
+  let sections: HTMLElement[] = topLevel.flatMap((child) => {
+    if (child.hasAttribute('data-pdf-section')) return [child];
+    const tagged = Array.from(child.querySelectorAll('[data-pdf-section]')) as HTMLElement[];
+    // On ne descend que si les blocs balisés couvrent l'essentiel de l'enfant,
+    // sinon on perdrait le contenu non balisé.
+    if (tagged.length > 0) {
+      const taggedHeight = tagged.reduce((sum, el) => sum + el.offsetHeight, 0);
+      if (taggedHeight >= (child.offsetHeight || 0) * 0.9) return tagged;
+    }
+    return [child];
+  });
 
-  if (sections.length === 0) {
-    // Fallback: use direct children
-    sections = Array.from(container.children) as HTMLElement[];
-  }
+  sections = sections.filter((el) => el.offsetHeight > 8);
+
+  if (sections.length === 0) sections = topLevel;
 
   // Un bloc plus haut qu'une page était découpé au pixel, ce qui coupait les
   // cadres en bas de page. On le remplace par ses sous-blocs paginables
@@ -100,6 +114,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   };
 
   sections = sections.flatMap((s) => expand(s));
+
 
   // Disclaimer obligatoire en dernière section (sauf s'il est déjà dans le HTML source).
   // Ajouté APRÈS la collecte pour ne jamais court-circuiter le fallback ci-dessus.
