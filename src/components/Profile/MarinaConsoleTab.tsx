@@ -688,18 +688,36 @@ export function MarinaConsoleTab() {
             </div>
           ) : (
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {reports.map((report: any) => {
+              {groupAudits(reports as any[]).map((g) => {
+                const report: any = g.main;
+                const isBatch = g.items.length > 1;
+                const target: any = g.items.find((i: any) => i.hasReport) || report;
                 const scanMode = normalizeScanMode(report.scanMode);
+                const scores = g.items
+                  .map((i: any) => i.globalScore)
+                  .filter((s: any): s is number => typeof s === 'number');
+                const avgScore = scores.length
+                  ? Math.round(scores.reduce((sum: number, s: number) => sum + s, 0) / scores.length)
+                  : null;
                 return (
-                <div key={report.id} className="group flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
+                <div key={g.key} className="group flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm truncate">{report.domain || report.url || '—'}</p>
                     <p className="text-[10px] text-muted-foreground truncate font-mono">
                       {new Date(report.createdAt).toLocaleString(language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'fr-FR')}
-                      {report.globalScore !== null ? ` · ${report.globalScore}/100` : ''}
+                      {avgScore !== null ? ` · ${avgScore}/100` : ''}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    {isBatch && (
+                      <Badge variant="outline" className="text-[10px]">
+                        {t3(language,
+                          `Multipages · ${g.items.length} pages`,
+                          `Multipage · ${g.items.length} pages`,
+                          `Multipágina · ${g.items.length} páginas`
+                        )}
+                      </Badge>
+                    )}
                     {scanMode && (
                       <Badge variant="outline" className="text-[10px]">{scanMode}</Badge>
                     )}
@@ -710,11 +728,11 @@ export function MarinaConsoleTab() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7"
-                      disabled={openingId === report.id}
-                      onClick={() => openReport(report.id)}
+                      disabled={openingId === target.id}
+                      onClick={() => openReport(target.id)}
                       title={t3(language, 'Ouvrir', 'Open', 'Abrir')}
                     >
-                      {openingId === report.id
+                      {openingId === target.id
                         ? <Loader2 className="h-3 w-3 animate-spin" />
                         : <ExternalLink className="h-3 w-3" />}
                     </Button>
@@ -723,7 +741,7 @@ export function MarinaConsoleTab() {
                       size="icon"
                       className="h-7 w-7 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-destructive"
                       disabled={deletingId === report.id}
-                      onClick={() => deleteReport(report.id)}
+                      onClick={() => deleteBatch(g.items.map((i: any) => i.id))}
                       title={t3(language, 'Supprimer', 'Delete', 'Eliminar')}
                     >
                       {deletingId === report.id
@@ -735,6 +753,7 @@ export function MarinaConsoleTab() {
                 );
               })}
             </div>
+
           )}
 
         </CardContent>
