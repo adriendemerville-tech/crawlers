@@ -428,6 +428,8 @@ export interface DomainAuthority {
   top_anchors: string[];
   top_anchors_detail?: { anchor: string; count: number }[];
   toxicity?: BacklinkToxicity | null;
+  distribution?: BacklinkDistribution | null;
+  top_linked_pages?: LinkedPage[];
   organic_visibility?: OrganicVisibility | null;
   confidence?: 'high' | 'medium' | 'low';
   confidence_reason?: string;
