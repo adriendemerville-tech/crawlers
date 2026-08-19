@@ -14,7 +14,12 @@
  *   4. Divulgation méthodologique (une seule fois, en fin de document)
  */
 
-import { buildNetworkSynthesisHTML, type SiteStructureContext } from './networkSynthesis';
+import {
+  computeNetworkSynthesis,
+  type NetworkSynthesisFacts,
+  type SiteStructureContext,
+} from './networkSynthesis';
+
 
 export interface MarinaReportPart {
   url: string;
@@ -308,7 +313,13 @@ function buildGlobalSummary(domain: string, metas: PageMeta[], domainVerdict: st
  */
 export function mergeMarinaReports(
   parts: MarinaReportPart[],
-  opts?: { title?: string; site?: SiteStructureContext },
+  opts?: {
+    title?: string;
+    site?: SiteStructureContext;
+    /** Trou 10 — reçoit les faits de la synthèse réseau (nul sous 2 URLs). */
+    onSynthesis?: (facts: NetworkSynthesisFacts | null) => void;
+  },
+
 ): string {
   if (parts.length === 0) return '';
   if (parts.length === 1) return parts[0].html;
@@ -411,7 +422,18 @@ export function mergeMarinaReports(
     : '';
   // Lecture d'ensemble normalisée : toujours en première position après la page
   // de garde, avant la synthèse exécutive et les fiches par URL.
-  const networkSynthesis = buildNetworkSynthesisHTML(domain, metas, opts?.site);
+  // Trou 10 — les faits de la synthèse sont exposés à l'appelant pour être
+  // archivés et poussés dans le Workbench, sans relecture du HTML.
+  const synthesis = computeNetworkSynthesis(domain, metas, opts?.site);
+  const networkSynthesis = synthesis.html;
+  if (opts?.onSynthesis) {
+    try {
+      opts.onSynthesis(synthesis.facts);
+    } catch {
+      /* la propagation ne doit jamais empêcher la fusion */
+    }
+  }
+
 
 
   const sections = parts

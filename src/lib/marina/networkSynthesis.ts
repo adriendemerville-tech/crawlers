@@ -564,15 +564,50 @@ function normPath(p: string): string {
 }
 
 /**
- * Synthèse réseau complète. Retourne une chaîne vide sous 2 URLs : la lecture
- * d'ensemble n'a alors pas d'objet.
+ * Trou 10 — la synthèse ne vit plus seulement dans le PDF : ses constats sont
+ * exposés sous forme de faits structurés, persistables et comparables dans le
+ * temps, et convertibles en tâches Workbench sans réinterprétation du HTML.
  */
-export function buildNetworkSynthesisHTML(
+export interface NetworkSynthesisFacts {
+  domain: string;
+  urlsAudited: number;
+  regime: CohesionRegime;
+  /** Effectif du sous-lot réseau en régime mixte, sinon toutes les URLs. */
+  scopedUrls: number;
+  techAvg: number | null;
+  geoAvg: number | null;
+  /** techAvg - geoAvg quand les deux sont consolidés. */
+  techGeoGap: number | null;
+  templates: Array<{
+    pattern: string;
+    pages: number;
+    solidity: Solidity;
+    contentCheck: ContentCheck;
+    global: number | null;
+    tech: number | null;
+    geo: number | null;
+  }>;
+  mesh: { measured: boolean; edges: number; pagesWithTargets: number; isolated: number };
+  measuredDuplicates: Array<{ a: string; b: string; similarity: number; verdict: string }>;
+  hubs: { missing: string[]; existing: string[]; unverified: string[] };
+  thinPages: string[];
+  orphanPages: string[];
+  /** Structure de domaine réellement exploitée pour vérifier les piliers. */
+  structureVerified: boolean;
+  recommendations: NetworkRecommendation[];
+}
+
+/**
+ * Synthèse réseau complète : HTML du bloc de tête + faits structurés.
+ * `facts` est nul sous 2 URLs, la lecture d'ensemble n'ayant alors pas d'objet.
+ */
+export function computeNetworkSynthesis(
   domain: string,
   metas: PageMeta[],
   site?: SiteStructureContext,
-): string {
-  if (metas.length < 2) return '';
+): { html: string; facts: NetworkSynthesisFacts | null } {
+  if (metas.length < 2) return { html: '', facts: null };
+
 
 
   const families = detectTemplates(metas);
@@ -1304,7 +1339,45 @@ export function buildNetworkSynthesisHTML(
      </ul>`,
   );
 
-  return `
+  const facts: NetworkSynthesisFacts = {
+    domain,
+    urlsAudited: metas.length,
+    regime: cohesion.regime,
+    scopedUrls: scopeMetas.length,
+    techAvg,
+    geoAvg,
+    techGeoGap: techAvg !== null && geoAvg !== null ? techAvg - geoAvg : null,
+    templates: stats.map((s) => ({
+      pattern: s.family.pattern,
+      pages: s.count,
+      solidity: s.solidity,
+      contentCheck: s.contentCheck.status,
+      global: s.global,
+      tech: s.tech,
+      geo: s.geo,
+    })),
+    mesh: {
+      measured: meshMeasured,
+      edges: intraEdges.length,
+      pagesWithTargets: withTargets.length,
+      isolated: isolatedInLot.length,
+    },
+    measuredDuplicates: dupInScope,
+    hubs: {
+      missing: missingHubs.map(([p]) => String(p)),
+      existing: existingHubs.map(([p]) => String(p)),
+      unverified: unverifiedHubs.map(([p]) => String(p)),
+    },
+    thinPages: metas
+      .filter((m) => m.isThin || (num(m.words) !== null && (m.words as number) < 300))
+      .map((m) => m.path),
+    orphanPages: orphans.map((m) => m.path),
+    structureVerified: crawlUsable,
+    recommendations,
+  };
+
+  const html = `
+
   <section class="marina-network-synthesis section" data-pdf-section
            style="page-break-after:always;padding:32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;border-left:6px solid ${VIOLET};">
     <p style="letter-spacing:.16em;text-transform:uppercase;font-size:11px;margin:0 0 6px 0;color:${MUTED};">Marina — lecture d'ensemble</p>
@@ -1323,4 +1396,16 @@ export function buildNetworkSynthesisHTML(
     ${block7}
     ${block8}
   </section>`;
+
+  return { html, facts };
 }
+
+/** Compatibilité : HTML seul, pour les appels qui n'exploitent pas les faits. */
+export function buildNetworkSynthesisHTML(
+  domain: string,
+  metas: PageMeta[],
+  site?: SiteStructureContext,
+): string {
+  return computeNetworkSynthesis(domain, metas, site).html;
+}
+
