@@ -76,7 +76,7 @@ export const startMarinaFreeAudit = createServerFn({ method: 'POST' })
     if ((ipCount ?? 0) >= MARINA_FREE_QUOTA) {
       return {
         error: 'quota_exhausted' as const,
-        message: `Vos ${MARINA_FREE_QUOTA} rapports gratuits ont été utilisés. Créez un compte pour continuer (5 crédits offerts = 1 rapport).`,
+        message: `Vos ${MARINA_FREE_QUOTA} rapports gratuits ont été utilisés. Créez un compte pour continuer (20 crédits offerts).`,
         remaining: 0,
       };
     }

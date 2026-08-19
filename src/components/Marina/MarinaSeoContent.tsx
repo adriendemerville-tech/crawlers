@@ -12,7 +12,7 @@ import { MARINA_FREE_QUOTA } from '@/lib/marinaFree.constants';
 const FAQ: Array<{ q: string; a: string }> = [
   {
     q: "L'audit Marina est-il vraiment gratuit ?",
-    a: `Oui. Les ${MARINA_FREE_QUOTA} premiers rapports sont offerts, sans carte bancaire ni abonnement : une adresse e-mail suffit. Au-delà, un rapport coûte 5 crédits sur un compte Crawlers.`,
+    a: `Oui. Les ${MARINA_FREE_QUOTA} premiers rapports sont offerts, sans carte bancaire ni abonnement : une adresse e-mail suffit. Au-delà, un rapport coûte 30 crédits sur un compte Crawlers.`,
   },
   {
     q: 'Que contient le rapport ?',

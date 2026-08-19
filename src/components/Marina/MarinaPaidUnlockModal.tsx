@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { createMarinaPaidPass, getMarinaPassStatus, startMarinaPaidAudit } from '@/lib/marinaFree.functions';
 
 const PASS_STORAGE_KEY = 'marina_paid_pass_token';
-export const MARINA_ONESHOT_PRICE_EUR = 15;
+export const MARINA_ONESHOT_PRICE_EUR = 9;
 
 interface Props {
   open: boolean;
@@ -143,7 +143,7 @@ export function MarinaPaidUnlockModal({ open, onOpenChange, url, email, language
               : `Débloquer l'audit — ${MARINA_ONESHOT_PRICE_EUR} €`}
           </Button>
           <p className="text-xs text-muted-foreground text-center">
-            Créer un compte reste gratuit : 5 crédits offerts, soit un rapport Marina inclus.
+            Créer un compte reste gratuit : 20 crédits offerts à l'inscription.
           </p>
         </div>
       </DialogContent>

@@ -616,7 +616,7 @@ const DOC_SECTIONS: DocSection[] = [
         id: 'marina-overview',
         title: "Qu'est-ce que Marina ?",
         content: `Marina est un pipeline d'audit SEO/GEO automatisé qui génère un rapport HTML complet de 15+ pages en ~3 minutes. Il combine en une seule passe : audit technique (200 critères), audit stratégique GEO, visibilité IA (5 LLMs), et analyse de cocon sémantique.
-<p class="mt-2"><strong>Coût :</strong> 5 crédits par rapport.</p>
+<p class="mt-2"><strong>Coût :</strong> 30 crédits par rapport.</p>
 <p class="mt-1"><strong>Page dédiée :</strong> <a href="/marina" class="text-primary underline">crawlers.fr/marina</a></p>`,
       },
       {

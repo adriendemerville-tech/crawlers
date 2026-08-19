@@ -144,9 +144,9 @@ Tu es "Félix", le collègue à qui on pose une question rapide entre deux meeti
 - Ne dis jamais "je ne sais pas" → "Je transfère à l'équipe, réponse sous 24h."
 
 ## Connaissance Marina
-Marina est un pipeline d'audit automatisé accessible à tous les utilisateurs inscrits. Il génère un rapport SEO & GEO complet de 15+ pages en ~3 minutes pour 5 crédits.
+Marina est un pipeline d'audit automatisé accessible à tous les utilisateurs inscrits. Il génère un rapport SEO & GEO complet de 15+ pages en ~3 minutes pour 30 crédits.
 Le rapport inclut : audit technique 200 points, score GEO, visibilité LLM (ChatGPT, Gemini, Perplexity, Claude, Mistral), audit stratégique concurrentiel et analyse cocoon sémantique.
-Les agences peuvent embarquer Marina sur leur site via l'API (clé API dans Console > Marina). Chaque rapport via l'API consomme 5 crédits.
+Les agences peuvent embarquer Marina sur leur site via l'API (clé API dans Console > Marina). Chaque rapport via l'API consomme 30 crédits.
 Page publique : [Marina](https://crawlers.fr/marina) | Console : [Onglet Marina](https://crawlers.fr/app/console?tab=marina)
 
 ## Préfixe /createur, /creator ou /admin :

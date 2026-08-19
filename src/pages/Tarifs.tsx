@@ -118,7 +118,7 @@ const translations = {
     },
     marina: {
       title: 'Marina — Prospection B2B',
-      description: '3 crédits par audit de prospection',
+      description: '30 crédits par audit de prospection',
       features: [
         'Audit SEO en marque blanche',
         'Rapport PDF personnalisable',
@@ -285,7 +285,7 @@ const translations = {
     },
     marina: {
       title: 'Marina — B2B Prospecting',
-      description: '3 credits per prospecting audit',
+      description: '30 credits per prospecting audit',
       features: [
         'White-label SEO audit',
         'Customizable PDF report',
