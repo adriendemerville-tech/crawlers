@@ -87,7 +87,15 @@ export interface GMBData {
   is_claimed?: boolean;
   quick_wins?: string[];
   totalReviews?: number;
+  /** Réseau multi-établissements (franchises, agences). */
+  locations_count?: number;
+  network_total_reviews?: number;
+  network_avg_rating?: number;
+  is_multi_location?: boolean;
+  /** 'single' | 'network' | 'not_measured' — provenance de la mesure. */
+  measurement_scope?: 'single' | 'network' | 'not_measured';
 }
+
 
 export interface FounderInfo {
   name: string | null;

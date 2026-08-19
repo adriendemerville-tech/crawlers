@@ -16,25 +16,113 @@ import {
 
 // ==================== GOOGLE MY BUSINESS DETECTION ====================
 
+interface RawListing {
+  title?: string;
+  rating?: number;
+  reviews?: number;
+  category?: string;
+  address?: string;
+  is_claimed?: boolean;
+}
+
+/** Normalise un nom de marque pour comparaison (accents, casse, ponctuation). */
+function normBrand(s: string): string {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+/** Construit un GMBData agrégé à partir de N fiches (réseau de franchisés / agences). */
+function buildGmbFromListings(listings: RawListing[], brandName: string): GMBData | null {
+  const valid = listings.filter((l) => l.title || l.address);
+  if (valid.length === 0) return null;
+
+  const withReviews = valid.filter((l) => typeof l.reviews === 'number' && (l.reviews as number) > 0);
+  const networkReviews = withReviews.reduce((sum, l) => sum + (l.reviews || 0), 0);
+  const weightedRating = withReviews.length && networkReviews > 0
+    ? withReviews.reduce((sum, l) => sum + (l.rating || 0) * (l.reviews || 0), 0) / networkReviews
+    : undefined;
+
+  // Fiche principale = celle avec le plus d'avis (sinon la première)
+  const primary = [...valid].sort((a, b) => (b.reviews || 0) - (a.reviews || 0))[0];
+  const isNetwork = valid.length > 1;
+
+  const quickWins: string[] = [];
+  if (isNetwork) {
+    const avgPerLocation = Math.round(networkReviews / valid.length);
+    if (withReviews.length < valid.length) {
+      quickWins.push(`${valid.length - withReviews.length} établissement(s) sur ${valid.length} n'ont aucun avis : lancez une collecte prioritaire sur ces fiches pour débloquer la visibilité locale.`);
+    }
+    if (avgPerLocation < 30) {
+      quickWins.push(`Moyenne de ${avgPerLocation} avis par établissement (${networkReviews} au total sur ${valid.length} fiches) : industrialisez la collecte d'avis (QR code, SMS post-chantier) pour dépasser 50 avis par point de vente.`);
+    }
+    quickWins.push(`Ajoutez un balisage LocalBusiness distinct par établissement, relié à la fiche Google correspondante (sameAs), pour que les moteurs de réponse rattachent chaque agence au réseau.`);
+  } else {
+    const rating = primary.rating;
+    const reviews = primary.reviews;
+    if (rating != null && rating < 4.5 && reviews != null) quickWins.push(`Améliorez votre note (${rating}/5) en sollicitant des avis clients satisfaits. Objectif : atteindre 4.5+ pour maximiser la confiance locale.`);
+    if (reviews != null && reviews < 50) quickWins.push(`Avec seulement ${reviews} avis, mettez en place une stratégie de collecte d'avis post-achat (email, QR code, SMS) pour renforcer votre visibilité Maps.`);
+    if (quickWins.length === 0 && rating != null && rating >= 4.5) quickWins.push(`Exploitez votre excellente note (${rating}/5) en intégrant des rich snippets "AggregateRating" dans vos données structurées Schema.org.`);
+    if (quickWins.length < 2) quickWins.push(`Publiez des Google Posts hebdomadaires (offres, actualités, événements) pour maintenir votre fiche active et améliorer votre positionnement local.`);
+  }
+
+  return {
+    title: primary.title || brandName,
+    rating: typeof primary.rating === 'number' ? primary.rating : (weightedRating != null ? Math.round(weightedRating * 10) / 10 : undefined),
+    reviews_count: typeof primary.reviews === 'number' ? primary.reviews : undefined,
+    category: primary.category,
+    address: primary.address,
+    is_claimed: primary.is_claimed,
+    quick_wins: quickWins.slice(0, 2),
+    totalReviews: networkReviews > 0 ? networkReviews : (typeof primary.reviews === 'number' ? primary.reviews : undefined),
+    locations_count: valid.length,
+    ...(networkReviews > 0 ? { network_total_reviews: networkReviews } : {}),
+    ...(weightedRating != null ? { network_avg_rating: Math.round(weightedRating * 10) / 10 } : {}),
+    is_multi_location: isNetwork,
+    measurement_scope: isNetwork ? 'network' : 'single',
+  };
+}
+
 export async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number, languageCode: string = 'fr'): Promise<GMBData | null> {
   const cleanDomain = domain.replace(/^www\./, '');
   console.log(`📍 Searching GMB for "${brandName}" / ${cleanDomain}...`);
 
-  // Step 1: Check backend gmb_locations table first
+  // Step 1: Check backend gmb_locations table first (ALL locations, not just one)
   try {
     const sb = getServiceClient();
-    const { data: locations } = await sb.from('gmb_locations').select('id, location_name, address, category, website').or(`website.ilike.%${cleanDomain}%`).limit(1);
+    const { data: locations } = await sb
+      .from('gmb_locations')
+      .select('id, location_name, address, category, website')
+      .or(`website.ilike.%${cleanDomain}%`)
+      .limit(100);
     if (locations && locations.length > 0) {
-      const loc = locations[0];
-      const { data: perf } = await sb.from('gmb_performance').select('avg_rating, total_reviews').eq('gmb_location_id', loc.id || '').order('measured_at', { ascending: false }).limit(1);
-      const rating = perf?.[0]?.avg_rating ?? undefined;
-      const reviewsCount = perf?.[0]?.total_reviews ?? undefined;
-      const quickWins: string[] = [];
-      if (rating != null && rating < 4.5 && reviewsCount != null) quickWins.push(`Améliorez votre note (${rating}/5) en sollicitant des avis clients satisfaits. Objectif : atteindre 4.5+.`);
-      if (reviewsCount != null && reviewsCount < 50) quickWins.push(`Avec ${reviewsCount} avis, mettez en place une stratégie de collecte d'avis pour renforcer votre visibilité Maps.`);
-      if (quickWins.length < 2) quickWins.push(`Publiez des Google Posts hebdomadaires pour maintenir votre fiche active.`);
-      console.log(`📍 ✅ GMB found in backend: "${loc.location_name}" (skipping DataForSEO)`);
-      return { title: loc.location_name || brandName, rating, reviews_count: reviewsCount, category: loc.category || undefined, address: loc.address || undefined, quick_wins: quickWins.slice(0, 2) };
+      const ids = locations.map((l: any) => l.id).filter(Boolean);
+      const { data: perfRows } = await sb
+        .from('gmb_performance')
+        .select('gmb_location_id, avg_rating, total_reviews, measured_at')
+        .in('gmb_location_id', ids)
+        .order('measured_at', { ascending: false });
+      const latestByLoc = new Map<string, any>();
+      for (const row of perfRows || []) {
+        if (!latestByLoc.has(row.gmb_location_id)) latestByLoc.set(row.gmb_location_id, row);
+      }
+      const listings: RawListing[] = locations.map((loc: any) => {
+        const perf = latestByLoc.get(loc.id);
+        return {
+          title: loc.location_name || undefined,
+          rating: perf?.avg_rating ?? undefined,
+          reviews: perf?.total_reviews ?? undefined,
+          category: loc.category || undefined,
+          address: loc.address || undefined,
+        };
+      });
+      const aggregated = buildGmbFromListings(listings, brandName);
+      if (aggregated) {
+        console.log(`📍 ✅ GMB found in backend: ${aggregated.locations_count} fiche(s), ${aggregated.network_total_reviews ?? 0} avis cumulés (skipping DataForSEO)`);
+        return aggregated;
+      }
     }
   } catch (e) { console.warn('📍 Backend GMB lookup failed, falling back to DataForSEO:', e); }
 
@@ -45,8 +133,8 @@ export async function detectGoogleMyBusiness(domain: string, brandName: string, 
     const response = await fetch('https://api.dataforseo.com/v3/serp/google/maps/live/regular', {
       method: 'POST',
       headers: { 'Authorization': getDataForSeoAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ keyword: brandName, location_code: locationCode, language_code: languageCode, depth: 5 }]),
-      signal: AbortSignal.timeout(10000),
+      body: JSON.stringify([{ keyword: brandName, location_code: locationCode, language_code: languageCode, depth: 20 }]),
+      signal: AbortSignal.timeout(12000),
     });
     if (!response.ok) { console.log(`⚠️ GMB search failed: ${response.status}`); await response.text(); return null; }
     trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'serp/google/maps');
@@ -54,27 +142,41 @@ export async function detectGoogleMyBusiness(domain: string, brandName: string, 
     const items = data.tasks?.[0]?.result?.[0]?.items;
     if (!items || !Array.isArray(items)) { console.log('📍 No GMB results found'); return null; }
 
-    const match = items.find((item: any) => {
+    const brandNorm = normBrand(brandName);
+    const brandTokens = brandNorm.split(' ').filter((t) => t.length > 3);
+    const matches = items.filter((item: any) => {
       if (!item) return false;
       const itemDomain = (item.domain || '').replace(/^www\./, '').toLowerCase();
       const itemUrl = (item.url || '').toLowerCase();
-      return itemDomain === cleanDomain.toLowerCase() || itemUrl.includes(cleanDomain.toLowerCase()) || (item.website && item.website.toLowerCase().includes(cleanDomain.toLowerCase()));
+      const site = (item.website || '').toLowerCase();
+      const domainMatch = itemDomain === cleanDomain.toLowerCase()
+        || itemUrl.includes(cleanDomain.toLowerCase())
+        || site.includes(cleanDomain.toLowerCase());
+      if (domainMatch) return true;
+      // Réseau de franchisés : le site web diffère souvent, mais l'enseigne est dans le titre
+      const titleNorm = normBrand(item.title || '');
+      if (!titleNorm || brandTokens.length === 0) return false;
+      return brandTokens.every((t) => titleNorm.includes(t));
     });
-    if (!match) { console.log('📍 No matching GMB listing for domain'); return null; }
 
-    const rating = match.rating?.value ?? match.rating ?? null;
-    const reviewsCount = match.rating?.votes_count ?? match.reviews_count ?? null;
-    const quickWins: string[] = [];
-    if (rating != null && rating < 4.5 && reviewsCount != null) quickWins.push(`Améliorez votre note (${rating}/5) en sollicitant des avis clients satisfaits. Objectif : atteindre 4.5+ pour maximiser la confiance locale.`);
-    if (reviewsCount != null && reviewsCount < 50) quickWins.push(`Avec seulement ${reviewsCount} avis, mettez en place une stratégie de collecte d'avis post-achat (email, QR code, SMS) pour renforcer votre visibilité Maps.`);
-    if (quickWins.length === 0 && rating != null && rating >= 4.5) quickWins.push(`Exploitez votre excellente note (${rating}/5) en intégrant des rich snippets "AggregateRating" dans vos données structurées Schema.org.`);
-    if (quickWins.length < 2) quickWins.push(`Publiez des Google Posts hebdomadaires (offres, actualités, événements) pour maintenir votre fiche active et améliorer votre positionnement local.`);
+    if (matches.length === 0) { console.log('📍 No matching GMB listing for domain or brand'); return null; }
 
-    const result: GMBData = { title: match.title || brandName, rating: typeof rating === 'number' ? rating : undefined, reviews_count: typeof reviewsCount === 'number' ? reviewsCount : undefined, category: match.category || match.snippet || undefined, address: match.address || undefined, is_claimed: match.is_claimed ?? undefined, quick_wins: quickWins.slice(0, 2) };
-    console.log(`📍 ✅ GMB found: "${result.title}" — ${result.rating}/5 (${result.reviews_count} avis)`);
+    const listings: RawListing[] = matches.map((m: any) => ({
+      title: m.title || undefined,
+      rating: typeof m.rating?.value === 'number' ? m.rating.value : (typeof m.rating === 'number' ? m.rating : undefined),
+      reviews: typeof m.rating?.votes_count === 'number' ? m.rating.votes_count : (typeof m.reviews_count === 'number' ? m.reviews_count : undefined),
+      category: m.category || m.snippet || undefined,
+      address: m.address || undefined,
+      is_claimed: m.is_claimed ?? undefined,
+    }));
+
+    const result = buildGmbFromListings(listings, brandName);
+    if (!result) return null;
+    console.log(`📍 ✅ GMB found: ${result.locations_count} fiche(s) — note réseau ${result.network_avg_rating ?? '?'} / 5, ${result.network_total_reviews ?? 0} avis cumulés`);
     return result;
   } catch (error) { console.error('📍 GMB detection error:', error); return null; }
 }
+
 
 // ==================== FOUNDER DISCOVERY VIA SERP ====================
 

@@ -184,16 +184,24 @@ export async function fetchPlacesSocialProof(brandName: string, domain: string):
 }
 
 /** Couche 2 bis — réutilise une fiche GMB déjà résolue en amont (0 appel réseau). */
-export function gmbToSocialProofSignals(gmb: { title?: string; rating?: number; reviews_count?: number } | null | undefined): SocialProofSignal[] {
+export function gmbToSocialProofSignals(gmb: { title?: string; rating?: number; reviews_count?: number; locations_count?: number; network_total_reviews?: number; network_avg_rating?: number; is_multi_location?: boolean } | null | undefined): SocialProofSignal[] {
   if (!gmb) return [];
-  if (typeof gmb.rating !== 'number' && typeof gmb.reviews_count !== 'number') return [];
+  const netReviews = typeof gmb.network_total_reviews === 'number' ? gmb.network_total_reviews : undefined;
+  const netRating = typeof gmb.network_avg_rating === 'number' ? gmb.network_avg_rating : undefined;
+  const effReviews = netReviews ?? (typeof gmb.reviews_count === 'number' ? gmb.reviews_count : undefined);
+  const effRating = netRating ?? (typeof gmb.rating === 'number' ? gmb.rating : undefined);
+  if (effRating === undefined && effReviews === undefined) return [];
+  const detail = gmb.is_multi_location && gmb.locations_count
+    ? `Réseau Google Business : ${gmb.locations_count} établissements, ${effRating ?? '?'} / 5 sur ${effReviews ?? '?'} avis cumulés`
+    : `Fiche Google « ${gmb.title || 'établissement'} » : ${effRating ?? '?'} / 5 sur ${effReviews ?? '?'} avis`;
   return [{
     layer: 2, source: 'Google Business Profile', kind: 'places',
-    ...(typeof gmb.rating === 'number' ? { rating: gmb.rating } : {}),
-    ...(typeof gmb.reviews_count === 'number' ? { reviewCount: gmb.reviews_count } : {}),
-    detail: `Fiche Google « ${gmb.title || 'établissement'} » : ${gmb.rating ?? '?'} / 5 sur ${gmb.reviews_count ?? '?'} avis`,
+    ...(effRating !== undefined ? { rating: effRating } : {}),
+    ...(effReviews !== undefined ? { reviewCount: effReviews } : {}),
+    detail,
   }];
 }
+
 
 export interface ResolveSocialProofInput {
   html?: string;
