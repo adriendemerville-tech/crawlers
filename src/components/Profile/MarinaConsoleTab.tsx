@@ -749,8 +749,8 @@ export function MarinaConsoleTab() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7"
-                      disabled={openingId === target.id}
-                      onClick={() => openReport(target.id)}
+                      disabled={openingId === (isBatch ? g.key : target.id)}
+                      onClick={() => (isBatch ? openBatchReport(g.items as any[], g.key) : openReport(target.id))}
                       title={t3(language, 'Ouvrir', 'Open', 'Abrir')}
                     >
                       {openingId === target.id
