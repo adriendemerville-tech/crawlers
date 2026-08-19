@@ -2,6 +2,7 @@ import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, FileSearch, Layers, Gauge, Bot } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { ClaudeVerdictBlock } from '@/components/Marina/ClaudeVerdictBlock';
 
 /**
  * Section home : audit profond gratuit (Marina).
