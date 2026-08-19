@@ -93,6 +93,8 @@ interface CocoonPageFacts {
   cannibalWith: string[];
   suggestedLinks: string[];
   geoScore: number | null;
+  /** Chemins des cibles internes réellement liées depuis cette page. */
+  outTargets: string[];
 }
 
 /**
