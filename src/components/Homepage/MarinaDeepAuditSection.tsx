@@ -65,7 +65,7 @@ export function MarinaDeepAuditSection() {
             {t.badge}
           </span>
 
-          <h2 id="marina-free-audit-title" className="mt-4 whitespace-nowrap text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+          <h2 id="marina-free-audit-title" className="mt-4 text-balance text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
             {t.title}
           </h2>
 
@@ -92,13 +92,18 @@ export function MarinaDeepAuditSection() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/etudes/autopilot-parmenion-iktracker" className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
+            <a
+              href="/marina-crawlers-sample.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="whitespace-nowrap text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+            >
               {t.secondary}
-            </Link>
+            </a>
           </div>
         </div>
 
-        <ClaudeVerdictBlock className="mt-0" />
+        <ClaudeVerdictBlock className="mt-0" showSubtitle={false} />
       </div>
     </section>
   );
