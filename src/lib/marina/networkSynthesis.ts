@@ -635,7 +635,8 @@ export function buildNetworkSynthesisHTML(
       parts5.push(
         `<p style="margin:0 0 6px 0;">${unverifiedHubs.length === 1 ? 'Un niveau' : `${unverifiedHubs.length} niveaux`} de regroupement
          ${unverifiedHubs.length === 1 ? 'est absent' : 'sont absents'} du périmètre audité. Faute de crawl exploitable du domaine,
-         leur existence ailleurs sur le site n'a pas pu être vérifiée : à contrôler avant toute création.</p>`,
+         ${unverifiedHubs.length === 1 ? 'son existence' : 'leur existence'} ailleurs sur le site n'a pas pu être vérifiée :
+         à contrôler avant toute création.</p>`,
         hubList(unverifiedHubs, () => 'aucune page de regroupement auditée à ce niveau ; existence sur le site non vérifiée.'),
       );
       candidates.push({
