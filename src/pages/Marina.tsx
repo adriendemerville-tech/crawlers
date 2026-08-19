@@ -576,6 +576,20 @@ export default function Marina() {
   const [demoHtml, setDemoHtml] = useState<string | null>(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [activeTab, setActiveTab] = useState('features');
+  // Essai gratuit sans compte : 2 rapports complets par adresse IP, email requis
+  const [freeEmail, setFreeEmail] = useState('');
+  const [freeRemaining, setFreeRemaining] = useState<number | null>(null);
+
+  const freeT = FREE_TRIAL_TEXTS[language as keyof typeof FREE_TRIAL_TEXTS] || FREE_TRIAL_TEXTS.fr;
+
+  useEffect(() => {
+    if (user) { setFreeRemaining(null); return; }
+    let cancelled = false;
+    getMarinaFreeQuota()
+      .then(q => { if (!cancelled) setFreeRemaining(q.remaining); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [user]);
 
   // Lecture du hash uniquement côté client (le SSR n'a pas de window)
   useEffect(() => {
