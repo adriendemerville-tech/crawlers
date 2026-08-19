@@ -132,7 +132,13 @@ export async function naturalizeBenchmarkQuestions(
     })),
   }));
 
-  const anchors = identityKeywords(s);
+  // Page profonde : ses propres termes (prestation, localité) passent devant
+  // ceux du domaine dans la règle d'ancrage.
+  const pageTerms: string[] = Array.isArray(s.page_focus?.terms) ? s.page_focus.terms : [];
+  const anchors = [
+    ...pageTerms,
+    ...identityKeywords(s).filter((k) => !pageTerms.some((p) => p.toLowerCase() === k.toLowerCase())),
+  ];
   const system = [
     "Tu écris des questions que de vrais clients potentiels posent à ChatGPT, Gemini ou Perplexity quand ils cherchent un prestataire ou un outil.",
     "Ces questions servent à mesurer si une entreprise est citée spontanément par les IA : elles ne doivent donc JAMAIS nommer l'entreprise auditée, sa marque, ni son site.",
@@ -140,6 +146,9 @@ export async function naturalizeBenchmarkQuestions(
     "Une seule phrase interrogative par question, entre 20 et 200 caractères, sans liste, sans guillemets, sans jargon SEO, sans terme technique interne.",
     anchors.length
       ? `RÈGLE D'ANCRAGE (impérative) : au moins ${Math.round(MIN_KEYWORD_COVERAGE * 100)} % des questions doivent contenir un ou plusieurs de ces mots-clés issus de la carte d'identité (ce qui est vendu, modèle d'affaires, cible principale, cible secondaire) : ${anchors.slice(0, 14).join(', ')}. Reprends-les littéralement, y compris les sigles (SEO, GEO, AEO…), sans les remplacer par un synonyme.`
+      : '',
+    s.page_focus?.topic
+      ? `PAGE AUDITÉE (prioritaire sur le reste de la carte d'identité) : l'audit porte sur la page « ${s.page_focus.topic} »${s.page_focus.locality ? `, localisée à ${s.page_focus.locality}` : ''}. Chaque question doit rester sur CETTE intention précise${s.page_focus.locality ? ` et mentionner ${s.page_focus.locality} dès qu'il s'agit d'un besoin local` : ''} ; n'élargis jamais au besoin générique du domaine.`
       : '',
     "Une question dont l'intention est « competitor » doit conserver TEL QUEL le nom du concurrent présent dans la version déterministe.",
     `Type d'entreprise auditée : ${ARCHETYPE_DIRECTIVE[archetype]}`,
