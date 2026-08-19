@@ -269,32 +269,32 @@ export function Header() {
         {!isProfilePage && isHomePage && (
           <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
             <Link to="/features">
-              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
+              <Button variant="ghost" size="sm" className="text-black hover:text-black/80 dark:text-white dark:hover:text-white/80 hover:bg-muted/60">
                 <span className="text-sm font-thin">Features</span>
               </Button>
             </Link>
             <Link to="/tarifs">
-              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
+              <Button variant="ghost" size="sm" className="text-black hover:text-black/80 dark:text-white dark:hover:text-white/80 hover:bg-muted/60">
                 <span className="text-sm font-thin">{language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}</span>
               </Button>
             </Link>
             <Link to="/audit-expert">
-              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
+              <Button variant="ghost" size="sm" className="text-black hover:text-black/80 dark:text-white dark:hover:text-white/80 hover:bg-muted/60">
                 <span className="text-sm font-thin">Audit</span>
               </Button>
             </Link>
             <Link to="/eeat">
-              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
+              <Button variant="ghost" size="sm" className="text-black hover:text-black/80 dark:text-white dark:hover:text-white/80 hover:bg-muted/60">
                 <span className="text-sm font-thin">E-E-A-T</span>
               </Button>
             </Link>
             <Link to="/app/ranking-serp">
-              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
+              <Button variant="ghost" size="sm" className="text-black hover:text-black/80 dark:text-white dark:hover:text-white/80 hover:bg-muted/60">
                 <span className="text-sm font-thin">SERPs</span>
               </Button>
             </Link>
             <Link to={user ? "/developers" : "/developers/login"}>
-              <Button variant="ghost" size="sm" className="text-foreground/80 hover:text-foreground hover:bg-muted/60">
+              <Button variant="ghost" size="sm" className="text-black hover:text-black/80 dark:text-white dark:hover:text-white/80 hover:bg-muted/60">
                 <span className="text-sm font-thin">Platform API</span>
               </Button>
             </Link>
