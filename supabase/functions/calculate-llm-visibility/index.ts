@@ -558,11 +558,15 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
     const weekStart = getWeekStart()
 
+    // Une page profonde a ses propres questions : son cache doit être séparé de
+    // celui du domaine, sinon elle écrase (ou hérite de) la mesure de la home.
+    const cacheDomain = pageScoped ? `${site.domain}${pageFocus!.path}` : site.domain
+
     // ── Check shared domain cache first ──
     const { data: cachedData } = await supabase
       .from('domain_data_cache')
       .select('result_data, created_at')
-      .eq('domain', site.domain)
+      .eq('domain', cacheDomain)
       .eq('data_type', 'llm_visibility')
       .eq('week_start_date', weekStart)
       .gt('expires_at', new Date().toISOString())
