@@ -416,7 +416,18 @@ export function mergeMarinaReports(
     : '';
   // Lecture d'ensemble normalisée : toujours en première position après la page
   // de garde, avant la synthèse exécutive et les fiches par URL.
-  const networkSynthesis = buildNetworkSynthesisHTML(domain, metas, opts?.site);
+  // Trou 10 — les faits de la synthèse sont exposés à l'appelant pour être
+  // archivés et poussés dans le Workbench, sans relecture du HTML.
+  const synthesis = computeNetworkSynthesis(domain, metas, opts?.site);
+  const networkSynthesis = synthesis.html;
+  if (opts?.onSynthesis) {
+    try {
+      opts.onSynthesis(synthesis.facts);
+    } catch {
+      /* la propagation ne doit jamais empêcher la fusion */
+    }
+  }
+
 
 
   const sections = parts
