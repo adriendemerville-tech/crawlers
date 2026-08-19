@@ -2,6 +2,8 @@
  * Lightweight AI usage logger for edge functions that call ai.gateway.lovable.dev directly.
  * Fire-and-forget: never blocks or throws.
  */
+import { claimUsageWrite } from './aiUsageLog.ts';
+
 
 /** Estimated cost per 1M tokens (USD) */
 const MODEL_COST: Record<string, { input: number; output: number }> = {
@@ -39,6 +41,8 @@ export function logAIUsageFromResponse(
     const ct = usage?.completion_tokens || 0;
     const cacheCreate = usage?.cache_creation_input_tokens || 0;
     const cacheRead = usage?.cache_read_input_tokens || 0;
+    // Garde partagée : évite un doublon si le wrapper gateway a déjà loggé l'appel.
+    if (!claimUsageWrite(model, pt, ct)) return;
     supabase.from('ai_gateway_usage').insert({
       gateway: model.startsWith('anthropic/') ? 'openrouter' : 'lovable',
       model,

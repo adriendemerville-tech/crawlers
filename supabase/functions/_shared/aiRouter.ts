@@ -22,6 +22,7 @@
 
 import { getServiceClient } from './supabaseClient.ts';
 import { callGroq } from './groqClient.ts';
+import { logAiUsage, detectEdgeFunctionName } from './aiUsageLog.ts';
 
 const GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const CACHE_TTL_MS = 30_000;
@@ -68,6 +69,11 @@ export interface RoutedAIOptions {
   /** Modèle Lovable par défaut si aucune override n'existe en DB. */
   fallbackModel?: string;
   timeoutMs?: number;
+  /**
+   * Nom de l'edge function appelante, persisté dans `ai_gateway_usage.edge_function`.
+   * Optionnel : déduit de la pile d'appel quand il n'est pas fourni.
+   */
+  edgeFunction?: string;
 }
 
 export interface RoutedAIResult {
@@ -82,6 +88,8 @@ export async function callRoutedAI(
   feature: string,
   opts: RoutedAIOptions,
 ): Promise<RoutedAIResult> {
+  // Résolu AVANT tout await : la pile d'appel contient encore la function appelante.
+  const edgeFn = opts.edgeFunction || detectEdgeFunctionName();
   const routing = await getRouting(feature);
   const useGroq = routing?.enabled === true && routing.provider === 'groq';
 
@@ -102,6 +110,13 @@ export async function callRoutedAI(
         response_format: opts.jsonMode ? { type: 'json_object' } : undefined,
         timeoutMs: opts.timeoutMs ?? 60_000,
       });
+      logAiUsage({
+        gateway: 'groq',
+        model: routing!.model,
+        edgeFunction: edgeFn,
+        feature,
+        usage: r.raw?.usage,
+      });
       return {
         content: r.content,
         tool_calls: r.tool_calls,
@@ -116,7 +131,17 @@ export async function callRoutedAI(
   }
 
   const model = routing?.original_model || opts.fallbackModel || 'google/gemini-3-flash-preview';
-  return await callLovable(model, messages, opts);
+  const result = await callLovable(model, messages, opts);
+  logAiUsage({
+    gateway: 'lovable',
+    model,
+    edgeFunction: edgeFn,
+    feature,
+    usage: result.raw?.usage,
+    // Un repli Groq → Lovable est un fallback à part entière.
+    isFallback: useGroq,
+  });
+  return result;
 }
 
 async function callLovable(
