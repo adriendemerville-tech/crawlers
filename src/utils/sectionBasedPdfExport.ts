@@ -58,7 +58,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
 
   // Render HTML in hidden iframe
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = `position:fixed;left:-9999px;top:0;width:${iframeWidth}px;border:none;`;
+  iframe.style.cssText = `position:fixed;left:-9999px;top:0;width:${iframeWidth}px;height:2000px;border:none;`;
   document.body.appendChild(iframe);
 
   const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
@@ -72,6 +72,17 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   iframeDoc.close();
 
   await new Promise((r) => setTimeout(r, renderDelay));
+
+  // On agrandit l'iframe à la hauteur réelle du contenu : sinon les blocs situés
+  // hors du viewport de 2000px peuvent rester non peints et sortir vides du PDF.
+  const fullHeight = Math.max(
+    iframeDoc.documentElement?.scrollHeight || 0,
+    iframeDoc.body?.scrollHeight || 0,
+  );
+  if (fullHeight > 0) {
+    iframe.style.height = `${fullHeight}px`;
+    await new Promise((r) => setTimeout(r, 250));
+  }
 
   // Collect sections.
   // ATTENTION : certains rapports (Marina) ne balisent qu'une poignée de blocs
