@@ -14,6 +14,8 @@
  *   4. Divulgation méthodologique (une seule fois, en fin de document)
  */
 
+import { buildNetworkSynthesisHTML } from './networkSynthesis';
+
 export interface MarinaReportPart {
   url: string;
   html: string;
@@ -70,6 +72,12 @@ export interface PageMeta {
   linksOut?: number | null;
   criticalCount?: number;
   actions?: string[];
+  /** Faits mesurés utilisés par la synthèse réseau (rapports récents uniquement). */
+  words?: number | null;
+  lcpMs?: number | null;
+  isThin?: boolean;
+  isOrphan?: boolean;
+  cannibalWith?: string[];
 }
 
 /** Découpe un body Marina en blocs balisés + reste (header, toolbar, footer…). */
@@ -353,6 +361,11 @@ export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: s
       <h1 style="font-size:34px;line-height:1.2;margin:0 0 12px 0;">Rapport multipages</h1>
       <p style="font-size:18px;margin:0 0 6px 0;font-weight:600;">${escapeHtml(domain)}</p>
       <p style="font-size:14px;opacity:.7;margin:0 0 30px 0;">${parts.length} pages auditées — ${generatedAt}</p>
+      <h2 style="font-size:18px;margin:26px 0 10px 0;">Lecture d'ensemble</h2>
+      <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
+        <li style="margin:0 0 8px 0;">Synthèse réseau — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés</li>
+        <li style="margin:0 0 8px 0;">Synthèse exécutive — verdict du domaine puis reprise page par page</li>
+      </ul>
       ${sharedToc}
       <h2 style="font-size:18px;margin:26px 0 10px 0;">Fiches par page</h2>
       <ol style="list-style:none;padding:0;margin:0;font-size:14px;">${toc}</ol>
@@ -387,6 +400,10 @@ export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: s
   const globalSummary = mutualised
     ? buildGlobalSummary(domain, metas, domainVerdict, parts.length)
     : '';
+  // Lecture d'ensemble normalisée : toujours en première position après la page
+  // de garde, avant la synthèse exécutive et les fiches par URL.
+  const networkSynthesis = buildNetworkSynthesisHTML(domain, metas);
+
 
   const sections = parts
     .map((p, i) => {
@@ -433,6 +450,7 @@ ${head}
 </head>
 <body>
 ${cover}
+${networkSynthesis}
 ${globalSummary}
 ${sharedSection}
 ${sections}

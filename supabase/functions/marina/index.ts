@@ -4674,6 +4674,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           pageActions: (pageScopedActions.length ? pageScopedActions : (consolidatedPlan || []))
             .map((i: any) => ({ severity: i.severity, title: splitLongTitle(String(i.title || ''), '').title })),
           cocoonData: cocoonResult,
+          words: expertData?.scores?.semantic?.wordCount ?? null,
+          lcpMs: expertData?.scores?.performance?.lcp ?? null,
         });
         const cocoonPageHTML = buildCocoonPageFocusHTML(cocoonResult, url, detectedLang);
 
