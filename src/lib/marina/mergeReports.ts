@@ -380,12 +380,12 @@ export function mergeMarinaReports(
   const globalSummary = mutualised
     ? buildGlobalSummary(domain, metas, domainVerdict, parts.length)
     : '';
-  // Lecture d'ensemble normalisée : toujours en première position après la page
-  // de garde, avant la synthèse exécutive et les fiches par URL.
+  // Lecture d'ensemble normalisée : elle OUVRE le document, avant la page de
+  // garde et le sommaire. Un lecteur qui n'ouvre qu'une page doit tomber sur la
+  // conclusion d'ensemble, pas sur une table des matières.
   // Trou 10 — les faits de la synthèse sont exposés à l'appelant pour être
   // archivés et poussés dans le Workbench, sans relecture du HTML.
   const synthesis = computeNetworkSynthesis(domain, metas, opts?.site);
-  const networkSynthesis = synthesis.html;
   if (opts?.onSynthesis) {
     try {
       opts.onSynthesis(synthesis.facts);
@@ -393,6 +393,21 @@ export function mergeMarinaReports(
       /* la propagation ne doit jamais empêcher la fusion */
     }
   }
+  // La synthèse étant en première page, elle porte elle-même l'identification du
+  // rapport : sans ce bandeau, la page d'ouverture ne nommerait ni le domaine ni
+  // la date ni le nombre d'URLs couvertes.
+  const networkSynthesis = synthesis.html
+    ? `<section class="marina-batch-opening" style="padding:0;">
+         <div style="padding:40px 32px 0 32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+           <p style="letter-spacing:.18em;text-transform:uppercase;font-size:11px;margin:0 0 8px 0;opacity:.7;">Crawlers — Marina · Rapport multipages</p>
+           <p style="font-size:17px;font-weight:700;margin:0 0 4px 0;">${escapeHtml(domain)}</p>
+           <p style="font-size:12px;opacity:.7;margin:0;">${parts.length} pages auditées — ${generatedAt} · page de garde et sommaire à la suite de cette synthèse</p>
+         </div>
+         ${synthesis.html}
+       </section>`
+    : '';
+
+
 
 
   const cover = `
