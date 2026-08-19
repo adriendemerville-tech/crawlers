@@ -151,8 +151,18 @@ export function detectTemplates(metas: PageMeta[]): TemplateFamily[] {
             const homogeneous =
                 depth > 0 ||
                 (siblingCount >= 3 && [...sibs].filter((s) => slugLike(s)).length / siblingCount >= 0.8);
+            // La forme d'un seul frère ne peut pas décider du sort de la fratrie :
+            // `/agence/marseille` et `/agence/aix-en-provence` sont deux instances
+            // du même gabarit. Dès qu'au moins la moitié des frères ressemble à un
+            // identifiant, tous les frères de ce niveau sont traités en variantes,
+            // sinon un lot de deux villes produisait deux gabarits d'une page.
+            const slugLikeShare = [...sibs].filter((s) => slugLike(s)).length / Math.max(siblingCount, 1);
             const variable =
-              homogeneous && siblingCount >= 2 && parentCount < 2 && (slugLike(seg) || siblingCount >= 3);
+              homogeneous &&
+              siblingCount >= 2 &&
+              parentCount < 2 &&
+              (slugLike(seg) || siblingCount >= 3 || slugLikeShare >= 0.5);
+
             if (!variable) return seg;
             variants.push(seg);
             return '*';
