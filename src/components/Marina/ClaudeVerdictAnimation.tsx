@@ -112,8 +112,17 @@ export function ClaudeVerdictAnimation() {
           </div>
 
           {/* Réponse */}
-          <div className={showVerdict ? 'animate-fade-in' : 'opacity-0'}>
-            <p className="mb-3 text-[13px] text-[#8a8981] dark:text-[#8f8e88]">
+          <div className={showVerdict || phase === 'thinking' ? 'animate-fade-in' : 'opacity-0'}>
+            <p className="mb-3 flex items-center gap-2 text-[13px] text-[#8a8981] dark:text-[#8f8e88]">
+              <img
+                src={claudeLogo.url}
+                alt="Logo Claude"
+                className={`h-4 w-4 shrink-0 ${
+                  phase === 'thinking'
+                    ? 'animate-[pulse_0.7s_ease-in-out_infinite]'
+                    : 'animate-[pulse_3s_cubic-bezier(0.4,0,0.6,1)_infinite]'
+                }`}
+              />
               {phase === 'thinking' ? 'A réfléchi pendant 20 s…' : 'A réfléchi pendant 20 s'}
             </p>
             {showVerdict && (
