@@ -66,7 +66,7 @@ const translations = {
       credits: 'crédits',
       loginCta: 'Connectez-vous pour lancer un rapport',
       signupOffer: '5 crédits offerts à l\'inscription = 1 rapport gratuit',
-      apiDocLink: '📄 Documentation API Marina',
+      apiDocLink: 'Documentation API Marina',
     },
     toasts: {
       enterUrl: 'Veuillez entrer une URL',
@@ -78,11 +78,11 @@ const translations = {
       genFailed: 'Échec de la génération',
     },
     phases: {
-      initializing: '🔍 Initialisation...',
-      phase1: '📊 Audit SEO technique...',
-      phase2: '🧠 Audit stratégique GEO...',
-      phase3: '🕸️ Analyse sémantique & Cocoon...',
-      generating_report: '📄 Génération du rapport...',
+      initializing: 'Initialisation...',
+      phase1: 'Audit SEO technique...',
+      phase2: 'Audit stratégique GEO...',
+      phase3: 'Analyse sémantique & Cocoon...',
+      generating_report: 'Génération du rapport...',
       init: 'Initialisation...',
       done: 'Terminé !',
       inProgress: 'En cours...',
@@ -237,7 +237,7 @@ const translations = {
       credits: 'credits',
       loginCta: 'Sign in to generate a report',
       signupOffer: '5 free credits on signup = 1 free report',
-      apiDocLink: '📄 Marina API Documentation',
+      apiDocLink: 'Marina API Documentation',
     },
     toasts: {
       enterUrl: 'Please enter a URL',
@@ -249,11 +249,11 @@ const translations = {
       genFailed: 'Generation failed',
     },
     phases: {
-      initializing: '🔍 Initializing...',
-      phase1: '📊 Technical SEO audit...',
-      phase2: '🧠 Strategic GEO audit...',
-      phase3: '🕸️ Semantic & Cocoon analysis...',
-      generating_report: '📄 Generating report...',
+      initializing: 'Initializing...',
+      phase1: 'Technical SEO audit...',
+      phase2: 'Strategic GEO audit...',
+      phase3: 'Semantic & Cocoon analysis...',
+      generating_report: 'Generating report...',
       init: 'Initializing...',
       done: 'Done!',
       inProgress: 'In progress...',
@@ -408,7 +408,7 @@ const translations = {
       credits: 'créditos',
       loginCta: 'Inicia sesión para generar un informe',
       signupOffer: '5 créditos gratis al registrarte = 1 informe gratis',
-      apiDocLink: '📄 Documentación API Marina',
+      apiDocLink: 'Documentación API Marina',
     },
     toasts: {
       enterUrl: 'Introduce una URL',
@@ -420,11 +420,11 @@ const translations = {
       genFailed: 'Falló la generación',
     },
     phases: {
-      initializing: '🔍 Inicializando...',
-      phase1: '📊 Auditoría SEO técnica...',
-      phase2: '🧠 Auditoría estratégica GEO...',
-      phase3: '🕸️ Análisis semántico & Cocoon...',
-      generating_report: '📄 Generando informe...',
+      initializing: 'Inicializando...',
+      phase1: 'Auditoría SEO técnica...',
+      phase2: 'Auditoría estratégica GEO...',
+      phase3: 'Análisis semántico & Cocoon...',
+      generating_report: 'Generando informe...',
       init: 'Inicializando...',
       done: '¡Listo!',
       inProgress: 'En curso...',
@@ -1485,7 +1485,7 @@ async function generateReport(url) {
   }
 }`}
                     </pre>
-                    <p className="text-[11px] text-primary/80 mt-2 italic">💡 {t.api.refReportNote}</p>
+                    <p className="text-[11px] text-primary/80 mt-2 italic">{t.api.refReportNote}</p>
                   </div>
 
                   <div>
@@ -1558,7 +1558,7 @@ async function generateReport(url) {
                   <CardContent className="p-5">
                     <h4 className="text-sm font-semibold text-foreground mb-3">{t.api.refPolling}</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">{t.api.refPollingDesc}</p>
-                    <p className="text-[11px] text-primary/80 mt-3 italic">💡 {t.api.refJsonNote}</p>
+                    <p className="text-[11px] text-primary/80 mt-3 italic">{t.api.refJsonNote}</p>
                   </CardContent>
                 </Card>
 

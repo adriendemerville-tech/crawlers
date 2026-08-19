@@ -345,7 +345,7 @@ export function ParmenionTargetPanel({
       .eq('domain', targetDomain)
       .neq('status', 'cancelled');
     if (!error) {
-      toast({ title: '🗑 Registre purgé', description: `Entrées ${targetLabel} marquées comme annulées.` });
+      toast({ title: 'Registre purgé', description: `Entrées ${targetLabel} marquées comme annulées.` });
       fetchLogs();
     }
   };
@@ -355,7 +355,7 @@ export function ParmenionTargetPanel({
       toast({ title: 'Erreur', description: `Aucun site autopilote actif trouvé pour ${targetLabel}.`, variant: 'destructive' });
       return;
     }
-    toast({ title: '🆕 Nouvelle action demandée', description: `Cycle Parménion lancé pour ${targetLabel}.` });
+    toast({ title: 'Nouvelle action demandée', description: `Cycle Parménion lancé pour ${targetLabel}.` });
     
     const body = {
       force_new: true,
@@ -500,14 +500,14 @@ export function ParmenionTargetPanel({
                 if (!error) {
                   setAutopilotConfig(prev => prev ? { ...prev, force_iktracker_article: newVal } : prev);
                   toast({
-                    title: newVal ? '📝 Article forcé' : '📝 Article désactivé',
+                    title: newVal ? 'Article forcé' : 'Article désactivé',
                     description: newVal ? `Parménion créera un article à chaque cycle pour ${targetLabel}.` : 'Le mode article forcé est désactivé.',
                   });
                 }
               }}
             >
               <Pencil className="h-4 w-4" />
-              {isMobile ? 'Art' : (autopilotConfig?.force_iktracker_article ? '📝 Art:ON' : 'Article')}
+              {isMobile ? 'Art' : (autopilotConfig?.force_iktracker_article ? 'Art:ON' : 'Article')}
             </Button>
           )}
           <Button
@@ -625,7 +625,7 @@ export function ParmenionTargetPanel({
                 <p className="text-[10px] text-muted-foreground mt-0.5">{autopilotConfig.domain}</p>
               </div>
             ) : (
-              <span className="text-sm font-semibold text-muted-foreground">💤 Inactif</span>
+              <span className="text-sm font-semibold text-muted-foreground">Inactif</span>
             )}
           </CardContent>
         </Card>
@@ -723,7 +723,7 @@ export function ParmenionTargetPanel({
                     .update({ cooldown_hours: val } as any)
                     .eq('id', autopilotConfig!.config_id);
                   if (!error) {
-                    toast({ title: '✅ Cooldown mis à jour', description: `${val}h entre chaque cycle` });
+                    toast({ title: 'Cooldown mis à jour', description: `${val}h entre chaque cycle` });
                     fetchAutopilotConfig();
                   }
                 }}
@@ -849,14 +849,14 @@ export function ParmenionTargetPanel({
                             Prédit: {log.impact_predicted} → Réel: {log.impact_actual}
                           </span>
                           {log.calibration_note && (
-                            <p className="text-muted-foreground mt-1 italic">💡 {log.calibration_note}</p>
+                            <p className="text-muted-foreground mt-1 italic">{log.calibration_note}</p>
                           )}
                         </div>
                       )}
 
                       {log.execution_error && (
                         <div className="mt-2 p-2 rounded bg-destructive/10 text-xs text-destructive flex items-start justify-between gap-2">
-                          <span>⚠️ {log.execution_error}</span>
+                          <span>{log.execution_error}</span>
                           <Button
                             variant="outline"
                             size="sm"
@@ -893,7 +893,7 @@ export function ParmenionTargetPanel({
               <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
                 const last24h = history.filter(ev => new Date(ev.created_at) >= new Date(Date.now() - 24 * 60 * 60 * 1000));
                 generateParmenionReport(last24h as any, targetDomain);
-                toast({ title: '📄 Rapport PDF téléchargé', description: `${last24h.length} action(s) sur les dernières 24h` });
+                toast({ title: 'Rapport PDF téléchargé', description: `${last24h.length} action(s) sur les dernières 24h` });
               }}>
                 <Download className="h-3.5 w-3.5" />
                 Rapport 24h
