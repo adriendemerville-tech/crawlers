@@ -303,7 +303,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       Array.from({ length: Math.min(CONCURRENCY, initial.length) }, (_, i) => worker(i)),
     );
     setRunning(false);
-  }, [credits, isAuthenticated, runOne, targets, totalCost]);
+  }, [credits, isAuthenticated, runOne, targets, totalCost, unlimitedCredits]);
 
   /* ── Relance des URLs en échec (aucun crédit n'a été débité pour elles) ── */
   const handleRetryFailed = useCallback(async () => {
