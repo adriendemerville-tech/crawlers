@@ -550,11 +550,17 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
                 <X className="w-4 h-4" /> Arrêter le suivi
               </Button>
             )}
+            {items.some(i => i.status === 'failed') && !running && (
+              <Button type="button" variant="outline" onClick={handleRetryFailed} className="gap-2 bg-transparent border-border">
+                <Layers className="w-4 h-4" /> Relancer les {items.filter(i => i.status === 'failed').length} échec(s)
+              </Button>
+            )}
             {items.length > 0 && !running && (
               <Button type="button" variant="outline" onClick={resetBatch} className="gap-2 bg-transparent border-border">
                 <X className="w-4 h-4" /> Réinitialiser
               </Button>
             )}
+
           </div>
 
           {/* Suivi par URL */}
