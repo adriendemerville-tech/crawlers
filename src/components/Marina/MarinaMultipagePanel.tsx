@@ -171,7 +171,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
   };
 
   /* ── Exécution : un job Marina par URL, 2 en parallèle ── */
-  const runOne = useCallback(async (index: number, url: string): Promise<void> => {
+  const runOne = useCallback(async (index: number, url: string, batch?: { id: string; size: number }): Promise<void> => {
     const setItem = (patch: Partial<BatchItem>) =>
       setItems(prev => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
 
@@ -192,7 +192,13 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
           Authorization: `Bearer ${session?.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url, lang: language || 'fr' }),
+        body: JSON.stringify({
+          url,
+          lang: language || 'fr',
+          // Marqueurs de lot : permettent de regrouper les N jobs d'un audit
+          // multipages en une seule carte dans « Mes audits ».
+          ...(batch ? { batch_id: batch.id, batch_size: batch.size, batch_index: index } : {}),
+        }),
       });
       const data = await res.json();
       if (data.error || !data.job_id) throw new Error(data.error || 'Lancement impossible');
@@ -255,6 +261,10 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
     toast.success(`${targets.length} audits lancés — génération séquentielle en cours`);
 
     let cursor = 0;
+    const batch = {
+      id: (globalThis.crypto?.randomUUID?.() || `batch-${Date.now()}`),
+      size: initial.length,
+    };
     const worker = async (workerIndex: number) => {
       // Le second worker attend que le premier ait initié le crawl mutualisé.
       if (workerIndex > 0) {
@@ -262,7 +272,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
       }
       while (cursor < initial.length && !cancelRef.current) {
         const index = cursor++;
-        await runOne(index, initial[index].url);
+        await runOne(index, initial[index].url, batch);
       }
     };
     await Promise.all(
