@@ -3231,7 +3231,21 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
 
       // ─── Step 2: Launch Strategic GEO Audit (don't wait — self-invoke phase1b) ───
-      console.log(`[Marina] Phase 1 Step 2: launching strategic-orchestrator for ${url}`);
+      // Mutualisation multipages : la synthèse stratégique (GEO, autorité,
+      // roadmap) est de niveau SITE. En lot multipages, la relancer par URL
+      // multipliait par N le coût LLM le plus lourd de Marina pour un résultat
+      // identique. On la calcule une fois par domaine et on réutilise pendant
+      // 24h ; les N-1 audits suivants sautent l'appel.
+      const isBatch = Boolean((parentJob.input_payload as any)?.batch_id);
+      let reusedStrategic: any = null;
+      if (isBatch) {
+        const scope = await readSiteScopeCache(sb, domain, parentJob.user_id);
+        if (scope?.strategic && Number(scope.strategic?.overallScore || 0) > 0) {
+          reusedStrategic = scope.strategic;
+          console.log(`[Marina] Phase 1a : synthèse stratégique réutilisée pour ${domain} (mutualisation multipages)`);
+        }
+      }
+
       const toolsData = {
         crawlers: { note: 'Non disponible dans Marina' },
         geo: { note: 'Calcul stratégique en cours' },
@@ -3242,17 +3256,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         },
       };
 
-      const strategicJobId = await startTrackedSubJob(
-        sb,
-        'strategic-orchestrator',
-        parentJob.user_id,
-        {
-          parent_job_id: jobId,
-          url,
-          lang: detectedLang,
-          toolsData,
-        },
-      );
+      const strategicJobId = reusedStrategic
+        ? null
+        : await startTrackedSubJob(
+            sb,
+            'strategic-orchestrator',
+            parentJob.user_id,
+            {
+              parent_job_id: jobId,
+              url,
+              lang: detectedLang,
+              toolsData,
+            },
+          );
 
       // Save expert data + strategic job ID for phase1b to pick up
       await sb.from('audit_cache').upsert({
@@ -3263,13 +3279,14 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           domain,
           detectedLang,
           strategicJobId,
+          reusedStrategic,
           identityCard,
         },
 
         expires_at: new Date(Date.now() + PHASE_CHECKPOINT_TTL_MS).toISOString(),
       }, { onConflict: 'cache_key' });
 
-      console.log(`[Marina] ✅ Phase 1a complete — strategic launched (${strategicJobId}), self-invoking phase1b`);
+      console.log(`[Marina] ✅ Phase 1a complete — strategic ${strategicJobId ? `launched (${strategicJobId})` : 'mutualisé (aucun appel)'}, self-invoking phase1b`);
       await selfInvokePhase(jobId, url, detectedLang, 'phase1b', { domain });
 
     } else if (currentPhase === 'phase1b') {
