@@ -3919,11 +3919,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           if (normalizedResult && !result?.error && Array.isArray(normalizedResult.scores)) {
             llmVisibilityData = normalizedResult;
             console.log(`[Marina] LLM visibility done: ${normalizedResult.scores.length} LLMs scored, ${normalizedResult.benchmarks?.length || 0} benchmarks persisted`);
-            await writeSiteScopeCache(sb, domain, parentJob.user_id, { llmVisibility: normalizedResult });
-          } else if (isFreshLlmPayload(siteScope?.llmVisibility)) {
+            await writeSiteScopeCache(sb, llmCacheDomain, parentJob.user_id, { llmVisibility: normalizedResult });
+          } else if (isFreshLlmPayload(pageScope?.llmVisibility)) {
             // Ne jamais perdre les questions persistées si l'appel HTTP est coupé
             // après le démarrage de la mesure.
-            llmVisibilityData = unwrapFunctionPayload(siteScope.llmVisibility);
+            llmVisibilityData = unwrapFunctionPayload(pageScope.llmVisibility);
           } else {
             console.warn(`[Marina] LLM visibility returned no scores: ${result?.error || 'empty'}`);
           }
