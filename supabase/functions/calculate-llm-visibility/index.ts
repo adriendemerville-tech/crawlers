@@ -6,6 +6,7 @@ import { generateNaturalPrompts, type SiteContext as NaturalSiteContext } from '
 import { buildLlmBenchmarks } from '../_shared/llmBenchmarks.ts'
 import { naturalizeBenchmarkQuestions } from '../_shared/benchmarkQuestionWriter.ts'
 import { selectQuestionTopics, isToolLikeSite } from '../_shared/questionTopics.ts'
+import { derivePageFocus, pageFocusTopic } from '../_shared/pageFocus.ts'
 import { resolveIdentityCard } from '../_shared/identityResolver.ts'
 import { buildAggregate, computeCoverage } from '../_shared/llmVisibilityScore.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
