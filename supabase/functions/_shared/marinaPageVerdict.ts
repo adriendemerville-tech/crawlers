@@ -281,6 +281,20 @@ export function buildPageVerdictHTML(
     .map((a) => String(a.title || '').trim())
     .filter(Boolean);
 
+  // Quasi-doublons MESURÉS concernant cette URL (0 token LLM).
+  const nearDup: Array<{ url: string; similarity: number; verdict: string }> = [];
+  for (const c of ctx.integrity?.topClusters || []) {
+    const urls: string[] = (c?.pages || []).map((u: any) => String(u?.url || u));
+    if (!urls.some((u) => pageKey(u) === pageKey(url))) continue;
+    for (const u of urls) {
+      if (pageKey(u) === pageKey(url)) continue;
+      nearDup.push({ url: u, similarity: Number(c?.similarity || 0), verdict: String(c?.verdict || 'watch') });
+    }
+  }
+  const thinHit = (ctx.integrity?.topThinPages || []).find(
+    (p: any) => p?.url && pageKey(String(p.url)) === pageKey(url),
+  );
+
   const meta: PageVerdictMeta = {
     url,
     path: pathOf(url),
@@ -299,6 +313,9 @@ export function buildPageVerdictHTML(
     isThin: f?.isThin ?? false,
     isOrphan: f?.isOrphan ?? false,
     cannibalWith: f?.cannibalWith ?? [],
+    internalTargets: f?.outTargets ?? [],
+    nearDup: nearDup.slice(0, 6),
+    thinScore: thinHit ? Math.round(Number(thinHit.thinScore ?? thinHit.thin_score ?? 0)) || null : null,
   };
 
   const cell = (l: string, v: string) => `
