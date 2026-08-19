@@ -387,7 +387,16 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
   const supabase = getServiceClient()
 
   try {
-    const { tracked_site_id, user_id, siteContext: externalContext } = await req.json()
+    const {
+      tracked_site_id,
+      user_id,
+      siteContext: externalContext,
+      // URL réellement auditée (peut être une page profonde) + métadonnées
+      // crawlées. Sans ça, /salle-de-bain-marseille et /saint-remy-de-provence
+      // recevaient les mêmes questions que la home.
+      pageUrl,
+      pageMeta,
+    } = await req.json()
 
     if (!tracked_site_id || !user_id) {
       return jsonError('Missing tracked_site_id or user_id', 400)
