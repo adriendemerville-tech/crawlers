@@ -74,6 +74,8 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
   const [mergedHtml, setMergedHtml] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const cancelRef = useRef(false);
+  const batchRef = useRef<{ id: string; size: number } | null>(null);
+
 
   /* ── Reprise d'un batch interrompu (jobs côté serveur) ── */
   useEffect(() => {
