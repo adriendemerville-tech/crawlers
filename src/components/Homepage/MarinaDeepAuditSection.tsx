@@ -13,9 +13,9 @@ export function MarinaDeepAuditSection() {
   const t = {
     fr: {
       badge: 'Audit profond — 2 rapports offerts',
-      title: 'Un audit SEO & GEO de 40 pages, gratuit et sans compte',
+      title: 'Audit SEO & GEO gratuit de 40 pages',
       lead:
-        "Marina crawle votre site, teste votre visibilité dans ChatGPT, Gemini et Perplexity, puis livre un rapport complet avec plan d'action priorisé. Chaque donnée est étiquetée mesurée, testée, déduite ou estimée.",
+        "Marina teste votre visibilité dans ChatGPT, Gemini et Perplexity, puis livre un rapport actionnable avec plan d'action priorisé.",
       items: [
         { icon: Layers, k: '~20', l: 'sous-audits : technique, sémantique, maillage, autorité' },
         { icon: Bot, k: '9', l: 'questions posées aux moteurs de réponse IA' },
@@ -24,13 +24,12 @@ export function MarinaDeepAuditSection() {
       ],
       cta: 'Lancer mon audit profond gratuit',
       secondary: 'Voir un rapport type',
-      note: 'Aucune carte bancaire. Rapport livré en 5 minutes environ.',
     },
     es: {
       badge: 'Auditoría profunda — 2 informes gratis',
-      title: 'Una auditoría SEO y GEO de 40 páginas, gratis y sin cuenta',
+      title: 'Auditoría SEO y GEO gratuita de 40 páginas',
       lead:
-        'Marina rastrea su sitio, prueba su visibilidad en ChatGPT, Gemini y Perplexity, y entrega un informe completo con plan de acción priorizado. Cada dato se etiqueta como medido, probado, deducido o estimado.',
+        'Marina prueba su visibilidad en ChatGPT, Gemini y Perplexity, y entrega un informe accionable con plan de acción priorizado.',
       items: [
         { icon: Layers, k: '~20', l: 'sub-auditorías: técnica, semántica, enlazado, autoridad' },
         { icon: Bot, k: '9', l: 'preguntas hechas a los motores de respuesta IA' },
@@ -39,13 +38,12 @@ export function MarinaDeepAuditSection() {
       ],
       cta: 'Lanzar mi auditoría profunda gratis',
       secondary: 'Ver un informe tipo',
-      note: 'Sin tarjeta bancaria. Informe entregado en unos 5 minutos.',
     },
     en: {
       badge: 'Deep audit — 2 free reports',
-      title: 'A 40-page SEO & GEO audit, free and without an account',
+      title: 'Free 40-page SEO & GEO audit',
       lead:
-        'Marina crawls your site, tests your visibility inside ChatGPT, Gemini and Perplexity, then delivers a full report with a prioritised action plan. Every data point is labelled measured, tested, inferred or estimated.',
+        'Marina tests your visibility in ChatGPT, Gemini and Perplexity, then delivers an actionable report with a prioritised action plan.',
       items: [
         { icon: Layers, k: '~20', l: 'sub-audits: technical, semantic, internal links, authority' },
         { icon: Bot, k: '9', l: 'questions asked to AI answer engines' },
@@ -54,7 +52,6 @@ export function MarinaDeepAuditSection() {
       ],
       cta: 'Run my free deep audit',
       secondary: 'See a sample report',
-      note: 'No credit card. Report delivered in about 5 minutes.',
     },
   }[language === 'es' ? 'es' : language === 'en' ? 'en' : 'fr'];
 
