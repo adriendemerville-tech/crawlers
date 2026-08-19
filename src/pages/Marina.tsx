@@ -873,7 +873,7 @@ export default function Marina() {
                 {t.hero.title}
                 <span className="block text-primary">{t.hero.titleAccent}</span>
               </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+              <p className="text-lg text-muted-foreground max-w-4xl mx-auto mb-8">
                 {t.hero.subtitle}
               </p>
 
