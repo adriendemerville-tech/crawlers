@@ -3303,23 +3303,34 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         throw new Error('Phase 1b: phase 1a data not found');
       }
 
-      const { expertData, domain, detectedLang, strategicJobId, identityCard } = cached1a.result_data as any;
+      const { expertData, domain, detectedLang, strategicJobId, reusedStrategic, identityCard } = cached1a.result_data as any;
 
       let lastMirroredProgress = 30;
-      const strategicData = await waitForTrackedJob(sb, strategicJobId, {
-        timeoutMs: 420_000,
-        pollMs: 4_000,
-        onProgress: async (childJob) => {
-          const childProgress = Math.max(0, Math.min(100, childJob.progress || 0));
-          const mirroredProgress = Math.min(64, 30 + Math.round((childProgress / 100) * 35));
-          if (mirroredProgress > lastMirroredProgress) {
-            lastMirroredProgress = mirroredProgress;
-            await updateProgress(mirroredProgress, 'strategic_audit');
-          }
-        },
-      });
+      let strategicData: any;
+      if (reusedStrategic) {
+        // Mutualisation multipages : aucun sous-job à attendre.
+        strategicData = { ...reusedStrategic, _mutualized_from_domain: domain };
+      } else {
+        strategicData = await waitForTrackedJob(sb, strategicJobId, {
+          timeoutMs: 420_000,
+          pollMs: 4_000,
+          onProgress: async (childJob) => {
+            const childProgress = Math.max(0, Math.min(100, childJob.progress || 0));
+            const mirroredProgress = Math.min(64, 30 + Math.round((childProgress / 100) * 35));
+            if (mirroredProgress > lastMirroredProgress) {
+              lastMirroredProgress = mirroredProgress;
+              await updateProgress(mirroredProgress, 'strategic_audit');
+            }
+          },
+        });
+        // On ne met en cache qu'une synthèse réellement aboutie : un fallback
+        // dégradé (overallScore 0) réutilisé N fois propagerait la panne.
+        if (Number(strategicData?.overallScore || 0) > 0) {
+          await writeSiteScopeCache(sb, domain, parentJob.user_id, { strategic: strategicData });
+        }
+      }
 
-      console.log(`[Marina] Strategic audit done. Score: ${strategicData?.overallScore || 'N/A'}`);
+      console.log(`[Marina] Strategic audit ${reusedStrategic ? 'mutualisé' : 'done'}. Score: ${strategicData?.overallScore || 'N/A'}`);
       await updateProgress(65, 'phase1_complete');
 
       // ─── Save intermediate data and self-invoke phase 2 ───
