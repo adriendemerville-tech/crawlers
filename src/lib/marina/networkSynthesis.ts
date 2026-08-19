@@ -484,7 +484,7 @@ export function buildNetworkSynthesisHTML(
   const block3 = blockShell(3, 'Conformité technique contre valeur sémantique', 'mesure', block3Body);
 
   // ── 4. Concurrence interne ────────────────────────────────────────────────
-  const auditedPathsForDup = new Set(metas.map((m) => normPath(m.path)));
+  const auditedPaths = new Set(metas.map((m) => normPath(m.path)));
   const byVariant = new Map<string, PageMeta[]>();
   const variantsByPath = variantIndex(families);
   for (const m of metas) {
@@ -523,7 +523,7 @@ export function buildNetworkSynthesisHTML(
     }
   }
   /** Paires mesurées dont les deux URLs sont dans le lot audité. */
-  const dupInScope = measuredDup.filter((d) => auditedPathsForDup.has(normPath(d.a)) && auditedPathsForDup.has(normPath(d.b)));
+  const dupInScope = measuredDup.filter((d) => auditedPaths.has(normPath(d.a)) && auditedPaths.has(normPath(d.b)));
   const dupOutScope = measuredDup.filter((d) => !dupInScope.includes(d));
 
   let block4Body: string;
@@ -614,7 +614,6 @@ export function buildNetworkSynthesisHTML(
   // ── 5. Hiérarchie : pilier présent ou manquant ────────────────────────────
   // Un pilier absent du LOT audité peut exister sur le site. On ne conclut à
   // l'absence que si le crawl du domaine est disponible et ne le contient pas.
-  const auditedPaths = new Set(metas.map((m) => normPath(m.path)));
   const knownPaths = new Set((site?.knownPaths || []).map(normPath));
   const crawlUsable = Boolean(site && site.crawlPages > 0 && knownPaths.size > 0);
   const hubCandidates = new Map<string, number>();
