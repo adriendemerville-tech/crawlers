@@ -739,8 +739,9 @@ export default function Marina() {
         data: { url: url.trim(), email: freeEmail.trim(), lang: language || 'fr' },
       });
       if ('error' in res) {
-        setError(res.message);
-        toast.error(res.message);
+        const message = res.message || t.toasts.launchError;
+        setError(message);
+        toast.error(message);
         if (res.error === 'quota_exhausted') setFreeRemaining(0);
         setLoading(false);
         return;
