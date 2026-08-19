@@ -1056,36 +1056,104 @@ export function buildNetworkSynthesisHTML(
     });
   }
 
+  /**
+   * Trou 8 — un lot propre ne doit pas déboucher sur « rien à faire ». Quand
+   * aucun défaut transverse n'est mesuré, la synthèse bascule sur des actions
+   * de DÉVELOPPEMENT, déduites elles aussi de faits du lot : un gabarit qui
+   * performe et mérite d'être étendu, un pilier existant à consolider, des
+   * pages solides qui n'exploitent pas encore le format citable. Elles sont
+   * marquées « développement » et jamais confondues avec un correctif.
+   */
+  const corrections = candidates.filter((c) => c.kind === 'correction');
+  if (corrections.length < 2) {
+    const bestFamily = [...stats]
+      .filter((s) => s.count >= 2 && s.geo !== null && s.family.pattern.includes('*'))
+      .sort((a, b) => (b.geo as number) - (a.geo as number))[0];
+    if (bestFamily) {
+      candidates.push({
+        title: `Étendre le gabarit ${bestFamily.family.pattern} à de nouvelles variantes`,
+        why: `C'est le gabarit décliné le mieux noté du lot (GEO moyen ${bestFamily.geo}/100 sur ${bestFamily.count} pages) : la mécanique tient, la marge est dans le nombre de variantes couvertes, pas dans une correction.`,
+        effort: 'moyen',
+        level: 'estimation',
+        kind: 'developpement',
+        severity: 60,
+        reach: bestFamily.count,
+        reachTotal: metas.length,
+        solidity: bestFamily.solidity,
+      });
+    }
+    const strongPages = metas.filter((m) => num(m.geo) !== null && (m.geo as number) >= 70);
+    if (strongPages.length >= 2) {
+      candidates.push({
+        title: `Passer les ${strongPages.length} pages les mieux notées au format directement citable`,
+        why: 'Ces pages sont déjà solides : réponse en une phrase en tête, données datées et sourcées, balisage question-réponse. Aucun défaut à corriger, un format à ajouter.',
+        effort: 'faible',
+        level: 'estimation',
+        kind: 'developpement',
+        severity: 55,
+        reach: strongPages.length,
+        reachTotal: metas.length,
+      });
+    }
+    if (cohesion.regime !== 'assemblage' && !missingHubs.length && !existingHubs.length && !unverifiedHubs.length) {
+      candidates.push({
+        title: "Créer l'échelon supérieur qui agrège ce lot en une entité citable",
+        why: "Aucun niveau de regroupement ne manque à l'intérieur du périmètre audité : le levier restant est au-dessus du lot, une page qui nomme et cadre l'ensemble pour les moteurs de réponse.",
+        effort: 'moyen',
+        level: 'estimation',
+        kind: 'developpement',
+        severity: 50,
+        reach: metas.length,
+        reachTotal: metas.length,
+      });
+    }
+  }
+
   const seen = new Set<string>();
   const recommendations: NetworkRecommendation[] = candidates
     .filter((c) => (seen.has(c.title) ? false : (seen.add(c.title), true)))
+    .map((c) => ({ ...c, ...candidateYield(c) }))
     .sort((a, b) => b.yield_ - a.yield_)
     .slice(0, 6)
-    .map((c, i) => ({ rank: i + 1, title: c.title, why: c.why, effort: c.effort, level: c.level }));
+    .map((c, i) => ({ ...c, rank: i + 1 }));
 
+  const devOnly = recommendations.length > 0 && recommendations.every((r) => r.kind === 'developpement');
   const block7 = blockShell(
     7,
     'Recommandations séquencées par rendement',
     'deduction',
     recommendations.length
       ? `<p style="margin:0 0 8px 0;color:${MUTED};font-size:12.5px;">
-           Ordre de rendement décroissant, calculé sur l'ampleur du défaut mesuré et le nombre de pages couvertes
-           par un même correctif. À traiter dans cet ordre.
+           Ordre de passage calculé par une formule unique, identique d'un rapport à l'autre :
+           <strong>gravité mesurée × portée dans le lot × confiance × facilité</strong>. La gravité vient du relevé,
+           la portée du nombre d'URLs qu'un même correctif couvre, la confiance du niveau de preuve et de l'effectif.
+           Ce n'est pas une prévision de gain.
          </p>
+         ${
+           devOnly
+             ? `<p style="margin:0 0 8px 0;">Aucun défaut transverse mesuré sur ce lot : les actions ci-dessous sont des
+                actions de <strong>développement</strong> et non des correctifs. Elles visent la demande encore non couverte,
+                pas la réparation d'un problème constaté.</p>`
+             : ''
+         }
          <ol style="padding-left:20px;margin:0;">
            ${recommendations
              .map(
                (r) => `
              <li style="margin:0 0 10px 0;">
-               <strong>${esc(r.title)}</strong> ${badge(r.level)}
+               <strong>${esc(r.title)}</strong> ${badge(r.level)}${
+                 r.kind === 'developpement'
+                   ? `<span style="margin-left:6px;border:1px solid ${MUTED};color:${MUTED};border-radius:999px;padding:1px 7px;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;">développement</span>`
+                   : ''
+               }
                <span style="display:block;color:${BODY};">${esc(r.why)}</span>
-               <span style="display:block;color:${MUTED};font-size:12px;">Effort : ${esc(r.effort)}</span>
+               <span style="display:block;color:${MUTED};font-size:12px;">Effort : ${esc(r.effort)} · gravité ${r.severity}/100 · portée ${r.reach}/${r.reachTotal} URLs · confiance ${Math.round(r.confidence * 100)} % · rendement ${String(r.yield_).replace('.', ',')}</span>
              </li>`,
              )
              .join('')}
          </ol>`
       : noFact(
-          'Aucun défaut transverse suffisamment marqué pour justifier une action de niveau réseau : les correctifs restants sont propres à chaque page et figurent dans les fiches ci-après.',
+          "Aucune action de niveau réseau n'a pu être établie : ni défaut transverse mesuré, ni gabarit décliné assez fourni pour justifier une extension. Les correctifs restants sont propres à chaque page et figurent dans les fiches ci-après.",
         ),
   );
 
