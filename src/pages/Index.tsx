@@ -655,6 +655,13 @@ const Index = () => {
           <div className="cv-auto"><PainPointsSection /></div>
         </Suspense>
 
+        {/* Audit profond gratuit (Marina) — juste après les pain points */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <div className="cv-auto"><MarinaDeepAuditSection /></div>
+        </Suspense>
+
+
+
         {/* Pro Agency hero */}
         <section className="relative overflow-hidden py-14 sm:py-20 cv-auto">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--brand-violet)/0.06),transparent_60%)]" />
