@@ -126,6 +126,7 @@ export const startMarinaFreeAudit = createServerFn({ method: 'POST' })
 
     const publishableKey = process.env['SUPABASE_PUBLISHABLE_KEY']!;
     const supabaseUrl = process.env['SUPABASE_URL']!;
+    console.log('[MarinaFree] debug', { admin: adminUserId, key: internalKey?.slice(0,8), pub: (publishableKey||'').slice(0,3) });
     const launchRes = await fetch(`${supabaseUrl}/functions/v1/marina`, {
       method: 'POST',
       headers: {
