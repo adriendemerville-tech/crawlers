@@ -334,7 +334,8 @@ function unavailable(domain: string, reason: string): AuthorityData {
   };
 }
 
-async function dfsPost(path: string, payload: unknown, label: string, target: string) {
+/** Appel DataForSEO backlinks partagé (exporté pour l'historisation — lot 3 — et le link gap — lot 4). */
+export async function dfsBacklinksPost(path: string, payload: unknown, label: string, target: string) {
   const auth = 'Basic ' + btoa(`${DATAFORSEO_LOGIN}:${DATAFORSEO_PASSWORD}`);
   const resp = await fetch(`https://api.dataforseo.com/v3/${path}`, {
     method: 'POST',
@@ -498,20 +499,20 @@ export async function fetchDomainAuthority(
 
   try {
     const [summaryRes, refRes, anchorRes, pagesRes] = await Promise.allSettled([
-      dfsPost('backlinks/summary/live', [{ target: domain, internal_list_limit: 10, include_subdomains: true }], 'backlinks/summary/live', domain),
-      dfsPost(
+      dfsBacklinksPost('backlinks/summary/live', [{ target: domain, internal_list_limit: 10, include_subdomains: true }], 'backlinks/summary/live', domain),
+      dfsBacklinksPost(
         'backlinks/referring_domains/live',
         [{ target: domain, limit: REFERRING_DOMAINS_SAMPLE_LIMIT, order_by: ['rank,desc'], internal_list_limit: 1 }],
         'backlinks/referring_domains/live',
         domain,
       ),
-      dfsPost(
+      dfsBacklinksPost(
         'backlinks/anchors/live',
         [{ target: domain, limit: ANCHORS_SAMPLE_LIMIT, order_by: ['backlinks,desc'], internal_list_limit: 1 }],
         'backlinks/anchors/live',
         domain,
       ),
-      dfsPost(
+      dfsBacklinksPost(
         'backlinks/domain_pages/live',
         [{ target: domain, limit: LINKED_PAGES_SAMPLE_LIMIT, order_by: ['referring_domains,desc'], internal_list_limit: 1 }],
         'backlinks/domain_pages/live',

@@ -15,6 +15,8 @@ import { writeIdentity } from '../_shared/identityGateway.ts';
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts';
 import { computeFactualCitationScores } from '../_shared/citationScorer.ts';
 import { fetchDomainAuthority, type AuthorityData } from '../_shared/domainAuthority.ts';
+import { persistAuthoritySnapshot, buildAuthorityTrendPromptSection, type AuthorityTrend } from '../_shared/authoritySnapshots.ts';
+import { fetchLinkGap, resolveCompetitorDomains, buildLinkGapPromptSection, writeLinkGapFindings, type LinkGapResult } from '../_shared/linkGap.ts';
 import { preCrawlForAudit, formatPreCrawlForPrompt, type PreCrawlResult } from '../_shared/preCrawlForAudit.ts';
 import { handleRequest } from '../_shared/serveHandler.ts';
 import { applyMarketWeighting } from '../_shared/marketPriority.ts';
@@ -149,6 +151,10 @@ Deno.serve(handleRequest(async (req) => {
     let marketData: MarketData | null;
     let rankingOverview: RankingOverview | null;
     let authorityData: AuthorityData | null = null;
+    // Lot 3 : tendance mesurée sur l'historique propriétaire des snapshots.
+    let authorityTrend: AuthorityTrend | null = null;
+    // Lot 4 : link gap contre les concurrents déclarés.
+    let linkGapData: LinkGapResult | null = null;
     let founderInfo: FounderInfo;
     let localCompetitorData: { name: string; url: string; rank: number; score?: number } | null = null;
     let localCompetitorsAll: { name: string; url: string; rank: number; score?: number }[] = [];
@@ -283,6 +289,30 @@ Deno.serve(handleRequest(async (req) => {
       }
       if (authorityData?.data_source === 'dataforseo') console.log(`🔗 Autorité: AS=${authorityData.authority_score}/100 (conf. ${authorityData.confidence}), toxicité=${authorityData.toxicity?.toxicity_score ?? 'n/a'}/100 (${authorityData.toxicity?.verdict ?? '—'}), ref_domains=${authorityData.referring_domains}, backlinks=${authorityData.backlinks_total}`);
       else console.warn(`⚠️ Autorité indisponible: ${authorityData?.unavailable_reason || 'non collectée'}`);
+
+      // ── Lot 3 : historisation mensuelle + tendance mesurée ──
+      // ── Lot 4 : link gap contre les concurrents déclarés (carte d'identité
+      //    d'abord, concurrents SERP détectés en repli) ──
+      if (!isContentMode && authorityData?.data_source === 'dataforseo') {
+        const competitorDomains = resolveCompetitorDomains(
+          {
+            identityCompetitors: (siteIdentityCtx as any)?.competitors,
+            competitorUrls: localCompetitorsAll.map((c: any) => c?.url || null),
+          },
+          domainWithoutWww,
+        );
+        const [trendRes, gapRes] = await Promise.allSettled([
+          withDeadline(persistAuthoritySnapshot(authorityData), 20_000, 'authority_snapshot'),
+          competitorDomains.length
+            ? withDeadline(fetchLinkGap(domainWithoutWww, competitorDomains), 30_000, 'link_gap')
+            : Promise.resolve(null),
+        ]);
+        authorityTrend = trendRes.status === 'fulfilled' ? trendRes.value : null;
+        linkGapData = gapRes.status === 'fulfilled' ? gapRes.value : null;
+        if (authorityTrend) console.log(`📈 Historique liens: ${authorityTrend.months_tracked} mois, verdict ${authorityTrend.verdict} (Δréf ${authorityTrend.delta_referring_domains ?? 'n/a'})`);
+        if (linkGapData) console.log(`🔎 Link gap: ${linkGapData.gap_count} domaines manquants (source ${linkGapData.source}, concurrents ${linkGapData.competitors.join(', ') || 'aucun'})`);
+        else if (competitorDomains.length === 0) console.log('🔎 Link gap ignoré : aucun domaine concurrent exploitable dans la carte d\'identité');
+      }
       console.log(`⏱️ Data collection done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
 
@@ -332,6 +362,9 @@ Deno.serve(handleRequest(async (req) => {
 
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode, facebookPageInfo, authorityData);
     userPrompt = `${formatSocialProofForPrompt(socialProof)}\n\n` + userPrompt;
+    // Faits mesurés (lots 3 et 4) : le LLM ne doit ni les deviner ni les ignorer.
+    if (authorityTrend) userPrompt = `${buildAuthorityTrendPromptSection(authorityTrend)}\n\n` + userPrompt;
+    if (linkGapData) userPrompt = `${buildLinkGapPromptSection(linkGapData)}\n\n` + userPrompt;
     userPrompt = `LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
 
     const pageTypeLabels: Record<PageType, string> = { editorial: 'MODE ÉDITORIAL', product: 'MODE PRODUIT', deep: 'MODE PAGE PROFONDE', homepage: 'MODE PAGE D\'ACCUEIL' };
@@ -759,7 +792,7 @@ Réponds en JSON STRICT:
               tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
               title: `Chunkability faible (${cs.score}/100) — contenu mal découpé pour les IA`,
               description: cs.explanation,
-              finding_category: 'structure_rag', source_type: 'audit' as const,
+              finding_category: 'structure_rag', source_type: 'audit_strategic' as const,
               source_function: 'audit-strategique-ia', source_record_id: `chunk_${cleanDomain}_${url.replace(/[^a-z0-9]/gi, '_').slice(0, 60)}`,
               severity: cs.score < 30 ? 'danger' : 'warning', status: 'pending' as const,
               target_url: url,
@@ -775,7 +808,7 @@ Réponds en JSON STRICT:
                 tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
                 title: `Fan-out manquant : "${rec.keyword}" (${rec.volume.toLocaleString()} vol/mois)`,
                 description: `Cette requête à fort volume n'est pas couverte dans le contenu de la page. Ajoutez une section H2 dédiée pour capter ce sous-angle RAG.`,
-                finding_category: 'content_gap_fanout', source_type: 'audit' as const,
+                finding_category: 'content_gap_fanout', source_type: 'audit_strategic' as const,
                 source_function: 'audit-strategique-ia', source_record_id: `fanout_${kwSlug}_${cleanDomain}`,
                 severity: rec.volume >= 1000 ? 'danger' : 'warning', status: 'pending' as const,
                 target_url: url,
@@ -794,7 +827,7 @@ Réponds en JSON STRICT:
                 tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
                 title: `Authority Score faible (${a.authority_score}/100) — ${a.referring_domains} domaines référents`,
                 description: `Le profil de liens est étroit (rank ${a.domain_rank}/100, ${a.referring_domains} domaines référents, ${a.backlinks_total} backlinks). En attendant des liens externes, renforcez la circulation du PageRank interne vers les pages stratégiques.`,
-                finding_category: 'domain_authority', source_type: 'audit' as const,
+                finding_category: 'domain_authority', source_type: 'audit_strategic' as const,
                 source_function: 'audit-strategique-ia', source_record_id: `authority_${cleanDomain}`,
                 severity: a.authority_score < 20 ? 'danger' : 'warning', status: 'pending' as const,
                 target_url: `https://${cleanDomain}`,
@@ -806,7 +839,7 @@ Réponds en JSON STRICT:
                 tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
                 title: `${a.broken_backlinks} backlinks cassés (${Math.round((a.broken_backlinks / a.backlinks_total) * 100)} % du profil)`,
                 description: `Une part significative des liens entrants pointe vers des URLs mortes. Rétablissez ces cibles ou redirigez-les en 301 vers la page équivalente pour récupérer le signal d'autorité.`,
-                finding_category: 'backlink_health', source_type: 'audit' as const,
+                finding_category: 'backlink_health', source_type: 'audit_strategic' as const,
                 source_function: 'audit-strategique-ia', source_record_id: `backlink_health_${cleanDomain}`,
                 severity: a.broken_backlinks / a.backlinks_total > 0.25 ? 'danger' : 'warning', status: 'pending' as const,
                 target_url: `https://${cleanDomain}`,
@@ -820,13 +853,38 @@ Réponds en JSON STRICT:
                 tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
                 title: `Profil de liens ${t.verdict === 'pollue' ? 'pollué' : 'à surveiller'} (toxicité ${t.toxicity_score}/100)`,
                 description: `${t.signals.length ? t.signals.join(' ; ') + '. ' : ''}${t.recommendation}`,
-                finding_category: 'backlink_toxicity', source_type: 'audit' as const,
+                finding_category: 'backlink_toxicity', source_type: 'audit_strategic' as const,
                 source_function: 'audit-strategique-ia', source_record_id: `backlink_toxicity_${cleanDomain}`,
                 severity: t.verdict === 'pollue' ? 'danger' : 'warning', status: 'pending' as const,
                 target_url: `https://${cleanDomain}`,
                 payload: { auto_generated: true, ...t, authority_score: a.authority_score, confidence: a.confidence },
               });
             }
+            // ── Lot 3 : perte de liens détectée sur l'historique propriétaire ──
+            if (authorityTrend && authorityTrend.verdict === 'perte_de_liens') {
+              wbItems.push({
+                tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
+                title: `Perte de domaines référents sur ${authorityTrend.months_tracked} mois mesurés`,
+                description: `${authorityTrend.recommendation} (Δ domaines référents ${authorityTrend.delta_referring_domains ?? 'n/a'}, Δ backlinks ${authorityTrend.delta_backlinks ?? 'n/a'} depuis ${authorityTrend.previous_month || 'la mesure précédente'}).`,
+                finding_category: 'backlink_health', source_type: 'audit_strategic' as const,
+                source_function: 'audit-strategique-ia', source_record_id: `authority_trend_${cleanDomain}`,
+                severity: 'warning', status: 'pending' as const,
+                target_url: `https://${cleanDomain}`,
+                payload: { auto_generated: true, ...authorityTrend },
+              });
+            }
+          }
+
+          // ── Lot 4 : link gap → tâches exécutables (finding_category='link_gap') ──
+          if (linkGapData) {
+            try {
+              const written = await writeLinkGapFindings(getServiceClient(), linkGapData, {
+                userId: wbUser.id,
+                trackedSiteId: trackedId,
+                sourceFunction: 'audit-strategique-ia',
+              });
+              if (written) console.log(`✅ Workbench: ${written} constats link_gap`);
+            } catch (gapErr) { console.warn('⚠️ Link gap workbench failed:', gapErr); }
           }
 
           // ── Réécriture « réponse directe » (~40 mots) sur la page auditée ──
@@ -848,7 +906,7 @@ Réponds en JSON STRICT:
                 userId: wbUser.id,
                 trackedSiteId: trackedId,
                 sourceFunction: 'audit-strategique-ia',
-                sourceType: 'audit',
+                sourceType: 'audit_strategic',
               });
             }
           } catch (aeoErr) { console.warn('⚠️ AEO rewrite prescription failed:', aeoErr); }

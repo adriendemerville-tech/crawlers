@@ -1714,6 +1714,30 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
       });
       break;
 
+    case 'link_gap':
+      // Lot 4 : l'obtention d'un lien externe n'est jamais automatisable. La tâche
+      // reste exécutable (cible nommée, mesurée) mais exige une validation humaine.
+      tasks.push({
+        id: `${baseId}_linkgap`,
+        action_type: 'fix_technical',
+        priority: 0,
+        title: lang === 'en'
+          ? `Link gap: earn a link from a domain already citing your competitors`
+          : `Link gap : obtenir un lien depuis un domaine citant déjà vos concurrents`,
+        description: `${finding.description || ''}\n\n${lang === 'en'
+          ? 'Expected action: find the competitor-citing page, then pitch an equivalent or better resource on your domain. Offsite action, no internal change fixes this finding.'
+          : "Action attendue : identifier la page qui cite le concurrent, puis proposer une ressource équivalente ou supérieure sur votre domaine. Action offsite : aucune modification interne ne corrige ce constat."}`,
+        affected_urls: urls.slice(0, 3),
+        source_diagnostics: [sourceType],
+        execution_mode: 'operational_queue',
+        is_destructive: false,
+        depends_on: [],
+        estimated_impact: impact,
+        metadata: { offsite_action: true, requires_human_validation: true, recommended_action: 'acquire_backlink', link_gap: finding.payload || null },
+      });
+      break;
+
+
     case 'anchor_diversity':
       tasks.push({
         id: `${baseId}_anchor`,
