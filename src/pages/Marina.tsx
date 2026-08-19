@@ -747,8 +747,12 @@ export default function Marina() {
       if ('error' in res) {
         const message = res.message || t.toasts.launchError;
         setError(message);
-        toast.error(message);
-        if (res.error === 'quota_exhausted') setFreeRemaining(0);
+        if (res.error === 'quota_exhausted') {
+          setFreeRemaining(0);
+          setShowPaidUnlock(true);
+        } else {
+          toast.error(message);
+        }
         setLoading(false);
         return;
       }
@@ -759,7 +763,7 @@ export default function Marina() {
       toast.error(err?.message || t.toasts.launchError);
       setLoading(false);
     }
-  }, [url, freeEmail, freeT, language, t]);
+  }, [url, freeEmail, freeT, language, t, freeRemaining]);
 
   const handleGenerate = useCallback(async () => {
     if (!url.trim()) { toast.error(t.toasts.enterUrl); return; }
