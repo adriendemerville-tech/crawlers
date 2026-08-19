@@ -564,15 +564,50 @@ function normPath(p: string): string {
 }
 
 /**
- * Synthèse réseau complète. Retourne une chaîne vide sous 2 URLs : la lecture
- * d'ensemble n'a alors pas d'objet.
+ * Trou 10 — la synthèse ne vit plus seulement dans le PDF : ses constats sont
+ * exposés sous forme de faits structurés, persistables et comparables dans le
+ * temps, et convertibles en tâches Workbench sans réinterprétation du HTML.
  */
-export function buildNetworkSynthesisHTML(
+export interface NetworkSynthesisFacts {
+  domain: string;
+  urlsAudited: number;
+  regime: CohesionRegime;
+  /** Effectif du sous-lot réseau en régime mixte, sinon toutes les URLs. */
+  scopedUrls: number;
+  techAvg: number | null;
+  geoAvg: number | null;
+  /** techAvg - geoAvg quand les deux sont consolidés. */
+  techGeoGap: number | null;
+  templates: Array<{
+    pattern: string;
+    pages: number;
+    solidity: Solidity;
+    contentCheck: ContentCheck;
+    global: number | null;
+    tech: number | null;
+    geo: number | null;
+  }>;
+  mesh: { measured: boolean; edges: number; pagesWithTargets: number; isolated: number };
+  measuredDuplicates: Array<{ a: string; b: string; similarity: number; verdict: string }>;
+  hubs: { missing: string[]; existing: string[]; unverified: string[] };
+  thinPages: string[];
+  orphanPages: string[];
+  /** Structure de domaine réellement exploitée pour vérifier les piliers. */
+  structureVerified: boolean;
+  recommendations: NetworkRecommendation[];
+}
+
+/**
+ * Synthèse réseau complète : HTML du bloc de tête + faits structurés.
+ * `facts` est nul sous 2 URLs, la lecture d'ensemble n'ayant alors pas d'objet.
+ */
+export function computeNetworkSynthesis(
   domain: string,
   metas: PageMeta[],
   site?: SiteStructureContext,
-): string {
-  if (metas.length < 2) return '';
+): { html: string; facts: NetworkSynthesisFacts | null } {
+  if (metas.length < 2) return { html: '', facts: null };
+
 
 
   const families = detectTemplates(metas);
