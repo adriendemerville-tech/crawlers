@@ -592,7 +592,7 @@ const FREE_TRIAL_TEXTS = {
 export default function Marina() {
   useCanonicalHreflang('/marina');
   const { user } = useAuth();
-  const { balance: credits, refreshBalance: refreshCredits, useCredit } = useCredits();
+  const { balance: credits, refreshBalance: refreshCredits, useCredit, hasUnlimitedCredits } = useCredits();
   const { language } = useLanguage();
   const t = translations[language as keyof typeof translations] || translations.fr;
   const [url, setUrl] = useState('');
