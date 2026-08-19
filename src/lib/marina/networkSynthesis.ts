@@ -1005,8 +1005,20 @@ export function computeNetworkSynthesis(
               .slice(0, 6)
               .map((m) => `<code style="font-size:12px;">${esc(m.path)}</code>`)
               .join(' · ')}`
-          : '. Toutes les pages du lot participent au maillage interne'
+          : '. Toutes les pages dont les liens sont remontés participent au maillage interne'
+      }${
+        unmeasuredInLot.length
+          ? `. ${unmeasuredInLot.length} page${unmeasuredInLot.length > 1 ? 's' : ''} du lot ne reçoi${
+              unmeasuredInLot.length > 1 ? 'vent' : 't'
+            } aucun lien des autres URLs auditées et ${
+              unmeasuredInLot.length > 1 ? 'leurs liens sortants ne sont pas remontés' : 'ses liens sortants ne sont pas remontés'
+            } : ${unmeasuredInLot
+              .slice(0, 6)
+              .map((m) => `<code style="font-size:12px;">${esc(m.path)}</code>`)
+              .join(' · ')} — rattachement à vérifier`
+          : ''
       }${meshNote}.</p>`;
+
   if (meshMeasured && intraEdges.length === 0 && cohesion.regime !== 'assemblage') {
     candidates.push({
       title: `Relier entre elles les ${withTargets.length} pages du lot`,
