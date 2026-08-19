@@ -723,10 +723,42 @@ export default function Marina() {
     return () => { cancelled = true; };
   }, [jobId, refreshCredits]);
 
+  // Visiteur non connecté : essai gratuit (quota serveur par IP + par email)
+  const handleFreeGenerate = useCallback(async () => {
+    if (!url.trim()) { toast.error(t.toasts.enterUrl); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(freeEmail.trim())) { toast.error(freeT.emailRequired); return; }
+
+    setLoading(true);
+    setError(null);
+    setReportUrl(null);
+    setProgress(0);
+    setPhase(t.phases.init);
+
+    try {
+      const res = await startMarinaFreeAudit({
+        data: { url: url.trim(), email: freeEmail.trim(), lang: language || 'fr' },
+      });
+      if ('error' in res) {
+        setError(res.message);
+        toast.error(res.message);
+        if (res.error === 'quota_exhausted') setFreeRemaining(0);
+        setLoading(false);
+        return;
+      }
+      setJobId(res.jobId);
+      setFreeRemaining(res.remaining);
+      toast.success(freeT.launched);
+    } catch (err: any) {
+      toast.error(err?.message || t.toasts.launchError);
+      setLoading(false);
+    }
+  }, [url, freeEmail, freeT, language, t]);
+
   const handleGenerate = useCallback(async () => {
     if (!url.trim()) { toast.error(t.toasts.enterUrl); return; }
-    if (!user) { toast.error(t.toasts.loginRequired); return; }
+    if (!user) { await handleFreeGenerate(); return; }
     if (credits < CREDIT_COST) { toast.error(`${t.toasts.insufficientCredits} (${CREDIT_COST} required)`); return; }
+
 
     setLoading(true);
     setError(null);
