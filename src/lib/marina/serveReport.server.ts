@@ -26,19 +26,20 @@ async function resolveJobId(code: string): Promise<string | null> {
   if (UUID_RE.test(code)) return code;
   if (!PREFIX_RE.test(code)) return null;
 
+  // On cherche directement le fichier dans le bucket : pas de requête SQL,
+  // et le préfixe est validé par une correspondance de nom de fichier.
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-  const { data } = await supabaseAdmin
-    .from('async_jobs')
-    .select('id')
-    .eq('function_name', 'marina')
-    .ilike('id::text', `${code}%`)
-    .limit(2);
+  const { data } = await supabaseAdmin.storage
+    .from('shared-reports')
+    .list('marina', { search: code, limit: 2 });
 
-  // Ambiguïté (deux jobs partagent le préfixe) : on refuse plutôt que de
+  const matches = (data ?? []).filter((f) => f.name.toLowerCase().startsWith(code.toLowerCase()));
+  // Ambiguïté (deux rapports partagent le préfixe) : on refuse plutôt que de
   // servir le mauvais rapport.
-  if (!data || data.length !== 1) return null;
-  return data[0].id as string;
+  if (matches.length !== 1) return null;
+  return matches[0].name.replace(/\.html$/i, '');
 }
+
 
 export async function serveMarinaReport(code: string): Promise<Response> {
   const jobId = await resolveJobId(code.trim());
