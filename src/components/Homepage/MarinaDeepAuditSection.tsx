@@ -2,6 +2,7 @@ import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, FileSearch, Layers, Gauge, Bot } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { ClaudeVerdictBlock } from '@/components/Marina/ClaudeVerdictBlock';
 
 /**
  * Section home : audit profond gratuit (Marina).
@@ -58,7 +59,7 @@ export function MarinaDeepAuditSection() {
   return (
     <section className="relative overflow-hidden py-14 sm:py-20" aria-labelledby="marina-free-audit-title">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_0%,hsl(var(--brand-violet)/0.10),transparent_65%)]" />
-      <div className="relative mx-auto max-w-3xl px-4">
+      <div className="relative mx-auto grid max-w-6xl items-start gap-8 px-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-border/60 bg-card/40 p-6 sm:p-10 backdrop-blur-sm">
           <span className="inline-flex items-center rounded-full border border-amber-500/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-500">
             {t.badge}
@@ -96,6 +97,8 @@ export function MarinaDeepAuditSection() {
             </Link>
           </div>
         </div>
+
+        <ClaudeVerdictBlock className="mt-0" />
       </div>
     </section>
   );

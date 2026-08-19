@@ -1,8 +1,8 @@
 import ClaudeVerdictAnimation from '@/components/Marina/ClaudeVerdictAnimation';
 
-export function ClaudeVerdictBlock() {
+export function ClaudeVerdictBlock({ className = 'mt-12' }: { className?: string }) {
   return (
-    <section className="mt-12">
+    <section className={className}>
       <div className="mx-auto max-w-3xl px-4">
         <h3 className="text-xl font-bold text-foreground text-center mb-4">
           Un LLM seul peut-il produire le même audit ?
