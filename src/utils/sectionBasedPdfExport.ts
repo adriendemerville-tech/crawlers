@@ -178,7 +178,10 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   let cursorY = marginTop;
   let isFirstElement = true;
 
+  let captured = 0;
   for (const section of sections) {
+    captured += 1;
+    onProgress?.(captured, sections.length);
     // On capture chaque bloc à sa largeur réelle (les blocs imbriqués sont plus
     // étroits que le conteneur) puis on le recentre dans la zone utile, sinon
     // html2canvas ajoutait une bande blanche à droite.
@@ -186,7 +189,9 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     const nativeWidth = Math.max(1, Math.min(captureWidth, measuredWidth));
     let canvas: HTMLCanvasElement;
     try {
-      canvas = await html2canvas(section, {
+      // Délai de garde : une capture qui ne rend jamais la main bloquait tout
+      // l'export (bouton figé sur « Génération… »).
+      const shot = html2canvas(section, {
         scale,
         useCORS: true,
         allowTaint: true,
@@ -195,7 +200,14 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
         logging: false,
         backgroundColor,
       });
+      canvas = await Promise.race([
+        shot,
+        new Promise<HTMLCanvasElement>((_, reject) =>
+          setTimeout(() => reject(new Error('html2canvas timeout')), 20000),
+        ),
+      ]);
     } catch {
+
       continue; // un bloc non capturable ne doit pas casser tout l'export
     }
 
