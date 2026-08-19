@@ -24,6 +24,34 @@ Deno.serve(async (req) => {
   try {
     if (event.eventType === EventName.TransactionCompleted) {
       const txn = event.data;
+
+      // Achat d'un audit Marina à l'unité par un visiteur sans compte :
+      // on ouvre un "pass" à usage unique rattaché au jeton généré au checkout.
+      if (txn.customData?.kind === "marina_oneshot") {
+        const passToken = String(txn.customData?.passToken || "");
+        if (!passToken) {
+          console.warn("[payments-webhook] marina_oneshot without passToken", txn.id);
+          return new Response("ok", { status: 200 });
+        }
+        const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+        const { error: passErr } = await admin.from("marina_paid_passes").upsert(
+          {
+            pass_token: passToken,
+            email: txn.customData?.email ? String(txn.customData.email).toLowerCase() : null,
+            txn_id: txn.id,
+            amount_cents: parseInt(txn.details?.totals?.total ?? "0", 10) || null,
+            status: "granted",
+          },
+          { onConflict: "pass_token" },
+        );
+        if (passErr) {
+          console.error("[payments-webhook] marina pass upsert error", passErr);
+          return new Response("db_error", { status: 500 });
+        }
+        console.log(`[payments-webhook] marina pass granted token=${passToken.slice(0, 8)}…`);
+        return new Response("ok", { status: 200 });
+      }
+
       const userId = txn.customData?.userId;
       if (!userId) {
         console.warn("[payments-webhook] no userId in customData, skipping", txn.id);
