@@ -6,6 +6,7 @@ import { Loader2, ExternalLink, RefreshCw, Terminal, Layers, FileText } from 'lu
 import { toast } from 'sonner';
 import { listMyMarinaAudits, getMyMarinaReportUrl } from '@/lib/marina/myAudits.functions';
 import { normalizeScanMode } from '@/lib/marina/scanMode';
+import { groupAudits } from '@/lib/marina/groupAudits';
 
 type Audit = Awaited<ReturnType<typeof listMyMarinaAudits>>[number];
 
@@ -17,45 +18,6 @@ const STATUS_LABEL: Record<string, string> = {
   failed: 'Échec',
 };
 
-interface AuditGroup {
-  key: string;
-  main: Audit;
-  items: Audit[];
-}
-
-/**
- * Regroupe les jobs d'un même audit multipages en une seule entrée.
- * - Priorité au marqueur `batchId` posé au lancement.
- * - Repli pour les lots antérieurs : jobs consécutifs du même domaine, lancés
- *   à moins de 5 minutes d'intervalle et portant des URLs distinctes.
- */
-function groupAudits(audits: Audit[]): AuditGroup[] {
-  const groups: AuditGroup[] = [];
-  const byBatch = new Map<string, AuditGroup>();
-
-  for (const a of audits) {
-    if (a.batchId) {
-      const existing = byBatch.get(a.batchId);
-      if (existing) { existing.items.push(a); continue; }
-      const g: AuditGroup = { key: a.batchId, main: a, items: [a] };
-      byBatch.set(a.batchId, g);
-      groups.push(g);
-      continue;
-    }
-
-    const last = groups[groups.length - 1];
-    const lastItem = last?.items[last.items.length - 1];
-    const sameDomain = lastItem && !lastItem.batchId && lastItem.domain === a.domain;
-    const closeInTime =
-      lastItem && Math.abs(new Date(lastItem.createdAt).getTime() - new Date(a.createdAt).getTime()) < 5 * 60_000;
-    const distinctUrl = lastItem && last.items.every(i => (i.url || '') !== (a.url || ''));
-
-    if (sameDomain && closeInTime && distinctUrl) last.items.push(a);
-    else groups.push({ key: a.id, main: a, items: [a] });
-  }
-
-  return groups;
-}
 export function MarinaMyAuditsTab() {
   const [audits, setAudits] = useState<Audit[]>([]);
   const [loading, setLoading] = useState(true);
