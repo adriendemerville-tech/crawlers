@@ -11,6 +11,7 @@ import { analyzeHtmlFull, type HtmlData } from '../_shared/matriceHtmlAnalysis.t
 import { extractInjectionPoints, injectionPointsToPrompt, type InjectionPoints } from '../_shared/injectionPoints.ts';
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
 import { buildCacheKey, getUserCache, getCrawlersRecommendation, saveCache, payloadToMarkdown } from '../_shared/contentArchitectCache.ts';
+import { enqueueJob } from '../_shared/jobQueue.ts';
 
 // Map content-architect page_type → editorial pipeline content_type
 const PAGE_TYPE_TO_CONTENT_TYPE: Record<string, ContentType> = {
@@ -187,6 +188,72 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
     _jobId = jobId
     const jobSb = jobId ? getServiceClient() : null
 
+    // ── MODE ÉTAGÉ (job_queue) ──
+    // staged: true  → découpe l'exécution en 2 jobs enfilés :
+    //   étape 1 « research » (I/O : identité, HTML, DataForSEO, Firecrawl, audits)
+    //   étape 2 « synthesis » (LLM + persistance)
+    // Chaque étape a son propre budget CPU/wall-time → plus de timeout à 65 %.
+    const stage = (body as { _stage?: 'research' | 'synthesis' })._stage
+    const stagedMode = (body as { staged?: boolean }).staged === true || !!stage
+
+    // Reprise de l'étape 2 : on recharge le checkpoint de l'étape 1.
+    let resumedResearch: Record<string, any> | null = null
+    if (stage === 'synthesis' && jobSb && jobId) {
+      const { data: ckpt } = await jobSb
+        .from('async_jobs')
+        .select('result_data')
+        .eq('id', jobId)
+        .maybeSingle()
+      const stored = (ckpt?.result_data as Record<string, any> | null)?.__research
+      if (!stored) {
+        await jobSb.from('async_jobs').update({
+          status: 'failed',
+          error_message: 'Checkpoint de recherche introuvable — étape 1 non terminée',
+          completed_at: new Date().toISOString(),
+        }).eq('id', jobId)
+        return jsonError('Research checkpoint missing', 500)
+      }
+      resumedResearch = stored
+      console.log(`[content-advisor] Étape 2/2 (synthèse) reprise depuis le checkpoint du job ${jobId}`)
+    }
+
+    // Entrée du mode étagé : crée le job de suivi et enfile l'étape 1 dans job_queue.
+    if (stagedMode && !jobId) {
+      const sb = getServiceClient()
+      const { data: job, error: jobError } = await sb
+        .from('async_jobs')
+        .insert({
+          user_id: user.id,
+          function_name: 'content-architecture-advisor',
+          status: 'pending',
+          input_payload: { url, keyword, page_type, tracked_site_id, language_code, location_code, staged: true },
+        })
+        .select('id')
+        .single()
+      if (jobError || !job) return jsonError('Failed to create async job', 500)
+
+      try {
+        await enqueueJob(sb as any, {
+          userId: user.id,
+          functionName: 'content-architecture-advisor',
+          payload: { ...body, async: false, staged: true, _stage: 'research', _job_id: job.id, user_id: user.id },
+          maxAttempts: 2,
+        })
+      } catch (e) {
+        await sb.from('async_jobs').update({
+          status: 'failed',
+          error_message: `Enfilement de l'étape recherche impossible : ${e instanceof Error ? e.message : String(e)}`,
+          completed_at: new Date().toISOString(),
+        }).eq('id', job.id)
+        return jsonError('Failed to enqueue research stage', 500)
+      }
+
+      console.log(`[content-advisor] Job étagé créé : ${job.id} (étape 1 enfilée) pour ${keyword}@${extractDomain(url)}`)
+      return new Response(JSON.stringify({ job_id: job.id, status: 'pending', staged: true }), {
+        status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     if (body.async === true && !jobId) {
       // Create async job
       const sb = getServiceClient()
@@ -228,7 +295,8 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
     }
 
     // Fair use check (hourly/daily) — skip for service role
-    if (!isServiceRole) {
+    // En mode étagé, quotas et crédits sont déjà consommés à l'étape 1 : on ne les rejoue pas.
+    if (!isServiceRole && stage !== 'synthesis') {
       const fairUse = await checkFairUse(user.id, 'strategic_audit' as any)
       if (!fairUse.allowed) {
         return jsonError('Rate limit exceeded', 429)
@@ -242,7 +310,7 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
     let creditsDeducted = false
     const CONTENT_CREDIT_COST = 5
 
-    if (!isServiceRole) {
+    if (!isServiceRole && stage !== 'synthesis') {
       const { data: userProfile } = await serviceClientForPlan
         .from('profiles')
         .select('plan_type, subscription_status, credits_balance')
@@ -342,6 +410,9 @@ async function processAdvisorRequest(req: Request, isWaitUntilMode: boolean): Pr
     }
 
 
+    // ── ÉTAPE 1/2 : phase « recherche » (sautée si reprise depuis checkpoint) ──
+    let researchBundle: Record<string, any> | null = resumedResearch
+    if (!researchBundle) {
     // ── Step 1: Site Identity + CMS Detection + Content Template ──
     if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 10 }).eq('id', jobId)
     console.log(`[content-advisor] Step 1: Fetching site context + CMS + prompt template for ${domain}`)
@@ -683,6 +754,77 @@ RÈGLE : Le contenu doit s'inscrire dans cet univers sémantique.
         console.log(`[content-advisor] ☁️ Keyword cloud injected: ${kwList.length} keywords`)
       }
     }
+
+    // Postgres refuse \u0000 en jsonb : on nettoie tout le bundle avant sérialisation.
+    const stripNul = (v: unknown): unknown => {
+      if (typeof v === 'string') return v.replace(/\u0000/g, '')
+      if (Array.isArray(v)) return v.map(stripNul)
+      if (v && typeof v === 'object') {
+        const out: Record<string, unknown> = {}
+        for (const [k, val] of Object.entries(v as Record<string, unknown>)) out[k.replace(/\u0000/g, '')] = stripNul(val)
+        return out
+      }
+      return v
+    }
+
+    researchBundle = stripNul({
+      siteContext, cmsConnection, resolvedSiteId,
+      existingPageHtml, existingPageHtmlRaw: existingPageHtmlRaw.slice(0, 150_000),
+      contentTemplate, keywordData, serpData,
+      workbenchKeywords, workbenchQuickWins, workbenchContentGaps,
+      workbenchMissingTerms, workbenchMissingPages, skippedDataForSEO,
+      competitorInsights, existingAuditData, strategicAuditSerpData,
+      cocoonData, geoScoreData, llmVisibilityData, backlinkData,
+      workbenchItems, keywordCloudBlock,
+    }) as Record<string, any>
+    } // fin phase recherche
+
+    // Checkpoint + enfilement de l'étape 2 (synthèse LLM) dans job_queue.
+    if (stagedMode && !resumedResearch && jobSb && jobId) {
+      let ckptErr = (await jobSb.from('async_jobs')
+        .update({ progress: 60, result_data: { __research: researchBundle } })
+        .eq('id', jobId)).error
+
+      if (ckptErr) {
+        // Repli : on retire le HTML brut (poste le plus lourd) et on réessaie.
+        console.error(`[content-advisor] Checkpoint refusé (${ckptErr.message}) — retry sans HTML brut`)
+        const light = { ...researchBundle, existingPageHtmlRaw: '' }
+        ckptErr = (await jobSb.from('async_jobs')
+          .update({ progress: 60, result_data: { __research: light } })
+          .eq('id', jobId)).error
+      }
+
+      if (ckptErr) {
+        await jobSb.from('async_jobs').update({
+          status: 'failed',
+          error_message: `Checkpoint de recherche non persistable : ${ckptErr.message}`,
+          completed_at: new Date().toISOString(),
+        }).eq('id', jobId)
+        return jsonError(`Checkpoint persistence failed: ${ckptErr.message}`, 500)
+      }
+
+      await enqueueJob(jobSb as any, {
+        userId: user.id,
+        functionName: 'content-architecture-advisor',
+        payload: { ...body, async: false, staged: true, _stage: 'synthesis', _job_id: jobId, user_id: user.id },
+        maxAttempts: 2,
+      })
+      console.log(`[content-advisor] Étape 1/2 terminée — synthèse enfilée (job ${jobId})`)
+      return jsonOk({ job_id: jobId, stage: 'research_done', status: 'processing' })
+    }
+
+
+    const {
+      siteContext, cmsConnection, resolvedSiteId,
+      existingPageHtml, existingPageHtmlRaw,
+      contentTemplate, keywordData, serpData,
+      workbenchKeywords, workbenchQuickWins, workbenchContentGaps,
+      workbenchMissingTerms, workbenchMissingPages, skippedDataForSEO,
+      competitorInsights, existingAuditData, strategicAuditSerpData,
+      cocoonData, geoScoreData, llmVisibilityData, backlinkData,
+      workbenchItems, keywordCloudBlock,
+    } = researchBundle as Record<string, any>
+
 
     if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 65 }).eq('id', jobId)
     console.log(`[content-advisor] Step 5: LLM synthesis`)

@@ -31,3 +31,5 @@
 - [Proposition de valeur & archétypes de questions](mem://features/identity/value-proposition-benchmarks-fr) — value_proposition + secondary_propositions dans la carte d'identité, axe value_prop réservé au benchmark n°1, questions directes géolocalisées pour les commerces/services locaux, directives par archétype dans le rédacteur LLM
 
 - [Discrimination des constats](mem://tech/audit/report-discrimination-fixes-fr) — FAQ détectée balises retirées + croisement crawl, impact modulé par famille (fin du 68/100 générique), autorité de page recalculée avec astérisque/n-m, verdict pilier contesté départagé par le signal mesuré le plus marqué, modèle d'affaires jamais « non résolu » s'il sert un arbitrage
+
+- [Content Advisor étagé](mem://tech/architect/content-advisor-staged-queue-fr) — Découpage `staged: true` en 2 jobs job_queue (research → synthesis), checkpoint 23 clés dans async_jobs.result_data.__research, nettoyage \u0000 + retry sans HTML brut, crédits non rejoués à l'étape 2
