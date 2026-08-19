@@ -538,7 +538,12 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
   const meshAvg = avg(linksIn);
 
   let block5Body: string;
-  if (!missingHubs.length) {
+  if (cohesion.regime === 'assemblage') {
+    block5Body = `<p style="margin:0;">Aucun pilier n'est attendu ici : les URLs auditées ne se rattachent pas à une branche
+      commune, il n'existe donc pas de niveau de regroupement à créer pour ce lot${
+        meshAvg !== null ? ` (maillage entrant moyen des pages auditées : ${meshAvg} liens)` : ''
+      }. La hiérarchie de chaque page est traitée dans sa fiche.</p>`;
+  } else if (!missingHubs.length) {
     block5Body = `<p style="margin:0;">Aucun niveau intermédiaire manquant détecté sur le périmètre audité${
       meshAvg !== null ? ` (maillage entrant moyen : ${meshAvg} liens)` : ''
     }.</p>`;
