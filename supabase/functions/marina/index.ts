@@ -4801,7 +4801,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // (jeton JWT inclus) et sont illisibles. `/r/<8 premiers caractères de
       // l'identifiant>` est servi par notre domaine en text/html.
       const reportShortUrl = `https://crawlers.fr/r/${jobId.slice(0, 8)}`;
-      const reportDownloadUrl = signedUrlData?.signedUrl || '';
+      
       html = html.replace('</head>', `<meta name="marina-report-url" content="${reportShortUrl}" />\n</head>`);
       await sb.storage
         .from('shared-reports')
