@@ -282,23 +282,46 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
     setBuildingPdf(true);
     try {
       const parts: { url: string; html: string }[] = [];
+      const failures: string[] = [];
       for (const item of items) {
         if ((item.status !== 'completed' && item.status !== 'partial') || !item.jobId) continue;
+
+        // On lit le rapport depuis notre propre domaine (proxy same-origin) :
+        // les URL signées Storage sont cross-origin (CORS) et expirent, ce qui
+        // faisait échouer silencieusement la fusion.
+        const candidates = [`/api/public/marina-report?id=${item.jobId}`];
         const { data: job } = await supabase
           .from('async_jobs')
           .select('result_data')
           .eq('id', item.jobId)
           .maybeSingle();
         const result = job?.result_data as any;
-        const viewUrl = result?.report_view_url || result?.report_url;
-        if (!viewUrl) continue;
-        const resp = await fetch(viewUrl);
-        if (!resp.ok) continue;
-        parts.push({ url: item.url, html: await resp.text() });
+        if (result?.report_url) candidates.push(result.report_url as string);
+
+        let html: string | null = null;
+        for (const candidate of candidates) {
+          try {
+            const resp = await fetch(candidate);
+            if (!resp.ok) continue;
+            const text = await resp.text();
+            if (text.includes('<html') && !text.includes('Rapport introuvable')) {
+              html = text;
+              break;
+            }
+          } catch {
+            /* candidat suivant */
+          }
+        }
+
+        if (html) parts.push({ url: item.url, html });
+        else failures.push(item.url);
       }
       if (parts.length === 0) {
-        toast.error('Aucun rapport récupérable');
+        toast.error('Aucun rapport récupérable — les rapports ont peut-être expiré');
         return;
+      }
+      if (failures.length > 0) {
+        toast.warning(`${failures.length} rapport(s) illisible(s), exclus du PDF`);
       }
       setMergedHtml(mergeMarinaReports(parts));
       setShowModal(true);
