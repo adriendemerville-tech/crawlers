@@ -581,15 +581,20 @@ export function buildNetworkSynthesisHTML(
 
   // ── 4. Concurrence interne ────────────────────────────────────────────────
   const auditedPaths = new Set(metas.map((m) => normPath(m.path)));
+  // Trou 4 — en régime mixte, la lecture de réseau (concurrence, pilier,
+  // maillage) ne porte que sur le noyau décliné : l'étendre aux pages
+  // indépendantes du lot produirait des collisions et des piliers imaginaires.
+  const scopeMetas = cohesion.subLots ? cohesion.subLots.networked : metas;
   const byVariant = new Map<string, PageMeta[]>();
   const variantsByPath = variantIndex(families);
-  for (const m of metas) {
+  for (const m of scopeMetas) {
     const key = variantsByPath.get(m.path) || null;
     if (!key) continue;
     const arr = byVariant.get(key) || [];
     arr.push(m);
     byVariant.set(key, arr);
   }
+
   const collisions = [...byVariant.entries()].filter(([, arr]) => arr.length >= 2);
   const byCluster = new Map<string, PageMeta[]>();
   for (const m of metas) {
