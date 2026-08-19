@@ -72,6 +72,12 @@ export interface AuthorityData {
   top_anchors_detail: { anchor: string; count: number }[];
   toxicity: BacklinkToxicity | null;
   organic_visibility?: OrganicVisibility | null;
+  /** Nombre de domaines référents réellement analysés (échantillon, ≠ total) */
+  referring_domains_sampled: number;
+  /** Nombre d'ancres réellement analysées */
+  anchors_sampled: number;
+  /** Provenance de l'échantillon d'ancres */
+  anchors_source: 'anchors_endpoint' | 'summary_sample' | 'unavailable';
   /** Fiabilité de la mesure selon la complétude de la réponse DataForSEO */
   confidence: 'high' | 'medium' | 'low';
   confidence_reason: string;
