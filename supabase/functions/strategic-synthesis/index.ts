@@ -11,6 +11,7 @@ import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts'
 import { computeFactualCitationScores } from '../_shared/citationScorer.ts'
 import { fetchDomainAuthority, buildAuthorityPromptSection, type AuthorityData } from '../_shared/domainAuthority.ts'
+import { persistAuthoritySnapshot, buildAuthorityTrendPromptSection, type AuthorityTrend } from '../_shared/authoritySnapshots.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -150,6 +151,21 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       console.log(`[strategic-synthesis] AS=${authorityData.authority_score}/100 (conf. ${authorityData.confidence}), toxicité=${authorityData.toxicity?.toxicity_score ?? 'n/a'}/100, ref_domains=${authorityData.referring_domains}, backlinks=${authorityData.backlinks_total}`);
     } else {
       console.warn(`[strategic-synthesis] Autorité indisponible: ${authorityData?.unavailable_reason || 'non collectée'}`);
+    }
+
+    // ── Lot 3 : historisation mensuelle du profil de liens (chemin principal).
+    // L'orchestrateur passe par cette fonction, pas par audit-strategique-ia :
+    // sans cet appel la table `domain_authority_snapshots` reste vide.
+    let authorityTrend: AuthorityTrend | null = null;
+    if (authorityData?.data_source === 'dataforseo') {
+      authorityTrend = await Promise.race([
+        persistAuthoritySnapshot(authorityData),
+        new Promise<null>((r) => setTimeout(() => r(null), 20_000)),
+      ]).catch(() => null);
+      if (authorityTrend) {
+        marketSection += `\n${buildAuthorityTrendPromptSection(authorityTrend)}`;
+        console.log(`[strategic-synthesis] Historique liens: ${authorityTrend.months_tracked} mois, verdict ${authorityTrend.verdict} (Δréf ${authorityTrend.delta_referring_domains ?? 'n/a'})`);
+      }
     }
 
 
@@ -459,6 +475,7 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
         raw_market_data: mktData,
         ranking_overview: rankingOverview,
         domain_authority: authorityData,
+        domain_authority_trend: authorityTrend,
         google_my_business: gmbData,
         toolsData: null,
         llm_visibility_raw: llmData,

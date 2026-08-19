@@ -1685,6 +1685,27 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
   const priorityContent = strategicData?.priority_content || null;
   const domainAuthority = strategicData?.domain_authority || null;
   const rankingOverview = strategicData?.ranking_overview || null;
+  // Lot 3 : tendance mesurée du profil de liens (snapshots mensuels maison).
+  const authorityTrend = strategicData?.domain_authority_trend || null;
+  const authorityTrendHtml = (() => {
+    const t: any = authorityTrend;
+    if (!t || !t.months_tracked) return '';
+    const VERDICTS: Record<string, string> = {
+      perte_de_liens: 'Perte de liens',
+      acquisition_positive: 'Acquisition positive',
+      profil_stable: 'Profil stable',
+      premiere_mesure: 'Première mesure',
+    };
+    const label = VERDICTS[String(t.verdict)] || String(t.verdict);
+    const d = (v: unknown) => (v === null || v === undefined ? 'n/a' : `${Number(v) > 0 ? '+' : ''}${v}`);
+    return `
+      <div style="margin-top:16px;padding:16px;border:1px solid #e5e7eb;border-radius:8px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Tendance du profil de liens — ${label}</h3>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">Mesuré sur ${t.months_tracked} mois${t.previous_month ? `, référence ${t.previous_month}` : ''} (source ${t.source === 'snapshots_dataforseo' ? 'historique DataForSEO + relevés Crawlers' : 'relevés Crawlers'}).</div>
+        <div style="font-size:13px;">Domaines référents ${d(t.delta_referring_domains)} · Backlinks ${d(t.delta_backlinks)} · Score d'autorité ${d(t.delta_authority_score)}</div>
+        ${t.recommendation ? `<div class="intro-text" style="margin-top:8px;">${t.recommendation}</div>` : ''}
+      </div>`;
+  })();
 
 
   const content = `
@@ -1717,6 +1738,7 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       ${buildKeywordPositioningSection(keywordPos, rankingOverview)}
       ${buildModuleSection('Contenus prioritaires à créer / renforcer', '🧭', priorityContent)}
       ${buildModuleSection('Marché et autorité de domaine', '🔗', domainAuthority)}
+      ${authorityTrendHtml}
       ${buildModuleSection('Données Marché', '📈', marketData)}
 
       <!-- ── Bloc marque, concurrence, audience ── -->

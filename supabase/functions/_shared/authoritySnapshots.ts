@@ -180,7 +180,7 @@ export async function persistAuthoritySnapshot(a: AuthorityData): Promise<Author
     });
     const history = [...merged.values()].sort((x, y) => x.month.localeCompare(y.month)).slice(-HISTORY_MONTHS);
 
-    await supabase.from('domain_authority_snapshots').upsert(
+    const { error: upsertError } = await supabase.from('domain_authority_snapshots').upsert(
       {
         domain: a.domain,
         snapshot_month: currentMonth,
@@ -206,6 +206,13 @@ export async function persistAuthoritySnapshot(a: AuthorityData): Promise<Author
       },
       { onConflict: 'domain,snapshot_month' },
     );
+    if (upsertError) {
+      // Historisation impossible : on le dit franchement plutôt que de renvoyer
+      // une tendance qui ne sera jamais comparable au mois suivant.
+      console.error(`[authority-snapshot] upsert refusé sur ${a.domain}: ${upsertError.message}`);
+      return null;
+    }
+
 
     // Référence de comparaison : le snapshot maison précédent, sinon le dernier
     // mois de la série DataForSEO antérieur au mois courant.
