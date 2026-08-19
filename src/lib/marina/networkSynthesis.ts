@@ -336,6 +336,7 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
   if (metas.length < 2) return '';
 
   const families = detectTemplates(metas);
+  const cohesion = detectCohesion(metas, families);
   const stats = families.map(familyStats);
   const scored = metas.filter((m) => num(m.global) !== null);
   const techAvg = avg(metas.map((m) => num(m.tech)).filter((v): v is number => v !== null));
