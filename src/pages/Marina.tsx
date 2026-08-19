@@ -32,6 +32,7 @@ import { MARINA_FREE_QUOTA } from '@/lib/marinaFree.constants';
 import { toMarinaViewUrl } from '@/lib/marina/reportUrl';
 import { MarinaMyAuditsTab } from '@/components/Marina/MarinaMyAuditsTab';
 import { MarinaRunningAuditsSection } from '@/components/Marina/MarinaRunningAuditsSection';
+import { MarinaSeoContent } from '@/components/Marina/MarinaSeoContent';
 
 
 
@@ -1631,6 +1632,7 @@ async function generateReport(url) {
           </div>
         </section>
         )}
+        <MarinaSeoContent />
       </main>
 
       <Suspense fallback={null}><Footer /></Suspense>
