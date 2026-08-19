@@ -175,12 +175,17 @@ export function detectSuspiciousReferringDomains(
 }
 
 /**
- * Toxicité du profil de liens — 100 % déterministe, calculée depuis les données
- * déjà payées (summary + top domaines référents). Aucun appel supplémentaire.
+ * Toxicité du profil de liens — 100 % déterministe.
+ *
+ * `topReferringDomains` sert à l'affichage ; `sampleReferringDomains`, quand il
+ * est fourni, porte l'échantillon complet (jusqu'à 200 domaines) sur lequel sont
+ * calculés le rank moyen des référents et la détection de domaines hors-sujet.
+ * Sans lui, on retombe sur le top 10 (comportement historique).
  */
 export function computeBacklinkToxicity(input: {
   anchors: { anchor: string; count: number }[];
   topReferringDomains: { domain: string; rank: number; backlinks: number }[];
+  sampleReferringDomains?: { domain: string; rank: number; backlinks: number }[];
   backlinksTotal: number;
   referringDomains: number;
   brokenBacklinks: number;
@@ -198,7 +203,8 @@ export function computeBacklinkToxicity(input: {
   const unnaturalRatio = totalAnchorCount > 0
     ? Math.round((unnaturalCount / totalAnchorCount) * 100) / 100
     : 0;
-  const ranks = input.topReferringDomains.map((d) => normalizeDomainRank(d.rank));
+  const refSample = (input.sampleReferringDomains?.length ? input.sampleReferringDomains : input.topReferringDomains) || [];
+  const ranks = refSample.map((d) => normalizeDomainRank(d.rank));
   const avgReferrerRank = ranks.length
     ? Math.round((ranks.reduce((s, r) => s + r, 0) / ranks.length) * 10) / 10
     : 0;
