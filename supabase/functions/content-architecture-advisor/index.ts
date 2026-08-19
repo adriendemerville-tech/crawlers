@@ -1409,7 +1409,17 @@ FRAÎCHEUR & DÉNOMINATION:
     }
 
     if (!recommendation) {
+      // En mode async, un `return` laisserait le job bloqué à progress 65
+      // jusqu'au reaper : on throw pour marquer l'échec immédiatement.
+      if (jobSb && jobId) throw new Error('Failed to generate recommendation (réponse LLM non exploitable)')
       return jsonError('Failed to generate recommendation', 500)
+    }
+
+    // Mode dégradé : la recommandation vient du fallback compact (sortie plafonnée).
+    if (usedCompactFallback) {
+      recommendation.degraded = true
+      recommendation.degraded_reason = 'Modèles principaux expirés — recommandation compacte générée en mode dégradé (sections et longueurs plafonnées). Relancez pour une version complète.'
+      recommendation.confidence_score = Math.min(recommendation.confidence_score ?? 60, 55)
     }
 
     trackTokenUsage('content-architecture-advisor', aiJson?.usage?.total_tokens || 0, user.id)
