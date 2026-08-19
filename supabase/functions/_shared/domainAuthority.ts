@@ -497,7 +497,7 @@ export async function fetchDomainAuthority(
   }
 
   try {
-    const [summaryRes, refRes, anchorRes] = await Promise.allSettled([
+    const [summaryRes, refRes, anchorRes, pagesRes] = await Promise.allSettled([
       dfsPost('backlinks/summary/live', [{ target: domain, internal_list_limit: 10, include_subdomains: true }], 'backlinks/summary/live', domain),
       dfsPost(
         'backlinks/referring_domains/live',
@@ -509,6 +509,12 @@ export async function fetchDomainAuthority(
         'backlinks/anchors/live',
         [{ target: domain, limit: ANCHORS_SAMPLE_LIMIT, order_by: ['backlinks,desc'], internal_list_limit: 1 }],
         'backlinks/anchors/live',
+        domain,
+      ),
+      dfsPost(
+        'backlinks/domain_pages/live',
+        [{ target: domain, limit: LINKED_PAGES_SAMPLE_LIMIT, order_by: ['referring_domains,desc'], internal_list_limit: 1 }],
+        'backlinks/domain_pages/live',
         domain,
       ),
     ]);
