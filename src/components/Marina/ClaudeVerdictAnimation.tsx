@@ -127,11 +127,11 @@ export function ClaudeVerdictAnimation() {
               {phase === 'thinking' ? 'A réfléchi pendant 20 s…' : 'A réfléchi pendant 20 s'}
             </p>
             {showVerdict && (
-              <p className="mb-4 text-[22px] font-semibold tracking-[-0.01em] text-[#141413] dark:text-[#f5f4ef]">
+              <p className="mb-4 text-left text-[22px] font-semibold tracking-[-0.01em] text-[#141413] dark:text-[#f5f4ef]">
                 Non.
               </p>
             )}
-            <blockquote className="citable-passage text-[16px] leading-[1.7] text-[#141413] dark:text-[#e8e6e1]">
+            <blockquote className="citable-passage text-left text-[16px] leading-[1.7] text-[#141413] dark:text-[#e8e6e1]">
               {phase === 'answer'
                 ? ANSWER.slice(0, answerLen)
                 : phase === 'idle'
