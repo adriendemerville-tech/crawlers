@@ -52,6 +52,8 @@ const ProductShowcaseSection = lazy(() => import('@/components/Homepage/ProductS
 const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
 const BreathingSpiralSection = lazy(() => import('@/components/Homepage/BreathingSpiralSection').then(m => ({ default: m.BreathingSpiralSection })));
 const PainPointsSection = lazy(() => import('@/components/Homepage/PainPointsSection').then(m => ({ default: m.PainPointsSection })));
+const MarinaDeepAuditSection = lazy(() => import('@/components/Homepage/MarinaDeepAuditSection').then(m => ({ default: m.MarinaDeepAuditSection })));
+
 const ExtensionSection = lazy(() => import('@/components/Homepage/ExtensionSection').then(m => ({ default: m.ExtensionSection })));
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -654,6 +656,13 @@ const Index = () => {
         <Suspense fallback={<SectionSkeleton />}>
           <div className="cv-auto"><PainPointsSection /></div>
         </Suspense>
+
+        {/* Audit profond gratuit (Marina) — juste après les pain points */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <div className="cv-auto"><MarinaDeepAuditSection /></div>
+        </Suspense>
+
+
 
         {/* Pro Agency hero */}
         <section className="relative overflow-hidden py-14 sm:py-20 cv-auto">
