@@ -5,7 +5,10 @@ type: feature
 ---
 `supabase/functions/_shared/domainAuthority.ts` : source unique pour les backlinks, l'autorité de domaine et la toxicité du profil de liens.
 
-- Appels DataForSEO : `backlinks/summary/live` + `backlinks/referring_domains/live` (top 10), cache 24 h via `auditCache`, clé versionnée par `AUTHORITY_CALIBRATION_VERSION`.
+- Appels DataForSEO (3, cache 24 h via `auditCache`, clé versionnée par `AUTHORITY_CALIBRATION_VERSION` = 3) : `backlinks/summary/live` + `backlinks/referring_domains/live` (**limit 200**, `REFERRING_DOMAINS_SAMPLE_LIMIT`) + `backlinks/anchors/live` (**limit 100**, `ANCHORS_SAMPLE_LIMIT`).
+- Lot 1 (2026-08-19) : les ancres sont **mesurées** via l'endpoint dédié (`extractAnchorsFromEndpoint`) et non plus déduites de `referring_links_anchors` ; repli explicite sur le résumé si l'endpoint échoue. Champs exposés : `referring_domains_sampled`, `anchors_sampled`, `anchors_source` (`anchors_endpoint` | `summary_sample` | `unavailable`).
+- `computeBacklinkToxicity` accepte `sampleReferringDomains` (échantillon 200) pour le rank moyen des référents et la détection de domaines hors-sujet ; `topReferringDomains` reste l'affichage (top 10). Sans échantillon, comportement historique conservé.
+- `confidence` dégradée si l'échantillon de référents est réduit (<50 pour >50 domaines) ou si les ancres viennent du résumé ; `confidence_reason` porte les tailles d'échantillon et remonte jusqu'au prompt et à `DomainAuthorityCard`.
 - `normalizeDomainRank` (calibration v2, 2026-08-08) : l'échelle rank backlinks est 0–1000 et logarithmique → courbe `95 * (r/1000)^1.8` (1000→95, 600→38, 300→11). L'ancienne division par 10 saturait à 100/100 des domaines réellement à ~38 (constaté sur avenir-renovations.fr vs Semrush).
 - `computeAuthorityScore(rank, refDomains, { toxicityScore, avgReferrerRank })` = 60 % rank normalisé + 40 % diversité `log10(ref)*11` pondérée par la qualité moyenne des référents, moins une pénalité de toxicité (max −45 %), **plafonné à 92** (jamais 100).
 - `computeBacklinkToxicity` : 100 % déterministe, aucun appel supplémentaire (ancre dominante, ancres non naturelles URL/générique/emoji, rank moyen des référents, liens par domaine, liens cassés, dofollow ~100 %) → `toxicity_score` /100 et verdict `sain` / `a_surveiller` / `pollue` + recommandation de désaveu.
