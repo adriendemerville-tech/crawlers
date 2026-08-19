@@ -156,27 +156,52 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     // On capture chaque bloc à sa largeur réelle (les blocs imbriqués sont plus
     // étroits que le conteneur) puis on le recentre dans la zone utile, sinon
     // html2canvas ajoutait une bande blanche à droite.
-    const nativeWidth = Math.min(captureWidth, section.offsetWidth || captureWidth);
-    const canvas = await html2canvas(section, {
-      scale,
-      useCORS: true,
-      allowTaint: true,
-      width: nativeWidth,
-      windowWidth: iframeWidth,
-      logging: false,
-      backgroundColor,
-    });
+    const measuredWidth = section.offsetWidth || section.scrollWidth || captureWidth;
+    const nativeWidth = Math.max(1, Math.min(captureWidth, measuredWidth));
+    let canvas: HTMLCanvasElement;
+    try {
+      canvas = await html2canvas(section, {
+        scale,
+        useCORS: true,
+        allowTaint: true,
+        width: nativeWidth,
+        windowWidth: iframeWidth,
+        logging: false,
+        backgroundColor,
+      });
+    } catch {
+      continue; // un bloc non capturable ne doit pas casser tout l'export
+    }
+
+    // Un canvas vide (bloc masqué, hauteur nulle) produisait des dimensions
+    // NaN/0 et faisait échouer jsPDF.addImage → PDF vide ou tronqué.
+    if (!canvas.width || !canvas.height) continue;
 
     const imgData = canvas.toDataURL('image/jpeg', 0.92);
     const sectionWidthMm = usableWidthMm * (nativeWidth / captureWidth);
     const sectionX = marginSide + (usableWidthMm - sectionWidthMm) / 2;
     const sectionHeightMm = (canvas.height * sectionWidthMm) / canvas.width;
 
+    if (!Number.isFinite(sectionWidthMm) || sectionWidthMm <= 0) continue;
+    if (!Number.isFinite(sectionHeightMm) || sectionHeightMm <= 0) continue;
+
+    if (!Number.isFinite(cursorY) || cursorY < marginTop) cursorY = marginTop;
     const spaceLeft = pdfHeightMm - marginBottom - cursorY;
+
+    // Un seul bloc ne doit jamais faire échouer l'export complet.
+    const place = (img: string, y: number, w: number, h: number) => {
+      if (!img.startsWith('data:image') || !Number.isFinite(h) || h <= 0) return false;
+      try {
+        doc.addImage(img, 'JPEG', sectionX, y, w, h);
+        return true;
+      } catch {
+        return false;
+      }
+    };
 
     if (sectionHeightMm <= spaceLeft) {
       // Fits on current page
-      doc.addImage(imgData, 'JPEG', sectionX, cursorY, sectionWidthMm, sectionHeightMm);
+      place(imgData, cursorY, sectionWidthMm, sectionHeightMm);
       cursorY += sectionHeightMm + sectionGap;
     } else if (sectionHeightMm <= usableHeightMm) {
       // Fits on a fresh page (don't break it)
@@ -184,18 +209,31 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
         doc.addPage();
         cursorY = marginTop;
       }
-      doc.addImage(imgData, 'JPEG', sectionX, cursorY, sectionWidthMm, sectionHeightMm);
+      place(imgData, cursorY, sectionWidthMm, sectionHeightMm);
       cursorY += sectionHeightMm + sectionGap;
     } else {
       // Section is taller than one full page — must slice (rare: huge tables)
       const pixelsPerMm = canvas.height / sectionHeightMm;
       let srcYPx = 0;
       let remaining = sectionHeightMm;
+      let guard = 0;
 
-      while (remaining > 0) {
-        const pageSpace = (pdfHeightMm - marginBottom) - cursorY;
+      while (remaining > 0.5 && guard++ < 400) {
+        // Si la page courante est déjà pleine, on repart d'une page vierge :
+        // sinon `pageSpace` devenait nul ou négatif et jsPDF recevait des
+        // dimensions invalides (export interrompu, PDF tronqué).
+        let pageSpace = (pdfHeightMm - marginBottom) - cursorY;
+        if (pageSpace < 5) {
+          doc.addPage();
+          cursorY = marginTop;
+          pageSpace = usableHeightMm;
+        }
+
         const sliceHeightMm = Math.min(remaining, pageSpace);
-        const sliceHeightPx = Math.round(sliceHeightMm * pixelsPerMm);
+        const sliceHeightPx = Math.min(
+          Math.max(1, Math.round(sliceHeightMm * pixelsPerMm)),
+          Math.max(1, canvas.height - srcYPx),
+        );
 
         const sliceCanvas = document.createElement('canvas');
         sliceCanvas.width = canvas.width;
@@ -203,15 +241,14 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
         const ctx = sliceCanvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(canvas, 0, srcYPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
-          const sliceImg = sliceCanvas.toDataURL('image/jpeg', 0.92);
-          doc.addImage(sliceImg, 'JPEG', sectionX, cursorY, sectionWidthMm, sliceHeightMm);
+          place(sliceCanvas.toDataURL('image/jpeg', 0.92), cursorY, sectionWidthMm, sliceHeightMm);
         }
 
         srcYPx += sliceHeightPx;
         remaining -= sliceHeightMm;
         cursorY += sliceHeightMm;
 
-        if (remaining > 0) {
+        if (remaining > 0.5) {
           doc.addPage();
           cursorY = marginTop;
         }
@@ -220,6 +257,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     }
     isFirstElement = false;
   }
+
 
   document.body.removeChild(iframe);
   doc.save(filename);
