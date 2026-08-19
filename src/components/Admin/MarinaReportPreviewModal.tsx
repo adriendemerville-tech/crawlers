@@ -16,6 +16,7 @@ interface MarinaReportPreviewModalProps {
 export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain }: MarinaReportPreviewModalProps) {
   const isMobile = useIsMobile();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState<{ done: number; total: number } | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -30,6 +31,7 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
         htmlContent,
         filename,
         disclaimer: { auditType: 'marina', domain, target: domain, language: 'fr' },
+        onProgress: (done, total) => setPdfProgress({ done, total }),
       });
 
     } catch (error) {
@@ -37,6 +39,7 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
       toast.error('Erreur de génération PDF');
     } finally {
       setIsGeneratingPDF(false);
+      setPdfProgress(null);
     }
   };
 
@@ -129,7 +132,12 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
               className={isMobile ? 'bg-primary hover:bg-primary/90' : 'gap-2 bg-primary hover:bg-primary/90'}
             >
               {isGeneratingPDF ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {!isMobile && (isGeneratingPDF ? 'Génération…' : 'Télécharger')}
+              {!isMobile &&
+                (isGeneratingPDF
+                  ? pdfProgress
+                    ? `Génération… ${pdfProgress.done}/${pdfProgress.total}`
+                    : 'Génération…'
+                  : 'Télécharger')}
             </Button>
             <Button onClick={handlePrint} variant="outline" size={isMobile ? 'icon' : 'default'} className={isMobile ? '' : 'gap-2'}>
               <Printer className="h-4 w-4" />

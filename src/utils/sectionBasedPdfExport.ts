@@ -35,6 +35,10 @@ interface SectionPdfOptions {
    * contient déjà [data-pdf-section="disclaimer"].
    */
   disclaimer?: DisclaimerContext;
+  /** Progression de la capture (rapports fusionnés multipages : très nombreux blocs). */
+  onProgress?: (done: number, total: number) => void;
+  /** Nombre maximum de blocs capturés (garde-fou mémoire/temps). */
+  maxSections?: number;
 }
 
 export async function generateSectionBasedPDF(options: SectionPdfOptions): Promise<void> {
@@ -42,7 +46,6 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     htmlContent,
     filename,
     iframeWidth = 794,
-    scale = 2,
     backgroundColor = '#f8fafc',
     marginTop = 15,
     marginBottom = 15,
@@ -50,7 +53,10 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     sectionGap = 2,
     renderDelay = 1500,
     disclaimer,
+    onProgress,
+    maxSections = 320,
   } = options;
+
 
 
   const { default: html2canvas } = await import('html2canvas');
@@ -83,6 +89,13 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     iframe.style.height = `${fullHeight}px`;
     await new Promise((r) => setTimeout(r, 250));
   }
+
+  // Échelle adaptative : un rapport fusionné multipages fait plusieurs dizaines de
+  // milliers de pixels de haut. À l'échelle 2, html2canvas saturait la mémoire de
+  // l'onglet et l'export ne rendait jamais la main.
+  const scale = options.scale ?? (fullHeight > 80000 ? 1 : fullHeight > 30000 ? 1.4 : 2);
+
+
 
   // Collect sections.
   // ATTENTION : certains rapports (Marina) ne balisent qu'une poignée de blocs
@@ -126,6 +139,19 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
 
   sections = sections.flatMap((s) => expand(s));
 
+  // Garde-fou : au-delà de `maxSections`, on remonte d'un cran de granularité
+  // (blocs parents) plutôt que de capturer des milliers de sous-blocs, ce qui
+  // faisait tourner l'export indéfiniment sur les rapports fusionnés.
+  if (sections.length > maxSections) {
+    const coarse = sections
+      .map((el) => (el.parentElement as HTMLElement | null) || el)
+      .filter((el, i, arr) => arr.indexOf(el) === i && el.offsetHeight > 8);
+    if (coarse.length >= 1 && coarse.length < sections.length) sections = coarse;
+    if (sections.length > maxSections) sections = sections.slice(0, maxSections);
+  }
+
+
+
 
   // Disclaimer obligatoire en dernière section (sauf s'il est déjà dans le HTML source).
   // Ajouté APRÈS la collecte pour ne jamais court-circuiter le fallback ci-dessus.
@@ -152,7 +178,10 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   let cursorY = marginTop;
   let isFirstElement = true;
 
+  let captured = 0;
   for (const section of sections) {
+    captured += 1;
+    onProgress?.(captured, sections.length);
     // On capture chaque bloc à sa largeur réelle (les blocs imbriqués sont plus
     // étroits que le conteneur) puis on le recentre dans la zone utile, sinon
     // html2canvas ajoutait une bande blanche à droite.
@@ -160,7 +189,9 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     const nativeWidth = Math.max(1, Math.min(captureWidth, measuredWidth));
     let canvas: HTMLCanvasElement;
     try {
-      canvas = await html2canvas(section, {
+      // Délai de garde : une capture qui ne rend jamais la main bloquait tout
+      // l'export (bouton figé sur « Génération… »).
+      const shot = html2canvas(section, {
         scale,
         useCORS: true,
         allowTaint: true,
@@ -169,7 +200,14 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
         logging: false,
         backgroundColor,
       });
+      canvas = await Promise.race([
+        shot,
+        new Promise<HTMLCanvasElement>((_, reject) =>
+          setTimeout(() => reject(new Error('html2canvas timeout')), 20000),
+        ),
+      ]);
     } catch {
+
       continue; // un bloc non capturable ne doit pas casser tout l'export
     }
 
