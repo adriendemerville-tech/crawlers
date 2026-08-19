@@ -123,9 +123,22 @@ export function normalizeCommercialModel(input: {
   entity_type?: string | null;
   is_local_business?: boolean | null;
   sector?: SectorKey;
+  /**
+   * Signaux de repli lisibles (offre, cible, description). Sans eux, un site
+   * dont seules ces colonnes sont remplies ressortait « modèle d'affaires non
+   * résolu » alors que le rapport s'en servait ensuite pour arbitrer.
+   */
+  products_services?: unknown;
+  target_audience?: string | null;
+  description?: string | null;
 }): CommercialModelKey {
-  const blob = [input.commercial_model, input.business_model, input.business_type, input.entity_type]
-    .filter(Boolean).join(' ').toLowerCase();
+  const offer = Array.isArray(input.products_services)
+    ? input.products_services.map((v) => (typeof v === 'string' ? v : (v as any)?.name || '')).join(' ')
+    : typeof input.products_services === 'string' ? input.products_services : '';
+  const blob = [
+    input.commercial_model, input.business_model, input.business_type, input.entity_type,
+    offer, input.target_audience, input.description,
+  ].filter(Boolean).join(' ').toLowerCase();
 
   // Clé canonique explicite (panel identité / carte verrouillée) : priorité absolue.
   const explicit = (input.commercial_model || '').trim().toLowerCase();
@@ -140,9 +153,31 @@ export function normalizeCommercialModel(input: {
   // `agence` seul est trop large (agence web/SEO/marketing = lead_gen, pas d'implantation
   // physique) : on exige un signal d'implantation ou is_local_business.
   if (input.is_local_business === true || /point de vente|magasin|showroom|multi-?site|agence (immobili|de travaux|locale)|implantation locale|service local|\blocal\b/.test(blob)) return 'local_service';
-
-
-  if (/lead|devis|prise de contact|b2b|service/.test(blob)) return 'lead_gen';
+  if (/lead|devis|prise de contact|b2b|service|prestation|r[eé]novation|travaux|installation|d[eé]pannage|conseil|cabinet/.test(blob)) return 'lead_gen';
+  // Dernier repli : un secteur normalisé suffit à trancher le modèle dominant,
+  // ce qui vaut mieux qu'un « non résolu » contredit plus loin dans le rapport.
+  const bySector: Partial<Record<SectorKey, CommercialModelKey>> = {
+    renovation_batiment: 'lead_gen',
+    immobilier: 'lead_gen',
+    services_web_seo: 'lead_gen',
+    marketing_communication: 'lead_gen',
+    conseil_strategie: 'lead_gen',
+    rh_recrutement: 'lead_gen',
+    finance_assurance: 'lead_gen',
+    juridique: 'lead_gen',
+    education_formation: 'lead_gen',
+    transport_logistique: 'lead_gen',
+    industrie_production: 'lead_gen',
+    sante_medical: 'local_service',
+    beaute_bienetre: 'local_service',
+    restauration: 'local_service',
+    tourisme_hotellerie: 'local_service',
+    automobile: 'local_service',
+    artisanat_creation: 'local_service',
+    sport_loisirs: 'local_service',
+    association_public: 'non_commercial',
+  };
+  if (input.sector && bySector[input.sector]) return bySector[input.sector]!;
   return 'unknown';
 }
 

@@ -1,3 +1,5 @@
+import { fingerprintFinding } from './actionPlanDiscrimination.ts';
+
 /**
  * roiWeighting.ts — Couche ROI diffuse (impact × effort) appliquée aux plans
  * d'action des rapports (Marina, audit stratégique).
@@ -97,13 +99,44 @@ export function estimateEffort(item: RoiScorable): number {
   return 3;
 }
 
+/**
+ * Poids propre à chaque famille de consigne. Sans lui, la gravité `critical`
+ * plus un unique bonus de levier produisaient le même impact (68/100) sur la
+ * quasi-totalité des actions : le score ne discriminait plus rien.
+ */
+const FAMILY_IMPACT: Record<string, number> = {
+  robots: 20, canonical: 16, redirects: 12, sitemap: 9, broken_links: 8, https: 14,
+  structured_data: 13, direct_answer: 12, ai_citability: 11, faq: 8,
+  title_tag: 12, meta_description: 9, h1: 8, heading_structure: 5,
+  web_vitals: 14, image_weight: 7, image_alt: 4, mobile: 10,
+  internal_linking: 11, orphan_pages: 9, semantic_cocoon: 10,
+  cannibalization: 13, duplicate_content: 10, thin_content: 12,
+  content_gap: 15, new_content: 12,
+  eeat_author: 9, social_proof: 8, backlinks: 10,
+  i18n: 5, breadcrumb: 4, divers: 6,
+};
+
 /** Impact business 0-100. */
 export function estimateImpact(item: RoiScorable, ctx: RoiContext = {}): number {
   const sev = String(item.severity || 'suggestion').toLowerCase();
   let impact = SEVERITY_IMPACT[sev] ?? 35;
   const label = `${item.category || ''} ${item.title || ''}`;
+  // Poids de famille (levier réellement actionné) : une action d'indexation et
+  // une action de texte alternatif ne peuvent pas peser pareil.
+  const family = fingerprintFinding({
+    title: item.title,
+    description: item.description,
+    category: item.category,
+  });
+  impact += FAMILY_IMPACT[family] ?? 6;
+  // Levier de catégorie : cumulable une seconde fois au maximum, pour séparer
+  // deux actions de même famille dont l'une touche l'indexation.
+  let leverHits = 0;
   for (const [re, bonus] of LEVERAGE) {
-    if (re.test(label)) { impact += bonus; break; }
+    if (re.test(label)) {
+      impact += leverHits === 0 ? bonus : Math.round(bonus / 2);
+      if (++leverHits >= 2) break;
+    }
   }
   const pages = Number(item.pages_affected || 0);
   const scale = ctx.pagesAnalyzed || 0;

@@ -1681,13 +1681,32 @@ function generateRecommendations(
   //    On combine plusieurs patterns pour éviter les faux négatifs (sites JS, <details>, listes…)
   //    et les faux positifs (mot "faq" dans une classe CSS ou un lien isolé).
   const rawHtml = htmlAnalysis.rawHtml || '';
-  const faqHeadingRegex = /<h[1-6][^>]*>[^<]{0,120}(faq|questions?\s+fr[ée]quentes?|foire\s+aux\s+questions|frequently\s+asked|preguntas\s+frecuentes)[^<]{0,120}<\/h[1-6]>/i;
+  // Les titres réels contiennent presque toujours des balises internes
+  // (<span>, <em>, <br>) : un motif `[^<]` sur le contenu du heading produisait
+  // un faux négatif « aucune FAQ » alors que le crawl listait bien un H2 FAQ.
+  // On extrait donc le texte de chaque heading, balises retirées.
+  const headingTexts: string[] = (rawHtml.match(/<h[1-6][^>]*>[\s\S]{0,600}?<\/h[1-6]>/gi) || [])
+    .map((block: string) => block.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  // Les titres déjà extraits par le crawl (h2Contents/h3Contents) sont une
+  // seconde source : ils évitent la contradiction entre sections du rapport.
+  const ha = htmlAnalysis as unknown as Record<string, unknown>;
+  const crawlHeadings: string[] = [
+    ...(Array.isArray(ha['h2Contents']) ? (ha['h2Contents'] as unknown[]) : []),
+    ...(Array.isArray(ha['h3Contents']) ? (ha['h3Contents'] as unknown[]) : []),
+  ].map((h: unknown) => String(h || '').trim()).filter(Boolean);
+
+  const FAQ_LABEL = /(faq|questions?\s+fr[ée]quentes?|foire\s+aux\s+questions|frequently\s+asked|preguntas\s+frecuentes|vous\s+avez\s+des\s+questions|on\s+a\s+les\s+r[ée]ponses|questions?\s*\/\s*r[ée]ponses)/i;
+  const faqHeadingHit = [...headingTexts, ...crawlHeadings].some((t) => FAQ_LABEL.test(t));
   const faqDetailsRegex = /<details[^>]*>\s*<summary[^>]*>[\s\S]{1,200}\?[\s\S]{0,200}<\/summary>/i;
-  // Heuristique Q/R : au moins 2 questions interrogatives (terminées par "?") dans des balises de heading/strong/dt
-  const qaPairCount = (rawHtml.match(/<(?:h[2-6]|strong|dt|p)[^>]*>[^<]{8,180}\?\s*<\/(?:h[2-6]|strong|dt|p)>/gi) || []).length;
+  // Heuristique Q/R : au moins 3 intitulés interrogatifs, balises internes tolérées.
+  const qaPairCount =
+    headingTexts.filter((t) => /\?\s*$/.test(t) && t.length >= 8).length +
+    crawlHeadings.filter((t) => /\?\s*$/.test(t) && t.length >= 8).length +
+    (rawHtml.match(/<(?:strong|dt)[^>]*>[\s\S]{8,180}\?\s*<\/(?:strong|dt)>/gi) || []).length;
   const faqLandmarkRegex = /(?:id|class|role|aria-label)\s*=\s*["'][^"']*\bfaq\b[^"']*["']/i;
   const faqContentPresent =
-    faqHeadingRegex.test(rawHtml) ||
+    faqHeadingHit ||
     faqDetailsRegex.test(rawHtml) ||
     qaPairCount >= 3 ||
     faqLandmarkRegex.test(rawHtml);

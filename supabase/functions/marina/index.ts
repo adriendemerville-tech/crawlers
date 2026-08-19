@@ -30,7 +30,7 @@ import {
   type AbsenceVerificationReport,
 } from '../_shared/absenceVerification.ts';
 import { buildGeoSubSignals, geoSubSignalsBlockHTML } from '../_shared/geoSubSignals.ts';
-import { verdictsFromCocoonRisks, pillarSatelliteBlockHTML } from '../_shared/pillarSatelliteVerdict.ts';
+import { verdictsFromCocoonRisks, pillarSatelliteBlockHTML, pageAuthority } from '../_shared/pillarSatelliteVerdict.ts';
 
 
 
@@ -1538,7 +1538,11 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       </div>
       ${crawlMeta.h2Contents.length > 0 ? `
       <div style="margin-top:16px;">
-        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Structure des titres (${crawlMeta.h2Contents.length} H2, ${crawlMeta.h3Count} H3)</h3>
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Structure des titres (${crawlMeta.h2Count || crawlMeta.h2Contents.length} H2, ${crawlMeta.h3Count} H3)${
+          (crawlMeta.h2Count || 0) > crawlMeta.h2Contents.length
+            ? ` — extrait de ${crawlMeta.h2Contents.length} intitulé${crawlMeta.h2Contents.length > 1 ? 's' : ''} relevé${crawlMeta.h2Contents.length > 1 ? 's' : ''}`
+            : ''
+        }</h3>
         <ul style="padding-left:20px;font-size:13px;color:#374151;">
           ${crawlMeta.h2Contents.slice(0, 20).map((h: string) => `<li style="margin-bottom:4px;">${h}</li>`).join('')}
         </ul>
@@ -1898,12 +1902,27 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
             <tr style="border-bottom:1px solid #f3f4f6;">
               <td style="padding:6px 8px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${nd.url || nd.title || '-'}</td>
               <td style="padding:6px 8px;text-align:center;">${nd.intent || '-'}</td>
-              <td style="padding:6px 8px;text-align:center;">${nd.page_authority != null ? Math.round(nd.page_authority) : '-'}</td>
+              <td style="padding:6px 8px;text-align:center;">${(() => {
+                // `page_authority` n'est pas toujours calculé côté cocon : plutôt
+                // qu'une colonne à 0 partout (donc illisible), on recalcule la
+                // même autorité interne déterministe que le verdict pilier/satellite.
+                const stored = Number(nd.page_authority);
+                if (Number.isFinite(stored) && stored > 0) return Math.round(stored);
+                const computed = pageAuthority({
+                  url: String(nd.url || ''),
+                  seo_score: nd.seo_score ?? null,
+                  word_count: nd.word_count ?? null,
+                  inbound: nd.internal_links_in ?? null,
+                  depth: nd.crawl_depth ?? nd.depth ?? null,
+                });
+                return computed > 0 ? `${Math.round(computed)}<span style="color:#9ca3af;"> *</span>` : 'n/m';
+              })()}</td>
               <td style="padding:6px 8px;text-align:center;">${nd.internal_links_in ?? '-'}</td>
               <td style="padding:6px 8px;text-align:center;">${nd.internal_links_out ?? '-'}</td>
             </tr>
           `).join('')}</tbody>
         </table>
+        <p style="font-size:11px;color:#6b7280;margin-top:6px;">Autorité interne déterministe (score SEO, volume de contenu, liens entrants, profondeur de crawl). Les valeurs suivies d'un astérisque sont recalculées ici faute de valeur stockée ; « n/m » signale une page sans signal exploitable.</p>
       </div>` : ''}
       ${cocoonEdges.length > 0 ? `
       <div style="margin-top:16px;">

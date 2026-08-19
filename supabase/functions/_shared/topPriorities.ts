@@ -535,7 +535,9 @@ export function renderConsolidatedPlanHTML(
          <div style="font-size:10.5px;color:#6b7280;margin-top:3px;">KPI : ${escapeHtml(acc.kpi)}</div>
          <div style="font-size:10.5px;color:${acc.traffic_gain !== null ? '#4b5563' : '#9ca3af'};margin-top:3px;">${
            acc.traffic_gain !== null
-             ? `+${acc.traffic_gain} visites/mois estimées`
+             ? `+${acc.traffic_gain} visites/mois — gain direct attribuable${
+                 it.severity === 'critical' ? ', hors effet de déblocage' : ''
+               }`
              : 'Gain non estimable'
          }</div>`
       : '<span style="font-size:11px;color:#9ca3af;">n/d</span>';
@@ -578,6 +580,14 @@ export function renderConsolidatedPlanHTML(
       Les blocages critiques restent en tête quel que soit leur rendement ;
       à gravité égale, l'ordre suit le rapport impact / effort. Chaque action porte un pilote,
       un indicateur de suivi et, quand une donnée mesurée l'autorise, une estimation de gain.
+    </p>
+    <p style="font-size:11.5px;color:#6b7280;margin-bottom:12px;">
+      Lecture des gains : la colonne « Pilote &amp; KPI » n'affiche que le gain <strong>directement
+      attribuable</strong> à l'action, part de l'effet de sa famille, sur un horizon de trois mois.
+      Ces chiffres sont volontairement prudents et ne mesurent pas ce que l'action <em>débloque</em> :
+      une correction d'indexation ou de rendu conditionne tout le reste du plan, son enjeu réel est
+      la levée du blocage, pas son gain direct. Ne pas additionner ces valeurs pour en faire une
+      projection de trafic.
     </p>
 
     <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
