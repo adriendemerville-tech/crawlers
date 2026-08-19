@@ -21,7 +21,7 @@ type: feature
 - `confidence` (`high|medium|low`) + `confidence_reason` selon la complétude de la réponse ; log d'alerte si le score dépasse 90 (garde-fou anti-régression).
 - `organic_visibility` : trafic estimé, mots-clés positionnés, position moyenne, top3/top10 — renseigné par les appelants depuis `rankingOverview` déjà collecté (aucun appel payant supplémentaire).
 - `buildAuthorityPromptSection` injecte autorité + toxicité + visibilité, et interdit explicitement au LLM de présenter l'Authority Score comme un chiffre Semrush/Moz/Majestic.
-- Tests figés : `supabase/functions/_shared/domainAuthority_test.ts` (5 tests Deno).
+- Tests figés : `supabase/functions/_shared/domainAuthority_test.ts` (11 tests Deno).
 
 Câblage :
 - `audit-strategique-ia` : Wave 2 (deadline 30 s), `organic_visibility` ajoutée après collecte, exposé en `data.domain_authority`, alimente `computeFactualCitationScores`.
