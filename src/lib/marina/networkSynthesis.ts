@@ -615,9 +615,14 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
 
   // ── 7. Recommandations séquencées ─────────────────────────────────────────
   const weakMesh = metas.filter((m) => num(m.linksIn) !== null && (m.linksIn as number) <= 2);
+  // En régime « assemblage », les pages n'ont pas vocation à être reliées entre
+  // elles : la recommandation porte sur le maillage depuis le site, pas entre URLs.
   if (weakMesh.length >= 2) {
     candidates.push({
-      title: `Relier entre elles les ${weakMesh.length} pages à maillage entrant faible`,
+      title:
+        cohesion.regime === 'assemblage'
+          ? `Renforcer le maillage entrant des ${weakMesh.length} pages sous-liées depuis le reste du site`
+          : `Relier entre elles les ${weakMesh.length} pages à maillage entrant faible`,
       why: 'Elles reçoivent 2 liens internes ou moins : elles dépendent du sitemap pour être découvertes et ne transmettent aucune autorité au réseau.',
       effort: 'faible',
       level: 'mesure',
