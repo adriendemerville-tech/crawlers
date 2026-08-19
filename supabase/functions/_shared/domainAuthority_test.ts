@@ -4,7 +4,12 @@
  * qu'aucune régression ne réintroduise un 100/100 fantaisiste.
  */
 import { assert, assertEquals } from 'https://deno.land/std@0.208.0/assert/mod.ts';
-import { computeAuthorityScore, computeBacklinkToxicity, normalizeDomainRank } from './domainAuthority.ts';
+import {
+  computeAuthorityScore,
+  computeBacklinkToxicity,
+  extractAnchorsFromEndpoint,
+  normalizeDomainRank,
+} from './domainAuthority.ts';
 
 Deno.test('normalizeDomainRank : courbe 0-1000 → 0-95', () => {
   assertEquals(normalizeDomainRank(0), 0);
