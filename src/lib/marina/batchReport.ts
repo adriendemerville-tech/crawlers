@@ -42,5 +42,14 @@ export async function buildMergedBatchReport(
 
   if (parts.length === 0) return null;
   const site = await fetchSiteStructure(parts[0].url);
-  return { html: mergeMarinaReports(parts, { site }), missing };
+  // Trou 10 — la lecture d'ensemble est archivée et poussée dans le Workbench
+  // au moment où elle est produite, en tâche de fond.
+  const html = mergeMarinaReports(parts, {
+    site,
+    onSynthesis: (facts) => {
+      void persistNetworkSynthesis(facts);
+    },
+  });
+  return { html, missing };
 }
+
