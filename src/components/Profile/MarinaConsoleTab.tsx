@@ -305,7 +305,7 @@ export function MarinaConsoleTab() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <Anchor className="h-6 w-6 text-primary" />
           <div>
@@ -319,11 +319,21 @@ export function MarinaConsoleTab() {
             </p>
           </div>
         </div>
-        {isAgencyPro && (
-          <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
-            {t3(language, 'Inclus dans votre plan', 'Included in your plan', 'Incluido en su plan')}
-          </Badge>
-        )}
+        <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
+          {isAgencyPro && (
+            <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
+              {t3(language, 'Inclus dans votre plan', 'Included in your plan', 'Incluido en su plan')}
+            </Badge>
+          )}
+          <Button variant="outline" size="sm" onClick={() => navigate('/marina#api')} className="gap-2 bg-transparent">
+            <ExternalLink className="h-4 w-4" />
+            {t3(language, 'Documentation API', 'API Documentation', 'Documentación API')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate('/marina')} className="gap-2 bg-transparent">
+            <Anchor className="h-4 w-4" />
+            {t3(language, 'Page Marina', 'Marina Page', 'Página Marina')}
+          </Button>
+        </div>
       </div>
 
       {/* Bannière audit(s) Marina en cours */}
