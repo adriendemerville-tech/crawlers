@@ -337,11 +337,38 @@ function table(headers: string[], rows: string[][]): string {
 }
 
 /**
+ * Structure connue du domaine, issue du dernier crawl complet. Sert à ne PAS
+ * recommander la création d'une page pilier qui existe déjà hors du périmètre
+ * audité. Absente, la synthèse le déclare au lieu de conclure à l'absence.
+ */
+export interface SiteStructureContext {
+  /** Chemins connus du domaine (crawl), normalisés sans slash final. */
+  knownPaths: string[];
+  /** Nombre de pages du crawl exploité ; 0 = aucune vérification possible. */
+  crawlPages: number;
+  /** Date du crawl exploité, au format ISO. */
+  crawlDate?: string | null;
+}
+
+function normPath(p: string): string {
+  const s = (p || '').trim().toLowerCase();
+  if (!s) return '/';
+  const noHost = s.startsWith('http') ? (() => { try { return new URL(s).pathname; } catch { return s; } })() : s;
+  const withSlash = noHost.startsWith('/') ? noHost : `/${noHost}`;
+  return withSlash.length > 1 ? withSlash.replace(/\/+$/, '') : '/';
+}
+
+/**
  * Synthèse réseau complète. Retourne une chaîne vide sous 2 URLs : la lecture
  * d'ensemble n'a alors pas d'objet.
  */
-export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): string {
+export function buildNetworkSynthesisHTML(
+  domain: string,
+  metas: PageMeta[],
+  site?: SiteStructureContext,
+): string {
   if (metas.length < 2) return '';
+
 
   const families = detectTemplates(metas);
   const cohesion = detectCohesion(metas, families);
