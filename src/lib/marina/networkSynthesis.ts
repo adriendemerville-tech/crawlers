@@ -551,7 +551,7 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
   const orphans = metas.filter((m) => m.isOrphan);
   if (orphans.length) {
     candidates.push({
-      title: `Sortir de l'orphelinat ${orphans.length} page${orphans.length > 1 ? 's' : ''}`,
+      title: `Sortir de l'orphelinat ${orphans.length > 1 ? `les ${orphans.length} pages sans lien entrant` : 'la page sans lien entrant'}`,
       why: 'Aucun lien interne entrant détecté : la page est invisible pour la découverte comme pour la transmission d\'autorité.',
       effort: 'faible',
       level: 'mesure',
