@@ -148,6 +148,23 @@ export function MarinaConsoleTab() {
     setOpeningId(null);
   };
 
+  /** Lot multipages : rapport consolidé reconstruit à la volée (sections site mutualisées). */
+  const openBatchReport = async (items: any[], key: string) => {
+    setOpeningId(key);
+    try {
+      const { buildMergedBatchReport } = await import('@/lib/marina/batchReport');
+      const result = await buildMergedBatchReport(items);
+      if (!result) {
+        toast.error(t3(language, 'Aucun rapport récupérable', 'No report available', 'Ningún informe disponible'));
+        return;
+      }
+      setMergedReport({ html: result.html, domain: items[0]?.domain || items[0]?.url || 'multipages' });
+    } catch (e: any) {
+      toast.error(e?.message || 'Erreur');
+    }
+    setOpeningId(null);
+  };
+
   const deleteBatch = async (jobIds: string[]) => {
     setDeletingId(jobIds[0]);
     try {
