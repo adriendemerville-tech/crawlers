@@ -82,6 +82,15 @@ export default function SharedReportRedirect() {
         const html = await response.text();
         setHtmlContent(html);
       } catch (e: any) {
+        // Compatibilité : anciens liens courts Marina servis sur /r/<code>
+        try {
+          const proxy = await fetch(`/api/public/marina-report?id=${encodeURIComponent(shareId)}`);
+          const text = proxy.ok ? await proxy.text() : '';
+          if (text.includes('marina-report-url') || /<html/i.test(text) && !text.includes('Rapport introuvable')) {
+            setHtmlContent(text);
+            return;
+          }
+        } catch { /* ignore */ }
         console.error(e);
         setError(e?.message || t.error);
       }

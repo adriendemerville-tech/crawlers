@@ -241,7 +241,7 @@ Content-Type: application/json`}</Code>
     "domain": "example.com",
     "language": "fr",
     "report_url": "https://.../rapport.html",          // URL signée du rapport HTML
-    "report_view_url": "https://crawlers.fr/r/8f3a9b2c-...", // lecteur public
+    "report_view_url": "https://crawlers.fr/m/8f3a9b2c-...", // lecteur public
     "report_path": "reports/8f3a9b2c/rapport.html",
     "expert_seo_score": 78,
     "expert_seo_max": 100,
@@ -304,7 +304,7 @@ x-marina-event: marina.report.completed   // ou marina.report.partial | marina.r
   "domain": "example.com",
   "language": "fr",
   "report_url": "https://.../rapport.html",
-  "report_view_url": "https://crawlers.fr/r/8f3a9b2c-...",
+  "report_view_url": "https://crawlers.fr/m/8f3a9b2c-...",
   "expert_seo_score": 78,
   "expert_seo_max": 100,
   "strategic_score": 64,
