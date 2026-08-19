@@ -56,8 +56,7 @@ function groupAudits(audits: Audit[]): AuditGroup[] {
 
   return groups;
 }
-
-
+export function MarinaMyAuditsTab() {
   const [audits, setAudits] = useState<Audit[]>([]);
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
