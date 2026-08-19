@@ -1339,7 +1339,45 @@ export function computeNetworkSynthesis(
      </ul>`,
   );
 
-  return `
+  const facts: NetworkSynthesisFacts = {
+    domain,
+    urlsAudited: metas.length,
+    regime: cohesion.regime,
+    scopedUrls: scopeMetas.length,
+    techAvg,
+    geoAvg,
+    techGeoGap: techAvg !== null && geoAvg !== null ? techAvg - geoAvg : null,
+    templates: stats.map((s) => ({
+      pattern: s.family.pattern,
+      pages: s.count,
+      solidity: s.solidity,
+      contentCheck: s.contentCheck.status,
+      global: s.global,
+      tech: s.tech,
+      geo: s.geo,
+    })),
+    mesh: {
+      measured: meshMeasured,
+      edges: intraEdges.length,
+      pagesWithTargets: withTargets.length,
+      isolated: isolatedInLot.length,
+    },
+    measuredDuplicates: dupInScope,
+    hubs: {
+      missing: missingHubs.map(([p]) => String(p)),
+      existing: existingHubs.map(([p]) => String(p)),
+      unverified: unverifiedHubs.map(([p]) => String(p)),
+    },
+    thinPages: metas
+      .filter((m) => m.isThin || (num(m.words) !== null && (m.words as number) < 300))
+      .map((m) => m.path),
+    orphanPages: orphans.map((m) => m.path),
+    structureVerified: crawlUsable,
+    recommendations,
+  };
+
+  const html = `
+
   <section class="marina-network-synthesis section" data-pdf-section
            style="page-break-after:always;padding:32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;border-left:6px solid ${VIOLET};">
     <p style="letter-spacing:.16em;text-transform:uppercase;font-size:11px;margin:0 0 6px 0;color:${MUTED};">Marina — lecture d'ensemble</p>
