@@ -93,8 +93,9 @@ export const startMarinaFreeAudit = createServerFn({ method: 'POST' })
       };
     }
 
+    const { launchMarinaJob } = await import('./marinaLaunch.server');
     const launch = await launchMarinaJob(supabaseAdmin, targetUrl, lang);
-    if ('error' in launch) return launch;
+    if ('error' in launch) return { error: launch.error, message: launch.message };
 
 
     // La consommation n'est comptée qu'après un lancement réussi.
