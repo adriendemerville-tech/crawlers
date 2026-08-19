@@ -796,7 +796,7 @@ export default function Marina() {
       } catch {}
       refreshCredits();
     }
-  }, [url, user, credits, refreshCredits, t]);
+  }, [url, user, credits, refreshCredits, t, handleFreeGenerate]);
 
   const copyCode = (text: string) => {
     navigator.clipboard.writeText(text);
