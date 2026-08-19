@@ -945,6 +945,9 @@ export default function Marina() {
                 </div>
                 {!user && (
                   <div className="mt-4">
+                    {freeRemaining === 0 && (
+                      <p className="text-sm text-foreground mb-2">{freeT.exhausted}</p>
+                    )}
                     <Link to="/auth" onClick={() => sessionStorage.setItem('audit_return_path', '/marina')}>
                       <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
                         {t.hero.loginCta} <ArrowRight className="w-4 h-4 ml-1" />
