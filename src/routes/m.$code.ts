@@ -6,7 +6,7 @@ import { serveMarinaReport } from "@/lib/marina/serveReport.server";
  * `code` = début de l'identifiant du rapport (8 caractères suffisent) ou
  * l'identifiant complet. Remplace l'URL signée Storage, illisible à partager.
  */
-export const Route = createFileRoute("/r/$code")({
+export const Route = createFileRoute("/m/$code")({
   server: {
     handlers: {
       GET: ({ params }) => serveMarinaReport(params.code),

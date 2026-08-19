@@ -111,10 +111,10 @@ import { Route as GuidesGeoVsSeoRouteImport } from './routes/guides/geo-vs-seo'
 import { Route as LandingSlugRouteImport } from './routes/landing/$slug'
 import { Route as LexiqueIndexRouteImport } from './routes/lexique/index'
 import { Route as LexiqueSlugRouteImport } from './routes/lexique/$slug'
+import { Route as MCodeRouteImport } from './routes/m.$code'
 import { Route as MatriceIndexRouteImport } from './routes/matrice/index'
 import { Route as MatriceCompareRouteImport } from './routes/matrice/compare'
 import { Route as MatriceHistoriqueRouteImport } from './routes/matrice/historique'
-import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as RShareIdRouteImport } from './routes/r/$shareId'
 import { Route as RapportReportIdRouteImport } from './routes/rapport/$reportId'
 import { Route as RapportAuditRouteImport } from './routes/rapport/audit'
@@ -653,6 +653,11 @@ const LexiqueSlugRoute = LexiqueSlugRouteImport.update({
   path: '/lexique/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MCodeRoute = MCodeRouteImport.update({
+  id: '/m/$code',
+  path: '/m/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MatriceIndexRoute = MatriceIndexRouteImport.update({
   id: '/matrice/',
   path: '/matrice/',
@@ -666,11 +671,6 @@ const MatriceCompareRoute = MatriceCompareRouteImport.update({
 const MatriceHistoriqueRoute = MatriceHistoriqueRouteImport.update({
   id: '/matrice/historique',
   path: '/matrice/historique',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RCodeRoute = RCodeRouteImport.update({
-  id: '/r/$code',
-  path: '/r/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RShareIdRoute = RShareIdRouteImport.update({
@@ -856,9 +856,9 @@ export interface FileRoutesByFullPath {
   '/guides/geo-vs-seo': typeof GuidesGeoVsSeoRoute
   '/landing/$slug': typeof LandingSlugRoute
   '/lexique/$slug': typeof LexiqueSlugRoute
+  '/m/$code': typeof MCodeRoute
   '/matrice/compare': typeof MatriceCompareRoute
   '/matrice/historique': typeof MatriceHistoriqueRoute
-  '/r/$code': typeof RCodeRoute
   '/r/$shareId': typeof RShareIdRoute
   '/rapport/$reportId': typeof RapportReportIdRoute
   '/rapport/audit': typeof RapportAuditRoute
@@ -981,9 +981,9 @@ export interface FileRoutesByTo {
   '/guides/geo-vs-seo': typeof GuidesGeoVsSeoRoute
   '/landing/$slug': typeof LandingSlugRoute
   '/lexique/$slug': typeof LexiqueSlugRoute
+  '/m/$code': typeof MCodeRoute
   '/matrice/compare': typeof MatriceCompareRoute
   '/matrice/historique': typeof MatriceHistoriqueRoute
-  '/r/$code': typeof RCodeRoute
   '/r/$shareId': typeof RShareIdRoute
   '/rapport/$reportId': typeof RapportReportIdRoute
   '/rapport/audit': typeof RapportAuditRoute
@@ -1107,9 +1107,9 @@ export interface FileRoutesById {
   '/guides/geo-vs-seo': typeof GuidesGeoVsSeoRoute
   '/landing/$slug': typeof LandingSlugRoute
   '/lexique/$slug': typeof LexiqueSlugRoute
+  '/m/$code': typeof MCodeRoute
   '/matrice/compare': typeof MatriceCompareRoute
   '/matrice/historique': typeof MatriceHistoriqueRoute
-  '/r/$code': typeof RCodeRoute
   '/r/$shareId': typeof RShareIdRoute
   '/rapport/$reportId': typeof RapportReportIdRoute
   '/rapport/audit': typeof RapportAuditRoute
@@ -1234,9 +1234,9 @@ export interface FileRouteTypes {
     | '/guides/geo-vs-seo'
     | '/landing/$slug'
     | '/lexique/$slug'
+    | '/m/$code'
     | '/matrice/compare'
     | '/matrice/historique'
-    | '/r/$code'
     | '/r/$shareId'
     | '/rapport/$reportId'
     | '/rapport/audit'
@@ -1359,9 +1359,9 @@ export interface FileRouteTypes {
     | '/guides/geo-vs-seo'
     | '/landing/$slug'
     | '/lexique/$slug'
+    | '/m/$code'
     | '/matrice/compare'
     | '/matrice/historique'
-    | '/r/$code'
     | '/r/$shareId'
     | '/rapport/$reportId'
     | '/rapport/audit'
@@ -1484,9 +1484,9 @@ export interface FileRouteTypes {
     | '/guides/geo-vs-seo'
     | '/landing/$slug'
     | '/lexique/$slug'
+    | '/m/$code'
     | '/matrice/compare'
     | '/matrice/historique'
-    | '/r/$code'
     | '/r/$shareId'
     | '/rapport/$reportId'
     | '/rapport/audit'
@@ -1610,9 +1610,9 @@ export interface RootRouteChildren {
   GuidesGeoVsSeoRoute: typeof GuidesGeoVsSeoRoute
   LandingSlugRoute: typeof LandingSlugRoute
   LexiqueSlugRoute: typeof LexiqueSlugRoute
+  MCodeRoute: typeof MCodeRoute
   MatriceCompareRoute: typeof MatriceCompareRoute
   MatriceHistoriqueRoute: typeof MatriceHistoriqueRoute
-  RCodeRoute: typeof RCodeRoute
   RShareIdRoute: typeof RShareIdRoute
   RapportReportIdRoute: typeof RapportReportIdRoute
   RapportAuditRoute: typeof RapportAuditRoute
@@ -2355,6 +2355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LexiqueSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/m/$code': {
+      id: '/m/$code'
+      path: '/m/$code'
+      fullPath: '/m/$code'
+      preLoaderRoute: typeof MCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/matrice/': {
       id: '/matrice/'
       path: '/matrice'
@@ -2374,13 +2381,6 @@ declare module '@tanstack/react-router' {
       path: '/matrice/historique'
       fullPath: '/matrice/historique'
       preLoaderRoute: typeof MatriceHistoriqueRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/r/$code': {
-      id: '/r/$code'
-      path: '/r/$code'
-      fullPath: '/r/$code'
-      preLoaderRoute: typeof RCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$shareId': {
@@ -2604,9 +2604,9 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesGeoVsSeoRoute: GuidesGeoVsSeoRoute,
   LandingSlugRoute: LandingSlugRoute,
   LexiqueSlugRoute: LexiqueSlugRoute,
+  MCodeRoute: MCodeRoute,
   MatriceCompareRoute: MatriceCompareRoute,
   MatriceHistoriqueRoute: MatriceHistoriqueRoute,
-  RCodeRoute: RCodeRoute,
   RShareIdRoute: RShareIdRoute,
   RapportReportIdRoute: RapportReportIdRoute,
   RapportAuditRoute: RapportAuditRoute,
