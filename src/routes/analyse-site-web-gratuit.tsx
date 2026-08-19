@@ -5,10 +5,11 @@ import { marinaMentionJsonLd } from "@/lib/seo/marinaMentions";
 
 export const Route = createFileRoute("/analyse-site-web-gratuit")({
   head: () => pageHead({
-    title: "Analyse de site web gratuite — audit SEO GEO 220 points",
-    description: "Analyser un site gratuitement : rapport de 40 à 100 pages, 18 sections, 220+ points SEO/GEO mesurés et 9 questions posées aux LLM. 2 rapports offerts.",
+    title: "Audit SEO + GEO gratuit — analyse de site web complète",
+    description: "Audit SEO + GEO gratuit : rapport de 40 à 100 pages, 18 sections, 220+ points mesurés et 9 questions posées aux LLM. 2 audits offerts.",
     path: "/analyse-site-web-gratuit",
-    jsonLd: [marinaMentionJsonLd({ path: "/analyse-site-web-gratuit", name: "Analyse de site web gratuite — audit SEO GEO 220 points", description: "Analyser un site gratuitement : rapport de 40 à 100 pages, 18 sections, 220+ points SEO/GEO mesurés et 9 questions posées aux LLM. 2 rapports offerts." })],
+    noIndex: false,
+    jsonLd: [marinaMentionJsonLd({ path: "/analyse-site-web-gratuit", name: "Audit SEO + GEO gratuit — analyse de site web complète", description: "Audit SEO + GEO gratuit : rapport de 40 à 100 pages, 18 sections, 220+ points mesurés et 9 questions posées aux LLM. 2 audits offerts." })],
     ogType: "article",
   }),
   component: AnalyseSiteWebGratuit,
