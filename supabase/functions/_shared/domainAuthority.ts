@@ -355,9 +355,20 @@ export async function fetchDomainAuthority(
   }
 
   try {
-    const [summaryRes, refRes] = await Promise.allSettled([
+    const [summaryRes, refRes, anchorRes] = await Promise.allSettled([
       dfsPost('backlinks/summary/live', [{ target: domain, internal_list_limit: 10, include_subdomains: true }], 'backlinks/summary/live', domain),
-      dfsPost('backlinks/referring_domains/live', [{ target: domain, limit: 10, order_by: ['rank,desc'] }], 'backlinks/referring_domains/live', domain),
+      dfsPost(
+        'backlinks/referring_domains/live',
+        [{ target: domain, limit: REFERRING_DOMAINS_SAMPLE_LIMIT, order_by: ['rank,desc'], internal_list_limit: 1 }],
+        'backlinks/referring_domains/live',
+        domain,
+      ),
+      dfsPost(
+        'backlinks/anchors/live',
+        [{ target: domain, limit: ANCHORS_SAMPLE_LIMIT, order_by: ['backlinks,desc'], internal_list_limit: 1 }],
+        'backlinks/anchors/live',
+        domain,
+      ),
     ]);
 
     if (summaryRes.status !== 'fulfilled') {
@@ -373,18 +384,27 @@ export async function fetchDomainAuthority(
     const domainRank = normalizeDomainRank(rawRank);
     const referringDomains = s.referring_domains || 0;
 
-    let topRef: AuthorityData['top_referring_domains'] = [];
+    // Échantillon complet (jusqu'à 200) pour les statistiques, top 10 pour l'affichage.
+    let refSample: AuthorityData['top_referring_domains'] = [];
     if (refRes.status === 'fulfilled') {
-      topRef = (refRes.value?.tasks?.[0]?.result?.[0]?.items || [])
-        .slice(0, 10)
+      refSample = (refRes.value?.tasks?.[0]?.result?.[0]?.items || [])
         .map((r: any) => ({ domain: r.domain || '', rank: r.rank || 0, backlinks: r.backlinks || 0 }))
         .filter((r: any) => r.domain);
     }
+    const topRef = refSample.slice(0, 10);
 
-    const anchors = extractAnchors(s.referring_links_anchors);
+    // Ancres mesurées si l'endpoint dédié répond, sinon repli sur le summary.
+    const endpointAnchors = anchorRes.status === 'fulfilled' ? extractAnchorsFromEndpoint(anchorRes.value) : [];
+    const summaryAnchors = extractAnchors(s.referring_links_anchors);
+    const anchors = endpointAnchors.length ? endpointAnchors : summaryAnchors;
+    const anchorsSource: AuthorityData['anchors_source'] = endpointAnchors.length
+      ? 'anchors_endpoint'
+      : summaryAnchors.length ? 'summary_sample' : 'unavailable';
+
     const toxicity = computeBacklinkToxicity({
       anchors,
       topReferringDomains: topRef,
+      sampleReferringDomains: refSample,
       backlinksTotal,
       referringDomains,
       brokenBacklinks: s.broken_backlinks || 0,
@@ -394,8 +414,10 @@ export async function fetchDomainAuthority(
     // Confiance : la mesure vaut ce que vaut l'échantillon reçu.
     let confidence: AuthorityData['confidence'] = 'high';
     const missing: string[] = [];
-    if (refRes.status !== 'fulfilled' || topRef.length === 0) missing.push('domaines référents non détaillés');
-    if (anchors.length === 0) missing.push("échantillon d'ancres absent");
+    if (refSample.length === 0) missing.push('domaines référents non détaillés');
+    else if (referringDomains > 50 && refSample.length < 50) missing.push(`échantillon de référents réduit (${refSample.length}/${referringDomains})`);
+    if (anchorsSource === 'unavailable') missing.push("échantillon d'ancres absent");
+    else if (anchorsSource === 'summary_sample') missing.push('ancres issues du résumé, endpoint dédié indisponible');
     if (!rawRank) missing.push('rank de domaine absent');
     if (missing.length >= 2) confidence = 'low';
     else if (missing.length === 1) confidence = 'medium';
@@ -404,7 +426,7 @@ export async function fetchDomainAuthority(
       domain,
       authority_score: computeAuthorityScore(domainRank, referringDomains, {
         toxicityScore: toxicity.toxicity_score,
-        avgReferrerRank: topRef.length ? toxicity.avg_referrer_rank : undefined,
+        avgReferrerRank: refSample.length ? toxicity.avg_referrer_rank : undefined,
       }),
       domain_rank: domainRank,
       domain_rank_raw: rawRank,
@@ -419,12 +441,16 @@ export async function fetchDomainAuthority(
       top_anchors_detail: anchors.slice(0, 10),
       toxicity,
       organic_visibility: opts?.organicVisibility ?? null,
+      referring_domains_sampled: refSample.length,
+      anchors_sampled: anchors.length,
+      anchors_source: anchorsSource,
       confidence,
-      confidence_reason: missing.length ? `échantillon partiel : ${missing.join(', ')}` : 'réponse DataForSEO complète',
+      confidence_reason: missing.length ? `échantillon partiel : ${missing.join(', ')}` : `réponse DataForSEO complète (${refSample.length} référents, ${anchors.length} ancres mesurées)`,
       calibration_version: AUTHORITY_CALIBRATION_VERSION,
       data_source: 'dataforseo',
       fetched_at: new Date().toISOString(),
     };
+
 
     // Garde-fou anti-régression : un score quasi parfait est presque toujours
     // un bug de normalisation, pas un domaine parfait.
