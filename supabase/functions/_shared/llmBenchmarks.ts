@@ -518,8 +518,11 @@ export function buildLlmBenchmarks(
   if (reputationOk) {
     const first = result[0];
     const need = framedNeed(needs[0]).need;
-    const place = (pageKeywords.find((k) => /^[A-ZÉÈÀÂÎÔÛ]/.test(k)) || (ctx.commercial_area || '').trim());
+    const placeRaw = (pageKeywords.find((k) => /^[A-ZÉÈÀÂÎÔÛ]/.test(k)) || (ctx.commercial_area || '').trim());
+    // Jamais deux fois la même ville : le besoin peut déjà la porter.
+    const place = placeRaw && !need.toLowerCase().includes(placeRaw.toLowerCase()) ? placeRaw : '';
     const at = place ? (lang === 'en' ? ` in ${place}` : lang === 'es' ? ` en ${place}` : ` à ${place}`) : '';
+
     const text = lang === 'en'
       ? `Who has the best customer reviews for ${need}${at}, and are those reviews trustworthy?`
       : lang === 'es'
