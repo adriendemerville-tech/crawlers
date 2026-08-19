@@ -612,6 +612,8 @@ export default function Marina() {
   // Essai gratuit sans compte : 2 rapports complets par adresse IP, email requis
   const [freeEmail, setFreeEmail] = useState('');
   const [freeRemaining, setFreeRemaining] = useState<number | null>(null);
+  // Quota gratuit épuisé : déblocage payant du rapport suivant (15 €, sans compte)
+  const [showPaidUnlock, setShowPaidUnlock] = useState(false);
 
   const freeT = FREE_TRIAL_TEXTS[language as keyof typeof FREE_TRIAL_TEXTS] || FREE_TRIAL_TEXTS.fr;
 
