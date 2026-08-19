@@ -58,6 +58,11 @@ export function buildMarketProfile(ctx: Record<string, unknown> | null | undefin
       entity_type: c['entity_type'] ?? null,
       is_local_business: c['is_local_business'] ?? null,
       sector,
+      products_services: c['products_services'] ?? null,
+      target_audience: typeof c['target_audience'] === 'string' ? c['target_audience'] : null,
+      description: typeof c['description'] === 'string'
+        ? c['description']
+        : typeof c['value_proposition'] === 'string' ? c['value_proposition'] : null,
     }),
     entityType: c['entity_type'] ?? null,
     businessType: c['business_type'] ?? null,

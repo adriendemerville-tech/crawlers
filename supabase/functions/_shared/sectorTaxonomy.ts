@@ -157,14 +157,25 @@ export function normalizeCommercialModel(input: {
   // Dernier repli : un secteur normalisé suffit à trancher le modèle dominant,
   // ce qui vaut mieux qu'un « non résolu » contredit plus loin dans le rapport.
   const bySector: Partial<Record<SectorKey, CommercialModelKey>> = {
-    batiment_renovation: 'lead_gen',
-    sante_bien_etre: 'local_service',
-    restauration: 'local_service',
+    renovation_batiment: 'lead_gen',
     immobilier: 'lead_gen',
-    services_pro: 'lead_gen',
-    formation: 'lead_gen',
-    tourisme: 'local_service',
+    services_web_seo: 'lead_gen',
+    marketing_communication: 'lead_gen',
+    conseil_strategie: 'lead_gen',
+    rh_recrutement: 'lead_gen',
+    finance_assurance: 'lead_gen',
+    juridique: 'lead_gen',
+    education_formation: 'lead_gen',
+    transport_logistique: 'lead_gen',
+    industrie_production: 'lead_gen',
+    sante_medical: 'local_service',
+    beaute_bienetre: 'local_service',
+    restauration: 'local_service',
+    tourisme_hotellerie: 'local_service',
     automobile: 'local_service',
+    artisanat_creation: 'local_service',
+    sport_loisirs: 'local_service',
+    association_public: 'non_commercial',
   };
   if (input.sector && bySector[input.sector]) return bySector[input.sector]!;
   return 'unknown';
