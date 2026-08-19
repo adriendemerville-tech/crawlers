@@ -177,6 +177,68 @@ function variantIndex(families: TemplateFamily[]): Map<string, string> {
   return index;
 }
 
+// ───────────────────── Régime de lecture du lot audité ─────────────────────
+
+/**
+ * Un lot multipages n'est PAS forcément un réseau : ce peut être un ensemble de
+ * pages sans branche commune, sans déclinaison et sans lien entre elles (audit
+ * d'un panier de pages choisies à la main, comparaison de pages concurrentes
+ * internes, échantillon d'un site hétérogène). Les blocs « concurrence interne »
+ * et « pilier manquant » n'ont alors aucun objet, et les affirmer serait faux.
+ *
+ * Le régime est déterminé par trois signaux mesurés, sans liste codée en dur :
+ *   - part des URLs appartenant à un gabarit décliné (motif répété) ;
+ *   - existence d'une branche commune couvrant la majorité des URLs ;
+ *   - part des URLs partageant un cluster sémantique avec une autre URL auditée.
+ */
+export type CohesionRegime = 'reseau' | 'arborescence' | 'assemblage';
+
+export interface Cohesion {
+  regime: CohesionRegime;
+  /** Part des URLs dans un gabarit décliné, 0-1. */
+  declinedShare: number;
+  /** Branche commune à la majorité des URLs, ou null. */
+  commonBranch: string | null;
+  /** Part des URLs partageant un cluster avec une autre URL auditée, 0-1. */
+  clusterShare: number;
+  /** Phrase de cadrage, à afficher telle quelle en tête du bloc 2. */
+  statement: string;
+}
+
+export function detectCohesion(metas: PageMeta[], families: TemplateFamily[]): Cohesion {
+  const total = metas.length || 1;
+  const declined = families.filter((f) => f.pattern.includes('*') && f.pages.length >= 2);
+  const declinedShare = declined.reduce((a, f) => a + f.pages.length, 0) / total;
+
+  // Branche commune : premier segment partagé par au moins 60 % des URLs.
+  const firstSegCount = new Map<string, number>();
+  for (const m of metas) {
+    const s = segments(m.path)[0];
+    if (s) firstSegCount.set(s.toLowerCase(), (firstSegCount.get(s.toLowerCase()) || 0) + 1);
+  }
+  const topBranch = [...firstSegCount.entries()].sort((a, b) => b[1] - a[1])[0];
+  const commonBranch = topBranch && topBranch[1] / total >= 0.6 ? `/${topBranch[0]}` : null;
+
+  const clusterCount = new Map<string, number>();
+  for (const m of metas) if (m.cluster) clusterCount.set(String(m.cluster), (clusterCount.get(String(m.cluster)) || 0) + 1);
+  const shared = [...clusterCount.values()].filter((c) => c >= 2).reduce((a, c) => a + c, 0);
+  const clusterShare = shared / total;
+
+  let regime: CohesionRegime;
+  if (declinedShare >= 0.6 && declined.length >= 1) regime = 'reseau';
+  else if (commonBranch || clusterShare >= 0.6) regime = 'arborescence';
+  else regime = 'assemblage';
+
+  const statement =
+    regime === 'reseau'
+      ? 'Les URLs auditées forment un réseau : elles sont produites par des gabarits déclinés, donc lisibles ensemble.'
+      : regime === 'arborescence'
+        ? `Les URLs auditées relèvent d'une même branche${commonBranch ? ` (<code style="font-size:12px;">${esc(commonBranch)}</code>)` : ' thématique'} : elles se lisent comme une arborescence, pas comme un motif répété.`
+        : "Les URLs auditées ne partagent ni gabarit décliné, ni branche commune, ni cluster commun : ce lot est un assemblage de pages indépendantes. Il se lit comme une comparaison de pages, pas comme un réseau.";
+
+  return { regime, declinedShare, commonBranch, clusterShare, statement };
+}
+
 interface FamilyStats {
   family: TemplateFamily;
   count: number;
