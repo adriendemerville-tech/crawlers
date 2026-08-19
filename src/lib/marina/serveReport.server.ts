@@ -52,5 +52,12 @@ export async function serveMarinaReport(code: string): Promise<Response> {
 
   if (error || !data) return htmlResponse(notFoundHtml, 404);
 
-  return htmlResponse(await data.text(), 200);
-}
+  const shortUrl = `https://crawlers.fr/r/${jobId.slice(0, 8)}`;
+  // Les rapports générés avant les liens courts embarquent l'URL signée dans
+  // le bouton « Copier le lien » : on la remplace à la volée.
+  const html = (await data.text()).replace(
+    /(<meta name="marina-report-url" content=")[^"]*(")/i,
+    `$1${shortUrl}$2`,
+  );
+  return htmlResponse(html, 200);
+
