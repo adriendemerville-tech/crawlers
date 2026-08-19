@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Layers, Loader2, FolderSearch, FileText, X, Check, AlertTriangle } from 'lucide-react';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { mergeMarinaReports } from '@/lib/marina/mergeReports';
+import { fetchSiteStructure } from '@/lib/marina/siteStructure';
 
 const MAX_URLS = 15;
 const CREDIT_COST = 30;
@@ -379,7 +380,8 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       if (failures.length > 0) {
         toast.warning(`${failures.length} rapport(s) illisible(s), exclus du PDF`);
       }
-      setMergedHtml(mergeMarinaReports(parts));
+      const site = await fetchSiteStructure(parts[0].url);
+      setMergedHtml(mergeMarinaReports(parts, { site }));
       setShowModal(true);
     } catch (e: any) {
       toast.error(e?.message || 'Fusion impossible');
