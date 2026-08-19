@@ -54,6 +54,15 @@ const SLUG_STOPWORDS = new Set([
 /** Segments de chemin purement structurels : on remonte au segment précédent. */
 const STRUCTURAL_SEGMENTS = /^(fr|en|es|blog|articles?|actualites?|news|services?|prestations?|realisations?|zones?|zone-d-intervention|villes?|agences?|categorie|category|c|p)$/i;
 
+/**
+ * Segments « avis / témoignages ». Une page avis ne vend pas des avis : elle
+ * vend la prestation de la page (ou de l'agence) parente. On la traite donc
+ * comme un segment structurel — le focus est hérité du segment précédent — et
+ * on ne garde la réputation que comme angle secondaire (1 question sur 9).
+ */
+const REVIEW_SEGMENTS = /^(avis|avis-clients?|avis-google|temoignages?|témoignages?|reviews?|testimonials?|notations?|notes|ratings?)$/i;
+
+
 /** Marqueurs de toponyme français (composition de nom de commune). */
 const LOCALITY_PATTERNS: RegExp[] = [
   /^saint(e)?[- ]/i,
