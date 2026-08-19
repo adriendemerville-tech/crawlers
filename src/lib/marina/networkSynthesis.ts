@@ -876,20 +876,27 @@ export function buildNetworkSynthesisHTML(
   );
 
   // ── 6. Maillon le plus faible ─────────────────────────────────────────────
-  const rankable = stats.filter((s) => s.geo !== null || s.worstLcpMs !== null);
+  // Trou 5 — un gabarit d'une seule page ne peut pas être désigné « maillon
+  // faible du réseau » : on privilégie les effectifs comparables, et on ne
+  // retombe sur un effectif d'une page qu'à défaut, en le disant.
+  const rankableAll = stats.filter((s) => s.geo !== null || s.worstLcpMs !== null);
+  const rankable = rankableAll.filter((s) => s.count >= 2);
+  const rankableFallback = rankable.length ? rankable : rankableAll;
   let block6Body: string;
-  if (!rankable.length) {
+  if (!rankableAll.length) {
     block6Body = noFact("Aucun gabarit n'a assez de métriques consolidées pour être désigné comme maillon faible.");
   } else {
-    const weakest = [...rankable].sort((a, b) => (a.geo ?? 101) - (b.geo ?? 101))[0];
+    const weakest = [...rankableFallback].sort((a, b) => (a.geo ?? 101) - (b.geo ?? 101))[0];
     const slowest = [...stats].filter((s) => s.worstLcpMs !== null).sort((a, b) => (b.worstLcpMs as number) - (a.worstLcpMs as number))[0];
     const slowPages = metas.filter((m) => num(m.lcpMs) !== null && (m.lcpMs as number) > 4000);
+    const geoCov = weakest.coverage.geo;
     block6Body = `<p style="margin:0 0 6px 0;">
         Le gabarit <code style="font-size:12px;">${esc(weakest.family.pattern)}</code> est le plus faible du réseau :
-        ${weakest.geo !== null ? `GEO moyen ${weakest.geo}/100` : 'GEO non consolidé'}${
+        ${weakest.geo !== null ? `GEO moyen ${weakest.geo}/100${geoCov.known < geoCov.total ? ` relevé sur ${geoCov.known} des ${geoCov.total} pages` : ''}` : 'GEO non consolidé'}${
       weakest.words !== null ? `, ${weakest.words.toLocaleString('fr-FR')} mots en moyenne` : ''
-    }${weakest.lcpMs !== null ? `, LCP moyen ${seconds(weakest.lcpMs)}` : ''}, sur ${weakest.count} page${weakest.count > 1 ? 's' : ''}.
-        ${weakest.family.pattern.includes('*') ? 'Comme ce gabarit est décliné, chaque nouvelle variante reproduit ce défaut.' : ''}
+    }${weakest.lcpMs !== null ? `, LCP moyen ${seconds(weakest.lcpMs)}` : ''}, sur ${weakest.count} page${weakest.count > 1 ? 's' : ''}${solidityNote(weakest.count)}.
+        ${weakest.family.pattern.includes('*') && weakest.count >= 3 ? 'Comme ce gabarit est décliné, chaque nouvelle variante reproduit ce défaut.' : ''}
+        ${!rankable.length ? "Aucun gabarit ne compte deux pages ou plus : ce classement compare des cas isolés, il ne désigne pas un défaut de gabarit." : ''}
       </p>
       ${
         slowest && (slowest.worstLcpMs as number) > 4000
@@ -897,6 +904,7 @@ export function buildNetworkSynthesisHTML(
              pire cas ${seconds(slowest.worstLcpMs as number)} sur <code style="font-size:12px;">${esc(slowest.family.pattern)}</code>.</p>`
           : `<p style="margin:0;color:${MUTED};">Aucun LCP au-dessus de 4 s sur les URLs mesurées.</p>`
       }`;
+
     if (slowest && (slowest.worstLcpMs as number) > 4000) {
       candidates.push({
         title: `Traiter le LCP du gabarit ${slowest.family.pattern}`,
