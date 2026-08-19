@@ -94,9 +94,10 @@ export function MarinaDeepAuditSection() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/autopilot-iktracker" className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
+            <Link to="/etudes/autopilot-parmenion-iktracker" className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
               {t.secondary}
             </Link>
+
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground">{t.note}</p>
