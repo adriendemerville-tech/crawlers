@@ -1199,21 +1199,25 @@ FRAÎCHEUR & DÉNOMINATION:
 
 
     // Dernière chance « compacte » : si tous les tiers ont expiré, on rejoue
-    // flash-lite avec un prompt tronqué. Coûte ~20s et évite un job `failed`
-    // (7 échecs "Signal timed out" sur les 7 derniers jours).
-    const COMPACT_ATTEMPT_MS = 22_000;
+    // flash-lite avec un prompt tronqué ET une sortie plafonnée (squelette de
+    // 4 sections courtes). Le vrai coût des timeouts est la génération des
+    // body_text longs : borner la sortie ramène l'attempt à ~15-20s et évite
+    // un job `failed` (mode dégradé assumé, signalé dans la recommandation).
+    const COMPACT_ATTEMPT_MS = 26_000;
     const COMPACT_PROMPT_CHARS = 6_000;
+    const COMPACT_MAX_TOKENS = 3_500;
     const attemptSpecs: { model: string; compact: boolean }[] = [
       ...modelTiers.map((m) => ({ model: m, compact: false })),
       { model: 'google/gemini-3.1-flash-lite', compact: true },
     ];
     const lastFullTierIndex = modelTiers.length - 1;
+    let usedCompactFallback = false;
 
     async function callLLMWithRetry(): Promise<Response> {
       for (let attempt = 0; attempt < attemptSpecs.length; attempt++) {
         const { model, compact } = attemptSpecs[attempt];
         const remaining = TOTAL_BUDGET_MS - (Date.now() - startTime);
-        const minNeeded = compact ? COMPACT_ATTEMPT_MS - 4_000 : MIN_ATTEMPT_MS;
+        const minNeeded = compact ? 12_000 : MIN_ATTEMPT_MS;
         if (remaining < minNeeded) {
           throw new Error(`LLM budget exhausted (${Math.round(remaining / 1000)}s restants) — abandon avant kill CPU`);
         }
@@ -1226,8 +1230,9 @@ FRAÎCHEUR & DÉNOMINATION:
             ? Math.min(MAX_ATTEMPT_MS, Math.max(MIN_ATTEMPT_MS, remaining - COMPACT_ATTEMPT_MS - 5_000))
             : Math.min(FIRST_ATTEMPT_MAX_MS, Math.max(MIN_ATTEMPT_MS, remaining - MIN_ATTEMPT_MS - 5_000));
         const promptForAttempt = compact
-          ? `${userPrompt.slice(0, COMPACT_PROMPT_CHARS)}\n\n(Contexte tronqué pour cause de délai : produis une recommandation complète et valide à partir des éléments ci-dessus.)`
+          ? `${userPrompt.slice(0, COMPACT_PROMPT_CHARS)}\n\nCONTRAINTE DE DÉLAI (mode dégradé) : contexte tronqué et sortie plafonnée. Produis une recommandation VALIDE mais compacte : au maximum 4 sections, chaque body_text limité à 100 mots, 3 mots-clés secondaires, 3 termes LSI, 1 schéma JSON-LD, rationale en 2 phrases. Ne dépasse jamais ces limites.`
           : userPrompt;
+        if (compact) usedCompactFallback = true;
         const isRetry = attempt > 0;
         if (isRetry) {
           console.log(`[content-advisor] ⚡ Retry ${compact ? 'compact' : ''} with faster model: ${model} (attempt ${attempt + 1}, budget ${Math.round(attemptTimeoutMs / 1000)}s)`);
