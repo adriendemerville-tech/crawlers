@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useLocation } from '@/lib/router-compat';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -284,7 +285,7 @@ export function FloatingChatBubble() {
             className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border border-border bg-background text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted text-[10px] font-bold"
             aria-label="Fermer"
           >
-            ✕
+            <X className="h-3 w-3" />
           </button>
           Bonjour, moi c'est Félix. Veux-tu que je t'explique comment fonctionne Crawlers ?
         </div>
@@ -302,7 +303,7 @@ export function FloatingChatBubble() {
             className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border border-border bg-background text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted text-[10px] font-bold"
             aria-label="Fermer"
           >
-            ✕
+            <X className="h-3 w-3" />
           </button>
           En quoi puis-je t'être utile&nbsp;?
         </div>
@@ -324,7 +325,7 @@ export function FloatingChatBubble() {
             className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border border-border bg-background text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted text-[10px] font-bold"
             aria-label="Fermer"
           >
-            ✕
+            <X className="h-3 w-3" />
           </button>
           Veux-tu que je t'aide à diagnostiquer cette hallucination&nbsp;?
         </div>

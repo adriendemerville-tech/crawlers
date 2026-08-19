@@ -807,15 +807,15 @@ const Index = () => {
               {/* Right — 4 pillar cards */}
               <div className="grid grid-cols-2 gap-4 w-full lg:w-[420px] shrink-0">
                 {[
-                  { letter: 'E', label: language === 'fr' ? 'Expérience' : 'Experience', color: 'from-blue-500 to-blue-600', icon: '🧑‍💻' },
-                  { letter: 'E', label: language === 'fr' ? 'Expertise' : 'Expertise', color: 'from-emerald-500 to-emerald-600', icon: '🎓' },
-                  { letter: 'A', label: language === 'fr' ? 'Autorité' : 'Authority', color: 'from-violet-500 to-violet-600', icon: '🏛️' },
-                  { letter: 'T', label: language === 'fr' ? 'Fiabilité' : 'Trust', color: 'from-amber-500 to-amber-600', icon: '🛡️' },
+                  { letter: 'E', label: language === 'fr' ? 'Expérience' : 'Experience', Icon: FileSearch },
+                  { letter: 'E', label: language === 'fr' ? 'Expertise' : 'Expertise', Icon: Brain },
+                  { letter: 'A', label: language === 'fr' ? 'Autorité' : 'Authority', Icon: Globe },
+                  { letter: 'T', label: language === 'fr' ? 'Fiabilité' : 'Trust', Icon: ShieldCheck },
                 ].map((p) => (
                   <div key={p.label} className="rounded-xl border border-border/60 bg-card/80 backdrop-blur p-5 text-center space-y-2 hover:shadow-lg transition-shadow">
-                    <span className="text-3xl">{p.icon}</span>
-                    <p className={`text-2xl font-black bg-gradient-to-r ${p.color} bg-clip-text text-transparent`}>{p.letter}</p>
-                    <p className="text-sm font-medium text-foreground">{p.label}</p>
+                    <p.Icon className="h-7 w-7 mx-auto text-muted-foreground" strokeWidth={1.5} />
+                    <p className="text-2xl font-black text-foreground">{p.letter}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{p.label}</p>
                   </div>
                 ))}
               </div>
@@ -852,8 +852,8 @@ const Index = () => {
         {/* Contextual CTA → Audit Expert after scan */}
         {hasResults && (
           <section className="py-8 px-4">
-            <div className="mx-auto max-w-2xl rounded-2xl border-2 border-[#3b82f6]/40 bg-gradient-to-r from-[#3b82f6]/5 via-primary/5 to-[#3b82f6]/5 p-6 sm:p-8 text-center shadow-lg shadow-[#3b82f6]/5">
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#3b82f6]/10 border border-[#3b82f6]/30 px-3 py-1 text-xs font-semibold text-[#3b82f6] dark:text-[#60a5fa] mb-3">
+            <div className="mx-auto max-w-2xl rounded-2xl border-2 border-primary/40 bg-card/60 p-6 sm:p-8 text-center shadow-lg">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-3 py-1 text-xs font-semibold text-primary mb-3">
                 <Crown className="h-3.5 w-3.5" />
                 {language === 'fr' ? 'Aller plus loin' : language === 'es' ? 'Ir más allá' : 'Go further'}
               </div>
