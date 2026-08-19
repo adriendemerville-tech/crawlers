@@ -168,7 +168,87 @@ export function detectTemplates(metas: PageMeta[]): TemplateFamily[] {
     }
   }
 
-  return [...families.values()].sort((a, b) => b.pages.length - a.pages.length);
+  return splitFamiliesByContent([...families.values()]).sort((a, b) => b.pages.length - a.pages.length);
+}
+
+// ─────────────── Trou 9 — contrôle de contenu des gabarits ───────────────
+
+export type ContentCheck = 'confirme' | 'morphologique' | 'heterogene';
+
+/** Dispersion relative d'une série (écart-type / moyenne), null si non calculable. */
+function dispersion(values: number[]): number | null {
+  if (values.length < 2) return null;
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  if (mean <= 0) return null;
+  const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length;
+  return Math.sqrt(variance) / mean;
+}
+
+/**
+ * Un gabarit détecté sur la seule forme des URLs peut regrouper des pages qui
+ * n'ont rien à voir. Deux signaux de CONTENU tranchent, sans liste codée en dur :
+ *   - homogénéité de cluster sémantique (quand le cluster est remonté) ;
+ *   - dispersion du volume de contenu (au-delà de 70 % d'écart relatif, les
+ *     pages ne sortent visiblement pas du même moule).
+ *
+ * Le résultat qualifie le gabarit — confirmé par le contenu, purement
+ * morphologique faute de signal, ou hétérogène — et cette qualification est
+ * affichée : une moyenne de gabarit hétérogène ne se lit pas comme un défaut
+ * de gabarit.
+ */
+export function familyContentCheck(family: TemplateFamily): { status: ContentCheck; note: string } {
+  const clusters = family.pages.map((p) => (p.cluster ? String(p.cluster).toLowerCase() : null)).filter((c): c is string => Boolean(c));
+  const words = family.pages.map((p) => num(p.words)).filter((v): v is number => v !== null);
+  const spread = dispersion(words);
+  const distinct = new Set(clusters).size;
+  if (family.pages.length < 2) return { status: 'morphologique', note: 'gabarit à une seule page : rien à confirmer par le contenu' };
+  if (clusters.length >= 2 && distinct === 1 && (spread === null || spread <= 0.7)) {
+    return { status: 'confirme', note: 'gabarit confirmé par le contenu (même cluster sémantique, volumes comparables)' };
+  }
+  if ((clusters.length >= Math.ceil(family.pages.length / 2) && distinct >= 3) || (spread !== null && spread > 0.7)) {
+    return {
+      status: 'heterogene',
+      note:
+        spread !== null && spread > 0.7
+          ? `contenu hétérogène : ${Math.round(spread * 100)} % de dispersion sur le volume de texte, la moyenne du gabarit ne décrit pas un moule unique`
+          : `contenu hétérogène : ${distinct} clusters sémantiques différents dans le même gabarit`,
+    };
+  }
+  if (spread !== null && spread <= 0.35) {
+    return { status: 'confirme', note: `gabarit confirmé par le contenu (volumes homogènes, ${Math.round(spread * 100)} % de dispersion)` };
+  }
+  return { status: 'morphologique', note: 'gabarit reconstruit sur la forme des URLs uniquement, aucun signal de contenu disponible pour le confirmer' };
+}
+
+/**
+ * Sépare un gabarit dont les pages appartiennent à des clusters sémantiques
+ * nettement distincts : deux sous-groupes d'au moins deux pages suffisent. Évite
+ * de moyenner ensemble des pages de même forme et de thème étranger.
+ */
+function splitFamiliesByContent(families: TemplateFamily[]): TemplateFamily[] {
+  const out: TemplateFamily[] = [];
+  for (const fam of families) {
+    const groups = new Map<string, number[]>();
+    fam.pages.forEach((p, i) => {
+      const key = p.cluster ? String(p.cluster).toLowerCase() : '';
+      if (!key) return;
+      groups.set(key, [...(groups.get(key) || []), i]);
+    });
+    const covered = [...groups.values()].reduce((n, g) => n + g.length, 0);
+    const usable = [...groups.entries()].filter(([, g]) => g.length >= 2);
+    if (fam.pages.length < 4 || covered < fam.pages.length || usable.length < 2 || usable.length !== groups.size) {
+      out.push(fam);
+      continue;
+    }
+    for (const [cluster, idx] of usable) {
+      out.push({
+        pattern: `${fam.pattern} — ${cluster}`,
+        pages: idx.map((i) => fam.pages[i]),
+        variants: idx.map((i) => fam.variants[i]),
+      });
+    }
+  }
+  return out;
 }
 
 /**
