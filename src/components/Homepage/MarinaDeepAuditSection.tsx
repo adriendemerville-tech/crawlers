@@ -58,17 +58,17 @@ export function MarinaDeepAuditSection() {
   return (
     <section className="relative overflow-hidden py-14 sm:py-20" aria-labelledby="marina-free-audit-title">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_0%,hsl(var(--brand-violet)/0.10),transparent_65%)]" />
-      <div className="relative mx-auto max-w-5xl px-4">
+      <div className="relative mx-auto max-w-3xl px-4">
         <div className="rounded-2xl border border-border/60 bg-card/40 p-6 sm:p-10 backdrop-blur-sm">
           <span className="inline-flex items-center rounded-full border border-amber-500/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-500">
             {t.badge}
           </span>
 
-          <h2 id="marina-free-audit-title" className="mt-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+          <h2 id="marina-free-audit-title" className="mt-4 whitespace-nowrap text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
             {t.title}
           </h2>
 
-          <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             {t.lead}
           </p>
 
@@ -94,10 +94,7 @@ export function MarinaDeepAuditSection() {
             <Link to="/etudes/autopilot-parmenion-iktracker" className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
               {t.secondary}
             </Link>
-
           </div>
-
-          <p className="mt-4 text-xs text-muted-foreground">{t.note}</p>
         </div>
       </div>
     </section>
