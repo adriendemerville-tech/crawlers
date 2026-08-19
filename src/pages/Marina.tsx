@@ -1663,6 +1663,22 @@ async function generateReport(url) {
           domain={url.trim().replace(/^https?:\/\//, '').split('/')[0]}
         />
       )}
+
+      <MarinaPaidUnlockModal
+        open={showPaidUnlock}
+        onOpenChange={setShowPaidUnlock}
+        url={url.trim()}
+        email={freeEmail}
+        language={language}
+        onAuditStarted={jid => {
+          setError(null);
+          setReportUrl(null);
+          setProgress(0);
+          setLoading(true);
+          setJobId(jid);
+        }}
+      />
     </>
+
   );
 }
