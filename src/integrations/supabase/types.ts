@@ -8416,6 +8416,63 @@ export type Database = {
         }
         Relationships: []
       }
+      marina_network_syntheses: {
+        Row: {
+          created_at: string
+          domain: string
+          facts: Json
+          geo_avg: number | null
+          id: string
+          measured_duplicates: number
+          mesh_edges: number
+          mesh_measured: boolean
+          missing_hubs: number
+          recommendations: Json
+          regime: string
+          structure_verified: boolean
+          tech_avg: number | null
+          tech_geo_gap: number | null
+          urls_audited: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          facts?: Json
+          geo_avg?: number | null
+          id?: string
+          measured_duplicates?: number
+          mesh_edges?: number
+          mesh_measured?: boolean
+          missing_hubs?: number
+          recommendations?: Json
+          regime: string
+          structure_verified?: boolean
+          tech_avg?: number | null
+          tech_geo_gap?: number | null
+          urls_audited?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          facts?: Json
+          geo_avg?: number | null
+          id?: string
+          measured_duplicates?: number
+          mesh_edges?: number
+          mesh_measured?: boolean
+          missing_hubs?: number
+          recommendations?: Json
+          regime?: string
+          structure_verified?: boolean
+          tech_avg?: number | null
+          tech_geo_gap?: number | null
+          urls_audited?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       marina_paid_passes: {
         Row: {
           amount_cents: number | null
