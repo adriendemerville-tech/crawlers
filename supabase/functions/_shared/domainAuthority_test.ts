@@ -4,7 +4,12 @@
  * qu'aucune régression ne réintroduise un 100/100 fantaisiste.
  */
 import { assert, assertEquals } from 'https://deno.land/std@0.208.0/assert/mod.ts';
-import { computeAuthorityScore, computeBacklinkToxicity, normalizeDomainRank } from './domainAuthority.ts';
+import {
+  computeAuthorityScore,
+  computeBacklinkToxicity,
+  extractAnchorsFromEndpoint,
+  normalizeDomainRank,
+} from './domainAuthority.ts';
 
 Deno.test('normalizeDomainRank : courbe 0-1000 → 0-95', () => {
   assertEquals(normalizeDomainRank(0), 0);
@@ -70,4 +75,51 @@ Deno.test('computeBacklinkToxicity : profil naturel = sain', () => {
   });
   assertEquals(t.verdict, 'sain');
   assert(t.toxicity_score < 35);
+});
+
+Deno.test("extractAnchorsFromEndpoint : ancres mesurées triées par volume", () => {
+  const payload = {
+    tasks: [{
+      result: [{
+        items: [
+          { anchor: 'rénovation maison', backlinks: 12 },
+          { anchor: 'https://exemple.fr', backlinks: 80 },
+          { anchor: '', backlinks: 999 },
+          { anchor: 'cliquez ici', referring_domains: 3 },
+        ],
+      }],
+    }],
+  };
+  const anchors = extractAnchorsFromEndpoint(payload);
+  assertEquals(anchors.length, 3);
+  assertEquals(anchors[0].anchor, 'https://exemple.fr');
+  assertEquals(anchors[0].count, 80);
+  assertEquals(extractAnchorsFromEndpoint({}).length, 0);
+});
+
+Deno.test("computeBacklinkToxicity : l'échantillon élargi révèle ce que le top 10 masque", () => {
+  const anchors = [
+    { anchor: 'rénovation maison ancienne', count: 10 },
+    { anchor: 'travaux de toiture', count: 9 },
+    { anchor: 'isolation thermique par extérieur', count: 8 },
+    { anchor: 'avenir renovations avis', count: 7 },
+  ];
+  const top = Array.from({ length: 10 }, (_, i) => ({ domain: `bon-site-${i}.fr`, rank: 600, backlinks: 2 }));
+  const sample = [
+    ...top,
+    ...Array.from({ length: 40 }, (_, i) => ({ domain: `annuaire-${i}.info`, rank: 20, backlinks: 1 })),
+    { domain: 'casino-bonus.ru', rank: 10, backlinks: 5 },
+  ];
+  const base = {
+    anchors, topReferringDomains: top, backlinksTotal: 120,
+    referringDomains: 51, brokenBacklinks: 0, dofollowRatio: 70,
+  };
+  const withSample = computeBacklinkToxicity({ ...base, sampleReferringDomains: sample });
+  const withoutSample = computeBacklinkToxicity(base);
+  assert(
+    withSample.avg_referrer_rank < withoutSample.avg_referrer_rank,
+    `échantillon élargi attendu plus bas : ${withSample.avg_referrer_rank} vs ${withoutSample.avg_referrer_rank}`,
+  );
+  assert(withSample.verdict !== 'sain', 'un référent hors-sujet interdit le verdict sain');
+  assertEquals(withoutSample.verdict, 'sain');
 });
