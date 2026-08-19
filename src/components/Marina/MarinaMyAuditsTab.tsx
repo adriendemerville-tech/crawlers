@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { listMyMarinaAudits, getMyMarinaReportUrl } from '@/lib/marina/myAudits.functions';
 import { normalizeScanMode } from '@/lib/marina/scanMode';
 import { groupAudits } from '@/lib/marina/groupAudits';
+import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 
 type Audit = Awaited<ReturnType<typeof listMyMarinaAudits>>[number];
 
@@ -22,6 +23,7 @@ export function MarinaMyAuditsTab() {
   const [audits, setAudits] = useState<Audit[]>([]);
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [merged, setMerged] = useState<{ html: string; domain: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -43,6 +45,24 @@ export function MarinaMyAuditsTab() {
       else toast.error('Rapport indisponible pour cet audit');
     } catch (e: any) {
       toast.error(e?.message || 'Erreur lors de l\'ouverture du rapport');
+    }
+    setOpeningId(null);
+  };
+
+  /** Lot multipages : on reconstruit le rapport consolidé (mutualisé) à la volée. */
+  const openBatchReport = async (group: Audit[], key: string) => {
+    setOpeningId(key);
+    try {
+      const { buildMergedBatchReport } = await import('@/lib/marina/batchReport');
+      const merged = await buildMergedBatchReport(group);
+      if (!merged) {
+        toast.error('Aucun rapport récupérable pour ce lot');
+        return;
+      }
+      if (merged.missing > 0) toast.warning(`${merged.missing} page(s) illisible(s), exclue(s) du rapport`);
+      setMerged({ html: merged.html, domain: group[0]?.domain || group[0]?.url || 'multipages' });
+    } catch (e: any) {
+      toast.error(e?.message || 'Fusion impossible');
     }
     setOpeningId(null);
   };
@@ -128,13 +148,13 @@ export function MarinaMyAuditsTab() {
                     variant="outline"
                     size="sm"
                     className="gap-2"
-                    disabled={!target.hasReport || openingId === target.id}
-                    onClick={() => openReport(target.id)}
+                    disabled={!target.hasReport || openingId === (isBatch ? g.key : target.id)}
+                    onClick={() => (isBatch ? openBatchReport(g.items, g.key) : openReport(target.id))}
                   >
-                    {openingId === target.id
+                    {openingId === (isBatch ? g.key : target.id)
                       ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       : <ExternalLink className="w-3.5 h-3.5" />}
-                    Voir le rapport
+                    {isBatch ? 'Voir le rapport consolidé' : 'Voir le rapport'}
                   </Button>
                 </CardContent>
               </Card>
@@ -144,6 +164,15 @@ export function MarinaMyAuditsTab() {
 
         )}
       </div>
+
+      {merged && (
+        <MarinaReportPreviewModal
+          isOpen
+          onClose={() => setMerged(null)}
+          htmlContent={merged.html}
+          domain={merged.domain}
+        />
+      )}
     </section>
   );
 }

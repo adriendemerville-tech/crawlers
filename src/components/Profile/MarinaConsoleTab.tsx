@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { listMyMarinaAudits, getMyMarinaReportUrl, deleteMyMarinaAudit } from '@/lib/marina/myAudits.functions';
 import { normalizeScanMode } from '@/lib/marina/scanMode';
 import { groupAudits } from '@/lib/marina/groupAudits';
+import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 
 
 
@@ -118,6 +119,7 @@ export function MarinaConsoleTab() {
 
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [mergedReport, setMergedReport] = useState<{ html: string; domain: string } | null>(null);
 
   // Source de vérité : les jobs Marina de l'utilisateur (UI + API + reprises),
   // et non plus seulement les rapports archivés côté navigateur.
@@ -142,6 +144,23 @@ export function MarinaConsoleTab() {
       const { url } = await getMyMarinaReportUrl({ data: { jobId } });
       if (url) window.open(url, '_blank', 'noopener');
       else toast.error(t3(language, 'Rapport indisponible', 'Report unavailable', 'Informe no disponible'));
+    } catch (e: any) {
+      toast.error(e?.message || 'Erreur');
+    }
+    setOpeningId(null);
+  };
+
+  /** Lot multipages : rapport consolidé reconstruit à la volée (sections site mutualisées). */
+  const openBatchReport = async (items: any[], key: string) => {
+    setOpeningId(key);
+    try {
+      const { buildMergedBatchReport } = await import('@/lib/marina/batchReport');
+      const result = await buildMergedBatchReport(items);
+      if (!result) {
+        toast.error(t3(language, 'Aucun rapport récupérable', 'No report available', 'Ningún informe disponible'));
+        return;
+      }
+      setMergedReport({ html: result.html, domain: items[0]?.domain || items[0]?.url || 'multipages' });
     } catch (e: any) {
       toast.error(e?.message || 'Erreur');
     }
@@ -731,11 +750,11 @@ export function MarinaConsoleTab() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7"
-                      disabled={openingId === target.id}
-                      onClick={() => openReport(target.id)}
+                      disabled={openingId === (isBatch ? g.key : target.id)}
+                      onClick={() => (isBatch ? openBatchReport(g.items as any[], g.key) : openReport(target.id))}
                       title={t3(language, 'Ouvrir', 'Open', 'Abrir')}
                     >
-                      {openingId === target.id
+                      {openingId === (isBatch ? g.key : target.id)
                         ? <Loader2 className="h-3 w-3 animate-spin" />
                         : <ExternalLink className="h-3 w-3" />}
                     </Button>
@@ -825,6 +844,15 @@ export function MarinaConsoleTab() {
           {t3(language, 'Page Marina', 'Marina Page', 'Página Marina')}
         </Button>
       </div>
+
+      {mergedReport && (
+        <MarinaReportPreviewModal
+          isOpen
+          onClose={() => setMergedReport(null)}
+          htmlContent={mergedReport.html}
+          domain={mergedReport.domain}
+        />
+      )}
     </div>
   );
 }
