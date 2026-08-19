@@ -8341,10 +8341,12 @@ export type Database = {
           consumed_at: string | null
           created_at: string
           email: string | null
+          granted_at: string | null
           id: string
           job_id: string | null
           pass_token: string
           status: string
+          stripe_session_id: string | null
           txn_id: string | null
         }
         Insert: {
@@ -8352,10 +8354,12 @@ export type Database = {
           consumed_at?: string | null
           created_at?: string
           email?: string | null
+          granted_at?: string | null
           id?: string
           job_id?: string | null
           pass_token: string
           status?: string
+          stripe_session_id?: string | null
           txn_id?: string | null
         }
         Update: {
@@ -8363,10 +8367,12 @@ export type Database = {
           consumed_at?: string | null
           created_at?: string
           email?: string | null
+          granted_at?: string | null
           id?: string
           job_id?: string | null
           pass_token?: string
           status?: string
+          stripe_session_id?: string | null
           txn_id?: string | null
         }
         Relationships: []
