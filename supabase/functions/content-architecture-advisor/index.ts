@@ -1337,6 +1337,7 @@ FRAÎCHEUR & DÉNOMINATION:
                 },
               }],
               tool_choice: { type: 'function', function: { name: 'content_architecture_recommendation' } },
+              ...(compact ? { max_tokens: COMPACT_MAX_TOKENS } : {}),
             }),
           });
           // If we got a response (even error), return it — only retry on timeout
