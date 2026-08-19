@@ -35,6 +35,10 @@ interface SectionPdfOptions {
    * contient déjà [data-pdf-section="disclaimer"].
    */
   disclaimer?: DisclaimerContext;
+  /** Progression de la capture (rapports fusionnés multipages : très nombreux blocs). */
+  onProgress?: (done: number, total: number) => void;
+  /** Nombre maximum de blocs capturés (garde-fou mémoire/temps). */
+  maxSections?: number;
 }
 
 export async function generateSectionBasedPDF(options: SectionPdfOptions): Promise<void> {
@@ -42,7 +46,6 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     htmlContent,
     filename,
     iframeWidth = 794,
-    scale = 2,
     backgroundColor = '#f8fafc',
     marginTop = 15,
     marginBottom = 15,
@@ -50,7 +53,10 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     sectionGap = 2,
     renderDelay = 1500,
     disclaimer,
+    onProgress,
+    maxSections = 320,
   } = options;
+
 
 
   const { default: html2canvas } = await import('html2canvas');
