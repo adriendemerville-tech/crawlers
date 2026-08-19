@@ -730,7 +730,9 @@ export default function Marina() {
   // Visiteur non connecté : essai gratuit (quota serveur par IP + par email)
   const handleFreeGenerate = useCallback(async () => {
     if (!url.trim()) { toast.error(t.toasts.enterUrl); return; }
+    if (freeRemaining === 0) { setShowPaidUnlock(true); return; }
     if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(freeEmail.trim())) { toast.error(freeT.emailRequired); return; }
+
 
     setLoading(true);
     setError(null);
