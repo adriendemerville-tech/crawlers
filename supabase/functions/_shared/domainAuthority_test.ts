@@ -98,7 +98,12 @@ Deno.test("extractAnchorsFromEndpoint : ancres mesurées triées par volume", ()
 });
 
 Deno.test("computeBacklinkToxicity : l'échantillon élargi révèle ce que le top 10 masque", () => {
-  const anchors = [{ anchor: 'rénovation maison', count: 10 }, { anchor: 'travaux', count: 9 }];
+  const anchors = [
+    { anchor: 'rénovation maison ancienne', count: 10 },
+    { anchor: 'travaux de toiture', count: 9 },
+    { anchor: 'isolation thermique par extérieur', count: 8 },
+    { anchor: 'avenir renovations avis', count: 7 },
+  ];
   const top = Array.from({ length: 10 }, (_, i) => ({ domain: `bon-site-${i}.fr`, rank: 600, backlinks: 2 }));
   const sample = [
     ...top,
