@@ -604,7 +604,10 @@ export function buildNetworkSynthesisHTML(
         why: `${gap} points d'écart entre conformité technique (${techAvg}) et citabilité IA (${geoAvg}) : seul un contenu non duplicable fait bouger le GEO.`,
         effort: 'moyen',
         level: 'deduction',
-        yield_: 80 + Math.min(gap, 60),
+        kind: 'correction',
+        severity: Math.min(100, Math.round(gap * 1.6)),
+        reach: metas.length,
+        reachTotal: metas.length,
       });
     }
     block3Body = `<p style="margin:0 0 6px 0;">${verdict}</p>${
@@ -621,7 +624,10 @@ export function buildNetworkSynthesisHTML(
         why: 'Elles consomment du budget de crawl et diluent l\'intention du gabarit sans apporter de contenu propre.',
         effort: 'faible',
         level: 'deduction',
-        yield_: 60 + thinPages.length * 4,
+        kind: 'correction',
+        severity: Math.min(90, 42 + thinPages.length * 8),
+        reach: thinPages.length,
+        reachTotal: metas.length,
       });
     }
   }
@@ -704,7 +710,10 @@ export function buildNetworkSynthesisHTML(
         why: 'Plusieurs pages visent la même intention avec le même vocabulaire : fusion, ou canonical explicite plus contenu réellement différent.',
         effort: 'moyen',
         level: 'deduction',
-        yield_: 85 + collisions.length * 3,
+        kind: 'correction',
+        severity: Math.min(100, 70 + collisions.length * 6),
+        reach: collisions.reduce((n, [, arr]) => n + arr.length, 0),
+        reachTotal: metas.length,
       });
     }
     if (clusterCollisions.length) {
@@ -735,7 +744,10 @@ export function buildNetworkSynthesisHTML(
         why: `Similarité de contenu mesurée jusqu'à ${Math.max(...dupInScope.map((d) => d.similarity))} % : ce n'est pas une déduction d'URL, les moteurs voient bien deux fois la même page.`,
         effort: 'moyen',
         level: 'mesure',
-        yield_: 90 + dupInScope.length * 3,
+        kind: 'correction',
+        severity: Math.min(100, Math.max(...dupInScope.map((d) => d.similarity))),
+        reach: new Set(dupInScope.flatMap((d) => [normPath(d.a), normPath(d.b)])).size,
+        reachTotal: metas.length,
       });
     }
     if (dupOutScope.length) {
@@ -844,7 +856,10 @@ export function buildNetworkSynthesisHTML(
       why: "Aucun lien interne mesuré entre ces pages : sans liaison latérale, elles ne forment pas un ensemble identifiable et ne se transmettent aucune autorité.",
       effort: 'faible',
       level: 'mesure',
-      yield_: 88,
+      kind: 'correction',
+      severity: 85,
+      reach: withTargets.length,
+      reachTotal: metas.length,
     });
   } else if (meshMeasured && isolatedInLot.length >= 2) {
     candidates.push({
@@ -852,7 +867,10 @@ export function buildNetworkSynthesisHTML(
       why: `Mesuré : ces pages ne reçoivent ni n'émettent aucun lien vers les autres URLs auditées, alors que le reste du lot est déjà relié.`,
       effort: 'faible',
       level: 'mesure',
-      yield_: 78 + isolatedInLot.length,
+      kind: 'correction',
+      severity: 68,
+      reach: isolatedInLot.length,
+      reachTotal: metas.length,
     });
   }
   const hubList = (entries: [string, number][], tail: (count: number) => string) =>
@@ -886,7 +904,10 @@ export function buildNetworkSynthesisHTML(
         why: `${missingHubs[0][1]} pages filles auditées et aucune page pilier trouvée dans le crawl du site : c'est ce qui transforme des feuilles isolées en cocon à deux niveaux et crée l'entité citable.`,
         effort: 'moyen',
         level: 'deduction',
-        yield_: 100,
+        kind: 'correction',
+        severity: 96,
+        reach: missingHubs[0][1],
+        reachTotal: metas.length,
       });
     }
     if (existingHubs.length) {
@@ -901,7 +922,10 @@ export function buildNetworkSynthesisHTML(
         why: `La page de regroupement existe déjà sur le site : le levier n'est pas sa création mais sa qualité et la convergence du maillage de ses ${existingHubs[0][1]} pages filles vers elle.`,
         effort: 'faible',
         level: 'deduction',
-        yield_: 95,
+        kind: 'correction',
+        severity: 82,
+        reach: existingHubs[0][1],
+        reachTotal: metas.length,
       });
     }
     if (unverifiedHubs.length) {
@@ -917,7 +941,10 @@ export function buildNetworkSynthesisHTML(
         why: `${unverifiedHubs[0][1]} pages filles auditées sans pilier dans le lot. Le crawl du domaine n'étant pas disponible, l'action commence par un contrôle, pas par une création.`,
         effort: 'faible',
         level: 'deduction',
-        yield_: 92,
+        kind: 'correction',
+        severity: 74,
+        reach: unverifiedHubs[0][1],
+        reachTotal: metas.length,
       });
     }
     parts5.push(meshHtml);
@@ -967,7 +994,11 @@ export function buildNetworkSynthesisHTML(
         why: `Pire cas mesuré ${seconds(slowest.worstLcpMs as number)} : au-delà de 4 s, la performance devient le facteur limitant du gabarit entier.`,
         effort: 'faible',
         level: 'mesure',
-        yield_: 70 + Math.min(Math.round((slowest.worstLcpMs as number) / 1000), 12),
+        kind: 'correction',
+        severity: Math.min(100, Math.round(((slowest.worstLcpMs as number) - 2500) / 25)),
+        reach: slowest.count,
+        reachTotal: metas.length,
+        solidity: slowest.solidity,
       });
     }
     if (weakest.geo !== null && weakest.geo < 60) {
@@ -981,7 +1012,11 @@ export function buildNetworkSynthesisHTML(
         level: 'deduction',
         // Trou 5 — un constat porté par une seule page ne remonte pas au même
         // rang qu'un défaut de gabarit vérifié sur plusieurs pages.
-        yield_: 75 + (60 - weakest.geo) - (weakest.count >= 5 ? 0 : weakest.count >= 3 ? 8 : 20),
+        kind: 'correction',
+        severity: Math.min(100, Math.round((60 - weakest.geo) * 1.7)),
+        reach: weakest.count,
+        reachTotal: metas.length,
+        solidity: weakest.solidity,
       });
     }
 
@@ -1001,7 +1036,10 @@ export function buildNetworkSynthesisHTML(
       why: 'Elles reçoivent 2 liens internes ou moins : elles dépendent du sitemap pour être découvertes et ne transmettent aucune autorité au réseau.',
       effort: 'faible',
       level: 'mesure',
-      yield_: 65 + weakMesh.length * 2,
+      kind: 'correction',
+      severity: 58,
+      reach: weakMesh.length,
+      reachTotal: metas.length,
     });
   }
   const orphans = metas.filter((m) => m.isOrphan);
@@ -1011,7 +1049,10 @@ export function buildNetworkSynthesisHTML(
       why: 'Aucun lien interne entrant détecté : la page est invisible pour la découverte comme pour la transmission d\'autorité.',
       effort: 'faible',
       level: 'mesure',
-      yield_: 90,
+      kind: 'correction',
+      severity: 88,
+      reach: orphans.length,
+      reachTotal: metas.length,
     });
   }
 
