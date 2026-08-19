@@ -1690,9 +1690,10 @@ function generateRecommendations(
     .filter(Boolean);
   // Les titres déjà extraits par le crawl (h2Contents/h3Contents) sont une
   // seconde source : ils évitent la contradiction entre sections du rapport.
+  const ha = htmlAnalysis as unknown as Record<string, unknown>;
   const crawlHeadings: string[] = [
-    ...(Array.isArray(htmlAnalysis.h2Contents) ? htmlAnalysis.h2Contents : []),
-    ...(Array.isArray(htmlAnalysis.h3Contents) ? htmlAnalysis.h3Contents : []),
+    ...(Array.isArray(ha['h2Contents']) ? (ha['h2Contents'] as unknown[]) : []),
+    ...(Array.isArray(ha['h3Contents']) ? (ha['h3Contents'] as unknown[]) : []),
   ].map((h: unknown) => String(h || '').trim()).filter(Boolean);
 
   const FAQ_LABEL = /(faq|questions?\s+fr[ée]quentes?|foire\s+aux\s+questions|frequently\s+asked|preguntas\s+frecuentes|vous\s+avez\s+des\s+questions|on\s+a\s+les\s+r[ée]ponses|questions?\s*\/\s*r[ée]ponses)/i;
