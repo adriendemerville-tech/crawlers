@@ -755,7 +755,19 @@ RÈGLE : Le contenu doit s'inscrire dans cet univers sémantique.
       }
     }
 
-    researchBundle = {
+    // Postgres refuse \u0000 en jsonb : on nettoie tout le bundle avant sérialisation.
+    const stripNul = (v: unknown): unknown => {
+      if (typeof v === 'string') return v.replace(/\u0000/g, '')
+      if (Array.isArray(v)) return v.map(stripNul)
+      if (v && typeof v === 'object') {
+        const out: Record<string, unknown> = {}
+        for (const [k, val] of Object.entries(v as Record<string, unknown>)) out[k.replace(/\u0000/g, '')] = stripNul(val)
+        return out
+      }
+      return v
+    }
+
+    researchBundle = stripNul({
       siteContext, cmsConnection, resolvedSiteId,
       existingPageHtml, existingPageHtmlRaw: existingPageHtmlRaw.slice(0, 150_000),
       contentTemplate, keywordData, serpData,
@@ -764,14 +776,33 @@ RÈGLE : Le contenu doit s'inscrire dans cet univers sémantique.
       competitorInsights, existingAuditData, strategicAuditSerpData,
       cocoonData, geoScoreData, llmVisibilityData, backlinkData,
       workbenchItems, keywordCloudBlock,
-    }
+    }) as Record<string, any>
     } // fin phase recherche
 
     // Checkpoint + enfilement de l'étape 2 (synthèse LLM) dans job_queue.
     if (stagedMode && !resumedResearch && jobSb && jobId) {
-      await jobSb.from('async_jobs')
+      let ckptErr = (await jobSb.from('async_jobs')
         .update({ progress: 60, result_data: { __research: researchBundle } })
-        .eq('id', jobId)
+        .eq('id', jobId)).error
+
+      if (ckptErr) {
+        // Repli : on retire le HTML brut (poste le plus lourd) et on réessaie.
+        console.error(`[content-advisor] Checkpoint refusé (${ckptErr.message}) — retry sans HTML brut`)
+        const light = { ...researchBundle, existingPageHtmlRaw: '' }
+        ckptErr = (await jobSb.from('async_jobs')
+          .update({ progress: 60, result_data: { __research: light } })
+          .eq('id', jobId)).error
+      }
+
+      if (ckptErr) {
+        await jobSb.from('async_jobs').update({
+          status: 'failed',
+          error_message: `Checkpoint de recherche non persistable : ${ckptErr.message}`,
+          completed_at: new Date().toISOString(),
+        }).eq('id', jobId)
+        return jsonError(`Checkpoint persistence failed: ${ckptErr.message}`, 500)
+      }
+
       await enqueueJob(jobSb as any, {
         userId: user.id,
         functionName: 'content-architecture-advisor',
@@ -781,6 +812,7 @@ RÈGLE : Le contenu doit s'inscrire dans cet univers sémantique.
       console.log(`[content-advisor] Étape 1/2 terminée — synthèse enfilée (job ${jobId})`)
       return jsonOk({ job_id: jobId, stage: 'research_done', status: 'processing' })
     }
+
 
     const {
       siteContext, cmsConnection, resolvedSiteId,
