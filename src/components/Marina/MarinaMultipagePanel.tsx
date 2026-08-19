@@ -270,10 +270,11 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       toast.error('Indiquez au moins 2 URLs');
       return;
     }
-    if (credits < totalCost) {
+    if (!unlimitedCredits && credits < totalCost) {
       toast.error(`Crédits insuffisants : ${totalCost} requis, ${credits} disponibles`);
       return;
     }
+
 
     cancelRef.current = false;
     setMergedHtml(null);
