@@ -27,6 +27,12 @@ export interface PageVerdictMeta {
   linksOut?: number | null;
   criticalCount?: number;
   actions: string[];
+  /** Faits mesurés remontés pour la synthèse réseau des rapports multipages. */
+  words?: number | null;
+  lcpMs?: number | null;
+  isThin?: boolean;
+  isOrphan?: boolean;
+  cannibalWith?: string[];
 }
 
 function pathOf(url: string): string {
@@ -213,6 +219,9 @@ export function buildPageVerdictHTML(
     criticalCount?: number;
     pageActions?: Array<{ severity?: string; title: string }>;
     cocoonData?: any;
+    /** Faits mesurés sur cette URL, propagés à la synthèse réseau multipages. */
+    words?: number | null;
+    lcpMs?: number | null;
   },
 ): { html: string; meta: PageVerdictMeta } {
   const isEn = lang === 'en';
@@ -267,6 +276,11 @@ export function buildPageVerdictHTML(
     linksOut: f?.linksOut ?? null,
     criticalCount: critical,
     actions,
+    words: ctx.words != null && Number(ctx.words) > 0 ? Math.round(Number(ctx.words)) : null,
+    lcpMs: ctx.lcpMs != null && Number(ctx.lcpMs) > 0 ? Math.round(Number(ctx.lcpMs)) : null,
+    isThin: f?.isThin ?? false,
+    isOrphan: f?.isOrphan ?? false,
+    cannibalWith: f?.cannibalWith ?? [],
   };
 
   const cell = (l: string, v: string) => `
