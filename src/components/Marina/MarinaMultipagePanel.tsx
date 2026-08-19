@@ -261,6 +261,10 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
     toast.success(`${targets.length} audits lancés — génération séquentielle en cours`);
 
     let cursor = 0;
+    const batch = {
+      id: (globalThis.crypto?.randomUUID?.() || `batch-${Date.now()}`),
+      size: initial.length,
+    };
     const worker = async (workerIndex: number) => {
       // Le second worker attend que le premier ait initié le crawl mutualisé.
       if (workerIndex > 0) {
@@ -268,7 +272,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
       }
       while (cursor < initial.length && !cancelRef.current) {
         const index = cursor++;
-        await runOne(index, initial[index].url);
+        await runOne(index, initial[index].url, batch);
       }
     };
     await Promise.all(
