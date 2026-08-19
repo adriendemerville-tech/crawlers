@@ -860,6 +860,31 @@ Réponds en JSON STRICT:
                 payload: { auto_generated: true, ...t, authority_score: a.authority_score, confidence: a.confidence },
               });
             }
+            // ── Lot 3 : perte de liens détectée sur l'historique propriétaire ──
+            if (authorityTrend && authorityTrend.verdict === 'perte_de_liens') {
+              wbItems.push({
+                tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
+                title: `Perte de domaines référents sur ${authorityTrend.months_tracked} mois mesurés`,
+                description: `${authorityTrend.recommendation} (Δ domaines référents ${authorityTrend.delta_referring_domains ?? 'n/a'}, Δ backlinks ${authorityTrend.delta_backlinks ?? 'n/a'} depuis ${authorityTrend.previous_month || 'la mesure précédente'}).`,
+                finding_category: 'backlink_health', source_type: 'audit_strategic' as const,
+                source_function: 'audit-strategique-ia', source_record_id: `authority_trend_${cleanDomain}`,
+                severity: 'warning', status: 'pending' as const,
+                target_url: `https://${cleanDomain}`,
+                payload: { auto_generated: true, ...authorityTrend },
+              });
+            }
+          }
+
+          // ── Lot 4 : link gap → tâches exécutables (finding_category='link_gap') ──
+          if (linkGapData) {
+            try {
+              const written = await writeLinkGapFindings(getServiceClient(), linkGapData, {
+                userId: wbUser.id,
+                trackedSiteId: trackedId,
+                sourceFunction: 'audit-strategique-ia',
+              });
+              if (written) console.log(`✅ Workbench: ${written} constats link_gap`);
+            } catch (gapErr) { console.warn('⚠️ Link gap workbench failed:', gapErr); }
           }
 
           // ── Réécriture « réponse directe » (~40 mots) sur la page auditée ──
