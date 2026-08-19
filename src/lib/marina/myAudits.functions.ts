@@ -61,7 +61,7 @@ export const getMyMarinaReportUrl = createServerFn({ method: 'POST' })
 
     // Lien court servi par notre domaine : les URLs signées Storage renvoient
     // text/plain + nosniff (code source affiché) et font ~700 caractères.
-    return { url: `/r/${data.jobId.slice(0, 8)}` };
+    return { url: `/m/${data.jobId.slice(0, 8)}` };
 
   });
 

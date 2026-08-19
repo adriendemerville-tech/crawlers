@@ -38,7 +38,7 @@ export function FloatingChatBubble() {
   
 
   // Hide Félix on report preview/viewer pages
-  const hiddenRoutes = ['/app/rapport/', '/temporarylink/', '/temporaryreport/', '/r/'];
+  const hiddenRoutes = ['/app/rapport/', '/temporarylink/', '/temporaryreport/', '/r/', '/m/'];
   const isReportPage = hiddenRoutes.some(r => location.pathname.startsWith(r));
 
   // Sync mute state from ChatWindow toggle

@@ -6,14 +6,14 @@
  */
 export function toMarinaViewUrl(rawUrl?: string | null, jobId?: string | null): string | null {
   const id = extractReportId(rawUrl) ?? (jobId && /^[a-f0-9-]{36}$/i.test(jobId) ? jobId : null);
-  if (id) return `/r/${id.slice(0, 8)}`;
+  if (id) return `/m/${id.slice(0, 8)}`;
   return rawUrl ?? null;
 }
 
 /** Lien court absolu, prêt à être partagé. */
 export function toMarinaShareUrl(rawUrl?: string | null, jobId?: string | null): string | null {
   const path = toMarinaViewUrl(rawUrl, jobId);
-  if (!path || !path.startsWith('/r/')) return path;
+  if (!path || !path.startsWith('/m/')) return path;
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://crawlers.fr';
   return `${origin}${path}`;
 }
