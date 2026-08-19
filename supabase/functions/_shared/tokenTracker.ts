@@ -48,16 +48,20 @@ export async function trackTokenUsage(
     const supabase = getServiceClient();
 
     // Table de coût (source de vérité pour la mesure de budget) — fire & forget.
-    supabase.from('ai_gateway_usage').insert({
-      gateway: model.startsWith('anthropic/') ? 'openrouter' : model.startsWith('llama') ? 'groq' : 'lovable',
-      model,
-      edge_function: functionName,
-      prompt_tokens: pt,
-      completion_tokens: ct,
-      total_tokens: total,
-      estimated_cost_usd: costUsd,
-      is_fallback: false,
-    }).then(() => {}, () => {});
+    // `claimUsageWrite` évite la double écriture quand l'appel est déjà passé par
+    // le wrapper gateway (`aiGatewayFetch` / `aiRouter`), qui logge de son côté.
+    if (claimUsageWrite(model, pt, ct)) {
+      supabase.from('ai_gateway_usage').insert({
+        gateway: model.startsWith('anthropic/') ? 'openrouter' : model.startsWith('llama') ? 'groq' : 'lovable',
+        model,
+        edge_function: functionName,
+        prompt_tokens: pt,
+        completion_tokens: ct,
+        total_tokens: total,
+        estimated_cost_usd: costUsd,
+        is_fallback: false,
+      }).then(() => {}, () => {});
+    }
 
     await supabase.from('analytics_events').insert({
       event_type: 'ai_token_usage',
