@@ -1,0 +1,2 @@
+delete from public.marina_free_trials where email = 'test-freetrial@crawlers.fr';
+update public.async_jobs set status = 'cancelled', completed_at = now() where id = '5a2b12ed-7a77-4974-90de-91a82ecf144c' and status not in ('completed','failed');

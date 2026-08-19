@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 import { getMarinaShowcaseReport } from '@/lib/marina/showcase.functions';
+import { getMarinaFreeQuota, startMarinaFreeAudit } from '@/lib/marinaFree.functions';
+import { MARINA_FREE_QUOTA } from '@/lib/marinaFree.constants';
 import { toMarinaViewUrl } from '@/lib/marina/reportUrl';
 import { MarinaMyAuditsTab } from '@/components/Marina/MarinaMyAuditsTab';
 import { MarinaRunningAuditsSection } from '@/components/Marina/MarinaRunningAuditsSection';
@@ -553,6 +555,37 @@ const translations = {
   },
 };
 
+/* ─── Essai gratuit sans compte (2 rapports / IP, email requis) ─── */
+const FREE_TRIAL_TEXTS = {
+  fr: {
+    title: `${MARINA_FREE_QUOTA} rapports complets offerts, sans compte`,
+    emailPlaceholder: 'votre@email.com',
+    hint: 'Votre email sert à vous envoyer le lien du rapport et à limiter les abus.',
+    remaining: (n: number) => `${n} rapport${n > 1 ? 's' : ''} gratuit${n > 1 ? 's' : ''} restant${n > 1 ? 's' : ''} pour cette connexion`,
+    exhausted: 'Vos rapports gratuits ont été utilisés. Créez un compte pour continuer.',
+    emailRequired: 'Renseignez une adresse email valide',
+    launched: 'Rapport gratuit lancé ! Génération en cours...',
+  },
+  en: {
+    title: `${MARINA_FREE_QUOTA} full reports free, no account needed`,
+    emailPlaceholder: 'your@email.com',
+    hint: 'Your email is used to send you the report link and to prevent abuse.',
+    remaining: (n: number) => `${n} free report${n > 1 ? 's' : ''} left on this connection`,
+    exhausted: 'Your free reports have been used. Create an account to continue.',
+    emailRequired: 'Enter a valid email address',
+    launched: 'Free report started! Generating...',
+  },
+  es: {
+    title: `${MARINA_FREE_QUOTA} informes completos gratis, sin cuenta`,
+    emailPlaceholder: 'tu@email.com',
+    hint: 'Tu email sirve para enviarte el enlace del informe y limitar los abusos.',
+    remaining: (n: number) => `${n} informe${n > 1 ? 's' : ''} gratuito${n > 1 ? 's' : ''} restante${n > 1 ? 's' : ''} en esta conexión`,
+    exhausted: 'Tus informes gratuitos se han agotado. Crea una cuenta para continuar.',
+    emailRequired: 'Introduce un email válido',
+    launched: '¡Informe gratuito iniciado! Generando...',
+  },
+};
+
 export default function Marina() {
   useCanonicalHreflang('/marina');
   const { user } = useAuth();
@@ -575,6 +608,20 @@ export default function Marina() {
   const [demoHtml, setDemoHtml] = useState<string | null>(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [activeTab, setActiveTab] = useState('features');
+  // Essai gratuit sans compte : 2 rapports complets par adresse IP, email requis
+  const [freeEmail, setFreeEmail] = useState('');
+  const [freeRemaining, setFreeRemaining] = useState<number | null>(null);
+
+  const freeT = FREE_TRIAL_TEXTS[language as keyof typeof FREE_TRIAL_TEXTS] || FREE_TRIAL_TEXTS.fr;
+
+  useEffect(() => {
+    if (user) { setFreeRemaining(null); return; }
+    let cancelled = false;
+    getMarinaFreeQuota()
+      .then(q => { if (!cancelled) setFreeRemaining(q.remaining); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [user]);
 
   // Lecture du hash uniquement côté client (le SSR n'a pas de window)
   useEffect(() => {
@@ -632,7 +679,8 @@ export default function Marina() {
           const session = (await supabase.auth.getSession()).data.session;
           const res = await fetch(
             `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina?job_id=${jobId}`,
-            { headers: { Authorization: `Bearer ${session?.access_token}` } }
+            // Visiteur anonyme (essai gratuit) : la clé publique suffit au polling
+            { headers: { Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` } }
           );
           const data = await res.json();
           if (data.status === 'completed' || data.status === 'partial') {
@@ -676,10 +724,43 @@ export default function Marina() {
     return () => { cancelled = true; };
   }, [jobId, refreshCredits]);
 
+  // Visiteur non connecté : essai gratuit (quota serveur par IP + par email)
+  const handleFreeGenerate = useCallback(async () => {
+    if (!url.trim()) { toast.error(t.toasts.enterUrl); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(freeEmail.trim())) { toast.error(freeT.emailRequired); return; }
+
+    setLoading(true);
+    setError(null);
+    setReportUrl(null);
+    setProgress(0);
+    setPhase(t.phases.init);
+
+    try {
+      const res = await startMarinaFreeAudit({
+        data: { url: url.trim(), email: freeEmail.trim(), lang: language || 'fr' },
+      });
+      if ('error' in res) {
+        const message = res.message || t.toasts.launchError;
+        setError(message);
+        toast.error(message);
+        if (res.error === 'quota_exhausted') setFreeRemaining(0);
+        setLoading(false);
+        return;
+      }
+      setJobId(res.jobId);
+      setFreeRemaining(res.remaining);
+      toast.success(freeT.launched);
+    } catch (err: any) {
+      toast.error(err?.message || t.toasts.launchError);
+      setLoading(false);
+    }
+  }, [url, freeEmail, freeT, language, t]);
+
   const handleGenerate = useCallback(async () => {
     if (!url.trim()) { toast.error(t.toasts.enterUrl); return; }
-    if (!user) { toast.error(t.toasts.loginRequired); return; }
+    if (!user) { await handleFreeGenerate(); return; }
     if (credits < CREDIT_COST) { toast.error(`${t.toasts.insufficientCredits} (${CREDIT_COST} required)`); return; }
+
 
     setLoading(true);
     setError(null);
@@ -716,7 +797,7 @@ export default function Marina() {
       } catch {}
       refreshCredits();
     }
-  }, [url, user, credits, refreshCredits, t]);
+  }, [url, user, credits, refreshCredits, t, handleFreeGenerate]);
 
   const copyCode = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -798,13 +879,34 @@ export default function Marina() {
                   />
                   <Button
                     onClick={handleGenerate}
-                    disabled={loading || (!user)}
-                    className="h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                    disabled={loading || (!user && freeRemaining === 0)}
+                    className="h-12 px-6 bg-transparent border border-foreground text-foreground hover:bg-foreground/10 font-semibold"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                     <span className="ml-2">{loading ? t.hero.btnAnalyzing : t.hero.btnAnalyze}</span>
                   </Button>
                 </div>
+
+                {/* Essai gratuit sans compte : email obligatoire, quota par IP */}
+                {!user && freeRemaining !== 0 && (
+                  <div className="mt-3 text-left">
+                    <p className="text-sm font-medium text-foreground mb-2">{freeT.title}</p>
+                    <Input
+                      type="email"
+                      value={freeEmail}
+                      onChange={e => setFreeEmail(e.target.value)}
+                      placeholder={freeT.emailPlaceholder}
+                      className="h-11 text-base bg-card border-border"
+                      disabled={loading}
+                      onKeyDown={e => e.key === 'Enter' && handleGenerate()}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {freeT.hint}
+                      {typeof freeRemaining === 'number' && ` — ${freeT.remaining(freeRemaining)}`}
+                    </p>
+                  </div>
+                )}
+
 
                 {/* Progression de l'audit — juste sous le champ URL */}
                 {loading && (
@@ -844,6 +946,9 @@ export default function Marina() {
                 </div>
                 {!user && (
                   <div className="mt-4">
+                    {freeRemaining === 0 && (
+                      <p className="text-sm text-foreground mb-2">{freeT.exhausted}</p>
+                    )}
                     <Link to="/auth" onClick={() => sessionStorage.setItem('audit_return_path', '/marina')}>
                       <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
                         {t.hero.loginCta} <ArrowRight className="w-4 h-4 ml-1" />
