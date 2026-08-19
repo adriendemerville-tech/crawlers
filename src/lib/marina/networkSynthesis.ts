@@ -751,11 +751,13 @@ export function buildNetworkSynthesisHTML(
   const intraEdges: Array<{ from: string; to: string }> = [];
   const linkedFrom = new Set<string>();
   const linkedTo = new Set<string>();
+  const scopePaths = new Set(scopeMetas.map((m) => normPath(m.path)));
   if (meshMeasured) {
     for (const m of withTargets) {
       for (const target of m.internalTargets || []) {
         const t = normPath(target);
-        if (t === normPath(m.path) || !auditedPaths.has(t)) continue;
+        if (t === normPath(m.path) || !scopePaths.has(t)) continue;
+
         intraEdges.push({ from: m.path, to: t });
         linkedFrom.add(normPath(m.path));
         linkedTo.add(t);
