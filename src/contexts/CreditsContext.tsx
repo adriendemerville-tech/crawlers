@@ -149,7 +149,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   const isAgencyPremium = planType === 'agency_premium' && (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') && (!subscriptionExpiresAt || new Date(subscriptionExpiresAt) > new Date());
 
   return (
-    <CreditsContext.Provider value={{ balance, loading, planType, subscriptionStatus, billingPeriod, subscriptionPeriodEnd, isAgencyPro, isAgencyPremium, refreshBalance, useCredit }}>
+    <CreditsContext.Provider value={{ balance, loading, planType, subscriptionStatus, billingPeriod, subscriptionPeriodEnd, isAgencyPro, isAgencyPremium, hasUnlimitedCredits, refreshBalance, useCredit }}>
       {children}
     </CreditsContext.Provider>
   );
