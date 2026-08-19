@@ -961,9 +961,29 @@ export function computeNetworkSynthesis(
       }
     }
   }
+  /**
+   * Une page n'est isolée que si elle n'émet ni ne reçoit de lien vers le lot.
+   * Le test porte sur TOUTES les pages du périmètre, pas seulement sur celles
+   * qui remontent des cibles : une page muette jamais citée par ses voisines
+   * est précisément le cas d'isolement à signaler. On distingue toutefois les
+   * pages sans cibles remontées, dont l'isolement n'est pas complètement
+   * mesuré, pour ne pas les compter comme un fait établi.
+   */
   const isolatedInLot = meshMeasured
-    ? withTargets.filter((m) => !linkedFrom.has(normPath(m.path)) && !linkedTo.has(normPath(m.path)))
+    ? scopeMetas.filter(
+        (m) =>
+          (m.internalTargets?.length || 0) > 0 &&
+          !linkedFrom.has(normPath(m.path)) &&
+          !linkedTo.has(normPath(m.path)),
+      )
     : [];
+  /** Pages jamais citées par le lot et dont les liens sortants ne sont pas remontés. */
+  const unmeasuredInLot = meshMeasured
+    ? scopeMetas.filter(
+        (m) => (m.internalTargets?.length || 0) === 0 && !linkedTo.has(normPath(m.path)),
+      )
+    : [];
+
   const density = meshMeasured && withTargets.length > 1
     ? Math.round((intraEdges.length / (withTargets.length * (withTargets.length - 1))) * 1000) / 10
     : null;
