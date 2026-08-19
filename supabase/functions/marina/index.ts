@@ -3111,14 +3111,22 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
   const sb = getServiceClient();
   const { data: parentJob } = await sb
     .from('async_jobs')
-    .select('user_id')
+    .select('user_id, input_payload')
     .eq('id', jobId)
     .single();
 
   if (!parentJob?.user_id) {
     throw new Error('Parent Marina job missing user_id');
   }
-  
+
+  // Marqueurs de lot multipages : input_payload est réécrit à chaque
+  // updateProgress, il faut donc les retransporter à chaque écriture.
+  const initialPayload = (parentJob as any)?.input_payload || {};
+  const batchMarkers: Record<string, unknown> = {};
+  for (const key of ['batch_id', 'batch_size', 'batch_index']) {
+    if (initialPayload[key] !== undefined) batchMarkers[key] = initialPayload[key];
+  }
+
   // Mode de scan réellement appliqué au run : résolu en phase 2, transporté
   // dans intermediateData d'une phase à l'autre, puis répliqué dans
   // input_payload à chaque updateProgress (qui réécrit ce champ).
@@ -3131,6 +3139,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       if (phaseName) updateData.input_payload = {
         phase: phaseName,
         url,
+        ...batchMarkers,
         ...(scanModeInfo ? { scan_mode: scanModeInfo } : {}),
         ...(pagesCrawledInfo !== null ? { pages_crawled: pagesCrawledInfo } : {}),
       };
