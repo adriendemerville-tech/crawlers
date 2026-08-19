@@ -19,7 +19,12 @@ const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
 
 /** Version de calibrage : invalide les entrées de cache produites avant le recalibrage. */
-export const AUTHORITY_CALIBRATION_VERSION = 2;
+export const AUTHORITY_CALIBRATION_VERSION = 3;
+
+/** Taille de l'échantillon de domaines référents analysé (affichage limité au top 10). */
+export const REFERRING_DOMAINS_SAMPLE_LIMIT = 200;
+/** Nombre d'ancres demandées à `backlinks/anchors/live`. */
+export const ANCHORS_SAMPLE_LIMIT = 100;
 
 export interface BacklinkToxicity {
   /** 0-100 : plus le score est haut, plus le profil est artificiel */
