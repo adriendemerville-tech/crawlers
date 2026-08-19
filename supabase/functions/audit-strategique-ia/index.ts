@@ -425,7 +425,7 @@ Deno.serve(handleRequest(async (req) => {
       parsedAnalysis = mergeParallelResults(resultA, resultB, resultC);
       console.log(`✅ Merged in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     } else {
-      const factualCitationMono = computeFactualCitationScores({ rankingOverview, crawlData: effectiveToolsData, backlinkData: authorityData?.data_source === 'dataforseo' ? { domain_rank: authorityData.domain_rank, referring_domains: authorityData.referring_domains } : null, gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null });
+      const factualCitationMono = computeFactualCitationScores({ rankingOverview, crawlData: effectiveToolsData, backlinkData: authorityData?.data_source === 'dataforseo' ? { domain_rank: authorityData.domain_rank, referring_domains: authorityData.referring_domains } : null, gmbData: gmbData ? { completeness_score: (gmbData.network_total_reviews ?? gmbData.reviews_count) ? 70 : (gmbData.rating ? 60 : 30), rating: gmbData.network_avg_rating ?? gmbData.rating, total_reviews: gmbData.network_total_reviews ?? gmbData.totalReviews ?? gmbData.reviews_count } : null });
       userPrompt = userPrompt + '\n' + factualCitationMono.factual_summary;
       const systemPromptForPage = getSystemPromptForPageType(pageType);
       const primaryModel = body._modelOverride || 'google/gemini-3.1-pro-preview';
