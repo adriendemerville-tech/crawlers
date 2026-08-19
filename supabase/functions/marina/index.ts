@@ -3884,23 +3884,36 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       const isSettledLlmPayload = (p: any): boolean =>
         isFreshLlmPayload(p) && llmPendingModels(p).length === 0;
 
+      // Portée LLM : une page profonde a sa propre intention (prestation, ville).
+      // Le cache mutualisé par domaine ne vaut donc que pour la home.
+      const llmScopePath = (() => {
+        try { return new URL(url).pathname.replace(/\/+$/, ''); } catch { return ''; }
+      })();
+      const llmIsDeepPage = llmScopePath !== '' && llmScopePath !== '/';
+      const llmCacheDomain = llmIsDeepPage ? `${domain}${llmScopePath}` : domain;
+
       const llmVisibilityPromise = (async () => {
         if (!trackedSiteId) return;
-        if (siteScope?.llmVisibility && isSettledLlmPayload(siteScope.llmVisibility)) {
-          llmVisibilityData = siteScope.llmVisibility;
+        const pageScope = llmIsDeepPage
+          ? await readSiteScopeCache(sb, llmCacheDomain, parentJob.user_id)
+          : siteScope;
+        if (pageScope?.llmVisibility && isSettledLlmPayload(pageScope.llmVisibility)) {
+          llmVisibilityData = pageScope.llmVisibility;
           reusedFromCache.push('visibilité IA');
-          console.log(`[Marina] ♻️ LLM visibility réutilisée depuis le cache domaine (${domain})`);
+          console.log(`[Marina] ♻️ LLM visibility réutilisée depuis le cache (${llmCacheDomain})`);
           return;
         }
-        if (siteScope?.llmVisibility) {
-          console.log(`[Marina] ⚠️ Cache LLM inutilisable (moins de 3 benchmarks ou mesure en cours) pour ${domain} → remesure`);
+        if (pageScope?.llmVisibility) {
+          console.log(`[Marina] ⚠️ Cache LLM inutilisable (moins de 3 benchmarks ou mesure en cours) pour ${llmCacheDomain} → remesure`);
         }
         try {
-          console.log(`[Marina] Phase 3: calculate-llm-visibility for ${domain}`);
+          console.log(`[Marina] Phase 3: calculate-llm-visibility for ${llmCacheDomain}`);
           const result = await callFunction('calculate-llm-visibility', {
             tracked_site_id: trackedSiteId,
             user_id: parentJob.user_id,
             ...(hasMarinaContext ? { siteContext: marinaSiteContext } : {}),
+            // Questions ancrées sur l'intention de la page auditée.
+            ...(llmIsDeepPage ? { pageUrl: url } : {}),
           });
           const normalizedResult = unwrapFunctionPayload(result);
           if (normalizedResult && !result?.error && Array.isArray(normalizedResult.scores)) {
