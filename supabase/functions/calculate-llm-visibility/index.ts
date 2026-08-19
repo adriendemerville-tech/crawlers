@@ -49,13 +49,17 @@ const MAX_RICHNESS_BONUS = 15
 // `models` = [primaire, secours]. Si le primaire échoue techniquement (id retiré
 // du catalogue, 404, timeout), on rejoue immédiatement sur le secours afin que
 // les 5 modèles affichés dans les rapports soient réellement mesurés.
+// `sampled: true` = modèle coûteux interrogé sur un sous-échantillon d'une
+// question par axe (3 sur 9) : GPT-5.4 représentait à lui seul 2,98 $ des
+// 3,53 $ de la fonction. Le sous-échantillon garde une mesure par benchmark,
+// donc la lecture par axe reste possible, avec un statut « sampled » explicite.
 const LLM_TARGETS = [
-  { id: 'chatgpt',    name: 'ChatGPT',    models: ['openai/gpt-5.4', 'openai/gpt-5.4-mini'] },
+  { id: 'chatgpt',    name: 'ChatGPT',    models: ['openai/gpt-5.4', 'openai/gpt-5.4-mini'], sampled: true },
   { id: 'gemini',     name: 'Gemini',     models: ['google/gemini-3-flash-preview', 'google/gemini-3.5-flash'] },
   { id: 'perplexity', name: 'Perplexity', models: ['perplexity/sonar', 'perplexity/sonar-pro'] },
   { id: 'claude',     name: 'Claude',     models: ['anthropic/claude-3-haiku', 'anthropic/claude-haiku-4.5'] },
   { id: 'mistral',    name: 'Mistral',    models: ['mistralai/mistral-medium-3.1', 'mistralai/mistral-small-3.2-24b-instruct'] },
-]
+] as Array<{ id: string; name: string; models: string[]; sampled?: boolean }>
 
 const NUM_PROMPTS = 3 // 3 intentions contrastées (besoin, comparatif, local/audience)
 
@@ -583,9 +587,9 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     // L'empreinte est calculée sur les questions DÉTERMINISTES (avant la
     // reformulation LLM, non reproductible) : sinon le cache serait invalidé à
     // chaque exécution et chaque audit repaierait les 45 appels modèles.
-    const promptsFingerprint = benchmarks
+    const detPromptKeys: string[] = benchmarks
       .flatMap((b) => b.prompts.map((p) => `${b.id}:${p.intent}:${p.text}`))
-      .join('||')
+    const promptsFingerprint = detPromptKeys.join('||')
     const cachedFingerprint = (cachedData?.result_data as any)?.prompts_fingerprint
     const fingerprintStale = !!cachedData?.result_data && cachedFingerprint !== promptsFingerprint
     const cacheIsComplete = (cachedData?.result_data as any)?.measurement_status !== 'processing'
@@ -650,6 +654,41 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
     }
     const prompts = flatPrompts.map((p) => p.text)
 
+    // ── Levier 1 : sous-échantillon pour les modèles coûteux ──
+    // Une question par axe (la première de chaque benchmark) : 3 appels au lieu
+    // de 9 pour GPT-5.4, sans perdre la lecture par benchmark.
+    const sampledIndices = new Set<number>()
+    for (const b of benchmarks) {
+      const first = flatPrompts.findIndex((p) => p.benchmarkId === b.id)
+      if (first >= 0) sampledIndices.add(first)
+    }
+
+    // ── Levier 2 : pool de mesures mutualisé à l'échelle du domaine ──
+    // En multipages, chaque URL repose des questions identiques (l'axe large est
+    // commun au domaine, les axes scopés se recoupent souvent). La clé est
+    // DÉTERMINISTE (avant reformulation LLM), donc stable d'une page à l'autre.
+    const POOL_TYPE = 'llm_prompt_pool'
+    type PoolEntry = { iteration_found: number; response_text: string; model_used?: string }
+    let measurePool: Record<string, PoolEntry> = {}
+    try {
+      const { data: poolRow } = await supabase
+        .from('domain_data_cache')
+        .select('result_data')
+        .eq('domain', site.domain)
+        .eq('data_type', POOL_TYPE)
+        .eq('week_start_date', weekStart)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle()
+      const entries = (poolRow?.result_data as any)?.entries
+      if (entries && typeof entries === 'object') measurePool = entries as Record<string, PoolEntry>
+    } catch (e) {
+      console.warn('[llm-vis] pool de mesures illisible:', (e as Error).message)
+    }
+    const poolKeyOf = (llmId: string, i: number) => `${llmId}::${detPromptKeys[i] ?? prompts[i]}`
+    const freshPoolEntries: Record<string, PoolEntry> = {}
+    let poolHits = 0
+
+
 
     // Persistance AVANT les appels modèles : un fournisseur lent ou une coupure
     // de l'exécution ne doit plus effacer les questions réellement envoyées.
@@ -709,6 +748,10 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       const responseTexts: string[] = new Array(prompts.length).fill('')
       let failedPrompts = 0
       let lastError: string | undefined
+      const isSampled = llm.sampled === true
+      const plannedIndices = flatPrompts
+        .map((_, i) => i)
+        .filter((i) => !isSampled || sampledIndices.has(i))
 
       const followUps = getFollowUpPrompts(site)
       // Les neuf benchmarks sont indépendants. Les exécuter en série pouvait
@@ -717,7 +760,15 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       // séquentielle à l'intérieur de chaque question, mais les questions sont
       // lancées ensemble : même nombre d'appels et de tokens, durée bornée par la
       // question la plus lente plutôt que par leur somme.
-      const promptResults = await Promise.all(flatPrompts.map(async ({ text: prompt }, i) => {
+      const promptResults = await Promise.all(plannedIndices.map(async (i) => {
+        const prompt = flatPrompts[i].text
+        // Mutualisation domaine : question déjà posée à ce modèle cette semaine
+        // (autre page du même domaine, ou audit précédent) → aucun appel payant.
+        const pooled = measurePool[poolKeyOf(llm.id, i)]
+        if (pooled && typeof pooled.iteration_found === 'number') {
+          poolHits++
+          return { iteration_found: pooled.iteration_found, response_text: pooled.response_text || '', measured: true, error: undefined, model_used: pooled.model_used, prompt, index: i }
+        }
         const result = await queryWithFallback(
           openrouterKey,
           llm.models,
@@ -728,6 +779,13 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         )
 
         trackPaidApiCall('calculate-llm-visibility', 'openrouter', result.model_used, site.domain)
+        if (result.measured) {
+          freshPoolEntries[poolKeyOf(llm.id, i)] = {
+            iteration_found: result.iteration_found,
+            response_text: (result.response_text || '').slice(0, 2000),
+            model_used: result.model_used,
+          }
+        }
         return { ...result, prompt, index: i }
       }))
 
@@ -741,6 +799,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
           console.warn(`[llm-vis] ${site.domain} × ${llm.name}: prompt non mesuré (${error})`)
           continue
         }
+
 
         alignedScores[index] = scorePromptResult(iteration_found, response_text, patterns)
         responseTexts[index] = response_text.slice(0, 500)
@@ -777,18 +836,23 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       const breakdown = promptScores.map((ps, i) =>
         `P${i + 1}:it${ps.iterationFound}×pos${ps.positionRank}×${ps.sentiment}=${ps.compositeScore}`
       ).join(' | ')
-      console.log(`[llm-vis] ${site.domain} × ${llm.name}: ${score === null ? 'NON MESURÉ' : score + '%'} [${breakdown}] (${measuredPrompts}/${prompts.length} mesurés)`)
+      console.log(`[llm-vis] ${site.domain} × ${llm.name}: ${score === null ? 'NON MESURÉ' : score + '%'} [${breakdown}] (${measuredPrompts}/${plannedIndices.length} mesurés${isSampled ? `, sous-échantillon ${plannedIndices.length}/${prompts.length}` : ''})`)
 
       // ── Save conversations for the Benchmark LLM modal ──
-      const convRows = prompts.map((prompt, i) => ({
-        tracked_site_id,
-        user_id,
-        llm_name: llm.name,
-        iteration: i + 1,
-        prompt_text: prompt,
-        response_summary: (responseTexts[i] || '').slice(0, 2000),
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      }))
+      // Un modèle échantillonné n'écrit que les questions réellement posées :
+      // une ligne vide se lirait comme « aucune réponse » dans le rapport.
+      const convRows = prompts
+        .map((prompt, i) => ({ prompt, i }))
+        .filter(({ i }) => !isSampled || sampledIndices.has(i))
+        .map(({ prompt, i }) => ({
+          tracked_site_id,
+          user_id,
+          llm_name: llm.name,
+          iteration: i + 1,
+          prompt_text: prompt,
+          response_summary: (responseTexts[i] || '').slice(0, 2000),
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        }))
       // Delete old conversations for this LLM, then insert fresh ones
       await supabase
         .from('llm_depth_conversations')
@@ -796,20 +860,31 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         .eq('tracked_site_id', tracked_site_id)
         .eq('user_id', user_id)
         .eq('llm_name', llm.name)
-      await supabase.from('llm_depth_conversations').insert(convRows)
+      if (convRows.length > 0) await supabase.from('llm_depth_conversations').insert(convRows)
 
       return {
         llm_name: llm.name,
         score,
         measured_prompts: measuredPrompts,
-        total_prompts: prompts.length,
+        // Le denominateur affiché est le nombre de questions PRÉVUES pour ce
+        // modèle : 3 pour un modèle échantillonné, 9 sinon. Sans cela le rapport
+        // afficherait « 3/9 mesurés » et se lirait comme une panne.
+        total_prompts: plannedIndices.length,
+        planned_prompts: plannedIndices.length,
+        sampled: isSampled,
         failed_prompts: failedPrompts,
-        measurement_status: measuredPrompts === 0 ? 'unmeasured' : (failedPrompts > 0 ? 'partial' : 'measured'),
+        measurement_status: measuredPrompts === 0
+          ? 'unmeasured'
+          : failedPrompts > 0
+            ? 'partial'
+            : isSampled ? 'sampled' : 'measured',
         error: measuredPrompts === 0 ? (lastError || 'model_unavailable') : undefined,
         promptDetails: promptScores,
         alignedScores,
         responseTexts,
+        plannedIndices,
       }
+
 
 
 
@@ -854,12 +929,19 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       const modelScores = llmResults.map(r => {
         const own = idx.map(i => r.alignedScores[i]).filter((s): s is PromptScore => s !== null)
         const score = own.length > 0 ? aggregateLLMScore(own) : null
+        // Un modèle échantillonné n'a qu'une question prévue par axe : le
+        // denominateur doit refléter le plan, pas les 3 questions de l'axe.
+        const plannedHere = idx.filter(i => (r.plannedIndices || idx).includes(i)).length || idx.length
         return {
           llm_name: r.llm_name,
           score_percentage: score,
-          measurement_status: own.length === 0 ? 'unmeasured' : (own.length < idx.length ? 'partial' : 'measured'),
+          measurement_status: own.length === 0
+            ? 'unmeasured'
+            : own.length < plannedHere
+              ? 'partial'
+              : r.sampled ? 'sampled' : 'measured',
           measured_prompts: own.length,
-          total_prompts: idx.length,
+          total_prompts: plannedHere,
           overall_sentiment: sentimentOf(own),
           details: idx.flatMap(i => {
             const ps = r.alignedScores[i]
@@ -949,7 +1031,35 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
       expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
     }, { onConflict: 'domain,data_type,week_start_date' })
 
-    return jsonOk({ data: cachePayload })
+    // ── Pool mutualisé : les mesures brutes servent aux autres pages du même
+    // domaine (multipages) pendant la semaine en cours. On relit juste avant
+    // d'écrire pour ne pas écraser les entrées d'une page auditée en parallèle.
+    const freshCount = Object.keys(freshPoolEntries).length
+    if (freshCount > 0) {
+      try {
+        const { data: latestPool } = await supabase
+          .from('domain_data_cache')
+          .select('result_data')
+          .eq('domain', site.domain)
+          .eq('data_type', POOL_TYPE)
+          .eq('week_start_date', weekStart)
+          .maybeSingle()
+        const existing = ((latestPool?.result_data as any)?.entries || {}) as Record<string, PoolEntry>
+        await supabase.from('domain_data_cache').upsert({
+          domain: site.domain,
+          data_type: POOL_TYPE,
+          week_start_date: weekStart,
+          result_data: { entries: { ...existing, ...measurePool, ...freshPoolEntries } },
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        }, { onConflict: 'domain,data_type,week_start_date' })
+      } catch (e) {
+        console.warn('[llm-vis] écriture du pool mutualisé ignorée:', (e as Error).message)
+      }
+    }
+    const plannedCalls = LLM_TARGETS.reduce((n, l) => n + (l.sampled ? sampledIndices.size : prompts.length), 0)
+    console.log(`[llm-vis] coût: ${freshCount} appels payants sur ${plannedCalls} prévus (${poolHits} réutilisés du pool domaine, ${LLM_TARGETS.length * prompts.length} sans optimisation)`)
+
+    return jsonOk({ data: { ...cachePayload, cost_optimization: { paid_calls: freshCount, pooled_calls: poolHits, planned_calls: plannedCalls, baseline_calls: LLM_TARGETS.length * prompts.length } } })
   } catch (error) {
     console.error('[llm-vis] Error:', error)
     return jsonError(error instanceof Error ? error.message : 'Unknown error', 500)
