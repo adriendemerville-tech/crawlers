@@ -32,7 +32,7 @@
  */
 
 import { estimateTokenCostUsd } from './tokenTracker.ts';
-import { detectEdgeFunctionName } from './aiUsageLog.ts';
+import { detectEdgeFunctionName, logAiUsage } from './aiUsageLog.ts';
 
 const LOVABLE_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
