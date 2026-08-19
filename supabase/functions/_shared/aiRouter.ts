@@ -88,6 +88,8 @@ export async function callRoutedAI(
   feature: string,
   opts: RoutedAIOptions,
 ): Promise<RoutedAIResult> {
+  // Résolu AVANT tout await : la pile d'appel contient encore la function appelante.
+  const edgeFn = opts.edgeFunction || detectEdgeFunctionName();
   const routing = await getRouting(feature);
   const useGroq = routing?.enabled === true && routing.provider === 'groq';
 
