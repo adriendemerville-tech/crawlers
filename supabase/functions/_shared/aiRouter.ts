@@ -69,6 +69,11 @@ export interface RoutedAIOptions {
   /** Modèle Lovable par défaut si aucune override n'existe en DB. */
   fallbackModel?: string;
   timeoutMs?: number;
+  /**
+   * Nom de l'edge function appelante, persisté dans `ai_gateway_usage.edge_function`.
+   * Optionnel : déduit de la pile d'appel quand il n'est pas fourni.
+   */
+  edgeFunction?: string;
 }
 
 export interface RoutedAIResult {
