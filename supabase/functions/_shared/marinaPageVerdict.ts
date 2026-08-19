@@ -33,6 +33,19 @@ export interface PageVerdictMeta {
   isThin?: boolean;
   isOrphan?: boolean;
   cannibalWith?: string[];
+  /**
+   * Cibles internes RÉELLES de cette page (chemins), issues des arêtes du cocon.
+   * Permet à la synthèse réseau de MESURER si les URLs auditées se lient entre
+   * elles, au lieu de le déduire d'un compteur de liens entrants.
+   */
+  internalTargets?: string[];
+  /**
+   * Quasi-doublons MESURÉS (SimHash/LSH du module d'intégrité) impliquant cette
+   * URL — indépendant de la morphologie des slugs.
+   */
+  nearDup?: Array<{ url: string; similarity: number; verdict: string }>;
+  /** Score de minceur mesuré (0-100) si cette URL est remontée en contenu pauvre. */
+  thinScore?: number | null;
 }
 
 function pathOf(url: string): string {
