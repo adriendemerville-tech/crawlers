@@ -264,8 +264,16 @@ export function computeFactualCitationScores(opts: {
       }
       parts.push(`  → Utilise ce score GMB pour knowledge_graph_signals (forte corrélation GMB ↔ Knowledge Panel) et pour pondérer brand_authority`);
     } else {
-      parts.push(`- GMB: complétude=${gmbScore}%, note=${gmbRating}/5, ${gmbReviews} avis (utilise ces données pour knowledge_graph_signals et brand_authority si > valeur pré-calculée)`);
+      const g = opts.gmbData as Record<string, unknown>;
+      const locations = typeof g['locations_count'] === 'number' ? g['locations_count'] as number : null;
+      const scopeLabel = locations && locations > 1
+        ? ` (réseau de ${locations} établissements, avis cumulés)`
+        : '';
+      const ratingLabel = opts.gmbData.rating == null ? 'non mesurée' : `${gmbRating}/5`;
+      const reviewsLabel = opts.gmbData.total_reviews == null ? 'nombre d\'avis non mesuré' : `${gmbReviews} avis${scopeLabel}`;
+      parts.push(`- GMB: complétude=${gmbScore}%, note=${ratingLabel}, ${reviewsLabel} (utilise ces données pour knowledge_graph_signals et brand_authority si > valeur pré-calculée ; n'affirme JAMAIS "0 avis" quand la donnée est non mesurée)`);
     }
+
   }
 
   const nullSignals = Object.entries(breakdown).filter(([_, v]) => v === null).map(([k]) => k);
