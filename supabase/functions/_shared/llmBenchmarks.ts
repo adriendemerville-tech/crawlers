@@ -43,7 +43,22 @@ export interface LlmBenchmark {
   prompts: BenchmarkPrompt[];
 }
 
-type AxisKey = 'value_prop' | 'covered' | 'ranked' | 'demand' | 'identity';
+type AxisKey = 'page_focus' | 'value_prop' | 'covered' | 'ranked' | 'demand' | 'identity';
+
+const PAGE_FOCUS_LABELS: Record<PromptLang, { label: string; description: string }> = {
+  fr: {
+    label: 'Intention de la page auditée',
+    description: "Besoin réellement porté par l'URL auditée (prestation et, le cas échéant, localité déduites du slug, du title et du H1) : mesure si les IA citent le site sur l'intention propre à cette page, et non sur celle du domaine.",
+  },
+  en: {
+    label: 'Audited page intent',
+    description: 'The need actually carried by the audited URL (service and, where relevant, locality derived from the slug, title and H1): measures whether AI models cite the site on this page-level intent rather than the domain-level one.',
+  },
+  es: {
+    label: 'Intención de la página auditada',
+    description: 'La necesidad que realmente cubre la URL auditada (servicio y, si aplica, localidad deducidos del slug, title y H1): mide si las IA citan el sitio sobre la intención propia de esta página.',
+  },
+};
 
 const VALUE_PROP_LABELS: Record<PromptLang, { label: string; description: string }> = {
   fr: {
@@ -62,6 +77,7 @@ const VALUE_PROP_LABELS: Record<PromptLang, { label: string; description: string
 
 const AXIS_LABELS: Record<PromptLang, Record<AxisKey, { label: string; description: string }>> = {
   fr: {
+    page_focus: PAGE_FOCUS_LABELS.fr,
     value_prop: VALUE_PROP_LABELS.fr,
     covered: {
       label: 'Cœur de marché couvert',
@@ -81,6 +97,7 @@ const AXIS_LABELS: Record<PromptLang, Record<AxisKey, { label: string; descripti
     },
   },
   en: {
+    page_focus: PAGE_FOCUS_LABELS.en,
     value_prop: VALUE_PROP_LABELS.en,
     covered: {
       label: 'Covered core market',
@@ -100,6 +117,7 @@ const AXIS_LABELS: Record<PromptLang, Record<AxisKey, { label: string; descripti
     },
   },
   es: {
+    page_focus: PAGE_FOCUS_LABELS.es,
     value_prop: VALUE_PROP_LABELS.es,
     covered: {
       label: 'Núcleo de mercado cubierto',
@@ -264,7 +282,17 @@ export function isCompetitorQuestionRelevant(ctx: SiteContext & Record<string, a
  * `selections` : mêmes besoins enrichis de l'axe de marché et des preuves.
  */
 export function buildLlmBenchmarks(
-  site: SiteContext & { domain?: string; competitors?: (string | null)[] },
+  site: SiteContext & {
+    domain?: string;
+    competitors?: (string | null)[];
+    /**
+     * Mots-clés propres à la PAGE auditée (slug, title, H1). Ils passent AVANT
+     * ceux de la carte d'identité du domaine dans la règle des 75 % d'ancrage :
+     * une page « salle de bain marseille » doit être testée sur ses termes, pas
+     * sur ceux de la home.
+     */
+    page_keywords?: string[];
+  },
   lang: PromptLang = 'fr',
   extraBrandNames: (string | null | undefined)[] = [],
   topics: string[] = [],
