@@ -148,10 +148,6 @@ export function MarinaConsoleTab() {
     setOpeningId(null);
   };
 
-  /** Supprime tous les jobs d'un lot multipages en une action. */
-
-
-  /** Supprime tous les jobs d'un lot multipages en une action. */
   const deleteBatch = async (jobIds: string[]) => {
     setDeletingId(jobIds[0]);
     try {
