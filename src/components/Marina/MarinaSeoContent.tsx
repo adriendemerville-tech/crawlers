@@ -1,7 +1,7 @@
 import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { MARINA_FREE_QUOTA } from '@/lib/marinaFree.constants';
-import ClaudeVerdictAnimation from '@/components/Marina/ClaudeVerdictAnimation';
+
 
 /**
  * Contenu éditorial rendu côté serveur sous le formulaire Marina.
