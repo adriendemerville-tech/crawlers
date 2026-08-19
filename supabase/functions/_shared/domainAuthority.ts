@@ -318,6 +318,23 @@ function extractAnchors(raw: unknown): { anchor: string; count: number }[] {
 }
 
 /**
+ * Ancres mesurées via `backlinks/anchors/live` : la répartition réelle des
+ * ancres, et non l'échantillon tronqué exposé par `summary`.
+ */
+export function extractAnchorsFromEndpoint(payload: unknown): { anchor: string; count: number }[] {
+  const items = (payload as any)?.tasks?.[0]?.result?.[0]?.items;
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((i: any) => ({
+      anchor: String(i?.anchor ?? '').trim(),
+      count: Number(i?.backlinks ?? i?.referring_domains ?? 0) || 0,
+    }))
+    .filter((a) => a.anchor)
+    .sort((a, b) => b.count - a.count);
+}
+
+
+/**
  * Récupère l'autorité de domaine + profil de backlinks.
  * Ne throw jamais : renvoie un objet `unavailable` explicite (pas de silence).
  */
