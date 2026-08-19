@@ -177,37 +177,54 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
 
     setItem({ status: 'running', progress: 0 });
 
-    const debit = await useCredit(`Rapport Marina — ${url}`, CREDIT_COST);
+    // Le débit de crédits passe par un RPC : une coupure réseau ponctuelle ne doit
+    // pas condamner l'URL. On retente 3 fois avec backoff, et on n'échoue
+    // définitivement que sur un refus métier (crédits insuffisants, non autorisé).
+    let debit = await useCredit(`Rapport Marina — ${url}`, CREDIT_COST);
+    for (let attempt = 1; attempt < 3 && !debit.success && !cancelRef.current; attempt++) {
+      const msg = (debit.error || '').toLowerCase();
+      if (msg.includes('insufficient') || msg.includes('crédit') || msg.includes('unauthorized') || msg.includes('authenticated')) break;
+      await new Promise(r => setTimeout(r, attempt * 3000));
+      debit = await useCredit(`Rapport Marina — ${url}`, CREDIT_COST);
+    }
     if (!debit.success) {
-      setItem({ status: 'failed', error: debit.error || 'Crédits insuffisants' });
+      setItem({ status: 'failed', error: debit.error || 'Débit de crédits impossible' });
       return;
     }
 
     let jobId: string | null = null;
-    try {
-      const session = (await supabase.auth.getSession()).data.session;
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url,
-          lang: language || 'fr',
-          // Marqueurs de lot : permettent de regrouper les N jobs d'un audit
-          // multipages en une seule carte dans « Mes audits ».
-          ...(batch ? { batch_id: batch.id, batch_size: batch.size, batch_index: index } : {}),
-        }),
-      });
-      const data = await res.json();
-      if (data.error || !data.job_id) throw new Error(data.error || 'Lancement impossible');
-      jobId = data.job_id;
-      setItem({ jobId: data.job_id });
-    } catch (e: any) {
-      setItem({ status: 'failed', error: e?.message || 'Lancement impossible' });
+    let launchError = 'Lancement impossible';
+    for (let attempt = 0; attempt < 3 && !jobId && !cancelRef.current; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, attempt * 4000));
+      try {
+        const session = (await supabase.auth.getSession()).data.session;
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url,
+            lang: language || 'fr',
+            // Marqueurs de lot : permettent de regrouper les N jobs d'un audit
+            // multipages en une seule carte dans « Mes audits ».
+            ...(batch ? { batch_id: batch.id, batch_size: batch.size, batch_index: index } : {}),
+          }),
+        });
+        const data = await res.json();
+        if (data.error || !data.job_id) throw new Error(data.error || 'Lancement impossible');
+        jobId = data.job_id as string;
+        setItem({ jobId });
+      } catch (e: any) {
+        launchError = e?.message || 'Lancement impossible';
+      }
+    }
+    if (!jobId) {
+      setItem({ status: 'failed', error: launchError });
       return;
     }
+
 
     // Polling — le job vit côté serveur, la fermeture de l'onglet ne l'interrompt pas.
     while (!cancelRef.current) {
