@@ -940,6 +940,8 @@ export default function Marina() {
                 <MarinaMultipagePanel
                   isAuthenticated={!!user}
                   credits={credits}
+                  unlimitedCredits={hasUnlimitedCredits}
+
                   language={language}
                   useCredit={useCredit}
                   refreshCredits={refreshCredits}
