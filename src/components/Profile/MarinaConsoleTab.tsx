@@ -753,7 +753,7 @@ export function MarinaConsoleTab() {
                       onClick={() => (isBatch ? openBatchReport(g.items as any[], g.key) : openReport(target.id))}
                       title={t3(language, 'Ouvrir', 'Open', 'Abrir')}
                     >
-                      {openingId === target.id
+                      {openingId === (isBatch ? g.key : target.id)
                         ? <Loader2 className="h-3 w-3 animate-spin" />
                         : <ExternalLink className="h-3 w-3" />}
                     </Button>
