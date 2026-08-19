@@ -22,6 +22,7 @@ export function MarinaMyAuditsTab() {
   const [audits, setAudits] = useState<Audit[]>([]);
   const [loading, setLoading] = useState(true);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [merged, setMerged] = useState<{ html: string; domain: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
