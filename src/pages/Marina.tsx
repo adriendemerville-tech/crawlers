@@ -678,7 +678,8 @@ export default function Marina() {
           const session = (await supabase.auth.getSession()).data.session;
           const res = await fetch(
             `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina?job_id=${jobId}`,
-            { headers: { Authorization: `Bearer ${session?.access_token}` } }
+            // Visiteur anonyme (essai gratuit) : la clé publique suffit au polling
+            { headers: { Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` } }
           );
           const data = await res.json();
           if (data.status === 'completed' || data.status === 'partial') {
