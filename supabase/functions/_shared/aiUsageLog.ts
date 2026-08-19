@@ -40,6 +40,27 @@ export function detectEdgeFunctionName(): string | null {
   }
 }
 
+// ── Dédoublonnage ────────────────────────────────────────────────────────────
+// Plusieurs instrumentations coexistent (wrapper gateway + `trackTokenUsage`
+// appelé par la function elle-même). Sans garde, le même appel LLM produit deux
+// lignes et le coût mesuré est doublé. On garde une empreinte par isolate :
+// même modèle + mêmes compteurs de tokens dans la fenêtre = déjà compté.
+const seen = new Map<string, number>();
+const DEDUPE_WINDOW_MS = 120_000;
+
+/**
+ * Réserve l'écriture pour une empreinte d'appel. Renvoie `false` si une autre
+ * instrumentation a déjà loggé ce même appel.
+ */
+export function claimUsageWrite(model: string, promptTokens: number, completionTokens: number): boolean {
+  const now = Date.now();
+  for (const [k, ts] of seen) if (now - ts > DEDUPE_WINDOW_MS) seen.delete(k);
+  const key = `${model}|${promptTokens}|${completionTokens}`;
+  if (seen.has(key)) return false;
+  seen.set(key, now);
+  return true;
+}
+
 /** Insère une ligne de coût. `feature` sert au suivi par fonctionnalité du routeur. */
 export function logAiUsage(opts: {
   gateway: 'lovable' | 'openrouter' | 'groq';
