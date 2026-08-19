@@ -12,6 +12,7 @@ import {
   Gauge, Shield, FileText, BarChart3, Zap, Target, AlertTriangle
 } from 'lucide-react';
 import heroImage from '@/assets/landing/analyse-site-web-hero.webp';
+import MarinaCitablePassage from "@/components/seo/MarinaCitablePassage";
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -220,6 +221,7 @@ const AnalyseSiteWebGratuit = () => {
             </div>
           </div>
         </article>
+        <MarinaCitablePassage />
       </main>
 
       <Suspense fallback={null}>
