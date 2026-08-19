@@ -413,6 +413,7 @@ function familyStats(family: TemplateFamily): FamilyStats {
       lcp: { known: lcps.length, total: p.length },
     },
     solidity: solidity(p.length),
+    contentCheck: familyContentCheck(family),
   };
 }
 
