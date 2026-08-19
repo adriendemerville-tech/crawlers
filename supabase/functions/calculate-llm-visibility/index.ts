@@ -938,7 +938,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
 
 
     await supabase.from('domain_data_cache').upsert({
-      domain: site.domain,
+      domain: cacheDomain,
       data_type: 'llm_visibility',
       week_start_date: weekStart,
       result_data: cachePayload,
