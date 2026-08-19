@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Link } from '@/lib/router-compat';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
+import { MarinaPaidUnlockModal, MARINA_ONESHOT_PRICE_EUR } from '@/components/Marina/MarinaPaidUnlockModal';
 import { MarinaScanModePanel, type ActiveScanMode } from '@/components/Marina/MarinaScanModePanel';
 import MarinaIdentityPanel from '@/components/Marina/MarinaIdentityPanel';
 import MarinaProgressTimeline from '@/components/Marina/MarinaProgressTimeline';
@@ -888,7 +889,7 @@ export default function Marina() {
                   />
                   <Button
                     onClick={handleGenerate}
-                    disabled={loading || (!user && freeRemaining === 0)}
+                    disabled={loading}
                     className="h-12 px-6 bg-transparent border border-foreground text-foreground hover:bg-foreground/10 font-semibold"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
@@ -956,7 +957,16 @@ export default function Marina() {
                 {!user && (
                   <div className="mt-4">
                     {freeRemaining === 0 && (
-                      <p className="text-sm text-foreground mb-2">{freeT.exhausted}</p>
+                      <>
+                        <p className="text-sm text-foreground mb-2">{freeT.exhausted}</p>
+                        <Button
+                          variant="outline"
+                          className="mb-3 border-foreground text-foreground hover:bg-foreground/10"
+                          onClick={() => setShowPaidUnlock(true)}
+                        >
+                          Débloquer un audit — {MARINA_ONESHOT_PRICE_EUR} €
+                        </Button>
+                      </>
                     )}
                     <Link to="/auth" onClick={() => sessionStorage.setItem('audit_return_path', '/marina')}>
                       <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
