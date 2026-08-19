@@ -96,6 +96,8 @@ export function MarinaDeepAuditSection() {
             </Link>
           </div>
         </div>
+
+        <ClaudeVerdictBlock className="mt-0" />
       </div>
     </section>
   );
