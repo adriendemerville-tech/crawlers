@@ -91,7 +91,7 @@ export function ClaudeVerdictAnimation() {
 
 
   return (
-    <div ref={ref} className="mx-auto max-w-[90vw] px-4">
+    <div ref={ref} className="mx-auto w-full max-w-[min(1600px,92vw)] px-4">
       <div className="overflow-hidden rounded-2xl border border-[#e3e1d7] bg-[#faf9f5] shadow-sm dark:border-[#3a3a37] dark:bg-[#262624]">
         {/* Barre de fenêtre */}
         <div className="flex items-center gap-2 border-b border-[#e3e1d7] px-4 py-3 dark:border-[#3a3a37]">
