@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { PageSpeedDashboard } from '@/components/PageSpeedDashboard';
 import { PillarRelatedArticles } from '@/components/seo/PillarRelatedArticles';
+import MarinaCitablePassage from "@/components/seo/MarinaCitablePassage";
 
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -339,6 +340,7 @@ const AuditSeoGratuit = () => {
         <PillarRelatedArticles
           slugs={['guide-visibilite-technique-ia', 'comprendre-geo-vs-seo', 'json-ld-snippet-autorite']}
         />
+        <MarinaCitablePassage />
       </main>
 
 

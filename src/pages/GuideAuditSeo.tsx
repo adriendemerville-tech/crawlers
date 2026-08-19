@@ -19,6 +19,7 @@ import {
 import { ArrowRight, CheckCircle2, AlertTriangle, TrendingUp, Search, Shield, Zap, Users, Fingerprint, Brain, Eye } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
 import { ClusterMesh } from '@/components/seo/ClusterMesh';
+import MarinaCitablePassage from "@/components/seo/MarinaCitablePassage";
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -402,6 +403,7 @@ export default function GuideAuditSeo() {
         pillar={{"href":"/audit-seo-gratuit","label":"Audit SEO gratuit","description":"Pilier : 200 points techniques + GEO en 60 secondes."}}
         sisters={[{"href":"/audit-expert","label":"Audit expert","description":"168 critères + plan d'action correctif."},{"href":"/audit-semantique","label":"Audit sémantique","description":"Densité lexicale, entités, lacunes."},{"href":"/pagespeed","label":"PageSpeed Insights","description":"Core Web Vitals & performance."},{"href":"/eeat","label":"E-E-A-T","description":"Signaux d'expertise & autorité."}]}
       />
+        <MarinaCitablePassage />
       </main>
       <Suspense fallback={null}>
         <Footer />

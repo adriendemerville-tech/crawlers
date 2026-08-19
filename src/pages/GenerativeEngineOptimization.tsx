@@ -16,6 +16,7 @@ import heroImage from '@/assets/landing/geo-pillar-hero.webp';
 import { supabase } from '@/integrations/supabase/client';
 import { GeoResult } from '@/types/geo';
 import { GeoDashboard } from '@/components/GeoDashboard';
+import MarinaCitablePassage from "@/components/seo/MarinaCitablePassage";
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -394,6 +395,7 @@ const GenerativeEngineOptimization = () => {
             </div>
           </div>
         </article>
+        <MarinaCitablePassage />
       </main>
 
       <Suspense fallback={null}>
