@@ -554,6 +554,37 @@ const translations = {
   },
 };
 
+/* ─── Essai gratuit sans compte (2 rapports / IP, email requis) ─── */
+const FREE_TRIAL_TEXTS = {
+  fr: {
+    title: `${MARINA_FREE_QUOTA} rapports complets offerts, sans compte`,
+    emailPlaceholder: 'votre@email.com',
+    hint: 'Votre email sert à vous envoyer le lien du rapport et à limiter les abus.',
+    remaining: (n: number) => `${n} rapport${n > 1 ? 's' : ''} gratuit${n > 1 ? 's' : ''} restant${n > 1 ? 's' : ''} pour cette connexion`,
+    exhausted: 'Vos rapports gratuits ont été utilisés. Créez un compte pour continuer.',
+    emailRequired: 'Renseignez une adresse email valide',
+    launched: 'Rapport gratuit lancé ! Génération en cours...',
+  },
+  en: {
+    title: `${MARINA_FREE_QUOTA} full reports free, no account needed`,
+    emailPlaceholder: 'your@email.com',
+    hint: 'Your email is used to send you the report link and to prevent abuse.',
+    remaining: (n: number) => `${n} free report${n > 1 ? 's' : ''} left on this connection`,
+    exhausted: 'Your free reports have been used. Create an account to continue.',
+    emailRequired: 'Enter a valid email address',
+    launched: 'Free report started! Generating...',
+  },
+  es: {
+    title: `${MARINA_FREE_QUOTA} informes completos gratis, sin cuenta`,
+    emailPlaceholder: 'tu@email.com',
+    hint: 'Tu email sirve para enviarte el enlace del informe y limitar los abusos.',
+    remaining: (n: number) => `${n} informe${n > 1 ? 's' : ''} gratuito${n > 1 ? 's' : ''} restante${n > 1 ? 's' : ''} en esta conexión`,
+    exhausted: 'Tus informes gratuitos se han agotado. Crea una cuenta para continuar.',
+    emailRequired: 'Introduce un email válido',
+    launched: '¡Informe gratuito iniciado! Generando...',
+  },
+};
+
 export default function Marina() {
   useCanonicalHreflang('/marina');
   const { user } = useAuth();
