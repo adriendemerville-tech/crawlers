@@ -116,8 +116,16 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Error using credit:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+      // PostgrestError n'est pas une instance d'Error : son message serait perdu.
+      const msg =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'message' in error
+            ? String((error as { message: unknown }).message)
+            : 'Erreur réseau lors du débit de crédits';
+      return { success: false, error: msg };
     }
+
   }, [user]);
 
   const isAgencyPro = ['agency_pro', 'agency_premium'].includes(planType) && (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') && (!subscriptionExpiresAt || new Date(subscriptionExpiresAt) > new Date());

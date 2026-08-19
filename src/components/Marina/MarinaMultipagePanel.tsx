@@ -74,6 +74,8 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
   const [mergedHtml, setMergedHtml] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const cancelRef = useRef(false);
+  const batchRef = useRef<{ id: string; size: number } | null>(null);
+
 
   /* ── Reprise d'un batch interrompu (jobs côté serveur) ── */
   useEffect(() => {
@@ -177,37 +179,54 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
 
     setItem({ status: 'running', progress: 0 });
 
-    const debit = await useCredit(`Rapport Marina — ${url}`, CREDIT_COST);
+    // Le débit de crédits passe par un RPC : une coupure réseau ponctuelle ne doit
+    // pas condamner l'URL. On retente 3 fois avec backoff, et on n'échoue
+    // définitivement que sur un refus métier (crédits insuffisants, non autorisé).
+    let debit = await useCredit(`Rapport Marina — ${url}`, CREDIT_COST);
+    for (let attempt = 1; attempt < 3 && !debit.success && !cancelRef.current; attempt++) {
+      const msg = (debit.error || '').toLowerCase();
+      if (msg.includes('insufficient') || msg.includes('crédit') || msg.includes('unauthorized') || msg.includes('authenticated')) break;
+      await new Promise(r => setTimeout(r, attempt * 3000));
+      debit = await useCredit(`Rapport Marina — ${url}`, CREDIT_COST);
+    }
     if (!debit.success) {
-      setItem({ status: 'failed', error: debit.error || 'Crédits insuffisants' });
+      setItem({ status: 'failed', error: debit.error || 'Débit de crédits impossible' });
       return;
     }
 
     let jobId: string | null = null;
-    try {
-      const session = (await supabase.auth.getSession()).data.session;
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url,
-          lang: language || 'fr',
-          // Marqueurs de lot : permettent de regrouper les N jobs d'un audit
-          // multipages en une seule carte dans « Mes audits ».
-          ...(batch ? { batch_id: batch.id, batch_size: batch.size, batch_index: index } : {}),
-        }),
-      });
-      const data = await res.json();
-      if (data.error || !data.job_id) throw new Error(data.error || 'Lancement impossible');
-      jobId = data.job_id;
-      setItem({ jobId: data.job_id });
-    } catch (e: any) {
-      setItem({ status: 'failed', error: e?.message || 'Lancement impossible' });
+    let launchError = 'Lancement impossible';
+    for (let attempt = 0; attempt < 3 && !jobId && !cancelRef.current; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, attempt * 4000));
+      try {
+        const session = (await supabase.auth.getSession()).data.session;
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url,
+            lang: language || 'fr',
+            // Marqueurs de lot : permettent de regrouper les N jobs d'un audit
+            // multipages en une seule carte dans « Mes audits ».
+            ...(batch ? { batch_id: batch.id, batch_size: batch.size, batch_index: index } : {}),
+          }),
+        });
+        const data = await res.json();
+        if (data.error || !data.job_id) throw new Error(data.error || 'Lancement impossible');
+        jobId = data.job_id as string;
+        setItem({ jobId });
+      } catch (e: any) {
+        launchError = e?.message || 'Lancement impossible';
+      }
+    }
+    if (!jobId) {
+      setItem({ status: 'failed', error: launchError });
       return;
     }
+
 
     // Polling — le job vit côté serveur, la fermeture de l'onglet ne l'interrompt pas.
     while (!cancelRef.current) {
@@ -265,6 +284,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
       id: (globalThis.crypto?.randomUUID?.() || `batch-${Date.now()}`),
       size: initial.length,
     };
+    batchRef.current = batch;
     const worker = async (workerIndex: number) => {
       // Le second worker attend que le premier ait initié le crawl mutualisé.
       if (workerIndex > 0) {
@@ -280,6 +300,28 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
     );
     setRunning(false);
   }, [credits, isAuthenticated, runOne, targets, totalCost]);
+
+  /* ── Relance des URLs en échec (aucun crédit n'a été débité pour elles) ── */
+  const handleRetryFailed = useCallback(async () => {
+    const failedIdx = items.map((it, i) => ({ it, i })).filter(({ it }) => it.status === 'failed').map(({ i }) => i);
+    if (failedIdx.length === 0) return;
+    cancelRef.current = false;
+    setRunning(true);
+    const batch = batchRef.current;
+    let cursor = 0;
+    const worker = async (workerIndex: number) => {
+      if (workerIndex > 0) await new Promise(r => setTimeout(r, workerIndex * STAGGER_MS));
+      while (cursor < failedIdx.length && !cancelRef.current) {
+        const idx = failedIdx[cursor++];
+        await runOne(idx, items[idx].url, batch ?? undefined);
+      }
+    };
+    await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, failedIdx.length) }, (_, i) => worker(i)),
+    );
+    setRunning(false);
+  }, [items, runOne]);
+
 
   const handleCancel = () => {
     cancelRef.current = true;
@@ -508,11 +550,17 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
                 <X className="w-4 h-4" /> Arrêter le suivi
               </Button>
             )}
+            {items.some(i => i.status === 'failed') && !running && (
+              <Button type="button" variant="outline" onClick={handleRetryFailed} className="gap-2 bg-transparent border-border">
+                <Layers className="w-4 h-4" /> Relancer les {items.filter(i => i.status === 'failed').length} échec(s)
+              </Button>
+            )}
             {items.length > 0 && !running && (
               <Button type="button" variant="outline" onClick={resetBatch} className="gap-2 bg-transparent border-border">
                 <X className="w-4 h-4" /> Réinitialiser
               </Button>
             )}
+
           </div>
 
           {/* Suivi par URL */}
