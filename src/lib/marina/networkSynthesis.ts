@@ -792,15 +792,28 @@ export function computeNetworkSynthesis(
    */
   const measuredDup: Array<{ a: string; b: string; similarity: number; verdict: string }> = [];
   const seenPair = new Set<string>();
+  /**
+   * Le détecteur de quasi-doublons émet une similarité en 0-1 (arrondie au
+   * centième) tandis que d'autres sources la donnent déjà en pourcentage. On
+   * ramène tout en points de pourcentage : sans cette normalisation, une paire
+   * mesurée à 0,93 se lisait « 0,93 % » et pesait 0,93 dans la priorisation,
+   * reléguant le constat le plus solide en dernière position du plan.
+   */
+  const asPercent = (raw: unknown): number => {
+    const v = Number(raw);
+    if (!Number.isFinite(v) || v <= 0) return 0;
+    return Math.round((v <= 1 ? v * 100 : v) * 10) / 10;
+  };
   for (const m of metas) {
     for (const d of m.nearDup || []) {
       const other = normPath(d.url);
       const pair = [normPath(m.path), other].sort().join('|');
       if (seenPair.has(pair)) continue;
       seenPair.add(pair);
-      measuredDup.push({ a: m.path, b: other, similarity: Number(d.similarity) || 0, verdict: d.verdict });
+      measuredDup.push({ a: m.path, b: other, similarity: asPercent(d.similarity), verdict: d.verdict });
     }
   }
+
   /** Paires mesurées dont les deux URLs sont dans le lot audité. */
   const dupInScope = measuredDup.filter((d) => auditedPaths.has(normPath(d.a)) && auditedPaths.has(normPath(d.b)));
   const dupOutScope = measuredDup.filter((d) => !dupInScope.includes(d));
