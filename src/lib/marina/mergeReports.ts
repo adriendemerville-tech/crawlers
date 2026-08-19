@@ -14,7 +14,12 @@
  *   4. Divulgation méthodologique (une seule fois, en fin de document)
  */
 
-import { buildNetworkSynthesisHTML, type SiteStructureContext } from './networkSynthesis';
+import {
+  computeNetworkSynthesis,
+  type NetworkSynthesisFacts,
+  type SiteStructureContext,
+} from './networkSynthesis';
+
 
 export interface MarinaReportPart {
   url: string;
