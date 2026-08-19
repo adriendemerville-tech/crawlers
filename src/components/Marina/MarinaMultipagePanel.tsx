@@ -383,7 +383,20 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
         toast.warning(`${failures.length} rapport(s) illisible(s), exclus du PDF`);
       }
       const site = await fetchSiteStructure(parts[0].url);
-      setMergedHtml(mergeMarinaReports(parts, { site }));
+      setMergedHtml(
+        mergeMarinaReports(parts, {
+          site,
+          // Trou 10 — archivage de la synthèse et création des tâches Workbench.
+          onSynthesis: (facts) => {
+            void persistNetworkSynthesis(facts).then((res) => {
+              if (res.workbenchItems > 0) {
+                toast.success(`${res.workbenchItems} action(s) de réseau ajoutée(s) au plan de travail`);
+              }
+            });
+          },
+        }),
+      );
+
       setShowModal(true);
     } catch (e: any) {
       toast.error(e?.message || 'Fusion impossible');
