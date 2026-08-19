@@ -617,7 +617,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
           market_sector: enrichedSite.market_sector,
           products_services: enrichedSite.products_services,
           target_audience: enrichedSite.target_audience,
-          commercial_area: enrichedSite.commercial_area,
+          commercial_area: (pageScoped && pageFocus!.locality) || enrichedSite.commercial_area,
           entity_type: enrichedSite.entity_type,
           business_model: enrichedSite.business_model,
           value_proposition: (enrichedSite as any).value_proposition,
@@ -625,7 +625,10 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
           brand_name: enrichedSite.brand_name,
           site_name: enrichedSite.site_name,
           domain: enrichedSite.domain,
-        },
+          page_focus: pageScoped
+            ? { topic: pageTopic, locality: pageFocus!.locality, terms: pageFocus!.focusTerms }
+            : null,
+        } as any,
         'fr',
       )
       benchmarks = naturalized.benchmarks
