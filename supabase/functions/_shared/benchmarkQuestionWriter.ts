@@ -20,7 +20,10 @@
 
 import { callRoutedAI } from './aiRouter.ts';
 import { buildBrandScrubTerms, scrubBrandFromText, type SiteContext, type PromptLang } from './naturalPrompts.ts';
-import type { LlmBenchmark } from './llmBenchmarks.ts';
+import { identityKeywords, questionHasKeyword, keywordCoverage, type LlmBenchmark } from './llmBenchmarks.ts';
+
+/** Part minimale des questions devant contenir un mot-clé de la carte d'identité. */
+const MIN_KEYWORD_COVERAGE = 0.75;
 
 const INTENT_ROLE: Record<string, string> = {
   discovery: "découverte : le prospect ne connaît aucun acteur et demande une recommandation",
@@ -28,6 +31,7 @@ const INTENT_ROLE: Record<string, string> = {
   local: "contexte géographique : le prospect cherche un prestataire dans sa zone",
   audience: "contexte de profil : le prospect se présente puis expose son besoin",
   usecase: "contexte d'usage : le prospect demande dans quels cas c'est pertinent et à qui se fier",
+  competitor: "alternative à un concurrent : le prospect utilise déjà un concurrent NOMMÉ et demande une alternative — ce nom de concurrent doit rester dans la question",
 };
 
 const AXIS_ROLE: Record<string, string> = {
@@ -128,16 +132,21 @@ export async function naturalizeBenchmarkQuestions(
     })),
   }));
 
+  const anchors = identityKeywords(s);
   const system = [
     "Tu écris des questions que de vrais clients potentiels posent à ChatGPT, Gemini ou Perplexity quand ils cherchent un prestataire ou un outil.",
     "Ces questions servent à mesurer si une entreprise est citée spontanément par les IA : elles ne doivent donc JAMAIS nommer l'entreprise auditée, sa marque, ni son site.",
     "Contraintes absolues : tu conserves exactement le même nombre de blocs et de questions, le même besoin testé et la même intention pour chaque question. Tu ne fais que reformuler dans une langue naturelle, parlée, à la première personne.",
     "Une seule phrase interrogative par question, entre 20 et 200 caractères, sans liste, sans guillemets, sans jargon SEO, sans terme technique interne.",
+    anchors.length
+      ? `RÈGLE D'ANCRAGE (impérative) : au moins ${Math.round(MIN_KEYWORD_COVERAGE * 100)} % des questions doivent contenir un ou plusieurs de ces mots-clés issus de la carte d'identité (ce qui est vendu, modèle d'affaires, cible principale, cible secondaire) : ${anchors.slice(0, 14).join(', ')}. Reprends-les littéralement, y compris les sigles (SEO, GEO, AEO…), sans les remplacer par un synonyme.`
+      : '',
+    "Une question dont l'intention est « competitor » doit conserver TEL QUEL le nom du concurrent présent dans la version déterministe.",
     `Type d'entreprise auditée : ${ARCHETYPE_DIRECTIVE[archetype]}`,
     "Quand un bloc porte sur la proposition de valeur centrale, la question doit interroger cette offre de front, sans détour ni généralité.",
     lang === 'fr' ? "Rédige en français." : lang === 'es' ? "Escribe en español." : "Write in English.",
     "Réponds uniquement en JSON : {\"blocks\":[{\"index\":0,\"questions\":[\"…\",\"…\",\"…\"]}]}",
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 
   const user = [
     "Carte d'identité de l'entreprise auditée (contexte uniquement, à ne jamais citer) :",
@@ -174,11 +183,24 @@ export async function naturalizeBenchmarkQuestions(
 
   const seen = new Set<string>();
   let rewritten = 0;
+  /** Nom du concurrent nommé dans la version déterministe d'une question. */
+  const rivalOf = (text: string): string => {
+    const m = text.match(/(?:J'utilise|I currently use|Uso)\s+([^:—]+?)\s+(?:pour|for|para)\s/i);
+    return (m?.[1] || '').trim();
+  };
   const out = benchmarks.map((b, i) => {
     const qs = byIndex.get(i) || [];
     const prompts = b.prompts.map((p, j) => {
       const candidate = qs[j] || '';
       if (!isAcceptable(candidate, scrubTerms)) return p;
+      // Ancrage : une reformulation ne peut pas faire disparaître le mot-clé
+      // d'identité (« GEO », « SEO »…) que portait la version déterministe.
+      if (anchors.length && questionHasKeyword(p.text, anchors) && !questionHasKeyword(candidate, anchors)) return p;
+      // Question concurrent : le nom du concurrent doit survivre.
+      if (p.intent === 'competitor') {
+        const rival = rivalOf(p.text);
+        if (rival && !candidate.toLowerCase().includes(rival.toLowerCase())) return p;
+      }
       const key = candidate.toLowerCase();
       if (seen.has(key)) return p;
       seen.add(key);
@@ -191,6 +213,26 @@ export async function naturalizeBenchmarkQuestions(
     return { ...b, prompts };
   });
 
-  console.log(`[benchmarkQuestions] ${rewritten}/${total} questions reformulées par LLM (1 appel)`);
+  // Filet final : si la couverture des mots-clés d'identité passe sous le seuil,
+  // les reformulations non ancrées reviennent à leur version déterministe (qui,
+  // elle, est ancrée par construction).
+  const cov = keywordCoverage(out, anchors);
+  if (anchors.length && cov.total && cov.ratio < MIN_KEYWORD_COVERAGE) {
+    let reverted = 0;
+    out.forEach((b, i) => {
+      b.prompts = b.prompts.map((p, j) => {
+        const original = benchmarks[i].prompts[j];
+        if (!original || p.text === original.text) return p;
+        if (questionHasKeyword(p.text, anchors)) return p;
+        reverted++;
+        rewritten = Math.max(0, rewritten - 1);
+        return original;
+      });
+    });
+    const after = keywordCoverage(out, anchors);
+    console.log(`[benchmarkQuestions] ancrage sous le seuil (${Math.round(cov.ratio * 100)} %) → ${reverted} reformulation(s) annulée(s), ${Math.round(after.ratio * 100)} % après correction`);
+  }
+
+  console.log(`[benchmarkQuestions] ${rewritten}/${total} questions reformulées par LLM (1 appel), ancrage ${Math.round(keywordCoverage(out, anchors).ratio * 100)} %`);
   return { benchmarks: out, rewritten, total };
 }

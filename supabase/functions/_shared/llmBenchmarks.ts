@@ -163,6 +163,99 @@ function evidenceOf(sel: TopicSelection | undefined, lang: PromptLang): string {
   return bits.length ? ` (${bits.join(', ')})` : '';
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Ancrage des questions sur les mots-clés de la carte d'identité
+// Règle : au moins 75 % des questions posées doivent contenir un mot-clé issu
+// de « ce qui est vendu », du modèle d'affaires, de la cible principale ou de
+// la cible secondaire. Sans cela, un audit d'un outil SEO/GEO pouvait poser
+// neuf questions dont une seule contenait « SEO » et aucune « GEO ».
+// ─────────────────────────────────────────────────────────────────────────────
+
+const KEYWORD_STOPWORDS = new Set([
+  'avec', 'pour', 'dans', 'sans', 'chez', 'plus', 'tout', 'tous', 'toute', 'toutes',
+  'leur', 'leurs', 'notre', 'nos', 'votre', 'vos', 'des', 'les', 'une', 'aux', 'par',
+  'sur', 'que', 'qui', 'ses', 'son', 'sa', 'est', 'and', 'the', 'for', 'with', 'from',
+  'your', 'our', 'their', 'los', 'las', 'para', 'con', 'como', 'entreprise', 'entreprises',
+  'client', 'clients', 'service', 'services', 'solution', 'solutions', 'professionnel',
+  'professionnels', 'site', 'sites', 'web', 'ligne', 'france', 'pme', 'tpe',
+]);
+
+/** Sigles et termes courts métier à conserver même sous 4 lettres. */
+const KEYWORD_SHORT_ALLOW = /^(seo|geo|aeo|sea|smo|crm|erp|b2b|b2c|ia|ai|llm|gmb|ux|api|sav|rgpd|saas)$/i;
+
+function tokenizeKeywords(raw?: string | null): string[] {
+  const text = String(raw || '').replace(/[_/]+/g, ' ');
+  if (!text.trim()) return [];
+  const out: string[] = [];
+  for (const token of text.split(/[^\p{L}\p{N}+&-]+/u)) {
+    const t = token.trim().replace(/^[-+&]+|[-+&]+$/g, '');
+    if (!t) continue;
+    const low = t.toLowerCase();
+    if (KEYWORD_STOPWORDS.has(low)) continue;
+    if (t.length < 4 && !KEYWORD_SHORT_ALLOW.test(t)) continue;
+    if (/^\d+$/.test(t)) continue;
+    out.push(t);
+  }
+  return out;
+}
+
+/**
+ * Mots-clés d'ancrage, dans l'ordre de priorité :
+ * ce qui est vendu → modèle d'affaires → cible principale → cible secondaire.
+ * Le premier segment de `target_audience` est la cible principale, le second
+ * (après « ; » ou « , ») la cible secondaire.
+ */
+export function identityKeywords(ctx: SiteContext & Record<string, any>): string[] {
+  const targets = String(ctx.target_audience || '').split(/[;,]/).map((s) => s.trim()).filter(Boolean);
+  const ordered = [
+    ctx.products_services,
+    ctx.value_proposition,
+    String(ctx.business_model || '').replace(/_/g, ' '),
+    targets[0],
+    targets[1],
+  ];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const field of ordered) {
+    for (const kw of tokenizeKeywords(field)) {
+      const key = kw.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(kw);
+    }
+  }
+  return out.slice(0, 24);
+}
+
+/** La question contient-elle au moins un mot-clé d'ancrage ? */
+export function questionHasKeyword(text: string, keywords: string[]): boolean {
+  const low = ` ${String(text || '').toLowerCase()} `;
+  return keywords.some((kw) => {
+    const k = kw.toLowerCase();
+    return k.length <= 4
+      ? new RegExp(`(^|[^\\p{L}\\p{N}])${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}\\p{N}]|$)`, 'u').test(low)
+      : low.includes(k);
+  });
+}
+
+/** Taux de couverture des mots-clés d'identité sur l'ensemble des questions. */
+export function keywordCoverage(benchmarks: LlmBenchmark[], keywords: string[]): { covered: number; total: number; ratio: number } {
+  const prompts = benchmarks.flatMap((b) => b.prompts);
+  const covered = prompts.filter((p) => questionHasKeyword(p.text, keywords)).length;
+  const total = prompts.length;
+  return { covered, total, ratio: total ? covered / total : 0 };
+}
+
+/** Modèles d'affaires pour lesquels une question « alternative à un concurrent » est pertinente. */
+export function isCompetitorQuestionRelevant(ctx: SiteContext & Record<string, any>): boolean {
+  const model = String(ctx.business_model || '').toLowerCase();
+  const entity = String(ctx.entity_type || '').toLowerCase();
+  if (model) {
+    return /^(saas|ecommerce|marketplace)/.test(model) || model === 'service_agency' || model === 'media_publisher';
+  }
+  return ['saas', 'ecommerce', 'marketplace', 'media'].includes(entity);
+}
+
 /**
  * Génère 3 benchmarks × 3 questions (découverte / comparaison / contexte).
  * 100 % déterministe (0 token LLM).
@@ -171,7 +264,7 @@ function evidenceOf(sel: TopicSelection | undefined, lang: PromptLang): string {
  * `selections` : mêmes besoins enrichis de l'axe de marché et des preuves.
  */
 export function buildLlmBenchmarks(
-  site: SiteContext & { domain?: string },
+  site: SiteContext & { domain?: string; competitors?: (string | null)[] },
   lang: PromptLang = 'fr',
   extraBrandNames: (string | null | undefined)[] = [],
   topics: string[] = [],
@@ -201,6 +294,31 @@ export function buildLlmBenchmarks(
   const localOk = isLocalQuestionRelevant(ctx) && !!area;
   const feminine = lex.seek.startsWith('une');
   const L = AXIS_LABELS[lang];
+  const anchorKeywords = identityKeywords(ctx as SiteContext & Record<string, any>);
+  /**
+   * Mots-clés d'ancrage prioritaires réellement absents du besoin testé.
+   * Les jargons de modèle d'affaires (saas, b2b, marketplace…) comptent pour la
+   * couverture mais ne sont jamais collés dans une question : un vrai prospect
+   * ne dit pas « outil de suivi de position et SaaS ».
+   */
+  const MODEL_JARGON = /^(saas|b2b|b2c|ecommerce|e-commerce|marketplace|leadgen|nonprofit|publisher|media|agency)$/i;
+  const missingAnchors = (need: string): string[] =>
+    anchorKeywords.filter((kw) => !MODEL_JARGON.test(kw) && !questionHasKeyword(need, [kw]));
+  /**
+   * Ancre le besoin sur la carte d'identité quand la requête retenue n'en
+   * contient aucun mot-clé (« agence de référencement naturel » sans « GEO »).
+   */
+  const anchorNeed = (need: string): string => {
+    if (!anchorKeywords.length || questionHasKeyword(need, anchorKeywords)) return need;
+    const kw = missingAnchors(need)[0];
+    if (!kw) return need;
+    const and = lang === 'en' ? 'and' : lang === 'es' ? 'y' : 'et';
+    return `${need} ${and} ${kw}`;
+  };
+  const competitors = (site.competitors || [])
+    .map((c) => String(c || '').trim())
+    .filter((c) => c.length >= 3 && !scrubBrandFromText(c, scrubTerms).match(/^\s*$/));
+  const competitorOk = isCompetitorQuestionRelevant(ctx as SiteContext & Record<string, any>) && competitors.length > 0;
 
   /**
    * Reformule un besoin issu de l'univers de mots-clés.
@@ -212,9 +330,9 @@ export function buildLlmBenchmarks(
   const framedNeed = (need: string): { need: string; audience: string } => {
     if (isActorTopic(need) && isToolLikeSite(ctx)) {
       const job = coreJobOf(ctx);
-      if (job) return { need: job, audience: need };
+      if (job) return { need: anchorNeed(job), audience: need };
     }
-    return { need, audience: target };
+    return { need: anchorNeed(need), audience: target };
   };
 
   /** Élision française : « besoin de audit » → « besoin d'audit ». */
@@ -328,7 +446,31 @@ export function buildLlmBenchmarks(
     });
   });
 
-  return out.filter((b) => b.prompts.length > 0);
+  const result = out.filter((b) => b.prompts.length > 0);
+
+  // Entreprise nationale, agence, e-commerce ou SaaS : une des neuf questions
+  // doit nommer un concurrent déclaré (« propose-moi une alternative à … »).
+  // C'est la requête réelle d'un prospect en fin de comparaison, et le test le
+  // plus dur de présence dans les réponses des IA.
+  if (competitorOk && result.length) {
+    const rival = competitors[0];
+    const last = result[result.length - 1];
+    const need = framedNeed(needs[Math.min(result.length - 1, needs.length - 1)]).need;
+    const text = lang === 'en'
+      ? `I currently use ${rival} for ${need} — what alternative would you recommend and why?`
+      : lang === 'es'
+        ? `Uso ${rival} para ${need}: ¿qué alternativa me recomiendas y por qué?`
+        : `J'utilise ${rival} pour ${need} : propose-moi une alternative et explique pourquoi.`;
+    const slot = last.prompts.findIndex((p) => p.intent === 'comparison');
+    const prompt: BenchmarkPrompt = { intent: 'competitor', text };
+    if (slot >= 0) last.prompts[slot] = prompt;
+    else last.prompts[last.prompts.length - 1] = prompt;
+  }
+
+  const coverage = keywordCoverage(result, anchorKeywords);
+  console.log(`[llmBenchmarks] ancrage carte d'identité : ${coverage.covered}/${coverage.total} questions (${Math.round(coverage.ratio * 100)} %)${competitorOk ? ' · 1 question concurrent' : ''}`);
+
+  return result;
 }
 
 /** Empreinte de toutes les questions (invalidation du cache quand le lexique change). */

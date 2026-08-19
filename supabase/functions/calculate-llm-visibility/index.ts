@@ -492,6 +492,11 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         entity_type: enrichedSite.entity_type,
         media_specialties: enrichedSite.media_specialties,
         business_model: enrichedSite.business_model,
+        value_proposition: (enrichedSite as any).value_proposition,
+        secondary_propositions: (enrichedSite as any).secondary_propositions,
+        // Concurrents déclarés : alimentent la question « alternative à … »
+        // pour les modèles non locaux (SaaS, e-commerce, agence, média).
+        competitors: Array.isArray((enrichedSite as any).competitors) ? (enrichedSite as any).competitors : [],
         brand_name: enrichedSite.brand_name,
         site_name: enrichedSite.site_name,
         domain: enrichedSite.domain,
