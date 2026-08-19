@@ -238,6 +238,8 @@ export function buildPageVerdictHTML(
     /** Faits mesurés sur cette URL, propagés à la synthèse réseau multipages. */
     words?: number | null;
     lcpMs?: number | null;
+    /** Résumé d'intégrité du contenu (quasi-doublons et pages pauvres mesurés). */
+    integrity?: any;
   },
 ): { html: string; meta: PageVerdictMeta } {
   const isEn = lang === 'en';
