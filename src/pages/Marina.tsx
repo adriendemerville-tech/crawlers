@@ -986,6 +986,8 @@ export default function Marina() {
                     <Terminal className="w-4 h-4" /> {t.hero.apiDocLink}
                   </button>
                 </div>
+
+                <ClaudeVerdictBlock />
               </div>
 
 
