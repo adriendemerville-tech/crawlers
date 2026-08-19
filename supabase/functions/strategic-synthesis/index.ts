@@ -475,6 +475,7 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
         raw_market_data: mktData,
         ranking_overview: rankingOverview,
         domain_authority: authorityData,
+        domain_authority_trend: authorityTrend,
         google_my_business: gmbData,
         toolsData: null,
         llm_visibility_raw: llmData,
