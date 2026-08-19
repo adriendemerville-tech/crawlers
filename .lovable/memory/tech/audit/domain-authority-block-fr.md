@@ -5,8 +5,14 @@ type: feature
 ---
 `supabase/functions/_shared/domainAuthority.ts` : source unique pour les backlinks, l'autorité de domaine et la toxicité du profil de liens.
 
-- Appels DataForSEO (3, cache 24 h via `auditCache`, clé versionnée par `AUTHORITY_CALIBRATION_VERSION` = 3) : `backlinks/summary/live` + `backlinks/referring_domains/live` (**limit 200**, `REFERRING_DOMAINS_SAMPLE_LIMIT`) + `backlinks/anchors/live` (**limit 100**, `ANCHORS_SAMPLE_LIMIT`).
+- Appels DataForSEO (4 en parallèle, cache 24 h via `auditCache`, clé versionnée par `AUTHORITY_CALIBRATION_VERSION` = 4) : `backlinks/summary/live` + `backlinks/referring_domains/live` (**limit 200**, `REFERRING_DOMAINS_SAMPLE_LIMIT`) + `backlinks/anchors/live` (**limit 100**, `ANCHORS_SAMPLE_LIMIT`) + `backlinks/domain_pages/live` (**limit 50**, `LINKED_PAGES_SAMPLE_LIMIT`).
 - Lot 1 (2026-08-19) : les ancres sont **mesurées** via l'endpoint dédié (`extractAnchorsFromEndpoint`) et non plus déduites de `referring_links_anchors` ; repli explicite sur le résumé si l'endpoint échoue. Champs exposés : `referring_domains_sampled`, `anchors_sampled`, `anchors_source` (`anchors_endpoint` | `summary_sample` | `unavailable`).
+- Lot 2 (2026-08-19) — **répartition du profil** (`BacklinkDistribution`, 0 token LLM, 1 seul appel payant ajouté) :
+  - `extractDistribution()` lit les cartes déjà présentes dans `summary` (`referring_links_tld`, `referring_links_countries`, `referring_links_platform_types`) → parts triées, aucun crédit supplémentaire.
+  - `extractLinkedPages()` lit `backlinks/domain_pages/live` → `top_linked_pages` (top 10) avec domaines référents par page.
+  - `computeBacklinkDistribution()` produit des constats déterministes : mono-TLD (>=85 %), concentration géographique (>=90 %), dispersion (<40 %), dépendance à une page unique (>=80 % des référents), monoculture de plateformes (>=70 %), + recommandation priorisée (diluer l'entonnoir de liens > élargir la géographie > élargir les TLD).
+  - `source` = `dataforseo` / `partial` / `unavailable`, `confidence` dégradée si la répartition manque ou est partielle. Aucune conclusion sans mesure.
+  - Rendu : `buildAuthorityPromptSection` (TLD, pays, plateformes, pages cibles, concentration) et `DomainAuthorityCard` (grille TLD/Pays/Plateformes + pages cibles + signaux).
 - `computeBacklinkToxicity` accepte `sampleReferringDomains` (échantillon 200) pour le rank moyen des référents et la détection de domaines hors-sujet ; `topReferringDomains` reste l'affichage (top 10). Sans échantillon, comportement historique conservé.
 - `confidence` dégradée si l'échantillon de référents est réduit (<50 pour >50 domaines) ou si les ancres viennent du résumé ; `confidence_reason` porte les tailles d'échantillon et remonte jusqu'au prompt et à `DomainAuthorityCard`.
 - `normalizeDomainRank` (calibration v2, 2026-08-08) : l'échelle rank backlinks est 0–1000 et logarithmique → courbe `95 * (r/1000)^1.8` (1000→95, 600→38, 300→11). L'ancienne division par 10 saturait à 100/100 des domaines réellement à ~38 (constaté sur avenir-renovations.fr vs Semrush).
