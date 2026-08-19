@@ -8305,6 +8305,36 @@ export type Database = {
         }
         Relationships: []
       }
+      marina_free_trials: {
+        Row: {
+          created_at: string
+          domain: string | null
+          email: string
+          id: string
+          ip_hash: string
+          job_id: string | null
+          lang: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain?: string | null
+          email: string
+          id?: string
+          ip_hash: string
+          job_id?: string | null
+          lang?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string | null
+          email?: string
+          id?: string
+          ip_hash?: string
+          job_id?: string | null
+          lang?: string | null
+        }
+        Relationships: []
+      }
       marina_prospects: {
         Row: {
           company: string | null
