@@ -180,7 +180,7 @@ export async function persistAuthoritySnapshot(a: AuthorityData): Promise<Author
     });
     const history = [...merged.values()].sort((x, y) => x.month.localeCompare(y.month)).slice(-HISTORY_MONTHS);
 
-    await supabase.from('domain_authority_snapshots').upsert(
+    const { error: upsertError } = await supabase.from('domain_authority_snapshots').upsert(
       {
         domain: a.domain,
         snapshot_month: currentMonth,
