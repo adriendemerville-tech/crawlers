@@ -284,6 +284,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
       id: (globalThis.crypto?.randomUUID?.() || `batch-${Date.now()}`),
       size: initial.length,
     };
+    batchRef.current = batch;
     const worker = async (workerIndex: number) => {
       // Le second worker attend que le premier ait initié le crawl mutualisé.
       if (workerIndex > 0) {
@@ -299,6 +300,28 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
     );
     setRunning(false);
   }, [credits, isAuthenticated, runOne, targets, totalCost]);
+
+  /* ── Relance des URLs en échec (aucun crédit n'a été débité pour elles) ── */
+  const handleRetryFailed = useCallback(async () => {
+    const failedIdx = items.map((it, i) => ({ it, i })).filter(({ it }) => it.status === 'failed').map(({ i }) => i);
+    if (failedIdx.length === 0) return;
+    cancelRef.current = false;
+    setRunning(true);
+    const batch = batchRef.current;
+    let cursor = 0;
+    const worker = async (workerIndex: number) => {
+      if (workerIndex > 0) await new Promise(r => setTimeout(r, workerIndex * STAGGER_MS));
+      while (cursor < failedIdx.length && !cancelRef.current) {
+        const idx = failedIdx[cursor++];
+        await runOne(idx, items[idx].url, batch ?? undefined);
+      }
+    };
+    await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, failedIdx.length) }, (_, i) => worker(i)),
+    );
+    setRunning(false);
+  }, [items, runOne]);
+
 
   const handleCancel = () => {
     cancelRef.current = true;
