@@ -1,11 +1,11 @@
 import { createServerFn } from '@tanstack/react-start';
 import { getRequestHeader } from '@tanstack/react-start/server';
+import { MARINA_FREE_QUOTA } from './marinaFree.constants';
 
 // Essai gratuit de Marina sans compte : 2 rapports complets par adresse IP,
 // email obligatoire (capture de lead + second garde-fou anti-abus).
 // Toute la logique de quota est serveur : le client ne fait que l'afficher.
 
-export const MARINA_FREE_QUOTA = 2;
 
 function clientIpFromHeaders(): string {
   const fwd = getRequestHeader('x-forwarded-for') || '';

@@ -27,7 +27,8 @@ import {
 } from 'lucide-react';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 import { getMarinaShowcaseReport } from '@/lib/marina/showcase.functions';
-import { getMarinaFreeQuota, startMarinaFreeAudit, MARINA_FREE_QUOTA } from '@/lib/marinaFree.functions';
+import { getMarinaFreeQuota, startMarinaFreeAudit } from '@/lib/marinaFree.functions';
+import { MARINA_FREE_QUOTA } from '@/lib/marinaFree.constants';
 import { toMarinaViewUrl } from '@/lib/marina/reportUrl';
 import { MarinaMyAuditsTab } from '@/components/Marina/MarinaMyAuditsTab';
 import { MarinaRunningAuditsSection } from '@/components/Marina/MarinaRunningAuditsSection';
