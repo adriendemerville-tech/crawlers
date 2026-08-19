@@ -1,4 +1,5 @@
 import { mergeMarinaReports } from './mergeReports';
+import { fetchSiteStructure } from './siteStructure';
 
 export interface BatchReportItem {
   id: string;
@@ -38,5 +39,6 @@ export async function buildMergedBatchReport(
   }
 
   if (parts.length === 0) return null;
-  return { html: mergeMarinaReports(parts), missing };
+  const site = await fetchSiteStructure(parts[0].url);
+  return { html: mergeMarinaReports(parts, { site }), missing };
 }
