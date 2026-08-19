@@ -123,3 +123,53 @@ Deno.test("computeBacklinkToxicity : l'échantillon élargi révèle ce que le t
   assert(withSample.verdict !== 'sain', 'un référent hors-sujet interdit le verdict sain');
   assertEquals(withoutSample.verdict, 'sain');
 });
+
+// ============ Lot 2 : répartition TLD / pays / pages cibles ============
+
+Deno.test('extractDistribution : parts calculées et tri décroissant', () => {
+  const d = extractDistribution({ '.fr': 80, '.com': 15, '.org': 5, '.xyz': 0 });
+  assertEquals(d.length, 3);
+  assertEquals(d[0].key, '.fr');
+  assertEquals(Math.round(d[0].share * 100), 80);
+  assert(d[0].share > d[1].share);
+  assertEquals(extractDistribution(null).length, 0);
+});
+
+Deno.test('extractLinkedPages : tri par domaines référents et URL requise', () => {
+  const pages = extractLinkedPages({
+    tasks: [{ result: [{ items: [
+      { page_address: 'https://x.fr/a', referring_domains: 3, backlinks: 4 },
+      { page_address: 'https://x.fr/b', referring_domains: 12, backlinks: 20 },
+      { page_address: '', referring_domains: 99, backlinks: 99 },
+    ] }] }],
+  });
+  assertEquals(pages.length, 2);
+  assertEquals(pages[0].url, 'https://x.fr/b');
+  assertEquals(extractLinkedPages({}).length, 0);
+});
+
+Deno.test('computeBacklinkDistribution : dépendance à une page unique détectée', () => {
+  const d = computeBacklinkDistribution({
+    tld: extractDistribution({ '.fr': 95, '.com': 5 }),
+    countries: extractDistribution({ FR: 98, BE: 2 }),
+    platformTypes: [],
+    linkedPages: [
+      { url: 'https://x.fr/', referring_domains: 45, backlinks: 90 },
+      { url: 'https://x.fr/contact', referring_domains: 2, backlinks: 2 },
+    ],
+    referringDomains: 50,
+  });
+  assert(d.top_page_share >= 0.8, `part attendue élevée : ${d.top_page_share}`);
+  assert(d.signals.some((s) => /page unique/.test(s)));
+  assert(/Diluer/.test(d.recommendation));
+  assertEquals(d.source, 'dataforseo');
+});
+
+Deno.test('computeBacklinkDistribution : absence de données ne fabrique aucun constat', () => {
+  const d = computeBacklinkDistribution({
+    tld: [], countries: [], platformTypes: [], linkedPages: [], referringDomains: 0,
+  });
+  assertEquals(d.source, 'unavailable');
+  assertEquals(d.signals.length, 0);
+  assert(/non mesurable/.test(d.recommendation));
+});
