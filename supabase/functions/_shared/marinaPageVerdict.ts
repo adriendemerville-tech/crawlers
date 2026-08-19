@@ -139,6 +139,7 @@ export function extractCocoonPageFacts(cocoonData: any, url: string): CocoonPage
     isThin: thin,
     cannibalWith: cannibalWith.slice(0, 4),
     suggestedLinks,
+    outTargets: [...new Set(linksOut.map((e) => pathOf(String(e.target))))].slice(0, 60),
     geoScore: node?.geo_score != null ? Math.round(Number(node.geo_score)) : null,
   };
 }
