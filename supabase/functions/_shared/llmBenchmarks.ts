@@ -292,6 +292,14 @@ export function buildLlmBenchmarks(
      * sur ceux de la home.
      */
     page_keywords?: string[];
+    /**
+     * Angle secondaire porté par la page auditée. `reputation` (pages avis /
+     * témoignages) remplace UNE question sur neuf par une question de preuve
+     * sociale : le but d'une page avis reste de vendre la prestation, la
+     * réputation n'en est que le levier.
+     */
+    page_secondary_angle?: 'reputation' | null;
+
   },
   lang: PromptLang = 'fr',
   extraBrandNames: (string | null | undefined)[] = [],
