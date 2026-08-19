@@ -85,7 +85,9 @@ export function ClaudeVerdictAnimation() {
     return () => window.clearInterval(id);
   }, [phase]);
 
-  const showVerdict = phase === 'verdict' || phase === 'answer';
+  // 'idle' = état SSR : tout le texte est présent pour les crawlers.
+  const showVerdict = phase === 'idle' || phase === 'verdict' || phase === 'answer';
+
 
   return (
     <div ref={ref} className="mx-auto max-w-3xl px-4">
