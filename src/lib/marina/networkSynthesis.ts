@@ -1291,6 +1291,15 @@ export function buildNetworkSynthesisHTML(
        }</li>
        <li style="margin:0 0 5px 0;">Le régime de lecture retenu est « ${cohesion.regime === 'reseau' ? 'réseau décliné' : cohesion.regime === 'mixte' ? 'mixte : noyau décliné et pages indépendantes' : cohesion.regime === 'arborescence' ? 'branche commune' : 'assemblage de pages indépendantes'} ». Dans un assemblage, les lectures de concurrence interne et de pilier manquant sont déclarées hors objet plutôt que forcées${cohesion.subLots ? `, et en régime mixte elles ne portent que sur les ${cohesion.subLots.networked.length} URLs du sous-lot réseau` : ''}.</li>
        <li style="margin:0 0 5px 0;">Aucune note globale de site n'est produite : les moyennes par gabarit servent à comparer, pas à noter.</li>
+       <li style="margin:0 0 5px 0;">${
+         (() => {
+           const conf = stats.filter((s) => s.contentCheck.status === 'confirme').length;
+           const het = stats.filter((s) => s.contentCheck.status === 'heterogene').length;
+           const morph = stats.length - conf - het;
+           return `Les gabarits sont d'abord reconstruits sur la forme des URLs, puis confrontés au contenu (cluster sémantique, dispersion du volume de texte) : ${conf} confirmé${conf > 1 ? 's' : ''} par le contenu, ${morph} non confirmé${morph > 1 ? 's' : ''} faute de signal, ${het} déclaré${het > 1 ? 's' : ''} hétérogène${het > 1 ? 's' : ''}. Un gabarit hétérogène ne prouve pas un défaut de gabarit.`;
+         })()
+       }</li>
+       <li style="margin:0 0 5px 0;">L'ordre des recommandations vient d'une formule unique et bornée — gravité mesurée × portée dans le lot × confiance (niveau de preuve et effectif) × facilité — et non d'un poids choisi action par action. Les quatre composantes sont affichées sous chaque action.${devOnly ? " Ce lot ne portant aucun défaut transverse mesuré, les actions listées sont des actions de développement : leur gravité est un potentiel estimé, pas un problème constaté." : ''}</li>
        <li style="margin:0;">Aucun gain de trafic, de position ou de revenu n'est promis ici : l'ordre des recommandations est un rendement relatif, pas une prévision.</li>
      </ul>`,
   );
