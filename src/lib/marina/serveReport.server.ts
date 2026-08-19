@@ -60,4 +60,6 @@ export async function serveMarinaReport(code: string): Promise<Response> {
     `$1${shortUrl}$2`,
   );
   return htmlResponse(html, 200);
+}
+
 
