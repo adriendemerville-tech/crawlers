@@ -78,6 +78,7 @@ export function logAiUsage(opts: {
     const pt = Number(opts.usage?.prompt_tokens) || 0;
     const ct = Number(opts.usage?.completion_tokens) || 0;
     if (pt === 0 && ct === 0) return;
+    if (!claimUsageWrite(opts.model, pt, ct)) return;
 
     const edgeFunction = opts.edgeFunction || detectEdgeFunctionName();
 
