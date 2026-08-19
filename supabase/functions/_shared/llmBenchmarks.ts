@@ -322,7 +322,15 @@ export function buildLlmBenchmarks(
   const localOk = isLocalQuestionRelevant(ctx) && !!area;
   const feminine = lex.seek.startsWith('une');
   const L = AXIS_LABELS[lang];
-  const anchorKeywords = identityKeywords(ctx as SiteContext & Record<string, any>);
+  const pageKeywords = (site.page_keywords || [])
+    .map((k) => String(k || '').trim())
+    .filter((k) => k.length >= 3);
+  const anchorKeywords = [
+    ...pageKeywords,
+    ...identityKeywords(ctx as SiteContext & Record<string, any>).filter(
+      (k) => !pageKeywords.some((p) => p.toLowerCase() === k.toLowerCase()),
+    ),
+  ];
   /**
    * Mots-clés d'ancrage prioritaires réellement absents du besoin testé.
    * Les jargons de modèle d'affaires (saas, b2b, marketplace…) comptent pour la
