@@ -113,7 +113,7 @@ export async function callRoutedAI(
       logAiUsage({
         gateway: 'groq',
         model: routing!.model,
-        edgeFunction: opts.edgeFunction,
+        edgeFunction: edgeFn,
         feature,
         usage: r.raw?.usage,
       });
