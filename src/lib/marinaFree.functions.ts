@@ -93,59 +93,10 @@ export const startMarinaFreeAudit = createServerFn({ method: 'POST' })
       };
     }
 
-    // Le job est lancé sous une clé API Marina interne rattachée au compte
-    // technique admin : aucun crédit utilisateur n'est débité.
-    const { data: adminRole } = await supabaseAdmin
-      .from('user_roles')
-      .select('user_id')
-      .eq('role', 'admin')
-      .limit(1)
-      .maybeSingle();
-    const adminUserId = adminRole?.user_id;
-    if (!adminUserId) {
-      console.error('[MarinaFree] no admin account available to host free runs');
-      return { error: 'launch_failed' as const, message: 'Service momentanément indisponible' };
-    }
+    const { launchMarinaJob } = await import('./marinaLaunch.server');
+    const launch = await launchMarinaJob(supabaseAdmin, targetUrl, lang);
+    if ('error' in launch) return { error: launch.error, message: launch.message };
 
-    const { data: keyRow } = await supabaseAdmin
-      .from('marina_api_keys')
-      .select('api_key')
-      .eq('user_id', adminUserId)
-      .maybeSingle();
-    let internalKey = keyRow?.api_key;
-    if (!internalKey) {
-      internalKey = `mk_${crypto.randomUUID().replace(/-/g, '')}${crypto.randomUUID().replace(/-/g, '')}`;
-      const { error: keyErr } = await supabaseAdmin
-        .from('marina_api_keys')
-        .upsert({ user_id: adminUserId, api_key: internalKey }, { onConflict: 'user_id' });
-      if (keyErr) {
-        console.error('[MarinaFree] cannot provision internal key', keyErr);
-        return { error: 'launch_failed' as const, message: 'Service momentanément indisponible' };
-      }
-    }
-
-    const publishableKey = process.env['SUPABASE_PUBLISHABLE_KEY']!;
-    const supabaseUrl = process.env['SUPABASE_URL']!;
-    const launchRes = await fetch(`${supabaseUrl}/functions/v1/marina`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${publishableKey}`,
-        apikey: publishableKey,
-        'x-marina-key': internalKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url: targetUrl, lang }),
-    });
-    const launch = (await launchRes.json().catch(() => ({}))) as {
-      job_id?: string;
-      status?: string;
-      queue_position?: number;
-      error?: string;
-    };
-    if (!launchRes.ok || launch.error || !launch.job_id) {
-      console.error('[MarinaFree] launch failed', launchRes.status, launch);
-      return { error: 'launch_failed' as const, message: launch.error || 'Lancement impossible' };
-    }
 
     // La consommation n'est comptée qu'après un lancement réussi.
     await supabaseAdmin.from('marina_free_trials').insert({
@@ -161,5 +112,104 @@ export const startMarinaFreeAudit = createServerFn({ method: 'POST' })
       status: launch.status || 'pending',
       queuePosition: launch.queue_position ?? null,
       remaining: Math.max(0, MARINA_FREE_QUOTA - ((ipCount ?? 0) + 1)),
+    };
+  });
+
+// ---------------------------------------------------------------------------
+// Audit Marina payé à l'unité (15 €), sans compte.
+// Le quota gratuit épuisé, le visiteur peut débloquer un rapport supplémentaire :
+// un jeton (pass) est généré côté serveur, le paiement le passe en "granted"
+// via le webhook, puis le lancement le consomme (usage unique).
+// ---------------------------------------------------------------------------
+
+export const createMarinaPaidPass = createServerFn({ method: 'POST' })
+  .inputValidator((input: { email: string }) => input)
+  .handler(async ({ data }) => {
+    const email = String(data.email || '').trim().toLowerCase();
+    if (!EMAIL_RE.test(email) || email.length > 160) {
+      return { error: 'invalid_email' as const, message: 'Adresse email invalide' };
+    }
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const passToken = `mp_${crypto.randomUUID().replace(/-/g, '')}`;
+    const { error } = await supabaseAdmin
+      .from('marina_paid_passes')
+      .insert({ pass_token: passToken, email, status: 'pending' });
+    if (error) {
+      console.error('[MarinaPaid] cannot create pass', error);
+      return { error: 'pass_failed' as const, message: 'Service momentanément indisponible' };
+    }
+    return { passToken };
+  });
+
+export const getMarinaPassStatus = createServerFn({ method: 'POST' })
+  .inputValidator((input: { passToken: string }) => input)
+  .handler(async ({ data }) => {
+    const passToken = String(data.passToken || '').slice(0, 80);
+    if (!passToken) return { status: 'unknown' as const };
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: row } = await supabaseAdmin
+      .from('marina_paid_passes')
+      .select('status, job_id')
+      .eq('pass_token', passToken)
+      .maybeSingle();
+    if (!row) return { status: 'unknown' as const };
+    return { status: row.status as 'pending' | 'granted' | 'consumed', jobId: row.job_id };
+  });
+
+export const startMarinaPaidAudit = createServerFn({ method: 'POST' })
+  .inputValidator((input: { url: string; passToken: string; lang?: string }) => input)
+  .handler(async ({ data }) => {
+    const targetUrl = normalizeUrl(String(data.url || ''));
+    if (!targetUrl) return { error: 'invalid_url' as const, message: 'URL invalide' };
+    const passToken = String(data.passToken || '').slice(0, 80);
+    const lang = typeof data.lang === 'string' ? data.lang.slice(0, 5) : 'fr';
+
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: pass } = await supabaseAdmin
+      .from('marina_paid_passes')
+      .select('id, status, job_id, email')
+      .eq('pass_token', passToken)
+      .maybeSingle();
+
+    if (!pass) return { error: 'pass_unknown' as const, message: 'Paiement introuvable' };
+    if (pass.status === 'consumed') {
+      return { error: 'pass_consumed' as const, message: 'Ce paiement a déjà généré un rapport', jobId: pass.job_id };
+    }
+    if (pass.status !== 'granted') {
+      return { error: 'pass_pending' as const, message: 'Paiement en cours de validation' };
+    }
+
+    // Verrou optimiste : seul le premier appel passe 'granted' -> 'consumed'.
+    const { data: claimed } = await supabaseAdmin
+      .from('marina_paid_passes')
+      .update({ status: 'consumed', consumed_at: new Date().toISOString() })
+      .eq('id', pass.id)
+      .eq('status', 'granted')
+      .select('id')
+      .maybeSingle();
+    if (!claimed) {
+      return { error: 'pass_consumed' as const, message: 'Ce paiement a déjà généré un rapport' };
+    }
+
+    const { launchMarinaJob } = await import('./marinaLaunch.server');
+    const launch = await launchMarinaJob(supabaseAdmin, targetUrl, lang);
+    if ('error' in launch) {
+      // Lancement raté : on rend le pass au visiteur.
+      await supabaseAdmin
+        .from('marina_paid_passes')
+        .update({ status: 'granted', consumed_at: null })
+        .eq('id', pass.id);
+      return { error: launch.error, message: launch.message };
+    }
+
+    await supabaseAdmin
+      .from('marina_paid_passes')
+      .update({ job_id: launch.job_id })
+      .eq('id', pass.id);
+
+    return {
+      jobId: launch.job_id,
+      status: launch.status,
+      queuePosition: launch.queue_position,
     };
   });

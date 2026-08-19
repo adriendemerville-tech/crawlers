@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Link } from '@/lib/router-compat';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
+import { MarinaPaidUnlockModal, MARINA_ONESHOT_PRICE_EUR } from '@/components/Marina/MarinaPaidUnlockModal';
 import { MarinaScanModePanel, type ActiveScanMode } from '@/components/Marina/MarinaScanModePanel';
 import MarinaIdentityPanel from '@/components/Marina/MarinaIdentityPanel';
 import MarinaProgressTimeline from '@/components/Marina/MarinaProgressTimeline';
@@ -612,6 +613,8 @@ export default function Marina() {
   // Essai gratuit sans compte : 2 rapports complets par adresse IP, email requis
   const [freeEmail, setFreeEmail] = useState('');
   const [freeRemaining, setFreeRemaining] = useState<number | null>(null);
+  // Quota gratuit épuisé : déblocage payant du rapport suivant (15 €, sans compte)
+  const [showPaidUnlock, setShowPaidUnlock] = useState(false);
 
   const freeT = FREE_TRIAL_TEXTS[language as keyof typeof FREE_TRIAL_TEXTS] || FREE_TRIAL_TEXTS.fr;
 
@@ -728,7 +731,9 @@ export default function Marina() {
   // Visiteur non connecté : essai gratuit (quota serveur par IP + par email)
   const handleFreeGenerate = useCallback(async () => {
     if (!url.trim()) { toast.error(t.toasts.enterUrl); return; }
+    if (freeRemaining === 0) { setShowPaidUnlock(true); return; }
     if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(freeEmail.trim())) { toast.error(freeT.emailRequired); return; }
+
 
     setLoading(true);
     setError(null);
@@ -743,8 +748,12 @@ export default function Marina() {
       if ('error' in res) {
         const message = res.message || t.toasts.launchError;
         setError(message);
-        toast.error(message);
-        if (res.error === 'quota_exhausted') setFreeRemaining(0);
+        if (res.error === 'quota_exhausted') {
+          setFreeRemaining(0);
+          setShowPaidUnlock(true);
+        } else {
+          toast.error(message);
+        }
         setLoading(false);
         return;
       }
@@ -755,7 +764,7 @@ export default function Marina() {
       toast.error(err?.message || t.toasts.launchError);
       setLoading(false);
     }
-  }, [url, freeEmail, freeT, language, t]);
+  }, [url, freeEmail, freeT, language, t, freeRemaining]);
 
   const handleGenerate = useCallback(async () => {
     if (!url.trim()) { toast.error(t.toasts.enterUrl); return; }
@@ -880,7 +889,7 @@ export default function Marina() {
                   />
                   <Button
                     onClick={handleGenerate}
-                    disabled={loading || (!user && freeRemaining === 0)}
+                    disabled={loading}
                     className="h-12 px-6 bg-transparent border border-foreground text-foreground hover:bg-foreground/10 font-semibold"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
@@ -948,7 +957,16 @@ export default function Marina() {
                 {!user && (
                   <div className="mt-4">
                     {freeRemaining === 0 && (
-                      <p className="text-sm text-foreground mb-2">{freeT.exhausted}</p>
+                      <>
+                        <p className="text-sm text-foreground mb-2">{freeT.exhausted}</p>
+                        <Button
+                          variant="outline"
+                          className="mb-3 border-foreground text-foreground hover:bg-foreground/10"
+                          onClick={() => setShowPaidUnlock(true)}
+                        >
+                          Débloquer un audit — {MARINA_ONESHOT_PRICE_EUR} €
+                        </Button>
+                      </>
                     )}
                     <Link to="/auth" onClick={() => sessionStorage.setItem('audit_return_path', '/marina')}>
                       <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
@@ -1645,6 +1663,22 @@ async function generateReport(url) {
           domain={url.trim().replace(/^https?:\/\//, '').split('/')[0]}
         />
       )}
+
+      <MarinaPaidUnlockModal
+        open={showPaidUnlock}
+        onOpenChange={setShowPaidUnlock}
+        url={url.trim()}
+        email={freeEmail}
+        language={language}
+        onAuditStarted={jid => {
+          setError(null);
+          setReportUrl(null);
+          setProgress(0);
+          setLoading(true);
+          setJobId(jid);
+        }}
+      />
     </>
+
   );
 }
