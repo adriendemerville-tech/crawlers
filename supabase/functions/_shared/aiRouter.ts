@@ -135,7 +135,7 @@ export async function callRoutedAI(
   logAiUsage({
     gateway: 'lovable',
     model,
-    edgeFunction: opts.edgeFunction,
+    edgeFunction: edgeFn,
     feature,
     usage: result.raw?.usage,
     // Un repli Groq → Lovable est un fallback à part entière.
