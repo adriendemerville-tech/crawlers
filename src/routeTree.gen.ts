@@ -114,6 +114,7 @@ import { Route as LexiqueSlugRouteImport } from './routes/lexique/$slug'
 import { Route as MatriceIndexRouteImport } from './routes/matrice/index'
 import { Route as MatriceCompareRouteImport } from './routes/matrice/compare'
 import { Route as MatriceHistoriqueRouteImport } from './routes/matrice/historique'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as RShareIdRouteImport } from './routes/r/$shareId'
 import { Route as RapportReportIdRouteImport } from './routes/rapport/$reportId'
 import { Route as RapportAuditRouteImport } from './routes/rapport/audit'
@@ -667,6 +668,11 @@ const MatriceHistoriqueRoute = MatriceHistoriqueRouteImport.update({
   path: '/matrice/historique',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RShareIdRoute = RShareIdRouteImport.update({
   id: '/r/$shareId',
   path: '/r/$shareId',
@@ -852,6 +858,7 @@ export interface FileRoutesByFullPath {
   '/lexique/$slug': typeof LexiqueSlugRoute
   '/matrice/compare': typeof MatriceCompareRoute
   '/matrice/historique': typeof MatriceHistoriqueRoute
+  '/r/$code': typeof RCodeRoute
   '/r/$shareId': typeof RShareIdRoute
   '/rapport/$reportId': typeof RapportReportIdRoute
   '/rapport/audit': typeof RapportAuditRoute
@@ -976,6 +983,7 @@ export interface FileRoutesByTo {
   '/lexique/$slug': typeof LexiqueSlugRoute
   '/matrice/compare': typeof MatriceCompareRoute
   '/matrice/historique': typeof MatriceHistoriqueRoute
+  '/r/$code': typeof RCodeRoute
   '/r/$shareId': typeof RShareIdRoute
   '/rapport/$reportId': typeof RapportReportIdRoute
   '/rapport/audit': typeof RapportAuditRoute
@@ -1101,6 +1109,7 @@ export interface FileRoutesById {
   '/lexique/$slug': typeof LexiqueSlugRoute
   '/matrice/compare': typeof MatriceCompareRoute
   '/matrice/historique': typeof MatriceHistoriqueRoute
+  '/r/$code': typeof RCodeRoute
   '/r/$shareId': typeof RShareIdRoute
   '/rapport/$reportId': typeof RapportReportIdRoute
   '/rapport/audit': typeof RapportAuditRoute
@@ -1227,6 +1236,7 @@ export interface FileRouteTypes {
     | '/lexique/$slug'
     | '/matrice/compare'
     | '/matrice/historique'
+    | '/r/$code'
     | '/r/$shareId'
     | '/rapport/$reportId'
     | '/rapport/audit'
@@ -1351,6 +1361,7 @@ export interface FileRouteTypes {
     | '/lexique/$slug'
     | '/matrice/compare'
     | '/matrice/historique'
+    | '/r/$code'
     | '/r/$shareId'
     | '/rapport/$reportId'
     | '/rapport/audit'
@@ -1475,6 +1486,7 @@ export interface FileRouteTypes {
     | '/lexique/$slug'
     | '/matrice/compare'
     | '/matrice/historique'
+    | '/r/$code'
     | '/r/$shareId'
     | '/rapport/$reportId'
     | '/rapport/audit'
@@ -1600,6 +1612,7 @@ export interface RootRouteChildren {
   LexiqueSlugRoute: typeof LexiqueSlugRoute
   MatriceCompareRoute: typeof MatriceCompareRoute
   MatriceHistoriqueRoute: typeof MatriceHistoriqueRoute
+  RCodeRoute: typeof RCodeRoute
   RShareIdRoute: typeof RShareIdRoute
   RapportReportIdRoute: typeof RapportReportIdRoute
   RapportAuditRoute: typeof RapportAuditRoute
@@ -2363,6 +2376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MatriceHistoriqueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/r/$shareId': {
       id: '/r/$shareId'
       path: '/r/$shareId'
@@ -2586,6 +2606,7 @@ const rootRouteChildren: RootRouteChildren = {
   LexiqueSlugRoute: LexiqueSlugRoute,
   MatriceCompareRoute: MatriceCompareRoute,
   MatriceHistoriqueRoute: MatriceHistoriqueRoute,
+  RCodeRoute: RCodeRoute,
   RShareIdRoute: RShareIdRoute,
   RapportReportIdRoute: RapportReportIdRoute,
   RapportAuditRoute: RapportAuditRoute,
