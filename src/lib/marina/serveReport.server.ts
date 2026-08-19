@@ -2,7 +2,7 @@
  * Lecture d'un rapport Marina stocké dans le bucket privé `shared-reports`.
  *
  * Partagé par `/api/public/marina-report?id=<uuid>` (lien historique) et par
- * `/r/<code>` (lien court : préfixe d'identifiant, 8 caractères suffisent).
+ * `/m/<code>` (lien court : préfixe d'identifiant, 8 caractères suffisent).
  */
 
 const UUID_RE = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
@@ -52,7 +52,7 @@ export async function serveMarinaReport(code: string): Promise<Response> {
 
   if (error || !data) return htmlResponse(notFoundHtml, 404);
 
-  const shortUrl = `https://crawlers.fr/r/${jobId.slice(0, 8)}`;
+  const shortUrl = `https://crawlers.fr/m/${jobId.slice(0, 8)}`;
   // Les rapports générés avant les liens courts embarquent l'URL signée dans
   // le bouton « Copier le lien » : on la remplace à la volée.
   const html = (await data.text()).replace(

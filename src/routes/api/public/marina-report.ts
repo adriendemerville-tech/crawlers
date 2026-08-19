@@ -7,7 +7,7 @@ import { serveMarinaReport } from "@/lib/marina/serveReport.server";
  *
  * Le Storage Supabase renvoie les fichiers HTML en `Content-Type: text/plain`
  * (+ nosniff), ce qui affiche le code source. Ce proxy renvoie le même contenu
- * avec le bon type MIME. Le lien court équivalent est `/r/<code>`.
+ * avec le bon type MIME. Le lien court équivalent est `/m/<code>`.
  */
 export const Route = createFileRoute("/api/public/marina-report")({
   server: {
