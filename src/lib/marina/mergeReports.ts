@@ -14,7 +14,7 @@
  *   4. Divulgation méthodologique (une seule fois, en fin de document)
  */
 
-import { buildNetworkSynthesisHTML } from './networkSynthesis';
+import { buildNetworkSynthesisHTML, type SiteStructureContext } from './networkSynthesis';
 
 export interface MarinaReportPart {
   url: string;
@@ -300,7 +300,10 @@ function buildGlobalSummary(domain: string, metas: PageMeta[], domainVerdict: st
  * Construit le document fusionné : page de garde + sommaire + analyse du site
  * mutualisée + fiches par URL + divulgation méthodologique.
  */
-export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: string }): string {
+export function mergeMarinaReports(
+  parts: MarinaReportPart[],
+  opts?: { title?: string; site?: SiteStructureContext },
+): string {
   if (parts.length === 0) return '';
   if (parts.length === 1) return parts[0].html;
 
@@ -402,7 +405,7 @@ export function mergeMarinaReports(parts: MarinaReportPart[], opts?: { title?: s
     : '';
   // Lecture d'ensemble normalisée : toujours en première position après la page
   // de garde, avant la synthèse exécutive et les fiches par URL.
-  const networkSynthesis = buildNetworkSynthesisHTML(domain, metas);
+  const networkSynthesis = buildNetworkSynthesisHTML(domain, metas, opts?.site);
 
 
   const sections = parts
