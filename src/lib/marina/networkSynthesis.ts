@@ -139,11 +139,19 @@ export function detectTemplates(metas: PageMeta[]): TemplateFamily[] {
           .map((seg, depth) => {
             const parent = '/' + segs.slice(0, depth).join('/');
             const low = seg.toLowerCase();
-            const siblingCount = siblings.get(`${depth}|${parent.toLowerCase()}`)?.size || 1;
+            const sibs = siblings.get(`${depth}|${parent.toLowerCase()}`) || new Set<string>([low]);
+            const siblingCount = sibs.size;
             const parentCount = parentsOfValue.get(`${depth}|${low}`)?.size || 1;
             // Un jeu de frères nombreux suffit à qualifier l'instance, même quand
             // le segment ne ressemble pas à un slug (ex. une ville en un seul mot).
-            const variable = siblingCount >= 2 && parentCount < 2 && (slugLike(seg) || siblingCount >= 3);
+            // À la racine, en revanche, des frères hétérogènes (/tarifs, /contact,
+            // /blog) sont des rubriques et non des instances d'un gabarit : on
+            // n'y voit une déclinaison que si la fratrie est homogène en forme.
+            const homogeneous =
+                depth > 0 ||
+                (siblingCount >= 3 && [...sibs].filter((s) => slugLike(s)).length / siblingCount >= 0.8);
+            const variable =
+              homogeneous && siblingCount >= 2 && parentCount < 2 && (slugLike(seg) || siblingCount >= 3);
             if (!variable) return seg;
             variants.push(seg);
             return '*';
@@ -175,6 +183,68 @@ function variantIndex(families: TemplateFamily[]): Map<string, string> {
     });
   }
   return index;
+}
+
+// ───────────────────── Régime de lecture du lot audité ─────────────────────
+
+/**
+ * Un lot multipages n'est PAS forcément un réseau : ce peut être un ensemble de
+ * pages sans branche commune, sans déclinaison et sans lien entre elles (audit
+ * d'un panier de pages choisies à la main, comparaison de pages concurrentes
+ * internes, échantillon d'un site hétérogène). Les blocs « concurrence interne »
+ * et « pilier manquant » n'ont alors aucun objet, et les affirmer serait faux.
+ *
+ * Le régime est déterminé par trois signaux mesurés, sans liste codée en dur :
+ *   - part des URLs appartenant à un gabarit décliné (motif répété) ;
+ *   - existence d'une branche commune couvrant la majorité des URLs ;
+ *   - part des URLs partageant un cluster sémantique avec une autre URL auditée.
+ */
+export type CohesionRegime = 'reseau' | 'arborescence' | 'assemblage';
+
+export interface Cohesion {
+  regime: CohesionRegime;
+  /** Part des URLs dans un gabarit décliné, 0-1. */
+  declinedShare: number;
+  /** Branche commune à la majorité des URLs, ou null. */
+  commonBranch: string | null;
+  /** Part des URLs partageant un cluster avec une autre URL auditée, 0-1. */
+  clusterShare: number;
+  /** Phrase de cadrage, à afficher telle quelle en tête du bloc 2. */
+  statement: string;
+}
+
+export function detectCohesion(metas: PageMeta[], families: TemplateFamily[]): Cohesion {
+  const total = metas.length || 1;
+  const declined = families.filter((f) => f.pattern.includes('*') && f.pages.length >= 2);
+  const declinedShare = declined.reduce((a, f) => a + f.pages.length, 0) / total;
+
+  // Branche commune : premier segment partagé par au moins 60 % des URLs.
+  const firstSegCount = new Map<string, number>();
+  for (const m of metas) {
+    const s = segments(m.path)[0];
+    if (s) firstSegCount.set(s.toLowerCase(), (firstSegCount.get(s.toLowerCase()) || 0) + 1);
+  }
+  const topBranch = [...firstSegCount.entries()].sort((a, b) => b[1] - a[1])[0];
+  const commonBranch = topBranch && topBranch[1] / total >= 0.6 ? `/${topBranch[0]}` : null;
+
+  const clusterCount = new Map<string, number>();
+  for (const m of metas) if (m.cluster) clusterCount.set(String(m.cluster), (clusterCount.get(String(m.cluster)) || 0) + 1);
+  const shared = [...clusterCount.values()].filter((c) => c >= 2).reduce((a, c) => a + c, 0);
+  const clusterShare = shared / total;
+
+  let regime: CohesionRegime;
+  if (declinedShare >= 0.6 && declined.length >= 1) regime = 'reseau';
+  else if (commonBranch || clusterShare >= 0.6) regime = 'arborescence';
+  else regime = 'assemblage';
+
+  const statement =
+    regime === 'reseau'
+      ? 'Les URLs auditées forment un réseau : elles sont produites par des gabarits déclinés, donc lisibles ensemble.'
+      : regime === 'arborescence'
+        ? `Les URLs auditées relèvent d'une même branche${commonBranch ? ` (<code style="font-size:12px;">${esc(commonBranch)}</code>)` : ' thématique'} : elles se lisent comme une arborescence, pas comme un motif répété.`
+        : "Les URLs auditées ne partagent ni gabarit décliné, ni branche commune, ni cluster commun : ce lot est un assemblage de pages indépendantes. Il se lit comme une comparaison de pages, pas comme un réseau.";
+
+  return { regime, declinedShare, commonBranch, clusterShare, statement };
 }
 
 interface FamilyStats {
@@ -274,6 +344,7 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
   if (metas.length < 2) return '';
 
   const families = detectTemplates(metas);
+  const cohesion = detectCohesion(metas, families);
   const stats = families.map(familyStats);
   const scored = metas.filter((m) => num(m.global) !== null);
   const techAvg = avg(metas.map((m) => num(m.tech)).filter((v): v is number => v !== null));
@@ -327,11 +398,15 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
         : `Les ${metas.length} URLs relèvent de ${families.length} gabarits sans déclinaison systématique :
            l'ensemble se lit comme un assemblage de pages hétérogènes plutôt que comme un réseau.`;
 
+  const globals = metas.map((m) => num(m.global)).filter((v): v is number => v !== null);
+  const spread = globals.length >= 2 ? Math.max(...globals) - Math.min(...globals) : null;
+
   const block2 = blockShell(
     2,
     'Ce que ces pages décrivent ensemble',
     'deduction',
-    `<p style="margin:0 0 8px 0;">${networkShape}</p>
+    `<p style="margin:0 0 8px 0;"><strong>Régime de lecture.</strong> ${cohesion.statement}</p>
+     <p style="margin:0 0 8px 0;">${cohesion.regime === 'assemblage' ? `Les ${metas.length} URLs sont donc traitées comme des cas indépendants : la valeur de ce rapport est comparative (quelle page tient, laquelle décroche, sur quel axe) et non structurelle.${spread !== null ? ` Écart de score global entre la meilleure et la moins bonne page : ${spread} points.` : ''}` : networkShape}</p>
      ${table(['Gabarit', 'Pages', 'Global', 'SEO', 'GEO', 'Mots (moy.)', 'LCP (moy.)'], rows2)}`,
   );
 
@@ -404,7 +479,11 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
 
   let block4Body: string;
   if (!collisions.length && !clusterCollisions.length && !declaredCannibal.length) {
-    block4Body = noFact('Aucune concurrence interne détectée entre les URLs auditées : chaque page porte une intention distincte.');
+    block4Body = noFact(
+      cohesion.regime === 'assemblage'
+        ? "Hors objet dans ce lot : les URLs auditées n'appartiennent ni au même gabarit décliné ni au même cluster, aucune concurrence interne ne peut être établie entre elles à partir du périmètre audité."
+        : 'Aucune concurrence interne détectée entre les URLs auditées : chaque page porte une intention distincte.',
+    );
   } else {
     const parts: string[] = [];
     if (collisions.length) {
@@ -467,7 +546,12 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
   const meshAvg = avg(linksIn);
 
   let block5Body: string;
-  if (!missingHubs.length) {
+  if (cohesion.regime === 'assemblage') {
+    block5Body = `<p style="margin:0;">Aucun pilier n'est attendu ici : les URLs auditées ne se rattachent pas à une branche
+      commune, il n'existe donc pas de niveau de regroupement à créer pour ce lot${
+        meshAvg !== null ? ` (maillage entrant moyen des pages auditées : ${meshAvg} liens)` : ''
+      }. La hiérarchie de chaque page est traitée dans sa fiche.</p>`;
+  } else if (!missingHubs.length) {
     block5Body = `<p style="margin:0;">Aucun niveau intermédiaire manquant détecté sur le périmètre audité${
       meshAvg !== null ? ` (maillage entrant moyen : ${meshAvg} liens)` : ''
     }.</p>`;
@@ -539,9 +623,14 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
 
   // ── 7. Recommandations séquencées ─────────────────────────────────────────
   const weakMesh = metas.filter((m) => num(m.linksIn) !== null && (m.linksIn as number) <= 2);
+  // En régime « assemblage », les pages n'ont pas vocation à être reliées entre
+  // elles : la recommandation porte sur le maillage depuis le site, pas entre URLs.
   if (weakMesh.length >= 2) {
     candidates.push({
-      title: `Relier entre elles les ${weakMesh.length} pages à maillage entrant faible`,
+      title:
+        cohesion.regime === 'assemblage'
+          ? `Renforcer le maillage entrant des ${weakMesh.length} pages sous-liées depuis le reste du site`
+          : `Relier entre elles les ${weakMesh.length} pages à maillage entrant faible`,
       why: 'Elles reçoivent 2 liens internes ou moins : elles dépendent du sitemap pour être découvertes et ne transmettent aucune autorité au réseau.',
       effort: 'faible',
       level: 'mesure',
@@ -600,6 +689,7 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
     `<ul style="padding-left:20px;margin:0;">
        <li style="margin:0 0 5px 0;">Elle porte sur les ${metas.length} URLs auditées, pas sur l'intégralité du site : une page non auditée n'est jamais déduite.</li>
        <li style="margin:0 0 5px 0;">Les gabarits sont reconstruits à partir des chemins d'URL des pages auditées ; un gabarit représenté par une seule URL n'est pas généralisable.</li>
+       <li style="margin:0 0 5px 0;">Le régime de lecture retenu est « ${cohesion.regime === 'reseau' ? 'réseau décliné' : cohesion.regime === 'arborescence' ? 'branche commune' : 'assemblage de pages indépendantes'} ». Dans un assemblage, les lectures de concurrence interne et de pilier manquant sont déclarées hors objet plutôt que forcées.</li>
        <li style="margin:0 0 5px 0;">Aucune note globale de site n'est produite : les moyennes par gabarit servent à comparer, pas à noter.</li>
        <li style="margin:0;">Aucun gain de trafic, de position ou de revenu n'est promis ici : l'ordre des recommandations est un rendement relatif, pas une prévision.</li>
      </ul>`,
