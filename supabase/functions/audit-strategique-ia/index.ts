@@ -151,6 +151,10 @@ Deno.serve(handleRequest(async (req) => {
     let marketData: MarketData | null;
     let rankingOverview: RankingOverview | null;
     let authorityData: AuthorityData | null = null;
+    // Lot 3 : tendance mesurée sur l'historique propriétaire des snapshots.
+    let authorityTrend: AuthorityTrend | null = null;
+    // Lot 4 : link gap contre les concurrents déclarés.
+    let linkGapData: LinkGapResult | null = null;
     let founderInfo: FounderInfo;
     let localCompetitorData: { name: string; url: string; rank: number; score?: number } | null = null;
     let localCompetitorsAll: { name: string; url: string; rank: number; score?: number }[] = [];
