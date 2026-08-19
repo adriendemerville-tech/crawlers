@@ -78,6 +78,12 @@ export interface PageMeta {
   isThin?: boolean;
   isOrphan?: boolean;
   cannibalWith?: string[];
+  /** Cibles internes réelles de la page (chemins) — maillage mesuré. */
+  internalTargets?: string[];
+  /** Quasi-doublons mesurés impliquant cette URL. */
+  nearDup?: Array<{ url: string; similarity: number; verdict: string }>;
+  /** Score de minceur mesuré, si la page est remontée pauvre. */
+  thinScore?: number | null;
 }
 
 /** Découpe un body Marina en blocs balisés + reste (header, toolbar, footer…). */
