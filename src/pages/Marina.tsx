@@ -34,6 +34,7 @@ import { toMarinaViewUrl } from '@/lib/marina/reportUrl';
 import { MarinaMyAuditsTab } from '@/components/Marina/MarinaMyAuditsTab';
 import { MarinaRunningAuditsSection } from '@/components/Marina/MarinaRunningAuditsSection';
 import { MarinaSeoContent } from '@/components/Marina/MarinaSeoContent';
+import { ClaudeVerdictBlock } from '@/components/Marina/ClaudeVerdictBlock';
 
 
 
