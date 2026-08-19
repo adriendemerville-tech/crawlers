@@ -86,7 +86,7 @@ export default function SharedReportRedirect() {
         try {
           const proxy = await fetch(`/api/public/marina-report?id=${encodeURIComponent(shareId)}`);
           const text = proxy.ok ? await proxy.text() : '';
-          if (text.includes('marina-report-url') || /<html/i.test(text) && !text.includes('Rapport introuvable')) {
+          if (/<html/i.test(text) && !text.includes('Rapport introuvable')) {
             setHtmlContent(text);
             return;
           }
