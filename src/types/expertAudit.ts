@@ -413,6 +413,31 @@ export interface OrganicVisibility {
   source: 'dataforseo_labs' | 'unavailable';
 }
 
+export interface DistributionBucket {
+  key: string;
+  count: number;
+  share: number;
+}
+
+export interface LinkedPage {
+  url: string;
+  referring_domains: number;
+  backlinks: number;
+}
+
+export interface BacklinkDistribution {
+  tld: DistributionBucket[];
+  countries: DistributionBucket[];
+  platform_types: DistributionBucket[];
+  dominant_tld_share: number;
+  dominant_country_share: number;
+  top_page_share: number;
+  linked_pages_sampled: number;
+  signals: string[];
+  recommendation: string;
+  source: 'dataforseo' | 'partial' | 'unavailable';
+}
+
 export interface DomainAuthority {
   domain: string;
   authority_score: number;
