@@ -245,7 +245,7 @@ export function computeBacklinkToxicity(input: {
 
   // Référents hors-sujet (paris, adulte, miroirs, fermes de contenu) : un seul
   // suffit à interdire le verdict « sain ».
-  const suspicious = detectSuspiciousReferringDomains(input.topReferringDomains);
+  const suspicious = detectSuspiciousReferringDomains(refSample);
   if (suspicious.length > 0) {
     score += Math.min(30, 12 + suspicious.length * 6);
     signals.push(
