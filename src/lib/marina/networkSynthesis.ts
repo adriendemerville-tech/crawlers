@@ -471,7 +471,11 @@ export function buildNetworkSynthesisHTML(domain: string, metas: PageMeta[]): st
 
   let block4Body: string;
   if (!collisions.length && !clusterCollisions.length && !declaredCannibal.length) {
-    block4Body = noFact('Aucune concurrence interne détectée entre les URLs auditées : chaque page porte une intention distincte.');
+    block4Body = noFact(
+      cohesion.regime === 'assemblage'
+        ? "Hors objet dans ce lot : les URLs auditées n'appartiennent ni au même gabarit décliné ni au même cluster, aucune concurrence interne ne peut être établie entre elles à partir du périmètre audité."
+        : 'Aucune concurrence interne détectée entre les URLs auditées : chaque page porte une intention distincte.',
+    );
   } else {
     const parts: string[] = [];
     if (collisions.length) {
