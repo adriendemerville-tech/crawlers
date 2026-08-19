@@ -301,7 +301,10 @@ function withUsageLog(
  * API recommandée: cascade primary → fallback1 → fallback2 avec allowlist.
  */
 export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
-  const { primary, fallback1, fallback2, cache = 'none', body, timeoutMs = DEFAULT_TIMEOUT_MS, headers = {}, callerFunction = 'unknown' } = opts;
+  const { primary, fallback1, fallback2, cache = 'none', body, timeoutMs = DEFAULT_TIMEOUT_MS, headers = {} } = opts;
+  // Nom d'appelant : explicite si fourni, sinon déduit de la pile d'appel
+  // (les appelants qui l'oubliaient produisaient des coûts `edge_function = 'unknown'`).
+  const callerFunction = opts.callerFunction || detectEdgeFunctionName() || 'unknown';
 
   // Validation allowlist primary
   if (!PRIMARY_ALLOWED_2026.has(primary) && !PRIMARY_ALLOWED_CLAUDE_EXCEPTION.has(primary)) {
