@@ -878,13 +878,34 @@ export default function Marina() {
                   />
                   <Button
                     onClick={handleGenerate}
-                    disabled={loading || (!user)}
-                    className="h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                    disabled={loading || (!user && freeRemaining === 0)}
+                    className="h-12 px-6 bg-transparent border border-foreground text-foreground hover:bg-foreground/10 font-semibold"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                     <span className="ml-2">{loading ? t.hero.btnAnalyzing : t.hero.btnAnalyze}</span>
                   </Button>
                 </div>
+
+                {/* Essai gratuit sans compte : email obligatoire, quota par IP */}
+                {!user && freeRemaining !== 0 && (
+                  <div className="mt-3 text-left">
+                    <p className="text-sm font-medium text-foreground mb-2">{freeT.title}</p>
+                    <Input
+                      type="email"
+                      value={freeEmail}
+                      onChange={e => setFreeEmail(e.target.value)}
+                      placeholder={freeT.emailPlaceholder}
+                      className="h-11 text-base bg-card border-border"
+                      disabled={loading}
+                      onKeyDown={e => e.key === 'Enter' && handleGenerate()}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {freeT.hint}
+                      {typeof freeRemaining === 'number' && ` — ${freeT.remaining(freeRemaining)}`}
+                    </p>
+                  </div>
+                )}
+
 
                 {/* Progression de l'audit — juste sous le champ URL */}
                 {loading && (
