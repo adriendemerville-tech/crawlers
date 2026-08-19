@@ -1004,7 +1004,27 @@ export function buildNetworkSynthesisHTML(
            ? `L'existence des pages de regroupement a été vérifiée sur les ${site!.crawlPages.toLocaleString('fr-FR')} pages du dernier crawl du domaine.`
            : "Aucun crawl du domaine n'était exploitable : l'absence d'une page pilier hors périmètre audité n'est pas affirmée, elle est signalée comme à vérifier."
        }</li>
-       <li style="margin:0 0 5px 0;">Les gabarits sont reconstruits à partir des chemins d'URL des pages auditées ; un gabarit représenté par une seule URL n'est pas généralisable.</li>
+       <li style="margin:0 0 5px 0;">Les gabarits sont reconstruits à partir des chemins d'URL des pages auditées ; un gabarit représenté par une seule URL n'est pas généralisable. ${
+         (() => {
+           const weak = stats.filter((s) => s.count < 3).length;
+           return weak
+             ? `${weak} gabarit${weak > 1 ? 's' : ''} sur ${stats.length} compte${weak > 1 ? 'nt' : ''} moins de 3 pages : leurs moyennes sont signalées comme indicatives dans le tableau du bloc 2.`
+             : `Tous les gabarits comptent au moins 3 pages : les moyennes du bloc 2 sont comparables entre elles.`;
+         })()
+       }</li>
+       <li style="margin:0 0 5px 0;">${
+         (() => {
+           const partial = stats.filter((s) =>
+             [s.coverage.tech, s.coverage.geo, s.coverage.global, s.coverage.words, s.coverage.lcp].some(
+               (c) => c.known > 0 && c.known < c.total,
+             ),
+           ).length;
+           return partial
+             ? `Les métriques ne sont pas relevées sur toutes les pages : ${partial} gabarit${partial > 1 ? 's' : ''} portent au moins une moyenne partielle, indiquée par une fraction dans le tableau. Une moyenne partielle ne vaut pas un relevé complet.`
+             : `Chaque métrique moyennée par gabarit est relevée sur l'ensemble de ses pages : aucune moyenne n'est partielle.`;
+         })()
+       }</li>
+
        <li style="margin:0 0 5px 0;">${
          meshMeasured
            ? `Le maillage entre pages est mesuré sur les liens internes réellement relevés (${withTargets.length} URLs porteuses de cibles, ${intraEdges.length} liens internes au lot).`
