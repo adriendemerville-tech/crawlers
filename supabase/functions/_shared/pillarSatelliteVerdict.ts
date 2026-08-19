@@ -61,6 +61,58 @@ export function pageAuthority(p: PsPage): number {
   );
 }
 
+/**
+ * Critère de départage réellement mesuré entre deux pages d'autorité proche.
+ * On prend l'écart relatif le plus marqué : sans cela, tous les verdicts
+ * « pilier contesté » d'un rapport portaient la même phrase générique.
+ */
+function tieBreaker(
+  a: PsPage & { authority: number; path?: string | null },
+  b: PsPage & { authority: number; path?: string | null },
+): string {
+  const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  const cands: Array<{ gap: number; text: string }> = [];
+
+  const inA = num(a.inbound), inB = num(b.inbound);
+  if (inA !== inB) {
+    const [win, lose] = inA > inB ? [a, b] : [b, a];
+    cands.push({
+      gap: Math.abs(inA - inB) / Math.max(1, Math.max(inA, inB)),
+      text: `Le maillage interne tranche déjà : ${win.path} reçoit ${Math.max(inA, inB)} lien(s) entrant(s) contre ${Math.min(inA, inB)} pour ${lose.path} — conserver ${win.path}.`,
+    });
+  }
+  const wA = num(a.word_count), wB = num(b.word_count);
+  if (wA !== wB) {
+    const [win, lose] = wA > wB ? [a, b] : [b, a];
+    cands.push({
+      gap: Math.abs(wA - wB) / Math.max(1, Math.max(wA, wB)),
+      text: `Le contenu tranche : ${win.path} compte ${Math.max(wA, wB)} mots contre ${Math.min(wA, wB)} pour ${lose.path} — garder ${win.path} comme base et y absorber ${lose.path}.`,
+    });
+  }
+  const dA = num(a.depth), dB = num(b.depth);
+  if (dA !== dB) {
+    const [win, lose] = dA < dB ? [a, b] : [b, a];
+    cands.push({
+      gap: Math.abs(dA - dB) / Math.max(1, Math.max(dA, dB)),
+      text: `La profondeur de clic tranche : ${win.path} est à ${Math.min(dA, dB)} clic(s) de l'accueil contre ${Math.max(dA, dB)} pour ${lose.path} — privilégier ${win.path}.`,
+    });
+  }
+  const sA = num(a.seo_score), sB = num(b.seo_score);
+  if (Math.abs(sA - sB) >= 3) {
+    const [win, lose] = sA > sB ? [a, b] : [b, a];
+    cands.push({
+      gap: Math.abs(sA - sB) / Math.max(1, Math.max(sA, sB)),
+      text: `La qualité on-page tranche : score SEO ${Math.max(sA, sB)}/100 pour ${win.path} contre ${Math.min(sA, sB)} pour ${lose.path} — conserver ${win.path}.`,
+    });
+  }
+
+  cands.sort((x, y) => y.gap - x.gap);
+  if (cands.length > 0 && cands[0].gap >= 0.1) return cands[0].text;
+  // Aucun signal ne départage : le dire explicitement plutôt que de servir une
+  // consigne générique présentée comme un diagnostic.
+  return `Aucun signal mesuré ne départage ces deux pages (liens entrants, volume de contenu, profondeur et score on-page équivalents) : l'arbitrage doit être métier — conversions constatées ou historique de positions.`;
+}
+
 export function classifyPillarSatellite(
   pages: PsPage[],
   opts?: { theme?: string; sharedKeywords?: string[] },
@@ -104,11 +156,15 @@ export function classifyPillarSatellite(
   }
 
   if (dominance !== null && dominance < 1.25) {
+    // Sans critère de départage mesuré, les cinq verdicts d'un même rapport
+    // affichaient la même phrase. On cherche donc l'écart le plus marqué entre
+    // les deux pages et on en fait la consigne d'arbitrage.
+    const criterion = tieBreaker(pilier, best);
     return {
       theme, shared_keywords: shared,
       verdict: 'pilier_conteste',
       label: 'Pilier contesté — arbitrage nécessaire',
-      action: `${pilier.path} (${pilier.authority}) et ${best.path} (${best.authority}) ont une autorité interne quasi identique : les moteurs alternent entre les deux et aucune ne capitalise. Choisir la page à conserver sur un critère métier (conversion, historique de positions), y fusionner le contenu utile de l’autre, puis 301.`,
+      action: `${pilier.path} (${pilier.authority}) et ${best.path} (${best.authority}) ont une autorité interne quasi identique : les moteurs alternent entre les deux et aucune ne capitalise. ${criterion} Fusionner ensuite le contenu utile de l’autre page, puis la rediriger en 301.`,
       dominance, pilier, satellites,
     };
   }
