@@ -148,17 +148,8 @@ export function MarinaConsoleTab() {
     setOpeningId(null);
   };
 
-  const deleteReport = async (jobId: string) => {
-    setDeletingId(jobId);
-    try {
-      await deleteMyMarinaAudit({ data: { jobId } });
-      setReports(prev => prev.filter(r => r.id !== jobId));
-      toast.success(t3(language, 'Rapport supprimé', 'Report deleted', 'Informe eliminado'));
-    } catch (e: any) {
-      toast.error(e?.message || 'Erreur de suppression');
-    }
-    setDeletingId(null);
-  };
+  /** Supprime tous les jobs d'un lot multipages en une action. */
+
 
   /** Supprime tous les jobs d'un lot multipages en une action. */
   const deleteBatch = async (jobIds: string[]) => {
