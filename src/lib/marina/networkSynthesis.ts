@@ -13,7 +13,8 @@
  *   2. Ce que ces pages décrivent ensemble    — Déduit (matrice gabarit × variante)
  *   3. Conformité technique vs valeur sémantique — Mesuré + Déduit
  *   4. Concurrence interne entre les pages    — Déduit
- *   5. Hiérarchie : pilier présent ou manquant — Déduit
+ *   5. Hiérarchie et maillage entre les pages auditées — Mesuré si les arêtes
+ *      internes sont remontées, Déduit sinon
  *   6. Maillon le plus faible du réseau       — Mesuré
  *   7. Recommandations séquencées par rendement — Déduit
  *   8. Ce que cette synthèse ne dit pas       — contrat de lecture
@@ -611,7 +612,7 @@ export function buildNetworkSynthesisHTML(
     block4Body,
   );
 
-  // ── 5. Hiérarchie : pilier présent ou manquant ────────────────────────────
+  // ── 5. Hiérarchie et maillage entre les pages auditées ────────────────────
   // Un pilier absent du LOT audité peut exister sur le site. On ne conclut à
   // l'absence que si le crawl du domaine est disponible et ne le contient pas.
   const knownPaths = new Set((site?.knownPaths || []).map(normPath));
