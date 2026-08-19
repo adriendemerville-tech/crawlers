@@ -47,6 +47,24 @@ export function MarinaMyAuditsTab() {
     setOpeningId(null);
   };
 
+  /** Lot multipages : on reconstruit le rapport consolidé (mutualisé) à la volée. */
+  const openBatchReport = async (group: Audit[], key: string) => {
+    setOpeningId(key);
+    try {
+      const { buildMergedBatchReport } = await import('@/lib/marina/batchReport');
+      const merged = await buildMergedBatchReport(group);
+      if (!merged) {
+        toast.error('Aucun rapport récupérable pour ce lot');
+        return;
+      }
+      if (merged.missing > 0) toast.warning(`${merged.missing} page(s) illisible(s), exclue(s) du rapport`);
+      setMerged({ html: merged.html, domain: group[0]?.domain || group[0]?.url || 'multipages' });
+    } catch (e: any) {
+      toast.error(e?.message || 'Fusion impossible');
+    }
+    setOpeningId(null);
+  };
+
   return (
     <section className="py-16 border-b border-border">
       <div className="mx-auto max-w-5xl px-4">
