@@ -896,6 +896,16 @@ export function buildNetworkSynthesisHTML(
            : "Aucun crawl du domaine n'était exploitable : l'absence d'une page pilier hors périmètre audité n'est pas affirmée, elle est signalée comme à vérifier."
        }</li>
        <li style="margin:0 0 5px 0;">Les gabarits sont reconstruits à partir des chemins d'URL des pages auditées ; un gabarit représenté par une seule URL n'est pas généralisable.</li>
+       <li style="margin:0 0 5px 0;">${
+         meshMeasured
+           ? `Le maillage entre pages est mesuré sur les liens internes réellement relevés (${withTargets.length} URLs porteuses de cibles, ${intraEdges.length} liens internes au lot).`
+           : "Les liens internes réellement émis par chaque page ne sont pas remontés dans ce rapport : aucune conclusion n'est tirée sur la liaison entre les URLs du lot."
+       }</li>
+       <li style="margin:0 0 5px 0;">${
+         measuredDup.length
+           ? `Les quasi-doublons sont mesurés par comparaison de contenu (empreinte SimHash), pas déduits des URLs : ${measuredDup.length} paire(s) relevée(s).`
+           : "Aucun quasi-doublon mesuré n'a été relevé ; les collisions signalées ici sont déduites des URLs et des clusters, à confirmer sur le contenu."
+       }</li>
        <li style="margin:0 0 5px 0;">Le régime de lecture retenu est « ${cohesion.regime === 'reseau' ? 'réseau décliné' : cohesion.regime === 'arborescence' ? 'branche commune' : 'assemblage de pages indépendantes'} ». Dans un assemblage, les lectures de concurrence interne et de pilier manquant sont déclarées hors objet plutôt que forcées.</li>
        <li style="margin:0 0 5px 0;">Aucune note globale de site n'est produite : les moyennes par gabarit servent à comparer, pas à noter.</li>
        <li style="margin:0;">Aucun gain de trafic, de position ou de revenu n'est promis ici : l'ordre des recommandations est un rendement relatif, pas une prévision.</li>
