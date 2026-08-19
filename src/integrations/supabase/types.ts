@@ -8335,6 +8335,42 @@ export type Database = {
         }
         Relationships: []
       }
+      marina_paid_passes: {
+        Row: {
+          amount_cents: number | null
+          consumed_at: string | null
+          created_at: string
+          email: string | null
+          id: string
+          job_id: string | null
+          pass_token: string
+          status: string
+          txn_id: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          consumed_at?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          job_id?: string | null
+          pass_token: string
+          status?: string
+          txn_id?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          consumed_at?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          job_id?: string | null
+          pass_token?: string
+          status?: string
+          txn_id?: string | null
+        }
+        Relationships: []
+      }
       marina_prospects: {
         Row: {
           company: string | null
