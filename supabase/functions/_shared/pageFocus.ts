@@ -19,6 +19,8 @@
  * marina (scoping du cache de visibilité IA par page).
  */
 
+export type PageKind = 'home' | 'reviews' | 'standard';
+
 export interface PageFocus {
   /** Chemin normalisé sans slash final (« /salle-de-bain-marseille »), '' pour la home. */
   path: string;
@@ -31,9 +33,17 @@ export interface PageFocus {
   service: string | null;
   /** Mots-clés d'ancrage spécifiques à la page (service + localité + title/H1). */
   focusTerms: string[];
+  /**
+   * Nature de la page. `reviews` = page avis / témoignages : son but reste de
+   * vendre la prestation, la réputation n'est qu'un angle secondaire.
+   */
+  kind: PageKind;
+  /** Angle secondaire à injecter dans UNE question sur neuf (réputation). */
+  secondaryAngle: 'reputation' | null;
   title?: string | null;
   h1?: string | null;
 }
+
 
 const SLUG_STOPWORDS = new Set([
   'de', 'du', 'des', 'la', 'le', 'les', 'un', 'une', 'et', 'ou', 'en', 'a', 'au', 'aux',
