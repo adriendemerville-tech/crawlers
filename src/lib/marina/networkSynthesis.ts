@@ -200,7 +200,7 @@ function variantIndex(families: TemplateFamily[]): Map<string, string> {
  *   - existence d'une branche commune couvrant la majorité des URLs ;
  *   - part des URLs partageant un cluster sémantique avec une autre URL auditée.
  */
-export type CohesionRegime = 'reseau' | 'arborescence' | 'assemblage';
+export type CohesionRegime = 'reseau' | 'mixte' | 'arborescence' | 'assemblage';
 
 export interface Cohesion {
   regime: CohesionRegime;
@@ -212,12 +212,18 @@ export interface Cohesion {
   clusterShare: number;
   /** Phrase de cadrage, à afficher telle quelle en tête du bloc 2. */
   statement: string;
+  /**
+   * Trou 4 — sous-lots en régime mixte : le noyau décliné (lisible comme un
+   * réseau) et le reste (lisible page par page). Vide hors régime mixte.
+   */
+  subLots: { networked: PageMeta[]; standalone: PageMeta[] } | null;
 }
 
 export function detectCohesion(metas: PageMeta[], families: TemplateFamily[]): Cohesion {
   const total = metas.length || 1;
   const declined = families.filter((f) => f.pattern.includes('*') && f.pages.length >= 2);
-  const declinedShare = declined.reduce((a, f) => a + f.pages.length, 0) / total;
+  const declinedPages = declined.flatMap((f) => f.pages);
+  const declinedShare = declinedPages.length / total;
 
   // Branche commune : premier segment partagé par au moins 60 % des URLs.
   const firstSegCount = new Map<string, number>();
@@ -233,19 +239,56 @@ export function detectCohesion(metas: PageMeta[], families: TemplateFamily[]): C
   const shared = [...clusterCount.values()].filter((c) => c >= 2).reduce((a, c) => a + c, 0);
   const clusterShare = shared / total;
 
+  // Trou 4 — zone grise assumée. Entre 35 % et 60 % d'URLs déclinées, le lot
+  // n'est ni un réseau ni un assemblage : un noyau décliné cohabite avec des
+  // pages indépendantes. On ne force plus la lecture vers l'un des deux.
+  const declinedSet = new Set(declinedPages.map((p) => p.path));
+  const standalone = metas.filter((m) => !declinedSet.has(m.path));
   let regime: CohesionRegime;
+  let subLots: Cohesion['subLots'] = null;
   if (declinedShare >= 0.6 && declined.length >= 1) regime = 'reseau';
-  else if (commonBranch || clusterShare >= 0.6) regime = 'arborescence';
+  else if (declinedShare >= 0.35 && declinedPages.length >= 3 && standalone.length >= 2) {
+    regime = 'mixte';
+    subLots = { networked: declinedPages, standalone };
+  } else if (commonBranch || clusterShare >= 0.6) regime = 'arborescence';
   else regime = 'assemblage';
 
+  const pct = (v: number) => `${Math.round(v * 100)} %`;
   const statement =
     regime === 'reseau'
       ? 'Les URLs auditées forment un réseau : elles sont produites par des gabarits déclinés, donc lisibles ensemble.'
-      : regime === 'arborescence'
-        ? `Les URLs auditées relèvent d'une même branche${commonBranch ? ` (<code style="font-size:12px;">${esc(commonBranch)}</code>)` : ' thématique'} : elles se lisent comme une arborescence, pas comme un motif répété.`
-        : "Les URLs auditées ne partagent ni gabarit décliné, ni branche commune, ni cluster commun : ce lot est un assemblage de pages indépendantes. Il se lit comme une comparaison de pages, pas comme un réseau.";
+      : regime === 'mixte'
+        ? `Le lot est mixte : ${declinedPages.length} URLs sur ${metas.length} (${pct(declinedShare)}) appartiennent à un gabarit décliné et se lisent comme un réseau, les ${standalone.length} autres sont des pages indépendantes. Les deux lectures sont conduites séparément, aucune n'est étendue à l'autre moitié.`
+        : regime === 'arborescence'
+          ? `Les URLs auditées relèvent d'une même branche${commonBranch ? ` (<code style="font-size:12px;">${esc(commonBranch)}</code>)` : ' thématique'} : elles se lisent comme une arborescence, pas comme un motif répété.`
+          : "Les URLs auditées ne partagent ni gabarit décliné, ni branche commune, ni cluster commun : ce lot est un assemblage de pages indépendantes. Il se lit comme une comparaison de pages, pas comme un réseau.";
 
-  return { regime, declinedShare, commonBranch, clusterShare, statement };
+  return { regime, declinedShare, commonBranch, clusterShare, statement, subLots };
+}
+
+/**
+ * Trou 5 — solidité d'un effectif. Une moyenne sur 2 pages n'a pas la même
+ * valeur qu'une moyenne sur 12 : la synthèse le dit au lieu d'affirmer.
+ */
+export type Solidity = 'solide' | 'indicatif' | 'fragile';
+
+export function solidity(count: number): Solidity {
+  if (count >= 5) return 'solide';
+  if (count >= 3) return 'indicatif';
+  return 'fragile';
+}
+
+function solidityNote(count: number): string {
+  const s = solidity(count);
+  if (s === 'solide') return '';
+  return s === 'indicatif'
+    ? ` (effectif ${count} pages : valeur indicative)`
+    : ` (effectif ${count} page${count > 1 ? 's' : ''} : non généralisable)`;
+}
+
+interface Coverage {
+  known: number;
+  total: number;
 }
 
 interface FamilyStats {
@@ -258,23 +301,53 @@ interface FamilyStats {
   lcpMs: number | null;
   worstLcpMs: number | null;
   thin: number;
+  /** Trou 6 — couverture réelle de chaque métrique dans le gabarit. */
+  coverage: { tech: Coverage; geo: Coverage; global: Coverage; words: Coverage; lcp: Coverage };
+  solidity: Solidity;
 }
 
 function familyStats(family: TemplateFamily): FamilyStats {
   const p = family.pages;
-  const lcps = p.map((x) => num(x.lcpMs)).filter((v): v is number => v !== null);
+  const pick = (key: 'tech' | 'geo' | 'global' | 'words' | 'lcpMs') =>
+    p.map((x) => num((x as unknown as Record<string, unknown>)[key])).filter((v): v is number => v !== null);
+  const techs = pick('tech');
+  const geos = pick('geo');
+  const globals = pick('global');
+  const words = pick('words');
+  const lcps = pick('lcpMs');
   return {
     family,
     count: p.length,
-    tech: avg(p.map((x) => num(x.tech)).filter((v): v is number => v !== null)),
-    geo: avg(p.map((x) => num(x.geo)).filter((v): v is number => v !== null)),
-    global: avg(p.map((x) => num(x.global)).filter((v): v is number => v !== null)),
-    words: avg(p.map((x) => num(x.words)).filter((v): v is number => v !== null)),
+    tech: avg(techs),
+    geo: avg(geos),
+    global: avg(globals),
+    words: avg(words),
     lcpMs: avg(lcps),
     worstLcpMs: lcps.length ? Math.max(...lcps) : null,
     thin: p.filter((x) => x.isThin || (num(x.words) !== null && (x.words as number) < 300)).length,
+    coverage: {
+      tech: { known: techs.length, total: p.length },
+      geo: { known: geos.length, total: p.length },
+      global: { known: globals.length, total: p.length },
+      words: { known: words.length, total: p.length },
+      lcp: { known: lcps.length, total: p.length },
+    },
+    solidity: solidity(p.length),
   };
 }
+
+/**
+ * Trou 6 — une moyenne partielle n'est jamais affichée comme une valeur pleine :
+ * la couverture est portée dans la cellule, et sous 50 % de relevé la valeur est
+ * annoncée comme partielle.
+ */
+function cell(value: number | null, cov: Coverage, format: (v: number) => string): string {
+  if (value === null || cov.known === 0) return `<span style="color:${MUTED};">n/d</span>`;
+  if (cov.known >= cov.total) return format(value);
+  const partial = cov.known / cov.total < 0.5;
+  return `${format(value)}<span style="color:${MUTED};font-size:11px;" title="Moyenne calculée sur ${cov.known} des ${cov.total} pages du gabarit."> ${cov.known}/${cov.total}${partial ? ' partiel' : ''}</span>`;
+}
+
 
 // ───────────────────────── Recommandations séquencées ─────────────────────────
 
@@ -404,13 +477,17 @@ export function buildNetworkSynthesisHTML(
   for (const s of multiVariant) for (const v of s.family.variants) if (v && v !== '—') variantTokens.add(v.split('/')[0].toLowerCase());
 
   const rows2 = stats.map((s) => [
-    `<code style="font-size:12px;">${esc(s.family.pattern)}</code>`,
+    `<code style="font-size:12px;">${esc(s.family.pattern)}</code>${
+      s.solidity === 'solide'
+        ? ''
+        : `<span style="display:block;color:${MUTED};font-size:11px;font-weight:400;">${s.solidity === 'indicatif' ? 'effectif faible, valeur indicative' : 'effectif trop faible, non généralisable'}</span>`
+    }`,
     String(s.count),
-    s.global !== null ? `${s.global}/100` : 'n/d',
-    s.tech !== null ? String(s.tech) : 'n/d',
-    s.geo !== null ? String(s.geo) : 'n/d',
-    s.words !== null ? s.words.toLocaleString('fr-FR') : 'n/d',
-    s.lcpMs !== null ? seconds(s.lcpMs) : 'n/d',
+    cell(s.global, s.coverage.global, (v) => `${v}/100`),
+    cell(s.tech, s.coverage.tech, (v) => String(v)),
+    cell(s.geo, s.coverage.geo, (v) => String(v)),
+    cell(s.words, s.coverage.words, (v) => v.toLocaleString('fr-FR')),
+    cell(s.lcpMs, s.coverage.lcp, (v) => seconds(v)),
   ]);
 
   const networkShape =
@@ -429,14 +506,32 @@ export function buildNetworkSynthesisHTML(
   const globals = metas.map((m) => num(m.global)).filter((v): v is number => v !== null);
   const spread = globals.length >= 2 ? Math.max(...globals) - Math.min(...globals) : null;
 
+  // Trou 4 — en régime mixte, les deux sous-lots sont nommés explicitement pour
+  // que le lecteur sache à quelle moitié s'applique chaque constat qui suit.
+  const subLotHtml = cohesion.subLots
+    ? `<p style="margin:0 0 8px 0;"><strong>Sous-lot réseau</strong> (${cohesion.subLots.networked.length} URLs) : ${cohesion.subLots.networked
+        .slice(0, 6)
+        .map((m) => `<code style="font-size:12px;">${esc(m.path)}</code>`)
+        .join(' · ')}${cohesion.subLots.networked.length > 6 ? '…' : ''}.
+       Les blocs 4 à 6 (concurrence interne, pilier, maillage) portent sur ce sous-lot.<br>
+       <strong>Sous-lot pages indépendantes</strong> (${cohesion.subLots.standalone.length} URLs) : ${cohesion.subLots.standalone
+         .slice(0, 6)
+         .map((m) => `<code style="font-size:12px;">${esc(m.path)}</code>`)
+         .join(' · ')}${cohesion.subLots.standalone.length > 6 ? '…' : ''}.
+       Ces pages sont lues une par une dans leur fiche : aucune conclusion de réseau ne leur est appliquée.</p>`
+    : '';
+
   const block2 = blockShell(
     2,
     'Ce que ces pages décrivent ensemble',
     'deduction',
     `<p style="margin:0 0 8px 0;"><strong>Régime de lecture.</strong> ${cohesion.statement}</p>
+     ${subLotHtml}
      <p style="margin:0 0 8px 0;">${cohesion.regime === 'assemblage' ? `Les ${metas.length} URLs sont donc traitées comme des cas indépendants : la valeur de ce rapport est comparative (quelle page tient, laquelle décroche, sur quel axe) et non structurelle.${spread !== null ? ` Écart de score global entre la meilleure et la moins bonne page : ${spread} points.` : ''}` : networkShape}</p>
-     ${table(['Gabarit', 'Pages', 'Global', 'SEO', 'GEO', 'Mots (moy.)', 'LCP (moy.)'], rows2)}`,
+     ${table(['Gabarit', 'Pages', 'Global', 'SEO', 'GEO', 'Mots (moy.)', 'LCP (moy.)'], rows2)}
+     <p style="margin:6px 0 0 0;color:${MUTED};font-size:12px;">Une cellule suivie d'une fraction indique le nombre de pages du gabarit sur lesquelles la métrique a réellement été relevée ; sous la moitié, la moyenne est annoncée comme partielle.</p>`,
   );
+
 
   // ── 3. Conformité technique vs valeur sémantique ──────────────────────────
   let block3Body: string;
@@ -486,15 +581,20 @@ export function buildNetworkSynthesisHTML(
 
   // ── 4. Concurrence interne ────────────────────────────────────────────────
   const auditedPaths = new Set(metas.map((m) => normPath(m.path)));
+  // Trou 4 — en régime mixte, la lecture de réseau (concurrence, pilier,
+  // maillage) ne porte que sur le noyau décliné : l'étendre aux pages
+  // indépendantes du lot produirait des collisions et des piliers imaginaires.
+  const scopeMetas = cohesion.subLots ? cohesion.subLots.networked : metas;
   const byVariant = new Map<string, PageMeta[]>();
   const variantsByPath = variantIndex(families);
-  for (const m of metas) {
+  for (const m of scopeMetas) {
     const key = variantsByPath.get(m.path) || null;
     if (!key) continue;
     const arr = byVariant.get(key) || [];
     arr.push(m);
     byVariant.set(key, arr);
   }
+
   const collisions = [...byVariant.entries()].filter(([, arr]) => arr.length >= 2);
   const byCluster = new Map<string, PageMeta[]>();
   for (const m of metas) {
@@ -618,7 +718,8 @@ export function buildNetworkSynthesisHTML(
   const knownPaths = new Set((site?.knownPaths || []).map(normPath));
   const crawlUsable = Boolean(site && site.crawlPages > 0 && knownPaths.size > 0);
   const hubCandidates = new Map<string, number>();
-  for (const m of metas) {
+  for (const m of scopeMetas) {
+
     const segs = segments(m.path);
     for (let d = 1; d <= Math.max(segs.length - 1, 0); d += 1) {
       const prefix = '/' + segs.slice(0, d).join('/');
@@ -645,16 +746,18 @@ export function buildNetworkSynthesisHTML(
    * autre URL du lot. Un lot de pages mutuellement isolées et un cocon complet
    * ne peuvent plus produire la même conclusion.
    */
-  const withTargets = metas.filter((m) => (m.internalTargets?.length || 0) > 0);
+  const withTargets = scopeMetas.filter((m) => (m.internalTargets?.length || 0) > 0);
   const meshMeasured = withTargets.length >= 2;
   const intraEdges: Array<{ from: string; to: string }> = [];
   const linkedFrom = new Set<string>();
   const linkedTo = new Set<string>();
+  const scopePaths = new Set(scopeMetas.map((m) => normPath(m.path)));
   if (meshMeasured) {
     for (const m of withTargets) {
       for (const target of m.internalTargets || []) {
         const t = normPath(target);
-        if (t === normPath(m.path) || !auditedPaths.has(t)) continue;
+        if (t === normPath(m.path) || !scopePaths.has(t)) continue;
+
         intraEdges.push({ from: m.path, to: t });
         linkedFrom.add(normPath(m.path));
         linkedTo.add(t);
@@ -781,20 +884,27 @@ export function buildNetworkSynthesisHTML(
   );
 
   // ── 6. Maillon le plus faible ─────────────────────────────────────────────
-  const rankable = stats.filter((s) => s.geo !== null || s.worstLcpMs !== null);
+  // Trou 5 — un gabarit d'une seule page ne peut pas être désigné « maillon
+  // faible du réseau » : on privilégie les effectifs comparables, et on ne
+  // retombe sur un effectif d'une page qu'à défaut, en le disant.
+  const rankableAll = stats.filter((s) => s.geo !== null || s.worstLcpMs !== null);
+  const rankable = rankableAll.filter((s) => s.count >= 2);
+  const rankableFallback = rankable.length ? rankable : rankableAll;
   let block6Body: string;
-  if (!rankable.length) {
+  if (!rankableAll.length) {
     block6Body = noFact("Aucun gabarit n'a assez de métriques consolidées pour être désigné comme maillon faible.");
   } else {
-    const weakest = [...rankable].sort((a, b) => (a.geo ?? 101) - (b.geo ?? 101))[0];
+    const weakest = [...rankableFallback].sort((a, b) => (a.geo ?? 101) - (b.geo ?? 101))[0];
     const slowest = [...stats].filter((s) => s.worstLcpMs !== null).sort((a, b) => (b.worstLcpMs as number) - (a.worstLcpMs as number))[0];
     const slowPages = metas.filter((m) => num(m.lcpMs) !== null && (m.lcpMs as number) > 4000);
+    const geoCov = weakest.coverage.geo;
     block6Body = `<p style="margin:0 0 6px 0;">
         Le gabarit <code style="font-size:12px;">${esc(weakest.family.pattern)}</code> est le plus faible du réseau :
-        ${weakest.geo !== null ? `GEO moyen ${weakest.geo}/100` : 'GEO non consolidé'}${
+        ${weakest.geo !== null ? `GEO moyen ${weakest.geo}/100${geoCov.known < geoCov.total ? ` relevé sur ${geoCov.known} des ${geoCov.total} pages` : ''}` : 'GEO non consolidé'}${
       weakest.words !== null ? `, ${weakest.words.toLocaleString('fr-FR')} mots en moyenne` : ''
-    }${weakest.lcpMs !== null ? `, LCP moyen ${seconds(weakest.lcpMs)}` : ''}, sur ${weakest.count} page${weakest.count > 1 ? 's' : ''}.
-        ${weakest.family.pattern.includes('*') ? 'Comme ce gabarit est décliné, chaque nouvelle variante reproduit ce défaut.' : ''}
+    }${weakest.lcpMs !== null ? `, LCP moyen ${seconds(weakest.lcpMs)}` : ''}, sur ${weakest.count} page${weakest.count > 1 ? 's' : ''}${solidityNote(weakest.count)}.
+        ${weakest.family.pattern.includes('*') && weakest.count >= 3 ? 'Comme ce gabarit est décliné, chaque nouvelle variante reproduit ce défaut.' : ''}
+        ${!rankable.length ? "Aucun gabarit ne compte deux pages ou plus : ce classement compare des cas isolés, il ne désigne pas un défaut de gabarit." : ''}
       </p>
       ${
         slowest && (slowest.worstLcpMs as number) > 4000
@@ -802,6 +912,7 @@ export function buildNetworkSynthesisHTML(
              pire cas ${seconds(slowest.worstLcpMs as number)} sur <code style="font-size:12px;">${esc(slowest.family.pattern)}</code>.</p>`
           : `<p style="margin:0;color:${MUTED};">Aucun LCP au-dessus de 4 s sur les URLs mesurées.</p>`
       }`;
+
     if (slowest && (slowest.worstLcpMs as number) > 4000) {
       candidates.push({
         title: `Traiter le LCP du gabarit ${slowest.family.pattern}`,
@@ -813,13 +924,19 @@ export function buildNetworkSynthesisHTML(
     }
     if (weakest.geo !== null && weakest.geo < 60) {
       candidates.push({
-        title: `Renforcer la citabilité du gabarit ${weakest.family.pattern}`,
-        why: `GEO moyen ${weakest.geo}/100 sur ${weakest.count} pages : réponse directe en tête, données factuelles datées, balisage structuré.`,
+        title:
+          weakest.count >= 2
+            ? `Renforcer la citabilité du gabarit ${weakest.family.pattern}`
+            : `Renforcer la citabilité de la page ${weakest.family.pages[0]?.path || weakest.family.pattern}`,
+        why: `GEO moyen ${weakest.geo}/100 sur ${weakest.count} page${weakest.count > 1 ? 's' : ''}${solidityNote(weakest.count)} : réponse directe en tête, données factuelles datées, balisage structuré.`,
         effort: 'moyen',
         level: 'deduction',
-        yield_: 75 + (60 - weakest.geo),
+        // Trou 5 — un constat porté par une seule page ne remonte pas au même
+        // rang qu'un défaut de gabarit vérifié sur plusieurs pages.
+        yield_: 75 + (60 - weakest.geo) - (weakest.count >= 5 ? 0 : weakest.count >= 3 ? 8 : 20),
       });
     }
+
   }
   const block6 = blockShell(6, 'Maillon le plus faible du réseau', 'mesure', block6Body);
 
@@ -895,7 +1012,27 @@ export function buildNetworkSynthesisHTML(
            ? `L'existence des pages de regroupement a été vérifiée sur les ${site!.crawlPages.toLocaleString('fr-FR')} pages du dernier crawl du domaine.`
            : "Aucun crawl du domaine n'était exploitable : l'absence d'une page pilier hors périmètre audité n'est pas affirmée, elle est signalée comme à vérifier."
        }</li>
-       <li style="margin:0 0 5px 0;">Les gabarits sont reconstruits à partir des chemins d'URL des pages auditées ; un gabarit représenté par une seule URL n'est pas généralisable.</li>
+       <li style="margin:0 0 5px 0;">Les gabarits sont reconstruits à partir des chemins d'URL des pages auditées ; un gabarit représenté par une seule URL n'est pas généralisable. ${
+         (() => {
+           const weak = stats.filter((s) => s.count < 3).length;
+           return weak
+             ? `${weak} gabarit${weak > 1 ? 's' : ''} sur ${stats.length} compte${weak > 1 ? 'nt' : ''} moins de 3 pages : leurs moyennes sont signalées comme indicatives dans le tableau du bloc 2.`
+             : `Tous les gabarits comptent au moins 3 pages : les moyennes du bloc 2 sont comparables entre elles.`;
+         })()
+       }</li>
+       <li style="margin:0 0 5px 0;">${
+         (() => {
+           const partial = stats.filter((s) =>
+             [s.coverage.tech, s.coverage.geo, s.coverage.global, s.coverage.words, s.coverage.lcp].some(
+               (c) => c.known > 0 && c.known < c.total,
+             ),
+           ).length;
+           return partial
+             ? `Les métriques ne sont pas relevées sur toutes les pages : ${partial} gabarit${partial > 1 ? 's' : ''} portent au moins une moyenne partielle, indiquée par une fraction dans le tableau. Une moyenne partielle ne vaut pas un relevé complet.`
+             : `Chaque métrique moyennée par gabarit est relevée sur l'ensemble de ses pages : aucune moyenne n'est partielle.`;
+         })()
+       }</li>
+
        <li style="margin:0 0 5px 0;">${
          meshMeasured
            ? `Le maillage entre pages est mesuré sur les liens internes réellement relevés (${withTargets.length} URLs porteuses de cibles, ${intraEdges.length} liens internes au lot).`
@@ -906,7 +1043,7 @@ export function buildNetworkSynthesisHTML(
            ? `Les quasi-doublons sont mesurés par comparaison de contenu (empreinte SimHash), pas déduits des URLs : ${measuredDup.length} paire(s) relevée(s).`
            : "Aucun quasi-doublon mesuré n'a été relevé ; les collisions signalées ici sont déduites des URLs et des clusters, à confirmer sur le contenu."
        }</li>
-       <li style="margin:0 0 5px 0;">Le régime de lecture retenu est « ${cohesion.regime === 'reseau' ? 'réseau décliné' : cohesion.regime === 'arborescence' ? 'branche commune' : 'assemblage de pages indépendantes'} ». Dans un assemblage, les lectures de concurrence interne et de pilier manquant sont déclarées hors objet plutôt que forcées.</li>
+       <li style="margin:0 0 5px 0;">Le régime de lecture retenu est « ${cohesion.regime === 'reseau' ? 'réseau décliné' : cohesion.regime === 'mixte' ? 'mixte : noyau décliné et pages indépendantes' : cohesion.regime === 'arborescence' ? 'branche commune' : 'assemblage de pages indépendantes'} ». Dans un assemblage, les lectures de concurrence interne et de pilier manquant sont déclarées hors objet plutôt que forcées${cohesion.subLots ? `, et en régime mixte elles ne portent que sur les ${cohesion.subLots.networked.length} URLs du sous-lot réseau` : ''}.</li>
        <li style="margin:0 0 5px 0;">Aucune note globale de site n'est produite : les moyennes par gabarit servent à comparer, pas à noter.</li>
        <li style="margin:0;">Aucun gain de trafic, de position ou de revenu n'est promis ici : l'ordre des recommandations est un rendement relatif, pas une prévision.</li>
      </ul>`,
