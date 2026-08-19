@@ -91,7 +91,7 @@ export function ClaudeVerdictAnimation() {
 
 
   return (
-    <div ref={ref} className="mx-auto max-w-[77rem] px-4">
+    <div ref={ref} className="mx-auto max-w-[90vw] px-4">
       <div className="overflow-hidden rounded-2xl border border-[#e3e1d7] bg-[#faf9f5] shadow-sm dark:border-[#3a3a37] dark:bg-[#262624]">
         {/* Barre de fenêtre */}
         <div className="flex items-center gap-2 border-b border-[#e3e1d7] px-4 py-3 dark:border-[#3a3a37]">
@@ -127,11 +127,11 @@ export function ClaudeVerdictAnimation() {
               {phase === 'thinking' ? 'A réfléchi pendant 20 s…' : 'A réfléchi pendant 20 s'}
             </p>
             {showVerdict && (
-              <p className="mb-4 text-[22px] font-semibold tracking-[-0.01em] text-[#141413] dark:text-[#f5f4ef]">
+              <p className="mb-4 text-left text-[22px] font-semibold tracking-[-0.01em] text-[#141413] dark:text-[#f5f4ef]">
                 Non.
               </p>
             )}
-            <blockquote className="citable-passage text-[16px] leading-[1.7] text-[#141413] dark:text-[#e8e6e1]">
+            <blockquote className="citable-passage text-left text-[16px] leading-[1.7] text-[#141413] dark:text-[#e8e6e1]">
               {phase === 'answer'
                 ? ANSWER.slice(0, answerLen)
                 : phase === 'idle'
