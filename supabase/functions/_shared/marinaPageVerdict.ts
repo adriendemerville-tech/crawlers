@@ -33,6 +33,19 @@ export interface PageVerdictMeta {
   isThin?: boolean;
   isOrphan?: boolean;
   cannibalWith?: string[];
+  /**
+   * Cibles internes RÉELLES de cette page (chemins), issues des arêtes du cocon.
+   * Permet à la synthèse réseau de MESURER si les URLs auditées se lient entre
+   * elles, au lieu de le déduire d'un compteur de liens entrants.
+   */
+  internalTargets?: string[];
+  /**
+   * Quasi-doublons MESURÉS (SimHash/LSH du module d'intégrité) impliquant cette
+   * URL — indépendant de la morphologie des slugs.
+   */
+  nearDup?: Array<{ url: string; similarity: number; verdict: string }>;
+  /** Score de minceur mesuré (0-100) si cette URL est remontée en contenu pauvre. */
+  thinScore?: number | null;
 }
 
 function pathOf(url: string): string {
@@ -80,6 +93,8 @@ interface CocoonPageFacts {
   cannibalWith: string[];
   suggestedLinks: string[];
   geoScore: number | null;
+  /** Chemins des cibles internes réellement liées depuis cette page. */
+  outTargets: string[];
 }
 
 /**
@@ -124,6 +139,7 @@ export function extractCocoonPageFacts(cocoonData: any, url: string): CocoonPage
     isThin: thin,
     cannibalWith: cannibalWith.slice(0, 4),
     suggestedLinks,
+    outTargets: [...new Set(linksOut.map((e) => pathOf(String(e.target))))].slice(0, 60),
     geoScore: node?.geo_score != null ? Math.round(Number(node.geo_score)) : null,
   };
 }
@@ -222,6 +238,8 @@ export function buildPageVerdictHTML(
     /** Faits mesurés sur cette URL, propagés à la synthèse réseau multipages. */
     words?: number | null;
     lcpMs?: number | null;
+    /** Résumé d'intégrité du contenu (quasi-doublons et pages pauvres mesurés). */
+    integrity?: any;
   },
 ): { html: string; meta: PageVerdictMeta } {
   const isEn = lang === 'en';
@@ -263,6 +281,20 @@ export function buildPageVerdictHTML(
     .map((a) => String(a.title || '').trim())
     .filter(Boolean);
 
+  // Quasi-doublons MESURÉS concernant cette URL (0 token LLM).
+  const nearDup: Array<{ url: string; similarity: number; verdict: string }> = [];
+  for (const c of ctx.integrity?.topClusters || []) {
+    const urls: string[] = (c?.pages || []).map((u: any) => String(u?.url || u));
+    if (!urls.some((u) => pageKey(u) === pageKey(url))) continue;
+    for (const u of urls) {
+      if (pageKey(u) === pageKey(url)) continue;
+      nearDup.push({ url: u, similarity: Number(c?.similarity || 0), verdict: String(c?.verdict || 'watch') });
+    }
+  }
+  const thinHit = (ctx.integrity?.topThinPages || []).find(
+    (p: any) => p?.url && pageKey(String(p.url)) === pageKey(url),
+  );
+
   const meta: PageVerdictMeta = {
     url,
     path: pathOf(url),
@@ -281,6 +313,9 @@ export function buildPageVerdictHTML(
     isThin: f?.isThin ?? false,
     isOrphan: f?.isOrphan ?? false,
     cannibalWith: f?.cannibalWith ?? [],
+    internalTargets: f?.outTargets ?? [],
+    nearDup: nearDup.slice(0, 6),
+    thinScore: thinHit ? Math.round(Number(thinHit.thinScore ?? thinHit.thin_score ?? 0)) || null : null,
   };
 
   const cell = (l: string, v: string) => `

@@ -4676,6 +4676,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           cocoonData: cocoonResult,
           words: expertData?.scores?.semantic?.wordCount ?? null,
           lcpMs: expertData?.scores?.performance?.lcp ?? null,
+          integrity: crawlSnapshot?.contentIntegrity ?? null,
         });
         const cocoonPageHTML = buildCocoonPageFocusHTML(cocoonResult, url, detectedLang);
 

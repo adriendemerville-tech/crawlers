@@ -13,7 +13,8 @@
  *   2. Ce que ces pages décrivent ensemble    — Déduit (matrice gabarit × variante)
  *   3. Conformité technique vs valeur sémantique — Mesuré + Déduit
  *   4. Concurrence interne entre les pages    — Déduit
- *   5. Hiérarchie : pilier présent ou manquant — Déduit
+ *   5. Hiérarchie et maillage entre les pages auditées — Mesuré si les arêtes
+ *      internes sont remontées, Déduit sinon
  *   6. Maillon le plus faible du réseau       — Mesuré
  *   7. Recommandations séquencées par rendement — Déduit
  *   8. Ce que cette synthèse ne dit pas       — contrat de lecture
@@ -484,6 +485,7 @@ export function buildNetworkSynthesisHTML(
   const block3 = blockShell(3, 'Conformité technique contre valeur sémantique', 'mesure', block3Body);
 
   // ── 4. Concurrence interne ────────────────────────────────────────────────
+  const auditedPaths = new Set(metas.map((m) => normPath(m.path)));
   const byVariant = new Map<string, PageMeta[]>();
   const variantsByPath = variantIndex(families);
   for (const m of metas) {
@@ -504,8 +506,29 @@ export function buildNetworkSynthesisHTML(
   const clusterCollisions = [...byCluster.entries()].filter(([, arr]) => arr.length >= 2);
   const declaredCannibal = metas.filter((m) => (m.cannibalWith?.length || 0) > 0);
 
+  /**
+   * Trou 3 — quasi-doublons MESURÉS (SimHash/LSH) entre URLs du lot. Ne dépend
+   * ni du slug ni du cluster : deux pages sans jeton commun mais au contenu
+   * quasi identique sont détectées, et deux pages au même slug de ville mais à
+   * contenus distincts ne sont plus taxées de doublon sur la seule morphologie.
+   */
+  const measuredDup: Array<{ a: string; b: string; similarity: number; verdict: string }> = [];
+  const seenPair = new Set<string>();
+  for (const m of metas) {
+    for (const d of m.nearDup || []) {
+      const other = normPath(d.url);
+      const pair = [normPath(m.path), other].sort().join('|');
+      if (seenPair.has(pair)) continue;
+      seenPair.add(pair);
+      measuredDup.push({ a: m.path, b: other, similarity: Number(d.similarity) || 0, verdict: d.verdict });
+    }
+  }
+  /** Paires mesurées dont les deux URLs sont dans le lot audité. */
+  const dupInScope = measuredDup.filter((d) => auditedPaths.has(normPath(d.a)) && auditedPaths.has(normPath(d.b)));
+  const dupOutScope = measuredDup.filter((d) => !dupInScope.includes(d));
+
   let block4Body: string;
-  if (!collisions.length && !clusterCollisions.length && !declaredCannibal.length) {
+  if (!collisions.length && !clusterCollisions.length && !declaredCannibal.length && !measuredDup.length) {
     block4Body = noFact(
       cohesion.regime === 'assemblage'
         ? "Hors objet dans ce lot : les URLs auditées n'appartiennent ni au même gabarit décliné ni au même cluster, aucune concurrence interne ne peut être établie entre elles à partir du périmètre audité."
@@ -545,6 +568,35 @@ export function buildNetworkSynthesisHTML(
            .join(', ')}.</p>`,
       );
     }
+    if (dupInScope.length) {
+      parts.push(
+        `<p style="margin:0 0 6px 0;"><strong>${dupInScope.length} paire${dupInScope.length > 1 ? 's' : ''} de pages
+         quasi identiques</strong> ${dupInScope.length > 1 ? 'ont été mesurées' : 'a été mesurée'} par comparaison de contenu
+         (empreinte SimHash), indépendamment des URLs :</p>
+         <ul style="padding-left:20px;margin:0 0 8px 0;">${dupInScope
+           .slice(0, 8)
+           .map(
+             (d) =>
+               `<li style="margin:0 0 4px 0;"><code style="font-size:12px;">${esc(d.a)}</code> ↔ <code style="font-size:12px;">${esc(d.b)}</code>
+                — ${d.similarity} % de similarité${d.verdict === 'cannibalization' ? ', qualifié cannibalisation' : ''}</li>`,
+           )
+           .join('')}</ul>`,
+      );
+      candidates.push({
+        title: `Fusionner ou différencier les ${dupInScope.length} paire(s) de pages mesurées quasi identiques`,
+        why: `Similarité de contenu mesurée jusqu'à ${Math.max(...dupInScope.map((d) => d.similarity))} % : ce n'est pas une déduction d'URL, les moteurs voient bien deux fois la même page.`,
+        effort: 'moyen',
+        level: 'mesure',
+        yield_: 90 + dupInScope.length * 3,
+      });
+    }
+    if (dupOutScope.length) {
+      parts.push(
+        `<p style="margin:0 0 6px 0;color:${MUTED};">${dupOutScope.length} autre${dupOutScope.length > 1 ? 's' : ''} paire${dupOutScope.length > 1 ? 's' : ''}
+         quasi identique${dupOutScope.length > 1 ? 's' : ''} implique${dupOutScope.length > 1 ? 'nt' : ''} une URL hors du lot audité :
+         ${dupOutScope.slice(0, 5).map((d) => `<code style="font-size:12px;">${esc(d.b)}</code>`).join(' · ')}.</p>`,
+      );
+    }
     if (declaredCannibal.length) {
       parts.push(
         `<p style="margin:0;">${declaredCannibal.length} URL${declaredCannibal.length > 1 ? 's' : ''} ${declaredCannibal.length > 1 ? 'sont' : 'est'} déjà
@@ -553,12 +605,16 @@ export function buildNetworkSynthesisHTML(
     }
     block4Body = parts.join('');
   }
-  const block4 = blockShell(4, 'Concurrence interne entre les pages auditées', 'deduction', block4Body);
+  const block4 = blockShell(
+    4,
+    'Concurrence interne entre les pages auditées',
+    measuredDup.length ? 'mesure' : 'deduction',
+    block4Body,
+  );
 
-  // ── 5. Hiérarchie : pilier présent ou manquant ────────────────────────────
+  // ── 5. Hiérarchie et maillage entre les pages auditées ────────────────────
   // Un pilier absent du LOT audité peut exister sur le site. On ne conclut à
   // l'absence que si le crawl du domaine est disponible et ne le contient pas.
-  const auditedPaths = new Set(metas.map((m) => normPath(m.path)));
   const knownPaths = new Set((site?.knownPaths || []).map(normPath));
   const crawlUsable = Boolean(site && site.crawlPages > 0 && knownPaths.size > 0);
   const hubCandidates = new Map<string, number>();
@@ -582,6 +638,72 @@ export function buildNetworkSynthesisHTML(
   const linksIn = metas.map((m) => num(m.linksIn)).filter((v): v is number => v !== null);
   const meshAvg = avg(linksIn);
   const meshNote = meshAvg !== null ? ` (maillage entrant moyen : ${meshAvg} liens)` : '';
+
+  /**
+   * Trou 2 — maillage INTER-PAGES réellement mesuré. On lit les cibles internes
+   * de chaque page (arêtes du cocon) et on compte celles qui pointent vers une
+   * autre URL du lot. Un lot de pages mutuellement isolées et un cocon complet
+   * ne peuvent plus produire la même conclusion.
+   */
+  const withTargets = metas.filter((m) => (m.internalTargets?.length || 0) > 0);
+  const meshMeasured = withTargets.length >= 2;
+  const intraEdges: Array<{ from: string; to: string }> = [];
+  const linkedFrom = new Set<string>();
+  const linkedTo = new Set<string>();
+  if (meshMeasured) {
+    for (const m of withTargets) {
+      for (const target of m.internalTargets || []) {
+        const t = normPath(target);
+        if (t === normPath(m.path) || !auditedPaths.has(t)) continue;
+        intraEdges.push({ from: m.path, to: t });
+        linkedFrom.add(normPath(m.path));
+        linkedTo.add(t);
+      }
+    }
+  }
+  const isolatedInLot = meshMeasured
+    ? withTargets.filter((m) => !linkedFrom.has(normPath(m.path)) && !linkedTo.has(normPath(m.path)))
+    : [];
+  const density = meshMeasured && withTargets.length > 1
+    ? Math.round((intraEdges.length / (withTargets.length * (withTargets.length - 1))) * 1000) / 10
+    : null;
+  const meshHtml = !meshMeasured
+    ? `<p style="margin:0;color:${MUTED};font-size:12.5px;">Maillage entre les URLs du lot non mesuré : les cibles internes de chaque page ne sont pas remontées dans ce rapport${
+        meshAvg !== null ? `. Seule la moyenne de liens entrants tous supports est connue (${meshAvg}).` : '.'
+      }</p>`
+    : intraEdges.length === 0
+    ? `<p style="margin:0;"><strong>Les ${withTargets.length} URLs mesurées ne se lient jamais entre elles</strong> : aucun lien interne
+       ne relie deux pages du lot. Chacune dépend entièrement du reste du site pour être atteinte, et rien ne signale aux moteurs
+       qu'elles forment un ensemble${meshNote}.</p>`
+    : `<p style="margin:0;">Maillage mesuré à l'intérieur du lot : ${intraEdges.length} lien${intraEdges.length > 1 ? 's' : ''} relie${
+        intraEdges.length > 1 ? 'nt' : ''
+      } deux URLs auditées sur ${withTargets.length} pages${density !== null ? `, soit ${density} % des liaisons possibles` : ''}${
+        isolatedInLot.length
+          ? `. ${isolatedInLot.length} page${isolatedInLot.length > 1 ? 's' : ''} reste${isolatedInLot.length > 1 ? 'nt' : ''} isolée${
+              isolatedInLot.length > 1 ? 's' : ''
+            } du reste du lot : ${isolatedInLot
+              .slice(0, 6)
+              .map((m) => `<code style="font-size:12px;">${esc(m.path)}</code>`)
+              .join(' · ')}`
+          : '. Toutes les pages du lot participent au maillage interne'
+      }${meshNote}.</p>`;
+  if (meshMeasured && intraEdges.length === 0 && cohesion.regime !== 'assemblage') {
+    candidates.push({
+      title: `Relier entre elles les ${withTargets.length} pages du lot`,
+      why: "Aucun lien interne mesuré entre ces pages : sans liaison latérale, elles ne forment pas un ensemble identifiable et ne se transmettent aucune autorité.",
+      effort: 'faible',
+      level: 'mesure',
+      yield_: 88,
+    });
+  } else if (meshMeasured && isolatedInLot.length >= 2) {
+    candidates.push({
+      title: `Rattacher au maillage les ${isolatedInLot.length} pages isolées du lot`,
+      why: `Mesuré : ces pages ne reçoivent ni n'émettent aucun lien vers les autres URLs auditées, alors que le reste du lot est déjà relié.`,
+      effort: 'faible',
+      level: 'mesure',
+      yield_: 78 + isolatedInLot.length,
+    });
+  }
   const hubList = (entries: [string, number][], tail: (count: number) => string) =>
     `<ul style="padding-left:20px;margin:0 0 8px 0;">${entries
       .map(
@@ -594,9 +716,9 @@ export function buildNetworkSynthesisHTML(
   if (cohesion.regime === 'assemblage') {
     block5Body = `<p style="margin:0;">Aucun pilier n'est attendu ici : les URLs auditées ne se rattachent pas à une branche
       commune, il n'existe donc pas de niveau de regroupement à créer pour ce lot${meshNote}. La hiérarchie de chaque
-      page est traitée dans sa fiche.</p>`;
+      page est traitée dans sa fiche.</p>${meshHtml}`;
   } else if (!hubGaps.length) {
-    block5Body = `<p style="margin:0;">Aucun niveau intermédiaire manquant détecté sur le périmètre audité${meshNote}.</p>`;
+    block5Body = `<p style="margin:0 0 8px 0;">Aucun niveau intermédiaire manquant détecté sur le périmètre audité.</p>${meshHtml}`;
   } else {
     const parts5: string[] = [];
     if (missingHubs.length) {
@@ -647,11 +769,16 @@ export function buildNetworkSynthesisHTML(
         yield_: 92,
       });
     }
-    parts5.push(`<p style="margin:0;color:${MUTED};font-size:12.5px;">Maillage${meshNote || ' entrant non mesuré sur ce lot'}.</p>`);
+    parts5.push(meshHtml);
     block5Body = parts5.join('');
   }
 
-  const block5 = blockShell(5, 'Hiérarchie : pilier présent ou manquant', 'deduction', block5Body);
+  const block5 = blockShell(
+    5,
+    'Hiérarchie et maillage entre les pages auditées',
+    meshMeasured ? 'mesure' : 'deduction',
+    block5Body,
+  );
 
   // ── 6. Maillon le plus faible ─────────────────────────────────────────────
   const rankable = stats.filter((s) => s.geo !== null || s.worstLcpMs !== null);
@@ -769,6 +896,16 @@ export function buildNetworkSynthesisHTML(
            : "Aucun crawl du domaine n'était exploitable : l'absence d'une page pilier hors périmètre audité n'est pas affirmée, elle est signalée comme à vérifier."
        }</li>
        <li style="margin:0 0 5px 0;">Les gabarits sont reconstruits à partir des chemins d'URL des pages auditées ; un gabarit représenté par une seule URL n'est pas généralisable.</li>
+       <li style="margin:0 0 5px 0;">${
+         meshMeasured
+           ? `Le maillage entre pages est mesuré sur les liens internes réellement relevés (${withTargets.length} URLs porteuses de cibles, ${intraEdges.length} liens internes au lot).`
+           : "Les liens internes réellement émis par chaque page ne sont pas remontés dans ce rapport : aucune conclusion n'est tirée sur la liaison entre les URLs du lot."
+       }</li>
+       <li style="margin:0 0 5px 0;">${
+         measuredDup.length
+           ? `Les quasi-doublons sont mesurés par comparaison de contenu (empreinte SimHash), pas déduits des URLs : ${measuredDup.length} paire(s) relevée(s).`
+           : "Aucun quasi-doublon mesuré n'a été relevé ; les collisions signalées ici sont déduites des URLs et des clusters, à confirmer sur le contenu."
+       }</li>
        <li style="margin:0 0 5px 0;">Le régime de lecture retenu est « ${cohesion.regime === 'reseau' ? 'réseau décliné' : cohesion.regime === 'arborescence' ? 'branche commune' : 'assemblage de pages indépendantes'} ». Dans un assemblage, les lectures de concurrence interne et de pilier manquant sont déclarées hors objet plutôt que forcées.</li>
        <li style="margin:0 0 5px 0;">Aucune note globale de site n'est produite : les moyennes par gabarit servent à comparer, pas à noter.</li>
        <li style="margin:0;">Aucun gain de trafic, de position ou de revenu n'est promis ici : l'ordre des recommandations est un rendement relatif, pas une prévision.</li>
