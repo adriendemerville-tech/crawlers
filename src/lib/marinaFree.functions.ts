@@ -93,59 +93,9 @@ export const startMarinaFreeAudit = createServerFn({ method: 'POST' })
       };
     }
 
-    // Le job est lancé sous une clé API Marina interne rattachée au compte
-    // technique admin : aucun crédit utilisateur n'est débité.
-    const { data: adminRole } = await supabaseAdmin
-      .from('user_roles')
-      .select('user_id')
-      .eq('role', 'admin')
-      .limit(1)
-      .maybeSingle();
-    const adminUserId = adminRole?.user_id;
-    if (!adminUserId) {
-      console.error('[MarinaFree] no admin account available to host free runs');
-      return { error: 'launch_failed' as const, message: 'Service momentanément indisponible' };
-    }
+    const launch = await launchMarinaJob(supabaseAdmin, targetUrl, lang);
+    if ('error' in launch) return launch;
 
-    const { data: keyRow } = await supabaseAdmin
-      .from('marina_api_keys')
-      .select('api_key')
-      .eq('user_id', adminUserId)
-      .maybeSingle();
-    let internalKey = keyRow?.api_key;
-    if (!internalKey) {
-      internalKey = `mk_${crypto.randomUUID().replace(/-/g, '')}${crypto.randomUUID().replace(/-/g, '')}`;
-      const { error: keyErr } = await supabaseAdmin
-        .from('marina_api_keys')
-        .upsert({ user_id: adminUserId, api_key: internalKey }, { onConflict: 'user_id' });
-      if (keyErr) {
-        console.error('[MarinaFree] cannot provision internal key', keyErr);
-        return { error: 'launch_failed' as const, message: 'Service momentanément indisponible' };
-      }
-    }
-
-    const publishableKey = process.env['SUPABASE_PUBLISHABLE_KEY']!;
-    const supabaseUrl = process.env['SUPABASE_URL']!;
-    const launchRes = await fetch(`${supabaseUrl}/functions/v1/marina`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${publishableKey}`,
-        apikey: publishableKey,
-        'x-marina-key': internalKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url: targetUrl, lang }),
-    });
-    const launch = (await launchRes.json().catch(() => ({}))) as {
-      job_id?: string;
-      status?: string;
-      queue_position?: number;
-      error?: string;
-    };
-    if (!launchRes.ok || launch.error || !launch.job_id) {
-      console.error('[MarinaFree] launch failed', launchRes.status, launch);
-      return { error: 'launch_failed' as const, message: launch.error || 'Lancement impossible' };
-    }
 
     // La consommation n'est comptée qu'après un lancement réussi.
     await supabaseAdmin.from('marina_free_trials').insert({
