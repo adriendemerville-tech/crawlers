@@ -373,6 +373,108 @@ export function extractAnchorsFromEndpoint(payload: unknown): { anchor: string; 
     .sort((a, b) => b.count - a.count);
 }
 
+/**
+ * Convertit une carte `clé → volume` du résumé DataForSEO (`referring_links_tld`,
+ * `referring_links_countries`, `referring_links_platform_types`) en distribution
+ * triée avec parts. Aucun appel supplémentaire : ces cartes sont déjà dans
+ * `backlinks/summary/live` (0 crédit dépensé en plus).
+ */
+export function extractDistribution(raw: unknown, limit = 8): DistributionBucket[] {
+  if (!raw || typeof raw !== 'object') return [];
+  const entries = Object.entries(raw as Record<string, unknown>)
+    .map(([key, count]) => ({ key: String(key).trim(), count: Number(count) || 0 }))
+    .filter((e) => e.key && e.count > 0);
+  const total = entries.reduce((sum, e) => sum + e.count, 0);
+  if (!total) return [];
+  return entries
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit)
+    .map((e) => ({ ...e, share: e.count / total }));
+}
+
+/** Pages cibles mesurées via `backlinks/domain_pages/live`. */
+export function extractLinkedPages(payload: unknown): LinkedPage[] {
+  const items = (payload as any)?.tasks?.[0]?.result?.[0]?.items;
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((i: any) => ({
+      url: String(i?.meta?.canonical || i?.page_address || i?.url || '').trim(),
+      referring_domains: Number(i?.referring_domains ?? 0) || 0,
+      backlinks: Number(i?.backlinks ?? 0) || 0,
+    }))
+    .filter((p) => p.url)
+    .sort((a, b) => b.referring_domains - a.referring_domains || b.backlinks - a.backlinks);
+}
+
+/**
+ * Verdict déterministe sur la répartition du profil : concentration
+ * géographique, monoculture de TLD, et dépendance à une seule page cible.
+ * Aucun token LLM.
+ */
+export function computeBacklinkDistribution(input: {
+  tld: DistributionBucket[];
+  countries: DistributionBucket[];
+  platformTypes: DistributionBucket[];
+  linkedPages: LinkedPage[];
+  referringDomains: number;
+}): BacklinkDistribution {
+  const { tld, countries, platformTypes, linkedPages, referringDomains } = input;
+  const dominantTldShare = tld[0]?.share ?? 0;
+  const dominantCountryShare = countries[0]?.share ?? 0;
+  const topPageRefs = linkedPages[0]?.referring_domains ?? 0;
+  const topPageShare = referringDomains > 0 ? Math.min(1, topPageRefs / referringDomains) : 0;
+
+  const signals: string[] = [];
+  if (tld.length && dominantTldShare >= 0.85) {
+    signals.push(`profil mono-TLD : ${Math.round(dominantTldShare * 100)} % des liens en .${tld[0].key.replace(/^\./, '')}`);
+  }
+  if (countries.length && dominantCountryShare >= 0.9) {
+    signals.push(`concentration géographique : ${Math.round(dominantCountryShare * 100)} % des liens depuis ${countries[0].key}`);
+  }
+  if (countries.length > 1 && dominantCountryShare < 0.4) {
+    signals.push(`dispersion géographique (pays dominant à ${Math.round(dominantCountryShare * 100)} % seulement)`);
+  }
+  if (linkedPages.length === 1 && referringDomains > 5) {
+    signals.push('une seule page du site reçoit des liens externes');
+  } else if (topPageShare >= 0.8 && linkedPages.length > 1) {
+    signals.push(`dépendance à une page unique : ${Math.round(topPageShare * 100)} % des référents pointent ${linkedPages[0].url}`);
+  }
+  const blogPlatform = platformTypes.find((p) => /blog|cms|forum/i.test(p.key));
+  if (blogPlatform && blogPlatform.share >= 0.7) {
+    signals.push(`${Math.round(blogPlatform.share * 100)} % des liens issus de plateformes « ${blogPlatform.key} »`);
+  }
+
+  let recommendation: string;
+  if (!tld.length && !countries.length && !linkedPages.length) {
+    recommendation = 'Répartition non mesurable : aucune distribution renvoyée par la source. Ne pas conclure sur la géographie des liens.';
+  } else if (topPageShare >= 0.8 && linkedPages.length <= 3) {
+    recommendation = `Diluer l'entonnoir de liens : ${Math.round(topPageShare * 100)} % de l'autorité arrive sur ${linkedPages[0]?.url || 'une seule page'}. Cibler en priorité 3 pages de conversion ou piliers secondaires dans les prochaines acquisitions de liens.`;
+  } else if (dominantCountryShare >= 0.9 && countries.length) {
+    recommendation = `Profil ancré sur ${countries[0].key} : cohérent pour une cible locale, limitant pour une ambition internationale. Aller chercher 5 à 10 domaines hors ${countries[0].key} si l'expansion est visée.`;
+  } else if (dominantTldShare >= 0.85 && tld.length) {
+    recommendation = `Élargir la nature des sources : ${Math.round(dominantTldShare * 100)} % des liens partagent le même TLD. Viser des .org / .edu / médias sectoriels pour crédibiliser le profil.`;
+  } else {
+    recommendation = 'Répartition équilibrée : conserver la même diversité de sources et de pages cibles lors des prochaines acquisitions.';
+  }
+
+  const measuredBlocks = [tld.length > 0, countries.length > 0, linkedPages.length > 0].filter(Boolean).length;
+  const source: BacklinkDistribution['source'] =
+    measuredBlocks === 0 ? 'unavailable' : measuredBlocks === 3 ? 'dataforseo' : 'partial';
+
+  return {
+    tld,
+    countries,
+    platform_types: platformTypes,
+    dominant_tld_share: dominantTldShare,
+    dominant_country_share: dominantCountryShare,
+    top_page_share: topPageShare,
+    linked_pages_sampled: linkedPages.length,
+    signals,
+    recommendation,
+    source,
+  };
+}
+
 
 /**
  * Récupère l'autorité de domaine + profil de backlinks.
