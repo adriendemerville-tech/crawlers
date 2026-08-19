@@ -539,7 +539,9 @@ function table(headers: string[], rows: string[][]): string {
         ${rows
           .map(
             (r) =>
-              `<tr>${r
+              // break-inside:avoid — sans cette règle, une ligne de gabarit peut
+              // être coupée en deux par un saut de page à l'export PDF.
+              `<tr style="break-inside:avoid;page-break-inside:avoid;">${r
                 .map(
                   (c, i) =>
                     `<td style="padding:7px 9px;border-bottom:1px solid #e5e7eb;text-align:${i === 0 ? 'left' : 'center'};${i === 0 ? 'font-weight:600;' : ''}">${c}</td>`,
