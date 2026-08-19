@@ -718,7 +718,8 @@ export function buildNetworkSynthesisHTML(
   const knownPaths = new Set((site?.knownPaths || []).map(normPath));
   const crawlUsable = Boolean(site && site.crawlPages > 0 && knownPaths.size > 0);
   const hubCandidates = new Map<string, number>();
-  for (const m of metas) {
+  for (const m of scopeMetas) {
+
     const segs = segments(m.path);
     for (let d = 1; d <= Math.max(segs.length - 1, 0); d += 1) {
       const prefix = '/' + segs.slice(0, d).join('/');
