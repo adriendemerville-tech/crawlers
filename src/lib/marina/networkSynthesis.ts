@@ -872,13 +872,13 @@ export function computeNetworkSynthesis(
            .map(
              (d) =>
                `<li style="margin:0 0 4px 0;"><code style="font-size:12px;">${esc(d.a)}</code> ↔ <code style="font-size:12px;">${esc(d.b)}</code>
-                — ${d.similarity} % de similarité${d.verdict === 'cannibalization' ? ', qualifié cannibalisation' : ''}</li>`,
+                — ${String(d.similarity).replace('.', ',')} % de similarité${d.verdict === 'cannibalization' ? ', qualifié cannibalisation' : ''}</li>`,
            )
            .join('')}</ul>`,
       );
       candidates.push({
         title: `Fusionner ou différencier les ${dupInScope.length} paire(s) de pages mesurées quasi identiques`,
-        why: `Similarité de contenu mesurée jusqu'à ${Math.max(...dupInScope.map((d) => d.similarity))} % : ce n'est pas une déduction d'URL, les moteurs voient bien deux fois la même page.`,
+        why: `Similarité de contenu mesurée jusqu'à ${String(Math.max(...dupInScope.map((d) => d.similarity))).replace('.', ',')} % : ce n'est pas une déduction d'URL, les moteurs voient bien deux fois la même page.`,
         effort: 'moyen',
         level: 'mesure',
         kind: 'correction',
@@ -1077,7 +1077,9 @@ export function computeNetworkSynthesis(
         title: `Vérifier l'existence du pilier ${unverifiedHubs[0][0]}, le créer s'il manque`,
         why: `${unverifiedHubs[0][1]} pages filles auditées sans pilier dans le lot. Le crawl du domaine n'étant pas disponible, l'action commence par un contrôle, pas par une création.`,
         effort: 'faible',
-        level: 'deduction',
+        // Existence du pilier non vérifiable faute de crawl : le constat reste une
+        // hypothèse, sa confiance doit être celle d'une estimation.
+        level: 'estimation',
         kind: 'correction',
         severity: 74,
         reach: unverifiedHubs[0][1],
