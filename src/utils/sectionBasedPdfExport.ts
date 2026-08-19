@@ -139,6 +139,19 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
 
   sections = sections.flatMap((s) => expand(s));
 
+  // Garde-fou : au-delà de `maxSections`, on remonte d'un cran de granularité
+  // (blocs parents) plutôt que de capturer des milliers de sous-blocs, ce qui
+  // faisait tourner l'export indéfiniment sur les rapports fusionnés.
+  if (sections.length > maxSections) {
+    const coarse = sections
+      .map((el) => (el.parentElement as HTMLElement | null) || el)
+      .filter((el, i, arr) => arr.indexOf(el) === i && el.offsetHeight > 8);
+    if (coarse.length >= 1 && coarse.length < sections.length) sections = coarse;
+    if (sections.length > maxSections) sections = sections.slice(0, maxSections);
+  }
+
+
+
 
   // Disclaimer obligatoire en dernière section (sauf s'il est déjà dans le HTML source).
   // Ajouté APRÈS la collecte pour ne jamais court-circuiter le fallback ci-dessus.
