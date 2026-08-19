@@ -351,18 +351,66 @@ function cell(value: number | null, cov: Coverage, format: (v: number) => string
 
 // ───────────────────────── Recommandations séquencées ─────────────────────────
 
+type Effort = 'faible' | 'moyen' | 'élevé';
+
 export interface NetworkRecommendation {
   /** Rang de rendement, 1 = meilleur rapport gain/effort. */
   rank: number;
   title: string;
   why: string;
-  effort: 'faible' | 'moyen' | 'élevé';
+  effort: Effort;
   level: Level;
+  /** Trou 7 — composantes du rendement, affichées pour être auditables. */
+  severity: number;
+  reach: number;
+  reachTotal: number;
+  confidence: number;
+  yield_: number;
+  /** Action de correction d'un défaut mesuré, ou action de développement. */
+  kind: 'correction' | 'developpement';
 }
 
-interface Candidate extends Omit<NetworkRecommendation, 'rank'> {
-  /** Poids de rendement déterministe : plus haut = traité en premier. */
-  yield_: number;
+interface Candidate extends Omit<NetworkRecommendation, 'rank' | 'yield_' | 'confidence'> {
+  /** Confiance dérivée du niveau de preuve et de l'effectif ; calculée si absente. */
+  solidity?: Solidity;
+}
+
+/**
+ * Trou 7 — le rendement n'est plus une constante choisie à la main par
+ * recommandation : c'est une formule unique, exposée dans le rapport, à quatre
+ * facteurs bornés.
+ *
+ *   rendement = gravité × portée × confiance × facilité
+ *
+ *   - gravité (0-100)  : ampleur du défaut réellement mesuré (écart de points,
+ *                        similarité relevée, dépassement de LCP…).
+ *   - portée           : part des URLs du lot qu'un même correctif couvre,
+ *                        ramenée à [0,55 ; 1] pour qu'une page unique reste
+ *                        traitable sans écraser un défaut de gabarit.
+ *   - confiance        : niveau de preuve (mesuré 1 / déduit 0,85 / estimé 0,6)
+ *                        pondéré par la solidité de l'effectif (Trou 5).
+ *   - facilité         : effort inversé (faible 1 / moyen 0,78 / élevé 0,55).
+ *
+ * Aucune de ces quantités n'est un gain de trafic : c'est un ordre de passage.
+ */
+const EFFORT_EASE: Record<Effort, number> = { faible: 1, moyen: 0.78, élevé: 0.55 };
+const LEVEL_TRUST: Record<Level, number> = { mesure: 1, deduction: 0.85, estimation: 0.6 };
+const SOLIDITY_TRUST: Record<Solidity, number> = { solide: 1, indicatif: 0.9, fragile: 0.75 };
+
+export function candidateConfidence(level: Level, sol: Solidity = 'solide'): number {
+  return Math.round(LEVEL_TRUST[level] * SOLIDITY_TRUST[sol] * 100) / 100;
+}
+
+export function candidateYield(c: Candidate): { yield_: number; confidence: number } {
+  const severity = Math.max(0, Math.min(100, c.severity));
+  const total = Math.max(1, c.reachTotal);
+  const reachShare = Math.max(0, Math.min(1, c.reach / total));
+  const reach = 0.55 + 0.45 * reachShare;
+  const confidence = candidateConfidence(c.level, c.solidity || 'solide');
+  return {
+    confidence,
+    yield_: Math.round(severity * reach * confidence * EFFORT_EASE[c.effort] * 10) / 10,
+  };
 }
 
 // ───────────────────────── Rendu ─────────────────────────
