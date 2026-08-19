@@ -916,13 +916,19 @@ export function buildNetworkSynthesisHTML(
     }
     if (weakest.geo !== null && weakest.geo < 60) {
       candidates.push({
-        title: `Renforcer la citabilité du gabarit ${weakest.family.pattern}`,
-        why: `GEO moyen ${weakest.geo}/100 sur ${weakest.count} pages : réponse directe en tête, données factuelles datées, balisage structuré.`,
+        title:
+          weakest.count >= 2
+            ? `Renforcer la citabilité du gabarit ${weakest.family.pattern}`
+            : `Renforcer la citabilité de la page ${weakest.family.pages[0]?.path || weakest.family.pattern}`,
+        why: `GEO moyen ${weakest.geo}/100 sur ${weakest.count} page${weakest.count > 1 ? 's' : ''}${solidityNote(weakest.count)} : réponse directe en tête, données factuelles datées, balisage structuré.`,
         effort: 'moyen',
         level: 'deduction',
-        yield_: 75 + (60 - weakest.geo),
+        // Trou 5 — un constat porté par une seule page ne remonte pas au même
+        // rang qu'un défaut de gabarit vérifié sur plusieurs pages.
+        yield_: 75 + (60 - weakest.geo) - (weakest.count >= 5 ? 0 : weakest.count >= 3 ? 8 : 20),
       });
     }
+
   }
   const block6 = blockShell(6, 'Maillon le plus faible du réseau', 'mesure', block6Body);
 
