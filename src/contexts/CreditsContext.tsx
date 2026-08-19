@@ -11,8 +11,11 @@ interface CreditsContextType {
   subscriptionPeriodEnd: string | null;
   isAgencyPro: boolean;
   isAgencyPremium: boolean;
+  /** Les administrateurs ne sont jamais débités : crédit illimité. */
+  hasUnlimitedCredits: boolean;
   refreshBalance: () => Promise<void>;
   useCredit: (description?: string, amount?: number) => Promise<{ success: boolean; newBalance?: number; error?: string }>;
+
 }
 
 const CreditsContext = createContext<CreditsContextType | undefined>(undefined);
