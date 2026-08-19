@@ -807,15 +807,15 @@ const Index = () => {
               {/* Right — 4 pillar cards */}
               <div className="grid grid-cols-2 gap-4 w-full lg:w-[420px] shrink-0">
                 {[
-                  { letter: 'E', label: language === 'fr' ? 'Expérience' : 'Experience', color: 'from-blue-500 to-blue-600', icon: '🧑‍💻' },
-                  { letter: 'E', label: language === 'fr' ? 'Expertise' : 'Expertise', color: 'from-emerald-500 to-emerald-600', icon: '🎓' },
-                  { letter: 'A', label: language === 'fr' ? 'Autorité' : 'Authority', color: 'from-violet-500 to-violet-600', icon: '🏛️' },
-                  { letter: 'T', label: language === 'fr' ? 'Fiabilité' : 'Trust', color: 'from-amber-500 to-amber-600', icon: '🛡️' },
+                  { letter: 'E', label: language === 'fr' ? 'Expérience' : 'Experience', Icon: FileSearch },
+                  { letter: 'E', label: language === 'fr' ? 'Expertise' : 'Expertise', Icon: Brain },
+                  { letter: 'A', label: language === 'fr' ? 'Autorité' : 'Authority', Icon: Globe },
+                  { letter: 'T', label: language === 'fr' ? 'Fiabilité' : 'Trust', Icon: ShieldCheck },
                 ].map((p) => (
                   <div key={p.label} className="rounded-xl border border-border/60 bg-card/80 backdrop-blur p-5 text-center space-y-2 hover:shadow-lg transition-shadow">
-                    <span className="text-3xl">{p.icon}</span>
-                    <p className={`text-2xl font-black bg-gradient-to-r ${p.color} bg-clip-text text-transparent`}>{p.letter}</p>
-                    <p className="text-sm font-medium text-foreground">{p.label}</p>
+                    <p.Icon className="h-7 w-7 mx-auto text-muted-foreground" strokeWidth={1.5} />
+                    <p className="text-2xl font-black text-foreground">{p.letter}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{p.label}</p>
                   </div>
                 ))}
               </div>
