@@ -29,6 +29,20 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   const [billingPeriod, setBillingPeriod] = useState('monthly');
   const [subscriptionPeriodEnd, setSubscriptionPeriodEnd] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasUnlimitedCredits, setHasUnlimitedCredits] = useState(false);
+
+  // Rôle admin = crédit illimité (vérifié côté serveur par la fonction has_role,
+  // le débit est de toute façon neutralisé dans le RPC use_credit).
+  useEffect(() => {
+    if (!user) { setHasUnlimitedCredits(false); return; }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      if (!cancelled) setHasUnlimitedCredits(!error && data === true);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
 
   const fetchBalance = useCallback(async () => {
     if (!user) {
