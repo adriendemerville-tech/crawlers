@@ -30,3 +30,25 @@ Câblage :
 - PDF : section « Marché & Autorité (backlinks) » dans `expertReportExport.ts` (méthode, fiabilité, toxicité, visibilité).
 - `scopeAndLimits.ts` : mention obligatoire « estimation propriétaire Crawlers, pas un score Semrush/Moz/Majestic ».
 - Workbench : `finding_category` `domain_authority` (AS < 35), `backlink_health` (>10 % de liens cassés) et `backlink_toxicity` (verdict ≠ sain) — mappés par `cocoon-strategist` en `add_internal_link` (aucune action offsite automatique).
+
+## Lot 3 — Historique propriétaire (`_shared/authoritySnapshots.ts`)
+
+- Table `domain_authority_snapshots` : une ligne par domaine et par mois (`month` `YYYY-MM`), RLS + GRANT appliqués.
+- `persistAuthoritySnapshot(authorityData)` écrit le snapshot du mois courant, amorce la série via `backlinks/history/live` (rafraîchi au maximum tous les 28 jours) et renvoie un `AuthorityTrend`.
+- Verdicts déterministes : `premiere_mesure`, `acquisition_en_hausse`, `profil_stable`, `perte_de_liens`, `historique_indisponible`. Aucune inférence LLM.
+- `buildAuthorityTrendPromptSection` injecte la tendance mesurée dans le prompt ; si l'historique manque, la section le dit explicitement.
+- Workbench : `perte_de_liens` crée un constat `backlink_health` / `authority_trend_{domaine}`.
+
+## Lot 4 — Link gap exécutable (`_shared/linkGap.ts`)
+
+- Un seul appel payant : `backlinks/domain_intersection/live` (site en cible 1, jusqu'à 3 concurrents), cache 7 jours.
+- Concurrents résolus par `resolveCompetitorDomains` : carte d'identité d'abord, concurrents SERP détectés en repli ; les noms commerciaux sans domaine et les plateformes génériques (Google, Facebook, LinkedIn…) sont rejetés.
+- `parseIntersection` exclut tout domaine qui lie déjà le site audité, trie par nombre de concurrents liés puis par rank.
+- Workbench : `finding_category = 'link_gap'` — un constat de synthèse (`link_gap_{domaine}`) + jusqu'à 5 tâches unitaires nominatives (`link_gap_{domaine}_{cible}`).
+- `cocoon-strategist` mappe `link_gap` en `fix_technical` / `operational_queue` avec `offsite_action: true` et `requires_human_validation: true` : l'acquisition de lien n'est jamais autonome.
+- Si aucun concurrent exploitable n'est déclaré, le link gap est explicitement non mesuré (`source: 'no_competitors'`) — jamais estimé.
+- Tests : `supabase/functions/_shared/linkGap.test.ts` (6 tests Deno).
+
+## Correctif transverse
+
+`audit-strategique-ia` insérait ses constats avec `source_type: 'audit'`, valeur absente de l'enum `diagnostic_source_type` : **tous** les upserts Workbench de cette fonction échouaient silencieusement. Corrigé en `audit_strategic` (chunkability, fan-out, autorité, liens cassés, toxicité, réécriture AEO).
