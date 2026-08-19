@@ -1396,4 +1396,16 @@ export function computeNetworkSynthesis(
     ${block7}
     ${block8}
   </section>`;
+
+  return { html, facts };
 }
+
+/** Compatibilité : HTML seul, pour les appels qui n'exploitent pas les faits. */
+export function buildNetworkSynthesisHTML(
+  domain: string,
+  metas: PageMeta[],
+  site?: SiteStructureContext,
+): string {
+  return computeNetworkSynthesis(domain, metas, site).html;
+}
+
