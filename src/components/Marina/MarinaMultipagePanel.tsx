@@ -63,7 +63,7 @@ function flattenTreeUrls(tree: any[]): string[] {
   return [...new Set(out)];
 }
 
-export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCredit, refreshCredits }: Props) {
+export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredits = false, language, useCredit, refreshCredits }: Props) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'paste' | 'directory'>('paste');
   const [rawUrls, setRawUrls] = useState('');
