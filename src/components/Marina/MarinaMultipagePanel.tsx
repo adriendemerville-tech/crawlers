@@ -30,10 +30,13 @@ interface BatchItem {
 interface Props {
   isAuthenticated: boolean;
   credits: number;
+  /** Administrateurs : crédit illimité, aucun contrôle de solde. */
+  unlimitedCredits?: boolean;
   language: string;
   useCredit: (description: string, amount: number) => Promise<{ success: boolean; error?: string }>;
   refreshCredits: () => void;
 }
+
 
 function normalizeUrl(raw: string): string | null {
   const trimmed = raw.trim().replace(/[,;]+$/, '');
@@ -60,7 +63,7 @@ function flattenTreeUrls(tree: any[]): string[] {
   return [...new Set(out)];
 }
 
-export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCredit, refreshCredits }: Props) {
+export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredits = false, language, useCredit, refreshCredits }: Props) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'paste' | 'directory'>('paste');
   const [rawUrls, setRawUrls] = useState('');
@@ -267,10 +270,11 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
       toast.error('Indiquez au moins 2 URLs');
       return;
     }
-    if (credits < totalCost) {
+    if (!unlimitedCredits && credits < totalCost) {
       toast.error(`Crédits insuffisants : ${totalCost} requis, ${credits} disponibles`);
       return;
     }
+
 
     cancelRef.current = false;
     setMergedHtml(null);
@@ -299,7 +303,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, language, useCr
       Array.from({ length: Math.min(CONCURRENCY, initial.length) }, (_, i) => worker(i)),
     );
     setRunning(false);
-  }, [credits, isAuthenticated, runOne, targets, totalCost]);
+  }, [credits, isAuthenticated, runOne, targets, totalCost, unlimitedCredits]);
 
   /* ── Relance des URLs en échec (aucun crédit n'a été débité pour elles) ── */
   const handleRetryFailed = useCallback(async () => {
