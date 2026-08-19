@@ -247,37 +247,15 @@ function logGatewayUsage(
   usage: Record<string, number> | undefined,
   isFallback: boolean,
 ): void {
-  try {
-    if (!usage) return;
-    const url = Deno.env.get('SUPABASE_URL');
-    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (!url || !key) return;
-    const pt = Number(usage.prompt_tokens) || 0;
-    const ct = Number(usage.completion_tokens) || 0;
-    if (pt === 0 && ct === 0) return;
-    fetch(`${url}/rest/v1/ai_gateway_usage`, {
-      method: 'POST',
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({
-        gateway: provider,
-        model,
-        edge_function: callerFunction || 'unknown',
-        prompt_tokens: pt,
-        completion_tokens: ct,
-        total_tokens: Number(usage.total_tokens) || pt + ct,
-        estimated_cost_usd: estimateTokenCostUsd(model, pt, ct),
-        cache_creation_tokens: Number(usage.cache_creation_input_tokens) || 0,
-        cache_read_tokens: Number(usage.cache_read_input_tokens) || 0,
-        is_fallback: isFallback,
-      }),
-      signal: AbortSignal.timeout(3000),
-    }).catch(() => {});
-  } catch { /* silent */ }
+  // Un seul écrivain : `logAiUsage` porte la garde anti-double-comptage partagée
+  // avec `trackTokenUsage` et `aiRouter`.
+  logAiUsage({
+    gateway: provider,
+    model,
+    edgeFunction: callerFunction || detectEdgeFunctionName(),
+    usage,
+    isFallback,
+  });
 }
 
 /** Clone la réponse pour en extraire `usage`, logge, puis rend la réponse intacte. */
