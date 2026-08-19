@@ -55,6 +55,40 @@ export interface OrganicVisibility {
   source: 'dataforseo_labs' | 'unavailable';
 }
 
+/** Une part de distribution mesurée (TLD, pays, type de plateforme). */
+export interface DistributionBucket {
+  key: string;
+  count: number;
+  /** Part 0-1 du total de l'échantillon */
+  share: number;
+}
+
+/** Page du domaine audité recevant des liens externes. */
+export interface LinkedPage {
+  url: string;
+  referring_domains: number;
+  backlinks: number;
+}
+
+/** Lecture déterministe de la répartition du profil de liens (lot 2). */
+export interface BacklinkDistribution {
+  tld: DistributionBucket[];
+  countries: DistributionBucket[];
+  platform_types: DistributionBucket[];
+  /** Part du TLD dominant (0-1) */
+  dominant_tld_share: number;
+  /** Part du pays dominant (0-1) */
+  dominant_country_share: number;
+  /** Part des domaines référents pointant la page la plus liée (0-1) */
+  top_page_share: number;
+  /** Nombre de pages du domaine recevant au moins un lien externe (échantillon) */
+  linked_pages_sampled: number;
+  signals: string[];
+  recommendation: string;
+  source: 'dataforseo' | 'partial' | 'unavailable';
+}
+
+
 export interface AuthorityData {
   domain: string;
   /** Authority Score maison sur 100 (rank normalisé + diversité, pénalisé par la toxicité) */
