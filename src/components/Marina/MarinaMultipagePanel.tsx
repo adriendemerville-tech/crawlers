@@ -9,6 +9,8 @@ import { Layers, Loader2, FolderSearch, FileText, X, Check, AlertTriangle } from
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { mergeMarinaReports } from '@/lib/marina/mergeReports';
 import { fetchSiteStructure } from '@/lib/marina/siteStructure';
+import { persistNetworkSynthesis } from '@/lib/marina/networkSynthesisPersist';
+
 
 const MAX_URLS = 15;
 const CREDIT_COST = 30;
