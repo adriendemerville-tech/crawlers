@@ -88,7 +88,7 @@ export function provenanceColor(level: ProvenanceLevel): string {
 export function provenanceBadge(level: ProvenanceLevel, lang?: string): string {
   const spec = LEVELS[level];
   const l = pickLocale(lang);
-  return `<span data-provenance="${level}" title="${spec.definition[l].replace(/"/g, '&quot;')}" style="display:inline-block;border:1px solid ${spec.color};color:${spec.color};border-radius:999px;padding:1px 7px;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:1.5;white-space:nowrap;vertical-align:middle;">${spec.label[l]}</span>`;
+  return `<span data-provenance="${level}" title="${spec.definition[l].replace(/"/g, '&quot;')}" style="display:inline-flex;align-items:center;justify-content:center;text-align:center;border:1px solid ${spec.color};color:${spec.color};border-radius:999px;padding:2px 8px;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:1;white-space:nowrap;vertical-align:middle;min-height:18px;">${spec.label[l]}</span>`;
 }
 
 /**
