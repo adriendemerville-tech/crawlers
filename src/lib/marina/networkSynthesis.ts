@@ -577,7 +577,7 @@ export function buildNetworkSynthesisHTML(
   const existingHubs = crawlUsable ? hubGaps.filter(([p]) => knownPaths.has(normPath(p))) : [];
   /** Pilier vérifié absent du site (crawl disponible et muet sur ce chemin). */
   const missingHubs = crawlUsable ? hubGaps.filter(([p]) => !knownPaths.has(normPath(p))) : [];
-  /** Pilier non auditĂ© et non vérifiable faute de crawl exploitable. */
+  /** Pilier non audité et non vérifiable faute de crawl exploitable. */
   const unverifiedHubs = crawlUsable ? [] : hubGaps;
   const linksIn = metas.map((m) => num(m.linksIn)).filter((v): v is number => v !== null);
   const meshAvg = avg(linksIn);
@@ -762,6 +762,11 @@ export function buildNetworkSynthesisHTML(
     'mesure',
     `<ul style="padding-left:20px;margin:0;">
        <li style="margin:0 0 5px 0;">Elle porte sur les ${metas.length} URLs auditées, pas sur l'intégralité du site : une page non auditée n'est jamais déduite.</li>
+       <li style="margin:0 0 5px 0;">${
+         crawlUsable
+           ? `L'existence des pages de regroupement a été vérifiée sur les ${site!.crawlPages.toLocaleString('fr-FR')} pages du dernier crawl du domaine.`
+           : "Aucun crawl du domaine n'était exploitable : l'absence d'une page pilier hors périmètre audité n'est pas affirmée, elle est signalée comme à vérifier."
+       }</li>
        <li style="margin:0 0 5px 0;">Les gabarits sont reconstruits à partir des chemins d'URL des pages auditées ; un gabarit représenté par une seule URL n'est pas généralisable.</li>
        <li style="margin:0 0 5px 0;">Le régime de lecture retenu est « ${cohesion.regime === 'reseau' ? 'réseau décliné' : cohesion.regime === 'arborescence' ? 'branche commune' : 'assemblage de pages indépendantes'} ». Dans un assemblage, les lectures de concurrence interne et de pilier manquant sont déclarées hors objet plutôt que forcées.</li>
        <li style="margin:0 0 5px 0;">Aucune note globale de site n'est produite : les moyennes par gabarit servent à comparer, pas à noter.</li>
