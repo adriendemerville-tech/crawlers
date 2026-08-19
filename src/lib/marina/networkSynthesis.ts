@@ -638,6 +638,72 @@ export function buildNetworkSynthesisHTML(
   const linksIn = metas.map((m) => num(m.linksIn)).filter((v): v is number => v !== null);
   const meshAvg = avg(linksIn);
   const meshNote = meshAvg !== null ? ` (maillage entrant moyen : ${meshAvg} liens)` : '';
+
+  /**
+   * Trou 2 — maillage INTER-PAGES réellement mesuré. On lit les cibles internes
+   * de chaque page (arêtes du cocon) et on compte celles qui pointent vers une
+   * autre URL du lot. Un lot de pages mutuellement isolées et un cocon complet
+   * ne peuvent plus produire la même conclusion.
+   */
+  const withTargets = metas.filter((m) => (m.internalTargets?.length || 0) > 0);
+  const meshMeasured = withTargets.length >= 2;
+  const intraEdges: Array<{ from: string; to: string }> = [];
+  const linkedFrom = new Set<string>();
+  const linkedTo = new Set<string>();
+  if (meshMeasured) {
+    for (const m of withTargets) {
+      for (const target of m.internalTargets || []) {
+        const t = normPath(target);
+        if (t === normPath(m.path) || !auditedPaths.has(t)) continue;
+        intraEdges.push({ from: m.path, to: t });
+        linkedFrom.add(normPath(m.path));
+        linkedTo.add(t);
+      }
+    }
+  }
+  const isolatedInLot = meshMeasured
+    ? withTargets.filter((m) => !linkedFrom.has(normPath(m.path)) && !linkedTo.has(normPath(m.path)))
+    : [];
+  const density = meshMeasured && withTargets.length > 1
+    ? Math.round((intraEdges.length / (withTargets.length * (withTargets.length - 1))) * 1000) / 10
+    : null;
+  const meshHtml = !meshMeasured
+    ? `<p style="margin:0;color:${MUTED};font-size:12.5px;">Maillage entre les URLs du lot non mesuré : les cibles internes de chaque page ne sont pas remontées dans ce rapport${
+        meshAvg !== null ? `. Seule la moyenne de liens entrants tous supports est connue (${meshAvg}).` : '.'
+      }</p>`
+    : intraEdges.length === 0
+    ? `<p style="margin:0;"><strong>Les ${withTargets.length} URLs mesurées ne se lient jamais entre elles</strong> : aucun lien interne
+       ne relie deux pages du lot. Chacune dépend entièrement du reste du site pour être atteinte, et rien ne signale aux moteurs
+       qu'elles forment un ensemble${meshNote}.</p>`
+    : `<p style="margin:0;">Maillage mesuré à l'intérieur du lot : ${intraEdges.length} lien${intraEdges.length > 1 ? 's' : ''} relie${
+        intraEdges.length > 1 ? 'nt' : ''
+      } deux URLs auditées sur ${withTargets.length} pages${density !== null ? `, soit ${density} % des liaisons possibles` : ''}${
+        isolatedInLot.length
+          ? `. ${isolatedInLot.length} page${isolatedInLot.length > 1 ? 's' : ''} reste${isolatedInLot.length > 1 ? 'nt' : ''} isolée${
+              isolatedInLot.length > 1 ? 's' : ''
+            } du reste du lot : ${isolatedInLot
+              .slice(0, 6)
+              .map((m) => `<code style="font-size:12px;">${esc(m.path)}</code>`)
+              .join(' · ')}`
+          : '. Toutes les pages du lot participent au maillage interne'
+      }${meshNote}.</p>`;
+  if (meshMeasured && intraEdges.length === 0 && cohesion.regime !== 'assemblage') {
+    candidates.push({
+      title: `Relier entre elles les ${withTargets.length} pages du lot`,
+      why: "Aucun lien interne mesuré entre ces pages : sans liaison latérale, elles ne forment pas un ensemble identifiable et ne se transmettent aucune autorité.",
+      effort: 'faible',
+      level: 'mesure',
+      yield_: 88,
+    });
+  } else if (meshMeasured && isolatedInLot.length >= 2) {
+    candidates.push({
+      title: `Rattacher au maillage les ${isolatedInLot.length} pages isolées du lot`,
+      why: `Mesuré : ces pages ne reçoivent ni n'émettent aucun lien vers les autres URLs auditées, alors que le reste du lot est déjà relié.`,
+      effort: 'faible',
+      level: 'mesure',
+      yield_: 78 + isolatedInLot.length,
+    });
+  }
   const hubList = (entries: [string, number][], tail: (count: number) => string) =>
     `<ul style="padding-left:20px;margin:0 0 8px 0;">${entries
       .map(
@@ -650,9 +716,9 @@ export function buildNetworkSynthesisHTML(
   if (cohesion.regime === 'assemblage') {
     block5Body = `<p style="margin:0;">Aucun pilier n'est attendu ici : les URLs auditées ne se rattachent pas à une branche
       commune, il n'existe donc pas de niveau de regroupement à créer pour ce lot${meshNote}. La hiérarchie de chaque
-      page est traitée dans sa fiche.</p>`;
+      page est traitée dans sa fiche.</p>${meshHtml}`;
   } else if (!hubGaps.length) {
-    block5Body = `<p style="margin:0;">Aucun niveau intermédiaire manquant détecté sur le périmètre audité${meshNote}.</p>`;
+    block5Body = `<p style="margin:0 0 8px 0;">Aucun niveau intermédiaire manquant détecté sur le périmètre audité.</p>${meshHtml}`;
   } else {
     const parts5: string[] = [];
     if (missingHubs.length) {
@@ -703,11 +769,16 @@ export function buildNetworkSynthesisHTML(
         yield_: 92,
       });
     }
-    parts5.push(`<p style="margin:0;color:${MUTED};font-size:12.5px;">Maillage${meshNote || ' entrant non mesuré sur ce lot'}.</p>`);
+    parts5.push(meshHtml);
     block5Body = parts5.join('');
   }
 
-  const block5 = blockShell(5, 'Hiérarchie : pilier présent ou manquant', 'deduction', block5Body);
+  const block5 = blockShell(
+    5,
+    'Hiérarchie et maillage entre les pages auditées',
+    meshMeasured ? 'mesure' : 'deduction',
+    block5Body,
+  );
 
   // ── 6. Maillon le plus faible ─────────────────────────────────────────────
   const rankable = stats.filter((s) => s.geo !== null || s.worstLcpMs !== null);
