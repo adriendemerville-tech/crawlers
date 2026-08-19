@@ -15,3 +15,9 @@ verify_jwt = false
 
 [functions.doc-share]
 verify_jwt = false
+
+[functions.stripe-actions]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false

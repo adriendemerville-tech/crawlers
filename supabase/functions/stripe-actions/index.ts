@@ -294,6 +294,56 @@ async function handleRetention(req: Request) {
   return json({ success: true, discount: 30, duration_months: 3 });
 }
 
+// ─── Marina one-shot (15 €, visiteur non connecté) ───
+
+const MARINA_ONESHOT_CENTS = 1500;
+
+async function handleMarinaOneshot(req: Request, body: any) {
+  const passToken = String(body.pass_token || "").slice(0, 80);
+  const email = String(body.email || "").trim().toLowerCase().slice(0, 160);
+  const targetUrl = String(body.url || "").slice(0, 500);
+
+  if (!/^mp_[a-f0-9]{32}$/.test(passToken)) return json({ error: "Invalid pass token" }, 400);
+  if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)) return json({ error: "Invalid email" }, 400);
+
+  // Le pass doit exister et être encore en attente de paiement.
+  const service = getServiceClient();
+  const { data: pass } = await service
+    .from("marina_paid_passes")
+    .select("id, status")
+    .eq("pass_token", passToken)
+    .maybeSingle();
+  if (!pass) return json({ error: "Pass introuvable" }, 404);
+  if (pass.status !== "pending") return json({ error: "Pass déjà utilisé" }, 409);
+
+  const origin = req.headers.get("origin") || "https://crawlers.fr";
+  const session = await stripe.checkout.sessions.create({
+    customer_email: email,
+    line_items: [{
+      price_data: {
+        currency: "eur",
+        product_data: {
+          name: "Audit Marina — rapport SEO + GEO complet",
+          ...(targetUrl ? { description: `Audit du site ${targetUrl}` } : {}),
+        },
+        unit_amount: MARINA_ONESHOT_CENTS,
+      },
+      quantity: 1,
+    }],
+    mode: "payment",
+    success_url: `${origin}/marina?marina_paid=1`,
+    cancel_url: `${origin}/marina?marina_paid=0`,
+    metadata: {
+      transaction_type: "marina_oneshot",
+      pass_token: passToken,
+      email,
+      site_url: targetUrl,
+    },
+  });
+
+  return json({ url: session.url, session_id: session.id, price: MARINA_ONESHOT_CENTS / 100 });
+}
+
 // ─── Router ───
 
 Deno.serve(handleRequest(async (req) => {
@@ -306,6 +356,7 @@ try {
       case 'credit-checkout':   return await handleCreditCheckout(req, body);
       case 'subscription':      return await handleSubscription(req, body);
       case 'subscription_premium': return await handleSubscriptionPremium(req, body);
+      case 'marina-oneshot':    return await handleMarinaOneshot(req, body);
       case 'portal':            return await handlePortal(req);
       case 'retention':         return await handleRetention(req);
       default:

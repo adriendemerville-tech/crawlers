@@ -44,7 +44,31 @@ try {
 
       // Check if this is a credit purchase
       const transactionType = session.metadata?.transaction_type;
-      
+
+      if (transactionType === "marina_oneshot") {
+        // 🔓 AUDIT MARINA ONE-SHOT : on débloque le pass à usage unique
+        const passToken = session.metadata?.pass_token;
+        if (!passToken) {
+          console.error("❌ marina_oneshot without pass_token", session.metadata);
+          return jsonError("Missing pass_token", 400);
+        }
+        const { error: passError } = await supabase
+          .from("marina_paid_passes")
+          .update({
+            status: "granted",
+            stripe_session_id: session.id,
+            granted_at: new Date().toISOString(),
+          })
+          .eq("pass_token", passToken)
+          .eq("status", "pending");
+        if (passError) {
+          console.error("❌ Cannot grant Marina pass:", passError);
+          return jsonError("Failed to grant Marina pass", 500);
+        }
+        console.log(`✅ Marina one-shot pass granted: ${passToken}`);
+        return jsonOk({ received: true, type: "marina_oneshot", pass_token: passToken });
+      }
+
       if (transactionType === "credit_purchase") {
         // 🪙 CREDIT PURCHASE FLOW
         const userId = session.metadata?.user_id;

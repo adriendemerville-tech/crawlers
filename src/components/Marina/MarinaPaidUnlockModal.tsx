@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { usePaddleCheckout } from '@/hooks/usePaddleCheckout';
+import { supabase } from '@/integrations/supabase/client';
 import { createMarinaPaidPass, getMarinaPassStatus, startMarinaPaidAudit } from '@/lib/marinaFree.functions';
 
 const PASS_STORAGE_KEY = 'marina_paid_pass_token';
@@ -26,7 +26,7 @@ interface Props {
  * dès qu'il est validé, l'audit est lancé automatiquement.
  */
 export function MarinaPaidUnlockModal({ open, onOpenChange, url, email, language, onAuditStarted }: Props) {
-  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [localEmail, setLocalEmail] = useState(email);
   const [waiting, setWaiting] = useState(false);
   const pollRef = useRef<number | null>(null);
@@ -85,16 +85,22 @@ export function MarinaPaidUnlockModal({ open, onOpenChange, url, email, language
     const pass = await createMarinaPaidPass({ data: { email: localEmail.trim() } });
     if ('error' in pass) { toast.error(pass.message); return; }
     localStorage.setItem(PASS_STORAGE_KEY, pass.passToken);
+    setCheckoutLoading(true);
     try {
-      await openCheckout({
-        priceId: 'marina_oneshot',
-        quantity: 1,
-        customerEmail: localEmail.trim(),
-        customData: { kind: 'marina_oneshot', passToken: pass.passToken, email: localEmail.trim() },
-        successUrl: `${window.location.origin}/marina`,
+      // Stripe Checkout (même circuit que les crédits et abonnements)
+      const { data, error } = await supabase.functions.invoke('stripe-actions', {
+        body: {
+          action: 'marina-oneshot',
+          pass_token: pass.passToken,
+          email: localEmail.trim(),
+          url: url.trim(),
+        },
       });
-      watchPass(pass.passToken);
+      if (error || !data?.url) throw new Error(data?.error || error?.message || 'checkout_failed');
+      // Le pass reste en localStorage : au retour sur /marina, le polling reprend.
+      window.location.href = data.url as string;
     } catch {
+      setCheckoutLoading(false);
       toast.error('Impossible d\'ouvrir le paiement');
     }
   };
