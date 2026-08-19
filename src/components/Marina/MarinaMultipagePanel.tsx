@@ -30,10 +30,13 @@ interface BatchItem {
 interface Props {
   isAuthenticated: boolean;
   credits: number;
+  /** Administrateurs : crédit illimité, aucun contrôle de solde. */
+  unlimitedCredits?: boolean;
   language: string;
   useCredit: (description: string, amount: number) => Promise<{ success: boolean; error?: string }>;
   refreshCredits: () => void;
 }
+
 
 function normalizeUrl(raw: string): string | null {
   const trimmed = raw.trim().replace(/[,;]+$/, '');
