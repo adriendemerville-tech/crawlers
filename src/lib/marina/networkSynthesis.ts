@@ -139,11 +139,19 @@ export function detectTemplates(metas: PageMeta[]): TemplateFamily[] {
           .map((seg, depth) => {
             const parent = '/' + segs.slice(0, depth).join('/');
             const low = seg.toLowerCase();
-            const siblingCount = siblings.get(`${depth}|${parent.toLowerCase()}`)?.size || 1;
+            const sibs = siblings.get(`${depth}|${parent.toLowerCase()}`) || new Set<string>([low]);
+            const siblingCount = sibs.size;
             const parentCount = parentsOfValue.get(`${depth}|${low}`)?.size || 1;
             // Un jeu de frères nombreux suffit à qualifier l'instance, même quand
             // le segment ne ressemble pas à un slug (ex. une ville en un seul mot).
-            const variable = siblingCount >= 2 && parentCount < 2 && (slugLike(seg) || siblingCount >= 3);
+            // À la racine, en revanche, des frères hétérogènes (/tarifs, /contact,
+            // /blog) sont des rubriques et non des instances d'un gabarit : on
+            // n'y voit une déclinaison que si la fratrie est homogène en forme.
+            const homogeneous =
+                depth > 0 ||
+                (siblingCount >= 3 && [...sibs].filter((s) => slugLike(s)).length / siblingCount >= 0.8);
+            const variable =
+              homogeneous && siblingCount >= 2 && parentCount < 2 && (slugLike(seg) || siblingCount >= 3);
             if (!variable) return seg;
             variants.push(seg);
             return '*';
