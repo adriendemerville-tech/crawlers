@@ -26,7 +26,7 @@ interface Props {
  * dès qu'il est validé, l'audit est lancé automatiquement.
  */
 export function MarinaPaidUnlockModal({ open, onOpenChange, url, email, language, onAuditStarted }: Props) {
-  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [localEmail, setLocalEmail] = useState(email);
   const [waiting, setWaiting] = useState(false);
   const pollRef = useRef<number | null>(null);
