@@ -25,7 +25,7 @@ export const getSiteStructure = createServerFn({ method: 'GET' })
 
       const { data: crawl } = await supabaseAdmin
         .from('site_crawls')
-        .select('id, created_at, pages_crawled')
+        .select('id, created_at')
         .or(`domain.eq.${data.domain},domain.eq.www.${data.domain}`)
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
