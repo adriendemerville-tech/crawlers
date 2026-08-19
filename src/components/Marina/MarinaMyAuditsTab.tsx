@@ -147,13 +147,13 @@ export function MarinaMyAuditsTab() {
                     variant="outline"
                     size="sm"
                     className="gap-2"
-                    disabled={!target.hasReport || openingId === target.id}
-                    onClick={() => openReport(target.id)}
+                    disabled={!target.hasReport || openingId === (isBatch ? g.key : target.id)}
+                    onClick={() => (isBatch ? openBatchReport(g.items, g.key) : openReport(target.id))}
                   >
-                    {openingId === target.id
+                    {openingId === (isBatch ? g.key : target.id)
                       ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       : <ExternalLink className="w-3.5 h-3.5" />}
-                    Voir le rapport
+                    {isBatch ? 'Voir le rapport consolidé' : 'Voir le rapport'}
                   </Button>
                 </CardContent>
               </Card>
@@ -163,6 +163,15 @@ export function MarinaMyAuditsTab() {
 
         )}
       </div>
+
+      {merged && (
+        <MarinaReportPreviewModal
+          isOpen
+          onClose={() => setMerged(null)}
+          htmlContent={merged.html}
+          domain={merged.domain}
+        />
+      )}
     </section>
   );
 }
