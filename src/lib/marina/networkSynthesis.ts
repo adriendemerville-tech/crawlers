@@ -484,6 +484,7 @@ export function buildNetworkSynthesisHTML(
   const block3 = blockShell(3, 'Conformité technique contre valeur sémantique', 'mesure', block3Body);
 
   // ── 4. Concurrence interne ────────────────────────────────────────────────
+  const auditedPathsForDup = new Set(metas.map((m) => normPath(m.path)));
   const byVariant = new Map<string, PageMeta[]>();
   const variantsByPath = variantIndex(families);
   for (const m of metas) {
@@ -504,8 +505,29 @@ export function buildNetworkSynthesisHTML(
   const clusterCollisions = [...byCluster.entries()].filter(([, arr]) => arr.length >= 2);
   const declaredCannibal = metas.filter((m) => (m.cannibalWith?.length || 0) > 0);
 
+  /**
+   * Trou 3 — quasi-doublons MESURÉS (SimHash/LSH) entre URLs du lot. Ne dépend
+   * ni du slug ni du cluster : deux pages sans jeton commun mais au contenu
+   * quasi identique sont détectées, et deux pages au même slug de ville mais à
+   * contenus distincts ne sont plus taxées de doublon sur la seule morphologie.
+   */
+  const measuredDup: Array<{ a: string; b: string; similarity: number; verdict: string }> = [];
+  const seenPair = new Set<string>();
+  for (const m of metas) {
+    for (const d of m.nearDup || []) {
+      const other = normPath(d.url);
+      const pair = [normPath(m.path), other].sort().join('|');
+      if (seenPair.has(pair)) continue;
+      seenPair.add(pair);
+      measuredDup.push({ a: m.path, b: other, similarity: Number(d.similarity) || 0, verdict: d.verdict });
+    }
+  }
+  /** Paires mesurées dont les deux URLs sont dans le lot audité. */
+  const dupInScope = measuredDup.filter((d) => auditedPathsForDup.has(normPath(d.a)) && auditedPathsForDup.has(normPath(d.b)));
+  const dupOutScope = measuredDup.filter((d) => !dupInScope.includes(d));
+
   let block4Body: string;
-  if (!collisions.length && !clusterCollisions.length && !declaredCannibal.length) {
+  if (!collisions.length && !clusterCollisions.length && !declaredCannibal.length && !measuredDup.length) {
     block4Body = noFact(
       cohesion.regime === 'assemblage'
         ? "Hors objet dans ce lot : les URLs auditées n'appartiennent ni au même gabarit décliné ni au même cluster, aucune concurrence interne ne peut être établie entre elles à partir du périmètre audité."
@@ -545,6 +567,35 @@ export function buildNetworkSynthesisHTML(
            .join(', ')}.</p>`,
       );
     }
+    if (dupInScope.length) {
+      parts.push(
+        `<p style="margin:0 0 6px 0;"><strong>${dupInScope.length} paire${dupInScope.length > 1 ? 's' : ''} de pages
+         quasi identiques</strong> ${dupInScope.length > 1 ? 'ont été mesurées' : 'a été mesurée'} par comparaison de contenu
+         (empreinte SimHash), indépendamment des URLs :</p>
+         <ul style="padding-left:20px;margin:0 0 8px 0;">${dupInScope
+           .slice(0, 8)
+           .map(
+             (d) =>
+               `<li style="margin:0 0 4px 0;"><code style="font-size:12px;">${esc(d.a)}</code> ↔ <code style="font-size:12px;">${esc(d.b)}</code>
+                — ${d.similarity} % de similarité${d.verdict === 'cannibalization' ? ', qualifié cannibalisation' : ''}</li>`,
+           )
+           .join('')}</ul>`,
+      );
+      candidates.push({
+        title: `Fusionner ou différencier les ${dupInScope.length} paire(s) de pages mesurées quasi identiques`,
+        why: `Similarité de contenu mesurée jusqu'à ${Math.max(...dupInScope.map((d) => d.similarity))} % : ce n'est pas une déduction d'URL, les moteurs voient bien deux fois la même page.`,
+        effort: 'moyen',
+        level: 'mesure',
+        yield_: 90 + dupInScope.length * 3,
+      });
+    }
+    if (dupOutScope.length) {
+      parts.push(
+        `<p style="margin:0 0 6px 0;color:${MUTED};">${dupOutScope.length} autre${dupOutScope.length > 1 ? 's' : ''} paire${dupOutScope.length > 1 ? 's' : ''}
+         quasi identique${dupOutScope.length > 1 ? 's' : ''} implique${dupOutScope.length > 1 ? 'nt' : ''} une URL hors du lot audité :
+         ${dupOutScope.slice(0, 5).map((d) => `<code style="font-size:12px;">${esc(d.b)}</code>`).join(' · ')}.</p>`,
+      );
+    }
     if (declaredCannibal.length) {
       parts.push(
         `<p style="margin:0;">${declaredCannibal.length} URL${declaredCannibal.length > 1 ? 's' : ''} ${declaredCannibal.length > 1 ? 'sont' : 'est'} déjà
@@ -553,7 +604,12 @@ export function buildNetworkSynthesisHTML(
     }
     block4Body = parts.join('');
   }
-  const block4 = blockShell(4, 'Concurrence interne entre les pages auditées', 'deduction', block4Body);
+  const block4 = blockShell(
+    4,
+    'Concurrence interne entre les pages auditées',
+    measuredDup.length ? 'mesure' : 'deduction',
+    block4Body,
+  );
 
   // ── 5. Hiérarchie : pilier présent ou manquant ────────────────────────────
   // Un pilier absent du LOT audité peut exister sur le site. On ne conclut à
