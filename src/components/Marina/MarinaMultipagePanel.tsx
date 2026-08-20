@@ -186,21 +186,14 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
   };
 
   /* ── Exécution : un job Marina par URL, 2 en parallèle ── */
-  const runOne = useCallback(async (index: number, url: string, batch?: { id: string; size: number }, skipDebit = false): Promise<void> => {
+  const runOne = useCallback(async (index: number, url: string, batch?: { id: string; size: number }): Promise<void> => {
     const setItem = (patch: Partial<BatchItem>) =>
       setItems(prev => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
 
     setItem({ status: 'running', progress: 0 });
 
-    // Le débit du forfait multipages est effectué une seule fois au lancement du lot.
-    // Les relances d'URLs en échec ne débitent pas à nouveau.
-    if (!skipDebit) {
-      const debit = await useCredit(`Rapport Marina — ${url}`, 0);
-      if (!debit.success) {
-        setItem({ status: 'failed', error: debit.error || 'Débit de crédits impossible' });
-        return;
-      }
-    }
+    // Le débit du forfait multipages est effectué une seule fois au lancement du lot
+    // (handleLaunch). Les relances d'URLs en échec ne débitent donc pas à nouveau.
 
     let jobId: string | null = null;
     let launchError = 'Lancement impossible';
