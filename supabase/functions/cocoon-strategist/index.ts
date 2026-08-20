@@ -525,6 +525,29 @@ try {
       console.log(`[strategist] 🌀 Breathing Spiral: ${spiralItems.length} items, avg score ${avgSpiralScore}, phase: ${spiralPhase}`);
     }
 
+    // ── Dette de pruning du site : elle arbitre avant de classer ──
+    // Un corpus saturé (trop de pages muettes, grappes de cannibalisation) n'a
+    // pas besoin d'un article de plus : la surprime contenu descend, et au-delà
+    // du seuil « saturé » la création est gelée sauf gap sémantique documenté.
+    let siteDebtRegime: DebtRegime = 'healthy';
+    let siteDebt: any = null;
+    try {
+      const { data: debtRow } = await supabase
+        .from('site_pruning_debt')
+        .select('debt, regime, corpus_size, useful_pages, cannibal_clusters, explanation, computed_at')
+        .eq('user_id', auth.userId)
+        .eq('domain', String(domain || '').replace(/^www\./, '').toLowerCase())
+        .maybeSingle();
+      if (debtRow) {
+        siteDebt = debtRow;
+        siteDebtRegime = (debtRow.regime as DebtRegime) || 'healthy';
+        console.log(`[strategist] dette de pruning ${debtRow.debt} → régime ${siteDebtRegime} (${debtRow.explanation || ''})`);
+      }
+    } catch (e) {
+      console.warn('[strategist] dette de pruning indisponible, régime sain par défaut');
+    }
+
+
     // Extract keyword cloud as reference universe
     const keywordCloud: string[] = [];
     const serpKwData = (serpKeywordsResult as any)?.data?.sample_keywords;
