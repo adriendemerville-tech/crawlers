@@ -10,18 +10,21 @@ import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreview
 import { mergeMarinaReports } from '@/lib/marina/mergeReports';
 import { fetchSiteStructure } from '@/lib/marina/siteStructure';
 import { persistNetworkSynthesis } from '@/lib/marina/networkSynthesisPersist';
-
+import {
+  cancelMarinaBatch,
+  createMarinaBatch,
+  getLatestMarinaBatch,
+  getMarinaBatch,
+  retryMarinaBatchFailures,
+} from '@/lib/marina/batch.functions';
 
 const MAX_URLS = 15;
 const MULTIPAGE_BASE_PAGES = 5;
 const MULTIPAGE_BASE_CREDITS = 30;
 const MULTIPAGE_EXTRA_CREDITS_PER_PAGE = 5;
-const CONCURRENCY = 2;
-// Décalage du 2e worker : laisse la 1re URL enregistrer le crawl partagé du
-// domaine avant que la suivante ne démarre (évite deux crawls simultanés).
-const STAGGER_MS = 20_000;
-const STORAGE_KEY = 'marina_batch_v2';
-const BATCH_KEY = 'marina_batch_v2_meta';
+/** Identifiant du lot courant : seul état local conservé entre deux visites. */
+const BATCH_ID_KEY = 'marina_batch_id';
+const POLL_MS = 6000;
 
 function computeMultipageCost(pageCount: number): number {
   if (pageCount <= MULTIPAGE_BASE_PAGES) return MULTIPAGE_BASE_CREDITS;
@@ -34,8 +37,8 @@ interface BatchItem {
   url: string;
   status: ItemStatus;
   progress: number;
-  jobId?: string;
-  error?: string;
+  jobId?: string | null;
+  error?: string | null;
 }
 
 interface Props {
@@ -47,7 +50,6 @@ interface Props {
   useCredit: (description: string, amount: number) => Promise<{ success: boolean; error?: string }>;
   refreshCredits: () => void;
 }
-
 
 function normalizeUrl(raw: string): string | null {
   const trimmed = raw.trim().replace(/[,;]+$/, '');
@@ -74,6 +76,16 @@ function flattenTreeUrls(tree: any[]): string[] {
   return [...new Set(out)];
 }
 
+/**
+ * Panneau multipages — pure expression d'un état serveur.
+ *
+ * L'orchestration du lot (lancement des URLs, suivi, reprise, clôture) vit en
+ * base et est avancée par le moteur serveur `batchEngine.server.ts` : cron
+ * quand personne ne regarde, lecture d'état quand l'onglet est ouvert. Ce
+ * composant ne fait que créer le lot, afficher sa progression et fusionner le
+ * PDF. Fermer l'onglet, recharger la page ou changer d'appareil n'interrompt
+ * plus rien.
+ */
 export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredits = false, language, useCredit, refreshCredits }: Props) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'paste' | 'directory'>('paste');
@@ -82,45 +94,72 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
   const [discovering, setDiscovering] = useState(false);
   const [discovered, setDiscovered] = useState<string[] | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
+  const [batchId, setBatchId] = useState<string | null>(null);
+  const [batchStatus, setBatchStatus] = useState<string>('idle');
   const [items, setItems] = useState<BatchItem[]>([]);
-  const [running, setRunning] = useState(false);
+  const [launching, setLaunching] = useState(false);
   const [buildingPdf, setBuildingPdf] = useState(false);
   const [mergedHtml, setMergedHtml] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-  /** Lot restauré depuis le stockage local, en attente de réconciliation serveur. */
-  const [pendingResume, setPendingResume] = useState<BatchItem[] | null>(null);
-  const cancelRef = useRef(false);
-  const batchRef = useRef<{ id: string; size: number } | null>(null);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const doneNotified = useRef(false);
 
+  const running = batchStatus === 'running';
 
-  /* ── Reprise d'un batch interrompu (jobs côté serveur) ── */
-  useEffect(() => {
+  /* ── Lecture de l'état du lot (la lecture fait aussi avancer la file) ── */
+  const refreshBatch = useCallback(async (id: string) => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return;
-      const parsed = JSON.parse(saved) as BatchItem[];
-      if (Array.isArray(parsed) && parsed.length > 0 && parsed.some(i => i.jobId)) {
-        setItems(parsed);
-        setOpen(true);
-        try {
-          const meta = localStorage.getItem(BATCH_KEY);
-          if (meta) batchRef.current = JSON.parse(meta);
-        } catch { /* ignore */ }
-        setPendingResume(parsed);
+      const state = await getMarinaBatch({ data: { batchId: id } });
+      setBatchStatus(state.status);
+      setItems(state.items.map(i => ({
+        url: i.url,
+        status: i.status,
+        progress: i.progress,
+        jobId: i.jobId,
+        error: i.error,
+      })));
+      if (state.status !== 'running' && !doneNotified.current) {
+        doneNotified.current = true;
+        refreshCredits();
       }
     } catch {
-      /* ignore */
+      /* réseau : nouvelle tentative au tour suivant */
     }
-  }, []);
+  }, [refreshCredits]);
 
+  /* ── Reprise d'affichage : on retrouve le lot côté serveur ── */
   useEffect(() => {
-    if (items.length === 0) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch {
-      /* quota */
-    }
-  }, [items]);
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    (async () => {
+      let id: string | null = null;
+      try {
+        id = localStorage.getItem(BATCH_ID_KEY);
+      } catch {
+        /* ignore */
+      }
+      if (!id) {
+        try {
+          id = (await getLatestMarinaBatch()).batchId;
+        } catch {
+          id = null;
+        }
+      }
+      if (!id || cancelled) return;
+      setBatchId(id);
+      setOpen(true);
+      void refreshBatch(id);
+    })();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, refreshBatch]);
+
+  /* ── Suivi périodique tant que le lot tourne ── */
+  useEffect(() => {
+    if (timer.current) { clearInterval(timer.current); timer.current = null; }
+    if (!batchId || batchStatus !== 'running') return;
+    timer.current = setInterval(() => { void refreshBatch(batchId); }, POLL_MS);
+    return () => { if (timer.current) clearInterval(timer.current); };
+  }, [batchId, batchStatus, refreshBatch]);
 
   const parsedFromText = useMemo(() => {
     const list = rawUrls
@@ -193,87 +232,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
     });
   };
 
-  /* ── Exécution : un job Marina par URL, 2 en parallèle ──
-   * `existingJobId` : reprise d'un job déjà lancé côté serveur (rechargement de
-   * page). On ne relance alors aucun audit, on se raccroche au suivi. */
-  const runOne = useCallback(async (
-    index: number,
-    url: string,
-    batch?: { id: string; size: number },
-    existingJobId?: string,
-  ): Promise<void> => {
-    const setItem = (patch: Partial<BatchItem>) =>
-      setItems(prev => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
-
-    setItem({ status: 'running', ...(existingJobId ? {} : { progress: 0 }) });
-
-    // Le débit du forfait multipages est effectué une seule fois au lancement du lot
-    // (handleLaunch). Les relances d'URLs en échec ne débitent donc pas à nouveau.
-
-    let jobId: string | null = existingJobId ?? null;
-    let launchError = 'Lancement impossible';
-    for (let attempt = 0; attempt < 3 && !jobId && !cancelRef.current; attempt++) {
-      if (attempt > 0) await new Promise(r => setTimeout(r, attempt * 4000));
-      try {
-        const session = (await supabase.auth.getSession()).data.session;
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url,
-            lang: language || 'fr',
-            // Marqueurs de lot : permettent de regrouper les N jobs d'un audit
-            // multipages en une seule carte dans « Mes audits ».
-            ...(batch ? { batch_id: batch.id, batch_size: batch.size, batch_index: index } : {}),
-          }),
-        });
-        const data = await res.json();
-        if (data.error || !data.job_id) throw new Error(data.error || 'Lancement impossible');
-        jobId = data.job_id as string;
-        setItem({ jobId });
-      } catch (e: any) {
-        launchError = e?.message || 'Lancement impossible';
-      }
-    }
-    if (!jobId) {
-      setItem({ status: 'failed', error: launchError });
-      return;
-    }
-
-
-    // Polling — le job vit côté serveur, la fermeture de l'onglet ne l'interrompt pas.
-    while (!cancelRef.current) {
-      await new Promise(r => setTimeout(r, 5000));
-      try {
-        const session = (await supabase.auth.getSession()).data.session;
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/marina?job_id=${jobId}`,
-          { headers: { Authorization: `Bearer ${session?.access_token}` } }
-        );
-        const data = await res.json();
-        if (data.status === 'completed' || data.status === 'partial') {
-          setItem({
-            status: data.status,
-            progress: 100,
-            ...(data.status === 'partial' ? { error: data.warning || 'Couche stratégique indisponible' } : {}),
-          });
-          refreshCredits();
-          return;
-        }
-        if (data.status === 'failed') {
-          setItem({ status: 'failed', progress: 0, error: data.error || 'Échec de la génération' });
-          return;
-        }
-        setItem({ progress: data.progress || 0 });
-      } catch {
-        /* réseau : on retente au tour suivant */
-      }
-    }
-  }, [language, refreshCredits]);
-
+  /* ── Lancement : on déclare le lot, le serveur exécute ── */
   const handleLaunch = useCallback(async () => {
     if (!isAuthenticated) {
       toast.error('Connectez-vous pour lancer un rapport');
@@ -288,8 +247,8 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       return;
     }
 
-    // Débit du forfait multipages en une seule fois : 30 crédits pour 5 pages,
-    // puis 5 crédits par page supplémentaire. Les relances d'URLs en échec sont incluses.
+    // Débit du forfait multipages en une seule fois : les relances d'URLs en
+    // échec sont incluses et ne débitent jamais à nouveau.
     if (!unlimitedCredits) {
       let debit = await useCredit(`Audit multipages Marina — ${targets.length} page(s)`, totalCost);
       for (let attempt = 1; attempt < 3 && !debit.success; attempt++) {
@@ -304,125 +263,48 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       }
     }
 
-    cancelRef.current = false;
+    setLaunching(true);
     setMergedHtml(null);
-    const initial: BatchItem[] = targets.map(url => ({ url, status: 'pending', progress: 0 }));
-    setItems(initial);
-    setRunning(true);
-    toast.success(`${targets.length} audits lancés — génération séquentielle en cours`);
-
-    let cursor = 0;
-    const batch = {
-      id: (globalThis.crypto?.randomUUID?.() || `batch-${Date.now()}`),
-      size: initial.length,
-    };
-    batchRef.current = batch;
-    try { localStorage.setItem(BATCH_KEY, JSON.stringify(batch)); } catch { /* quota */ }
-    const worker = async (workerIndex: number) => {
-      // Le second worker attend que le premier ait initié le crawl mutualisé.
-      if (workerIndex > 0) {
-        await new Promise(r => setTimeout(r, workerIndex * STAGGER_MS));
-      }
-      while (cursor < initial.length && !cancelRef.current) {
-        const index = cursor++;
-        await runOne(index, initial[index].url, batch);
-      }
-    };
-    await Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, initial.length) }, (_, i) => worker(i)),
-    );
-    setRunning(false);
-  }, [credits, isAuthenticated, runOne, targets, totalCost, unlimitedCredits]);
-
-  /* ── Relance des URLs en échec (le forfait multipages a déjà été débité) ── */
-  const handleRetryFailed = useCallback(async () => {
-    const failedIdx = items.map((it, i) => ({ it, i })).filter(({ it }) => it.status === 'failed').map(({ i }) => i);
-    if (failedIdx.length === 0) return;
-    cancelRef.current = false;
-    setRunning(true);
-    const batch = batchRef.current;
-    let cursor = 0;
-    const worker = async (workerIndex: number) => {
-      if (workerIndex > 0) await new Promise(r => setTimeout(r, workerIndex * STAGGER_MS));
-      while (cursor < failedIdx.length && !cancelRef.current) {
-        const idx = failedIdx[cursor++];
-        await runOne(idx, items[idx].url, batch ?? undefined);
-      }
-    };
-    await Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, failedIdx.length) }, (_, i) => worker(i)),
-    );
-    setRunning(false);
-  }, [items, runOne]);
-
-  /* ── Reprise d'un lot interrompu ───────────────────────────────────────────
-   * L'orchestration du lot vit dans cet onglet : un rechargement de page, une
-   * navigation ou une mise en veille tuait la boucle, laissant les URLs figées
-   * (« 67 % » éternel) et les suivantes jamais lancées, alors que les jobs
-   * étaient terminés côté serveur. On réconcilie donc l'état stocké avec la
-   * base, puis on relance la file sur les URLs restantes — sans nouveau débit,
-   * le forfait ayant déjà été prélevé au lancement. */
-  const resumeBatch = useCallback(async (saved: BatchItem[]) => {
-    // 1. Réconciliation : état réel des jobs déjà lancés.
-    const withJobs = saved.filter(i => i.jobId);
-    let reconciled = saved;
-    if (withJobs.length > 0) {
-      const { data } = await supabase
-        .from('async_jobs')
-        .select('id, status, progress')
-        .in('id', withJobs.map(i => i.jobId as string));
-      const byId = new Map((data || []).map((j: any) => [j.id as string, j]));
-      reconciled = saved.map(item => {
-        const job = item.jobId ? byId.get(item.jobId) : undefined;
-        if (!job) return item;
-        const status = String(job.status);
-        if (status === 'completed' || status === 'partial') {
-          return { ...item, status: status as ItemStatus, progress: 100 };
-        }
-        if (status === 'failed') {
-          return { ...item, status: 'failed' as ItemStatus, error: item.error || 'Échec de la génération' };
-        }
-        return { ...item, status: 'running' as ItemStatus, progress: (job.progress ?? item.progress) as number };
+    doneNotified.current = false;
+    try {
+      const { batchId: id } = await createMarinaBatch({
+        data: { urls: targets, lang: language || 'fr' },
       });
-      setItems(reconciled);
+      setBatchId(id);
+      setBatchStatus('running');
+      try { localStorage.setItem(BATCH_ID_KEY, id); } catch { /* quota */ }
+      await refreshBatch(id);
+      toast.success(`${targets.length} audits programmés — le traitement continue même onglet fermé`);
+    } catch (e: any) {
+      toast.error(e?.message || 'Lancement du lot impossible');
+    } finally {
+      setLaunching(false);
     }
+  }, [credits, isAuthenticated, language, refreshBatch, targets, totalCost, unlimitedCredits, useCredit]);
 
-    // 2. Reprise : suivi des jobs encore en vol + lancement des URLs en attente.
-    const todo = reconciled
-      .map((it, i) => ({ it, i }))
-      .filter(({ it }) => it.status === 'pending' || it.status === 'running');
-    if (todo.length === 0) return;
+  const handleRetryFailed = useCallback(async () => {
+    if (!batchId) return;
+    try {
+      await retryMarinaBatchFailures({ data: { batchId } });
+      setBatchStatus('running');
+      doneNotified.current = false;
+      await refreshBatch(batchId);
+      toast.success('Relance programmée pour les URLs en échec');
+    } catch (e: any) {
+      toast.error(e?.message || 'Relance impossible');
+    }
+  }, [batchId, refreshBatch]);
 
-    cancelRef.current = false;
-    setRunning(true);
-    const batch = batchRef.current;
-    let cursor = 0;
-    const worker = async (workerIndex: number) => {
-      if (workerIndex > 0) await new Promise(r => setTimeout(r, workerIndex * STAGGER_MS));
-      while (cursor < todo.length && !cancelRef.current) {
-        const { it, i } = todo[cursor++];
-        await runOne(i, it.url, batch ?? undefined, it.jobId);
-      }
-    };
-    await Promise.all(
-      Array.from({ length: Math.min(CONCURRENCY, todo.length) }, (_, w) => worker(w)),
-    );
-    setRunning(false);
-  }, [runOne]);
-
-  /* Reprise déclenchée une seule fois, après restauration du lot stocké. */
-  useEffect(() => {
-    if (!pendingResume) return;
-    setPendingResume(null);
-    void resumeBatch(pendingResume);
-  }, [pendingResume, resumeBatch]);
-
-
-  const handleCancel = () => {
-    cancelRef.current = true;
-    setRunning(false);
-    toast.info('Suivi interrompu — les audits déjà lancés continuent côté serveur');
-  };
+  const handleCancel = useCallback(async () => {
+    if (!batchId) return;
+    try {
+      await cancelMarinaBatch({ data: { batchId } });
+      setBatchStatus('cancelled');
+      toast.info('File arrêtée — les audits déjà lancés se terminent côté serveur');
+    } catch (e: any) {
+      toast.error(e?.message || 'Arrêt impossible');
+    }
+  }, [batchId]);
 
   /* ── Génération du PDF unique une fois tous les audits terminés ── */
   const handleBuildPdf = useCallback(async () => {
@@ -494,13 +376,12 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
   }, [items]);
 
   const resetBatch = () => {
-    cancelRef.current = true;
+    setBatchId(null);
+    setBatchStatus('idle');
     setItems([]);
     setMergedHtml(null);
-    setRunning(false);
     try {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(BATCH_KEY);
+      localStorage.removeItem(BATCH_ID_KEY);
     } catch {
       /* ignore */
     }
@@ -568,7 +449,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
                 className="bg-background border-border font-mono text-sm"
               />
               <p className="mt-2 text-xs text-muted-foreground">
-                Une URL par ligne (ou séparées par des espaces). Maximum {MAX_URLS} URLs.
+                Une URL par ligne (ou séparées par des espaces). Maximum {MAX_URLS} URLs, toutes sur le même domaine.
                 Chaque URL donne lieu à un audit Marina complet, puis tous les audits sont réunis dans un seul PDF.
               </p>
             </>
@@ -637,7 +518,6 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
             <span className="text-muted-foreground">
               Durée estimée : ~{Math.max(3, targets.length * 3)} min (audits exécutés l'un après l'autre)
             </span>
-
           </div>
 
           {overLimit && (
@@ -652,15 +532,15 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
               type="button"
               variant="outline"
               onClick={handleLaunch}
-              disabled={running || targets.length < 2}
+              disabled={running || launching || targets.length < 2}
               className="gap-2 bg-transparent border-border"
             >
-              {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
+              {launching || running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
               Lancer les {targets.length || ''} audits
             </Button>
             {running && (
               <Button type="button" variant="outline" onClick={handleCancel} className="gap-2 bg-transparent border-border">
-                <X className="w-4 h-4" /> Arrêter le suivi
+                <X className="w-4 h-4" /> Arrêter la file
               </Button>
             )}
             {items.some(i => i.status === 'failed') && !running && (
@@ -673,10 +553,9 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
                 <X className="w-4 h-4" /> Réinitialiser
               </Button>
             )}
-
           </div>
 
-          {/* Suivi par URL */}
+          {/* Suivi par URL — état lu côté serveur */}
           {items.length > 0 && (
             <div className="mt-5 space-y-2">
               {items.map((item, i) => (
@@ -713,8 +592,8 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
                 </Button>
                 {!allDone && (
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Le PDF n'est disponible qu'une fois tous les audits terminés. Les rapports sont
-                    conservés côté serveur : vous pouvez fermer l'onglet et revenir plus tard.
+                    Le PDF n'est disponible qu'une fois tous les audits terminés. La file est tenue par
+                    le serveur : vous pouvez fermer l'onglet, changer d'appareil et revenir plus tard.
                   </p>
                 )}
               </div>
