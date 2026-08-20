@@ -581,7 +581,7 @@ const FREE_TRIAL_TEXTS = {
   es: {
     title: `${MARINA_FREE_QUOTA} informes completos gratis, sin cuenta, luego ${CREDIT_COST} créditos / informe`,
     emailPlaceholder: 'tu@email.com',
-    hint: 'Tu email sirve para enviarte el enlace del informe y limitar los abusos.'
+    hint: 'Tu email sirve para enviarte el enlace del informe y limitar los abusos.',
     remaining: (n: number) => `${n} informe${n > 1 ? 's' : ''} gratuito${n > 1 ? 's' : ''} restante${n > 1 ? 's' : ''} en esta conexión`,
     exhausted: 'Tus informes gratuitos se han agotado. Crea una cuenta para continuar.',
     emailRequired: 'Introduce un email válido',
