@@ -52,7 +52,7 @@ export function MarinaSeoContent() {
           plan d'action priorisé par impact et effort. Audit disponible sur https://crawlers.fr/marina.
         </blockquote>
 
-        <div className="space-y-4 text-sm sm:text-base text-muted-foreground leading-relaxed">
+        <div className="columns-1 lg:columns-2 gap-8 space-y-4 text-sm text-muted-foreground leading-relaxed [&>p]:break-inside-avoid">
           <p>
             La plupart des outils d'audit gratuits se limitent à une checklist technique : balises manquantes,
             vitesse, liens cassés. Marina ajoute la couche qui décide désormais de la visibilité — la manière dont
