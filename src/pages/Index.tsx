@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense, memo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/hooks/use-toast';
+import { SiloHub } from '@/components/seo/SiloHub';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { ToolTabs, ToolTab } from '@/components/ToolTabs';
@@ -893,6 +894,13 @@ const Index = () => {
         <LazyVisible minHeight="500px">
           <Suspense fallback={<SectionSkeleton />}>
             <div className="cv-auto"><FAQSection /></div>
+          </Suspense>
+        </LazyVisible>
+
+        {/* Hub des 4 silos : la home transmet l'autorité aux piliers */}
+        <LazyVisible minHeight="400px">
+          <Suspense fallback={<SectionSkeleton />}>
+            <div className="cv-auto"><SiloHub /></div>
           </Suspense>
         </LazyVisible>
       </main>

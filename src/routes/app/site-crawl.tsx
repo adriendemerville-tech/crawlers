@@ -7,6 +7,8 @@ export const Route = createFileRoute("/app/site-crawl")({
     title: "Crawl Multi-Pages SEO — Jusqu'à 5000 pages | Crawlers.fr",
     description: "Crawl multi-pages jusqu'à 5000 pages. Analyse récursive sitemap-first. Détection d'erreurs techniques, maillage, indexation. Pro Agency inclus.",
     path: "/app/site-crawl",
+    // Le pilier public /crawl porte l'intention « outil de crawl ».
+    canonicalPath: "/crawl",
     noIndex: true,
   }),
   component: SiteCrawl,

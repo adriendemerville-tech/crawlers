@@ -14,7 +14,8 @@ import {
   ArrowRight, HelpCircle, Cpu, Globe, FileText, Rocket,
 } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
-import { ClusterMesh } from '@/components/seo/ClusterMesh';
+import { SiloNav } from '@/components/seo/SiloNav';
+
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
@@ -615,15 +616,11 @@ const ComparatifCrawlersSemrush = () => {
               </p>
             </div>
           </section>
-          <ClusterMesh
+          <SiloNav
+            silo="comparatifs"
             currentPath="/comparatif-crawlers-semrush"
-            currentLabel="Crawlers vs Semrush"
-            pillar={{ href: '/audit-seo-gratuit', label: 'Audit SEO gratuit', description: 'Pilier : 200 points techniques + GEO en 60 secondes.' }}
-            sisters={[
-              { href: '/comparatif-claude-vs-crawlers', label: 'Claude vs Crawlers', description: 'Comparatif IA générative vs plateforme SEO.' },
-              { href: '/audit-expert', label: 'Audit expert', description: '168 critères + plan d\'action correctif.' },
-              { href: '/generative-engine-optimization', label: 'Score GEO', description: 'Visibilité dans les moteurs IA.' },
-            ]}
+            heading="Les autres comparatifs du silo"
+            className="mt-12"
           />
         </main>
 

@@ -6,6 +6,8 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { KEYWORD_PILLARS } from '@/data/keywordPillars';
+import { siloForPath } from '@/data/silos';
+import { SiloNav } from '@/components/seo/SiloNav';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -24,6 +26,7 @@ export default function KeywordPillarPage() {
   if (!data) return <Navigate to="/404" replace />;
 
   const canonical = `https://crawlers.fr/${data.slug}`;
+  const silo = siloForPath(`/${slug}`);
 
   const articleJsonLd = {
     '@context': 'https://schema.org',
@@ -122,6 +125,10 @@ export default function KeywordPillarPage() {
               ))}
             </ul>
           </section>
+
+          {silo && (
+            <SiloNav silo={silo.id} currentPath={`/${slug}`} className="mt-16" />
+          )}
 
           <section className="mt-16 rounded-2xl border border-border bg-card/40 p-8 text-center">
             <div className="inline-flex items-center gap-2 mb-3 text-sm text-foreground/70">

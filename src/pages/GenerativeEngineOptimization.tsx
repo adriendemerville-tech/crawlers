@@ -18,6 +18,8 @@ import { GeoResult } from '@/types/geo';
 import { GeoDashboard } from '@/components/GeoDashboard';
 import MarinaCitablePassage from "@/components/seo/MarinaCitablePassage";
 
+import { SiloNav } from '@/components/seo/SiloNav';
+
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 const GenerativeEngineOptimization = () => {
@@ -396,6 +398,13 @@ const GenerativeEngineOptimization = () => {
           </div>
         </article>
         <MarinaCitablePassage />
+        <div className="max-w-4xl mx-auto px-4 pb-12">
+          <SiloNav
+            silo="geo"
+            currentPath="/generative-engine-optimization"
+            heading="Le silo référencement IA"
+          />
+        </div>
       </main>
 
       <Suspense fallback={null}>
