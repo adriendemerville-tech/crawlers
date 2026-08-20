@@ -21,6 +21,7 @@ const CONCURRENCY = 2;
 // domaine avant que la suivante ne démarre (évite deux crawls simultanés).
 const STAGGER_MS = 20_000;
 const STORAGE_KEY = 'marina_batch_v2';
+const BATCH_KEY = 'marina_batch_v2_meta';
 
 function computeMultipageCost(pageCount: number): number {
   if (pageCount <= MULTIPAGE_BASE_PAGES) return MULTIPAGE_BASE_CREDITS;
@@ -86,6 +87,8 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
   const [buildingPdf, setBuildingPdf] = useState(false);
   const [mergedHtml, setMergedHtml] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  /** Lot restauré depuis le stockage local, en attente de réconciliation serveur. */
+  const [pendingResume, setPendingResume] = useState<BatchItem[] | null>(null);
   const cancelRef = useRef(false);
   const batchRef = useRef<{ id: string; size: number } | null>(null);
 
@@ -99,6 +102,11 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       if (Array.isArray(parsed) && parsed.length > 0 && parsed.some(i => i.jobId)) {
         setItems(parsed);
         setOpen(true);
+        try {
+          const meta = localStorage.getItem(BATCH_KEY);
+          if (meta) batchRef.current = JSON.parse(meta);
+        } catch { /* ignore */ }
+        setPendingResume(parsed);
       }
     } catch {
       /* ignore */
@@ -185,17 +193,24 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
     });
   };
 
-  /* ── Exécution : un job Marina par URL, 2 en parallèle ── */
-  const runOne = useCallback(async (index: number, url: string, batch?: { id: string; size: number }): Promise<void> => {
+  /* ── Exécution : un job Marina par URL, 2 en parallèle ──
+   * `existingJobId` : reprise d'un job déjà lancé côté serveur (rechargement de
+   * page). On ne relance alors aucun audit, on se raccroche au suivi. */
+  const runOne = useCallback(async (
+    index: number,
+    url: string,
+    batch?: { id: string; size: number },
+    existingJobId?: string,
+  ): Promise<void> => {
     const setItem = (patch: Partial<BatchItem>) =>
       setItems(prev => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
 
-    setItem({ status: 'running', progress: 0 });
+    setItem({ status: 'running', ...(existingJobId ? {} : { progress: 0 }) });
 
     // Le débit du forfait multipages est effectué une seule fois au lancement du lot
     // (handleLaunch). Les relances d'URLs en échec ne débitent donc pas à nouveau.
 
-    let jobId: string | null = null;
+    let jobId: string | null = existingJobId ?? null;
     let launchError = 'Lancement impossible';
     for (let attempt = 0; attempt < 3 && !jobId && !cancelRef.current; attempt++) {
       if (attempt > 0) await new Promise(r => setTimeout(r, attempt * 4000));
@@ -302,6 +317,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       size: initial.length,
     };
     batchRef.current = batch;
+    try { localStorage.setItem(BATCH_KEY, JSON.stringify(batch)); } catch { /* quota */ }
     const worker = async (workerIndex: number) => {
       // Le second worker attend que le premier ait initié le crawl mutualisé.
       if (workerIndex > 0) {
@@ -338,6 +354,68 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
     );
     setRunning(false);
   }, [items, runOne]);
+
+  /* ── Reprise d'un lot interrompu ───────────────────────────────────────────
+   * L'orchestration du lot vit dans cet onglet : un rechargement de page, une
+   * navigation ou une mise en veille tuait la boucle, laissant les URLs figées
+   * (« 67 % » éternel) et les suivantes jamais lancées, alors que les jobs
+   * étaient terminés côté serveur. On réconcilie donc l'état stocké avec la
+   * base, puis on relance la file sur les URLs restantes — sans nouveau débit,
+   * le forfait ayant déjà été prélevé au lancement. */
+  const resumeBatch = useCallback(async (saved: BatchItem[]) => {
+    // 1. Réconciliation : état réel des jobs déjà lancés.
+    const withJobs = saved.filter(i => i.jobId);
+    let reconciled = saved;
+    if (withJobs.length > 0) {
+      const { data } = await supabase
+        .from('async_jobs')
+        .select('id, status, progress')
+        .in('id', withJobs.map(i => i.jobId as string));
+      const byId = new Map((data || []).map((j: any) => [j.id as string, j]));
+      reconciled = saved.map(item => {
+        const job = item.jobId ? byId.get(item.jobId) : undefined;
+        if (!job) return item;
+        const status = String(job.status);
+        if (status === 'completed' || status === 'partial') {
+          return { ...item, status: status as ItemStatus, progress: 100 };
+        }
+        if (status === 'failed') {
+          return { ...item, status: 'failed' as ItemStatus, error: item.error || 'Échec de la génération' };
+        }
+        return { ...item, status: 'running' as ItemStatus, progress: (job.progress ?? item.progress) as number };
+      });
+      setItems(reconciled);
+    }
+
+    // 2. Reprise : suivi des jobs encore en vol + lancement des URLs en attente.
+    const todo = reconciled
+      .map((it, i) => ({ it, i }))
+      .filter(({ it }) => it.status === 'pending' || it.status === 'running');
+    if (todo.length === 0) return;
+
+    cancelRef.current = false;
+    setRunning(true);
+    const batch = batchRef.current;
+    let cursor = 0;
+    const worker = async (workerIndex: number) => {
+      if (workerIndex > 0) await new Promise(r => setTimeout(r, workerIndex * STAGGER_MS));
+      while (cursor < todo.length && !cancelRef.current) {
+        const { it, i } = todo[cursor++];
+        await runOne(i, it.url, batch ?? undefined, it.jobId);
+      }
+    };
+    await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, todo.length) }, (_, w) => worker(w)),
+    );
+    setRunning(false);
+  }, [runOne]);
+
+  /* Reprise déclenchée une seule fois, après restauration du lot stocké. */
+  useEffect(() => {
+    if (!pendingResume) return;
+    setPendingResume(null);
+    void resumeBatch(pendingResume);
+  }, [pendingResume, resumeBatch]);
 
 
   const handleCancel = () => {
@@ -422,6 +500,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
     setRunning(false);
     try {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(BATCH_KEY);
     } catch {
       /* ignore */
     }
