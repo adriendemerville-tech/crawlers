@@ -40,6 +40,8 @@ export type LandingEnrichment = {
   faqs: EnrichmentFaq[];
   /** Article datePublished (ISO) */
   datePublished?: string;
+  /** Article dateModified (ISO) — à renseigner uniquement en cas de révision réelle */
+  dateModified?: string;
 };
 
 export const LANDING_ENRICHMENT: Record<string, LandingEnrichment> = {
