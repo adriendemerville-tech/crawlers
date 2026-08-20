@@ -10,7 +10,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const FREE_TOOLS = new Set(['check_geo_score', 'check_llm_visibility', 'check_ai_crawlers']);
 const TOOL_TO_FUNCTION: Record<string, string> = {
-  check_geo_score: 'check-geo', check_llm_visibility: 'check-llm-depth', check_ai_crawlers: 'check-llm-depth',
+  check_geo_score: 'check-geo', check_llm_visibility: 'check-llm-depth', check_ai_crawlers: 'check-crawlers',
   expert_seo_audit: 'audit-expert-seo', strategic_ai_audit: 'audit-strategique-ia',
   generate_corrective_code: 'generate-corrective-code', dry_run_script: 'process-script-queue',
   calculate_cocoon_logic: 'calculate-cocoon-logic', measure_audit_impact: 'auto-measure-predictions',
