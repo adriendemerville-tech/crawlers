@@ -850,11 +850,14 @@ export type Database = {
           finding_category: string
           gmb_urgency_score: number | null
           id: string
+          is_quick_win: boolean
           keyword_coverage_score: number
           manual_priority: number | null
           payload: Json | null
+          priority_score: number | null
           priority_tag: string | null
           ring_proximity_score: number
+          roi_tier: string | null
           seasonal_boost_score: number
           severity: string
           source_function: string | null
@@ -894,11 +897,14 @@ export type Database = {
           finding_category: string
           gmb_urgency_score?: number | null
           id?: string
+          is_quick_win?: boolean
           keyword_coverage_score?: number
           manual_priority?: number | null
           payload?: Json | null
+          priority_score?: number | null
           priority_tag?: string | null
           ring_proximity_score?: number
+          roi_tier?: string | null
           seasonal_boost_score?: number
           severity?: string
           source_function?: string | null
@@ -938,11 +944,14 @@ export type Database = {
           finding_category?: string
           gmb_urgency_score?: number | null
           id?: string
+          is_quick_win?: boolean
           keyword_coverage_score?: number
           manual_priority?: number | null
           payload?: Json | null
+          priority_score?: number | null
           priority_tag?: string | null
           ring_proximity_score?: number
+          roi_tier?: string | null
           seasonal_boost_score?: number
           severity?: string
           source_function?: string | null
@@ -12705,6 +12714,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      site_pruning_debt: {
+        Row: {
+          cannibal_clusters: number
+          cannibal_ratio: number
+          computed_at: string
+          concentration: number
+          corpus_size: number
+          created_at: string
+          debt: number
+          domain: string
+          explanation: string | null
+          id: string
+          insufficient_data: boolean
+          items_scored: number
+          metrics_available: boolean
+          mute_ratio: number
+          prunable_ratio: number
+          regime: string
+          tracked_site_id: string | null
+          useful_pages: number
+          user_id: string
+        }
+        Insert: {
+          cannibal_clusters?: number
+          cannibal_ratio?: number
+          computed_at?: string
+          concentration?: number
+          corpus_size?: number
+          created_at?: string
+          debt?: number
+          domain: string
+          explanation?: string | null
+          id?: string
+          insufficient_data?: boolean
+          items_scored?: number
+          metrics_available?: boolean
+          mute_ratio?: number
+          prunable_ratio?: number
+          regime?: string
+          tracked_site_id?: string | null
+          useful_pages?: number
+          user_id: string
+        }
+        Update: {
+          cannibal_clusters?: number
+          cannibal_ratio?: number
+          computed_at?: string
+          concentration?: number
+          corpus_size?: number
+          created_at?: string
+          debt?: number
+          domain?: string
+          explanation?: string | null
+          id?: string
+          insufficient_data?: boolean
+          items_scored?: number
+          metrics_available?: boolean
+          mute_ratio?: number
+          prunable_ratio?: number
+          regime?: string
+          tracked_site_id?: string | null
+          useful_pages?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       site_script_rules: {
         Row: {
