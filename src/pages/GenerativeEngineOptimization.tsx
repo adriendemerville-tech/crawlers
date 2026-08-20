@@ -161,7 +161,7 @@ const GenerativeEngineOptimization = () => {
               <span className="text-xs text-muted-foreground">Mis à jour le 9 mars 2026</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
-              Generative Engine Optimization (GEO) : définition, stratégie et guide complet 2026
+              Référencement IA (GEO) : définition, score, visibilité LLM et guide complet 2026
             </h1>
             <p className="text-lg text-muted-foreground mb-4">
               Par <strong>Adrien de Volontat</strong> — Fondateur de Crawlers.fr
