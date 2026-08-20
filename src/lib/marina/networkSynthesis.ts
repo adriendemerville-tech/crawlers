@@ -540,8 +540,8 @@ export function dedupeWhy(title: string, why: string): string {
   const w = normalizeForCompare(why);
   if (!t || !w) return why;
   if (w === t) return '';
-  if (w.startsWith(t)) {
-    const rest = why.slice(title.length).replace(/^[\s.:;,—–-]+/, '').trim();
+  if (w.startsWith(t) && why.trim().startsWith(title.trim())) {
+    const rest = why.trim().slice(title.trim().length).replace(/^[\s.:;,—–-]+/, '').trim();
     if (!rest) return '';
     return rest.charAt(0).toUpperCase() + rest.slice(1);
   }
