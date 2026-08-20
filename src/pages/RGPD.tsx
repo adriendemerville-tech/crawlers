@@ -219,8 +219,13 @@ const RGPD = () => {
                     </thead>
                     <tbody>
                       <tr className="border-b border-border/50">
+                        <td className="py-2 pr-4">Paddle.com Market Ltd.</td>
+                        <td className="py-2 pr-4">{t3(language, 'Merchant of Record : vente, abonnements, paiements, TVA, facturation', 'Merchant of Record: sale, subscriptions, payments, VAT, invoicing', 'Merchant of Record: venta, suscripciones, pagos, IVA, facturación')}</td>
+                        <td className="py-2">{t3(language, 'Royaume-Uni (décision d\'adéquation) et UE', 'United Kingdom (adequacy decision) and EU', 'Reino Unido (decisión de adecuación) y UE')}</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
                         <td className="py-2 pr-4">Stripe</td>
-                        <td className="py-2 pr-4">{t3(language, 'Paiements sécurisés (PCI-DSS niveau 1)', 'Secure payments (PCI-DSS Level 1)', 'Pagos seguros (PCI-DSS nivel 1)')}</td>
+                        <td className="py-2 pr-4">{t3(language, 'Paiements sécurisés, circuits résiduels (PCI-DSS niveau 1)', 'Secure payments, residual flows (PCI-DSS Level 1)', 'Pagos seguros, circuitos residuales (PCI-DSS nivel 1)')}</td>
                         <td className="py-2">{t3(language, 'UE (Dublin)', 'EU (Dublin)', 'UE (Dublín)')}</td>
                       </tr>
                       <tr className="border-b border-border/50">
