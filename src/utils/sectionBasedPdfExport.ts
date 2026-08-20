@@ -221,6 +221,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   const isBlank = (c: HTMLCanvasElement): boolean => {
     const ctx = c.getContext('2d');
     if (!ctx) return false;
+    try {
     const step = Math.max(1, Math.floor(c.height / 40));
     let first: string | null = null;
     for (let y = 0; y < c.height; y += step) {
@@ -232,6 +233,9 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
       }
     }
     return true;
+    } catch {
+      return false; // canvas « tainted » : on ne peut pas l'inspecter
+    }
   };
 
   let captured = 0;
