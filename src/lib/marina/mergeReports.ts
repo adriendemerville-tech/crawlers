@@ -426,7 +426,7 @@ export function mergeMarinaReports(
     ? `<h2 style="font-size:18px;margin:26px 0 10px 0;">Analyse du site (commune aux ${parts.length} pages)</h2>
        <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
          ${orderedSiteEntries
-           .map(([id]) => `<li style="margin:0 0 8px 0;">${escapeHtml(SITE_BLOCK_LABELS[id] || id)}</li>`)
+           .map(([id]) => `<li style="margin:0 0 8px 0;">${escapeHtml(siteBlockLabel(id))}</li>`)
            .join('')}
        </ul>`
     : '';
@@ -475,10 +475,10 @@ export function mergeMarinaReports(
       <h2 style="font-size:18px;margin:26px 0 10px 0;">Lecture d'ensemble</h2>
       <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
         ${networkSynthesis
-          ? `<li style="margin:0 0 8px 0;">Synthèse réseau, en ouverture de ce document — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés</li>`
+          ? `<li style="margin:0 0 8px 0;">Synthèse&nbsp;réseau, en ouverture de ce document — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés</li>`
           : ''}
         ${globalSummary
-          ? `<li style="margin:0 0 8px 0;">Synthèse exécutive — verdict du domaine puis reprise page par page</li>`
+          ? `<li style="margin:0 0 8px 0;">Synthèse&nbsp;exécutive — verdict du domaine puis reprise page par page</li>`
           : `<li style="margin:0 0 8px 0;">Reprise page par page — les rapports de ce lot ne portent pas les repères de synthèse</li>`}
       </ul>
       ${sharedToc}
