@@ -219,6 +219,45 @@ async function attachGscSignals(sb: any, candidates: PruneCandidate[]): Promise<
   return true;
 }
 
+/**
+ * Positions externes (Semrush / DataForSEO via `keyword_universe`).
+ * GSC n'associe une requête à une page que par recouvrement de jetons : une
+ * page classée en page 2 peut n'avoir aucun signal GSC exploitable. Cette
+ * source évite de dépublier un actif déjà positionné.
+ */
+async function attachExternalRanks(sb: any, candidates: PruneCandidate[]): Promise<void> {
+  const { data, error } = await sb
+    .from('keyword_universe')
+    .select('target_url, current_position, best_position, search_volume')
+    .eq('domain', DOMAIN)
+    .not('target_url', 'is', null)
+    .limit(5000);
+  if (error || !data?.length) return;
+
+  const byPath = new Map<string, PruneCandidate>();
+  for (const c of candidates) {
+    try { byPath.set(new URL(c.url).pathname.replace(/\/+$/, ''), c); } catch { /* url invalide */ }
+  }
+
+  for (const row of data) {
+    let path: string;
+    try { path = new URL(String(row.target_url)).pathname.replace(/\/+$/, ''); } catch { continue; }
+    const c = byPath.get(path);
+    if (!c) continue;
+    const positions = [row.current_position, row.best_position]
+      .map((p: unknown) => Number(p) || 0)
+      .filter((p: number) => p > 0);
+    if (positions.length === 0) continue;
+    const pos = Math.min(...positions);
+    if (c.externalBestPosition === null || pos < c.externalBestPosition) {
+      c.externalBestPosition = pos;
+      c.externalKeywordVolume = Number(row.search_volume) || 0;
+    }
+  }
+}
+
+
+
 /** Détection quasi-doublons + contenu pauvre (déterministe, 0 token). */
 async function attachIntegritySignals(candidates: PruneCandidate[], identity: SiteIdentity): Promise<void> {
   const pages: IntegrityPageInput[] = candidates.map((c) => ({
