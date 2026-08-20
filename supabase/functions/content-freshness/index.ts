@@ -676,11 +676,13 @@ try {
       })(),
     }
 
-    await sb.from('analytics_events').insert({
-      user_id: user.id,
-      event_type: 'content-freshness:analyze',
-      event_data: { tracked_site_id, ...summary },
-    }).catch(() => {})
+    try {
+      await sb.from('analytics_events').insert({
+        user_id: user.id,
+        event_type: 'content-freshness:analyze',
+        event_data: { tracked_site_id, ...summary },
+      })
+    } catch { /* télémétrie non bloquante */ }
 
     return json({ pages: results, summary, domain: site.domain })
   } catch (error: unknown) {
