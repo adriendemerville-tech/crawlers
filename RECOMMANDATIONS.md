@@ -12,8 +12,9 @@ Fusionner les deux edge functions de ~2500 lignes pour réduire la dette techniq
 ## #142 · P1 · 2j — Absence de safeServiceCall pour vérification de propriété
 Encapsuler les traitements d'audit dans `safeServiceCall` pour valider que l'utilisateur est bien propriétaire du `tracked_site_id` concerné.
 
-## #143 · P1 · 1j — GRANTs manquants pour authenticated
-Ajouter les `GRANT` explicites aux utilisateurs authentifiés sur les tables SEO pour éviter les erreurs 403 après correction du RLS.
+## #143 · P1 · FAIT (2026-08-20) — GRANTs manquants pour authenticated
+GRANT explicites posés sur les 14 tables audits/SEO pour `authenticated` (alignés sur les policies) et `service_role` (accès complet).
+
 
 ## #144 · P2 · 1j — Non-conformité Design System et console.log
 Remplacer les couleurs HSL/Tailwind hardcodées par les variables du Design System et supprimer les `console.log` de production.
