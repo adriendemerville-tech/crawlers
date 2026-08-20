@@ -181,6 +181,26 @@ export function ParmenionExecutionStatus() {
         }
       }
 
+
+      // Incidents des 7 derniers jours : un cycle dégradé/partiel/échoué n'était
+      // visible nulle part (le chip de phase ne portait ni cause ni compteur).
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: incidentRows } = await supabase
+        .from('parmenion_decision_log')
+        .select('pipeline_phase, status, created_at, execution_error, action_type')
+        .eq('domain', t.domain)
+        .in('status', ['degraded', 'partial', 'failed'])
+        .gte('created_at', sevenDaysAgo)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      const incidents: Incident[] = (incidentRows || []).slice(0, 5).map((row) => ({
+        phase: (row.pipeline_phase as string) || (row.action_type as string) || '—',
+        status: row.status as string,
+        at: row.created_at as string,
+        messages: parseErrorMessages(row.execution_error),
+      }));
+
       result.push({
         domain: t.domain,
         label: t.label,
@@ -191,7 +211,10 @@ export function ParmenionExecutionStatus() {
         total_cycles_run: cfg?.total_cycles_run ?? 0,
         last_cycle_number: lastCycleNumber,
         phases,
+        degradedCount7d: (incidentRows || []).length,
+        incidents,
       });
+
     }
 
     setRows(result);
