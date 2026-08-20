@@ -6,6 +6,8 @@
  */
 
 import { SITE_URL } from './pageHead';
+import { resolveArticleDates } from '@/lib/blog/lastUpdated';
+
 
 export interface ArticleJsonLdInput {
   title: string;
