@@ -72,7 +72,7 @@ export async function logContentCreation(
   },
 ): Promise<void> {
   try {
-    await supabase.from('autopilot_modification_log').insert({
+    const { error } = await supabase.from('autopilot_modification_log').insert({
       tracked_site_id: params.trackedSiteId,
       config_id: params.configId ?? null,
       user_id: params.userId ?? null,
@@ -84,6 +84,9 @@ export async function logContentCreation(
       description: `[PUBLISH:${params.via}] ${params.title || params.slug} (${params.published ? 'published' : 'draft'})`,
       diff_after: { slug: params.slug, published: params.published, via: params.via },
     });
+    // Sans cette trace le throttle est aveugle : on la remonte bruyamment.
+    if (error) console.error('[contentThrottle] trace publication refusée:', error.message);
+
   } catch (err) {
     console.error('[contentThrottle] log publication échoué:', err instanceof Error ? err.message : err);
   }
