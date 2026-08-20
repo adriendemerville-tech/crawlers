@@ -227,7 +227,7 @@ Deno.serve(handleRequest(async (req) => {
     // 6. Persistance
     let persisted = 0
     if (persist) {
-      await sb.from('site_pruning_debt').insert({
+      const { error: debtErr } = await sb.from('site_pruning_debt').insert({
         domain: bare,
         tracked_site_id: site.id,
         user_id: ownerId,
