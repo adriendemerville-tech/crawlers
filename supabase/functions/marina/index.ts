@@ -1639,15 +1639,18 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
         const title = split.text;
         const desc = typeof r === 'string' ? '' : r.description || r.detail || '';
         const priority = typeof r === 'string' ? (split.severity || '') : (r.priority || r.severity || split.severity || '');
-        const category = typeof r === 'string' ? '' : r.category || '';
-        const color = priority === 'critical' ? '#ef4444' : priority === 'important' ? '#f59e0b' : '#3b82f6';
+        const rawCategory = typeof r === 'string' ? '' : String(r.category || '').trim();
+        // Un fragment de phrase (« la », « Contenu de… ») laissé par un découpage
+        // amont ne fait pas une catégorie : mieux vaut ne rien afficher.
+        const category = rawCategory.length >= 3 && !/\s/.test(rawCategory) ? rawCategory : '';
+        const color = priority === 'critical' ? '#991b1b' : priority === 'important' ? '#8a6d1f' : '#6d28d9';
         return `<div class="reco-card" style="border-left-color:${color}">
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
             ${severityBadgeHTML(priority)}
-            ${category ? `<span style="font-size:11px;color:#6b7280;background:#f3f4f6;padding:1px 6px;border-radius:4px;">${humanizeKey(String(category))}</span>` : ''}
+            ${category ? `<span style="font-size:11px;color:#374151;border:1px solid #d1d5db;background:transparent;padding:1px 6px;border-radius:4px;">${cleanText(humanizeKey(category))}</span>` : ''}
           </div>
-          <div style="font-weight:500;">${title}</div>
-          ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${splitTrailingSeverity(String(desc)).text}</div>` : ''}
+          <div style="font-weight:500;">${cleanText(title)}</div>
+          ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${cleanText(splitTrailingSeverity(String(desc)).text)}</div>` : ''}
         </div>`;
 
       }).join('')}` : ''}
