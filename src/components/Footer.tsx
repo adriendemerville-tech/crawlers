@@ -85,6 +85,12 @@ function FooterComponent() {
       href: '/developers',
       description: t3(language, 'Plateforme développeurs : clés API, quotas, webhooks', 'Developer platform: API keys, quotas, webhooks', 'Plataforma de desarrolladores: claves API, cuotas, webhooks')
     },
+    {
+      label: t3(language, 'Flux RSS', 'RSS Feed', 'Feed RSS'),
+      href: '/rss.xml',
+      description: t3(language, 'Nouveaux articles et guides SEO/GEO', 'New SEO/GEO articles and guides', 'Nuevos artículos y guías SEO/GEO'),
+      external: true
+    },
   ];
 
   const technicalLinks = [
