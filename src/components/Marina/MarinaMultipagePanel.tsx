@@ -318,7 +318,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
     setRunning(false);
   }, [credits, isAuthenticated, runOne, targets, totalCost, unlimitedCredits]);
 
-  /* ── Relance des URLs en échec (aucun crédit n'a été débité pour elles) ── */
+  /* ── Relance des URLs en échec (le forfait multipages a déjà été débité) ── */
   const handleRetryFailed = useCallback(async () => {
     const failedIdx = items.map((it, i) => ({ it, i })).filter(({ it }) => it.status === 'failed').map(({ i }) => i);
     if (failedIdx.length === 0) return;
