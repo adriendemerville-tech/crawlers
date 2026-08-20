@@ -86,6 +86,8 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
   const [buildingPdf, setBuildingPdf] = useState(false);
   const [mergedHtml, setMergedHtml] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  /** Lot restauré depuis le stockage local, en attente de réconciliation serveur. */
+  const [pendingResume, setPendingResume] = useState<BatchItem[] | null>(null);
   const cancelRef = useRef(false);
   const batchRef = useRef<{ id: string; size: number } | null>(null);
 
