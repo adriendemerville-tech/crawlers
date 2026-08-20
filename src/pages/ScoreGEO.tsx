@@ -19,7 +19,7 @@ const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.
 
 const ScoreGEO = () => {
   const { language } = useLanguage();
-  useCanonicalHreflang('/score-geo');
+  useCanonicalHreflang('/generative-engine-optimization');
 
   const structuredData = {
     "@context": "https://schema.org",

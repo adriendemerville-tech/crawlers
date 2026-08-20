@@ -622,7 +622,7 @@ const ComparatifCrawlersSemrush = () => {
             sisters={[
               { href: '/comparatif-claude-vs-crawlers', label: 'Claude vs Crawlers', description: 'Comparatif IA générative vs plateforme SEO.' },
               { href: '/audit-expert', label: 'Audit expert', description: '168 critères + plan d\'action correctif.' },
-              { href: '/score-geo', label: 'Score GEO', description: 'Visibilité dans les moteurs IA.' },
+              { href: '/generative-engine-optimization', label: 'Score GEO', description: 'Visibilité dans les moteurs IA.' },
             ]}
           />
         </main>

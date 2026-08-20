@@ -350,7 +350,7 @@ export default function ComparatifClaudeVsCrawlers() {
                 {[
                   { to: '/methodologie', label: 'Méthodologie' },
                   { to: '/audit-expert', label: 'Audit Expert' },
-                  { to: '/score-geo', label: 'Score GEO' },
+                  { to: '/generative-engine-optimization', label: 'Score GEO' },
                   { to: '/tarifs', label: 'Tarifs' },
                   { to: '/blog/claude-cowork-code-vs-crawlers-seo-geo', label: 'Article blog détaillé' },
                   { to: '/analyse-bots-ia', label: 'Analyse Bots IA' },
@@ -388,7 +388,7 @@ export default function ComparatifClaudeVsCrawlers() {
           <ClusterMesh
             currentPath="/comparatif-claude-vs-crawlers"
             currentLabel="Claude vs Crawlers"
-            pillar={{ href: '/score-geo', label: 'Score GEO', description: 'Pilier : visibilité dans les moteurs IA.' }}
+            pillar={{ href: '/generative-engine-optimization', label: 'Score GEO', description: 'Pilier : visibilité dans les moteurs IA.' }}
             sisters={[
               { href: '/comparatif-crawlers-semrush', label: 'Crawlers vs Semrush', description: 'Comparatif SEO traditionnel vs GEO.' },
               { href: '/analyse-bots-ia', label: 'Analyse bots IA', description: 'Trafic GPTBot, ClaudeBot, PerplexityBot.' },

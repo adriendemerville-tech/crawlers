@@ -292,7 +292,7 @@ const AnalyseBotsIA = () => {
       <ClusterMesh
         currentPath="/analyse-bots-ia"
         currentLabel="Analyse bots IA"
-        pillar={{"href":"/score-geo","label":"Score GEO","description":"Pilier : mesurez votre visibilité ChatGPT, Claude, Perplexity."}}
+        pillar={{"href":"/generative-engine-optimization","label":"Score GEO","description":"Pilier : mesurez votre visibilité ChatGPT, Claude, Perplexity."}}
         sisters={[{"href":"/architecte-generatif","label":"Architecte génératif","description":"Structure pour citations LLM."},{"href":"/comparatif-claude-vs-crawlers","label":"Claude vs Crawlers","description":"Comparatif GEO."},{"href":"/comparatif-crawlers-semrush","label":"Crawlers vs Semrush","description":"Comparatif outils SEO."}]}
       />
       </main>

@@ -30,8 +30,8 @@ const translations = {
     freeDescription: 'Accessibles à tous, sans inscription',
     freeTools: [
       { icon: Bot, label: 'Analyse des Bots IA', description: 'Vérifiez l\'accès des crawlers IA à votre site', href: '/analyse-bots-ia' },
-      { icon: Globe, label: 'Score GEO', description: 'Évaluez votre optimisation pour les moteurs génératifs', href: '/score-geo' },
-      { icon: Brain, label: 'Visibilité LLM', description: 'Analysez votre présence sur ChatGPT, Claude, Gemini', href: '/visibilite-llm' },
+      { icon: Globe, label: 'Score GEO', description: 'Évaluez votre optimisation pour les moteurs génératifs', href: '/generative-engine-optimization' },
+      { icon: Brain, label: 'Visibilité LLM', description: 'Analysez votre présence sur ChatGPT, Claude, Gemini', href: '/generative-engine-optimization' },
       { icon: Gauge, label: 'PageSpeed', description: 'Testez les performances et Core Web Vitals', href: '/pagespeed' },
       { icon: Award, label: 'Audit E-E-A-T', description: 'Évaluez Expertise, Expérience, Autorité et Confiance', href: '/eeat' },
       { icon: TrendingUp, label: 'Ranking SERPs', description: 'Positions Top 3/10/50 et trafic estimé (ETV)', href: '/app/console?tab=indexation' },
@@ -197,8 +197,8 @@ const translations = {
     freeDescription: 'Accessible to everyone, no signup required',
     freeTools: [
       { icon: Bot, label: 'AI Bot Analysis', description: 'Check AI crawler access to your site', href: '/analyse-bots-ia' },
-      { icon: Globe, label: 'GEO Score', description: 'Evaluate your optimization for generative engines', href: '/score-geo' },
-      { icon: Brain, label: 'LLM Visibility', description: 'Analyze your presence on ChatGPT, Claude, Gemini', href: '/visibilite-llm' },
+      { icon: Globe, label: 'GEO Score', description: 'Evaluate your optimization for generative engines', href: '/generative-engine-optimization' },
+      { icon: Brain, label: 'LLM Visibility', description: 'Analyze your presence on ChatGPT, Claude, Gemini', href: '/generative-engine-optimization' },
       { icon: Gauge, label: 'PageSpeed', description: 'Test performance and Core Web Vitals', href: '/pagespeed' },
       { icon: Award, label: 'E-E-A-T Audit', description: 'Evaluate Expertise, Experience, Authority and Trust', href: '/eeat' },
       { icon: TrendingUp, label: 'SERP Rankings', description: 'Top 3/10/50 positions and estimated traffic (ETV)', href: '/app/console?tab=indexation' },
@@ -363,8 +363,8 @@ const translations = {
     freeDescription: 'Accesibles para todos, sin registro',
     freeTools: [
       { icon: Bot, label: 'Análisis de Bots IA', description: 'Verifica el acceso de crawlers IA a tu sitio', href: '/analyse-bots-ia' },
-      { icon: Globe, label: 'Puntuación GEO', description: 'Evalúa tu optimización para motores generativos', href: '/score-geo' },
-      { icon: Brain, label: 'Visibilidad LLM', description: 'Analiza tu presencia en ChatGPT, Claude, Gemini', href: '/visibilite-llm' },
+      { icon: Globe, label: 'Puntuación GEO', description: 'Evalúa tu optimización para motores generativos', href: '/generative-engine-optimization' },
+      { icon: Brain, label: 'Visibilidad LLM', description: 'Analiza tu presencia en ChatGPT, Claude, Gemini', href: '/generative-engine-optimization' },
       { icon: Gauge, label: 'PageSpeed', description: 'Prueba el rendimiento y Core Web Vitals', href: '/pagespeed' },
       { icon: Award, label: 'Auditoría E-E-A-T', description: 'Evalúa Experiencia, Pericia, Autoridad y Confianza', href: '/eeat' },
       { icon: TrendingUp, label: 'Ranking SERPs', description: 'Posiciones Top 3/10/50 y tráfico estimado (ETV)', href: '/app/console?tab=indexation' },

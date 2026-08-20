@@ -71,7 +71,7 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       { q: "L'audit détecte-t-il la cannibalisation ?", a: "Oui, le module Cocoon Sémantique 3D repère automatiquement les pages en concurrence lexicale et propose une fusion ou une déprécation." },
     ],
     relatedLinks: [
-      { label: "Score GEO : comment il est calculé", to: "/score-geo" },
+      { label: "Score GEO : comment il est calculé", to: "/generative-engine-optimization" },
       { label: "Comparatif Crawlers vs Semrush", to: "/comparatif-crawlers-semrush" },
       { label: "Guide GEO vs SEO", to: "/generative-engine-optimization" },
     ],
@@ -115,8 +115,8 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       { q: "Peut-on suivre l'évolution dans le temps ?", a: "Oui, chaque scan est historisé. Vous voyez sur 12 mois la progression du score GEO, du taux de citation et de la profondeur d'itération." },
     ],
     relatedLinks: [
-      { label: "Visibilité LLM : test complet", to: "/visibilite-llm" },
-      { label: "Score GEO : les 21 facteurs", to: "/score-geo" },
+      { label: "Visibilité LLM : test complet", to: "/generative-engine-optimization" },
+      { label: "Score GEO : les 21 facteurs", to: "/generative-engine-optimization" },
       { label: "GEO vs SEO", to: "/generative-engine-optimization" },
     ],
     datePublished: '2026-07-25',
@@ -159,7 +159,7 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
     ],
     relatedLinks: [
       { label: "GEO vs SEO", to: "/generative-engine-optimization" },
-      { label: "Score GEO détaillé", to: "/score-geo" },
+      { label: "Score GEO détaillé", to: "/generative-engine-optimization" },
       { label: "Snippets JSON-LD prêts à copier", to: "/blog/json-ld-snippet-autorite" },
     ],
     datePublished: '2026-07-25',

@@ -18,7 +18,7 @@ const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.
 
 const VisibiliteLLM = () => {
   const { language } = useLanguage();
-  useCanonicalHreflang('/visibilite-llm');
+  useCanonicalHreflang('/generative-engine-optimization');
 
   const structuredData = {
     "@context": "https://schema.org",

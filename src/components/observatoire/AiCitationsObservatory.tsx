@@ -224,7 +224,7 @@ export function AiCitationsObservatory() {
           </li>
         </ul>
         <Link
-          to="/referencement-ia"
+          to="/generative-engine-optimization"
           className="mt-4 inline-flex items-center gap-2 rounded-md border border-foreground/30 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-foreground"
         >
           Comprendre le référencement IA

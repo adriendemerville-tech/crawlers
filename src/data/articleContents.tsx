@@ -3207,7 +3207,7 @@ Allow: /`}</pre>
         />
 
         <RichLinkCard
-          href="/score-geo"
+          href="/generative-engine-optimization"
           title="Score GEO — Visibilité dans les moteurs IA"
           description="Mesurez votre visibilité dans ChatGPT, Gemini, Perplexity et Claude."
         />
@@ -3543,7 +3543,7 @@ Allow: /`}</pre>
 
         <h3>J61-J90 : Mesure et itération</h3>
         <ul>
-          <li>Lancer le <a href="/score-geo">Score GEO Crawlers</a> pour mesurer l'apparition de la marque dans ChatGPT / Perplexity / Gemini / Claude</li>
+          <li>Lancer le <a href="/generative-engine-optimization">Score GEO Crawlers</a> pour mesurer l'apparition de la marque dans ChatGPT / Perplexity / Gemini / Claude</li>
           <li>Corréler avec la <a href="/blog/share-of-voice-llm-illusion">Part de Voix LLM</a> face aux concurrents</li>
           <li>Doubler la mise sur les subs où le Score d'Ingestion IA remonte le mieux, abandonner les autres</li>
         </ul>
@@ -3576,7 +3576,7 @@ Allow: /`}</pre>
 
 
         <RichLinkCard
-          href="/score-geo"
+          href="/generative-engine-optimization"
           title="Score GEO — mesurez votre visibilité dans les IA"
           description="Suivez vos citations dans ChatGPT, Perplexity, Gemini et Claude."
         />
@@ -3665,7 +3665,7 @@ Allow: /`}</pre>
         <p>Crawlers doesn't post for you — that's the exact coordinated pattern moderators punish. Crawlers <strong>measures the GEO impact</strong> of your Reddit presence: brand citations in ChatGPT/Perplexity/Gemini/Claude, correlation with Reddit activity, alerts on new threads mentioning you, LLM Share of Voice tracking.</p>
 
         <RichLinkCard
-          href="/score-geo"
+          href="/generative-engine-optimization"
           title="GEO Score — measure your AI visibility"
           description="Track citations in ChatGPT, Perplexity, Gemini and Claude."
         />
@@ -3722,7 +3722,7 @@ Allow: /`}</pre>
         <p>Crawlers no publica por ti. Crawlers <strong>mide el impacto GEO</strong> de tu presencia Reddit: citaciones de marca en ChatGPT/Perplexity/Gemini/Claude, alertas, seguimiento de Cuota de Voz LLM.</p>
 
         <RichLinkCard
-          href="/score-geo"
+          href="/generative-engine-optimization"
           title="Score GEO — mide tu visibilidad IA"
           description="Sigue tus citaciones en ChatGPT, Perplexity, Gemini y Claude."
         />
