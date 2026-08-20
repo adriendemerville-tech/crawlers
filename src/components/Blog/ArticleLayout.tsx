@@ -87,7 +87,12 @@ function ArticleLayoutComponent({
               />
             </picture>
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+            {/* Légende visible : contexte de l'illustration pour les lecteurs et les moteurs */}
+            <figcaption className="absolute top-4 left-4 sm:top-6 sm:left-6 max-w-[85%] sm:max-w-md rounded-md border border-border/60 bg-background/75 px-2.5 py-1 text-xs leading-snug text-muted-foreground backdrop-blur-sm">
+              {heroCaption || heroAlt}
+            </figcaption>
           </figure>
+
 
           {/* Content Container */}
           <div className="max-w-3xl mx-auto px-4 sm:px-6 -mt-32 relative z-10">
