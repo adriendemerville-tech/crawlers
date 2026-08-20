@@ -145,7 +145,7 @@ Deno.serve(handleRequest(async (req) => {
         const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString().split('T')[0];
         const candidates = explicit.length > 0
           ? explicit
-          : formatted.filter(e => e.lastmod >= since).map(e => e.loc);
+          : formatted.filter(e => (e.lastmod || '') >= since).map(e => e.loc);
 
         if (candidates.length === 0) {
           indexnow = { submitted: 0, skipped: 0, success: true };
