@@ -30,6 +30,7 @@ import { Route as CgvuRouteImport } from './routes/cgvu'
 import { Route as CocoonRouteImport } from './routes/cocoon'
 import { Route as ComparatifClaudeVsCrawlersRouteImport } from './routes/comparatif-claude-vs-crawlers'
 import { Route as ComparatifCrawlersAhrefsRouteImport } from './routes/comparatif-crawlers-ahrefs'
+import { Route as ComparatifCrawlersScreamingFrogRouteImport } from './routes/comparatif-crawlers-screaming-frog'
 import { Route as ComparatifCrawlersSemrushRouteImport } from './routes/comparatif-crawlers-semrush'
 import { Route as ComparatifPlateformeSeoIaRouteImport } from './routes/comparatif-plateforme-seo-ia'
 import { Route as ConditionsUtilisationRouteImport } from './routes/conditions-utilisation'
@@ -245,6 +246,12 @@ const ComparatifCrawlersAhrefsRoute =
   ComparatifCrawlersAhrefsRouteImport.update({
     id: '/comparatif-crawlers-ahrefs',
     path: '/comparatif-crawlers-ahrefs',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ComparatifCrawlersScreamingFrogRoute =
+  ComparatifCrawlersScreamingFrogRouteImport.update({
+    id: '/comparatif-crawlers-screaming-frog',
+    path: '/comparatif-crawlers-screaming-frog',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ComparatifCrawlersSemrushRoute =
@@ -826,6 +833,7 @@ export interface FileRoutesByFullPath {
   '/cocoon': typeof CocoonRoute
   '/comparatif-claude-vs-crawlers': typeof ComparatifClaudeVsCrawlersRoute
   '/comparatif-crawlers-ahrefs': typeof ComparatifCrawlersAhrefsRoute
+  '/comparatif-crawlers-screaming-frog': typeof ComparatifCrawlersScreamingFrogRoute
   '/comparatif-crawlers-semrush': typeof ComparatifCrawlersSemrushRoute
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
@@ -958,6 +966,7 @@ export interface FileRoutesByTo {
   '/cocoon': typeof CocoonRoute
   '/comparatif-claude-vs-crawlers': typeof ComparatifClaudeVsCrawlersRoute
   '/comparatif-crawlers-ahrefs': typeof ComparatifCrawlersAhrefsRoute
+  '/comparatif-crawlers-screaming-frog': typeof ComparatifCrawlersScreamingFrogRoute
   '/comparatif-crawlers-semrush': typeof ComparatifCrawlersSemrushRoute
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
@@ -1091,6 +1100,7 @@ export interface FileRoutesById {
   '/cocoon': typeof CocoonRoute
   '/comparatif-claude-vs-crawlers': typeof ComparatifClaudeVsCrawlersRoute
   '/comparatif-crawlers-ahrefs': typeof ComparatifCrawlersAhrefsRoute
+  '/comparatif-crawlers-screaming-frog': typeof ComparatifCrawlersScreamingFrogRoute
   '/comparatif-crawlers-semrush': typeof ComparatifCrawlersSemrushRoute
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
@@ -1225,6 +1235,7 @@ export interface FileRouteTypes {
     | '/cocoon'
     | '/comparatif-claude-vs-crawlers'
     | '/comparatif-crawlers-ahrefs'
+    | '/comparatif-crawlers-screaming-frog'
     | '/comparatif-crawlers-semrush'
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
@@ -1357,6 +1368,7 @@ export interface FileRouteTypes {
     | '/cocoon'
     | '/comparatif-claude-vs-crawlers'
     | '/comparatif-crawlers-ahrefs'
+    | '/comparatif-crawlers-screaming-frog'
     | '/comparatif-crawlers-semrush'
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
@@ -1489,6 +1501,7 @@ export interface FileRouteTypes {
     | '/cocoon'
     | '/comparatif-claude-vs-crawlers'
     | '/comparatif-crawlers-ahrefs'
+    | '/comparatif-crawlers-screaming-frog'
     | '/comparatif-crawlers-semrush'
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
@@ -1622,6 +1635,7 @@ export interface RootRouteChildren {
   CocoonRoute: typeof CocoonRoute
   ComparatifClaudeVsCrawlersRoute: typeof ComparatifClaudeVsCrawlersRoute
   ComparatifCrawlersAhrefsRoute: typeof ComparatifCrawlersAhrefsRoute
+  ComparatifCrawlersScreamingFrogRoute: typeof ComparatifCrawlersScreamingFrogRoute
   ComparatifCrawlersSemrushRoute: typeof ComparatifCrawlersSemrushRoute
   ComparatifPlateformeSeoIaRoute: typeof ComparatifPlateformeSeoIaRoute
   ConditionsUtilisationRoute: typeof ConditionsUtilisationRoute
@@ -1880,6 +1894,13 @@ declare module '@tanstack/react-router' {
       path: '/comparatif-crawlers-ahrefs'
       fullPath: '/comparatif-crawlers-ahrefs'
       preLoaderRoute: typeof ComparatifCrawlersAhrefsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comparatif-crawlers-screaming-frog': {
+      id: '/comparatif-crawlers-screaming-frog'
+      path: '/comparatif-crawlers-screaming-frog'
+      fullPath: '/comparatif-crawlers-screaming-frog'
+      preLoaderRoute: typeof ComparatifCrawlersScreamingFrogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comparatif-crawlers-semrush': {
@@ -2670,6 +2691,7 @@ const rootRouteChildren: RootRouteChildren = {
   CocoonRoute: CocoonRoute,
   ComparatifClaudeVsCrawlersRoute: ComparatifClaudeVsCrawlersRoute,
   ComparatifCrawlersAhrefsRoute: ComparatifCrawlersAhrefsRoute,
+  ComparatifCrawlersScreamingFrogRoute: ComparatifCrawlersScreamingFrogRoute,
   ComparatifCrawlersSemrushRoute: ComparatifCrawlersSemrushRoute,
   ComparatifPlateformeSeoIaRoute: ComparatifPlateformeSeoIaRoute,
   ConditionsUtilisationRoute: ConditionsUtilisationRoute,
