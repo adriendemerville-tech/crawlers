@@ -15,7 +15,13 @@ export type ThrottlePeriod = 'day' | 'week';
 
 /** Marqueurs canoniques d'une publication réellement poussée. */
 const PUBLISH_ACTION_TYPE = 'create-post';
-const PUBLISH_STATUS = 'completed';
+// Contraintes DB : phase ∈ {diagnostic, prescription, implementation} et
+// status ∈ {applied, rolled_back, failed, simulated}. Toute autre valeur est
+// rejetée par un CHECK — c'est pourquoi l'ancien compteur ('completed') ne
+// trouvait jamais rien.
+const PUBLISH_STATUS = 'applied';
+const PUBLISH_PHASE = 'implementation';
+
 
 export function periodStart(period: ThrottlePeriod): string {
   const ms = period === 'week' ? 7 * 24 * 3600 * 1000 : 24 * 3600 * 1000;
