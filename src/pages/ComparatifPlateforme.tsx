@@ -215,6 +215,9 @@ const faqSD = {
   })),
 };
 
+/** JSON-LD servi côté serveur par le head() de la route (Helmet ne SSR pas ici). */
+export const PLATEFORME_JSONLD = [articleSD, breadcrumbSD, faqSD];
+
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 
 export default function ComparatifPlateforme() {
@@ -223,12 +226,6 @@ export default function ComparatifPlateforme() {
 
   return (
     <>
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(articleSD)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbSD)}</script>
-        <script type="application/ld+json">{JSON.stringify(faqSD)}</script>
-      </Helmet>
-
       <Header />
 
       <main className="min-h-screen pt-20">
