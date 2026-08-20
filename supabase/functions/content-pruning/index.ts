@@ -227,7 +227,9 @@ Deno.serve(handleRequest(async (req) => {
     // 6. Persistance
     let persisted = 0
     if (persist) {
-      const { error: debtErr } = await sb.from('site_pruning_debt').insert({
+      // Une seule ligne de dette par (user, domaine) : on réécrit la mesure
+      // courante plutôt que d'empiler un historique que rien ne consomme.
+      const { error: debtErr } = await sb.from('site_pruning_debt').upsert({
         domain: bare,
         tracked_site_id: site.id,
         user_id: ownerId,
