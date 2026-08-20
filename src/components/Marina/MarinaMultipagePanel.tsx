@@ -185,17 +185,24 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
     });
   };
 
-  /* ── Exécution : un job Marina par URL, 2 en parallèle ── */
-  const runOne = useCallback(async (index: number, url: string, batch?: { id: string; size: number }): Promise<void> => {
+  /* ── Exécution : un job Marina par URL, 2 en parallèle ──
+   * `existingJobId` : reprise d'un job déjà lancé côté serveur (rechargement de
+   * page). On ne relance alors aucun audit, on se raccroche au suivi. */
+  const runOne = useCallback(async (
+    index: number,
+    url: string,
+    batch?: { id: string; size: number },
+    existingJobId?: string,
+  ): Promise<void> => {
     const setItem = (patch: Partial<BatchItem>) =>
       setItems(prev => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
 
-    setItem({ status: 'running', progress: 0 });
+    setItem({ status: 'running', ...(existingJobId ? {} : { progress: 0 }) });
 
     // Le débit du forfait multipages est effectué une seule fois au lancement du lot
     // (handleLaunch). Les relances d'URLs en échec ne débitent donc pas à nouveau.
 
-    let jobId: string | null = null;
+    let jobId: string | null = existingJobId ?? null;
     let launchError = 'Lancement impossible';
     for (let attempt = 0; attempt < 3 && !jobId && !cancelRef.current; attempt++) {
       if (attempt > 0) await new Promise(r => setTimeout(r, attempt * 4000));
