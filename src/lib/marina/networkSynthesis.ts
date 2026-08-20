@@ -508,21 +508,56 @@ export function candidateYield(c: Candidate): { yield_: number; confidence: numb
 
 // ───────────────────────── Rendu ─────────────────────────
 
-function blockShell(index: number, title: string, level: Level, body: string): string {
+/**
+ * Lot A/B — les espaces des titres composés étaient parfois avalés à la capture
+ * PDF (« Concurrenceinterne »). On protège les jointures les plus fragiles :
+ * les mots courts (prépositions, articles) et les deux derniers mots du titre
+ * sont solidaires du mot voisin, sans empêcher le retour à la ligne ailleurs.
+ */
+export function tightenTitle(title: string): string {
+  const words = title.split(/\s+/).filter(Boolean);
+  if (words.length < 2) return title;
+  let out = words[0];
+  for (let i = 1; i < words.length; i += 1) {
+    const glue = words[i].length <= 3 || i === words.length - 1 ? '&nbsp;' : ' ';
+    out += glue + words[i];
+  }
+  return out;
+}
+
+/** Vrai si un corps de bloc n'apporte aucun texte lisible. */
+export function isEmptyBody(body: string): boolean {
+  return (
+    body
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim().length === 0
+  );
+}
+
+function blockShell(index: number, title: string, level: Level, body: string, emptyReason?: string): string {
+  const safeBody = isEmptyBody(body)
+    ? noFact(
+        emptyReason ||
+          "Aucun fait exploitable n'a été relevé pour ce bloc sur le lot audité : il est conservé pour que la séquence reste identique d'un rapport à l'autre, mais il ne conclut rien.",
+      )
+    : body;
   return `
     <div style="margin:0 0 20px 0;padding:0 0 0 14px;border-left:2px solid #e5e7eb;">
       <h3 style="font-size:15px;margin:0 0 6px 0;color:${INK};display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <span style="color:${VIOLET};font-weight:700;">${index}.</span>
-        <span>${esc(title)}</span>
+        <span>${tightenTitle(esc(title))}</span>
         ${badge(level)}
       </h3>
-      <div style="font-size:13px;color:${BODY};line-height:1.75;">${body}</div>
+      <div style="font-size:13px;color:${BODY};line-height:1.75;">${safeBody}</div>
     </div>`;
 }
 
 function noFact(reason: string): string {
   return `<p style="margin:0;color:${MUTED};font-style:italic;">${esc(reason)}</p>`;
 }
+
 
 /**
  * Le libellé d'une action et sa justification étaient parfois rédigés à partir

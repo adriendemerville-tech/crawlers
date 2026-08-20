@@ -288,7 +288,7 @@ function buildGlobalSummary(domain: string, metas: PageMeta[], domainVerdict: st
   const observations = crossPageObservations(metas);
 
   return `
-  <section class="marina-batch-summary section" style="page-break-after:always;padding:32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;border-left:6px solid #d4af37;">
+  <section id="synthese-executive" class="marina-batch-summary section" style="page-break-after:always;padding:32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;border-left:6px solid #d4af37;">
     <h2 style="font-size:22px;margin:0 0 6px 0;">Synthèse&nbsp;exécutive</h2>
     <p style="font-size:13px;color:#6b7280;margin:0 0 18px 0;">
       ${escapeHtml(domain)} — ${pageCount} URLs auditées. Cette synthèse reprend l'ensemble de l'audit : d'abord ce qui
@@ -413,23 +413,18 @@ export function mergeMarinaReports(
     ...[...siteBlocks.entries()].filter(([id]) => !siteOrder.includes(id)),
   ];
 
-  const toc = parts
-    .map((p, i) => `
-      <li style="margin:0 0 10px 0;">
-        <span style="display:inline-block;min-width:2.2em;font-weight:700;">${i + 1}.</span>
-        <span style="font-weight:600;">${escapeHtml(pathOf(p.url))}</span>
-        <span style="opacity:.65;"> — ${escapeHtml(hostOf(p.url))}</span>
-      </li>`)
-    .join('');
+  // Lot A — le sommaire ne contient que des entrées dont la cible existe
+  // réellement dans le document fusionné. Chaque section porte une ancre, le
+  // sommaire y renvoie, et une entrée sans ancre n'est pas rendue.
+  const anchors = new Set<string>();
+  orderedSiteEntries.forEach(([id]) => anchors.add(`site-${id}`));
+  parts.forEach((_p, i) => anchors.add(`fiche-${i + 1}`));
 
-  const sharedToc = orderedSiteEntries.length
-    ? `<h2 style="font-size:18px;margin:26px 0 10px 0;">Analyse du site (commune aux ${parts.length} pages)</h2>
-       <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
-         ${orderedSiteEntries
-           .map(([id]) => `<li style="margin:0 0 8px 0;">${escapeHtml(siteBlockLabel(id))}</li>`)
-           .join('')}
-       </ul>`
-    : '';
+  const tocLink = (id: string, label: string): string =>
+    anchors.has(id)
+      ? `<a href="#${id}" style="color:inherit;text-decoration:none;">${label}</a>`
+      : '';
+
 
   const metas = splits.map(s => s.meta).filter((m): m is PageMeta => Boolean(m));
   const domainVerdict = splits.map(s => s.domainVerdict).find(Boolean) || null;
@@ -453,7 +448,7 @@ export function mergeMarinaReports(
   // rapport : sans ce bandeau, la page d'ouverture ne nommerait ni le domaine ni
   // la date ni le nombre d'URLs couvertes.
   const networkSynthesis = synthesis.html
-    ? `<section class="marina-batch-opening" style="padding:0;">
+    ? `<section id="synthese-reseau" class="marina-batch-opening" style="padding:0;">
          <div style="padding:40px 32px 0 32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
            <p style="letter-spacing:.18em;text-transform:uppercase;font-size:11px;margin:0 0 8px 0;opacity:.7;">Crawlers — Marina · Rapport multipages</p>
            <p style="font-size:17px;font-weight:700;margin:0 0 4px 0;">${escapeHtml(domain)}</p>
@@ -465,6 +460,50 @@ export function mergeMarinaReports(
 
 
 
+  if (networkSynthesis) anchors.add('synthese-reseau');
+  if (globalSummary) anchors.add('synthese-executive');
+
+  const toc = parts
+    .map((p, i) => {
+      const label = `<span style="font-weight:600;">${escapeHtml(pathOf(p.url))}</span>
+        <span style="opacity:.65;"> — ${escapeHtml(hostOf(p.url))}</span>`;
+      const link = tocLink(`fiche-${i + 1}`, label);
+      if (!link) return '';
+      return `
+      <li style="margin:0 0 10px 0;">
+        <span style="display:inline-block;min-width:2.2em;font-weight:700;">${i + 1}.</span>
+        ${link}
+      </li>`;
+    })
+    .join('');
+
+  const sharedTocItems = orderedSiteEntries
+    .map(([id]) => {
+      const link = tocLink(`site-${id}`, escapeHtml(siteBlockLabel(id)));
+      return link ? `<li style="margin:0 0 8px 0;">${link}</li>` : '';
+    })
+    .join('');
+  const sharedToc = sharedTocItems
+    ? `<h2 style="font-size:18px;margin:26px 0 10px 0;">Analyse du site (commune aux ${parts.length} pages)</h2>
+       <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
+         ${sharedTocItems}
+       </ul>`
+    : '';
+
+  const openingItems = [
+    networkSynthesis
+      ? tocLink(
+          'synthese-reseau',
+          `Synthèse&nbsp;réseau, en ouverture de ce document — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés`,
+        )
+      : '',
+    globalSummary
+      ? tocLink('synthese-executive', 'Synthèse&nbsp;exécutive — verdict du domaine puis reprise page par page')
+      : `Reprise page par page — les rapports de ce lot ne portent pas les repères de synthèse`,
+  ]
+    .filter(Boolean)
+    .map((item) => `<li style="margin:0 0 8px 0;">${item}</li>`)
+    .join('');
 
   const cover = `
     <section class="marina-batch-cover" style="page-break-before:always;page-break-after:always;padding:64px 48px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
@@ -474,16 +513,12 @@ export function mergeMarinaReports(
       <p style="font-size:14px;opacity:.7;margin:0 0 30px 0;">${parts.length} pages auditées — ${generatedAt}</p>
       <h2 style="font-size:18px;margin:26px 0 10px 0;">Lecture d'ensemble</h2>
       <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
-        ${networkSynthesis
-          ? `<li style="margin:0 0 8px 0;">Synthèse&nbsp;réseau, en ouverture de ce document — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés</li>`
-          : ''}
-        ${globalSummary
-          ? `<li style="margin:0 0 8px 0;">Synthèse&nbsp;exécutive — verdict du domaine puis reprise page par page</li>`
-          : `<li style="margin:0 0 8px 0;">Reprise page par page — les rapports de ce lot ne portent pas les repères de synthèse</li>`}
+        ${openingItems}
       </ul>
       ${sharedToc}
-      <h2 style="font-size:18px;margin:26px 0 10px 0;">Fiches par page</h2>
-      <ol style="list-style:none;padding:0;margin:0;font-size:14px;">${toc}</ol>
+      ${toc ? '<h2 style="font-size:18px;margin:26px 0 10px 0;">Fiches par page</h2>' : ''}
+      ${toc ? `<ol style="list-style:none;padding:0;margin:0;font-size:14px;">${toc}</ol>` : ''}
+
       <p style="margin-top:32px;font-size:12px;opacity:.7;max-width:46em;">
         ${mutualised
           ? `Les analyses de périmètre site (crawl, cocon sémantique, indexation, visibilité IA) sont
@@ -506,7 +541,7 @@ export function mergeMarinaReports(
              Valable pour les ${parts.length} pages auditées — calculée une seule fois.
            </p>
          </div>
-         ${orderedSiteEntries.map(([, htmlBlock]) => htmlBlock).join('\n')}
+         ${orderedSiteEntries.map(([id, htmlBlock]) => `<a id="site-${id}"></a>${htmlBlock}`).join('\n')}
        </section>`
     : '';
 
@@ -568,7 +603,7 @@ export function mergeMarinaReports(
            </p>`
         : '';
       return `
-      <section class="marina-batch-part" style="page-break-before:always;">
+      <section id="fiche-${i + 1}" class="marina-batch-part" style="page-break-before:always;">
         <div style="padding:24px 32px 0 32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
           <p style="letter-spacing:.14em;text-transform:uppercase;font-size:11px;margin:0 0 4px 0;opacity:.7;">
             Fiche ${i + 1} / ${parts.length}${condensed ? ' — condensée' : ''}
