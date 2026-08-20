@@ -1,11 +1,5 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Brain, Search, ShieldCheck, Settings, Bot } from 'lucide-react';
+import { Brain, Search, ShieldCheck, Settings, Bot, ChevronDown } from 'lucide-react';
 
 // FAQ optimisée pour extraction LLM - Format Sujet + Verbe + Réponse factuelle
 const faqData = {
