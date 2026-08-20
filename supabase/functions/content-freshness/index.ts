@@ -1,16 +1,31 @@
 /**
  * content-freshness — Score pages by freshness and update frequency
- * 
+ *
  * Combines last-modified dates, GSC click trends, and crawl history
  * to identify stale content that needs updating.
- * 
+ *
  * Actions:
- *   - analyze: Full freshness analysis for a tracked site
+ *   - analyze : analyse de fraîcheur d'un site suivi (crawl_pages)
+ *   - scan    : audit hebdomadaire du blog crawlers.fr → file de travail admin
+ *               (`content_freshness_queue`). NE MODIFIE AUCUN ARTICLE.
+ *   - draft   : génère UN brouillon IA de révision pour un élément de la file
+ *   - approve : validation humaine → applique le brouillon, met à jour
+ *               `updated_at`, puis IndexNow + Google Indexing (RSS et sitemap
+ *               étant dynamiques, ils reflètent la mise à jour aussitôt)
+ *   - dismiss : écarte un élément de la file
+ *
+ * Rationalisation LLM : zéro appel IA pendant le scan ; un seul appel borné
+ * (12 000 caractères d'entrée) par brouillon explicitement demandé.
  */
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { getSiteContext } from '../_shared/getSiteContext.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getAuthenticatedUser } from '../_shared/auth.ts'
+import { resolveGscAccess } from '../_shared/gscQuery.ts'
+import { submitToIndexNow } from '../_shared/urlIndexing.ts'
+import { resolveIndexingToken, notifyGoogleIndexing } from '../_shared/googleIndexing.ts'
+import { callRoutedAI } from '../_shared/aiRouter.ts'
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
