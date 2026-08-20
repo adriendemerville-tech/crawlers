@@ -1031,12 +1031,23 @@ async function executeCmsBridgeActions(
   supabase: any, executionResults: any[], phaseErrors: ExecutionError[],
   setSuccess: (v: boolean) => void,
 ) {
-  if (decision.action.payload.cms_actions.length > MAX_CMS_ACTIONS_PER_CYCLE) {
-    console.warn(`[AutopilotEngine] Truncating ${decision.action.payload.cms_actions.length} CMS actions to ${MAX_CMS_ACTIONS_PER_CYCLE} for ${site.domain}`);
-    decision.action.payload.cms_actions = decision.action.payload.cms_actions.slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
+  // Plafond dur : quota restant de la période (par domaine) puis plafond par cycle.
+  const allowance = Math.max(0, Math.min(
+    MAX_CMS_ACTIONS_PER_CYCLE,
+    (config as any)._content_allowance ?? MAX_CMS_ACTIONS_PER_CYCLE,
+  ));
+  const rawActions: any[] = decision.action.payload.cms_actions || [];
+  const creations = rawActions.filter((a) => (a.action || (a.body ? 'create-post' : '')) === 'create-post');
+  const others = rawActions.filter((a) => !creations.includes(a));
+  const dropped = Math.max(0, creations.length - allowance);
+  if (dropped > 0) {
+    console.log(`[AutopilotEngine] 🚦 ${site.domain}: ${dropped} création(s) écartée(s) — quota période épuisé (allowance=${allowance})`);
   }
+  decision.action.payload.cms_actions = [...creations.slice(0, allowance), ...others]
+    .slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
   const bridgeName = resolveCmsBridge(site.domain);
   console.log(`[AutopilotEngine] Executing ${decision.action.payload.cms_actions.length} CMS actions via ${bridgeName} for ${site.domain}`);
+
   
   for (const cmsAction of decision.action.payload.cms_actions) {
     try {
