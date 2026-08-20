@@ -260,6 +260,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         ...(canSeeUsers ? [{ id: 'users', label: t.users, icon: Users, group: 'content' }] : []),
         { id: 'cms', label: t.cms, icon: FileText, group: 'content' },
         { id: 'freshness', label: 'Fraîcheur', icon: CalendarClock, group: 'content' },
+        { id: 'link-health', label: 'Liens', icon: Link2Off, group: 'content' },
         { id: 'support', label: t.support, icon: MessageCircle, group: 'content', notifKey: 'support' as const },
         { id: 'sav-ia', label: 'SAV IA', icon: Bot, group: 'content' },
         { id: 'affiliates', label: t.affiliates, icon: Link2, group: 'content' },
