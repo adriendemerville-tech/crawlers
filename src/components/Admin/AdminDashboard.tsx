@@ -316,6 +316,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'users': return wrap(<UserManagement />);
       case 'cms': return wrap(<BlogManagement />);
       case 'freshness': return wrap(<ContentFreshnessQueue />);
+      case 'link-health': return wrap(<LinkHealthQueue />);
       case 'support': return wrap(<SupportManagement />);
       case 'sav-ia': return <SavDashboard />;
       case 'affiliates': return wrap(<AffiliateManagement />);
