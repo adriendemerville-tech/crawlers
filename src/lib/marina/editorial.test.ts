@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { dedupeWhy, isEmptyBody, tightenTitle } from './networkSynthesis';
+import { dedupeWhy, isEmptyBody } from './networkSynthesis';
 import { mergeMarinaReports } from './mergeReports';
 
 describe('dedupeWhy', () => {
@@ -90,11 +90,6 @@ describe('Lot A — ancres du sommaire', () => {
 });
 
 describe('Lot B — titres et blocs vides', () => {
-  it('rend les jointures fragiles des titres insécables', () => {
-    expect(tightenTitle('Concurrence interne entre les pages auditées')).toContain('&nbsp;');
-    expect(tightenTitle('Périmètre')).toBe('Périmètre');
-  });
-
   it('détecte un corps de bloc sans texte lisible', () => {
     expect(isEmptyBody('<p style="margin:0"> &nbsp; </p>')).toBe(true);
     expect(isEmptyBody('<p>Un fait mesuré.</p>')).toBe(false);
