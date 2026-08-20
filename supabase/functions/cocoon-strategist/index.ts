@@ -1005,13 +1005,22 @@ try {
 
     // Throttle: when new-content creation is disabled, drop tasks that would create new pages/posts.
     // We keep rewrite/enrich/fix/links — only block actual creations.
+    // Second garde : le gel dur du régime « saturé » écarte les mêmes créations,
+    // même quand `disable_new_content` est faux — c'est la dette qui décide.
     const NEW_CONTENT_ACTIONS: ActionType[] = ['create_content', 'publish_draft'];
-    const filteredTasks = disable_new_content
-      ? rawTasks.filter(t => !NEW_CONTENT_ACTIONS.includes(t.action_type as ActionType))
-      : rawTasks;
+    const filteredTasks = rawTasks.filter((t) => {
+      const isCreation = NEW_CONTENT_ACTIONS.includes(t.action_type as ActionType);
+      if (!isCreation) return true;
+      if (disable_new_content) return false;
+      return !t.metadata?.creation_frozen;
+    });
+    const frozenCount = rawTasks.filter((t) => t.metadata?.creation_frozen).length;
     if (disable_new_content) {
       console.log(`[cocoon-strategist] 🚦 disable_new_content=true → filtered ${rawTasks.length - filteredTasks.length} new-content tasks`);
+    } else if (frozenCount > 0) {
+      console.log(`[cocoon-strategist] création gelée (régime ${siteDebtRegime}) → ${frozenCount} tâche(s) de création écartée(s)`);
     }
+
 
     // Apply budget: keep top N tasks
     const selectedTasks = filteredTasks.slice(0, budget);
