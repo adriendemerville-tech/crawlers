@@ -273,6 +273,21 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       return;
     }
 
+    // Débit du forfait multipages en une seule fois : 30 crédits pour 5 pages,
+    // puis 5 crédits par page supplémentaire. Les relances d'URLs en échec sont incluses.
+    if (!unlimitedCredits) {
+      let debit = await useCredit(`Audit multipages Marina — ${targets.length} page(s)`, totalCost);
+      for (let attempt = 1; attempt < 3 && !debit.success; attempt++) {
+        const msg = (debit.error || '').toLowerCase();
+        if (msg.includes('insufficient') || msg.includes('crédit') || msg.includes('unauthorized') || msg.includes('authenticated')) break;
+        await new Promise(r => setTimeout(r, attempt * 3000));
+        debit = await useCredit(`Audit multipages Marina — ${targets.length} page(s)`, totalCost);
+      }
+      if (!debit.success) {
+        toast.error(debit.error || 'Débit de crédits impossible');
+        return;
+      }
+    }
 
     cancelRef.current = false;
     setMergedHtml(null);
