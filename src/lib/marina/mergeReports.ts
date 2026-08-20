@@ -576,6 +576,7 @@ export function mergeMarinaReports(
           <p style="font-size:16px;font-weight:700;margin:0 0 4px 0;">${escapeHtml(p.url)}</p>
         </div>
         ${condensedNote}
+        ${dupConclusionNote}
         ${content}
       </section>`;
     })
