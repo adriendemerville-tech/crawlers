@@ -8386,6 +8386,98 @@ export type Database = {
         }
         Relationships: []
       }
+      marina_batch_items: {
+        Row: {
+          batch_id: string
+          error: string | null
+          id: string
+          job_id: string | null
+          launch_attempts: number
+          launched_at: string | null
+          position: number
+          progress: number
+          status: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          batch_id: string
+          error?: string | null
+          id?: string
+          job_id?: string | null
+          launch_attempts?: number
+          launched_at?: string | null
+          position: number
+          progress?: number
+          status?: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          batch_id?: string
+          error?: string | null
+          id?: string
+          job_id?: string | null
+          launch_attempts?: number
+          launched_at?: string | null
+          position?: number
+          progress?: number
+          status?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marina_batch_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "marina_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marina_batches: {
+        Row: {
+          concurrency: number
+          created_at: string
+          domain: string
+          id: string
+          item_count: number
+          lang: string
+          lock_until: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concurrency?: number
+          created_at?: string
+          domain: string
+          id?: string
+          item_count?: number
+          lang?: string
+          lock_until?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concurrency?: number
+          created_at?: string
+          domain?: string
+          id?: string
+          item_count?: number
+          lang?: string
+          lock_until?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       marina_free_trials: {
         Row: {
           created_at: string
