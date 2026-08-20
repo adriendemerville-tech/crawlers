@@ -175,12 +175,30 @@ const SITE_BLOCK_LABELS: Record<string, string> = {
   intro: 'Comment lire ce rapport (périmètre, précision, sources)',
   crawl: 'Crawl multi-pages',
   archetypes: 'Audit par type de page (rôle business de chaque gabarit)',
+  'archetype-mix': 'Répartition des types de page',
   cocoon: 'Cocon sémantique et maillage interne',
   indexation: "Santé d'indexation",
   llm: "Visibilité dans les moteurs de réponse IA",
   strategic: 'Analyse stratégique du domaine (marché, autorité, backlinks)',
   plan: "Plan d'action commun aux pages du lot",
+  // Aucun identifiant technique ne doit atteindre le sommaire : « identity »,
+  // « host-duplication », « owner-performance »… étaient rendus tels quels.
+  identity: 'Identité du site',
+  'host-duplication': 'Duplication entre versions du domaine (apex et www)',
+  'owner-performance': 'Performances relevées côté propriétaire du site',
+  verdict: 'Verdict stratégique du domaine',
+  tech: 'Audit technique',
+  keywords: 'Mots-clés et positions',
+  'keywords-sub': 'Détail des mots-clés',
+  module: 'Analyse complémentaire',
 };
+
+/** Dernier filet : un identifiant inconnu devient un libellé lisible en français. */
+function siteBlockLabel(id: string): string {
+  return SITE_BLOCK_LABELS[id]
+    || (id.replace(/[-_]+/g, ' ').replace(/^./, (c) => c.toUpperCase()));
+}
+
 
 
 const BAND_TEXT: Record<string, string> = {
@@ -408,7 +426,7 @@ export function mergeMarinaReports(
     ? `<h2 style="font-size:18px;margin:26px 0 10px 0;">Analyse du site (commune aux ${parts.length} pages)</h2>
        <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
          ${orderedSiteEntries
-           .map(([id]) => `<li style="margin:0 0 8px 0;">${escapeHtml(SITE_BLOCK_LABELS[id] || id)}</li>`)
+           .map(([id]) => `<li style="margin:0 0 8px 0;">${escapeHtml(siteBlockLabel(id))}</li>`)
            .join('')}
        </ul>`
     : '';
@@ -457,10 +475,10 @@ export function mergeMarinaReports(
       <h2 style="font-size:18px;margin:26px 0 10px 0;">Lecture d'ensemble</h2>
       <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
         ${networkSynthesis
-          ? `<li style="margin:0 0 8px 0;">Synthèse réseau, en ouverture de ce document — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés</li>`
+          ? `<li style="margin:0 0 8px 0;">Synthèse&nbsp;réseau, en ouverture de ce document — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés</li>`
           : ''}
         ${globalSummary
-          ? `<li style="margin:0 0 8px 0;">Synthèse exécutive — verdict du domaine puis reprise page par page</li>`
+          ? `<li style="margin:0 0 8px 0;">Synthèse&nbsp;exécutive — verdict du domaine puis reprise page par page</li>`
           : `<li style="margin:0 0 8px 0;">Reprise page par page — les rapports de ce lot ne portent pas les repères de synthèse</li>`}
       </ul>
       ${sharedToc}
