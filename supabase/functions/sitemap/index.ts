@@ -61,30 +61,30 @@ Deno.serve(handleRequest(async (req) => {
 
     if (!entries || entries.length === 0) {
       console.warn('No sitemap entries found, returning minimal sitemap');
-      const fallbackDate = new Date().toISOString().split('T')[0];
       return new Response(
         `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>${SITE_URL}</loc><lastmod>${fallbackDate}</lastmod></url>
+  <url><loc>${SITE_URL}</loc></url>
 </urlset>`,
         { headers: { ...corsHeaders, 'Content-Type': 'application/xml; charset=utf-8' } }
       );
     }
 
-    // Format lastmod dates (ensure YYYY-MM-DD)
+    // Format lastmod dates (ensure YYYY-MM-DD) ; null = pas de <lastmod> émis
     const formatted = entries.map(e => ({
       ...e,
       lastmod: typeof e.lastmod === 'string' && e.lastmod.includes('T')
         ? e.lastmod.split('T')[0]
-        : e.lastmod,
+        : (e.lastmod || null),
     }));
 
     const sitemap = generateSitemap(formatted);
     console.log(`Generated sitemap with ${formatted.length} URLs from sitemap_entries`);
 
     // Compute ETag from count + max lastmod for cache validation
-    const maxLastmod = formatted.reduce((max, e) => e.lastmod > max ? e.lastmod : max, '');
+    const maxLastmod = formatted.reduce((max, e) => (e.lastmod || '') > max ? (e.lastmod as string) : max, '');
     const etag = `"se-${formatted.length}-${maxLastmod}"`;
+
 
     // Check If-None-Match
     const ifNoneMatch = req.headers.get('if-none-match');
