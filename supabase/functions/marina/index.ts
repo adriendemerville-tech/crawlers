@@ -45,6 +45,8 @@ import {
   clusterSize,
   isolatedClustersNoteHTML,
   isFillerTable,
+  flatTableHTML,
+  cleanText,
 } from '../_shared/reportEditorial.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
