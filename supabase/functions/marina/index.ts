@@ -2261,7 +2261,7 @@ function buildExecutiveSummaryHTML(
 
   return `
   <div class="section" data-marina-scope="page" data-marina-block="summary" style="border-left:6px solid #d4af37;">
-    <h2 style="font-size:20px;margin:0 0 4px 0;">${t('Synthèse&nbsp;exécutive', 'Executive&nbsp;summary', 'Síntesis ejecutiva')}</h2>
+    <h2 style="font-size:20px;margin:0 0 4px 0;">${t('Synthèse exécutive', 'Executive summary', 'Síntesis ejecutiva')}</h2>
     <p style="font-size:14px;line-height:1.7;color:#374151;margin:0 0 14px 0;"><strong>${verdict}</strong></p>
     <div style="display:flex;flex-wrap:wrap;gap:10px;">
       ${cell(t('Score global', 'Global score', 'Puntuación global'), global === null ? 'n/d' : `${global}/100`, 'global_score')}

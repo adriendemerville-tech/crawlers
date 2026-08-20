@@ -635,6 +635,9 @@ ${head}
 <style>
   .marina-batch-part, .marina-batch-shared, .marina-batch-disclosure { break-before: page; }
   .marina-batch-cover { break-before: page; break-after: page; }
+  .marina-batch-cover h1, .marina-batch-cover h2,
+  .marina-network-synthesis h2, .marina-network-synthesis h3,
+  .marina-batch-summary h2 { word-spacing: normal; white-space: normal; }
 </style>
 </head>
 <body>
