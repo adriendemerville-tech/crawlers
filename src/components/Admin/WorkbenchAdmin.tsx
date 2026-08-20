@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Trash2, RefreshCw, Search, Archive, Merge, AlertTriangle } from 'lucide-react';
+import { Loader2, Trash2, RefreshCw, Search, Archive, Merge, AlertTriangle, Scale } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -32,7 +32,34 @@ interface WorkbenchItem {
   source_type: string;
   created_at: string;
   manual_priority: number | null;
+  priority_score: number | null;
+  roi_tier: string | null;
+  is_quick_win: boolean | null;
 }
+
+/** Dette de pruning agrégée du site : c'est elle qui arbitre créer vs consolider. */
+interface SiteDebt {
+  domain: string;
+  debt: number;
+  regime: string;
+  corpus_size: number | null;
+  useful_pages: number | null;
+  cannibal_clusters: number | null;
+  explanation: string | null;
+}
+
+const REGIME_LABEL: Record<string, string> = {
+  healthy: 'corpus sain',
+  crowded: 'corpus encombré',
+  saturated: 'corpus saturé — création gelée',
+};
+
+const REGIME_COLORS: Record<string, string> = {
+  healthy: 'border-emerald-500/40 text-emerald-500',
+  crowded: 'border-amber-500/40 text-amber-500',
+  saturated: 'border-red-500/40 text-red-500',
+};
+
 
 const SEVERITY_COLORS: Record<string, string> = {
   critical: 'bg-red-500/10 text-red-500',
@@ -52,6 +79,8 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function WorkbenchAdmin() {
   const [items, setItems] = useState<WorkbenchItem[]>([]);
+  const [debts, setDebts] = useState<SiteDebt[]>([]);
+
   const [stats, setStats] = useState<WorkbenchStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
@@ -92,11 +121,24 @@ export function WorkbenchAdmin() {
     });
   }, []);
 
+  const loadDebts = useCallback(async () => {
+    const { data } = await supabase
+      .from('site_pruning_debt')
+      .select('domain, debt, regime, corpus_size, useful_pages, cannibal_clusters, explanation')
+      .order('debt', { ascending: false })
+      .limit(50);
+    setDebts((data as SiteDebt[]) || []);
+  }, []);
+
   const loadItems = useCallback(async () => {
     setLoading(true);
       let query = supabase
       .from('architect_workbench')
-      .select('id, title, domain, status, severity, finding_category, spiral_score, target_url, source_type, created_at, manual_priority')
+      .select('id, title, domain, status, severity, finding_category, spiral_score, target_url, source_type, created_at, manual_priority, priority_score, roi_tier, is_quick_win')
+      // Tri sur l'échelle unifiée : quick wins d'abord, puis score de priorité ;
+      // la date ne sert plus que de départage.
+      .order('is_quick_win', { ascending: false, nullsFirst: false })
+      .order('priority_score', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
       .limit(200);
 
@@ -107,7 +149,7 @@ export function WorkbenchAdmin() {
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else {
-      let filtered = data || [];
+      let filtered = (data || []) as WorkbenchItem[];
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         filtered = filtered.filter(i => i.title.toLowerCase().includes(q) || (i.target_url || '').toLowerCase().includes(q));
@@ -117,7 +159,35 @@ export function WorkbenchAdmin() {
     setLoading(false);
   }, [filterDomain, filterStatus, searchQuery, toast]);
 
-  useEffect(() => { loadStats(); loadItems(); }, [loadStats, loadItems]);
+
+  useEffect(() => { loadStats(); loadItems(); loadDebts(); }, [loadStats, loadItems, loadDebts]);
+
+  /** Passe de priorité : recalcule la dette du site puis rejuge tous les constats. */
+  const handlePriorityPass = async () => {
+    setActing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('workbench-hygiene', {
+        body: {
+          action: 'priority_pass',
+          ...(filterDomain !== 'all' ? { domain: filterDomain } : {}),
+          limit: filterDomain !== 'all' ? 1 : 20,
+        },
+      });
+      if (error) throw error;
+      toast({
+        title: 'Priorités recalculées',
+        description: `${data?.priority_items || 0} constat(s) sur ${data?.priority_sites || 0} site(s)${data?.creations_frozen ? ` — ${data.creations_frozen} création(s) gelée(s)` : ''}`,
+      });
+      loadItems();
+      loadDebts();
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e.message, variant: 'destructive' });
+    } finally {
+      setActing(false);
+    }
+  };
+
+
 
   const handlePurgeDuplicates = async () => {
     setActing(true);
@@ -242,6 +312,10 @@ export function WorkbenchAdmin() {
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
               Recalculer scores
             </Button>
+            <Button size="sm" variant="outline" onClick={handlePriorityPass} disabled={acting}>
+              <Scale className="h-3.5 w-3.5 mr-1.5" />
+              Passe de priorité {filterDomain !== 'all' ? `(${filterDomain})` : '(20 sites)'}
+            </Button>
             <Button size="sm" variant="outline" onClick={() => handleBulkStatus('done')} disabled={acting || filterStatus === 'all'}>
               Bulk → done
             </Button>
@@ -252,6 +326,49 @@ export function WorkbenchAdmin() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dette de pruning par site — l'arbitrage « créer vs consolider » */}
+      {debts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Dette de pruning par site</CardTitle>
+            <CardDescription className="text-xs">
+              Mesurée sur le corpus entier : pages muettes, grappes de cannibalisation, concentration des clics.
+              Au-delà de 60, la création de contenu est gelée sauf gap sémantique documenté.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="max-h-[220px] overflow-y-auto divide-y divide-border">
+              {debts.map(d => (
+                <div key={d.domain} className="flex items-start gap-2 px-3 py-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-medium truncate">{d.domain}</span>
+                      <Badge variant="outline" className={`text-[9px] ${REGIME_COLORS[d.regime] || ''}`}>
+                        {d.debt} — {REGIME_LABEL[d.regime] || d.regime}
+                      </Badge>
+                      {d.corpus_size != null && (
+                        <span className="text-[9px] text-muted-foreground">
+                          {d.useful_pages ?? 0}/{d.corpus_size} pages utiles
+                        </span>
+                      )}
+                      {(d.cannibal_clusters ?? 0) > 0 && (
+                        <span className="text-[9px] text-muted-foreground">
+                          {d.cannibal_clusters} grappe(s) de cannibalisation
+                        </span>
+                      )}
+                    </div>
+                    {d.explanation && (
+                      <p className="text-[9px] text-muted-foreground mt-0.5">{d.explanation}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
@@ -312,9 +429,19 @@ export function WorkbenchAdmin() {
                       </Badge>
                       <span className="text-[9px] text-muted-foreground">{item.domain}</span>
                       <span className="text-[9px] text-muted-foreground">{item.finding_category}</span>
+                      {item.is_quick_win && (
+                        <Badge variant="outline" className="text-[9px] border-yellow-500/50 text-yellow-500">quick win</Badge>
+                      )}
+                      {item.priority_score != null && (
+                        <span className="text-[9px] text-muted-foreground">prio {Math.round(item.priority_score)}</span>
+                      )}
+                      {item.roi_tier && (
+                        <span className="text-[9px] text-muted-foreground">ROI {item.roi_tier}</span>
+                      )}
                       {item.spiral_score != null && (
                         <span className="text-[9px] text-muted-foreground">{item.spiral_score}pts</span>
                       )}
+
                     </div>
                     {item.target_url && (
                       <p className="text-[9px] text-muted-foreground truncate mt-0.5">{item.target_url}</p>

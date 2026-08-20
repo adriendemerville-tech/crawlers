@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runPriorityPass } from "../_shared/parmenionPass.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,10 +46,12 @@ Deno.serve(async (req) => {
   );
 
   let action = "full";
+  let body: any = {};
   try {
-    const body = await req.json().catch(() => ({}));
+    body = (await req.json().catch(() => ({}))) || {};
     action = body.action || "full";
   } catch { /* cron calls with no body */ }
+
 
   const results: Record<string, number> = {};
 
@@ -203,9 +207,41 @@ Deno.serve(async (req) => {
     results.reset_stuck = stuck?.length ?? 0;
   }
 
+  // ── 6. Passe de priorité unifiée : dette de pruning par site + rescoring ROI ──
+  // Elle passe en dernier : elle juge ce qui reste après déduplication et plafond,
+  // et c'est le seul endroit qui voit le corpus entier (donc la cannibalisation).
+  let priorityPass: unknown = null;
+  if (action === "full" || action === "priority_pass") {
+    try {
+      const pass = await runPriorityPass(supabase, {
+        domain: body?.domain ?? null,
+        userId: body?.user_id ?? null,
+        limit: Number(body?.limit) || 20,
+      });
+      results.priority_sites = pass.sites_processed;
+      results.priority_items = pass.results.reduce((s, r) => s + r.scored, 0);
+      results.creations_frozen = pass.results.reduce((s, r) => s + r.frozen, 0);
+      priorityPass = pass.results.map((r) => ({
+        domain: r.domain,
+        debt: r.debt?.debt ?? null,
+        regime: r.debt?.regime ?? null,
+        corpus_size: r.debt?.corpus_size ?? null,
+        useful_pages: r.debt?.useful_pages ?? null,
+        cannibal_clusters: r.debt?.cannibal_clusters ?? null,
+        explanation: r.debt?.explanation ?? null,
+        items_scored: r.scored,
+        creations_frozen: r.frozen,
+      }));
+    } catch (e) {
+      console.error("[workbench-hygiene] priority_pass failed:", e instanceof Error ? e.message : e);
+      results.priority_sites = 0;
+    }
+  }
+
   console.log("[workbench-hygiene]", action, results);
 
-  return new Response(JSON.stringify({ success: true, action, ...results }), {
+  return new Response(JSON.stringify({ success: true, action, ...results, priority_pass: priorityPass }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
+

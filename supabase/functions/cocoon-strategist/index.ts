@@ -8,6 +8,8 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, findMatchingContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
 import { getSavPatternsForStrategist } from '../_shared/crossAgentContext.ts';
 import { computeCrawlPageQuality, resolveBusinessProfile, type CrawlPageInput } from '../_shared/crawlPageQuality.ts';
+import { newContentPremium, isCreationFrozen, type DebtRegime } from '../_shared/parmenionPriority.ts';
+
 
 /**
  * cocoon-strategist: Orchestrateur Stratège 360°
@@ -525,6 +527,29 @@ try {
       console.log(`[strategist] 🌀 Breathing Spiral: ${spiralItems.length} items, avg score ${avgSpiralScore}, phase: ${spiralPhase}`);
     }
 
+    // ── Dette de pruning du site : elle arbitre avant de classer ──
+    // Un corpus saturé (trop de pages muettes, grappes de cannibalisation) n'a
+    // pas besoin d'un article de plus : la surprime contenu descend, et au-delà
+    // du seuil « saturé » la création est gelée sauf gap sémantique documenté.
+    let siteDebtRegime: DebtRegime = 'healthy';
+    let siteDebt: any = null;
+    try {
+      const { data: debtRow } = await supabase
+        .from('site_pruning_debt')
+        .select('debt, regime, corpus_size, useful_pages, cannibal_clusters, explanation, computed_at')
+        .eq('user_id', auth.userId)
+        .eq('domain', String(domain || '').replace(/^www\./, '').toLowerCase())
+        .maybeSingle();
+      if (debtRow) {
+        siteDebt = debtRow;
+        siteDebtRegime = (debtRow.regime as DebtRegime) || 'healthy';
+        console.log(`[strategist] dette de pruning ${debtRow.debt} → régime ${siteDebtRegime} (${debtRow.explanation || ''})`);
+      }
+    } catch (e) {
+      console.warn('[strategist] dette de pruning indisponible, régime sain par défaut');
+    }
+
+
     // Extract keyword cloud as reference universe
     const keywordCloud: string[] = [];
     const serpKwData = (serpKeywordsResult as any)?.data?.sample_keywords;
@@ -937,11 +962,30 @@ try {
       const urlSpiralMax = Math.max(0, ...task.affected_urls.map((u: string) => spiralUrlScoreMap.get(u) || 0));
       if (urlSpiralMax >= 60) spiralBoost *= 1.2;
 
-      // Content priority mode: boost content creation/modification tasks
+      // Surprime contenu — dégressive selon la surface utile et la dette du site.
+      // Un ×1.8 plat traitait un site de 8 pages comme un site de 800 : une page
+      // neuve ajoute ~10 % de surface d'entrée dans le premier cas, 0,2 % et de la
+      // concurrence interne dans le second.
       let contentPriorityBoost = 1.0;
+      let premiumWhy = '';
       if (content_priority_mode && CONTENT_PRIORITY_ACTIONS.includes(task.action_type as ActionType)) {
-        contentPriorityBoost = 1.8; // Strong boost to push content tasks to top
+        const p = newContentPremium({
+          usefulPages: siteDebt?.useful_pages ?? 0,
+          recentCreations: 0,
+          regime: siteDebtRegime,
+          contentPriorityMode: true,
+        });
+        contentPriorityBoost = p.premium;
+        premiumWhy = p.explanation;
       }
+
+      // Gel dur : en régime saturé, aucune création sans gap sémantique documenté.
+      const freeze = ['create_content', 'publish_draft'].includes(String(task.action_type))
+        ? isCreationFrozen(siteDebtRegime, {
+            documentedSemanticGap: Boolean(task.metadata?.semantic_gap_documented),
+            competingPages: Number(task.metadata?.competing_pages ?? 0),
+          })
+        : { frozen: false, reason: '' };
 
       task.priority = Math.round(sevWeight * catWeight * depthBoost * qualityBoost * spiralBoost * contentPriorityBoost * 10);
       task.urgency = deriveUrgency(task.estimated_impact, task.is_destructive);
@@ -950,19 +994,35 @@ try {
       task.metadata.spiral_phase = spiralPhase;
       task.metadata.spiral_score_avg = avgSpiralScore;
       task.metadata.content_priority_mode = content_priority_mode;
+      task.metadata.pruning_regime = siteDebtRegime;
+      if (premiumWhy) task.metadata.content_premium = { value: contentPriorityBoost, why: premiumWhy };
+      if (freeze.frozen) {
+        task.metadata.creation_frozen = true;
+        task.metadata.creation_frozen_reason = freeze.reason;
+      }
     }
+
 
     rawTasks.sort((a, b) => b.priority - a.priority);
 
     // Throttle: when new-content creation is disabled, drop tasks that would create new pages/posts.
     // We keep rewrite/enrich/fix/links — only block actual creations.
+    // Second garde : le gel dur du régime « saturé » écarte les mêmes créations,
+    // même quand `disable_new_content` est faux — c'est la dette qui décide.
     const NEW_CONTENT_ACTIONS: ActionType[] = ['create_content', 'publish_draft'];
-    const filteredTasks = disable_new_content
-      ? rawTasks.filter(t => !NEW_CONTENT_ACTIONS.includes(t.action_type as ActionType))
-      : rawTasks;
+    const filteredTasks = rawTasks.filter((t) => {
+      const isCreation = NEW_CONTENT_ACTIONS.includes(t.action_type as ActionType);
+      if (!isCreation) return true;
+      if (disable_new_content) return false;
+      return !t.metadata?.creation_frozen;
+    });
+    const frozenCount = rawTasks.filter((t) => t.metadata?.creation_frozen).length;
     if (disable_new_content) {
       console.log(`[cocoon-strategist] 🚦 disable_new_content=true → filtered ${rawTasks.length - filteredTasks.length} new-content tasks`);
+    } else if (frozenCount > 0) {
+      console.log(`[cocoon-strategist] création gelée (régime ${siteDebtRegime}) → ${frozenCount} tâche(s) de création écartée(s)`);
     }
+
 
     // Apply budget: keep top N tasks
     const selectedTasks = filteredTasks.slice(0, budget);
