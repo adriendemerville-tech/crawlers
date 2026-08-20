@@ -168,7 +168,13 @@ const VALUE_LABELS: Record<string, string> = {
   ok: "correct",
   pending: "en cours",
   done: "terminé",
+  easy: "facile",
+  hard: "difficile",
+  very_hard: "très difficile",
+  polluted: "pollué",
+  clean: "sain",
 };
+
 
 /** Libellé lisible d'une clé brute (snake_case, kebab-case ou camelCase). */
 export function humanizeKey(key: string): string {
