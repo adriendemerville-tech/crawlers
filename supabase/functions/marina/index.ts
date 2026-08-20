@@ -5648,7 +5648,19 @@ Deno.serve(handleRequest(async (req) => {
         user_id: userId,
         function_name: 'marina',
         status: 'pending',
-        input_payload: { url: targetUrl, lang: lang || null, callback_url: callback_url || null },
+        input_payload: {
+          url: targetUrl,
+          lang: lang || null,
+          callback_url: callback_url || null,
+          // Marqueurs de lot : regroupent les N jobs d'un audit multipages.
+          ...(body.batch_id
+            ? {
+                batch_id: body.batch_id,
+                batch_size: body.batch_size ?? null,
+                batch_index: body.batch_index ?? null,
+              }
+            : {}),
+        },
       })
       .select('id')
       .single();
