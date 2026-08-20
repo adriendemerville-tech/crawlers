@@ -1295,17 +1295,41 @@ async function executeContentArchitect(
 
   let funcResponse: Response | null = null;
   let funcResult: any = {};
+  const kickAttempts: string[] = [];
 
+  // Lancement du job advisor. Un 503 au démarrage (CPU wall-time à froid sur un
+  // module de ~1 900 lignes) ne doit pas dégrader le cycle : on retente avec
+  // backoff, puis on bascule sur le mode étagé `staged` (research → synthesis
+  // via job_queue), qui ne demande jamais un seul boot long.
   if (!jobId) {
-    console.log(`[AutopilotEngine] Calling content-architecture-advisor (ASYNC) for ${site.domain}, keyword: ${funcBody.keyword}`);
-    funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(funcBody),
-    });
-    funcResult = await funcResponse.json().catch(() => ({}));
-    if (funcResponse.status === 202 && funcResult.job_id) jobId = funcResult.job_id;
+    const kickModes: Array<{ label: string; body: Record<string, unknown>; waitMs: number }> = [
+      { label: 'async', body: funcBody, waitMs: 0 },
+      { label: 'async-retry', body: funcBody, waitMs: 4000 },
+      { label: 'staged', body: { ...funcBody, staged: true }, waitMs: 8000 },
+    ];
+
+    for (const mode of kickModes) {
+      if (mode.waitMs > 0) await new Promise((r) => setTimeout(r, mode.waitMs));
+      console.log(`[AutopilotEngine] content-architecture-advisor kick (${mode.label}) pour ${site.domain}, keyword: ${funcBody.keyword}`);
+      try {
+        funcResponse = await fetch(`${SUPABASE_URL}/functions/v1/content-architecture-advisor`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(mode.body),
+        });
+        funcResult = await funcResponse.json().catch(() => ({}));
+        if (funcResult?.job_id && (funcResponse.status === 202 || funcResponse.ok)) {
+          jobId = funcResult.job_id;
+          console.log(`[AutopilotEngine] Job advisor ${jobId} accepté en mode ${mode.label}`);
+          break;
+        }
+        kickAttempts.push(`${mode.label}:HTTP ${funcResponse.status}`);
+      } catch (e) {
+        kickAttempts.push(`${mode.label}:${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
   }
+
 
   if (jobId) {
     console.log(`[AutopilotEngine] content-architecture-advisor job ${jobId}, polling court...`);
