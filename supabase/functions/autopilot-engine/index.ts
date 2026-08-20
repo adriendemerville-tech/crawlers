@@ -1118,10 +1118,19 @@ async function executeCmsBridgeActions(
         status: funcResponse.ok ? 'success' : 'error', http_status: funcResponse.status,
         result: funcResult, image_generated: imageGenerated,
       });
+      if (funcResponse.ok && inferredAction === 'create-post') {
+        await logContentCreation(supabase, {
+          trackedSiteId: config.tracked_site_id, configId: config.id, userId: config.user_id,
+          cycleNumber, phase,
+          slug: cmsAction.body?.slug || cmsAction.slug || funcResult?.result?.slug || 'unknown',
+          title: cmsAction.body?.title, published: true, via: bridgeName,
+        });
+      }
       if (!funcResponse.ok) {
         phaseErrors.push({ phase, function: bridgeName, severity: 'degraded', message: `CMS action ${cmsAction.action} failed: HTTP ${funcResponse.status}`, retryable: true });
         setSuccess(false);
       }
+
     } catch (actionErr) {
       executionResults.push({
         function: bridgeName, cms_action: cmsAction.action,
