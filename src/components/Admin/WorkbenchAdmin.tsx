@@ -119,11 +119,24 @@ export function WorkbenchAdmin() {
     });
   }, []);
 
+  const loadDebts = useCallback(async () => {
+    const { data } = await supabase
+      .from('site_pruning_debt')
+      .select('domain, debt, regime, corpus_size, useful_pages, cannibal_clusters, explanation')
+      .order('debt', { ascending: false })
+      .limit(50);
+    setDebts((data as SiteDebt[]) || []);
+  }, []);
+
   const loadItems = useCallback(async () => {
     setLoading(true);
       let query = supabase
       .from('architect_workbench')
-      .select('id, title, domain, status, severity, finding_category, spiral_score, target_url, source_type, created_at, manual_priority')
+      .select('id, title, domain, status, severity, finding_category, spiral_score, target_url, source_type, created_at, manual_priority, priority_score, roi_tier, is_quick_win')
+      // Tri sur l'échelle unifiée : quick wins d'abord, puis score de priorité ;
+      // la date ne sert plus que de départage.
+      .order('is_quick_win', { ascending: false, nullsFirst: false })
+      .order('priority_score', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
       .limit(200);
 
@@ -134,7 +147,7 @@ export function WorkbenchAdmin() {
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else {
-      let filtered = data || [];
+      let filtered = (data || []) as WorkbenchItem[];
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         filtered = filtered.filter(i => i.title.toLowerCase().includes(q) || (i.target_url || '').toLowerCase().includes(q));
@@ -143,6 +156,7 @@ export function WorkbenchAdmin() {
     }
     setLoading(false);
   }, [filterDomain, filterStatus, searchQuery, toast]);
+
 
   useEffect(() => { loadStats(); loadItems(); }, [loadStats, loadItems]);
 
