@@ -12,7 +12,7 @@
  * morte orpheline, car il gaspille du crawl budget et casse la navigation.
  */
 
-import { classifyLink, isFalsePositiveDomain, type LinkVerdict } from './linkVerdict.ts';
+import { classifyLink, isFalsePositiveDomain, type LinkVerdict } from './linkVerdictShared.ts';
 
 export interface DeadUrlPageInput {
   url: string;
