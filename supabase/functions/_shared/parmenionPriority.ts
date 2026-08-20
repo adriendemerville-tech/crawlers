@@ -44,7 +44,16 @@ export interface PrunePageInput {
   http_status: number;
   /** true quand aucune donnée GSC n'est disponible pour le site. */
   metrics_missing?: boolean;
+  /**
+   * Meilleure position observée par une source externe (Semrush, DataForSEO)
+   * quand GSC ne remonte encore rien : une position naissante hors clics est
+   * un actif à défendre, pas une page morte.
+   */
+  external_best_position?: number | null;
+  /** Volume mensuel du mot-clé associé à cette position externe. */
+  external_keyword_volume?: number | null;
 }
+
 
 export interface PruneVerdict {
   url: string;
