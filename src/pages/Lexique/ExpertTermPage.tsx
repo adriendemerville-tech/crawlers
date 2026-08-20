@@ -7,6 +7,8 @@ import { ArrowLeft, Calendar, Code2, Lightbulb, BookOpen, MessageSquare, Chevron
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { TrustBadge, SoftwareApplicationSchema } from '@/components/TrustBadge';
+import { SiloNav } from '@/components/seo/SiloNav';
+import { siloForLexiqueTerm } from '@/data/silos';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
@@ -156,6 +158,13 @@ export default function ExpertTermPage() {
             <Link to="/audit-expert">Contactez l'expert Crawlers.fr</Link>
           </Button>
         </section>
+
+        {/* Maillage montant : la fiche remonte vers son pilier */}
+        <SiloNav
+          silo={siloForLexiqueTerm(term.slug, term.category)}
+          heading="Remonter au pilier"
+          className="mt-10"
+        />
 
         {/* Back Link */}
         <div className="mt-10">
