@@ -30,6 +30,10 @@ const MAX_MERGES_PER_RUN = 1;
 const WEEKLY_ACTION_CAP = 3;
 /** Anti-bruit : nb max de constats poussés au Workbench par exécution. */
 const MAX_FINDINGS_PER_RUN = 6;
+/** Borne haute de la « position naissante » : 16-30 = page 2, actif à défendre. */
+const NASCENT_POSITION_MAX = 30;
+/** Au-dessus de ce volume de mots, aucune dépublication sur simple absence de clics. */
+const SUBSTANTIAL_WORD_COUNT = 1200;
 
 const STOPWORDS = new Set([
   'le', 'la', 'les', 'de', 'des', 'du', 'un', 'une', 'et', 'ou', 'pour', 'avec',
@@ -435,6 +439,7 @@ export async function runPruneMergePass(sb: any, identity?: SiteIdentity | null)
     if (candidates.length === 0) return result;
 
     const gscAvailable = await attachGscSignals(sb, candidates);
+    await attachExternalRanks(sb, candidates);
     await attachIntegritySignals(candidates, {
       domain: DOMAIN,
       site_name: identity?.site_name || 'Crawlers',
