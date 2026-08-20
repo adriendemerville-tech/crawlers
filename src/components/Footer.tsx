@@ -354,9 +354,9 @@ function FooterComponent() {
               </nav>
 
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span>© {new Date().getFullYear()} Crawlers - crawlers.fr | {t3(language, ' Tous droits réservés', ' All rights reserved', ' Todos los derechos reservados')}</span>
+                <span>© {new Date().getFullYear()} Crawlers - crawlers.fr | {t3(language, ' Tous droits réservés', ' All rights reserved', ' Todos los drochos reservados')}</span>
                 <a
-                  href="/rss.xml"
+                  href="/feed.xml"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 hover:text-primary transition-colors"
