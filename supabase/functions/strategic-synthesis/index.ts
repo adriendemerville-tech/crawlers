@@ -10,6 +10,7 @@ import { trackAnalyzedUrl } from '../_shared/trackUrl.ts'
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts'
 import { computeFactualCitationScores } from '../_shared/citationScorer.ts'
+import { resolveCitationBreakdown } from '../_shared/citationBreakdownResolve.ts'
 import { fetchDomainAuthority, buildAuthorityPromptSection, type AuthorityData } from '../_shared/domainAuthority.ts'
 import { persistAuthoritySnapshot, buildAuthorityTrendPromptSection, type AuthorityTrend } from '../_shared/authoritySnapshots.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
