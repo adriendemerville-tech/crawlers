@@ -68,10 +68,16 @@ function attachMergeTargets(verdicts: (PruneVerdict & { merge_candidate?: string
     let best: { url: string; score: number } | null = null
     for (const k of keepers) {
       if (!k.slug || k.slug === s) continue
+      let shared = 0
+      for (const t of st) if (k.tokens.has(t)) shared++
+      // Deux jetons communs au moins : sur des slugs longs, le Jaccard seul
+      // écarterait des doublons évidents qui ne partagent que leur cœur de sujet.
+      if (shared < 2) continue
       const score = k.slug.includes(s) || s.includes(k.slug) ? 0.9 : similarity(st, k.tokens)
-      if (score > 0.45 && (!best || score > best.score)) best = { url: k.url, score }
+      if (score > 0.3 && (!best || score > best.score)) best = { url: k.url, score }
     }
     if (best) v.merge_candidate = best.url
+
 
     // Une page morte qui recouvre sémantiquement une page conservée se fusionne :
     // sans profil de backlink page à page, le juge partagé conclurait à tort
