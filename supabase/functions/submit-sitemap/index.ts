@@ -46,9 +46,9 @@ Deno.serve(handleRequest(async (req) => {
     const resolved = await resolveGoogleToken(supabase, user_id, targetDomain, clientId, clientSecret);
 
     if (!resolved) {
-      return jsonError('Impossible de résoudre le token Google. Vérifiez la connexion GSC.',
-        code: 'NO_GOOGLE_TOKEN', 401);
+      return jsonError('Impossible de résoudre le token Google. Vérifiez la connexion GSC.', 401);
     }
+
 
     // Soumission du sitemap
     const result = await submitSitemapToGSC({
