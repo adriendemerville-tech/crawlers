@@ -279,7 +279,11 @@ export function splitTrailingSeverity(text: string): { text: string; severity: S
   const captured = m[1].replace(/^(sévérité|severity)\s*:?\s*/i, "");
   const sev = normalizeSeverity(captured);
   if (!sev) return { text, severity: null };
-  return { text: text.slice(0, m.index).replace(/[\s—–\-·|(\[]+$/, "").trim(), severity: sev };
+  const remainder = text.slice(0, m.index).replace(/[\s—–\-·|(\[]+$/, "").trim();
+  // Si le retrait laisse un fragment inexploitable, le mot n'était pas une
+  // étiquette de sévérité mais un mot de la phrase : on ne touche à rien.
+  if (remainder.length < 12) return { text, severity: null };
+  return { text: remainder, severity: sev };
 }
 
 /**
