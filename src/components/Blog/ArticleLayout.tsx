@@ -39,6 +39,8 @@ function ArticleLayoutComponent({
   updatedAt = null,
   heroImage,
   heroAlt,
+  heroCaption,
+
   children,
   sources = [],
   slug = '',
