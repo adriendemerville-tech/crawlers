@@ -147,7 +147,7 @@ const ProductShowcaseSection = memo(() => {
                       </div>
                       <img
                         src={slide.image}
-                        alt={slide.title}
+                        alt={`Capture d'écran de l'interface Crawlers.fr : ${slide.title}`}
                         width={960}
                         height={600}
                         className="w-full h-auto block min-h-[200px] object-cover"
