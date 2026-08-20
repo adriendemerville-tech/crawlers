@@ -62,44 +62,11 @@ const ExpertAudit = () => {
   const [isAuditLoading, setIsAuditLoading] = useState(false);
   const { language } = useLanguage();
   const meta = metaData[language] || metaData.fr;
-  const faqItems = faqSchemaData[language] || faqSchemaData.fr;
 
   // Fix canonical & hreflang for multilingual indexation
   useCanonicalHreflang('/audit-expert');
 
-  // Build JSON-LD schemas for Helmet injection
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": faqItems.map(item => ({
-      "@type": "Question",
-      "name": item.q,
-      "acceptedAnswer": { "@type": "Answer", "text": item.a }
-    }))
-  };
 
-  const webPageSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": meta.title,
-    "description": meta.description,
-    "url": "https://crawlers.fr/audit-expert",
-    "inLanguage": language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
-    "isPartOf": { "@type": "WebSite", "name": "Crawlers.fr", "url": "https://crawlers.fr" },
-    "about": {
-      "name": "Audit Technique & Stratégique SEO/GEO",
-      "applicationCategory": "WebApplication",
-      "operatingSystem": "Web Browser",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
-    },
-    "breadcrumb": {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-        { "@type": "ListItem", "position": 2, "name": "Audit Technique & Stratégique SEO/GEO", "item": "https://crawlers.fr/audit-expert" }
-      ]
-    }
-  };
 
   // Force all links inside audit-expert to open in new tab
   useEffect(() => {

@@ -19,49 +19,6 @@ const PageSpeedLanding = () => {
   const { language } = useLanguage();
   useCanonicalHreflang('/pagespeed');
 
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Article",
-        "headline": "Test PageSpeed & Core Web Vitals — Analysez la performance de votre site",
-        "description": "Testez la vitesse de votre site avec notre outil PageSpeed. Analysez les Core Web Vitals (LCP, FID, CLS), obtenez des recommandations d'optimisation et améliorez votre score Google.",
-        "author": { "@type": "Person", "name": "Adrien de Volontat", "url": "https://crawlers.fr" },
-        "publisher": { "@type": "Organization", "name": "Crawlers.fr", "url": "https://crawlers.fr" },
-        "datePublished": "2026-04-08",
-        "dateModified": "2026-04-08",
-        "url": "https://crawlers.fr/pagespeed",
-        "mainEntityOfPage": "https://crawlers.fr/pagespeed"
-      },
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-          { "@type": "ListItem", "position": 2, "name": "PageSpeed", "item": "https://crawlers.fr/pagespeed" }
-        ]
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "Qu'est-ce que les Core Web Vitals ?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Les Core Web Vitals sont 3 métriques Google qui mesurent l'expérience utilisateur : LCP (Largest Contentful Paint) pour la vitesse de chargement, INP (Interaction to Next Paint) pour la réactivité, et CLS (Cumulative Layout Shift) pour la stabilité visuelle." }
-          },
-          {
-            "@type": "Question",
-            "name": "Comment améliorer son score PageSpeed ?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Optimisez les images (WebP, lazy loading), réduisez le JavaScript bloquant, activez la compression Gzip/Brotli, utilisez un CDN, minimisez le CSS critique et préchargez les ressources clés." }
-          },
-          {
-            "@type": "Question",
-            "name": "Le PageSpeed affecte-t-il le SEO ?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Oui, les Core Web Vitals sont un facteur de classement officiel de Google depuis 2021. Un site lent perd des positions dans les résultats de recherche, surtout sur mobile." }
-          }
-        ]
-      }
-    ]
-  };
 
   const metrics = [
     { icon: Eye, title: 'LCP', full: 'Largest Contentful Paint', desc: 'Temps de chargement du plus grand élément visible. Objectif : < 2.5s', color: 'text-green-500' },
