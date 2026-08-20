@@ -113,15 +113,16 @@ const ARCHETYPE_NOUN: Record<QuestionArchetype, { m: string; f: string }> = {
  */
 function stripSiteWording(text: string, archetype: QuestionArchetype): string {
   const { m, f } = ARCHETYPE_NOUN[archetype];
-  return text
-    .replace(/\bquels?\s+sites?\b/gi, `quel ${m}`)
-    .replace(/\bquelles?\s+sites?\b/gi, `quelle ${f}`)
+  const out = text
+    .replace(/\bquels?\s+sites?\b/gi, (x) => (x[0] === 'Q' ? `Quel ${m}` : `quel ${m}`))
+    .replace(/\bquelles?\s+sites?\b/gi, (x) => (x[0] === 'Q' ? `Quelle ${f}` : `quelle ${f}`))
     .replace(/\b(les|des)\s+(meilleurs?|bons?)\s+sites?\b/gi, (_x, d, q) => `${d} ${q} ${m}s`)
-    .replace(/\b(un|le|ce)\s+site(\s+web|\s+internet)?\b/gi, (_x, d) => `${d === 'un' ? 'un' : d} ${m}`)
+    .replace(/\b(un|le|ce)\s+site(\s+web|\s+internet)?\b/gi, (_x, d) => `${d} ${m}`)
     .replace(/\b(une|la|cette)\s+site\b/gi, (_x, d) => `${d} ${f}`)
     .replace(/\bsites?\s+(de\s+r[eé]f[eé]rence|de\s+confiance|fiables?)\b/gi, (_x, s) => `${m} ${s}`)
     .replace(/\s{2,}/g, ' ')
     .trim();
+  return out ? out.charAt(0).toUpperCase() + out.slice(1) : out;
 }
 
 function isAcceptable(text: string, scrubTerms: string[]): boolean {
