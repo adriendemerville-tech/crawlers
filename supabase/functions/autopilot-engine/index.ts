@@ -56,6 +56,8 @@ import { checkSemanticGate } from '../_shared/autopilot/semanticGate.ts';
 import { buildOriginalImageBrief } from '../_shared/parmenion/imageOriginality.ts';
 import { markDeployedItems } from '../_shared/autopilot/postExecute.ts';
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
+import { countRecentContentCreations, logContentCreation } from '../_shared/contentThrottle.ts';
+
 
 /** Slugify FR title for iktracker create-post. */
 function slugifyFr(s: string): string {
@@ -237,8 +239,10 @@ try {
         // Désactivable via parmenion_targets.backlog_guard_paused = true.
         let contentThrottled = false;
         let throttleInfo: { created: number; max: number; period: 'day' | 'week' } | null = null;
+        let contentAllowance = MAX_CMS_ACTIONS_PER_CYCLE;
         let backlogGuardActive = false;
         let backlogCount = 0;
+
 
         const PLANNED_BACKLOG_THRESHOLD = 5;
         const BACKLOG_GRACE_MINUTES = 60; // ignore les décisions trop récentes (< 1h)
@@ -293,25 +297,23 @@ try {
         // ═══ Throttle guard : limite de contenus créés par jour/semaine (parmenion_targets) ═══
         // Au lieu de skip le cycle, on bascule en mode "tech-only" : pas de nouveau contenu,
         // le cycle continue avec audit/diagnostic/prescription sur les actions techniques.
+        // Le quota est compté PAR DOMAINE (plusieurs tracked_sites peuvent partager
+        // un domaine) et sur les publications réellement poussées.
         if (targetGuard) {
           const maxPerPeriod = (targetGuard as any).max_content_per_period ?? 3;
           const period = ((targetGuard as any).throttle_period as 'day' | 'week') ?? 'day';
-          const sinceMs = period === 'week' ? 7 * 24 * 3600 * 1000 : 24 * 3600 * 1000;
-          const since = new Date(Date.now() - sinceMs).toISOString();
-          // On compte les créations réelles d'articles (create-post) sur la période.
-          const { count: createdCount } = await supabase
-            .from('autopilot_modification_log')
-            .select('id', { count: 'exact', head: true })
-            .eq('tracked_site_id', config.tracked_site_id)
-            .eq('action_type', 'create-post')
-            .eq('status', 'completed')
-            .gte('created_at', since);
-          throttleInfo = { created: createdCount ?? 0, max: maxPerPeriod, period };
-          if ((createdCount ?? 0) >= maxPerPeriod) {
+          const createdCount = await countRecentContentCreations(supabase, siteInfo.domain, period);
+          throttleInfo = { created: createdCount, max: maxPerPeriod, period };
+          contentAllowance = Math.max(0, maxPerPeriod - createdCount);
+          if (createdCount >= maxPerPeriod) {
             contentThrottled = true;
             console.log(`[AutopilotEngine] 🚦 Content throttled for ${siteInfo.domain}: ${createdCount}/${maxPerPeriod} per ${period}. Cycle continues in tech-only mode.`);
           }
         }
+        if (contentThrottled) contentAllowance = 0;
+        (config as any)._content_allowance = contentAllowance;
+        (config as any)._domain = siteInfo.domain;
+
 
         // ═══ Update status to 'running' ═══
         await supabase
@@ -899,8 +901,23 @@ async function executeCrawlersInternalPublish(
   supabase: any, executionResults: any[], phaseErrors: ExecutionError[],
   setSuccess: (v: boolean) => void,
 ) {
-  const actions = (decision.action.payload?.cms_actions || []).slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
+  // Plafond dur : le quota restant de la période (parmenion_targets) borne le nombre
+  // de créations, en plus du plafond par cycle. Sans cela un seul cycle pouvait
+  // publier des dizaines d'articles.
+  const allowance = Math.max(0, Math.min(
+    MAX_CMS_ACTIONS_PER_CYCLE,
+    (config as any)._content_allowance ?? MAX_CMS_ACTIONS_PER_CYCLE,
+  ));
+  const rawActions = (decision.action.payload?.cms_actions || []);
+  const creations = rawActions.filter((a: any) => (a.action || (a.body ? 'create-post' : '')) === 'create-post');
+  const others = rawActions.filter((a: any) => !creations.includes(a));
+  const keptCreations = creations.slice(0, allowance);
+  if (creations.length > keptCreations.length) {
+    console.log(`[AutopilotEngine] 🚦 crawlers.fr: ${creations.length - keptCreations.length} création(s) écartée(s) — quota période épuisé (allowance=${allowance})`);
+  }
+  const actions = [...keptCreations, ...others].slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
   console.log(`[AutopilotEngine] crawlers.fr internal publish: ${actions.length} action(s)`);
+
 
   for (const cmsAction of actions) {
     const body = cmsAction.body || {};
@@ -988,7 +1005,14 @@ async function executeCrawlersInternalPublish(
         target: slug, status: 'success', article_id: article.id,
         published: status === 'published', image_generated: imageGenerated,
       });
+      if (!existing) {
+        await logContentCreation(supabase, {
+          trackedSiteId: config.tracked_site_id, configId: config.id, userId: config.user_id,
+          phase, slug, title, published: status === 'published', via: 'crawlers-internal-publish',
+        });
+      }
       console.log(`[AutopilotEngine] crawlers.fr ${existing ? 'mis à jour' : 'créé'} : ${slug} (${status})`);
+
     } catch (err) {
       executionResults.push({
         function: 'crawlers-internal-publish', target: slug || 'unknown', status: 'error',
@@ -1007,12 +1031,23 @@ async function executeCmsBridgeActions(
   supabase: any, executionResults: any[], phaseErrors: ExecutionError[],
   setSuccess: (v: boolean) => void,
 ) {
-  if (decision.action.payload.cms_actions.length > MAX_CMS_ACTIONS_PER_CYCLE) {
-    console.warn(`[AutopilotEngine] Truncating ${decision.action.payload.cms_actions.length} CMS actions to ${MAX_CMS_ACTIONS_PER_CYCLE} for ${site.domain}`);
-    decision.action.payload.cms_actions = decision.action.payload.cms_actions.slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
+  // Plafond dur : quota restant de la période (par domaine) puis plafond par cycle.
+  const allowance = Math.max(0, Math.min(
+    MAX_CMS_ACTIONS_PER_CYCLE,
+    (config as any)._content_allowance ?? MAX_CMS_ACTIONS_PER_CYCLE,
+  ));
+  const rawActions: any[] = decision.action.payload.cms_actions || [];
+  const creations = rawActions.filter((a) => (a.action || (a.body ? 'create-post' : '')) === 'create-post');
+  const others = rawActions.filter((a) => !creations.includes(a));
+  const dropped = Math.max(0, creations.length - allowance);
+  if (dropped > 0) {
+    console.log(`[AutopilotEngine] 🚦 ${site.domain}: ${dropped} création(s) écartée(s) — quota période épuisé (allowance=${allowance})`);
   }
+  decision.action.payload.cms_actions = [...creations.slice(0, allowance), ...others]
+    .slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
   const bridgeName = resolveCmsBridge(site.domain);
   console.log(`[AutopilotEngine] Executing ${decision.action.payload.cms_actions.length} CMS actions via ${bridgeName} for ${site.domain}`);
+
   
   for (const cmsAction of decision.action.payload.cms_actions) {
     try {
@@ -1083,10 +1118,19 @@ async function executeCmsBridgeActions(
         status: funcResponse.ok ? 'success' : 'error', http_status: funcResponse.status,
         result: funcResult, image_generated: imageGenerated,
       });
+      if (funcResponse.ok && inferredAction === 'create-post') {
+        await logContentCreation(supabase, {
+          trackedSiteId: config.tracked_site_id, configId: config.id, userId: config.user_id,
+          cycleNumber, phase,
+          slug: cmsAction.body?.slug || cmsAction.slug || funcResult?.result?.slug || 'unknown',
+          title: cmsAction.body?.title, published: true, via: bridgeName,
+        });
+      }
       if (!funcResponse.ok) {
         phaseErrors.push({ phase, function: bridgeName, severity: 'degraded', message: `CMS action ${cmsAction.action} failed: HTTP ${funcResponse.status}`, retryable: true });
         setSuccess(false);
       }
+
     } catch (actionErr) {
       executionResults.push({
         function: bridgeName, cms_action: cmsAction.action,
