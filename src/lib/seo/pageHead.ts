@@ -95,24 +95,25 @@ export function pageHead(options: PageHeadOptions) {
   };
   const url = toUrl(path);
   const canonicalUrl = canonicalPath ? toUrl(canonicalPath) : url;
-  const fullTitle = /crawlers/i.test(title) ? title : `${title} | Crawlers.fr`;
+  const fullTitle = composeTitle(title);
+  const metaDescription = composeDescription(description);
 
 
   const meta: Array<Record<string, string>> = [
     { title: fullTitle },
-    { name: 'description', content: description },
+    { name: 'description', content: metaDescription },
     { name: 'robots', content: noIndex ? 'noindex, follow' : INDEXABLE },
     { property: 'og:type', content: ogType },
     { property: 'og:site_name', content: 'Crawlers.fr' },
     { property: 'og:url', content: url },
     { property: 'og:title', content: fullTitle },
-    { property: 'og:description', content: description },
+    { property: 'og:description', content: metaDescription },
     { property: 'og:image', content: image },
     { property: 'og:locale', content: 'fr_FR' },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:site', content: '@crawlersfr' },
     { name: 'twitter:title', content: fullTitle },
-    { name: 'twitter:description', content: description },
+    { name: 'twitter:description', content: metaDescription },
     { name: 'twitter:image', content: image },
   ];
 
