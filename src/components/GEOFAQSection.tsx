@@ -123,28 +123,28 @@ export function GEOFAQSection() {
           </h2>
         </div>
 
-        <Accordion type="single" collapsible className="space-y-3">
+        {/* Réponses rendues côté serveur (details) pour rester indexables. */}
+        <div className="space-y-3">
           {t.items.map((item, index) => {
             const IconComponent = iconMap[item.icon as keyof typeof iconMap] || Brain;
             return (
-              <AccordionItem
+              <details
                 key={index}
-                value={`item-${index}`}
-                className="border border-border rounded-lg bg-card px-6 data-[state=open]:bg-card/80"
+                open={index === 0}
+                className="group rounded-lg border border-border bg-card px-6"
               >
-                <AccordionTrigger className="text-left font-medium hover:no-underline py-4">
-                  <div className="flex items-center gap-3">
-                    <IconComponent className="h-5 w-5 text-primary shrink-0" />
-                    <h3 className="text-base font-medium">{item.question}</h3>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-4 pl-8">
-                  {item.answer}
-                </AccordionContent>
-              </AccordionItem>
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-4 marker:content-none">
+                  <span className="flex items-center gap-3">
+                    <IconComponent className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                    <h3 className="text-base font-medium text-foreground">{item.question}</h3>
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <div className="pb-4 pl-8 text-muted-foreground">{item.answer}</div>
+              </details>
             );
           })}
-        </Accordion>
+        </div>
       </div>
     </section>
   );
