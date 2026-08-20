@@ -249,7 +249,7 @@ function renderJsonSection(data: any, depth = 0): string {
     }
     // Array of objects
     return data.map((item) => {
-      if (typeof item === 'string') return `<div style="padding:6px 12px;margin-bottom:4px;background:#f9fafb;border-radius:4px;font-size:13px;">${item}</div>`;
+      if (typeof item === 'string') return `<div style="padding:6px 12px;margin-bottom:4px;background:#f9fafb;border-radius:4px;font-size:13px;">${cleanText(item)}</div>`;
       const rawTitle = item.title || item.name || item.label || item.keyword || item.action || item.prescriptive_action || item.action_concrete || '';
       const desc = item.description || item.detail || item.rationale || item.evidence || item.explanation || item.strategic_goal || '';
       const split = splitTrailingSeverity(String(rawTitle || ''));
