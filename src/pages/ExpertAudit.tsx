@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Header } from '@/components/Header';
+import { PageEditorial } from '@/components/seo/PageEditorial';
 import { ExpertAuditDashboard, ExpertAuditContent, ExpertAuditFAQ } from '@/components/ExpertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -74,6 +75,37 @@ const ExpertAudit = () => {
             <ExpertAuditFAQ />
           </>
         )}
+        <PageEditorial
+          heading="Ce que couvre un audit expert SEO et GEO"
+          intro="L'audit expert produit des constats vérifiables et le correctif associé. Cette section décrit son périmètre, ce qui reste du ressort humain, et comment lire la priorisation."
+          citable="Un audit expert Crawlers.fr examine quatre plans sur une URL : accessibilité et statut technique, structure sémantique et unicité de l'intention, données structurées valides, et citabilité par les moteurs génératifs. Chaque constat est rattaché à une preuve extraite de la page servie."
+          sections={[
+            {
+              title: 'Constat, cause racine, correctif',
+              paragraphs: [
+                "Un constat isolé ne sert à rien s'il ne remonte pas à sa cause. Un titre absent peut venir du modèle de page, d'une donnée manquante en base ou d'un rendu côté client : le correctif diffère radicalement selon le cas.",
+                "C'est la raison pour laquelle l'audit compare systématiquement le HTML servi au rendu final avant de conclure sur la qualité du contenu.",
+              ],
+            },
+            {
+              title: 'Priorisation par impact, pas par volume',
+              paragraphs: [
+                "Une liste de deux cents remarques n'aide personne. La priorisation retient d'abord ce qui empêche l'indexation, ensuite ce qui dégrade la compréhension de la page, enfin ce qui relève de l'optimisation fine.",
+              ],
+              bullets: [
+                "Bloquant : page non indexable, canonique contradictoire, statut HTTP anormal, contenu absent du HTML servi.",
+                "Structurel : intention dupliquée entre deux URL, titre non distinctif, hiérarchie de titres incohérente.",
+                "Amélioration : densité factuelle, passages citables, enrichissement des données structurées.",
+              ],
+            },
+            {
+              title: 'Ce qui reste humain',
+              paragraphs: [
+                "L'arbitrage commercial ne s'automatise pas : choisir la requête qui mérite une page, décider de fusionner deux contenus historiques, assumer un angle éditorial. L'audit supprime la collecte manuelle, pas la décision.",
+              ],
+            },
+          ]}
+        />
       </main>
       <Suspense fallback={null}>
         <Footer />

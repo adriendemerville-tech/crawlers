@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Header } from '@/components/Header';
+import { PageEditorial } from '@/components/seo/PageEditorial';
 import { Link } from '@/lib/router-compat';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -150,6 +151,38 @@ const PageSpeedLanding = () => {
         pillar={{"href":"/audit-seo-gratuit","label":"Audit SEO gratuit","description":"Pilier : 200 points techniques + GEO en 60 secondes."}}
         sisters={[{"href":"/audit-expert","label":"Audit expert","description":"168 critères + plan d'action correctif."},{"href":"/audit-semantique","label":"Audit sémantique","description":"Densité lexicale, entités, lacunes."},{"href":"/eeat","label":"E-E-A-T","description":"Signaux d'expertise & autorité."},{"href":"/guide-audit-seo","label":"Guide audit SEO","description":"Méthodologie pas à pas."}]}
       />
+        <PageEditorial
+          heading="Lire ses Core Web Vitals sans se tromper"
+          intro="Un score de performance n'a de valeur que rapporté à ce que vivent les visiteurs. Cette page explique ce que mesure chaque métrique, la différence entre données de laboratoire et données réelles, et l'ordre dans lequel corriger."
+          citable="Les Core Web Vitals retenus par Google sont le LCP (affichage du plus grand élément, cible sous 2,5 s), l'INP (réactivité aux interactions, cible sous 200 ms) et le CLS (stabilité visuelle, cible sous 0,1). Ils sont évalués au 75e centile des visites réelles, sur mobile en priorité."
+          sections={[
+            {
+              title: 'Laboratoire et terrain ne racontent pas la même histoire',
+              paragraphs: [
+                "Un test synthétique exécute la page une fois, depuis un lieu et un réseau donnés : il sert à diagnostiquer. Les données de terrain agrègent les visites réelles sur 28 jours : ce sont elles qui comptent pour le classement.",
+                "Un écart important entre les deux signale presque toujours une population d'appareils plus lente que le banc de test, ou un chemin de rendu qui dépend du réseau du visiteur.",
+              ],
+            },
+            {
+              title: 'Ordre de correction efficace',
+              paragraphs: [
+                "Corriger dans le bon ordre évite de retoucher dix fois la même page : on traite d'abord ce qui bloque l'affichage, ensuite ce qui bloque l'interaction, enfin ce qui déplace la mise en page.",
+              ],
+              bullets: [
+                "LCP : identifier l'élément concerné, le précharger, lui donner des dimensions explicites, servir un format moderne.",
+                "INP : réduire le JavaScript exécuté au chargement, différer ce qui n'est pas nécessaire au premier écran.",
+                "CLS : réserver la hauteur des blocs qui se montent après hydratation, polices en font-display swap.",
+                "TTFB : mise en cache, rendu côté serveur, proximité géographique de la réponse.",
+              ],
+            },
+            {
+              title: 'Performance et visibilité IA',
+              paragraphs: [
+                "La vitesse n'est pas un critère de citation pour un moteur génératif, mais elle en conditionne l'accès : un crawler qui rencontre des réponses lentes ou des délais d'attente explore moins de pages, donc en cite moins.",
+              ],
+            },
+          ]}
+        />
       </main>
 
       <Suspense fallback={null}><Footer /></Suspense>

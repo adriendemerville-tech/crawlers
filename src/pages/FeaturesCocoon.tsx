@@ -407,6 +407,33 @@ export default function FeaturesCocoon() {
             </Link>
           </div>
         </section>
+        <PageEditorial
+          heading="Cocon sémantique : à quoi sert la vue 3D"
+          intro="La représentation en trois dimensions n'est pas décorative : elle rend visibles deux défauts qu'un tableau masque presque toujours, la profondeur excessive et la redondance entre pages voisines."
+          citable="Un cocon sémantique est une organisation du maillage interne où chaque page couvre une intention unique et renvoie vers les pages qui la complètent, afin de concentrer le signal thématique sur une page pilier plutôt que de le disperser entre plusieurs URL concurrentes."
+          sections={[
+            {
+              title: 'Profondeur de clic et budget d’exploration',
+              paragraphs: [
+                "Une page atteignable en un clic depuis l'accueil est explorée souvent ; à quatre clics, elle peut ne l'être que rarement. La profondeur n'est pas un indicateur théorique : elle décide de la fréquence de passage des robots.",
+                "Le graphe met en évidence les grappes isolées, celles qui ne reçoivent aucun lien contextuel et vivent uniquement grâce au sitemap.",
+              ],
+            },
+            {
+              title: 'Cannibalisation : la mesurer, pas la supposer',
+              paragraphs: [
+                "Deux pages se cannibalisent quand elles répondent à la même intention et se substituent l'une à l'autre dans les résultats. Le diagnostic croise deux signaux : la similarité sémantique des contenus et le partage de requêtes en impressions.",
+                "La réponse n'est pas toujours la suppression. Selon les cas : fusion vers un pilier avec redirection permanente, différenciation réelle de l'angle, ou spécialisation de l'une des deux pages sur une sous-intention.",
+              ],
+            },
+            {
+              title: 'Ce que le maillage apporte aux moteurs génératifs',
+              paragraphs: [
+                "Un modèle de langage extrait plus facilement une réponse d'un ensemble hiérarchisé : le pilier fournit la définition citable, les satellites les cas d'usage et les chiffres. Une grappe redondante produit l'effet inverse, aucune page ne faisant autorité.",
+              ],
+            },
+          ]}
+        />
       </main>
 
       <Suspense fallback={null}><Footer /></Suspense>

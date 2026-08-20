@@ -1,6 +1,7 @@
 import { memo, useEffect, useState, lazy, Suspense} from 'react';
 import { Link } from '@/lib/router-compat';
 import { Header } from '@/components/Header';
+import { PageEditorial } from '@/components/seo/PageEditorial';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Calendar, ArrowRight, User, Sparkles } from 'lucide-react';
@@ -231,6 +232,30 @@ function BlogIndexComponent() {
               ))}
             </div>
           </div>
+          <PageEditorial
+            heading="Comment ce blog est construit"
+            intro="Les articles publiés ici suivent une règle simple : une page, une intention. L'objectif est qu'un lecteur comme un moteur sache en une phrase à quelle question la page répond."
+            citable="Chaque article du blog Crawlers.fr traite une seule intention de recherche et s'ouvre sur un passage autoportant : une réponse compréhensible hors contexte, condition principale pour être cité par un moteur génératif."
+            sections={[
+              {
+                title: 'Trois familles de contenus',
+                paragraphs: [
+                  "La ligne éditoriale se répartit entre veille algorithmique, méthode appliquée et analyse de cas. Ces familles ne se recouvrent pas, précisément pour éviter la cannibalisation entre articles proches.",
+                ],
+                bullets: [
+                  "Veille : évolutions Google et comportements des crawlers IA, avec la conséquence pratique pour un site.",
+                  "Méthode : procédures reproductibles, du diagnostic au correctif vérifiable.",
+                  "Analyse : cas réels, chiffres mesurés et limites de l'interprétation.",
+                ],
+              },
+              {
+                title: 'Pourquoi les articles ne se ressemblent pas',
+                paragraphs: [
+                  "Publier plusieurs variantes d'un même sujet disperse le signal : les moteurs regroupent les pages et n'en retiennent qu'une. Quand deux angles convergent, ils sont fusionnés vers un article pilier avec une redirection permanente plutôt que maintenus en parallèle.",
+                ],
+              },
+            ]}
+          />
         </main>
 
         <Suspense fallback={null}><Footer /></Suspense>
