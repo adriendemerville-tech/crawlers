@@ -11,7 +11,16 @@ import { createFileRoute } from '@tanstack/react-router';
 export const Route = createFileRoute('/api/public/hooks/marina-batch-tick')({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        // Endpoint public : seul le cron (porteur du secret) peut déclencher du travail.
+        const secret = process.env['CRON_SECRET'];
+        const provided = request.headers.get('x-cron-secret');
+        if (!secret || provided !== secret) {
+          return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
         try {
           const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
           const { advanceActiveBatches } = await import('@/lib/marina/batchEngine.server');
