@@ -328,49 +328,77 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
       place(imgData, cursorY, sectionWidthMm, sectionHeightMm);
       cursorY += sectionHeightMm + sectionGap;
     } else {
-      // Section is taller than one full page — must slice (rare: huge tables)
+      // Section plus haute qu'une page. On ne coupe plus au pixel : on relève
+      // les frontières visuelles internes (fin de paragraphe, de carte, de ligne
+      // de tableau) et on cale chaque coupure sur la dernière frontière qui
+      // tient dans la page. Un bloc de benchmark n'est donc plus tranché au
+      // milieu d'une carte ou d'une phrase.
       const pixelsPerMm = canvas.height / sectionHeightMm;
+      const sectionTop = section.getBoundingClientRect().top;
+      const ratio = canvas.height / sectionHeightPx; // px canvas par px CSS
+      const breakpoints = (() => {
+        const set = new Set<number>();
+        const nodes = Array.from(
+          section.querySelectorAll('p, li, tr, h1, h2, h3, h4, div, section, table, ul, ol'),
+        ) as HTMLElement[];
+        for (const n of nodes) {
+          if (n.offsetHeight <= 2) continue;
+          const r = n.getBoundingClientRect();
+          const bottom = (r.bottom - sectionTop) * ratio;
+          if (bottom > 4 && bottom < canvas.height - 4) set.add(Math.round(bottom));
+        }
+        return Array.from(set).sort((a, b) => a - b);
+      })();
+
       let srcYPx = 0;
-      let remaining = sectionHeightMm;
       let guard = 0;
 
-      while (remaining > 0.5 && guard++ < 400) {
-        // Si la page courante est déjà pleine, on repart d'une page vierge :
-        // sinon `pageSpace` devenait nul ou négatif et jsPDF recevait des
-        // dimensions invalides (export interrompu, PDF tronqué).
+      while (srcYPx < canvas.height - 2 && guard++ < 500) {
         let pageSpace = (pdfHeightMm - marginBottom) - cursorY;
-        if (pageSpace < 5) {
+        if (pageSpace < 20) {
           doc.addPage();
           cursorY = marginTop;
           pageSpace = usableHeightMm;
         }
 
-        const sliceHeightMm = Math.min(remaining, pageSpace);
-        const sliceHeightPx = Math.min(
-          Math.max(1, Math.round(sliceHeightMm * pixelsPerMm)),
-          Math.max(1, canvas.height - srcYPx),
-        );
+        const maxSlicePx = Math.max(1, Math.round(pageSpace * pixelsPerMm));
+        let sliceHeightPx = Math.min(maxSlicePx, canvas.height - srcYPx);
 
+        // Recale sur la dernière frontière de bloc contenue dans la page,
+        // à condition de ne pas gaspiller plus de 45 % de la page.
+        if (srcYPx + sliceHeightPx < canvas.height - 2) {
+          const limit = srcYPx + sliceHeightPx;
+          let candidate = 0;
+          for (const bp of breakpoints) {
+            if (bp > srcYPx + maxSlicePx * 0.55 && bp <= limit) candidate = bp;
+            if (bp > limit) break;
+          }
+          if (candidate > srcYPx) sliceHeightPx = candidate - srcYPx;
+        }
+
+        const sliceHeightMm = sliceHeightPx / pixelsPerMm;
         const sliceCanvas = document.createElement('canvas');
         sliceCanvas.width = canvas.width;
         sliceCanvas.height = sliceHeightPx;
         const ctx = sliceCanvas.getContext('2d');
         if (ctx) {
+          ctx.fillStyle = backgroundColor;
+          ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
           ctx.drawImage(canvas, 0, srcYPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
           place(sliceCanvas.toDataURL('image/jpeg', 0.92), cursorY, sectionWidthMm, sliceHeightMm);
         }
 
         srcYPx += sliceHeightPx;
-        remaining -= sliceHeightMm;
         cursorY += sliceHeightMm;
 
-        if (remaining > 0.5) {
+        if (srcYPx < canvas.height - 2) {
           doc.addPage();
           cursorY = marginTop;
         }
       }
       cursorY += sectionGap;
     }
+
     isFirstElement = false;
   }
 
