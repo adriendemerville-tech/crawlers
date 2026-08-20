@@ -5,6 +5,7 @@ import { ArrowRight, ChevronRight, ExternalLink } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReactMarkdown from 'react-markdown';
+import { resolveArticleDates, formatUpdatedDate } from '@/lib/blog/lastUpdated';
 
 export interface GuideSection {
   h2: string;
@@ -163,6 +164,8 @@ function MarkdownContent({ content }: { content: string }) {
 
 function GuideTemplateComponent({ guide }: GuideTemplateProps) {
   const { language } = useLanguage();
+  // Mêmes dates que le JSON-LD de la route /guide/$slug (source unique).
+  const guideDates = resolveArticleDates(guide.publishedAt, guide.updatedAt);
   const canonicalUrl = `https://crawlers.fr/guide/${guide.slug}`;
 
   const faqJsonLd = buildFaqJsonLd(guide.faqs);
