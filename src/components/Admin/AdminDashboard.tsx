@@ -7,6 +7,7 @@ import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { ContentFreshnessQueue } from './ContentFreshnessQueue';
+import { LinkHealthQueue } from './LinkHealthQueue';
 import { SupportManagement } from './SupportManagement';
 import { SavDashboard } from './SavDashboard';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
