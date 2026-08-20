@@ -9,6 +9,7 @@ import {
   buildFaqJsonLd,
 } from "@/lib/seo/articleSchema";
 import type { GuideData } from "@/components/Guide/GuideTemplate";
+import { resolveArticleDates } from "@/lib/blog/lastUpdated";
 
 export const Route = createFileRoute("/guide/$slug")({
   loader: async ({ params }): Promise<{ guide: GuideData | null }> => {
@@ -40,6 +41,8 @@ export const Route = createFileRoute("/guide/$slug")({
       guide.metaDescription ||
       `Guide SEO & GEO Crawlers.fr : ${guide.title}. Méthode, checklist et actions concrètes.`;
 
+    const dates = resolveArticleDates(guide.publishedAt, guide.updatedAt);
+
     return pageHead({
       title: guide.metaTitle || `${guide.title} | Crawlers.fr`,
       description,
@@ -47,11 +50,11 @@ export const Route = createFileRoute("/guide/$slug")({
       ogType: "article",
       ...(guide.targetKeyword ? { keywords: guide.targetKeyword } : {}),
       extraMeta: [
-        ...(guide.publishedAt
-          ? [{ property: "article:published_time", content: guide.publishedAt }]
+        ...(dates.datePublished
+          ? [{ property: "article:published_time", content: dates.datePublished }]
           : []),
-        ...(guide.updatedAt
-          ? [{ property: "article:modified_time", content: guide.updatedAt }]
+        ...(dates.dateModified
+          ? [{ property: "article:modified_time", content: dates.dateModified }]
           : []),
         { property: "article:author", content: "Adrien de Volontat" },
       ],
@@ -60,8 +63,8 @@ export const Route = createFileRoute("/guide/$slug")({
           title: guide.title,
           description,
           path,
-          datePublished: guide.publishedAt ?? null,
-          dateModified: guide.updatedAt ?? null,
+          datePublished: dates.datePublished,
+          dateModified: dates.dateModified,
           section: "Guides SEO & GEO",
           ...(guide.targetKeyword ? { keywords: guide.targetKeyword } : {}),
         }),

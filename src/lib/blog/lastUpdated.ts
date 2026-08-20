@@ -50,3 +50,31 @@ export function formatUpdatedDate(isoDay: string, language: string = 'fr'): stri
   const locale = language === 'es' ? 'es-ES' : language === 'en' ? 'en-US' : 'fr-FR';
   return d.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
 }
+
+/**
+ * Dates canoniques d'une page éditoriale, utilisées à la fois par le JSON-LD
+ * (`datePublished` / `dateModified`) et par la mention visible « Mis à jour le ».
+ *
+ * Garanties :
+ * - `dateModified` n'est jamais antérieure à `datePublished` ;
+ * - `dateModified` vaut exactement le jour affiché quand une révision réelle
+ *   existe, sinon retombe sur `datePublished` (pas de fausse fraîcheur) ;
+ * - `displayUpdated` est non nul uniquement quand la mention doit s'afficher.
+ */
+export function resolveArticleDates(
+  publishedAt?: string | null,
+  updatedAt?: string | null,
+): { datePublished: string | null; dateModified: string | null; displayUpdated: string | null } {
+  const published = parse(publishedAt);
+  const datePublished = published ? published.toISOString() : null;
+  // Idempotence : une valeur déjà résolue (jour ISO) est conservée telle quelle.
+  const displayUpdated = /^\d{4}-\d{2}-\d{2}$/.test(updatedAt ?? '')
+    ? (updatedAt as string)
+    : resolveLastUpdated(publishedAt, updatedAt);
+
+  return {
+    datePublished,
+    dateModified: displayUpdated ?? datePublished,
+    displayUpdated,
+  };
+}

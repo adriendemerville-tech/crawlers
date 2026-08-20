@@ -5,6 +5,7 @@ import { ArrowRight, ChevronRight, ExternalLink } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReactMarkdown from 'react-markdown';
+import { resolveArticleDates, formatUpdatedDate } from '@/lib/blog/lastUpdated';
 
 export interface GuideSection {
   h2: string;
@@ -163,6 +164,8 @@ function MarkdownContent({ content }: { content: string }) {
 
 function GuideTemplateComponent({ guide }: GuideTemplateProps) {
   const { language } = useLanguage();
+  // Mêmes dates que le JSON-LD de la route /guide/$slug (source unique).
+  const guideDates = resolveArticleDates(guide.publishedAt, guide.updatedAt);
   const canonicalUrl = `https://crawlers.fr/guide/${guide.slug}`;
 
   const faqJsonLd = buildFaqJsonLd(guide.faqs);
@@ -218,9 +221,15 @@ function GuideTemplateComponent({ guide }: GuideTemplateProps) {
             {guide.subtitle}
           </p>
           <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
-            <time dateTime={guide.updatedAt}>
-              Mis à jour le {new Date(guide.updatedAt).toLocaleDateString(language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </time>
+            {guideDates.displayUpdated ? (
+              <time dateTime={guideDates.displayUpdated}>
+                Mis à jour le {formatUpdatedDate(guideDates.displayUpdated, language)}
+              </time>
+            ) : guideDates.datePublished ? (
+              <time dateTime={guideDates.datePublished}>
+                Publié le {formatUpdatedDate(guideDates.datePublished.slice(0, 10), language)}
+              </time>
+            ) : null}
           </div>
         </header>
 

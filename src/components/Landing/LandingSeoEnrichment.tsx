@@ -32,7 +32,8 @@ function LandingSeoEnrichmentInner({ slug }: Props) {
     headline: data.primaryKeyword,
     keywords: [data.primaryKeyword, ...data.secondaryKeywords].join(', '),
     datePublished: data.datePublished || '2026-04-08',
-    dateModified: '2026-05-25',
+    // Pas de fraîcheur fictive : sans révision déclarée, dateModified = publication.
+    dateModified: data.dateModified || data.datePublished || '2026-04-08',
     author: { '@type': 'Person', name: 'Adrien de Volontat', url: 'https://crawlers.fr' },
     publisher: { '@type': 'Organization', name: 'Crawlers.fr', url: 'https://crawlers.fr' },
     mainEntityOfPage: fullUrl,
