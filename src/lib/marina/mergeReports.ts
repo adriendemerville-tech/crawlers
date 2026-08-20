@@ -413,23 +413,18 @@ export function mergeMarinaReports(
     ...[...siteBlocks.entries()].filter(([id]) => !siteOrder.includes(id)),
   ];
 
-  const toc = parts
-    .map((p, i) => `
-      <li style="margin:0 0 10px 0;">
-        <span style="display:inline-block;min-width:2.2em;font-weight:700;">${i + 1}.</span>
-        <span style="font-weight:600;">${escapeHtml(pathOf(p.url))}</span>
-        <span style="opacity:.65;"> — ${escapeHtml(hostOf(p.url))}</span>
-      </li>`)
-    .join('');
+  // Lot A — le sommaire ne contient que des entrées dont la cible existe
+  // réellement dans le document fusionné. Chaque section porte une ancre, le
+  // sommaire y renvoie, et une entrée sans ancre n'est pas rendue.
+  const anchors = new Set<string>();
+  orderedSiteEntries.forEach(([id]) => anchors.add(`site-${id}`));
+  parts.forEach((_p, i) => anchors.add(`fiche-${i + 1}`));
 
-  const sharedToc = orderedSiteEntries.length
-    ? `<h2 style="font-size:18px;margin:26px 0 10px 0;">Analyse du site (commune aux ${parts.length} pages)</h2>
-       <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
-         ${orderedSiteEntries
-           .map(([id]) => `<li style="margin:0 0 8px 0;">${escapeHtml(siteBlockLabel(id))}</li>`)
-           .join('')}
-       </ul>`
-    : '';
+  const tocLink = (id: string, label: string): string =>
+    anchors.has(id)
+      ? `<a href="#${id}" style="color:inherit;text-decoration:none;">${label}</a>`
+      : '';
+
 
   const metas = splits.map(s => s.meta).filter((m): m is PageMeta => Boolean(m));
   const domainVerdict = splits.map(s => s.domainVerdict).find(Boolean) || null;
