@@ -3216,6 +3216,92 @@ export type Database = {
           },
         ]
       }
+      content_freshness_queue: {
+        Row: {
+          article_id: string
+          created_at: string
+          dead_links: Json
+          detected_at: string
+          draft_content: string | null
+          draft_generated_at: string | null
+          draft_model: string | null
+          draft_summary: Json | null
+          gsc_signals: Json | null
+          id: string
+          indexing_result: Json | null
+          outdated_years: string[]
+          priority_score: number
+          published_at: string | null
+          reasons: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
+          slug: string
+          staleness_days: number | null
+          status: string
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          dead_links?: Json
+          detected_at?: string
+          draft_content?: string | null
+          draft_generated_at?: string | null
+          draft_model?: string | null
+          draft_summary?: Json | null
+          gsc_signals?: Json | null
+          id?: string
+          indexing_result?: Json | null
+          outdated_years?: string[]
+          priority_score?: number
+          published_at?: string | null
+          reasons?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          slug: string
+          staleness_days?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          dead_links?: Json
+          detected_at?: string
+          draft_content?: string | null
+          draft_generated_at?: string | null
+          draft_model?: string | null
+          draft_summary?: Json | null
+          gsc_signals?: Json | null
+          id?: string
+          indexing_result?: Json | null
+          outdated_years?: string[]
+          priority_score?: number
+          published_at?: string | null
+          reasons?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          slug?: string
+          staleness_days?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_freshness_queue_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: true
+            referencedRelation: "blog_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_gap_results: {
         Row: {
           competitor_domain: string
