@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import ArticlePage, { ARTICLE_SEO_OVERRIDES } from "@/pages/Blog/ArticlePage";
 import { getArticleBySlug } from "@/data/blogArticles";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +18,37 @@ export interface BlogArticleLoaderData {
   db: Record<string, unknown> | null;
 }
 
+/**
+ * Consolidation éditoriale : anciens articles quasi dupliqués fusionnés dans un
+ * pilier unique. On conserve les URLs historiques en 301 pour ne perdre aucun
+ * signal et éviter les 404 côté crawlers.
+ */
+const CONSOLIDATED_SLUGS: Record<string, string> = {
+  "front-loading-semantique-pourquoi-placer-votre-mot-cle-en-tete-de-title-est-vita":
+    "front-loading-title-mot-cle-premier-mot",
+  "front-loading-seo-maximiser-le-poids-semantique-du-premier-mot-de-votre-balise-t":
+    "front-loading-title-mot-cle-premier-mot",
+  "optimiser-la-balise-title-pour-le-double-impact-algorithmes-google-et-moteurs-ia":
+    "front-loading-title-mot-cle-premier-mot",
+  "optimiser-sa-balise-title-l-impact-strategique-du-premier-mot-en-2026":
+    "front-loading-title-mot-cle-premier-mot",
+  "front-loading-strategique-positionner-votre-mot-cle-en-debut-de-title-pour-domin":
+    "front-loading-title-mot-cle-premier-mot",
+  "la-regle-du-premier-mot-optimiser-l-emplacement-de-ses-mots-cles-dans-le-title-p":
+    "front-loading-title-mot-cle-premier-mot",
+  "la-methode-du-front-loading-pourquoi-placer-votre-mot-cle-des-le-premier-mot-de-":
+    "front-loading-title-mot-cle-premier-mot",
+  "le-dilemme-du-premier-mot-optimiser-la-position-des-mots-cles-dans-la-balise-tit":
+    "front-loading-title-mot-cle-premier-mot",
+};
+
 export const Route = createFileRoute("/blog/$slug")({
+  beforeLoad: ({ params }) => {
+    const target = CONSOLIDATED_SLUGS[params.slug];
+    if (target && target !== params.slug) {
+      throw redirect({ href: `/blog/${target}`, statusCode: 301, replace: true });
+    }
+  },
   loader: async ({ params }): Promise<BlogArticleLoaderData> => {
     const slug = params.slug;
     const staticArticle = getArticleBySlug(slug);

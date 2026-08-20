@@ -69,6 +69,18 @@ function optimizeImages(html: string): string {
 }
 
 /**
+ * Le H1 de la page est celui du gabarit (titre de l'article). Tout H1 présent
+ * dans le corps stocké en base est rétrogradé en H2 pour garantir un seul H1
+ * par page. Transformation purement textuelle : identique au serveur et au
+ * client, donc sans divergence d'hydratation.
+ */
+function demoteBodyH1(html: string): string {
+  return html
+    .replace(/<h1(\s[^>]*)?>/gi, (_m, attrs: string | undefined) => `<h2${attrs ?? ''}>`)
+    .replace(/<\/h1>/gi, '</h2>');
+}
+
+/**
  * Composant pour afficher du contenu HTML stocké en base de données.
  * Sanitisation isomorphe : nettoyage déterministe au rendu serveur ET au
  * premier rendu client (donc aucune divergence d'hydratation, et le HTML
@@ -96,7 +108,7 @@ function HtmlContentRendererComponent({ html, className = '' }: HtmlContentRende
 
 
   // Optimize images
-  const optimizedHtml = optimizeImages(linkedHtml);
+  const optimizedHtml = demoteBodyH1(optimizeImages(linkedHtml));
 
   return (
     <div 

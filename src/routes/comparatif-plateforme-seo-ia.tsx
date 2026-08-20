@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import ComparatifPlateforme from "@/pages/ComparatifPlateforme";
+import ComparatifPlateforme, { PLATEFORME_JSONLD } from "@/pages/ComparatifPlateforme";
 import { pageHead } from "@/lib/seo/pageHead";
 
 export const Route = createFileRoute("/comparatif-plateforme-seo-ia")({
@@ -8,6 +8,7 @@ export const Route = createFileRoute("/comparatif-plateforme-seo-ia")({
     description: "Pourquoi une plateforme SEO/GEO dédiée qui croise vos données surpasse Claude, ChatGPT ou Cowork pour le référencement naturel.",
     path: "/comparatif-plateforme-seo-ia",
     ogType: "article",
+    jsonLd: PLATEFORME_JSONLD,
   }),
   component: ComparatifPlateforme,
 });

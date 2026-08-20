@@ -85,7 +85,10 @@ export default function ExpertTermPage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-2">Définition</h2>
-              <p className="text-foreground leading-relaxed">{term.fullDefinition}</p>
+              {/* Passage citable : format privilégié par les moteurs génératifs */}
+              <blockquote className="citable-passage border-l-4 border-primary/40 pl-4 text-foreground leading-relaxed not-italic">
+                {term.fullDefinition}
+              </blockquote>
             </div>
           </div>
         </section>
