@@ -7874,11 +7874,16 @@ export type Database = {
       }
       link_health_queue: {
         Row: {
+          blocked_count: number
+          blocked_links: Json
           broken_count: number
+          consecutive_failures: number
           created_at: string
+          domain: string
           external_broken: Json
           fetch_error: string | null
           first_detected_at: string | null
+          hard_broken_count: number
           id: string
           internal_broken: Json
           last_checked_at: string
@@ -7887,6 +7892,9 @@ export type Database = {
           resolved_at: string | null
           reviewed_by: string | null
           severity: string
+          site_id: string | null
+          soft_broken: Json
+          soft_broken_count: number
           source: string
           status: string
           title: string | null
@@ -7894,11 +7902,16 @@ export type Database = {
           url: string
         }
         Insert: {
+          blocked_count?: number
+          blocked_links?: Json
           broken_count?: number
+          consecutive_failures?: number
           created_at?: string
+          domain?: string
           external_broken?: Json
           fetch_error?: string | null
           first_detected_at?: string | null
+          hard_broken_count?: number
           id?: string
           internal_broken?: Json
           last_checked_at?: string
@@ -7907,6 +7920,9 @@ export type Database = {
           resolved_at?: string | null
           reviewed_by?: string | null
           severity?: string
+          site_id?: string | null
+          soft_broken?: Json
+          soft_broken_count?: number
           source?: string
           status?: string
           title?: string | null
@@ -7914,11 +7930,16 @@ export type Database = {
           url: string
         }
         Update: {
+          blocked_count?: number
+          blocked_links?: Json
           broken_count?: number
+          consecutive_failures?: number
           created_at?: string
+          domain?: string
           external_broken?: Json
           fetch_error?: string | null
           first_detected_at?: string | null
+          hard_broken_count?: number
           id?: string
           internal_broken?: Json
           last_checked_at?: string
@@ -7927,6 +7948,9 @@ export type Database = {
           resolved_at?: string | null
           reviewed_by?: string | null
           severity?: string
+          site_id?: string | null
+          soft_broken?: Json
+          soft_broken_count?: number
           source?: string
           status?: string
           title?: string | null

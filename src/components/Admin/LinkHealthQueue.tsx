@@ -29,11 +29,16 @@ interface BrokenLink {
   status: number | null;
   anchor?: string;
   reason?: string;
+  /** Verdict du juge unique partagé : même mot pour la même valeur, partout. */
+  verdict?: 'hard_broken' | 'soft_broken' | 'blocked' | 'ok';
+  label?: string;
+  explanation?: string;
 }
 
 interface QueueItem {
   id: string;
   url: string;
+  domain: string | null;
   title: string | null;
   status: Status;
   severity: 'critical' | 'warning' | 'info';
@@ -42,6 +47,11 @@ interface QueueItem {
   broken_count: number;
   internal_broken: BrokenLink[] | null;
   external_broken: BrokenLink[] | null;
+  soft_broken: BrokenLink[] | null;
+  blocked_links: BrokenLink[] | null;
+  soft_broken_count: number | null;
+  blocked_count: number | null;
+  consecutive_failures: number | null;
   fetch_error: string | null;
   first_detected_at: string | null;
   last_checked_at: string;
@@ -223,6 +233,8 @@ export function LinkHealthQueue() {
             const open = expanded === item.id;
             const internal = item.internal_broken ?? [];
             const external = item.external_broken ?? [];
+            const soft = item.soft_broken ?? [];
+            const blocked = item.blocked_links ?? [];
             return (
               <Card key={item.id}>
                 <CardContent className="p-4">
@@ -237,14 +249,27 @@ export function LinkHealthQueue() {
                           </Badge>
                         ) : null}
                         {internal.length > 0 ? (
-                          <Badge variant="outline">{internal.length} interne(s)</Badge>
+                          <Badge variant="outline">{internal.length} cassé(s) interne(s)</Badge>
                         ) : null}
                         {external.length > 0 ? (
-                          <Badge variant="outline">{external.length} sortant(s)</Badge>
+                          <Badge variant="outline">{external.length} cassé(s) sortant(s)</Badge>
+                        ) : null}
+                        {soft.length > 0 ? (
+                          <Badge variant="outline" title="5xx / 429 / délai dépassé : confirmé au 2e constat consécutif">
+                            {soft.length} instable(s)
+                          </Badge>
+                        ) : null}
+                        {blocked.length > 0 ? (
+                          <Badge variant="outline" title="401/403/405/999 : la cible refuse les robots, ce n'est pas un défaut du site">
+                            {blocked.length} non vérifiable(s)
+                          </Badge>
                         ) : null}
                         <span className="text-xs text-muted-foreground">
                           priorité {item.priority_score} · {item.links_checked} lien(s) vérifiés ·
                           vu le {formatDate(item.last_checked_at)}
+                          {item.consecutive_failures && item.consecutive_failures > 1
+                            ? ` · ${item.consecutive_failures} constats consécutifs`
+                            : ''}
                         </span>
                       </div>
                       <p className="mt-2 truncate text-sm font-medium">
@@ -262,7 +287,11 @@ export function LinkHealthQueue() {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      {(internal.length > 0 || external.length > 0 || item.fetch_error) && (
+                      {(internal.length > 0 ||
+                        external.length > 0 ||
+                        soft.length > 0 ||
+                        blocked.length > 0 ||
+                        item.fetch_error) && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -303,8 +332,10 @@ export function LinkHealthQueue() {
                         </p>
                       ) : null}
                       {[
-                        { label: 'Liens internes cassés', links: internal },
-                        { label: 'Liens sortants cassés', links: external },
+                        { label: 'Liens cassés — internes', links: internal },
+                        { label: 'Liens cassés — sortants', links: external },
+                        { label: 'Liens instables (à confirmer)', links: soft },
+                        { label: 'Non vérifiables (protection serveur)', links: blocked },
                       ]
                         .filter((g) => g.links.length > 0)
                         .map((g) => (
@@ -315,7 +346,11 @@ export function LinkHealthQueue() {
                             <ul className="space-y-1">
                               {g.links.map((l) => (
                                 <li key={l.url} className="flex flex-wrap items-center gap-2">
-                                  <Badge variant="outline" className="font-mono text-[11px]">
+                                  <Badge
+                                    variant="outline"
+                                    className="font-mono text-[11px]"
+                                    title={l.explanation || undefined}
+                                  >
                                     {statusCode(l)}
                                   </Badge>
                                   <a
