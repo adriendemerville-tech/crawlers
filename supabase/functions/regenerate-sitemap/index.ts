@@ -39,12 +39,12 @@ function hasLangParam(loc: string): boolean {
   return /[?&]lang=/i.test(loc);
 }
 
-function generateSitemapXml(entries: Array<{ loc: string; lastmod: string; changefreq?: string; priority?: number }>): string {
+function generateSitemapXml(entries: Array<{ loc: string; lastmod: string | null; changefreq?: string; priority?: number }>): string {
   const urlEntries = entries.map(e => `
   <url>
-    <loc>${escapeXml(e.loc)}</loc>
-    <lastmod>${e.lastmod}</lastmod>${e.changefreq ? `\n    <changefreq>${e.changefreq}</changefreq>` : ''}${e.priority != null ? `\n    <priority>${e.priority}</priority>` : ''}
+    <loc>${escapeXml(e.loc)}</loc>${e.lastmod ? `\n    <lastmod>${e.lastmod}</lastmod>` : ''}${e.changefreq ? `\n    <changefreq>${e.changefreq}</changefreq>` : ''}${e.priority != null ? `\n    <priority>${e.priority}</priority>` : ''}
   </url>`).join('');
+
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
