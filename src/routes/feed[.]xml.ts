@@ -3,11 +3,11 @@ import { buildFeed } from "@/lib/rss/buildFeed";
 
 const SITE = "https://crawlers.fr";
 
-export const Route = createFileRoute("/rss.xml")({
+export const Route = createFileRoute("/feed.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const { xml, count } = await buildFeed(`${SITE}/rss.xml`);
+        const { xml, count } = await buildFeed(`${SITE}/feed.xml`);
         return new Response(xml, {
           status: 200,
           headers: {

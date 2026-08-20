@@ -87,9 +87,10 @@ function FooterComponent() {
     },
     {
       label: t3(language, 'Flux RSS', 'RSS Feed', 'Feed RSS'),
-      href: '/rss.xml',
+      href: '/feed.xml',
       description: t3(language, 'Nouveaux articles et guides SEO/GEO', 'New SEO/GEO articles and guides', 'Nuevos artículos y guías SEO/GEO'),
-      external: true
+      external: true,
+      rss: true,
     },
   ];
 
@@ -299,10 +300,12 @@ function FooterComponent() {
                       <SmartLink
                         to={link.href}
                         external={(link as any).external}
-                        className={`text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                        className={`inline-flex items-center gap-1.5 text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : (link as any).rss ? 'text-foreground hover:text-primary font-medium' : 'text-muted-foreground hover:text-primary'}`}
                         title={link.description}
                       >
+                        {(link as any).rss && <Rss className="h-3.5 w-3.5" />}
                         {link.label}
+                        {(link as any).external && !(link as any).rss && <ExternalLink className="h-3 w-3 opacity-60" />}
                       </SmartLink>
                     </li>
                   ))}
@@ -353,7 +356,7 @@ function FooterComponent() {
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span>© {new Date().getFullYear()} Crawlers - crawlers.fr | {t3(language, ' Tous droits réservés', ' All rights reserved', ' Todos los derechos reservados')}</span>
                 <a
-                  href="/rss.xml"
+                  href="/feed.xml"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 hover:text-primary transition-colors"
