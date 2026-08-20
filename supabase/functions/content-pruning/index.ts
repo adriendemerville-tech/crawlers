@@ -174,8 +174,9 @@ Deno.serve(handleRequest(async (req) => {
 
     // 4. Verdicts page par page
     const indexable = pages.filter((p) => p.is_indexable !== false && (p.http_status ?? 200) < 400)
-    const verdicts: (PruneVerdict & { merge_candidate?: string; clicks_90d: number; impressions_90d: number })[] =
-      indexable.map((p) => {
+    const verdicts: (PruneVerdict & {
+      merge_candidate?: string; clicks_90d: number; impressions_90d: number; functional?: boolean
+    })[] = indexable.map((p) => {
         const m = metrics?.get(normalizeUrlKey(p.url))
         const v = pruneRoi({
           url: p.url,
@@ -189,9 +190,20 @@ Deno.serve(handleRequest(async (req) => {
           http_status: p.http_status ?? 200,
           metrics_missing: metricsMissing,
         }, { pagesAnalyzed: indexable.length })
+        if (isFunctionalUrl(p.url)) {
+          return {
+            ...v,
+            decision: 'keep' as const,
+            functional: true,
+            reasons: ['Page fonctionnelle (application, formulaire ou mention légale) : hors périmètre éditorial'],
+            clicks_90d: m?.clicks ?? 0,
+            impressions_90d: m?.impressions ?? 0,
+          }
+        }
         return { ...v, clicks_90d: m?.clicks ?? 0, impressions_90d: m?.impressions ?? 0 }
       })
     attachMergeTargets(verdicts)
+
 
     // 5. Dette agrégée
     const debt = computeDebtFromCorpus({ pages, metrics })
