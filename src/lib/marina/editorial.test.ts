@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { dedupeWhy } from './networkSynthesis';
+import { dedupeWhy, isEmptyBody, tightenTitle } from './networkSynthesis';
 import { mergeMarinaReports } from './mergeReports';
 
 describe('dedupeWhy', () => {
@@ -64,5 +64,39 @@ describe('mergeMarinaReports — conclusions inter-pages', () => {
     ]);
     expect(html).toContain('Identité du site');
     expect(html).not.toMatch(/>host-duplication</);
+  });
+});
+
+describe('Lot A — ancres du sommaire', () => {
+  const doc = (id: string) =>
+    `<!DOCTYPE html><html lang="fr"><head></head><body>
+      <div data-marina-scope="site" data-marina-block="${id}"><p>Bloc ${id}</p></div>
+      <div data-marina-scope="page" data-marina-block="conclusion"><p>c</p></div>
+    </body></html>`;
+
+  it('chaque entrée du sommaire pointe vers une ancre présente dans le document', () => {
+    const html = mergeMarinaReports([
+      { url: 'https://exemple.fr/a', html: doc('crawl') },
+      { url: 'https://exemple.fr/b', html: doc('cocoon') },
+    ]);
+    const targets = [...html.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);
+    expect(targets.length).toBeGreaterThan(0);
+    for (const t of targets) {
+      expect(html).toContain(`id="${t}"`);
+    }
+    expect(targets).toContain('fiche-1');
+    expect(targets).toContain('fiche-2');
+  });
+});
+
+describe('Lot B — titres et blocs vides', () => {
+  it('rend les jointures fragiles des titres insécables', () => {
+    expect(tightenTitle('Concurrence interne entre les pages auditées')).toContain('&nbsp;');
+    expect(tightenTitle('Périmètre')).toBe('Périmètre');
+  });
+
+  it('détecte un corps de bloc sans texte lisible', () => {
+    expect(isEmptyBody('<p style="margin:0"> &nbsp; </p>')).toBe(true);
+    expect(isEmptyBody('<p>Un fait mesuré.</p>')).toBe(false);
   });
 });
