@@ -218,9 +218,15 @@ function GuideTemplateComponent({ guide }: GuideTemplateProps) {
             {guide.subtitle}
           </p>
           <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
-            <time dateTime={guide.updatedAt}>
-              Mis à jour le {new Date(guide.updatedAt).toLocaleDateString(language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : 'fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </time>
+            {guideDates.displayUpdated ? (
+              <time dateTime={guideDates.displayUpdated}>
+                Mis à jour le {formatUpdatedDate(guideDates.displayUpdated, language)}
+              </time>
+            ) : guideDates.datePublished ? (
+              <time dateTime={guideDates.datePublished}>
+                Publié le {formatUpdatedDate(guideDates.datePublished.slice(0, 10), language)}
+              </time>
+            ) : null}
           </div>
         </header>
 
