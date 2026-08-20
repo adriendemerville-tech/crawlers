@@ -13,12 +13,19 @@ import { persistNetworkSynthesis } from '@/lib/marina/networkSynthesisPersist';
 
 
 const MAX_URLS = 15;
-const CREDIT_COST = 30;
+const MULTIPAGE_BASE_PAGES = 5;
+const MULTIPAGE_BASE_CREDITS = 30;
+const MULTIPAGE_EXTRA_CREDITS_PER_PAGE = 5;
 const CONCURRENCY = 2;
 // Décalage du 2e worker : laisse la 1re URL enregistrer le crawl partagé du
 // domaine avant que la suivante ne démarre (évite deux crawls simultanés).
 const STAGGER_MS = 20_000;
 const STORAGE_KEY = 'marina_batch_v2';
+
+function computeMultipageCost(pageCount: number): number {
+  if (pageCount <= MULTIPAGE_BASE_PAGES) return MULTIPAGE_BASE_CREDITS;
+  return MULTIPAGE_BASE_CREDITS + (pageCount - MULTIPAGE_BASE_PAGES) * MULTIPAGE_EXTRA_CREDITS_PER_PAGE;
+}
 
 type ItemStatus = 'pending' | 'running' | 'completed' | 'partial' | 'failed';
 
