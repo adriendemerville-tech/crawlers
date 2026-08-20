@@ -38,13 +38,13 @@ const FAQ: Array<{ q: string; a: string }> = [
 
 export function MarinaSeoContent() {
   return (
-    <section className="py-16 border-t border-border" aria-labelledby="marina-audit-gratuit">
-      <div className="mx-auto max-w-3xl px-4">
+    <section className="py-10 border-t border-border" aria-labelledby="marina-audit-gratuit">
+      <div className="mx-auto max-w-5xl px-4">
         <h2 id="marina-audit-gratuit" className="text-2xl sm:text-3xl font-bold text-foreground text-center">
           Audit SEO et GEO gratuit : ce que mesure Marina
         </h2>
 
-        <blockquote className="citable-passage border-l-4 border-primary bg-muted/40 pl-4 py-3 my-6 text-base text-foreground italic">
+        <blockquote className="citable-passage border-l-4 border-primary bg-muted/40 pl-4 py-3 my-5 text-sm sm:text-base text-foreground italic">
           Marina est l'audit SEO et GEO gratuit de Crawlers.fr : {MARINA_FREE_QUOTA} rapports offerts sans carte
           bancaire, plus de 40 pages, une vingtaine de sous-audits et 9 questions réellement posées à ChatGPT,
           Gemini, Perplexity, Claude et Mistral pour mesurer le taux de citation du site dans les moteurs
