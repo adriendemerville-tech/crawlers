@@ -77,7 +77,7 @@ const ARCHETYPE_DIRECTIVE: Record<QuestionArchetype, string> = {
   software:
     "Logiciel / service en ligne : la question doit nommer la TÂCHE à accomplir, comme « quel outil pour piloter mon SEO et ma visibilité dans les IA ? ». Pas de lieu, pas de nom de produit.",
   ecommerce:
-    "Vente en ligne : questions d'achat du type « où acheter <produit> en ligne, en qui avoir confiance ? ». Pas de lieu.",
+    "Vente en ligne : questions d'achat du type « où acheter <produit> en ligne, dans quelle boutique avoir confiance ? ». Pas de lieu, et jamais le mot « site ».",
   agency:
     "Agence / prestataire B2B : questions du type « quelle agence pour <mission> ? », en précisant le profil du demandeur quand c'est utile.",
   generic:
