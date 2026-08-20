@@ -88,8 +88,12 @@ export function provenanceColor(level: ProvenanceLevel): string {
 export function provenanceBadge(level: ProvenanceLevel, lang?: string): string {
   const spec = LEVELS[level];
   const l = pickLocale(lang);
-  return `<span data-provenance="${level}" title="${spec.definition[l].replace(/"/g, '&quot;')}" style="display:inline-flex;align-items:center;justify-content:center;text-align:center;border:1px solid ${spec.color};color:${spec.color};border-radius:999px;padding:2px 8px;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:1;white-space:nowrap;vertical-align:middle;min-height:18px;">${spec.label[l]}</span>`;
+  // Pastille rendue en inline-block avec padding symétrique : html2canvas
+  // (export PDF) ignore le centrage flex et collait le texte en haut de la
+  // pastille. Ici la hauteur est intrinsèque, donc le texte est toujours centré.
+  return `<span data-provenance="${level}" title="${spec.definition[l].replace(/"/g, '&quot;')}" style="display:inline-block;border:1px solid ${spec.color};color:${spec.color};border-radius:999px;padding:4px 9px 3px;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:10px;text-align:center;white-space:nowrap;vertical-align:middle;">${spec.label[l]}</span>`;
 }
+
 
 /**
  * Légende des quatre niveaux, à placer une seule fois par rapport (section
