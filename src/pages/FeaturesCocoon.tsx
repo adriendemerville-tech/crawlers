@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
+import { PageEditorial } from "@/components/seo/PageEditorial";
 import cocoonGraph from '@/assets/screenshots/crawlers.fr_cocon-semantique-3d-maillage-interne.webp';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
