@@ -237,8 +237,10 @@ try {
         // Désactivable via parmenion_targets.backlog_guard_paused = true.
         let contentThrottled = false;
         let throttleInfo: { created: number; max: number; period: 'day' | 'week' } | null = null;
+        let contentAllowance = MAX_CMS_ACTIONS_PER_CYCLE;
         let backlogGuardActive = false;
         let backlogCount = 0;
+
 
         const PLANNED_BACKLOG_THRESHOLD = 5;
         const BACKLOG_GRACE_MINUTES = 60; // ignore les décisions trop récentes (< 1h)
