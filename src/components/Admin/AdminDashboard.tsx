@@ -2,11 +2,12 @@ import type { LucideIcon } from "lucide-react";
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from '@/lib/router-compat';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine, Award, Plug, MessageSquare, Share2, Map, Zap, Linkedin, CalendarClock } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Link2Off, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe, ClipboardList, Package, Bot, Shield, Anchor, PenLine, Award, Plug, MessageSquare, Share2, Map, Zap, Linkedin, CalendarClock } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { ContentFreshnessQueue } from './ContentFreshnessQueue';
+import { LinkHealthQueue } from './LinkHealthQueue';
 import { SupportManagement } from './SupportManagement';
 import { SavDashboard } from './SavDashboard';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
@@ -259,6 +260,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         ...(canSeeUsers ? [{ id: 'users', label: t.users, icon: Users, group: 'content' }] : []),
         { id: 'cms', label: t.cms, icon: FileText, group: 'content' },
         { id: 'freshness', label: 'Fraîcheur', icon: CalendarClock, group: 'content' },
+        { id: 'link-health', label: 'Liens', icon: Link2Off, group: 'content' },
         { id: 'support', label: t.support, icon: MessageCircle, group: 'content', notifKey: 'support' as const },
         { id: 'sav-ia', label: 'SAV IA', icon: Bot, group: 'content' },
         { id: 'affiliates', label: t.affiliates, icon: Link2, group: 'content' },
@@ -314,6 +316,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'users': return wrap(<UserManagement />);
       case 'cms': return wrap(<BlogManagement />);
       case 'freshness': return wrap(<ContentFreshnessQueue />);
+      case 'link-health': return wrap(<LinkHealthQueue />);
       case 'support': return wrap(<SupportManagement />);
       case 'sav-ia': return <SavDashboard />;
       case 'affiliates': return wrap(<AffiliateManagement />);

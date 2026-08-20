@@ -134,6 +134,7 @@ import { Route as AppRapportMatriceRouteImport } from './routes/app/rapport/matr
 import { Route as DocsApiCrawlersRouteImport } from './routes/docs/api/crawlers'
 import { Route as DocsApiMarinaRouteImport } from './routes/docs/api/marina'
 import { Route as DocsApiParmenionRouteImport } from './routes/docs/api/parmenion'
+import { Route as ApiPublicHooksLinkHealthScanRouteImport } from './routes/api/public/hooks/link-health-scan'
 import { Route as ApiPublicHooksMarinaBatchTickRouteImport } from './routes/api/public/hooks/marina-batch-tick'
 
 const IndexRoute = IndexRouteImport.update({
@@ -771,6 +772,12 @@ const DocsApiParmenionRoute = DocsApiParmenionRouteImport.update({
   path: '/docs/api/parmenion',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksLinkHealthScanRoute =
+  ApiPublicHooksLinkHealthScanRouteImport.update({
+    id: '/api/public/hooks/link-health-scan',
+    path: '/api/public/hooks/link-health-scan',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksMarinaBatchTickRoute =
   ApiPublicHooksMarinaBatchTickRouteImport.update({
     id: '/api/public/hooks/marina-batch-tick',
@@ -904,6 +911,7 @@ export interface FileRoutesByFullPath {
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
   '/docs/api/parmenion': typeof DocsApiParmenionRoute
+  '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
 }
 export interface FileRoutesByTo {
@@ -1032,6 +1040,7 @@ export interface FileRoutesByTo {
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
   '/docs/api/parmenion': typeof DocsApiParmenionRoute
+  '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
 }
 export interface FileRoutesById {
@@ -1161,6 +1170,7 @@ export interface FileRoutesById {
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
   '/docs/api/parmenion': typeof DocsApiParmenionRoute
+  '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
 }
 export interface FileRouteTypes {
@@ -1291,6 +1301,7 @@ export interface FileRouteTypes {
     | '/docs/api/crawlers'
     | '/docs/api/marina'
     | '/docs/api/parmenion'
+    | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1419,6 +1430,7 @@ export interface FileRouteTypes {
     | '/docs/api/crawlers'
     | '/docs/api/marina'
     | '/docs/api/parmenion'
+    | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
   id:
     | '__root__'
@@ -1547,6 +1559,7 @@ export interface FileRouteTypes {
     | '/docs/api/crawlers'
     | '/docs/api/marina'
     | '/docs/api/parmenion'
+    | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
   fileRoutesById: FileRoutesById
 }
@@ -1676,6 +1689,7 @@ export interface RootRouteChildren {
   DocsApiCrawlersRoute: typeof DocsApiCrawlersRoute
   DocsApiMarinaRoute: typeof DocsApiMarinaRoute
   DocsApiParmenionRoute: typeof DocsApiParmenionRoute
+  ApiPublicHooksLinkHealthScanRoute: typeof ApiPublicHooksLinkHealthScanRoute
   ApiPublicHooksMarinaBatchTickRoute: typeof ApiPublicHooksMarinaBatchTickRoute
 }
 
@@ -2556,6 +2570,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsApiParmenionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/link-health-scan': {
+      id: '/api/public/hooks/link-health-scan'
+      path: '/api/public/hooks/link-health-scan'
+      fullPath: '/api/public/hooks/link-health-scan'
+      preLoaderRoute: typeof ApiPublicHooksLinkHealthScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/marina-batch-tick': {
       id: '/api/public/hooks/marina-batch-tick'
       path: '/api/public/hooks/marina-batch-tick'
@@ -2694,6 +2715,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsApiCrawlersRoute: DocsApiCrawlersRoute,
   DocsApiMarinaRoute: DocsApiMarinaRoute,
   DocsApiParmenionRoute: DocsApiParmenionRoute,
+  ApiPublicHooksLinkHealthScanRoute: ApiPublicHooksLinkHealthScanRoute,
   ApiPublicHooksMarinaBatchTickRoute: ApiPublicHooksMarinaBatchTickRoute,
 }
 export const routeTree = rootRouteImport
