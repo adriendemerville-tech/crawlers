@@ -30,14 +30,15 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;");
 }
 
-type Entry = { loc: string; lastmod: string; changefreq?: string | null; priority?: number | null };
+type Entry = { loc: string; lastmod: string | null; changefreq?: string | null; priority?: number | null };
 
 function toXml(entries: Entry[]): string {
   const body = entries
     .map(
       (e) => `  <url>
-    <loc>${escapeXml(e.loc)}</loc>
-    <lastmod>${e.lastmod}</lastmod>${e.changefreq ? `\n    <changefreq>${e.changefreq}</changefreq>` : ""}${
+    <loc>${escapeXml(e.loc)}</loc>${e.lastmod ? `\n    <lastmod>${e.lastmod}</lastmod>` : ""}${
+        e.changefreq ? `\n    <changefreq>${e.changefreq}</changefreq>` : ""
+      }${
         e.priority != null ? `\n    <priority>${e.priority}</priority>` : ""
       }
   </url>`,
