@@ -455,7 +455,7 @@ export function computeBacklinkDistribution(input: {
   } else if (dominantTldShare >= 0.85 && tld.length) {
     recommendation = `Élargir la nature des sources : ${Math.round(dominantTldShare * 100)} % des liens partagent le même TLD. Viser des .org / .edu / médias sectoriels pour crédibiliser le profil.`;
   } else {
-    recommendation = 'Répartition équilibrée : conserver la même diversité de sources et de pages cibles lors des prochaines acquisitions.';
+    recommendation = 'Diversité géographique et technique équilibrée : conserver la même répartition de pays, d\'extensions et de pages cibles lors des prochaines acquisitions. Ce constat porte uniquement sur la répartition des sources, pas sur leur qualité : la toxicité des ancres et l\'autorité des référents sont évaluées séparément.';
   }
 
   const measuredBlocks = [tld.length > 0, countries.length > 0, linkedPages.length > 0].filter(Boolean).length;

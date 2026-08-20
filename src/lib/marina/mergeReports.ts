@@ -451,7 +451,7 @@ export function mergeMarinaReports(
   const cover = `
     <section class="marina-batch-cover" style="page-break-before:always;page-break-after:always;padding:64px 48px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
       <p style="letter-spacing:.18em;text-transform:uppercase;font-size:12px;margin:0 0 18px 0;">Crawlers — Marina</p>
-      <h1 style="font-size:34px;line-height:1.2;margin:0 0 12px 0;">Rapport multipages</h1>
+      <h1 style="font-size:34px;line-height:1.2;margin:0 0 12px 0;">Rapport&nbsp;multipages</h1>
       <p style="font-size:18px;margin:0 0 6px 0;font-weight:600;">${escapeHtml(domain)}</p>
       <p style="font-size:14px;opacity:.7;margin:0 0 30px 0;">${parts.length} pages auditées — ${generatedAt}</p>
       <h2 style="font-size:18px;margin:26px 0 10px 0;">Lecture d'ensemble</h2>

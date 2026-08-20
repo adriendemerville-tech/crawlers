@@ -45,6 +45,8 @@ import {
   clusterSize,
   isolatedClustersNoteHTML,
   isFillerTable,
+  flatTableHTML,
+  cleanText,
 } from '../_shared/reportEditorial.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
@@ -223,9 +225,9 @@ function renderJsonSection(data: any, depth = 0): string {
     // Lot 6 — une sévérité collée en fin de phrase devient un badge.
     const { text, severity } = splitTrailingSeverity(data);
     const badge = severityBadgeHTML(severity);
-    return `<p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:8px;">${text}${badge ? ` ${badge}` : ''}</p>`;
+    return `<p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:8px;">${cleanText(text)}${badge ? ` ${badge}` : ''}</p>`;
   }
-  if (typeof data === 'number' || typeof data === 'boolean') return `<span style="font-weight:600;color:#3b82f6;">${humanizeValue(data)}</span>`;
+  if (typeof data === 'number' || typeof data === 'boolean') return `<span style="font-weight:600;color:#6d28d9;">${humanizeValue(data)}</span>`;
   if (Array.isArray(data)) {
     if (data.length === 0) return '';
     // If array of strings
@@ -233,27 +235,33 @@ function renderJsonSection(data: any, depth = 0): string {
       return `<ul style="margin:8px 0;padding-left:20px;">${data.map(item => {
         const { text, severity } = splitTrailingSeverity(String(item));
         const badge = severityBadgeHTML(severity);
-        return `<li style="font-size:13px;color:#374151;margin-bottom:4px;">${text}${badge ? ` ${badge}` : ''}</li>`;
+        return `<li style="font-size:13px;color:#374151;margin-bottom:4px;">${cleanText(text)}${badge ? ` ${badge}` : ''}</li>`;
       }).join('')}</ul>`;
     }
     // Lot 6 — un tableau d'objets dont toutes les valeurs numériques sont à zéro
     // est un remplissage : on ne le rend pas.
     if (data.every((it) => it && typeof it === 'object') && isFillerTable(data as Array<Record<string, unknown>>)) return '';
+    // Une distribution homogène (`key / count / share`) se lit en tableau :
+    // sans ça, la sortie brute de l'API remplissait des pages entières.
+    if (data.every((it) => it && typeof it === 'object' && !Array.isArray(it))) {
+      const table = flatTableHTML(data as Array<Record<string, unknown>>);
+      if (table) return table;
+    }
     // Array of objects
     return data.map((item) => {
-      if (typeof item === 'string') return `<div style="padding:6px 12px;margin-bottom:4px;background:#f9fafb;border-radius:4px;font-size:13px;">${item}</div>`;
+      if (typeof item === 'string') return `<div style="padding:6px 12px;margin-bottom:4px;background:#f9fafb;border-radius:4px;font-size:13px;">${cleanText(item)}</div>`;
       const rawTitle = item.title || item.name || item.label || item.keyword || item.action || item.prescriptive_action || item.action_concrete || '';
       const desc = item.description || item.detail || item.rationale || item.evidence || item.explanation || item.strategic_goal || '';
       const split = splitTrailingSeverity(String(rawTitle || ''));
       const title = split.text;
       const badge = severityBadgeHTML(item.severity ?? item.priority ?? split.severity);
       const score = item.score ?? item.confidence ?? '';
-      const accent = badge && String(item.severity ?? item.priority ?? split.severity ?? '').toLowerCase().match(/crit|priorit/) ? '#ef4444'
-        : badge ? '#f59e0b' : '#3b82f6';
+      const accent = badge && String(item.severity ?? item.priority ?? split.severity ?? '').toLowerCase().match(/crit|priorit/) ? '#991b1b'
+        : badge ? '#8a6d1f' : '#6d28d9';
       return `<div style="padding:12px;margin-bottom:8px;background:#f9fafb;border-left:3px solid ${accent};border-radius:4px;">
         ${badge || score !== '' ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">${badge}${score !== '' ? `<span style="font-size:11px;color:#6b7280;font-weight:600;">${humanizeValue(score)}</span>` : ''}</div>` : ''}
-        ${title ? `<div style="font-weight:500;margin-top:2px;">${title}</div>` : ''}
-        ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${splitTrailingSeverity(String(desc)).text}</div>` : ''}
+        ${title ? `<div style="font-weight:500;margin-top:2px;">${cleanText(title)}</div>` : ''}
+        ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${cleanText(splitTrailingSeverity(String(desc)).text)}</div>` : ''}
         ${Object.entries(item).filter(([k]) => !['title','name','label','keyword','description','detail','rationale','evidence','explanation','score','confidence','priority','severity','action','prescriptive_action','action_concrete','strategic_goal'].includes(k)).map(([k, v]) => {
           if (v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0)) return '';
           if (typeof v === 'object') return '';
@@ -1631,15 +1639,18 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
         const title = split.text;
         const desc = typeof r === 'string' ? '' : r.description || r.detail || '';
         const priority = typeof r === 'string' ? (split.severity || '') : (r.priority || r.severity || split.severity || '');
-        const category = typeof r === 'string' ? '' : r.category || '';
-        const color = priority === 'critical' ? '#ef4444' : priority === 'important' ? '#f59e0b' : '#3b82f6';
+        const rawCategory = typeof r === 'string' ? '' : String(r.category || '').trim();
+        // Un fragment de phrase (« la », « Contenu de… ») laissé par un découpage
+        // amont ne fait pas une catégorie : mieux vaut ne rien afficher.
+        const category = rawCategory.length >= 3 && !/\s/.test(rawCategory) ? rawCategory : '';
+        const color = priority === 'critical' ? '#991b1b' : priority === 'important' ? '#8a6d1f' : '#6d28d9';
         return `<div class="reco-card" style="border-left-color:${color}">
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
             ${severityBadgeHTML(priority)}
-            ${category ? `<span style="font-size:11px;color:#6b7280;background:#f3f4f6;padding:1px 6px;border-radius:4px;">${humanizeKey(String(category))}</span>` : ''}
+            ${category ? `<span style="font-size:11px;color:#374151;border:1px solid #d1d5db;background:transparent;padding:1px 6px;border-radius:4px;">${cleanText(humanizeKey(category))}</span>` : ''}
           </div>
-          <div style="font-weight:500;">${title}</div>
-          ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${splitTrailingSeverity(String(desc)).text}</div>` : ''}
+          <div style="font-weight:500;">${cleanText(title)}</div>
+          ${desc ? `<div style="font-size:13px;color:#6b7280;margin-top:4px;">${cleanText(splitTrailingSeverity(String(desc)).text)}</div>` : ''}
         </div>`;
 
       }).join('')}` : ''}
@@ -1841,9 +1852,25 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
 
   // Lot 6 — nommage lisible des clusters + regroupement des thématiques isolées
   // (un cluster à une page n'a aucune valeur de lecture en tant que cadre).
-  const clusterEntries: any[] = cocoonClusters && typeof cocoonClusters === 'object'
+  const rawClusterEntries: any[] = cocoonClusters && typeof cocoonClusters === 'object'
     ? Object.entries(cocoonClusters).map(([key, val]: [string, any]) => ({ cluster_id: key, ...(val || {}) }))
     : (clusterDetails || []);
+  // Le résumé de cluster ne porte souvent ni mots-clés ni pages : on rattache
+  // les nœuds du graphe pour que le nommage déterministe puisse aboutir
+  // (sans ce rattachement, tous les groupes sortaient « non nommés »).
+  const nodesByCluster = new Map<string, any[]>();
+  for (const node of Array.isArray(cocoonNodes) ? cocoonNodes : []) {
+    const cid = node?.cluster_id ?? node?.cluster ?? node?.clusterId ?? node?.group;
+    if (cid === null || cid === undefined) continue;
+    const k = String(cid);
+    if (!nodesByCluster.has(k)) nodesByCluster.set(k, []);
+    nodesByCluster.get(k)!.push(node);
+  }
+  const clusterEntries: any[] = rawClusterEntries.map((c: any) => {
+    if (Array.isArray(c?.pages) && c.pages.length > 0) return c;
+    const attached = nodesByCluster.get(String(c?.cluster_id ?? c?.id ?? '')) || [];
+    return attached.length > 0 ? { ...c, pages: attached } : c;
+  });
   const { clusters: namedClusters, isolatedCount: isolatedClusters } = consolidateClusters(clusterEntries as any[]);
 
 

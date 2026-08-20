@@ -1440,7 +1440,7 @@ export function computeNetworkSynthesis(
   <section class="marina-network-synthesis section" data-pdf-section
            style="page-break-after:always;padding:32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;border-left:6px solid ${VIOLET};">
     <p style="letter-spacing:.16em;text-transform:uppercase;font-size:11px;margin:0 0 6px 0;color:${MUTED};">Marina — lecture d'ensemble</p>
-    <h2 style="font-size:22px;margin:0 0 6px 0;color:${INK};">Synthèse réseau</h2>
+    <h2 style="font-size:22px;margin:0 0 6px 0;color:${INK};">Synthèse&nbsp;réseau</h2>
     <p style="font-size:13px;color:${MUTED};margin:0 0 20px 0;max-width:60em;">
       ${esc(domain)} — ${metas.length} URLs. Ce que ces pages décrivent ensemble, comment elles interagissent,
       et dans quel ordre les reprendre. Séquence normalisée en 8 blocs, identique d'un rapport à l'autre :
