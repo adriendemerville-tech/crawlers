@@ -99,6 +99,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       if (Array.isArray(parsed) && parsed.length > 0 && parsed.some(i => i.jobId)) {
         setItems(parsed);
         setOpen(true);
+        setPendingResume(parsed);
       }
     } catch {
       /* ignore */
