@@ -10,11 +10,33 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const FREE_TOOLS = new Set(['check_geo_score', 'check_llm_visibility', 'check_ai_crawlers']);
 const TOOL_TO_FUNCTION: Record<string, string> = {
-  check_geo_score: 'check-geo', check_llm_visibility: 'check-llm-depth', check_ai_crawlers: 'check-llm-depth',
+  check_geo_score: 'check-geo', check_llm_visibility: 'check-llm-depth', check_ai_crawlers: 'check-crawlers',
   expert_seo_audit: 'audit-expert-seo', strategic_ai_audit: 'audit-strategique-ia',
   generate_corrective_code: 'generate-corrective-code', dry_run_script: 'process-script-queue',
   calculate_cocoon_logic: 'calculate-cocoon-logic', measure_audit_impact: 'auto-measure-predictions',
   wordpress_sync: 'wpsync', fetch_serp_kpis: 'fetch-serp-kpis', calculate_ias: 'calculate-ias',
+};
+
+// Adapte les arguments MCP au contrat d'entrée réel de chaque edge function.
+function bareDomain(v: string): string {
+  return v.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
+}
+
+function toUrl(a: Record<string, unknown>): Record<string, unknown> {
+  const raw = String(a['url'] ?? a['domain'] ?? '').trim();
+  if (!raw) return a;
+  return { ...a, url: /^https?:\/\//i.test(raw) ? raw : `https://${raw}` };
+}
+
+const ARG_ADAPT: Record<string, (a: Record<string, unknown>) => Record<string, unknown>> = {
+  // check-geo et check-crawlers exigent une `url` absolue ; le schéma MCP expose `domain`.
+  check_geo_score: toUrl,
+  check_ai_crawlers: toUrl,
+  expert_seo_audit: toUrl,
+  strategic_ai_audit: toUrl,
+  generate_corrective_code: toUrl,
+  // check-llm-depth exige un domaine nu, sans protocole ni chemin.
+  check_llm_visibility: (a) => ({ ...a, domain: bareDomain(String(a['domain'] ?? a['url'] ?? '')) }),
 };
 
 async function checkKillSwitch(): Promise<boolean> {
@@ -52,16 +74,17 @@ let _ah: string | null = null;
 function handler(tool: string) {
   return async (args: Record<string, unknown>) => {
     const t0 = Date.now(); const ah = _ah; const isFree = FREE_TOOLS.has(tool);
-    if (!(await checkKillSwitch())) { await log(null, tool, args, 'blocked', 'disabled', Date.now() - t0); return { content: [{ type: 'text' as const, text: '🚫 MCP Crawlers temporairement désactivé.' }] }; }
+    if (!(await checkKillSwitch())) { await log(null, tool, args, 'blocked', 'disabled', Date.now() - t0); return { content: [{ type: 'text' as const, text: 'MCP Crawlers temporairement désactivé.' }] }; }
     let auth: Auth | null = null;
     if (!isFree) {
       auth = await authenticate(ah);
-      if (!auth) { await log(null, tool, args, 'unauthorized', 'no token', Date.now() - t0); return { content: [{ type: 'text' as const, text: '🔒 Pro Agency requis. https://crawlers.fr/tarifs' }] }; }
-      if (!auth.isAdmin && auth.planType !== 'agency_pro') { await log(auth.userId, tool, args, 'forbidden', 'not pro', Date.now() - t0); return { content: [{ type: 'text' as const, text: '⚠️ Réservé Pro Agency. https://crawlers.fr/tarifs' }] }; }
-      if (!(await rateOk(auth.userId, tool))) { await log(auth.userId, tool, args, 'rate_limited', '30/h', Date.now() - t0); return { content: [{ type: 'text' as const, text: '⏳ Limite 30/h atteinte.' }] }; }
+      if (!auth) { await log(null, tool, args, 'unauthorized', 'no token', Date.now() - t0); return { content: [{ type: 'text' as const, text: 'Accès Pro Agency requis. https://crawlers.fr/tarifs' }] }; }
+      if (!auth.isAdmin && auth.planType !== 'agency_pro') { await log(auth.userId, tool, args, 'forbidden', 'not pro', Date.now() - t0); return { content: [{ type: 'text' as const, text: 'Réservé Pro Agency. https://crawlers.fr/tarifs' }] }; }
+      if (!(await rateOk(auth.userId, tool))) { await log(auth.userId, tool, args, 'rate_limited', '30/h', Date.now() - t0); return { content: [{ type: 'text' as const, text: 'Limite de 30 appels par heure atteinte.' }] }; }
     } else { auth = await authenticate(ah); }
-    const res = await callFn(TOOL_TO_FUNCTION[tool], args, ah || undefined); const ms = Date.now() - t0;
-    if (res.error) { await log(auth?.userId || null, tool, args, 'error', res.error, ms); return { content: [{ type: 'text' as const, text: `❌ ${res.error}` }] }; }
+    const payload = ARG_ADAPT[tool] ? ARG_ADAPT[tool]!(args) : args;
+    const res = await callFn(TOOL_TO_FUNCTION[tool], payload, ah || undefined); const ms = Date.now() - t0;
+    if (res.error) { await log(auth?.userId || null, tool, args, 'error', res.error, ms); return { content: [{ type: 'text' as const, text: `Erreur: ${res.error}` }] }; }
     await log(auth?.userId || null, tool, args, 'success', null, ms);
     return { content: [{ type: 'text' as const, text: JSON.stringify(res.data, null, 2) }] };
   };
