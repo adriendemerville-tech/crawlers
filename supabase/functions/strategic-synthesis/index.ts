@@ -482,6 +482,14 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
         google_my_business: gmbData,
         toolsData: null,
         llm_visibility_raw: llmData,
+        // Sous-signaux de citabilité : consommés par la décomposition GEO en 10
+        // sous-signaux du rapport Marina (toutes pages, homepage ou profonde).
+        citation_breakdown: resolveCitationBreakdown({
+          factual: factualCitation.breakdown,
+          parsedAnalysis,
+          gmbData,
+        }),
+
         _cachedContext: cachedContextOut,
       },
     };
