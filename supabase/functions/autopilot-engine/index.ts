@@ -1388,13 +1388,30 @@ async function executeContentArchitect(
     }
 
   } else {
+    // Aucun job n'a pu être lancé, même en mode étagé : on remonte les 3 tentatives
+    // en clair (statut HTTP par mode) pour que l'UI affiche une cause, pas un « dégradé » nu.
+    const detail = kickAttempts.length > 0 ? kickAttempts.join(' | ') : 'aucune tentative enregistrée';
     const ok = funcResponse?.ok ?? false;
-    executionResults.push({ function: 'content-architecture-advisor', status: ok ? 'success' : 'error', http_status: funcResponse?.status ?? 0, keyword: funcBody.keyword, result: funcResult });
+    executionResults.push({
+      function: 'content-architecture-advisor',
+      status: ok ? 'success' : 'error',
+      http_status: funcResponse?.status ?? 0,
+      keyword: funcBody.keyword,
+      kick_attempts: kickAttempts,
+      result: funcResult,
+    });
     if (!ok) {
-      phaseErrors.push({ phase, function: 'content-architecture-advisor', severity: 'degraded', message: `content-architecture-advisor sync failed: HTTP ${funcResponse?.status ?? 0}`, retryable: true });
+      phaseErrors.push({
+        phase,
+        function: 'content-architecture-advisor',
+        severity: 'degraded',
+        message: `content-architecture-advisor injoignable après 3 tentatives (async, async-retry, staged) — ${detail}`,
+        retryable: true,
+      });
       setSuccess(false);
     }
   }
+
 
 }
 
