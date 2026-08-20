@@ -1,6 +1,8 @@
 import { memo, useEffect, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { sanitizeHtmlDeterministic, PURIFY_CONFIG } from '@/lib/security/sanitizeHtml';
+import { buildImageSrcSet, buildImageUrl } from '@/lib/blog/imageUrl';
+
 
 
 interface HtmlContentRendererProps {
@@ -31,16 +33,14 @@ function optimizeImages(html: string): string {
       const altMatch = attrs.match(/alt=["']([^"']*)["']/);
       const alt = altMatch ? altMatch[1] : '';
       
-      if (src.includes('unsplash.com')) {
-        const baseUrl = src.replace(/[?&]w=\d+/g, '').replace(/[?&]q=\d+/g, '').replace(/[?&]fm=\w+/g, '');
-        const sep = baseUrl.includes('?') ? '&' : '?';
-        
-        const optimizedSrc = `${baseUrl}${sep}w=1200&q=80&auto=format`;
-        const srcset = [
-          `${baseUrl}${sep}w=640&q=75&auto=format 640w`,
-          `${baseUrl}${sep}w=828&q=75&auto=format 828w`,
-          `${baseUrl}${sep}w=1200&q=80&auto=format 1200w`,
-        ].join(', ');
+      const srcset = buildImageSrcSet(src, [
+        { width: 640, quality: 75 },
+        { width: 828, quality: 75 },
+        { width: 1200, quality: 80 },
+      ]);
+      if (srcset) {
+        const optimizedSrc = buildImageUrl(src, { width: 1200, quality: 80 });
+
         
         return `<img src="${optimizedSrc}" srcset="${srcset}" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1200px" alt="${alt}" width="1200" height="630" loading="${isFirst ? 'eager' : 'lazy'}"${isFirst ? ' fetchpriority="high"' : ''} decoding="async" class="w-full h-auto object-cover" style="aspect-ratio:1200/630">`;
       }

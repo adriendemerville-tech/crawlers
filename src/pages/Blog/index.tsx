@@ -8,6 +8,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { blogArticles } from '@/data/blogArticles';
 import { supabase } from '@/integrations/supabase/client';
+import { buildImageUrl } from '@/lib/blog/imageUrl';
+
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
@@ -139,9 +141,8 @@ function BlogIndexComponent() {
                   <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30">
                     <div className="aspect-video overflow-hidden">
                       <img
-                        src={article.heroImage.includes('unsplash.com') 
-                          ? `${article.heroImage.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '')}${article.heroImage.includes('?') ? '&' : '?'}w=640&q=75&auto=format`
-                          : article.heroImage}
+                        src={buildImageUrl(article.heroImage, { width: 640, quality: 75 })}
+
                         alt={article.heroAlt[language] || article.heroAlt.fr}
                         width={640}
                         height={360}
@@ -184,14 +185,11 @@ function BlogIndexComponent() {
                   <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30 relative">
                     <div className="aspect-video overflow-hidden">
                       <img
-                        src={(() => {
-                          const url = article.image_url || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31';
-                          if (url.includes('unsplash.com')) {
-                            const base = url.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '');
-                            return `${base}${base.includes('?') ? '&' : '?'}w=640&q=75&auto=format`;
-                          }
-                          return url;
-                        })()}
+                        src={buildImageUrl(
+                          article.image_url || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31',
+                          { width: 640, quality: 75 },
+                        )}
+
                         alt={(language === 'en' ? article.title_en : language === 'es' ? article.title_es : null) || article.title}
                         width={640}
                         height={360}
