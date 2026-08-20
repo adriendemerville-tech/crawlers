@@ -901,8 +901,23 @@ async function executeCrawlersInternalPublish(
   supabase: any, executionResults: any[], phaseErrors: ExecutionError[],
   setSuccess: (v: boolean) => void,
 ) {
-  const actions = (decision.action.payload?.cms_actions || []).slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
+  // Plafond dur : le quota restant de la période (parmenion_targets) borne le nombre
+  // de créations, en plus du plafond par cycle. Sans cela un seul cycle pouvait
+  // publier des dizaines d'articles.
+  const allowance = Math.max(0, Math.min(
+    MAX_CMS_ACTIONS_PER_CYCLE,
+    (config as any)._content_allowance ?? MAX_CMS_ACTIONS_PER_CYCLE,
+  ));
+  const rawActions = (decision.action.payload?.cms_actions || []);
+  const creations = rawActions.filter((a: any) => (a.action || (a.body ? 'create-post' : '')) === 'create-post');
+  const others = rawActions.filter((a: any) => !creations.includes(a));
+  const keptCreations = creations.slice(0, allowance);
+  if (creations.length > keptCreations.length) {
+    console.log(`[AutopilotEngine] 🚦 crawlers.fr: ${creations.length - keptCreations.length} création(s) écartée(s) — quota période épuisé (allowance=${allowance})`);
+  }
+  const actions = [...keptCreations, ...others].slice(0, MAX_CMS_ACTIONS_PER_CYCLE);
   console.log(`[AutopilotEngine] crawlers.fr internal publish: ${actions.length} action(s)`);
+
 
   for (const cmsAction of actions) {
     const body = cmsAction.body || {};
