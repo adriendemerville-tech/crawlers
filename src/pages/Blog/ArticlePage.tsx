@@ -142,6 +142,7 @@ function ArticlePageComponent() {
   const description = getDbTranslated('excerpt') || staticArticle?.description[language] || staticArticle?.description.fr || '';
   const author = 'Adrien';
   const date = dbArticle?.published_at || dbArticle?.created_at || staticArticle?.date || new Date().toISOString();
+  const updatedAt = (loaderData?.updatedAt as string | null) ?? null;
   const heroImage = dbArticle?.image_url || staticArticle?.heroImage || '';
   const heroAlt = staticArticle?.heroAlt[language] || staticArticle?.heroAlt?.fr || title;
   const sources = staticArticle?.sources || [];
@@ -167,6 +168,7 @@ function ArticlePageComponent() {
       description={description}
       author={author}
       date={date}
+      updatedAt={updatedAt}
       heroImage={heroImage}
       heroAlt={heroAlt}
       sources={sources}

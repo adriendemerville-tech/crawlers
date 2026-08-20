@@ -9,6 +9,7 @@ import { SourcesSection } from './SourcesSection';
 import { RelatedArticlesSection } from './RelatedArticlesSection';
 import { ResponsiveHeroImage } from './ResponsiveHeroImage';
 import { buildImageSrcSet, buildImageUrl } from '@/lib/blog/imageUrl';
+import { formatUpdatedDate } from '@/lib/blog/lastUpdated';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 interface ArticleLayoutProps {
@@ -16,6 +17,8 @@ interface ArticleLayoutProps {
   description: string;
   author?: string;
   date: string;
+  /** Jour ISO (YYYY-MM-DD) : renseigné uniquement en cas de révision réelle */
+  updatedAt?: string | null;
   heroImage: string;
   heroAlt: string;
   children: ReactNode;
@@ -30,6 +33,7 @@ function ArticleLayoutComponent({
   description,
   author = 'Adrien',
   date,
+  updatedAt = null,
   heroImage,
   heroAlt,
   children,
@@ -119,6 +123,19 @@ function ArticleLayoutComponent({
                 </Link>
                 <span className="text-muted-foreground/50">•</span>
                 <time dateTime={date}>{formattedDate}</time>
+                {updatedAt && (
+                  <>
+                    <span className="text-muted-foreground/50">•</span>
+                    <span>
+                      {language === 'fr'
+                        ? 'Mis à jour le '
+                        : language === 'es'
+                          ? 'Actualizado el '
+                          : 'Updated on '}
+                      <time dateTime={updatedAt}>{formatUpdatedDate(updatedAt, language)}</time>
+                    </span>
+                  </>
+                )}
               </div>
             </header>
 
