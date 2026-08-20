@@ -15,6 +15,12 @@ export interface PageHeadOptions {
   description: string;
   /** Absolute path of the page, e.g. "/tarifs". Used for canonical + og:url. */
   path: string;
+  /**
+   * Overrides the canonical target when another page owns the intention
+   * (ex. /app/site-crawl → /crawl). og:url suit le canonical.
+   */
+  canonicalPath?: string;
+
   /** og:type (default "website") */
   ogType?: string;
   /** Private / utility pages → noindex, follow */
@@ -36,6 +42,7 @@ export function pageHead(options: PageHeadOptions) {
     title,
     description,
     path,
+    canonicalPath,
     ogType = 'website',
     noIndex = false,
     image = DEFAULT_OG_IMAGE,
@@ -44,9 +51,14 @@ export function pageHead(options: PageHeadOptions) {
     jsonLd,
   } = options;
 
-  const cleanPath = path === '/' ? '' : path.replace(/\/$/, '');
-  const url = `${SITE_URL}${cleanPath || '/'}`;
+  const toUrl = (p: string) => {
+    const clean = p === '/' ? '' : p.replace(/\/$/, '');
+    return `${SITE_URL}${clean || '/'}`;
+  };
+  const url = toUrl(path);
+  const canonicalUrl = canonicalPath ? toUrl(canonicalPath) : url;
   const fullTitle = /crawlers/i.test(title) ? title : `${title} | Crawlers.fr`;
+
 
   const meta: Array<Record<string, string>> = [
     { title: fullTitle },
@@ -71,7 +83,7 @@ export function pageHead(options: PageHeadOptions) {
 
   return {
     meta,
-    links: [{ rel: 'canonical', href: url }],
+    links: [{ rel: 'canonical', href: canonicalUrl }],
     ...(jsonLd && jsonLd.length
       ? {
           scripts: jsonLd.map((payload) => ({

@@ -29,12 +29,14 @@ import { Route as CfShieldRouteImport } from './routes/cf-shield'
 import { Route as CgvuRouteImport } from './routes/cgvu'
 import { Route as CocoonRouteImport } from './routes/cocoon'
 import { Route as ComparatifClaudeVsCrawlersRouteImport } from './routes/comparatif-claude-vs-crawlers'
+import { Route as ComparatifCrawlersAhrefsRouteImport } from './routes/comparatif-crawlers-ahrefs'
 import { Route as ComparatifCrawlersSemrushRouteImport } from './routes/comparatif-crawlers-semrush'
 import { Route as ComparatifPlateformeSeoIaRouteImport } from './routes/comparatif-plateforme-seo-ia'
 import { Route as ConditionsUtilisationRouteImport } from './routes/conditions-utilisation'
 import { Route as ConsoleRouteImport } from './routes/console'
 import { Route as ContentArchitectRouteImport } from './routes/content-architect'
 import { Route as ConversionOptimizerRouteImport } from './routes/conversion-optimizer'
+import { Route as CrawlRouteImport } from './routes/crawl'
 import { Route as CrawlerIaRouteImport } from './routes/crawler-ia'
 import { Route as DataFlowDiagramRouteImport } from './routes/data-flow-diagram'
 import { Route as DiagnosticWafRouteImport } from './routes/diagnostic-waf'
@@ -239,6 +241,12 @@ const ComparatifClaudeVsCrawlersRoute =
     path: '/comparatif-claude-vs-crawlers',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ComparatifCrawlersAhrefsRoute =
+  ComparatifCrawlersAhrefsRouteImport.update({
+    id: '/comparatif-crawlers-ahrefs',
+    path: '/comparatif-crawlers-ahrefs',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ComparatifCrawlersSemrushRoute =
   ComparatifCrawlersSemrushRouteImport.update({
     id: '/comparatif-crawlers-semrush',
@@ -269,6 +277,11 @@ const ContentArchitectRoute = ContentArchitectRouteImport.update({
 const ConversionOptimizerRoute = ConversionOptimizerRouteImport.update({
   id: '/conversion-optimizer',
   path: '/conversion-optimizer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrawlRoute = CrawlRouteImport.update({
+  id: '/crawl',
+  path: '/crawl',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrawlerIaRoute = CrawlerIaRouteImport.update({
@@ -812,12 +825,14 @@ export interface FileRoutesByFullPath {
   '/cgvu': typeof CgvuRoute
   '/cocoon': typeof CocoonRoute
   '/comparatif-claude-vs-crawlers': typeof ComparatifClaudeVsCrawlersRoute
+  '/comparatif-crawlers-ahrefs': typeof ComparatifCrawlersAhrefsRoute
   '/comparatif-crawlers-semrush': typeof ComparatifCrawlersSemrushRoute
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
   '/console': typeof ConsoleRoute
   '/content-architect': typeof ContentArchitectRoute
   '/conversion-optimizer': typeof ConversionOptimizerRoute
+  '/crawl': typeof CrawlRoute
   '/crawler-ia': typeof CrawlerIaRoute
   '/data-flow-diagram': typeof DataFlowDiagramRoute
   '/diagnostic-waf': typeof DiagnosticWafRoute
@@ -942,12 +957,14 @@ export interface FileRoutesByTo {
   '/cgvu': typeof CgvuRoute
   '/cocoon': typeof CocoonRoute
   '/comparatif-claude-vs-crawlers': typeof ComparatifClaudeVsCrawlersRoute
+  '/comparatif-crawlers-ahrefs': typeof ComparatifCrawlersAhrefsRoute
   '/comparatif-crawlers-semrush': typeof ComparatifCrawlersSemrushRoute
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
   '/console': typeof ConsoleRoute
   '/content-architect': typeof ContentArchitectRoute
   '/conversion-optimizer': typeof ConversionOptimizerRoute
+  '/crawl': typeof CrawlRoute
   '/crawler-ia': typeof CrawlerIaRoute
   '/data-flow-diagram': typeof DataFlowDiagramRoute
   '/diagnostic-waf': typeof DiagnosticWafRoute
@@ -1073,12 +1090,14 @@ export interface FileRoutesById {
   '/cgvu': typeof CgvuRoute
   '/cocoon': typeof CocoonRoute
   '/comparatif-claude-vs-crawlers': typeof ComparatifClaudeVsCrawlersRoute
+  '/comparatif-crawlers-ahrefs': typeof ComparatifCrawlersAhrefsRoute
   '/comparatif-crawlers-semrush': typeof ComparatifCrawlersSemrushRoute
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
   '/console': typeof ConsoleRoute
   '/content-architect': typeof ContentArchitectRoute
   '/conversion-optimizer': typeof ConversionOptimizerRoute
+  '/crawl': typeof CrawlRoute
   '/crawler-ia': typeof CrawlerIaRoute
   '/data-flow-diagram': typeof DataFlowDiagramRoute
   '/diagnostic-waf': typeof DiagnosticWafRoute
@@ -1205,12 +1224,14 @@ export interface FileRouteTypes {
     | '/cgvu'
     | '/cocoon'
     | '/comparatif-claude-vs-crawlers'
+    | '/comparatif-crawlers-ahrefs'
     | '/comparatif-crawlers-semrush'
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
     | '/console'
     | '/content-architect'
     | '/conversion-optimizer'
+    | '/crawl'
     | '/crawler-ia'
     | '/data-flow-diagram'
     | '/diagnostic-waf'
@@ -1335,12 +1356,14 @@ export interface FileRouteTypes {
     | '/cgvu'
     | '/cocoon'
     | '/comparatif-claude-vs-crawlers'
+    | '/comparatif-crawlers-ahrefs'
     | '/comparatif-crawlers-semrush'
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
     | '/console'
     | '/content-architect'
     | '/conversion-optimizer'
+    | '/crawl'
     | '/crawler-ia'
     | '/data-flow-diagram'
     | '/diagnostic-waf'
@@ -1465,12 +1488,14 @@ export interface FileRouteTypes {
     | '/cgvu'
     | '/cocoon'
     | '/comparatif-claude-vs-crawlers'
+    | '/comparatif-crawlers-ahrefs'
     | '/comparatif-crawlers-semrush'
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
     | '/console'
     | '/content-architect'
     | '/conversion-optimizer'
+    | '/crawl'
     | '/crawler-ia'
     | '/data-flow-diagram'
     | '/diagnostic-waf'
@@ -1596,12 +1621,14 @@ export interface RootRouteChildren {
   CgvuRoute: typeof CgvuRoute
   CocoonRoute: typeof CocoonRoute
   ComparatifClaudeVsCrawlersRoute: typeof ComparatifClaudeVsCrawlersRoute
+  ComparatifCrawlersAhrefsRoute: typeof ComparatifCrawlersAhrefsRoute
   ComparatifCrawlersSemrushRoute: typeof ComparatifCrawlersSemrushRoute
   ComparatifPlateformeSeoIaRoute: typeof ComparatifPlateformeSeoIaRoute
   ConditionsUtilisationRoute: typeof ConditionsUtilisationRoute
   ConsoleRoute: typeof ConsoleRoute
   ContentArchitectRoute: typeof ContentArchitectRoute
   ConversionOptimizerRoute: typeof ConversionOptimizerRoute
+  CrawlRoute: typeof CrawlRoute
   CrawlerIaRoute: typeof CrawlerIaRoute
   DataFlowDiagramRoute: typeof DataFlowDiagramRoute
   DiagnosticWafRoute: typeof DiagnosticWafRoute
@@ -1848,6 +1875,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComparatifClaudeVsCrawlersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/comparatif-crawlers-ahrefs': {
+      id: '/comparatif-crawlers-ahrefs'
+      path: '/comparatif-crawlers-ahrefs'
+      fullPath: '/comparatif-crawlers-ahrefs'
+      preLoaderRoute: typeof ComparatifCrawlersAhrefsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/comparatif-crawlers-semrush': {
       id: '/comparatif-crawlers-semrush'
       path: '/comparatif-crawlers-semrush'
@@ -1888,6 +1922,13 @@ declare module '@tanstack/react-router' {
       path: '/conversion-optimizer'
       fullPath: '/conversion-optimizer'
       preLoaderRoute: typeof ConversionOptimizerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crawl': {
+      id: '/crawl'
+      path: '/crawl'
+      fullPath: '/crawl'
+      preLoaderRoute: typeof CrawlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crawler-ia': {
@@ -2628,12 +2669,14 @@ const rootRouteChildren: RootRouteChildren = {
   CgvuRoute: CgvuRoute,
   CocoonRoute: CocoonRoute,
   ComparatifClaudeVsCrawlersRoute: ComparatifClaudeVsCrawlersRoute,
+  ComparatifCrawlersAhrefsRoute: ComparatifCrawlersAhrefsRoute,
   ComparatifCrawlersSemrushRoute: ComparatifCrawlersSemrushRoute,
   ComparatifPlateformeSeoIaRoute: ComparatifPlateformeSeoIaRoute,
   ConditionsUtilisationRoute: ConditionsUtilisationRoute,
   ConsoleRoute: ConsoleRoute,
   ContentArchitectRoute: ContentArchitectRoute,
   ConversionOptimizerRoute: ConversionOptimizerRoute,
+  CrawlRoute: CrawlRoute,
   CrawlerIaRoute: CrawlerIaRoute,
   DataFlowDiagramRoute: DataFlowDiagramRoute,
   DiagnosticWafRoute: DiagnosticWafRoute,
