@@ -524,6 +524,31 @@ function noFact(reason: string): string {
   return `<p style="margin:0;color:${MUTED};font-style:italic;">${esc(reason)}</p>`;
 }
 
+/**
+ * Le libellé d'une action et sa justification étaient parfois rédigés à partir
+ * de la même phrase : le rapport affichait alors deux fois le même texte, une
+ * fois en gras, une fois en dessous. On retire la reprise littérale du titre en
+ * tête de justification, et on masque la justification si elle n'apporte rien.
+ */
+function normalizeForCompare(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+export function dedupeWhy(title: string, why: string): string {
+  const t = normalizeForCompare(title);
+  const w = normalizeForCompare(why);
+  if (!t || !w) return why;
+  if (w === t) return '';
+  if (w.startsWith(t)) {
+    const rest = why.slice(title.length).replace(/^[\s.:;,—–-]+/, '').trim();
+    if (!rest) return '';
+    return rest.charAt(0).toUpperCase() + rest.slice(1);
+  }
+  return why;
+}
+
+
 function table(headers: string[], rows: string[][]): string {
   return `
     <table style="width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 0 0;">
