@@ -291,6 +291,18 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
 
     let parsedAnalysis: any = null;
 
+    // Scores de citabilité déterministes (0 token) — calculés pour TOUS les
+    // modes : les pages profondes d'un audit multipages passent en mode
+    // « contenu » et sortaient sans aucun sous-signal GEO mesuré.
+    const factualCitation = computeFactualCitationScores({
+      rankingOverview,
+      crawlData: toolsData || null,
+      backlinkData: authorityData?.data_source === 'dataforseo'
+        ? { domain_rank: authorityData.domain_rank, referring_domains: authorityData.referring_domains }
+        : null,
+      gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
+    });
+
     if (isContentMode) {
       // ═══ CONTENT MODE: Single call (simpler JSON) ═══
       console.log(`🤖 [strategic-synthesis] Content mode (${pageType}) — single LLM call`);
@@ -305,19 +317,10 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       // ═══ HOMEPAGE MODE: 3 parallel calls ═══
       console.log('🚀 [strategic-synthesis] Parallel mode: 3 focused LLM calls...');
 
-      // Compute factual citation scores from real data
-      const factualCitation = computeFactualCitationScores({
-        rankingOverview,
-        crawlData: toolsData || null,
-        backlinkData: authorityData?.data_source === 'dataforseo'
-          ? { domain_rank: authorityData.domain_rank, referring_domains: authorityData.referring_domains }
-          : null,
-        gmbData: gmbData ? { completeness_score: gmbData.rating ? 70 : 30, rating: gmbData.rating, total_reviews: gmbData.totalReviews } : null,
-      });
-
       const userPromptA = buildUserPromptA(url, domain, baseContext);
       const userPromptB = buildUserPromptB(url, domain, baseContext);
       const userPromptC = buildUserPromptC(url, domain, baseContext, factualCitation.factual_summary);
+
 
       const parallelTimeout = 150_000;
 
