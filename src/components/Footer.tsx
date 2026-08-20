@@ -298,6 +298,7 @@ function FooterComponent() {
                     <li key={link.href}>
                       <SmartLink
                         to={link.href}
+                        external={(link as any).external}
                         className={`text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                         title={link.description}
                       >
