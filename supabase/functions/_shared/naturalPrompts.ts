@@ -298,7 +298,9 @@ type LexKey = 'software' | 'shop' | 'local_service' | 'agency' | 'nonprofit' | '
 const LEXICONS: Record<PromptLang, Record<LexKey, PromptLexicon>> = {
   fr: {
     software:      { seek: 'un logiciel',    comparePlural: 'les meilleurs logiciels',    noun: 'logiciel' },
-    shop:          { seek: 'un site',        comparePlural: 'les meilleurs sites',        noun: 'site' },
+    // On n'achète pas « un site » : on cherche une boutique. Le mot « site »
+    // est banni du lexique, il fausse la mesure de citabilité.
+    shop:          { seek: 'une boutique en ligne', comparePlural: 'les meilleures boutiques en ligne', noun: 'boutique en ligne' },
     local_service: { seek: 'une entreprise', comparePlural: 'les meilleures entreprises', noun: 'entreprise' },
     agency:        { seek: 'un prestataire', comparePlural: 'les meilleurs prestataires', noun: 'prestataire' },
     nonprofit:     { seek: 'une structure',  comparePlural: 'les meilleures structures',  noun: 'structure' },
@@ -306,7 +308,7 @@ const LEXICONS: Record<PromptLang, Record<LexKey, PromptLexicon>> = {
   },
   en: {
     software:      { seek: 'a software',       comparePlural: 'the best software',       noun: 'software' },
-    shop:          { seek: 'a website',       comparePlural: 'the best websites',       noun: 'website' },
+    shop:          { seek: 'an online shop',  comparePlural: 'the best online shops',   noun: 'online shop' },
     local_service: { seek: 'a company',       comparePlural: 'the best companies',      noun: 'company' },
     agency:        { seek: 'a provider',      comparePlural: 'the best providers',      noun: 'provider' },
     nonprofit:     { seek: 'an organization', comparePlural: 'the best organizations',  noun: 'organization' },
@@ -314,7 +316,7 @@ const LEXICONS: Record<PromptLang, Record<LexKey, PromptLexicon>> = {
   },
   es: {
     software:      { seek: 'un software',     comparePlural: 'los mejores software',     noun: 'software' },
-    shop:          { seek: 'una tienda',      comparePlural: 'las mejores tiendas',      noun: 'tienda' },
+    shop:          { seek: 'una tienda online', comparePlural: 'las mejores tiendas online', noun: 'tienda online' },
     local_service: { seek: 'una empresa',     comparePlural: 'las mejores empresas',     noun: 'empresa' },
     agency:        { seek: 'un proveedor',    comparePlural: 'los mejores proveedores',  noun: 'proveedor' },
     nonprofit:     { seek: 'una organización', comparePlural: 'las mejores organizaciones', noun: 'organización' },
@@ -322,18 +324,29 @@ const LEXICONS: Record<PromptLang, Record<LexKey, PromptLexicon>> = {
   },
 };
 
+/** Signaux d'une activité de prestation (travaux, intervention, conseil). */
+const SERVICE_OFFER_RE = /travaux|r[eé]novation|chantier|artisan|installation|d[eé]pannage|entretien|ma[îi]trise d.?\s?œuvre|entreprise g[eé]n[eé]rale|prestation|pose\b|am[eé]nagement|construction|isolation|plomberie|[eé]lectricit[eé]|toiture|ma[çc]onnerie|peinture|conseil|cabinet|formation|agence/i;
+
 function resolveLexKey(ctx: SiteContext): LexKey {
   const model = (ctx.business_model || '').trim().toLowerCase();
   const entity = (ctx.entity_type || '').trim().toLowerCase();
+  const offer = String((ctx as Record<string, unknown>)['products_services'] ?? '');
+  const isServiceOffer = SERVICE_OFFER_RE.test(offer);
 
-  if (model.startsWith('saas')) return 'software';
-  if (model.startsWith('ecommerce') || model.startsWith('marketplace')) return 'shop';
-  if (model === 'service_local' || model === 'leadgen') return 'local_service';
-  if (model === 'service_agency') return 'agency';
-  if (model === 'nonprofit') return 'nonprofit';
+  if (model.startsWith('saas') || model === 'software') return 'software';
+  // Un prestataire doté d'une boutique secondaire reste un prestataire : on ne
+  // bascule sur le lexique boutique que si l'offre décrite ne relève pas
+  // d'abord d'une prestation (cf. avenir-renovations : travaux + e-boutique).
+  if (model.startsWith('ecommerce') || model.startsWith('marketplace')) {
+    return isServiceOffer ? 'local_service' : 'shop';
+  }
+  if (model === 'service_local' || model === 'local_service' || model === 'leadgen' || model === 'lead_gen' || model === 'artisan') return 'local_service';
+  if (model === 'service_agency' || model === 'agency') return 'agency';
+  if (model === 'nonprofit' || model === 'non_commercial') return 'nonprofit';
 
   if (entity === 'saas') return 'software';
-  if (entity === 'ecommerce' || entity === 'marketplace') return 'shop';
+  if ((entity === 'ecommerce' || entity === 'marketplace') && !isServiceOffer) return 'shop';
+  if (isServiceOffer) return 'local_service';
   return 'service';
 }
 

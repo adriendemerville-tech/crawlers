@@ -44,13 +44,25 @@ const AXIS_ROLE: Record<string, string> = {
 
 type QuestionArchetype = 'local_commerce' | 'local_service' | 'software' | 'ecommerce' | 'agency' | 'generic';
 
-/** Archétype de question, déduit du modèle d'affaires et de la zone de chalandise. */
+/** Signaux d'une prestation (travaux, intervention, conseil) dans l'offre ou la page. */
+const SERVICE_SIGNAL_RE = /travaux|r[eé]novation|chantier|artisan|installation|d[eé]pannage|entretien|entreprise g[eé]n[eé]rale|prestation|ma[çc]onnerie|plomberie|isolation|toiture|am[eé]nagement|extension|construction|peinture|conseil|cabinet|agence|franchise/i;
+
+/** Archétype de question, déduit du modèle d'affaires, de la page auditée et de la zone. */
 function resolveArchetype(site: Record<string, any>): QuestionArchetype {
   const model = String(site.business_model || '').toLowerCase();
   const entity = String(site.entity_type || '').toLowerCase();
   const hasArea = !!String(site.commercial_area || '').trim();
+  const pageBlob = [site.page_focus?.topic, ...(Array.isArray(site.page_focus?.terms) ? site.page_focus.terms : [])]
+    .filter(Boolean).join(' ');
+  const hasLocality = !!String(site.page_focus?.locality || '').trim() || hasArea;
+  // La page auditée l'emporte : une page de prestation locale ne se teste pas
+  // avec des questions d'achat en ligne, même si le domaine héberge une boutique.
+  const serviceSignal = SERVICE_SIGNAL_RE.test(pageBlob) || SERVICE_SIGNAL_RE.test(String(site.products_services || ''));
   if (model.startsWith('saas') || entity === 'saas') return 'software';
-  if (model.startsWith('ecommerce') || model.startsWith('marketplace') || entity === 'ecommerce') return 'ecommerce';
+  if (model.startsWith('ecommerce') || model.startsWith('marketplace') || entity === 'ecommerce') {
+    if (serviceSignal) return hasLocality ? 'local_service' : 'generic';
+    return 'ecommerce';
+  }
   if (model === 'service_agency') return 'agency';
   if (model === 'commerce_local' || model === 'retail' || model === 'restaurant') return hasArea ? 'local_commerce' : 'generic';
   if (model === 'service_local' || model === 'leadgen' || model === 'artisan') return hasArea ? 'local_service' : 'generic';
@@ -65,7 +77,7 @@ const ARCHETYPE_DIRECTIVE: Record<QuestionArchetype, string> = {
   software:
     "Logiciel / service en ligne : la question doit nommer la TÂCHE à accomplir, comme « quel outil pour piloter mon SEO et ma visibilité dans les IA ? ». Pas de lieu, pas de nom de produit.",
   ecommerce:
-    "Vente en ligne : questions d'achat du type « où acheter <produit> en ligne, en qui avoir confiance ? ». Pas de lieu.",
+    "Vente en ligne : questions d'achat du type « où acheter <produit> en ligne, dans quelle boutique avoir confiance ? ». Pas de lieu, et jamais le mot « site ».",
   agency:
     "Agence / prestataire B2B : questions du type « quelle agence pour <mission> ? », en précisant le profil du demandeur quand c'est utile.",
   generic:
@@ -82,6 +94,35 @@ function sanitize(raw: unknown): string {
   const q = t.indexOf('?');
   if (q > 0) t = t.slice(0, q + 1);
   return t.trim();
+}
+
+/** Nom que le prospect cherche réellement, selon l'archétype. */
+const ARCHETYPE_NOUN: Record<QuestionArchetype, { m: string; f: string }> = {
+  local_commerce: { m: 'commerçant', f: 'entreprise' },
+  local_service: { m: 'prestataire', f: 'entreprise' },
+  software: { m: 'outil', f: 'solution' },
+  ecommerce: { m: 'marchand en ligne', f: 'boutique en ligne' },
+  agency: { m: 'prestataire', f: 'agence' },
+  generic: { m: 'prestataire', f: 'entreprise' },
+};
+
+/**
+ * On ne cherche jamais « un site » : on cherche une entreprise, une boutique
+ * ou un outil. Le mot « site » dans une question de benchmark fausse la mesure
+ * (personne ne demande « trouve-moi un site de fleuriste »).
+ */
+function stripSiteWording(text: string, archetype: QuestionArchetype): string {
+  const { m, f } = ARCHETYPE_NOUN[archetype];
+  const out = text
+    .replace(/\bquels?\s+sites?\b/gi, (x) => (x[0] === 'Q' ? `Quel ${m}` : `quel ${m}`))
+    .replace(/\bquelles?\s+sites?\b/gi, (x) => (x[0] === 'Q' ? `Quelle ${f}` : `quelle ${f}`))
+    .replace(/\b(les|des)\s+(meilleurs?|bons?)\s+sites?\b/gi, (_x, d, q) => `${d} ${q} ${m}s`)
+    .replace(/\b(un|le|ce)\s+site(\s+web|\s+internet)?\b/gi, (_x, d) => `${d} ${m}`)
+    .replace(/\b(une|la|cette)\s+site\b/gi, (_x, d) => `${d} ${f}`)
+    .replace(/\bsites?\s+(de\s+r[eé]f[eé]rence|de\s+confiance|fiables?)\b/gi, (_x, s) => `${m} ${s}`)
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  return out ? out.charAt(0).toUpperCase() + out.slice(1) : out;
 }
 
 function isAcceptable(text: string, scrubTerms: string[]): boolean {
@@ -152,6 +193,8 @@ export async function naturalizeBenchmarkQuestions(
       : '',
     "Une question dont l'intention est « competitor » doit conserver TEL QUEL le nom du concurrent présent dans la version déterministe.",
     `Type d'entreprise auditée : ${ARCHETYPE_DIRECTIVE[archetype]}`,
+    "INTERDIT : désigner ce que cherche le client par « site », « site web » ou « site internet ». Un client cherche une entreprise, un artisan, une agence, une boutique ou un outil — jamais un site.",
+    "N'invente jamais une activité absente de la carte d'identité : si l'entreprise réalise des travaux, ne suggère pas d'acheter des matériaux ou des produits en ligne.",
     "Quand un bloc porte sur la proposition de valeur centrale, la question doit interroger cette offre de front, sans détour ni généralité.",
     lang === 'fr' ? "Rédige en français." : lang === 'es' ? "Escribe en español." : "Write in English.",
     "Réponds uniquement en JSON : {\"blocks\":[{\"index\":0,\"questions\":[\"…\",\"…\",\"…\"]}]}",
@@ -200,7 +243,8 @@ export async function naturalizeBenchmarkQuestions(
   const out = benchmarks.map((b, i) => {
     const qs = byIndex.get(i) || [];
     const prompts = b.prompts.map((p, j) => {
-      const candidate = qs[j] || '';
+      // Filet déterministe : même si le modèle glisse « site », on le remplace.
+      const candidate = stripSiteWording(qs[j] || '', archetype);
       if (!isAcceptable(candidate, scrubTerms)) return p;
       // Ancrage : une reformulation ne peut pas faire disparaître le mot-clé
       // d'identité (« GEO », « SEO »…) que portait la version déterministe.
