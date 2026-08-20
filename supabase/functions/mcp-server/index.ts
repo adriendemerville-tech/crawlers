@@ -39,6 +39,58 @@ const ARG_ADAPT: Record<string, (a: Record<string, unknown>) => Record<string, u
   check_llm_visibility: (a) => ({ ...a, domain: bareDomain(String(a['domain'] ?? a['url'] ?? '')) }),
 };
 
+/**
+ * Résolveurs asynchrones : traduisent les arguments MCP en contrat réel de la
+ * fonction cible quand une lecture base est nécessaire.
+ *
+ * `dry_run_script` : le schéma MCP expose `script_id` + `target_url`, alors que
+ * `dry-run-script` attend `{ siteUrl, code }`. On résout le code depuis
+ * `site_script_rules` en vérifiant la propriété de la règle (isolation multi-tenant).
+ */
+type Resolved = { payload: Record<string, unknown> } | { error: string };
+
+const ARG_RESOLVE: Record<string, (a: Record<string, unknown>, auth: Auth | null) => Promise<Resolved>> = {
+  dry_run_script: async (a, auth) => {
+    const scriptId = String(a['script_id'] ?? '').trim();
+    const rawUrl = String(a['target_url'] ?? a['url'] ?? '').trim();
+    if (!scriptId) return { error: 'script_id est requis.' };
+    if (!auth) return { error: 'Authentification requise.' };
+    if (!/^[0-9a-f-]{36}$/i.test(scriptId)) return { error: 'script_id doit être un identifiant de règle (UUID).' };
+
+    const sb = getServiceClient();
+    let q = sb
+      .from('site_script_rules')
+      .select('id, user_id, script_source, payload_data, url_pattern, domain_id')
+      .eq('id', scriptId);
+    if (!auth.isAdmin) q = q.eq('user_id', auth.userId);
+    const { data: rule, error } = await q.maybeSingle();
+    if (error) return { error: `Lecture de la règle impossible : ${error.message}` };
+    if (!rule) return { error: 'Script introuvable ou non accessible avec ce compte.' };
+
+    const pd = (rule as any).payload_data as Record<string, unknown> | null;
+    const code = String(
+      (rule as any).script_source ?? pd?.['code'] ?? pd?.['script'] ?? pd?.['script_source'] ?? '',
+    ).trim();
+    if (!code) return { error: 'Cette règle ne contient aucun code généré (génération en attente).' };
+
+    // URL de test : celle fournie, sinon le domaine de la règle.
+    let siteUrl = rawUrl;
+    if (!siteUrl) {
+      const { data: site } = await sb
+        .from('tracked_sites')
+        .select('domain')
+        .eq('id', (rule as any).domain_id)
+        .maybeSingle();
+      const dom = (site as any)?.domain;
+      if (!dom) return { error: 'target_url est requis (domaine de la règle introuvable).' };
+      siteUrl = `https://${bareDomain(String(dom))}`;
+    }
+    if (!/^https?:\/\//i.test(siteUrl)) siteUrl = `https://${siteUrl}`;
+
+    return { payload: { siteUrl, code } };
+  },
+};
+
 async function checkKillSwitch(): Promise<boolean> {
   try { const { data } = await getServiceClient().from('system_config').select('value').eq('key', 'mcp_enabled').maybeSingle(); return !data || data.value !== false; } catch { return true; }
 }
