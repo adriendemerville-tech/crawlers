@@ -289,7 +289,7 @@ function buildGlobalSummary(domain: string, metas: PageMeta[], domainVerdict: st
 
   return `
   <section id="synthese-executive" class="marina-batch-summary section" style="page-break-after:always;padding:32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;border-left:6px solid #d4af37;">
-    <h2 style="font-size:22px;margin:0 0 6px 0;">Synthèse&nbsp;exécutive</h2>
+    <h2 style="font-size:22px;margin:0 0 6px 0;">Synthèse exécutive</h2>
     <p style="font-size:13px;color:#6b7280;margin:0 0 18px 0;">
       ${escapeHtml(domain)} — ${pageCount} URLs auditées. Cette synthèse reprend l'ensemble de l'audit : d'abord ce qui
       relève du domaine, puis la conclusion propre à chaque URL, puis les liens entre ces URLs.
@@ -494,11 +494,11 @@ export function mergeMarinaReports(
     networkSynthesis
       ? tocLink(
           'synthese-reseau',
-          `Synthèse&nbsp;réseau, en ouverture de ce document — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés`,
+          `Synthèse réseau, en ouverture de ce document — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés`,
         )
       : '',
     globalSummary
-      ? tocLink('synthese-executive', 'Synthèse&nbsp;exécutive — verdict du domaine puis reprise page par page')
+      ? tocLink('synthese-executive', 'Synthèse exécutive — verdict du domaine puis reprise page par page')
       : `Reprise page par page — les rapports de ce lot ne portent pas les repères de synthèse`,
   ]
     .filter(Boolean)
@@ -506,20 +506,20 @@ export function mergeMarinaReports(
     .join('');
 
   const cover = `
-    <section class="marina-batch-cover" style="page-break-before:always;page-break-after:always;padding:64px 48px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
-      <p style="letter-spacing:.18em;text-transform:uppercase;font-size:12px;margin:0 0 18px 0;">Crawlers — Marina</p>
-      <h1 style="font-size:34px;line-height:1.2;margin:0 0 12px 0;">Rapport&nbsp;multipages</h1>
+    <section class="marina-batch-cover" style="page-break-before:always;page-break-after:always;padding:44px 44px 32px 44px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+      <p style="letter-spacing:.18em;text-transform:uppercase;font-size:12px;margin:0 0 16px 0;">Crawlers — Marina</p>
+      <h1 style="font-size:32px;line-height:1.2;margin:0 0 12px 0;">Rapport multipages</h1>
       <p style="font-size:18px;margin:0 0 6px 0;font-weight:600;">${escapeHtml(domain)}</p>
-      <p style="font-size:14px;opacity:.7;margin:0 0 30px 0;">${parts.length} pages auditées — ${generatedAt}</p>
-      <h2 style="font-size:18px;margin:26px 0 10px 0;">Lecture d'ensemble</h2>
-      <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
+      <p style="font-size:14px;opacity:.7;margin:0 0 24px 0;">${parts.length} pages auditées — ${generatedAt}</p>
+      <h2 style="font-size:18px;margin:20px 0 8px 0;">Lecture d'ensemble</h2>
+      <ul style="list-style:none;padding:0;margin:0 0 6px 0;font-size:14px;">
         ${openingItems}
       </ul>
       ${sharedToc}
-      ${toc ? '<h2 style="font-size:18px;margin:26px 0 10px 0;">Fiches par page</h2>' : ''}
+      ${toc ? '<h2 style="font-size:18px;margin:20px 0 8px 0;">Fiches par page</h2>' : ''}
       ${toc ? `<ol style="list-style:none;padding:0;margin:0;font-size:14px;">${toc}</ol>` : ''}
 
-      <p style="margin-top:32px;font-size:12px;opacity:.7;max-width:46em;">
+      <p style="margin-top:18px;font-size:12px;opacity:.7;max-width:46em;break-inside:avoid;page-break-inside:avoid;">
         ${mutualised
           ? `Les analyses de périmètre site (crawl, cocon sémantique, indexation, visibilité IA) sont
              calculées une seule fois pour ${escapeHtml(domain)} et présentées en début de document.
@@ -529,6 +529,7 @@ export function mergeMarinaReports(
              Les scores ne sont pas moyennés entre les pages : ils sont à lire page par page.`}
       </p>
     </section>`;
+
 
   const sharedSection = orderedSiteEntries.length
     ? `<section class="marina-batch-shared" style="page-break-before:always;">

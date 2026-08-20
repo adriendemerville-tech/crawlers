@@ -79,7 +79,62 @@ const FIELD_LABELS: Record<string, string> = {
   review_count: "Nombre d'avis",
   rating: "Note moyenne",
   source: "Source",
+  // Blocs GEO génériques (arrivaient en anglais brut : « Llmsummary », « Analysis »)
+  analysis: "Analyse",
+  examples: "Exemples",
+  example: "Exemple",
+  recommendations: "Recommandations",
+  ratio: "Ratio",
+  score: "Score",
+  llm_summary: "Résumé généré par l'IA",
+  original_h1: "H1 de la page",
+  original_title: "Title de la page",
+  total_titles_analyzed: "Intitulés analysés",
+  question_titles_detected: "Intitulés sous forme de question",
+  at_risk_keywords: "Mots-clés exposés",
+  risk_level: "Niveau de risque",
+  mitigation: "Contre-mesure",
+  strengths: "Points forts",
+  weaknesses: "Points faibles",
+  findings: "Constats",
+  summary: "Synthèse",
+  details: "Détail",
+  notes: "Remarques",
+  keyword: "Mot-clé",
+  keywords: "Mots-clés",
+  url: "URL",
+  page: "Page",
+  count: "Nombre",
+  share: "Part",
+  reason: "Raison",
+  action: "Action",
+  actions: "Actions",
+  opportunity: "Opportunité",
+  opportunities: "Opportunités",
+  gap: "Écart",
+  gaps: "Écarts",
+  coverage: "Couverture",
+  volume: "Volume de recherche",
+  position: "Position dans la SERP",
+  difficulty: "Difficulté",
+  title: "Intitulé",
+  description: "Description",
+  label: "Libellé",
+  type: "Type",
+  category: "Catégorie",
+  // Plan d'action / contenus prioritaires
+  timeframe: "Échéance",
+  expected_impact: "Impact attendu",
+  missing_pages: "Pages manquantes",
+  content_upgrades: "Contenus à renforcer",
+  current_issue: "Problème constaté",
+  upgrade_strategy: "Correctif à appliquer",
+  signals: "Signaux relevés",
+  broken_ratio: "Part de liens cassés",
+  domain: "Domaine",
 };
+
+
 
 /** Table de traduction des valeurs énumérées. */
 const VALUE_LABELS: Record<string, string> = {
@@ -113,15 +168,29 @@ const VALUE_LABELS: Record<string, string> = {
   ok: "correct",
   pending: "en cours",
   done: "terminé",
+  easy: "facile",
+  hard: "difficile",
+  very_hard: "très difficile",
+  polluted: "pollué",
+  clean: "sain",
 };
 
-/** Libellé lisible d'une clé brute. */
+
+/** Libellé lisible d'une clé brute (snake_case, kebab-case ou camelCase). */
 export function humanizeKey(key: string): string {
-  const norm = key.trim().toLowerCase();
-  if (FIELD_LABELS[norm]) return FIELD_LABELS[norm];
-  const spaced = norm.replace(/[_-]+/g, " ").trim();
-  if (FIELD_LABELS[spaced.replace(/ /g, "_")]) return FIELD_LABELS[spaced.replace(/ /g, "_")];
+  const raw = (key || "").trim();
+  // `llmSummary` / `originalH1` arrivaient tels quels : on segmente le camelCase
+  // avant toute recherche, sinon la clé normalisée (« llmsummary ») ne matche rien.
+  const snake = raw
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
+    .replace(/[\s-]+/g, "_")
+    .toLowerCase();
+  if (FIELD_LABELS[raw.toLowerCase()]) return FIELD_LABELS[raw.toLowerCase()];
+  if (FIELD_LABELS[snake]) return FIELD_LABELS[snake];
+  const spaced = snake.replace(/_+/g, " ").trim();
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+
 }
 
 const NAMED_ENTITIES: Record<string, string> = {
