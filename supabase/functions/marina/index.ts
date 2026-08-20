@@ -2178,6 +2178,9 @@ function sanitizeMarinaHtml(html: string, opts?: { keepColors?: boolean }): stri
     .replace(EMOJI_RE, '')
     .replace(/[ \t]{2,}</g, ' <')
     .replace(/>\s{2,}([A-Za-zÀ-ÿ0-9])/g, '> $1');
+  // Dernier filet : aucune structure brute (dump JSON d'une distribution
+  // DataForSEO, « [object Object] ») ne doit atteindre le livrable.
+  out = stripRawStructureArtifacts(out);
   return out;
 }
 
