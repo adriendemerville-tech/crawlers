@@ -225,9 +225,9 @@ function renderJsonSection(data: any, depth = 0): string {
     // Lot 6 — une sévérité collée en fin de phrase devient un badge.
     const { text, severity } = splitTrailingSeverity(data);
     const badge = severityBadgeHTML(severity);
-    return `<p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:8px;">${text}${badge ? ` ${badge}` : ''}</p>`;
+    return `<p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:8px;">${cleanText(text)}${badge ? ` ${badge}` : ''}</p>`;
   }
-  if (typeof data === 'number' || typeof data === 'boolean') return `<span style="font-weight:600;color:#3b82f6;">${humanizeValue(data)}</span>`;
+  if (typeof data === 'number' || typeof data === 'boolean') return `<span style="font-weight:600;color:#6d28d9;">${humanizeValue(data)}</span>`;
   if (Array.isArray(data)) {
     if (data.length === 0) return '';
     // If array of strings
@@ -235,7 +235,7 @@ function renderJsonSection(data: any, depth = 0): string {
       return `<ul style="margin:8px 0;padding-left:20px;">${data.map(item => {
         const { text, severity } = splitTrailingSeverity(String(item));
         const badge = severityBadgeHTML(severity);
-        return `<li style="font-size:13px;color:#374151;margin-bottom:4px;">${text}${badge ? ` ${badge}` : ''}</li>`;
+        return `<li style="font-size:13px;color:#374151;margin-bottom:4px;">${cleanText(text)}${badge ? ` ${badge}` : ''}</li>`;
       }).join('')}</ul>`;
     }
     // Lot 6 — un tableau d'objets dont toutes les valeurs numériques sont à zéro
