@@ -159,6 +159,8 @@ function escapeForHtml(input: string): string {
  */
 export function cleanText(value: unknown): string {
   if (value === null || value === undefined) return "";
+  // Un objet/tableau passé ici sortait en « [object Object] » : on le résume.
+  if (typeof value === "object") return humanizeValue(value);
   return escapeForHtml(decodeEntities(String(value)));
 }
 
@@ -227,6 +229,22 @@ export function humanizeValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "non renseigné";
   if (typeof value === "boolean") return value ? "oui" : "non";
   if (typeof value === "number") return formatNumericCell("", value);
+  // Garde anti-JSON : un objet ou un tableau arrivé ici (distribution
+  // DataForSEO passée à un rendu scalaire) produisait « [object Object] » ou un
+  // dump JSON. On le résume en texte lisible, jamais en structure brute.
+  if (typeof value === "object") {
+    if (Array.isArray(value)) {
+      const parts = value
+        .filter((v) => v !== null && v !== undefined && typeof v !== "object")
+        .map((v) => humanizeValue(v));
+      return parts.length ? parts.slice(0, 5).join(", ") : "non exploitable";
+    }
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== null && v !== undefined && v !== "" && typeof v !== "object")
+      .slice(0, 4)
+      .map(([k, v]) => `${humanizeKey(k)} : ${humanizeValue(v)}`);
+    return entries.length ? entries.join(" · ") : "non exploitable";
+  }
   const raw = String(value).trim();
   const mapped = VALUE_LABELS[raw.toLowerCase()];
   if (mapped) return mapped;
@@ -234,6 +252,64 @@ export function humanizeValue(value: unknown): string {
   if (/^[a-z0-9]+(_[a-z0-9]+)+$/.test(raw)) return raw.replace(/_/g, " ");
   return escapeForHtml(decodeEntities(raw));
 }
+
+/** Découpe le HTML en segments, en isolant <script> et <style> (jamais réécrits). */
+function splitInertSegments(html: string): Array<{ inert: boolean; text: string }> {
+  const segments: Array<{ inert: boolean; text: string }> = [];
+  const re = /<(script|style)\b[\s\S]*?<\/\1>/gi;
+  let last = 0;
+  for (const m of html.matchAll(re)) {
+    const i = m.index ?? 0;
+    if (i > last) segments.push({ inert: false, text: html.slice(last, i) });
+    segments.push({ inert: true, text: m[0] });
+    last = i + m[0].length;
+  }
+  if (last < html.length) segments.push({ inert: false, text: html.slice(last) });
+  return segments;
+}
+
+const RAW_OBJECT_RE = /\{\s*(?:&quot;|")[\w-]+(?:&quot;|")\s*:[^<>]{0,2000}?\}/g;
+const RAW_ARRAY_RE = /\[\s*\{[^<>]{0,4000}?\}\s*\]/g;
+
+/**
+ * Contrôle de non-régression : détecte un reste de structure brute dans le HTML
+ * rendu d'un rapport (dump JSON d'une distribution DataForSEO,
+ * « [object Object] », tableau d'objets sérialisé). Les blocs <script>/<style>
+ * sont ignorés : ce n'est pas du contenu de rapport.
+ */
+export function findRawStructureArtifacts(html: string): string[] {
+  if (!html) return [];
+  const out: string[] = [];
+  for (const seg of splitInertSegments(html)) {
+    if (seg.inert) continue;
+    if (/\[object Object\]/.test(seg.text)) out.push("[object Object]");
+    const obj = seg.text.match(new RegExp(RAW_OBJECT_RE.source));
+    if (obj) out.push(obj[0].slice(0, 40));
+    const arr = seg.text.match(new RegExp(RAW_ARRAY_RE.source));
+    if (arr) out.push("[{...}]");
+  }
+  return out;
+}
+
+/**
+ * Dernier filet : remplace tout reste de structure brute par une mention
+ * lisible. Le rapport peut être incomplet, il ne doit jamais afficher de JSON.
+ */
+export function stripRawStructureArtifacts(html: string): string {
+  if (!html) return html;
+  return splitInertSegments(html)
+    .map((seg) =>
+      seg.inert
+        ? seg.text
+        : seg.text
+            .replace(/\[object Object\]/g, "donnée non exploitable")
+            .replace(RAW_ARRAY_RE, "donnée non exploitable")
+            .replace(RAW_OBJECT_RE, "donnée non exploitable"),
+    )
+    .join("");
+}
+
+
 
 export type Severity = "critical" | "important" | "minor" | null;
 
