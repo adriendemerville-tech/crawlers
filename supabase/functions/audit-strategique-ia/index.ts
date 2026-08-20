@@ -14,6 +14,7 @@ import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { writeIdentity } from '../_shared/identityGateway.ts';
 import { SYSTEM_PROMPT_A, SYSTEM_PROMPT_B, SYSTEM_PROMPT_C, buildUserPromptA, buildUserPromptB, buildUserPromptC, mergeParallelResults, parseLLMJson } from '../_shared/strategicSplitPrompts.ts';
 import { computeFactualCitationScores } from '../_shared/citationScorer.ts';
+import { resolveCitationBreakdown } from '../_shared/citationBreakdownResolve.ts';
 import { fetchDomainAuthority, type AuthorityData } from '../_shared/domainAuthority.ts';
 import { persistAuthoritySnapshot, buildAuthorityTrendPromptSection, type AuthorityTrend } from '../_shared/authoritySnapshots.ts';
 import { fetchLinkGap, resolveCompetitorDomains, buildLinkGapPromptSection, writeLinkGapFindings, type LinkGapResult } from '../_shared/linkGap.ts';
@@ -759,7 +760,29 @@ Réponds en JSON STRICT:
     }
 
     // ═══ BUILD FINAL RESULT ═══
-    const result = { success: true, data: { url, domain, scannedAt: new Date().toISOString(), isContentMode, pageType, ...parsedAnalysis, raw_market_data: marketData, ranking_overview: rankingOverview, domain_authority: authorityData, google_my_business: gmbData, toolsData: null, llm_visibility_raw: effectiveToolsData.llm, _cachedContext: cachedContextOut } };
+    // Sous-signaux de citabilité (0 token, purement déterministe) : sans eux la
+    // décomposition GEO en 10 sous-signaux du rapport Marina sortait entièrement
+    // en « non mesuré » sur les pages profondes.
+    const citationBreakdownOut = resolveCitationBreakdown({
+      factual: computeFactualCitationScores({
+        rankingOverview,
+        crawlData: effectiveToolsData,
+        backlinkData: authorityData?.data_source === 'dataforseo'
+          ? { domain_rank: authorityData.domain_rank, referring_domains: authorityData.referring_domains }
+          : null,
+        gmbData: gmbData
+          ? {
+              completeness_score: (gmbData.network_total_reviews ?? gmbData.reviews_count) ? 70 : (gmbData.rating ? 60 : 30),
+              rating: gmbData.network_avg_rating ?? gmbData.rating,
+              total_reviews: gmbData.network_total_reviews ?? gmbData.totalReviews ?? gmbData.reviews_count,
+            }
+          : null,
+      }).breakdown,
+      parsedAnalysis,
+      gmbData,
+    });
+    const result = { success: true, data: { url, domain, scannedAt: new Date().toISOString(), isContentMode, pageType, ...parsedAnalysis, raw_market_data: marketData, ranking_overview: rankingOverview, domain_authority: authorityData, google_my_business: gmbData, toolsData: null, llm_visibility_raw: effectiveToolsData.llm, citation_breakdown: citationBreakdownOut, _cachedContext: cachedContextOut } };
+
     console.log(`✅ AUDIT TERMINÉ (${((Date.now() - startTime) / 1000).toFixed(1)}s)`);
 
     // ═══ SAVE & RETURN (fire-and-forget) ═══
