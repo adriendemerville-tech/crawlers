@@ -13,6 +13,13 @@ type PhaseStatus = 'completed' | 'dry_run' | 'failed' | 'degraded' | 'partial' |
 
 const PHASES: Phase[] = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'];
 
+interface Incident {
+  phase: string;
+  status: string;
+  at: string;
+  messages: string[];
+}
+
 interface SiteRow {
   domain: string;
   label: string;
@@ -23,7 +30,28 @@ interface SiteRow {
   total_cycles_run: number;
   last_cycle_number: number | null;
   phases: Record<Phase, PhaseStatus>;
+  degradedCount7d: number;
+  incidents: Incident[];
 }
+
+/** `execution_error` est stocké soit en JSON (tableau d'erreurs de phase), soit en texte brut. */
+function parseErrorMessages(raw: unknown): string[] {
+  if (!raw) return [];
+  if (typeof raw !== 'string') return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((e) => (typeof e === 'string' ? e : [e?.function, e?.message].filter(Boolean).join(' — ')))
+        .filter(Boolean);
+    }
+    if (parsed && typeof parsed === 'object' && 'message' in parsed) return [String(parsed.message)];
+  } catch {
+    /* texte brut */
+  }
+  return [raw.slice(0, 300)];
+}
+
 
 interface TrackedSiteRef {
   id: string;
