@@ -237,10 +237,11 @@ export function humanizeValue(value: unknown): string {
 
 export type Severity = "critical" | "important" | "minor" | null;
 
-const SEVERITY_STYLE: Record<Exclude<Severity, null>, { label: string; bg: string; fg: string }> = {
-  critical: { label: "Critique", bg: "#fee2e2", fg: "#991b1b" },
-  important: { label: "Important", bg: "#fef3c7", fg: "#92400e" },
-  minor: { label: "Mineur", bg: "#e0e7ff", fg: "#3730a3" },
+// Charte Crawlers : pas de pastille à fond plein — bordure + texte.
+const SEVERITY_STYLE: Record<Exclude<Severity, null>, { label: string; fg: string }> = {
+  critical: { label: "Critique", fg: "#991b1b" },
+  important: { label: "Important", fg: "#8a6d1f" },
+  minor: { label: "Mineur", fg: "#4c1d95" },
 };
 
 function normalizeSeverity(input: unknown): Severity {
