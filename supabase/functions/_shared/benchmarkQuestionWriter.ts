@@ -96,6 +96,34 @@ function sanitize(raw: unknown): string {
   return t.trim();
 }
 
+/** Nom que le prospect cherche réellement, selon l'archétype. */
+const ARCHETYPE_NOUN: Record<QuestionArchetype, { m: string; f: string }> = {
+  local_commerce: { m: 'commerçant', f: 'entreprise' },
+  local_service: { m: 'prestataire', f: 'entreprise' },
+  software: { m: 'outil', f: 'solution' },
+  ecommerce: { m: 'marchand en ligne', f: 'boutique en ligne' },
+  agency: { m: 'prestataire', f: 'agence' },
+  generic: { m: 'prestataire', f: 'entreprise' },
+};
+
+/**
+ * On ne cherche jamais « un site » : on cherche une entreprise, une boutique
+ * ou un outil. Le mot « site » dans une question de benchmark fausse la mesure
+ * (personne ne demande « trouve-moi un site de fleuriste »).
+ */
+function stripSiteWording(text: string, archetype: QuestionArchetype): string {
+  const { m, f } = ARCHETYPE_NOUN[archetype];
+  return text
+    .replace(/\bquels?\s+sites?\b/gi, `quel ${m}`)
+    .replace(/\bquelles?\s+sites?\b/gi, `quelle ${f}`)
+    .replace(/\b(les|des)\s+(meilleurs?|bons?)\s+sites?\b/gi, (_x, d, q) => `${d} ${q} ${m}s`)
+    .replace(/\b(un|le|ce)\s+site(\s+web|\s+internet)?\b/gi, (_x, d) => `${d === 'un' ? 'un' : d} ${m}`)
+    .replace(/\b(une|la|cette)\s+site\b/gi, (_x, d) => `${d} ${f}`)
+    .replace(/\bsites?\s+(de\s+r[eé]f[eé]rence|de\s+confiance|fiables?)\b/gi, (_x, s) => `${m} ${s}`)
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 function isAcceptable(text: string, scrubTerms: string[]): boolean {
   if (text.length < 20 || text.length > 220) return false;
   if (!text.endsWith('?')) return false;
