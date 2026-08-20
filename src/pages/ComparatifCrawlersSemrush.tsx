@@ -14,7 +14,6 @@ import {
   ArrowRight, HelpCircle, Cpu, Globe, FileText, Rocket,
 } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
-import { ClusterMesh } from '@/components/seo/ClusterMesh';
 import { SiloNav } from '@/components/seo/SiloNav';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
