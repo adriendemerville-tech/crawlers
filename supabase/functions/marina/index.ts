@@ -5292,13 +5292,20 @@ Deno.serve(handleRequest(async (req) => {
 
     if (isServiceCall) {
       isAuthorized = true;
-      const { data: adminUser } = await sb
-        .from('user_roles' as any)
-        .select('user_id')
-        .eq('role', 'admin')
-        .limit(1)
-        .single();
-      userId = (adminUser as any)?.user_id;
+      // Orchestration serveur (lots multipages) : le job appartient au
+      // propriétaire du lot transmis, pas au service. À défaut seulement, on
+      // retombe sur un compte administrateur.
+      if (typeof body.user_id === 'string' && /^[0-9a-f-]{36}$/i.test(body.user_id)) {
+        userId = body.user_id;
+      } else {
+        const { data: adminUser } = await sb
+          .from('user_roles' as any)
+          .select('user_id')
+          .eq('role', 'admin')
+          .limit(1)
+          .single();
+        userId = (adminUser as any)?.user_id;
+      }
     }
 
     const apiKey = req.headers.get('x-marina-key') || body.api_key;
