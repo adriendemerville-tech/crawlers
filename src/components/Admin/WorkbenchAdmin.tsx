@@ -79,6 +79,8 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function WorkbenchAdmin() {
   const [items, setItems] = useState<WorkbenchItem[]>([]);
+  const [debts, setDebts] = useState<SiteDebt[]>([]);
+
   const [stats, setStats] = useState<WorkbenchStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
