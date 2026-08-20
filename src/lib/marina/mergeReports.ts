@@ -271,7 +271,7 @@ function buildGlobalSummary(domain: string, metas: PageMeta[], domainVerdict: st
 
   return `
   <section class="marina-batch-summary section" style="page-break-after:always;padding:32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;border-left:6px solid #d4af37;">
-    <h2 style="font-size:22px;margin:0 0 6px 0;">Synthèse exécutive</h2>
+    <h2 style="font-size:22px;margin:0 0 6px 0;">Synthèse&nbsp;exécutive</h2>
     <p style="font-size:13px;color:#6b7280;margin:0 0 18px 0;">
       ${escapeHtml(domain)} — ${pageCount} URLs auditées. Cette synthèse reprend l'ensemble de l'audit : d'abord ce qui
       relève du domaine, puis la conclusion propre à chaque URL, puis les liens entre ces URLs.

@@ -90,10 +90,11 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     await new Promise((r) => setTimeout(r, 250));
   }
 
-  // Échelle adaptative : un rapport fusionné multipages fait plusieurs dizaines de
-  // milliers de pixels de haut. À l'échelle 2, html2canvas saturait la mémoire de
-  // l'onglet et l'export ne rendait jamais la main.
-  const scale = options.scale ?? (fullHeight > 80000 ? 1 : fullHeight > 30000 ? 1.4 : 2);
+  // Échelle : chaque bloc est capturé séparément et déjà plafonné par les limites
+  // de canvas plus bas — on peut donc viser une échelle haute (texte net) sans
+  // saturer la mémoire, en ne dégradant que les documents véritablement énormes.
+  const scale = options.scale ?? (fullHeight > 150000 ? 1.6 : 2.2);
+
 
 
 
@@ -252,7 +253,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     // Échelle propre à ce bloc : jamais au-delà des limites de canvas.
     const scaleBySide = MAX_CANVAS_SIDE / Math.max(nativeWidth, sectionHeightPx);
     const scaleByArea = Math.sqrt(MAX_CANVAS_AREA / (nativeWidth * sectionHeightPx));
-    const sectionScale = Math.max(0.35, Math.min(scale, scaleBySide, scaleByArea));
+    const sectionScale = Math.max(0.7, Math.min(scale, scaleBySide, scaleByArea));
 
     const shoot = (s: number) =>
       Promise.race([
@@ -276,7 +277,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
       // Une capture uniforme (allocation ratée) est retentée à échelle réduite
       // avant d'être abandonnée : mieux vaut un bloc absent qu'une page noire.
       if (isBlank(canvas) && sectionScale > 0.5) {
-        const retry = await shoot(Math.max(0.35, sectionScale / 2));
+        const retry = await shoot(Math.max(0.6, sectionScale / 2));
         if (!isBlank(retry)) canvas = retry;
         else continue;
       } else if (isBlank(canvas)) {
@@ -292,7 +293,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     if (!canvas.width || !canvas.height) continue;
 
     canvas = flatten(canvas);
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const imgData = canvas.toDataURL('image/jpeg', 0.96);
 
     const sectionWidthMm = usableWidthMm * (nativeWidth / captureWidth);
     const sectionX = marginSide + (usableWidthMm - sectionWidthMm) / 2;
@@ -385,7 +386,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
           ctx.fillStyle = backgroundColor;
           ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
           ctx.drawImage(canvas, 0, srcYPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
-          place(sliceCanvas.toDataURL('image/jpeg', 0.92), cursorY, sectionWidthMm, sliceHeightMm);
+          place(sliceCanvas.toDataURL('image/jpeg', 0.96), cursorY, sectionWidthMm, sliceHeightMm);
         }
 
         srcYPx += sliceHeightPx;
