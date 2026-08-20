@@ -465,7 +465,7 @@ async function generateDraft(sb: any, itemId: string) {
     jsonMode: true,
     temperature: 0.3,
     maxTokens: 8000,
-    fallbackModel: 'google/gemini-2.5-flash',
+    fallbackModel: 'google/gemini-3-flash-preview',
     edgeFunction: 'content-freshness',
   })
 
