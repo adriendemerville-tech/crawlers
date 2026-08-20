@@ -227,6 +227,22 @@ export function humanizeValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "non renseigné";
   if (typeof value === "boolean") return value ? "oui" : "non";
   if (typeof value === "number") return formatNumericCell("", value);
+  // Garde anti-JSON : un objet ou un tableau arrivé ici (distribution
+  // DataForSEO passée à un rendu scalaire) produisait « [object Object] » ou un
+  // dump JSON. On le résume en texte lisible, jamais en structure brute.
+  if (typeof value === "object") {
+    if (Array.isArray(value)) {
+      const parts = value
+        .filter((v) => v !== null && v !== undefined && typeof v !== "object")
+        .map((v) => humanizeValue(v));
+      return parts.length ? parts.slice(0, 5).join(", ") : "non exploitable";
+    }
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== null && v !== undefined && v !== "" && typeof v !== "object")
+      .slice(0, 4)
+      .map(([k, v]) => `${humanizeKey(k)} : ${humanizeValue(v)}`);
+    return entries.length ? entries.join(" · ") : "non exploitable";
+  }
   const raw = String(value).trim();
   const mapped = VALUE_LABELS[raw.toLowerCase()];
   if (mapped) return mapped;
@@ -234,6 +250,36 @@ export function humanizeValue(value: unknown): string {
   if (/^[a-z0-9]+(_[a-z0-9]+)+$/.test(raw)) return raw.replace(/_/g, " ");
   return escapeForHtml(decodeEntities(raw));
 }
+
+/**
+ * Contrôle de non-régression : détecte un reste de structure brute dans le HTML
+ * d'un rapport (dump JSON d'une distribution DataForSEO, « [object Object] »,
+ * tableau d'objets sérialisé). Utilisé par les tests et par le nettoyage final.
+ */
+export function findRawStructureArtifacts(html: string): string[] {
+  if (!html) return [];
+  const out: string[] = [];
+  if (/\[object Object\]/.test(html)) out.push("[object Object]");
+  // Un objet JSON sérialisé : `{"clé":` ou `{ "clé" :` dans le texte rendu.
+  const jsonObj = html.match(/\{\s*&quot;[\w-]+&quot;\s*:|\{\s*"[\w-]+"\s*:/);
+  if (jsonObj) out.push(jsonObj[0].slice(0, 40));
+  // Un tableau d'objets sérialisé.
+  if (/\[\s*\{\s*(?:&quot;|")/.test(html)) out.push("[{...}]");
+  return out;
+}
+
+/**
+ * Dernier filet : remplace tout reste de structure brute par une mention
+ * lisible. Le rapport peut être incomplet, il ne doit jamais afficher de JSON.
+ */
+export function stripRawStructureArtifacts(html: string): string {
+  if (!html) return html;
+  return html
+    .replace(/\[object Object\]/g, "donnée non exploitable")
+    .replace(/\{\s*(?:&quot;|")[\w-]+(?:&quot;|")\s*:[^<]{0,2000}?\}/g, "donnée non exploitable")
+    .replace(/\[\s*\{[^<]{0,4000}?\}\s*\]/g, "donnée non exploitable");
+}
+
 
 export type Severity = "critical" | "important" | "minor" | null;
 
