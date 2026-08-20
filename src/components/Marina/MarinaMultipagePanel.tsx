@@ -257,7 +257,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
         /* réseau : on retente au tour suivant */
       }
     }
-  }, [language, refreshCredits, useCredit]);
+  }, [language, refreshCredits]);
 
   const handleLaunch = useCallback(async () => {
     if (!isAuthenticated) {
