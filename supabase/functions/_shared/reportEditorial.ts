@@ -253,20 +253,41 @@ export function humanizeValue(value: unknown): string {
   return escapeForHtml(decodeEntities(raw));
 }
 
+/** Découpe le HTML en segments, en isolant <script> et <style> (jamais réécrits). */
+function splitInertSegments(html: string): Array<{ inert: boolean; text: string }> {
+  const segments: Array<{ inert: boolean; text: string }> = [];
+  const re = /<(script|style)\b[\s\S]*?<\/\1>/gi;
+  let last = 0;
+  for (const m of html.matchAll(re)) {
+    const i = m.index ?? 0;
+    if (i > last) segments.push({ inert: false, text: html.slice(last, i) });
+    segments.push({ inert: true, text: m[0] });
+    last = i + m[0].length;
+  }
+  if (last < html.length) segments.push({ inert: false, text: html.slice(last) });
+  return segments;
+}
+
+const RAW_OBJECT_RE = /\{\s*(?:&quot;|")[\w-]+(?:&quot;|")\s*:[^<>]{0,2000}?\}/g;
+const RAW_ARRAY_RE = /\[\s*\{[^<>]{0,4000}?\}\s*\]/g;
+
 /**
  * Contrôle de non-régression : détecte un reste de structure brute dans le HTML
- * d'un rapport (dump JSON d'une distribution DataForSEO, « [object Object] »,
- * tableau d'objets sérialisé). Utilisé par les tests et par le nettoyage final.
+ * rendu d'un rapport (dump JSON d'une distribution DataForSEO,
+ * « [object Object] », tableau d'objets sérialisé). Les blocs <script>/<style>
+ * sont ignorés : ce n'est pas du contenu de rapport.
  */
 export function findRawStructureArtifacts(html: string): string[] {
   if (!html) return [];
   const out: string[] = [];
-  if (/\[object Object\]/.test(html)) out.push("[object Object]");
-  // Un objet JSON sérialisé : `{"clé":` ou `{ "clé" :` dans le texte rendu.
-  const jsonObj = html.match(/\{\s*&quot;[\w-]+&quot;\s*:|\{\s*"[\w-]+"\s*:/);
-  if (jsonObj) out.push(jsonObj[0].slice(0, 40));
-  // Un tableau d'objets sérialisé.
-  if (/\[\s*\{\s*(?:&quot;|")/.test(html)) out.push("[{...}]");
+  for (const seg of splitInertSegments(html)) {
+    if (seg.inert) continue;
+    if (/\[object Object\]/.test(seg.text)) out.push("[object Object]");
+    const obj = seg.text.match(new RegExp(RAW_OBJECT_RE.source));
+    if (obj) out.push(obj[0].slice(0, 40));
+    const arr = seg.text.match(new RegExp(RAW_ARRAY_RE.source));
+    if (arr) out.push("[{...}]");
+  }
   return out;
 }
 
@@ -276,11 +297,18 @@ export function findRawStructureArtifacts(html: string): string[] {
  */
 export function stripRawStructureArtifacts(html: string): string {
   if (!html) return html;
-  return html
-    .replace(/\[object Object\]/g, "donnée non exploitable")
-    .replace(/\{\s*(?:&quot;|")[\w-]+(?:&quot;|")\s*:[^<]{0,2000}?\}/g, "donnée non exploitable")
-    .replace(/\[\s*\{[^<]{0,4000}?\}\s*\]/g, "donnée non exploitable");
+  return splitInertSegments(html)
+    .map((seg) =>
+      seg.inert
+        ? seg.text
+        : seg.text
+            .replace(/\[object Object\]/g, "donnée non exploitable")
+            .replace(RAW_OBJECT_RE, "donnée non exploitable")
+            .replace(RAW_ARRAY_RE, "donnée non exploitable"),
+    )
+    .join("");
 }
+
 
 
 export type Severity = "critical" | "important" | "minor" | null;
