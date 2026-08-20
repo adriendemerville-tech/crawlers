@@ -13,12 +13,19 @@ import { persistNetworkSynthesis } from '@/lib/marina/networkSynthesisPersist';
 
 
 const MAX_URLS = 15;
-const CREDIT_COST = 30;
+const MULTIPAGE_BASE_PAGES = 5;
+const MULTIPAGE_BASE_CREDITS = 30;
+const MULTIPAGE_EXTRA_CREDITS_PER_PAGE = 5;
 const CONCURRENCY = 2;
 // Décalage du 2e worker : laisse la 1re URL enregistrer le crawl partagé du
 // domaine avant que la suivante ne démarre (évite deux crawls simultanés).
 const STAGGER_MS = 20_000;
 const STORAGE_KEY = 'marina_batch_v2';
+
+function computeMultipageCost(pageCount: number): number {
+  if (pageCount <= MULTIPAGE_BASE_PAGES) return MULTIPAGE_BASE_CREDITS;
+  return MULTIPAGE_BASE_CREDITS + (pageCount - MULTIPAGE_BASE_PAGES) * MULTIPAGE_EXTRA_CREDITS_PER_PAGE;
+}
 
 type ItemStatus = 'pending' | 'running' | 'completed' | 'partial' | 'failed';
 
@@ -117,7 +124,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
 
   const targets = mode === 'paste' ? parsedFromText.slice(0, MAX_URLS) : selected.slice(0, MAX_URLS);
   const overLimit = (mode === 'paste' ? parsedFromText.length : selected.length) > MAX_URLS;
-  const totalCost = targets.length * CREDIT_COST;
+  const totalCost = computeMultipageCost(targets.length);
   const completed = items.filter(i => i.status === 'completed' || i.status === 'partial');
   const allDone = items.length > 0 && items.every(i => i.status === 'completed' || i.status === 'partial' || i.status === 'failed');
 
@@ -185,20 +192,8 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
 
     setItem({ status: 'running', progress: 0 });
 
-    // Le débit de crédits passe par un RPC : une coupure réseau ponctuelle ne doit
-    // pas condamner l'URL. On retente 3 fois avec backoff, et on n'échoue
-    // définitivement que sur un refus métier (crédits insuffisants, non autorisé).
-    let debit = await useCredit(`Rapport Marina — ${url}`, CREDIT_COST);
-    for (let attempt = 1; attempt < 3 && !debit.success && !cancelRef.current; attempt++) {
-      const msg = (debit.error || '').toLowerCase();
-      if (msg.includes('insufficient') || msg.includes('crédit') || msg.includes('unauthorized') || msg.includes('authenticated')) break;
-      await new Promise(r => setTimeout(r, attempt * 3000));
-      debit = await useCredit(`Rapport Marina — ${url}`, CREDIT_COST);
-    }
-    if (!debit.success) {
-      setItem({ status: 'failed', error: debit.error || 'Débit de crédits impossible' });
-      return;
-    }
+    // Le débit du forfait multipages est effectué une seule fois au lancement du lot
+    // (handleLaunch). Les relances d'URLs en échec ne débitent donc pas à nouveau.
 
     let jobId: string | null = null;
     let launchError = 'Lancement impossible';
@@ -262,7 +257,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
         /* réseau : on retente au tour suivant */
       }
     }
-  }, [language, refreshCredits, useCredit]);
+  }, [language, refreshCredits]);
 
   const handleLaunch = useCallback(async () => {
     if (!isAuthenticated) {
@@ -278,6 +273,21 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       return;
     }
 
+    // Débit du forfait multipages en une seule fois : 30 crédits pour 5 pages,
+    // puis 5 crédits par page supplémentaire. Les relances d'URLs en échec sont incluses.
+    if (!unlimitedCredits) {
+      let debit = await useCredit(`Audit multipages Marina — ${targets.length} page(s)`, totalCost);
+      for (let attempt = 1; attempt < 3 && !debit.success; attempt++) {
+        const msg = (debit.error || '').toLowerCase();
+        if (msg.includes('insufficient') || msg.includes('crédit') || msg.includes('unauthorized') || msg.includes('authenticated')) break;
+        await new Promise(r => setTimeout(r, attempt * 3000));
+        debit = await useCredit(`Audit multipages Marina — ${targets.length} page(s)`, totalCost);
+      }
+      if (!debit.success) {
+        toast.error(debit.error || 'Débit de crédits impossible');
+        return;
+      }
+    }
 
     cancelRef.current = false;
     setMergedHtml(null);
@@ -308,7 +318,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
     setRunning(false);
   }, [credits, isAuthenticated, runOne, targets, totalCost, unlimitedCredits]);
 
-  /* ── Relance des URLs en échec (aucun crédit n'a été débité pour elles) ── */
+  /* ── Relance des URLs en échec (le forfait multipages a déjà été débité) ── */
   const handleRetryFailed = useCallback(async () => {
     const failedIdx = items.map((it, i) => ({ it, i })).filter(({ it }) => it.status === 'failed').map(({ i }) => i);
     if (failedIdx.length === 0) return;
@@ -540,7 +550,10 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
               {targets.length} page(s) sélectionnée(s)
             </span>
             <span className="font-semibold">
-              {totalCost} crédits ({CREDIT_COST} / page)
+              {totalCost} crédits
+            </span>
+            <span className="text-muted-foreground">
+              Forfait {MULTIPAGE_BASE_PAGES} pages = {MULTIPAGE_BASE_CREDITS} crédits, +{MULTIPAGE_EXTRA_CREDITS_PER_PAGE} crédits/page supplémentaire
             </span>
             <span className="text-muted-foreground">
               Durée estimée : ~{Math.max(3, targets.length * 3)} min (audits exécutés l'un après l'autre)
