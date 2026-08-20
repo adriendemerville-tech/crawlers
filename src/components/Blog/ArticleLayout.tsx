@@ -21,6 +21,9 @@ interface ArticleLayoutProps {
   updatedAt?: string | null;
   heroImage: string;
   heroAlt: string;
+  /** Légende visible sous/au-dessus du hero (contexte éditorial). Défaut : heroAlt */
+  heroCaption?: string;
+
   children: ReactNode;
   sources?: Array<{ title: string; url: string }>;
   slug?: string;
