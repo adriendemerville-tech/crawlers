@@ -159,6 +159,8 @@ function escapeForHtml(input: string): string {
  */
 export function cleanText(value: unknown): string {
   if (value === null || value === undefined) return "";
+  // Un objet/tableau passé ici sortait en « [object Object] » : on le résume.
+  if (typeof value === "object") return humanizeValue(value);
   return escapeForHtml(decodeEntities(String(value)));
 }
 
