@@ -32,7 +32,12 @@ export function buildArticleJsonLd(input: ArticleJsonLdInput) {
     ? input.author
     : 'Adrien de Volontat';
   const authorSlug = author.toLowerCase().replace(/\s+/g, '-');
-  const published = input.datePublished || undefined;
+  // Normalisation unique : le JSON-LD porte exactement les mêmes dates que la
+  // mention visible « Mis à jour le » (pas de dateModified fabriquée).
+  const { datePublished, dateModified } = resolveArticleDates(
+    input.datePublished,
+    input.dateModified,
+  );
 
   return {
     '@context': 'https://schema.org',
@@ -50,10 +55,9 @@ export function buildArticleJsonLd(input: ArticleJsonLdInput) {
       name: 'Crawlers.fr',
       logo: { '@type': 'ImageObject', url: `${SITE_URL}/favicon.svg` },
     },
-    ...(published ? { datePublished: published } : {}),
-    ...(input.dateModified || published
-      ? { dateModified: input.dateModified || published }
-      : {}),
+    ...(datePublished ? { datePublished } : {}),
+    ...(dateModified ? { dateModified } : {}),
+
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     inLanguage: 'fr-FR',
     articleSection: input.section || 'SEO & GEO',
