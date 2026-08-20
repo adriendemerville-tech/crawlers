@@ -14118,6 +14118,39 @@ export type Database = {
         }
         Relationships: []
       }
+      url_indexing_submissions: {
+        Row: {
+          engine: string
+          error: string | null
+          id: string
+          source: string
+          status_code: number | null
+          submitted_at: string
+          success: boolean
+          url: string
+        }
+        Insert: {
+          engine?: string
+          error?: string | null
+          id?: string
+          source?: string
+          status_code?: number | null
+          submitted_at?: string
+          success?: boolean
+          url: string
+        }
+        Update: {
+          engine?: string
+          error?: string | null
+          id?: string
+          source?: string
+          status_code?: number | null
+          submitted_at?: string
+          success?: boolean
+          url?: string
+        }
+        Relationships: []
+      }
       user_activity_log: {
         Row: {
           created_at: string
