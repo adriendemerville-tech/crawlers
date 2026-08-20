@@ -50,17 +50,34 @@ export interface AdvanceResult {
   status: string;
 }
 
-/** Bail exclusif sur un lot : un second run sort au lieu de travailler en double. */
+/**
+ * Bail exclusif sur un lot : un second run sort au lieu de travailler en double.
+ *
+ * Le bail est pris en deux temps (lecture puis écriture conditionnée sur la
+ * valeur lue). L'API Data refuse un filtre `or(...)` sur une écriture — il
+ * répondait « column lock_until does not exist » et le bail échouait toujours,
+ * ce qui figeait la file entière à « en attente ».
+ */
 async function acquireLease(sb: SupabaseClient, batchId: string): Promise<boolean> {
   const now = new Date();
-  const { data } = await sb
+  const { data: current } = await sb
     .from('marina_batches')
-    .update({ lock_until: new Date(now.getTime() + LEASE_MS).toISOString() } as never)
+    .select('lock_until')
     .eq('id', batchId)
-    .or(`lock_until.is.null,lock_until.lt.${now.toISOString()}`)
-    .select('id');
+    .maybeSingle();
+  const prev = (current as { lock_until: string | null } | null)?.lock_until ?? null;
+  if (prev && new Date(prev).getTime() > now.getTime()) return false;
+
+  const next = new Date(now.getTime() + LEASE_MS).toISOString();
+  let q = sb
+    .from('marina_batches')
+    .update({ lock_until: next } as never)
+    .eq('id', batchId);
+  q = prev === null ? q.is('lock_until', null) : q.eq('lock_until', prev);
+  const { data } = await q.select('id');
   return Array.isArray(data) && data.length > 0;
 }
+
 
 async function releaseLease(sb: SupabaseClient, batchId: string): Promise<void> {
   await sb.from('marina_batches').update({ lock_until: null } as never).eq('id', batchId);
@@ -127,7 +144,14 @@ async function launchItem(
   try {
     const res = await fetch(`${supabaseUrl}/functions/v1/marina`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${serviceKey}`,
+        // Second canal d'authentification serveur : les deux clés de service
+        // peuvent différer de format, le secret interne tranche.
+        ...(process.env['CRON_SECRET'] ? { 'x-internal-secret': process.env['CRON_SECRET'] as string } : {}),
+        'Content-Type': 'application/json',
+      },
+
       body: JSON.stringify({
         url: item.url,
         lang: batch.lang,

@@ -13,14 +13,19 @@ export const Route = createFileRoute('/api/public/hooks/marina-batch-tick')({
     handlers: {
       POST: async ({ request }) => {
         // Endpoint public : seul le cron (porteur du secret) peut déclencher du travail.
-        const secret = process.env['CRON_SECRET'];
-        const provided = request.headers.get('x-cron-secret');
-        if (!secret || provided !== secret) {
+        // Deux noms de secret sont acceptés, le planificateur historique et la
+        // rotation v2, sinon un renommage coupe silencieusement la file.
+        const provided = request.headers.get('x-cron-secret') || '';
+        const accepted = [process.env['CRON_SECRET'], process.env['CRON_SECRET_V2']].filter(
+          (s): s is string => Boolean(s),
+        );
+        if (!provided || !accepted.includes(provided)) {
           return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
             status: 401,
             headers: { 'Content-Type': 'application/json' },
           });
         }
+
         try {
           const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
           const { advanceActiveBatches } = await import('@/lib/marina/batchEngine.server');
