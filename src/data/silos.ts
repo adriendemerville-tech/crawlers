@@ -97,3 +97,46 @@ export function siloForPath(path: string): Silo | undefined {
     (silo) => silo.pillar.to === clean || silo.satellites.some((s) => s.to === clean),
   );
 }
+
+/**
+ * Rattachement des 27 fiches /lexique/* à un pilier.
+ *
+ * Ces fiches (180-680 mots) restent des satellites courts : elles ne doivent
+ * jamais vivre en circuit fermé entre elles. Chaque fiche remonte donc vers le
+ * pilier du silo qui couvre son intention.
+ */
+const LEXIQUE_CATEGORY_SILO: Record<string, Silo['id']> = {
+  'anti-bot': 'crawler',
+  architecture: 'outil-crawl',
+  'data-ai': 'geo',
+  ethics: 'crawler',
+};
+
+/** Exceptions par slug, quand la catégorie ne reflète pas l'intention réelle. */
+const LEXIQUE_SLUG_SILO: Record<string, Silo['id']> = {
+  'crawl-budget': 'outil-crawl',
+  'concurrency-control': 'outil-crawl',
+  'robots-txt-interpretation': 'crawler',
+  'ethical-scraping': 'crawler',
+  'marina-prospection': 'geo',
+  'observatoire-sectoriel': 'comparatifs',
+  'smart-recommendations': 'outil-crawl',
+  'fair-use-quotas': 'outil-crawl',
+  'roi-retour-investissement': 'comparatifs',
+  'cro-conversion-rate-optimization': 'comparatifs',
+  'sea-search-engine-advertising': 'comparatifs',
+  'ssr-vs-csr': 'crawler',
+  'headless-browsing': 'crawler',
+  'shadow-dom': 'crawler',
+  'dom-parsing': 'crawler',
+  'http2-http3': 'outil-crawl',
+};
+
+/** Silo de rattachement d'une fiche du lexique. */
+export function siloForLexiqueTerm(slug: string, category?: string): Silo['id'] {
+  return (
+    LEXIQUE_SLUG_SILO[slug] ??
+    (category ? LEXIQUE_CATEGORY_SILO[category] : undefined) ??
+    'geo'
+  );
+}
