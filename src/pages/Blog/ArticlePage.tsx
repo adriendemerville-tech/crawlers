@@ -184,6 +184,8 @@ function ArticlePageComponent() {
       updatedAt={updatedAt}
       heroImage={heroImage}
       heroAlt={heroAlt}
+      heroCaption={heroCaption}
+
       sources={sources}
       slug={slug}
     >
