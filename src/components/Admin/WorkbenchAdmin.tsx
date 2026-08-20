@@ -312,6 +312,10 @@ export function WorkbenchAdmin() {
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
               Recalculer scores
             </Button>
+            <Button size="sm" variant="outline" onClick={handlePriorityPass} disabled={acting}>
+              <Scale className="h-3.5 w-3.5 mr-1.5" />
+              Passe de priorité {filterDomain !== 'all' ? `(${filterDomain})` : '(20 sites)'}
+            </Button>
             <Button size="sm" variant="outline" onClick={() => handleBulkStatus('done')} disabled={acting || filterStatus === 'all'}>
               Bulk → done
             </Button>
@@ -322,6 +326,49 @@ export function WorkbenchAdmin() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dette de pruning par site — l'arbitrage « créer vs consolider » */}
+      {debts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Dette de pruning par site</CardTitle>
+            <CardDescription className="text-xs">
+              Mesurée sur le corpus entier : pages muettes, grappes de cannibalisation, concentration des clics.
+              Au-delà de 60, la création de contenu est gelée sauf gap sémantique documenté.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="max-h-[220px] overflow-y-auto divide-y divide-border">
+              {debts.map(d => (
+                <div key={d.domain} className="flex items-start gap-2 px-3 py-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-medium truncate">{d.domain}</span>
+                      <Badge variant="outline" className={`text-[9px] ${REGIME_COLORS[d.regime] || ''}`}>
+                        {d.debt} — {REGIME_LABEL[d.regime] || d.regime}
+                      </Badge>
+                      {d.corpus_size != null && (
+                        <span className="text-[9px] text-muted-foreground">
+                          {d.useful_pages ?? 0}/{d.corpus_size} pages utiles
+                        </span>
+                      )}
+                      {(d.cannibal_clusters ?? 0) > 0 && (
+                        <span className="text-[9px] text-muted-foreground">
+                          {d.cannibal_clusters} grappe(s) de cannibalisation
+                        </span>
+                      )}
+                    </div>
+                    {d.explanation && (
+                      <p className="text-[9px] text-muted-foreground mt-0.5">{d.explanation}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
