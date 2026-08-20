@@ -149,6 +149,7 @@ async function collectCandidates(sb: any): Promise<PruneCandidate[]> {
       targetKeyword: d.target_keyword || null,
       agentOwned: d?.generation_context?.source === 'agent-seo',
       clicks90d: 0, impressions90d: 0, bestPosition: null,
+      externalBestPosition: null, externalKeywordVolume: 0,
       thinScore: 0, isThin: false, duplicateOf: null, duplicateSimilarity: 0,
       decision: 'keep', reasons: [], executed: false,
     });
@@ -169,6 +170,7 @@ async function collectCandidates(sb: any): Promise<PruneCandidate[]> {
       targetKeyword: null,
       agentOwned: false,
       clicks90d: 0, impressions90d: 0, bestPosition: null,
+      externalBestPosition: null, externalKeywordVolume: 0,
       thinScore: 0, isThin: false, duplicateOf: null, duplicateSimilarity: 0,
       decision: 'keep', reasons: [], executed: false,
     });
