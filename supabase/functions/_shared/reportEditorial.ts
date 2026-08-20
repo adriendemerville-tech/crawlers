@@ -303,8 +303,8 @@ export function stripRawStructureArtifacts(html: string): string {
         ? seg.text
         : seg.text
             .replace(/\[object Object\]/g, "donnée non exploitable")
-            .replace(RAW_OBJECT_RE, "donnée non exploitable")
-            .replace(RAW_ARRAY_RE, "donnée non exploitable"),
+            .replace(RAW_ARRAY_RE, "donnée non exploitable")
+            .replace(RAW_OBJECT_RE, "donnée non exploitable"),
     )
     .join("");
 }
