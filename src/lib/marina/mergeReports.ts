@@ -545,10 +545,19 @@ export function mergeMarinaReports(
       ];
       const path = split.meta?.path || pathOf(p.url);
       const condensed = split.tagged && hasVerdict && detail.level.get(path) === 'condensed';
-      const kept = condensed
+      const dupOwner = conclusionSkip[i];
+      const kept = (condensed
         ? ordered.filter(b => b.id === 'page-verdict' || b.id === 'cocoon_page')
-        : ordered;
+        : ordered
+      ).filter(b => !(b.id === 'conclusion' && dupOwner !== null));
+      const dupConclusionNote = dupOwner !== null
+        ? `<p style="margin:10px 32px 0 32px;font-size:12px;color:#6b7280;line-height:1.6;max-width:52em;">
+             Conclusion intermédiaire identique, au mot près, à celle de la fiche
+             <strong>${dupOwner + 1}</strong> (${escapeHtml(pathOf(parts[dupOwner].url))}) : elle n'est pas répétée ici.
+           </p>`
+        : '';
       const content = split.tagged ? kept.map(b => b.html).join('\n') : extractBody(p.html);
+
       const condensedNote = condensed
         ? `<p style="margin:10px 32px 0 32px;font-size:12px;color:#6b7280;line-height:1.6;max-width:52em;">
              Fiche condensée : cette URL est une instance du gabarit
