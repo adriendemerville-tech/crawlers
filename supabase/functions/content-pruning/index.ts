@@ -33,22 +33,23 @@ function json(data: unknown, status = 200) {
   })
 }
 
-/** Candidat de fusion : page conservée du même répertoire au libellé le plus proche. */
-function similarity(a: string, b: string): number {
-  const maxLen = Math.max(a.length, b.length)
-  if (maxLen === 0) return 1
-  const m = Array.from({ length: a.length + 1 }, (_, i) =>
-    Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)),
-  )
-  for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) {
-      m[i][j] = a[i - 1] === b[j - 1]
-        ? m[i - 1][j - 1]
-        : Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j - 1] + 1)
-    }
-  }
-  return 1 - m[a.length][b.length] / maxLen
+/**
+ * Candidat de fusion : page conservée au libellé le plus proche.
+ * Recouvrement de jetons (Jaccard) plutôt que distance d'édition : sur un
+ * corpus de 150 pages aux slugs longs, la matrice de Levenshtein consommait
+ * seul l'essentiel du budget CPU de la function.
+ */
+function tokensOf(slug: string): Set<string> {
+  return new Set(slug.split(/[-_]+/).filter((t) => t.length > 2))
 }
+
+function similarity(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) return 0
+  let inter = 0
+  for (const t of a) if (b.has(t)) inter++
+  return inter / (a.size + b.size - inter)
+}
+
 
 function slugOf(url: string): string {
   try { return new URL(url).pathname.split('/').filter(Boolean).pop() || '' }
