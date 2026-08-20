@@ -1354,7 +1354,10 @@ export function computeNetworkSynthesis(
                    ? `<span style="margin-left:6px;border:1px solid ${MUTED};color:${MUTED};border-radius:999px;padding:1px 7px;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;">développement</span>`
                    : ''
                }
-               <span style="display:block;color:${BODY};">${esc(r.why)}</span>
+               ${(() => {
+                 const why = dedupeWhy(r.title, r.why);
+                 return why ? `<span style="display:block;color:${BODY};">${esc(why)}</span>` : '';
+               })()}
                <span style="display:block;color:${MUTED};font-size:12px;">Effort : ${esc(r.effort)} · gravité ${r.severity}/100 · portée ${r.reach}/${r.reachTotal} URLs · confiance ${Math.round(r.confidence * 100)} % · rendement ${String(r.yield_).replace('.', ',')}</span>
              </li>`,
              )
