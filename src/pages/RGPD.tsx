@@ -59,7 +59,7 @@ const RGPD = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
-                  <span>{t3(language, 'Paiements sécurisés via Stripe (PCI-DSS niveau 1) — aucune donnée bancaire stockée', 'Secure payments via Stripe (PCI-DSS Level 1) — no banking data stored', 'Pagos seguros a través de Stripe (PCI-DSS nivel 1) — ningún dato bancario almacenado')}</span>
+                  <span>{t3(language, 'Paiements sécurisés via Paddle (Merchant of Record) et Stripe (PCI-DSS niveau 1) — aucune donnée bancaire stockée', 'Secure payments via Paddle (Merchant of Record) and Stripe (PCI-DSS Level 1) — no banking data stored', 'Pagos seguros a través de Paddle (Merchant of Record) y Stripe (PCI-DSS nivel 1) — ningún dato bancario almacenado')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
