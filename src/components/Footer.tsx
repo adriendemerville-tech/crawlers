@@ -5,10 +5,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
 
 /** On audit-expert page, all internal links open in a new tab */
-function SmartLink({ to, className, title, children }: { to: string; className?: string; title?: string; children: React.ReactNode }) {
+function SmartLink({ to, className, title, external, children }: { to: string; className?: string; title?: string; external?: boolean; children: React.ReactNode }) {
   const { pathname } = useLocation();
   const isAuditPage = pathname.startsWith('/audit-expert');
-  if (isAuditPage) {
+  if (external || isAuditPage) {
     return <a href={to} target="_blank" rel="noopener noreferrer" className={className} title={title}>{children}</a>;
   }
   return <Link to={to} className={className} title={title}>{children}</Link>;
