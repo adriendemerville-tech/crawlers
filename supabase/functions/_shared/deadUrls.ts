@@ -12,6 +12,8 @@
  * morte orpheline, car il gaspille du crawl budget et casse la navigation.
  */
 
+import { classifyLink, isFalsePositiveDomain, type LinkVerdict } from './linkVerdict.ts';
+
 export interface DeadUrlPageInput {
   url: string;
   path?: string | null;
@@ -24,6 +26,10 @@ export interface DeadUrlPageInput {
 export interface DeadUrlEntry {
   url: string;
   status: number;
+  /** Verdict du juge unique partagé (`linkVerdict.ts`). */
+  verdict: LinkVerdict;
+  /** Libellé unifié, réutilisable tel quel dans le rapport. */
+  label: string;
   /** URLs du site qui pointent encore vers cette page morte. */
   linked_from: string[];
   /** Pages dont le canonical désigne cette page morte. */
@@ -36,6 +42,10 @@ export interface DeadUrlReport {
   linked_dead_pages: number;
   canonical_to_dead: number;
   broken_outbound_links: number;
+  /** Pages en 5xx / 429 : indisponibilité, pas absence. Hors décompte « mortes ». */
+  unstable_pages: number;
+  /** Pages en 401/403/405/999 : protection serveur, jamais un défaut du site. */
+  blocked_pages: number;
   entries: DeadUrlEntry[];
   /** Liens cassés relevés page par page (cible → sources), hors pages crawlées. */
   broken_targets: Array<{ target: string; sources: string[] }>;
@@ -64,10 +74,30 @@ export function analyzeDeadUrls(pages: DeadUrlPageInput[]): DeadUrlReport {
   }
 
   const dead = new Map<string, DeadUrlEntry>();
+  let unstablePages = 0;
+  let blockedPages = 0;
   for (const [key, page] of byUrl) {
     const status = Number(page.http_status || 0);
-    if (status >= 400) {
-      dead.set(key, { url: page.url, status, linked_from: [], canonical_from: [] });
+    if (status < 400) continue;
+    // Juge unique : 404/410 = page morte ; 5xx = instable ; 403 = protection.
+    const cls = classifyLink({ url: page.url, status });
+    if (cls.verdict === 'blocked') {
+      blockedPages++;
+      continue;
+    }
+    if (cls.verdict === 'soft_broken') {
+      unstablePages++;
+      continue;
+    }
+    if (cls.verdict === 'hard_broken') {
+      dead.set(key, {
+        url: page.url,
+        status,
+        verdict: cls.verdict,
+        label: cls.label,
+        linked_from: [],
+        canonical_from: [],
+      });
     }
   }
 
@@ -93,10 +123,13 @@ export function analyzeDeadUrls(pages: DeadUrlPageInput[]): DeadUrlReport {
         if (!entry.canonical_from.includes(page.url)) entry.canonical_from.push(page.url);
       }
     }
-    // Liens cassés relevés directement par l'analyseur (cibles non crawlées)
+    // Liens cassés relevés directement par l'analyseur (cibles non crawlées).
+    // Les domaines qui refusent les robots (LinkedIn, Amazon…) sont écartés :
+    // c'était la première source de faux positifs des rapports.
     for (const brokenRaw of page.broken_links || []) {
       const target = normalizeUrl(brokenRaw, page.url);
       if (!target || dead.has(target)) continue;
+      if (isFalsePositiveDomain(target)) continue;
       if (!brokenTargets.has(target)) brokenTargets.set(target, new Set());
       const set = brokenTargets.get(target)!;
       if (set.size < MAX_SOURCES) set.add(page.url);
@@ -114,6 +147,8 @@ export function analyzeDeadUrls(pages: DeadUrlPageInput[]): DeadUrlReport {
     linked_dead_pages: [...dead.values()].filter((e) => e.linked_from.length > 0).length,
     canonical_to_dead: [...dead.values()].filter((e) => e.canonical_from.length > 0).length,
     broken_outbound_links: brokenTargets.size,
+    unstable_pages: unstablePages,
+    blocked_pages: blockedPages,
     entries,
     broken_targets: [...brokenTargets.entries()]
       .map(([target, sources]) => ({ target, sources: [...sources] }))

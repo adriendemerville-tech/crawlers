@@ -10,6 +10,7 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { resolveSocialProof, fetchPlacesSocialProof, formatSocialProofForPrompt, type SocialProofResult } from '../_shared/socialProof.ts';
 import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
+import { classifyLink, isFalsePositiveDomain, type LinkVerdict } from '../_shared/linkVerdict.ts';
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
@@ -53,11 +54,17 @@ interface BrokenLink {
   status: number;
   anchor: string;
   type: 'internal' | 'external';
+  /** Verdict du juge unique `linkVerdict` (hard_broken | soft_broken). */
+  verdict?: LinkVerdict;
+  label?: string;
+  explanation?: string;
 }
 
 interface BrokenLinksAnalysis {
   total: number;
   broken: BrokenLink[];
+  /** Liens instables (5xx / 429 / 4xx résiduels) : à confirmer, hors score. */
+  unstable?: BrokenLink[];
   checked: number;
   corsBlocked: number;
   verdict: 'optimal' | 'warning' | 'critical';
@@ -1291,6 +1298,7 @@ async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string, userFalsePos
   console.log(`[BrokenLinks] Vérification de ${linksToCheck.length} liens...`);
   
   const brokenLinks: BrokenLink[] = [];
+  const unstableLinks: BrokenLink[] = [];
   let corsBlocked = 0;
   
   // Check links in parallel with stealth headers and retry logic
@@ -1303,23 +1311,25 @@ async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string, userFalsePos
           timeout: 10_000,
           maxRetries: method === 'HEAD' ? 0 : 1,
         });
-        
-        // 4xx and 5xx are broken (but not 403 which is often WAF blocking bots)
-        if (response.status >= 400 && response.status !== 403) {
-          return {
-            url: link.url,
-            status: response.status,
-            anchor: link.anchor,
-            type: link.type
-          };
-        }
-        // Success or 403 (WAF) — not broken
-        return null;
-      } catch (error) {
+
+        // Juge unique partagé : même échelle que Marina et la file Liens admin.
+        const cls = classifyLink({ url: link.url, status: response.status });
+        if (cls.verdict === 'ok' || cls.verdict === 'blocked') return null;
+        if (cls.verdict === 'soft_broken' && isFalsePositiveDomain(link.url)) return null;
+        return {
+          url: link.url,
+          status: response.status,
+          anchor: link.anchor,
+          type: link.type,
+          verdict: cls.verdict,
+          label: cls.label,
+          explanation: cls.explanation,
+        };
+      } catch (_error) {
         // If HEAD failed, try GET
         if (method === 'HEAD') continue;
         
-        // Both methods failed — treat as unverifiable, not broken
+        // Both methods failed — non vérifiable, jamais « cassé » (une seule mesure).
         corsBlocked++;
         return null;
       }
@@ -1330,12 +1340,13 @@ async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string, userFalsePos
   const results = await Promise.all(checkPromises);
   
   for (const result of results) {
-    if (result) {
-      brokenLinks.push(result);
-    }
+    if (!result) continue;
+    // `hard_broken` = lien cassé confirmé ; `soft_broken` = instable, à confirmer.
+    if (result.verdict === 'hard_broken') brokenLinks.push(result as BrokenLink);
+    else unstableLinks.push(result as BrokenLink);
   }
   
-  // Determine verdict
+  // Determine verdict — seuls les liens cassés confirmés pèsent sur le score.
   let verdict: 'optimal' | 'warning' | 'critical';
   if (brokenLinks.length === 0) {
     verdict = 'optimal';
@@ -1345,11 +1356,13 @@ async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string, userFalsePos
     verdict = 'critical';
   }
   
-  console.log(`[BrokenLinks] ✅ ${brokenLinks.length} cassés, ${skippedSocial} réseaux sociaux ignorés, sur ${linksToCheck.length + skippedSocial} liens`);
+  console.log(`[BrokenLinks] ${brokenLinks.length} cassés (confirmés), ${unstableLinks.length} instables, ${corsBlocked} non vérifiables, ${skippedSocial} réseaux sociaux ignorés, sur ${linksToCheck.length + skippedSocial} liens`);
+  
   
   return {
     total: linksToCheck.length,
     broken: brokenLinks,
+    unstable: unstableLinks,
     checked: linksToCheck.length,
     corsBlocked,
     skipped_social: skippedSocial,
