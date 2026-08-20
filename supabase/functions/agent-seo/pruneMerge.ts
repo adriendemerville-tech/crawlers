@@ -54,6 +54,10 @@ export interface PruneCandidate {
   clicks90d: number;
   impressions90d: number;
   bestPosition: number | null;
+  /** Meilleure position vue par une source externe (keyword_universe / Semrush). */
+  externalBestPosition: number | null;
+  externalKeywordVolume: number;
+
   thinScore: number;
   isThin: boolean;
   duplicateOf: string | null;
