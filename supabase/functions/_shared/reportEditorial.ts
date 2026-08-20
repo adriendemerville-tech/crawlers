@@ -232,7 +232,7 @@ export function humanizeValue(value: unknown): string {
   if (mapped) return mapped;
   // valeur snake_case anglaise non répertoriée : au moins la dé-souligner
   if (/^[a-z0-9]+(_[a-z0-9]+)+$/.test(raw)) return raw.replace(/_/g, " ");
-  return raw;
+  return escapeForHtml(decodeEntities(raw));
 }
 
 export type Severity = "critical" | "important" | "minor" | null;
