@@ -47,6 +47,7 @@ import {
   isFillerTable,
   flatTableHTML,
   cleanText,
+  stripRawStructureArtifacts,
 } from '../_shared/reportEditorial.ts';
 import { writeMarinaFindingsToWorkbench } from '../_shared/marinaWorkbench.ts';
 import { analyzePageArchetypes, renderPageArchetypesHTML, type ArchetypeAnalysis } from '../_shared/pageArchetypes.ts';
