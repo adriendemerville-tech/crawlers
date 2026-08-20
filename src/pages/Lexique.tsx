@@ -18,6 +18,8 @@ const loadPDFLibraries = async () => {
 import { toast } from 'sonner';
 import { ExpertTermsGrid } from '@/components/Lexique/ExpertTermsGrid';
 import { TrustBadge, SoftwareApplicationSchema } from '@/components/TrustBadge';
+import { SiloHub } from '@/components/seo/SiloHub';
+
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
@@ -1036,6 +1038,9 @@ export default function Lexique() {
               </div>
             </nav>
           )}
+
+          {/* Les fiches du lexique remontent vers les piliers du site */}
+          <SiloHub />
         </main>
 
         {/* Trust Badge */}
