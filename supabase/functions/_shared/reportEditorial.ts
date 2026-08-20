@@ -333,7 +333,13 @@ export function clusterDisplayName(c: ClusterLike, fallbackIndex?: number): stri
   if (explicit) return `Thématique « ${explicit.trim()} »`;
   const derived = deriveClusterTermsFromPages(c);
   if (derived.length > 0) return `Thématique « ${derived.join(", ")} »`;
-  return fallbackIndex != null ? `Thématique non nommée ${fallbackIndex + 1}` : "Thématique non nommée";
+  // Aucun terme dominant exploitable : nommer le groupe par ce qui est
+  // réellement mesuré (sa taille) plutôt que d'afficher « non nommée ».
+  const size = clusterSize(c);
+  const rank = fallbackIndex != null ? ` ${fallbackIndex + 1}` : "";
+  return size > 0
+    ? `Groupe${rank} — ${size} pages sans terme dominant identifiable`
+    : `Groupe${rank} — terme dominant non identifiable`;
 }
 
 const CLUSTER_STOP_WORDS = new Set([
