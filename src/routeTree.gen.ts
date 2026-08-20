@@ -68,6 +68,7 @@ import { Route as ScoreGeoRouteImport } from './routes/score-geo'
 import { Route as SeaSeoBridgeRouteImport } from './routes/sea-seo-bridge'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SiteCrawlRouteImport } from './routes/site-crawl'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SocialContentCreatorRouteImport } from './routes/social-content-creator'
 import { Route as StrategeCocoonRouteImport } from './routes/stratege-cocoon'
 import { Route as TarifsRouteImport } from './routes/tarifs'
@@ -434,6 +435,11 @@ const SignupRoute = SignupRouteImport.update({
 const SiteCrawlRoute = SiteCrawlRouteImport.update({
   id: '/site-crawl',
   path: '/site-crawl',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SocialContentCreatorRoute = SocialContentCreatorRouteImport.update({
@@ -826,6 +832,7 @@ export interface FileRoutesByFullPath {
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
   '/signup': typeof SignupRoute
   '/site-crawl': typeof SiteCrawlRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/social-content-creator': typeof SocialContentCreatorRoute
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
@@ -952,6 +959,7 @@ export interface FileRoutesByTo {
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
   '/signup': typeof SignupRoute
   '/site-crawl': typeof SiteCrawlRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/social-content-creator': typeof SocialContentCreatorRoute
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
@@ -1079,6 +1087,7 @@ export interface FileRoutesById {
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
   '/signup': typeof SignupRoute
   '/site-crawl': typeof SiteCrawlRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/social-content-creator': typeof SocialContentCreatorRoute
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
@@ -1207,6 +1216,7 @@ export interface FileRouteTypes {
     | '/sea-seo-bridge'
     | '/signup'
     | '/site-crawl'
+    | '/sitemap.xml'
     | '/social-content-creator'
     | '/stratege-cocoon'
     | '/tarifs'
@@ -1333,6 +1343,7 @@ export interface FileRouteTypes {
     | '/sea-seo-bridge'
     | '/signup'
     | '/site-crawl'
+    | '/sitemap.xml'
     | '/social-content-creator'
     | '/stratege-cocoon'
     | '/tarifs'
@@ -1459,6 +1470,7 @@ export interface FileRouteTypes {
     | '/sea-seo-bridge'
     | '/signup'
     | '/site-crawl'
+    | '/sitemap.xml'
     | '/social-content-creator'
     | '/stratege-cocoon'
     | '/tarifs'
@@ -1586,6 +1598,7 @@ export interface RootRouteChildren {
   SeaSeoBridgeRoute: typeof SeaSeoBridgeRoute
   SignupRoute: typeof SignupRoute
   SiteCrawlRoute: typeof SiteCrawlRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SocialContentCreatorRoute: typeof SocialContentCreatorRoute
   StrategeCocoonRoute: typeof StrategeCocoonRoute
   TarifsRoute: typeof TarifsRoute
@@ -2066,6 +2079,13 @@ declare module '@tanstack/react-router' {
       path: '/site-crawl'
       fullPath: '/site-crawl'
       preLoaderRoute: typeof SiteCrawlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/social-content-creator': {
@@ -2586,6 +2606,7 @@ const rootRouteChildren: RootRouteChildren = {
   SeaSeoBridgeRoute: SeaSeoBridgeRoute,
   SignupRoute: SignupRoute,
   SiteCrawlRoute: SiteCrawlRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SocialContentCreatorRoute: SocialContentCreatorRoute,
   StrategeCocoonRoute: StrategeCocoonRoute,
   TarifsRoute: TarifsRoute,
