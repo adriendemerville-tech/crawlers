@@ -87,9 +87,10 @@ function FooterComponent() {
     },
     {
       label: t3(language, 'Flux RSS', 'RSS Feed', 'Feed RSS'),
-      href: '/rss.xml',
+      href: '/feed.xml',
       description: t3(language, 'Nouveaux articles et guides SEO/GEO', 'New SEO/GEO articles and guides', 'Nuevos artículos y guías SEO/GEO'),
-      external: true
+      external: true,
+      rss: true,
     },
   ];
 
