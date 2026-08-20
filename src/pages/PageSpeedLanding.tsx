@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
+import { PageEditorial } from '@/components/seo/PageEditorial';
 import { Link } from '@/lib/router-compat';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -20,49 +20,6 @@ const PageSpeedLanding = () => {
   const { language } = useLanguage();
   useCanonicalHreflang('/pagespeed');
 
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Article",
-        "headline": "Test PageSpeed & Core Web Vitals — Analysez la performance de votre site",
-        "description": "Testez la vitesse de votre site avec notre outil PageSpeed. Analysez les Core Web Vitals (LCP, FID, CLS), obtenez des recommandations d'optimisation et améliorez votre score Google.",
-        "author": { "@type": "Person", "name": "Adrien de Volontat", "url": "https://crawlers.fr" },
-        "publisher": { "@type": "Organization", "name": "Crawlers.fr", "url": "https://crawlers.fr" },
-        "datePublished": "2026-04-08",
-        "dateModified": "2026-04-08",
-        "url": "https://crawlers.fr/pagespeed",
-        "mainEntityOfPage": "https://crawlers.fr/pagespeed"
-      },
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-          { "@type": "ListItem", "position": 2, "name": "PageSpeed", "item": "https://crawlers.fr/pagespeed" }
-        ]
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "Qu'est-ce que les Core Web Vitals ?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Les Core Web Vitals sont 3 métriques Google qui mesurent l'expérience utilisateur : LCP (Largest Contentful Paint) pour la vitesse de chargement, INP (Interaction to Next Paint) pour la réactivité, et CLS (Cumulative Layout Shift) pour la stabilité visuelle." }
-          },
-          {
-            "@type": "Question",
-            "name": "Comment améliorer son score PageSpeed ?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Optimisez les images (WebP, lazy loading), réduisez le JavaScript bloquant, activez la compression Gzip/Brotli, utilisez un CDN, minimisez le CSS critique et préchargez les ressources clés." }
-          },
-          {
-            "@type": "Question",
-            "name": "Le PageSpeed affecte-t-il le SEO ?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Oui, les Core Web Vitals sont un facteur de classement officiel de Google depuis 2021. Un site lent perd des positions dans les résultats de recherche, surtout sur mobile." }
-          }
-        ]
-      }
-    ]
-  };
 
   const metrics = [
     { icon: Eye, title: 'LCP', full: 'Largest Contentful Paint', desc: 'Temps de chargement du plus grand élément visible. Objectif : < 2.5s', color: 'text-green-500' },
@@ -84,9 +41,6 @@ const PageSpeedLanding = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-      </Helmet>
 
       <Header />
 
@@ -197,6 +151,38 @@ const PageSpeedLanding = () => {
         pillar={{"href":"/audit-seo-gratuit","label":"Audit SEO gratuit","description":"Pilier : 200 points techniques + GEO en 60 secondes."}}
         sisters={[{"href":"/audit-expert","label":"Audit expert","description":"168 critères + plan d'action correctif."},{"href":"/audit-semantique","label":"Audit sémantique","description":"Densité lexicale, entités, lacunes."},{"href":"/eeat","label":"E-E-A-T","description":"Signaux d'expertise & autorité."},{"href":"/guide-audit-seo","label":"Guide audit SEO","description":"Méthodologie pas à pas."}]}
       />
+        <PageEditorial
+          heading="Lire ses Core Web Vitals sans se tromper"
+          intro="Un score de performance n'a de valeur que rapporté à ce que vivent les visiteurs. Cette page explique ce que mesure chaque métrique, la différence entre données de laboratoire et données réelles, et l'ordre dans lequel corriger."
+          citable="Les Core Web Vitals retenus par Google sont le LCP (affichage du plus grand élément, cible sous 2,5 s), l'INP (réactivité aux interactions, cible sous 200 ms) et le CLS (stabilité visuelle, cible sous 0,1). Ils sont évalués au 75e centile des visites réelles, sur mobile en priorité."
+          sections={[
+            {
+              title: 'Laboratoire et terrain ne racontent pas la même histoire',
+              paragraphs: [
+                "Un test synthétique exécute la page une fois, depuis un lieu et un réseau donnés : il sert à diagnostiquer. Les données de terrain agrègent les visites réelles sur 28 jours : ce sont elles qui comptent pour le classement.",
+                "Un écart important entre les deux signale presque toujours une population d'appareils plus lente que le banc de test, ou un chemin de rendu qui dépend du réseau du visiteur.",
+              ],
+            },
+            {
+              title: 'Ordre de correction efficace',
+              paragraphs: [
+                "Corriger dans le bon ordre évite de retoucher dix fois la même page : on traite d'abord ce qui bloque l'affichage, ensuite ce qui bloque l'interaction, enfin ce qui déplace la mise en page.",
+              ],
+              bullets: [
+                "LCP : identifier l'élément concerné, le précharger, lui donner des dimensions explicites, servir un format moderne.",
+                "INP : réduire le JavaScript exécuté au chargement, différer ce qui n'est pas nécessaire au premier écran.",
+                "CLS : réserver la hauteur des blocs qui se montent après hydratation, polices en font-display swap.",
+                "TTFB : mise en cache, rendu côté serveur, proximité géographique de la réponse.",
+              ],
+            },
+            {
+              title: 'Performance et visibilité IA',
+              paragraphs: [
+                "La vitesse n'est pas un critère de citation pour un moteur génératif, mais elle en conditionne l'accès : un crawler qui rencontre des réponses lentes ou des délais d'attente explore moins de pages, donc en cite moins.",
+              ],
+            },
+          ]}
+        />
       </main>
 
       <Suspense fallback={null}><Footer /></Suspense>

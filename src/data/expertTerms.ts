@@ -187,7 +187,34 @@ Les systèmes modernes utilisent des modèles entraînés sur des millions de se
 La simulation de comportement humain réaliste est complexe car :
 - Les patterns doivent être aléatoires mais cohérents
 - Chaque site a ses propres heuristiques
-- Les modèles évoluent constamment`,
+- Les modèles évoluent constamment
+
+### Faux positifs : le vrai coût de l'analyse comportementale
+
+Un modèle trop strict bloque des visiteurs légitimes, et ce coût est presque toujours sous-estimé :
+
+- **Navigation au clavier et lecteurs d'écran** : aucune trajectoire de souris, donc un profil proche de celui d'un script.
+- **Utilisateurs mobiles** : pas de survol, un scroll très rapide, des délais courts entre deux interactions.
+- **Onglets préchargés** : la page est chargée sans jamais être regardée, ce qui produit une session sans interaction.
+- **Outils d'accessibilité et extensions** : automatisation locale légitime interprétée comme non humaine.
+
+En pratique, un seuil calibré sur le seul comportement dégrade la conversion avant de gêner un scraper motivé. Les dispositifs sérieux combinent le comportement avec des signaux réseau (empreinte TLS, réputation d'ASN) et n'appliquent le blocage dur qu'au recoupement de plusieurs indices.
+
+### Impact sur les crawlers SEO et les robots d'IA
+
+Un robot déclaré — Googlebot, GPTBot, ClaudeBot, ou un crawler d'audit — n'imite aucun comportement humain : il demande le HTML et repart. S'il est traité par la même heuristique comportementale qu'un scraper, il est ralenti ou bloqué, avec deux conséquences directes :
+
+1. Le nombre de pages explorées par passage chute, donc l'indexation se dégrade.
+2. Les moteurs génératifs ne récupèrent plus le contenu et cessent de citer le site.
+
+La règle d'exploitation est donc de vérifier l'identité des robots légitimes (résolution DNS inverse puis directe, plages d'adresses annoncées) et de les exclure du scoring comportemental, plutôt que de compter sur la seule chaîne User-Agent.
+
+### Ce qui est mesurable côté site
+
+- Taux de sessions classées suspectes par famille d'appareils.
+- Écart entre pages explorées et pages réellement servies aux robots vérifiés.
+- Codes 403 et 429 renvoyés aux crawlers identifiés sur les sept derniers jours.
+- Délai de réponse appliqué aux sessions jugées douteuses, et son effet sur le taux de rebond.`,
       codeExample: {
         language: 'python',
         code: `# Simulation de comportement humain avec Playwright

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Download, CheckCircle2 } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { Header } from '@/components/Header';
+import { PageEditorial } from '@/components/seo/PageEditorial';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -135,6 +136,53 @@ export default function ExtensionDownload() {
               </p>
             </section>
           </div>
+
+          <PageEditorial
+            heading="À quoi sert une extension d'audit dans un navigateur"
+            intro="Auditer depuis le navigateur change surtout le moment de l'analyse : le constat est produit sur la page qu'on regarde, pendant la revue, sans changer d'outil ni attendre un crawl complet."
+            citable="L'extension Crawlers audite uniquement la page active, à la demande : elle lit le HTML rendu par le navigateur, déclenche les moteurs d'analyse côté serveur et renvoie les constats dans le Workbench du compte connecté."
+            sections={[
+              {
+                title: 'HTML rendu et HTML servi : la différence qui compte',
+                paragraphs: [
+                  "Un crawler lit le HTML renvoyé par le serveur. Le navigateur, lui, exécute le JavaScript. Quand un site rend son contenu côté client, les deux vues divergent : la page paraît complète à l'écran mais quasi vide pour un moteur.",
+                  "Auditer depuis le navigateur permet de comparer ces deux états et d'identifier la cause racine — une coquille JavaScript — au lieu de conclure à tort que le contenu est pauvre.",
+                ],
+              },
+              {
+                title: 'Cas d’usage concrets',
+                paragraphs: [
+                  "L'extension est surtout utile sur les pages qu'un crawl n'atteint pas facilement, ou quand il faut trancher rapidement pendant une revue.",
+                ],
+                bullets: [
+                  "Page derrière un formulaire, un espace client ou une préproduction non publique.",
+                  "Contrôle avant mise en ligne : titre, description, données structurées, un seul H1.",
+                  "Revue concurrentielle : mesurer la citabilité d'une page tierce sans lancer un crawl entier.",
+                  "Vérification après déploiement : confirmer qu'un correctif est bien présent dans la page servie.",
+                ],
+              },
+              {
+                title: 'Ce que l’extension ne fait pas',
+                paragraphs: [
+                  "Aucun audit passif : rien n'est envoyé tant que l'audit n'est pas déclenché explicitement. Aucune collecte de navigation, aucun historique transmis, aucune analyse en arrière-plan. La session reste stockée localement dans le navigateur.",
+                ],
+              },
+            ]}
+            faq={[
+              {
+                question: "L'extension fonctionne-t-elle sur Edge, Brave, Arc et Opera ?",
+                answer: "Oui. Ces navigateurs partagent le moteur d'extensions de Chrome : la procédure d'installation en mode développeur est identique.",
+              },
+              {
+                question: 'Faut-il un compte pour auditer une page ?',
+                answer: "Oui, un compte Crawlers est nécessaire, car les constats sont rattachés à votre Workbench et consomment votre quota d'audits.",
+              },
+              {
+                question: "L'extension audite-t-elle les pages privées ou en préproduction ?",
+                answer: "Oui, tant que la page s'affiche dans votre navigateur. C'est le principal avantage sur un crawler externe, qui ne peut pas franchir une authentification.",
+              },
+            ]}
+          />
         </main>
         <Suspense fallback={null}>
           <Footer />

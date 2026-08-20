@@ -785,18 +785,6 @@ export default function Aide() {
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
         <html lang={language} />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "TechArticle",
-          "name": "Documentation Crawlers.fr",
-          "description": "Base de connaissance complète de la plateforme Crawlers.fr — audits SEO, GEO Score, visibilité LLM, cocon sémantique, correctifs actionnables.",
-          "url": "https://crawlers.fr/aide",
-          "publisher": {
-            "@type": "Organization",
-            "name": "Crawlers.fr",
-            "url": "https://crawlers.fr"
-          }
-        })}</script>
       </Helmet>
       <Header />
       <main className="flex-1 pt-20 pb-16">

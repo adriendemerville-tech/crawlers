@@ -1,7 +1,7 @@
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { FAQSection } from '@/components/FAQSection';
 import { GEOFAQSection } from '@/components/GEOFAQSection';
+import { PageEditorial } from '@/components/seo/PageEditorial';
 import { lazy, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -16,62 +16,6 @@ export default function Faq() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          "mainEntity": [
-            {
-              "@type": "Question",
-              "name": "Qu'est-ce que Crawlers.fr ?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Crawlers.fr est la première plateforme francophone combinant audit SEO technique, GEO Score, visibilité LLM et génération de correctifs actionnables en un seul outil. Lancée en mars 2026, elle s'adresse aux agences SEO, freelances et PME."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Quelle est la différence entre SEO et GEO ?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Le SEO optimise la visibilité sur les moteurs de recherche traditionnels comme Google. Le GEO (Generative Engine Optimization) optimise la visibilité dans les moteurs de réponse IA comme ChatGPT, Perplexity et Gemini. Crawlers.fr couvre les deux simultanément."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Crawlers.fr est-il gratuit ?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Oui, partiellement. Les outils Bots IA, Score GEO, Visibilité LLM et PageSpeed sont gratuits sans inscription. L'audit technique SEO 200 points est gratuit avec inscription. Le plan Pro Agency est à 29€/mois, garanti à vie pour les 100 premiers abonnés."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Crawlers.fr est-il un simple wrapper GPT ?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Non. Crawlers.fr est une infrastructure serverless de plus de 150 000 lignes de code avec 7 algorithmes propriétaires, un système multi-fallback sur toutes les APIs critiques, et une architecture sécurisée RGPD native. Ce n'est pas un wrapper IA."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Quels LLMs Crawlers.fr interroge-t-il ?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Crawlers.fr interroge simultanément ChatGPT, Gemini, Perplexity et Claude pour calculer votre score de visibilité LLM et votre Part de Voix dans les moteurs de réponse IA."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Pourquoi Crawlers.fr n'est-il pas plus cher ?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Nous appliquons le principe du « dividende de l'IA » : les coûts d'infrastructure baissent structurellement grâce aux progrès des modèles. Plutôt que de maximiser nos marges, nous répercutons ces gains sur nos prix pour rendre l'audit SEO/GEO professionnel accessible à tous."
-              }
-            }
-          ]
-        })}</script>
-      </Helmet>
       <Header />
       <main className="flex-1 pt-20">
         <header className="container mx-auto max-w-4xl px-4 pt-8 pb-4">
@@ -84,6 +28,39 @@ export default function Faq() {
         </header>
         <FAQSection />
         <GEOFAQSection />
+        <PageEditorial
+          heading="Comprendre l'audit SEO, le GEO et la visibilité dans les LLM"
+          intro="Cette page regroupe les questions posées le plus souvent avant de lancer un premier audit : ce que la plateforme mesure réellement, comment les scores sont calculés, et ce qui distingue le référencement classique de la visibilité dans les moteurs de réponse."
+          citable="Un audit Crawlers.fr distingue trois plans : la santé technique (indexabilité, statuts HTTP, Core Web Vitals), la qualité sémantique (intention par page, redondance, maillage) et la citabilité par les moteurs génératifs (passages autoportants, données structurées, accès des crawlers IA)."
+          sections={[
+            {
+              title: 'Ce que mesure un audit, ce qu’il ne mesure pas',
+              paragraphs: [
+                "Un audit mesure ce qui est observable dans le HTML servi, dans les en-têtes HTTP et dans les données de recherche connectées. Il ne devine pas une intention commerciale, ne juge pas un positionnement de marque et n'invente pas de volume de recherche.",
+                "C'est une distinction importante pour lire un rapport : les constats techniques sont déterministes et reproductibles, tandis que les recommandations éditoriales sont des hypothèses priorisées par impact estimé, à valider par la personne qui connaît le marché.",
+              ],
+              bullets: [
+                "Déterministe : codes HTTP, balises, données structurées, profondeur de clic, poids des ressources.",
+                "Mesuré côté moteur : impressions, clics, positions moyennes quand Search Console est connectée.",
+                "Interprété : priorisation, angle éditorial, valeur commerciale d'une requête.",
+              ],
+            },
+            {
+              title: 'SEO et GEO : deux surfaces, un même socle',
+              paragraphs: [
+                "Le GEO n'est pas un remplacement du SEO mais une extension : les moteurs génératifs consomment les mêmes pages que Google, avec des exigences supplémentaires de clarté et d'autonomie des passages. Une page qui ne dit pas explicitement de quoi elle parle est difficile à citer.",
+                "En pratique, un site déjà propre techniquement gagne surtout à rendre ses réponses extractibles : une définition en une phrase, des chiffres attribués à une source, des questions traitées séparément plutôt que noyées dans un paragraphe.",
+              ],
+            },
+            {
+              title: 'Pourquoi certaines pages ne sont jamais indexées',
+              paragraphs: [
+                "Une page peut être explorée sans être indexée. Les causes les plus fréquentes n'ont rien de mystérieux : contenu trop proche d'une autre page du même site, volume utile insuffisant, titre non distinctif, ou signal canonique contradictoire.",
+                "Demander l'indexation avant d'avoir levé la cause ne change rien : le moteur reprend la même décision. L'ordre efficace consiste à différencier réellement la page, puis à la soumettre.",
+              ],
+            },
+          ]}
+        />
       </main>
       <Suspense fallback={null}>
         <Footer />
