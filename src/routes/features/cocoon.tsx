@@ -4,10 +4,10 @@ import { pageHead } from "@/lib/seo/pageHead";
 
 export const Route = createFileRoute("/features/cocoon")({
   head: () => pageHead({
-    title: "Cocoon refresh",
+    title: "Cocon sémantique 3D : maillage interne et cannibalisation",
     description: "Créer un cocon sémantique en 3D : maillage interne, détection cannibalisation, auto-maillage IA, clustering et ROI prédictif GEO.",
     path: "/features/cocoon",
-    noIndex: true,
+    ogType: "article",
   }),
   component: FeaturesCocoon,
 });
