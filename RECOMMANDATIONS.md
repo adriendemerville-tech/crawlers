@@ -1,6 +1,7 @@
 
-## #139 · P0 · 2j — Bypass total RLS sur les tables audits et SEO
-Ajouter `TO service_role` ou `USING (auth.role() = 'service_role')` aux politiques "Service role full access" qui utilisent actuellement `USING (true)`.
+## #139 · P0 · FAIT (2026-08-20) — Bypass RLS sur les tables audits et SEO
+Constat corrigé : aucune policy `USING (true)` non scopée ne subsistait. Le vrai risque résiduel était l'application des policies au rôle `public` (donc `anon`). Toutes les policies des tables audits/SEO sont désormais `TO authenticated` ou `TO service_role`, et `anon` n'a plus aucun privilège de table. `audit_cache` reste strictement `service_role`.
+
 
 ## #140 · P0 · 1j — Appel LLM hors Gateway dans audit-compare
 Remplacer le `fetch` direct vers OpenRouter par `aiGatewayFetch` pour garantir le tracking des coûts et l'observabilité.
