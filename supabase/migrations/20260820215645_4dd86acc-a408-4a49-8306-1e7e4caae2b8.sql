@@ -1,0 +1,1 @@
+UPDATE public.sitemap_entries SET is_active = false, updated_at = now() WHERE loc IN ('https://crawlers.fr/auteur', 'https://crawlers.fr/auteur/');
