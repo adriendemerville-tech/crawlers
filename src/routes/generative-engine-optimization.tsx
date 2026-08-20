@@ -5,9 +5,9 @@ import { marinaMentionJsonLd } from "@/lib/seo/marinaMentions";
 
 // Pilier unique GEO : absorbe /score-geo, /outil-geo-ia, /visibilite-llm,
 // /optimisation-llm-seo et /referencement-ia (301 permanents).
-const TITLE = "Référencement IA & GEO : guide 2026, score et audit gratuit";
+const TITLE = "Référencement IA et GEO : guide 2026 et audit gratuit";
 const DESCRIPTION =
-  "Référencement IA (GEO) : définition, différences SEO/GEO, score GEO et visibilité LLM. Optimisez votre citabilité dans ChatGPT, Perplexity et Gemini. Audit gratuit : 220+ points mesurés, 9 questions posées aux IA.";
+  "Référencement IA (GEO) : définition, différences SEO/GEO, score GEO et visibilité LLM. Mesurez votre citabilité dans ChatGPT, Perplexity et Gemini, audit gratuit.";
 
 export const Route = createFileRoute("/generative-engine-optimization")({
   head: () =>
