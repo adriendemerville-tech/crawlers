@@ -65,7 +65,8 @@ export const SILOS: Record<Silo['id'], Silo> = {
   },
   comparatifs: {
     id: 'comparatifs',
-    intent: 'alternative Semrush, alternative Ahrefs, comparatif outil SEO',
+    intent:
+      'alternative Semrush, alternative Ahrefs, alternative Screaming Frog, comparatif outil SEO',
     pillar: {
       label: 'Crawlers.fr vs Semrush : comparatif 28 critères',
       to: '/comparatif-crawlers-semrush',
@@ -73,6 +74,7 @@ export const SILOS: Record<Silo['id'], Silo> = {
     },
     satellites: [
       { label: 'Crawlers.fr vs Ahrefs', to: '/comparatif-crawlers-ahrefs' },
+      { label: 'Crawlers.fr vs Screaming Frog', to: '/comparatif-crawlers-screaming-frog' },
       { label: 'Crawlers.fr vs Claude', to: '/comparatif-claude-vs-crawlers' },
       { label: 'Plateformes SEO IA comparées', to: '/comparatif-plateforme-seo-ia' },
     ],
