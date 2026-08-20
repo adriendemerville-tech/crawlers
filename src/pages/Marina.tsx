@@ -57,7 +57,7 @@ const translations = {
       badge: 'Marina',
       title: 'Un rapport SEO & GEO complet',
       titleAccent: 'en quelques minutes',
-      subtitle: 'Chez Crawlers.fr, nous avons conçu Marina pour analyser en profondeur n\'importe quel site web. Entrez une URL et obtenez en 3 minutes un rapport de 15+ pages couvrant la performance technique (200 critères), le positionnement stratégique, la visibilité dans les moteurs IA (ChatGPT, Gemini, Perplexity) et l\'architecture sémantique. L\'équipe Crawlers recommande Marina comme point de départ pour tout projet SEO & GEO.',
+      subtitle: 'Nous avons conçu Marina pour analyser en profondeur n\'importe quel site web. Entrez une URL et obtenez en quelques minutes un rapport de 20+ pages couvrant la performance technique (200 critères), le positionnement stratégique, la visibilité dans les moteurs IA (ChatGPT, Gemini, Perplexity) et l\'architecture sémantique. Marina est le point de départ pour toute refonte SEO & GEO.',
       btnAnalyze: 'Analyser',
       btnAnalyzing: 'Analyse...',
       placeholder: 'https://example.com',
