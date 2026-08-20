@@ -147,7 +147,22 @@ export function normalizeCommercialModel(input: {
   }
 
   if (/non_commercial|non commercial|association|ong|public|nonprofit/.test(blob)) return 'non_commercial';
-  if (/e-?commerce|boutique|marketplace|retail|vente en ligne/.test(blob) || input.sector === 'ecommerce') return 'ecommerce';
+  // Un signal « boutique » ne suffit pas : beaucoup de prestataires (travaux,
+  // artisans) exploitent une e-boutique secondaire. On n'accepte `ecommerce`
+  // que si le commerce est l'activité dominante — soit aucun signal de
+  // prestation, soit un signal commerce qui apparaît avant lui et sans
+  // marqueur d'accessoire (« ainsi qu'une boutique… »).
+  {
+    const commerceMatch = blob.match(/e-?commerce|boutique|marketplace|retail|vente en ligne/);
+    const serviceMatch = blob.match(/travaux|r[eé]novation|chantier|artisan|installation|d[eé]pannage|entretien|entreprise g[eé]n[eé]rale|prestation|ma[çc]onnerie|plomberie|isolation|toiture|am[eé]nagement|conseil|cabinet/);
+    const secondaryShop = /(ainsi qu|ainsi que|[eé]galement|aussi|en compl[eé]ment|par ailleurs|accessoirement)[^.]{0,60}(boutique|vente en ligne|e-?commerce)/.test(blob);
+    const commerceDominant = !!commerceMatch && (
+      !serviceMatch
+        ? true
+        : !secondaryShop && (commerceMatch.index ?? 0) < (serviceMatch.index ?? 0)
+    );
+    if (commerceDominant || input.sector === 'ecommerce') return 'ecommerce';
+  }
   if (/saas|abonnement|subscription|logiciel|software/.test(blob) || input.sector === 'saas_logiciel') return 'saas';
   if (/m[eé]dia|presse|[eé]dition|publisher|audience/.test(blob) || input.sector === 'media_edition') return 'media';
   // `agence` seul est trop large (agence web/SEO/marketing = lead_gen, pas d'implantation
