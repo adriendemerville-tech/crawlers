@@ -86,6 +86,32 @@ export function extractPersonName(title: string | null | undefined, url = '', pl
 }
 
 /**
+ * Noms appartenant à Crawlers (équipe / fondateur / auteurs du site).
+ * Ils ne doivent JAMAIS être publiés comme porte-parole ou auteur suggéré
+ * d'un domaine tiers audité : c'est une fuite de l'entité auditeuse dans
+ * le rapport de l'entité auditée.
+ */
+const OWN_BRAND_PERSONS = [
+  'adrien de volontat',
+  'michael di luca',
+];
+
+const OWN_BRAND_DOMAINS = /(^|\.)crawlers\.(fr|lovable\.app)$/i;
+
+function normalizePerson(name: string): string {
+  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/** true si le nom est une personne de Crawlers et que le domaine audité n'est pas Crawlers. */
+export function isForeignBrandPerson(name: string | null | undefined, domain = ''): boolean {
+  if (!name) return false;
+  const host = (domain || '').replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+  if (OWN_BRAND_DOMAINS.test(host)) return false;
+  return OWN_BRAND_PERSONS.includes(normalizePerson(name));
+}
+
+/**
  * Final gate: returns a validated founder name or null.
  */
 export function validateFounderCandidate(
@@ -97,5 +123,6 @@ export function validateFounderCandidate(
     ? candidate.name.trim()
     : extractPersonName(candidate.title ?? candidate.name, candidate.url, candidate.platform);
   if (!name) return null;
+  if (isForeignBrandPerson(name, domain)) return null;
   return isPlausiblePersonName(name, domain) ? name : null;
 }
