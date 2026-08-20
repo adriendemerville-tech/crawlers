@@ -308,7 +308,7 @@ const LEXICONS: Record<PromptLang, Record<LexKey, PromptLexicon>> = {
   },
   en: {
     software:      { seek: 'a software',       comparePlural: 'the best software',       noun: 'software' },
-    shop:          { seek: 'a website',       comparePlural: 'the best websites',       noun: 'website' },
+    shop:          { seek: 'an online shop',  comparePlural: 'the best online shops',   noun: 'online shop' },
     local_service: { seek: 'a company',       comparePlural: 'the best companies',      noun: 'company' },
     agency:        { seek: 'a provider',      comparePlural: 'the best providers',      noun: 'provider' },
     nonprofit:     { seek: 'an organization', comparePlural: 'the best organizations',  noun: 'organization' },
@@ -316,7 +316,7 @@ const LEXICONS: Record<PromptLang, Record<LexKey, PromptLexicon>> = {
   },
   es: {
     software:      { seek: 'un software',     comparePlural: 'los mejores software',     noun: 'software' },
-    shop:          { seek: 'una tienda',      comparePlural: 'las mejores tiendas',      noun: 'tienda' },
+    shop:          { seek: 'una tienda online', comparePlural: 'las mejores tiendas online', noun: 'tienda online' },
     local_service: { seek: 'una empresa',     comparePlural: 'las mejores empresas',     noun: 'empresa' },
     agency:        { seek: 'un proveedor',    comparePlural: 'los mejores proveedores',  noun: 'proveedor' },
     nonprofit:     { seek: 'una organización', comparePlural: 'las mejores organizaciones', noun: 'organización' },
