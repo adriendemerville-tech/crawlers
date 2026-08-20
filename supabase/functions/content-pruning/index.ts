@@ -110,12 +110,23 @@ Deno.serve(handleRequest(async (req) => {
       const { data } = await sb.from('tracked_sites').select('id, domain, user_id').eq('id', tracked_site_id).maybeSingle()
       site = data as any
     } else {
-      const bare = String(domainArg).replace(/^www\./, '').toLowerCase()
-      const { data } = await sb.from('tracked_sites').select('id, domain, user_id')
-        .or(`domain.eq.${bare},domain.eq.www.${bare}`)
-        .order('created_at', { ascending: false }).limit(1)
-      site = (data || [])[0] as any
+      const bareArg = String(domainArg).replace(/^www\./, '').toLowerCase()
+      const { data } = await sb.from('tracked_sites').select('id, domain, user_id, created_at')
+        .or(`domain.eq.${bareArg},domain.eq.www.${bareArg}`)
+        .order('created_at', { ascending: false })
+      const candidates = (data || []) as any[]
+      // Un même domaine peut être suivi par plusieurs comptes : on privilégie
+      // celui dont le compte Google couvre la propriété, sinon la mesure GSC
+      // serait absente et l'audit dégénérerait en verdict « non mesuré ».
+      const { data: conns } = await sb.from('google_connections').select('user_id, gsc_site_urls')
+      const gscOwners = new Set(
+        (conns || [])
+          .filter((c: any) => JSON.stringify(c.gsc_site_urls || []).toLowerCase().includes(bareArg))
+          .map((c: any) => c.user_id),
+      )
+      site = (candidates.find((c) => gscOwners.has(c.user_id)) || candidates[0]) as any
     }
+
     if (!site) return json({ error: 'Site non trouvé' }, 404)
     if (!isInternal && site.user_id !== userId) return json({ error: 'Forbidden' }, 403)
 
