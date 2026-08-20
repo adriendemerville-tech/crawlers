@@ -192,6 +192,8 @@ export async function naturalizeBenchmarkQuestions(
       : '',
     "Une question dont l'intention est « competitor » doit conserver TEL QUEL le nom du concurrent présent dans la version déterministe.",
     `Type d'entreprise auditée : ${ARCHETYPE_DIRECTIVE[archetype]}`,
+    "INTERDIT : désigner ce que cherche le client par « site », « site web » ou « site internet ». Un client cherche une entreprise, un artisan, une agence, une boutique ou un outil — jamais un site.",
+    "N'invente jamais une activité absente de la carte d'identité : si l'entreprise réalise des travaux, ne suggère pas d'acheter des matériaux ou des produits en ligne.",
     "Quand un bloc porte sur la proposition de valeur centrale, la question doit interroger cette offre de front, sans détour ni généralité.",
     lang === 'fr' ? "Rédige en français." : lang === 'es' ? "Escribe en español." : "Write in English.",
     "Réponds uniquement en JSON : {\"blocks\":[{\"index\":0,\"questions\":[\"…\",\"…\",\"…\"]}]}",
