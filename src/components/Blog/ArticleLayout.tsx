@@ -139,6 +139,12 @@ function ArticleLayoutComponent({
               </div>
             </header>
 
+            {/* Chapeau citable : résumé autoportant, format privilégié par les moteurs génératifs */}
+            {description && (
+              <blockquote className="citable-passage mb-8 border-l-4 border-primary/40 bg-primary/5 rounded-r-lg px-5 py-4 text-base text-foreground/90 leading-relaxed not-italic">
+                {description}
+              </blockquote>
+            )}
 
             {/* Article Content */}
             <div className="prose prose-lg prose-slate dark:prose-invert max-w-none
