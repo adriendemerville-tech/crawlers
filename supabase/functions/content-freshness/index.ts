@@ -552,7 +552,10 @@ try {
         const auth = await getAuthenticatedUser(req)
         if (!auth) return json({ error: 'Unauthorized' }, 401)
         if (!auth.isAdmin) return json({ error: 'Administrateur uniquement' }, 403)
-        actorId = auth.userId
+        // 'service-role' n'est pas un uuid : reviewed_by reste null dans ce cas.
+        actorId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(auth.userId)
+          ? auth.userId
+          : ''
       }
 
       const sbq = getServiceClient()
