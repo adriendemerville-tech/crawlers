@@ -990,7 +990,7 @@ export default function Marina() {
                   </button>
                 </div>
 
-                <ClaudeVerdictBlock collapsible className="mt-8 relative left-1/2 w-screen max-w-none -translate-x-1/2" />
+                <ClaudeVerdictBlock className="mt-8 relative left-1/2 w-screen max-w-none -translate-x-1/2" />
               </div>
 
 
