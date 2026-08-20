@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react';
 import ClaudeVerdictAnimation from '@/components/Marina/ClaudeVerdictAnimation';
 
 export function ClaudeVerdictBlock({
@@ -19,7 +20,7 @@ export function ClaudeVerdictBlock({
         <details className="group mx-auto max-w-[77rem] px-4">
           <summary className="mx-auto flex w-fit cursor-pointer list-none items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-foreground/5">
             {heading}
-            <span className="text-muted-foreground transition-transform group-open:rotate-180">v</span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
           </summary>
           {showSubtitle && (
             <p className="mx-auto mt-4 max-w-2xl text-center text-sm text-muted-foreground">{subtitle}</p>

@@ -864,16 +864,16 @@ export default function Marina() {
         {/* Hero */}
         <section className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-          <div className="relative mx-auto max-w-5xl px-4 py-20 text-center">
+          <div className="relative mx-auto max-w-5xl px-4 py-10 md:py-12 text-center">
             <div>
-              <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+              <Badge className="mb-3 bg-primary/10 text-primary border-primary/20">
                 <Anchor className="w-3 h-3 mr-1" /> {t.hero.badge}
               </Badge>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 tracking-tight">
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
                 {t.hero.title}
                 <span className="block text-primary">{t.hero.titleAccent}</span>
               </h1>
-              <p className="text-lg text-muted-foreground max-w-4xl mx-auto mb-8">
+              <p className="text-sm md:text-base text-muted-foreground max-w-3xl mx-auto mb-6">
                 {t.hero.subtitle}
               </p>
 
@@ -930,11 +930,11 @@ export default function Marina() {
                   />
                 )}
 
-                {/* Modes de scan : sample / standard / deep, bascule automatique */}
-                <MarinaScanModePanel language={language} active={activeScanMode} pagesCrawled={scanPagesCrawled} />
-
-                {/* Carte d'identité éditable et verrouillable avant le crawl */}
-                <MarinaIdentityPanel url={url} isAuthenticated={!!user} />
+                {/* Modes de scan + carte d'identité : deux colonnes pour limiter la hauteur */}
+                <div className="grid gap-3 md:grid-cols-2 [&>*]:mt-0 mt-3">
+                  <MarinaScanModePanel language={language} active={activeScanMode} pagesCrawled={scanPagesCrawled} />
+                  <MarinaIdentityPanel url={url} isAuthenticated={!!user} />
+                </div>
 
                 {/* Audit multipages (max 15 URLs, PDF unique) */}
                 <MarinaMultipagePanel
@@ -990,7 +990,7 @@ export default function Marina() {
                   </button>
                 </div>
 
-                <ClaudeVerdictBlock className="mt-12 relative left-1/2 w-screen max-w-none -translate-x-1/2" />
+                <ClaudeVerdictBlock collapsible className="mt-8 relative left-1/2 w-screen max-w-none -translate-x-1/2" />
               </div>
 
 
@@ -1075,10 +1075,10 @@ export default function Marina() {
 
         {/* Tab: Features */}
         {activeTab === 'features' && (
-        <section className="py-16 border-b border-border">
-          <div className="mx-auto max-w-5xl px-4">
-            <h2 className="text-2xl font-bold text-foreground text-center mb-8">{t.featuresTitle}</h2>
-            <div className="grid md:grid-cols-2 gap-4">
+        <section className="py-10 border-b border-border">
+          <div className="mx-auto max-w-6xl px-4">
+            <h2 className="text-2xl font-bold text-foreground text-center mb-6">{t.featuresTitle}</h2>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {t.features.map((f, i) => {
                 const Icon = featureIcons[i];
                 return (
