@@ -32,7 +32,34 @@ interface WorkbenchItem {
   source_type: string;
   created_at: string;
   manual_priority: number | null;
+  priority_score: number | null;
+  roi_tier: string | null;
+  is_quick_win: boolean | null;
 }
+
+/** Dette de pruning agrégée du site : c'est elle qui arbitre créer vs consolider. */
+interface SiteDebt {
+  domain: string;
+  debt: number;
+  regime: string;
+  corpus_size: number | null;
+  useful_pages: number | null;
+  cannibal_clusters: number | null;
+  explanation: string | null;
+}
+
+const REGIME_LABEL: Record<string, string> = {
+  healthy: 'corpus sain',
+  crowded: 'corpus encombré',
+  saturated: 'corpus saturé — création gelée',
+};
+
+const REGIME_COLORS: Record<string, string> = {
+  healthy: 'border-emerald-500/40 text-emerald-500',
+  crowded: 'border-amber-500/40 text-amber-500',
+  saturated: 'border-red-500/40 text-red-500',
+};
+
 
 const SEVERITY_COLORS: Record<string, string> = {
   critical: 'bg-red-500/10 text-red-500',
