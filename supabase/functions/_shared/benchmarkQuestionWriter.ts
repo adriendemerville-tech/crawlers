@@ -44,13 +44,25 @@ const AXIS_ROLE: Record<string, string> = {
 
 type QuestionArchetype = 'local_commerce' | 'local_service' | 'software' | 'ecommerce' | 'agency' | 'generic';
 
-/** Archétype de question, déduit du modèle d'affaires et de la zone de chalandise. */
+/** Signaux d'une prestation (travaux, intervention, conseil) dans l'offre ou la page. */
+const SERVICE_SIGNAL_RE = /travaux|r[eé]novation|chantier|artisan|installation|d[eé]pannage|entretien|entreprise g[eé]n[eé]rale|prestation|ma[çc]onnerie|plomberie|isolation|toiture|am[eé]nagement|extension|construction|peinture|conseil|cabinet|agence|franchise/i;
+
+/** Archétype de question, déduit du modèle d'affaires, de la page auditée et de la zone. */
 function resolveArchetype(site: Record<string, any>): QuestionArchetype {
   const model = String(site.business_model || '').toLowerCase();
   const entity = String(site.entity_type || '').toLowerCase();
   const hasArea = !!String(site.commercial_area || '').trim();
+  const pageBlob = [site.page_focus?.topic, ...(Array.isArray(site.page_focus?.terms) ? site.page_focus.terms : [])]
+    .filter(Boolean).join(' ');
+  const hasLocality = !!String(site.page_focus?.locality || '').trim() || hasArea;
+  // La page auditée l'emporte : une page de prestation locale ne se teste pas
+  // avec des questions d'achat en ligne, même si le domaine héberge une boutique.
+  const serviceSignal = SERVICE_SIGNAL_RE.test(pageBlob) || SERVICE_SIGNAL_RE.test(String(site.products_services || ''));
   if (model.startsWith('saas') || entity === 'saas') return 'software';
-  if (model.startsWith('ecommerce') || model.startsWith('marketplace') || entity === 'ecommerce') return 'ecommerce';
+  if (model.startsWith('ecommerce') || model.startsWith('marketplace') || entity === 'ecommerce') {
+    if (serviceSignal) return hasLocality ? 'local_service' : 'generic';
+    return 'ecommerce';
+  }
   if (model === 'service_agency') return 'agency';
   if (model === 'commerce_local' || model === 'retail' || model === 'restaurant') return hasArea ? 'local_commerce' : 'generic';
   if (model === 'service_local' || model === 'leadgen' || model === 'artisan') return hasArea ? 'local_service' : 'generic';
