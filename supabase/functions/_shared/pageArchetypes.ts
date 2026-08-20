@@ -1034,7 +1034,10 @@ export function renderPageArchetypesHTML(analysis: ArchetypeAnalysis, domain: st
     : `Ce que mesure cette section : un site ne se juge pas page par page mais gabarit par gabarit. Les ${analysis.totalPages} pages retenues sur ${domain} sont regroupées selon les types réellement détectés sur ce domaine (${detected}) : aucun type absent du site n'est décrit ici, et un gabarit n'est signalé comme manquant que s'il est attendu pour le modèle d'affaires identifié. Chaque type est confronté à l'objectif qu'il est censé servir, illustré par une page exemple, puis une conclusion intermédiaire précise s'il le remplit. La pondération du mix indique enfin s'il faut créer, élaguer ou simplement différencier chaque gabarit.`;
 
   return `
-  <div class="section" data-marina-scope="${analysis.scope === 'url' ? 'page' : 'site'}" data-marina-block="archetypes" data-pdf-section style="border-left:6px solid #6d28d9;">
+  <!-- Périmètre domaine : l'audit par gabarit décrit les types de pages du site,
+       il est donc mutualisé en multipages (répété, il ajoutait ~24 pages au PDF). -->
+  <div class="section" data-marina-scope="site" data-marina-block="archetypes" data-pdf-section style="border-left:6px solid #6d28d9;">
+
     <h2 style="font-size:19px;margin:0 0 10px 0;">Audit par type de page</h2>
     <p style="font-size:12.5px;line-height:1.7;color:#4b5563;background:#faf9f5;border-left:3px solid #d4af37;padding:10px 14px;border-radius:6px;margin:0 0 16px 0;">
       ${intro}
