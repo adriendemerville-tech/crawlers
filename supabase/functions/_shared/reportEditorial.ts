@@ -124,11 +124,109 @@ export function humanizeKey(key: string): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
+const NAMED_ENTITIES: Record<string, string> = {
+  quot: '"', apos: "'", nbsp: " ", amp: "&", lt: "<", gt: ">",
+  eacute: "é", egrave: "è", ecirc: "ê", euml: "ë", agrave: "à", acirc: "â",
+  ccedil: "ç", ocirc: "ô", ouml: "ö", ugrave: "ù", ucirc: "û", icirc: "î",
+  iuml: "ï", laquo: "«", raquo: "»", hellip: "…", rsquo: "’", lsquo: "‘",
+  ndash: "–", mdash: "—", deg: "°", euro: "€",
+};
+
+/**
+ * Décode les entités HTML déjà présentes dans les données sources
+ * (`d&#039;installation` sortait tel quel dans les rapports).
+ */
+export function decodeEntities(input: string): string {
+  if (!input || !input.includes("&")) return input;
+  return input
+    .replace(/&#(\d+);/g, (_m, d) => String.fromCodePoint(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (_m, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&([a-z]+);/gi, (m, n) => NAMED_ENTITIES[String(n).toLowerCase()] ?? m);
+}
+
+function escapeForHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Texte prêt à être injecté dans le HTML d'un rapport : les entités déjà
+ * encodées à la source sont décodées, puis le texte est réencodé une seule
+ * fois. Évite à la fois le double échappement et l'injection.
+ */
+export function cleanText(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  return escapeForHtml(decodeEntities(String(value)));
+}
+
+/** Nombre lisible : part 0-1 en pourcentage, décimales bornées à 2. */
+export function formatNumericCell(key: string, value: number): string {
+  const k = key.toLowerCase();
+  const isShare = /share|ratio|rate|part|pourcentage|percent/.test(k);
+  if (isShare && value >= 0 && value <= 1) return `${(value * 100).toFixed(1)} %`;
+  if (Number.isInteger(value)) return value.toLocaleString("fr-FR");
+  return value.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+}
+
+const TABLE_MAX_ROWS = 12;
+
+/**
+ * Un tableau de lignes plates et homogènes (typiquement une distribution
+ * `key / count / share` renvoyée par DataForSEO) se lit en tableau, pas en
+ * pile de cadres « Clé : … / Count : … / Share : 0.0568343 ».
+ * Retourne `null` si les lignes ne s'y prêtent pas.
+ */
+export function flatTableHTML(rows: Array<Record<string, unknown>>): string | null {
+  if (!Array.isArray(rows) || rows.length < 3) return null;
+  const flat = rows.every(
+    (r) =>
+      r && typeof r === "object" && !Array.isArray(r) &&
+      Object.values(r).every((v) => v === null || v === undefined || typeof v !== "object"),
+  );
+  if (!flat) return null;
+  const keys = Object.keys(rows[0] ?? {}).filter((k) => k !== "");
+  if (keys.length === 0 || keys.length > 5) return null;
+  const homogeneous = rows.every((r) => {
+    const rk = Object.keys(r ?? {});
+    return rk.length === keys.length && keys.every((k) => rk.includes(k));
+  });
+  if (!homogeneous) return null;
+
+  const shown = rows.slice(0, TABLE_MAX_ROWS);
+  const head = keys
+    .map(
+      (k) =>
+        `<th style="text-align:left;font-size:11px;font-weight:700;color:#374151;padding:6px 8px;border-bottom:1px solid #d1d5db;">${cleanText(humanizeKey(k))}</th>`,
+    )
+    .join("");
+  const body = shown
+    .map(
+      (r) =>
+        `<tr>${keys
+          .map((k) => {
+            const v = (r ?? {})[k];
+            const cell =
+              typeof v === "number" ? formatNumericCell(k, v) : cleanText(humanizeValue(v));
+            return `<td style="font-size:12px;color:#1e293b;padding:6px 8px;border-bottom:1px solid #f3f4f6;">${cell}</td>`;
+          })
+          .join("")}</tr>`,
+    )
+    .join("");
+  const rest = rows.length - shown.length;
+  const note = rest > 0
+    ? `<p style="font-size:11px;color:#6b7280;margin:6px 0 0;">${rest} ligne${rest > 1 ? "s" : ""} supplémentaire${rest > 1 ? "s" : ""} non affichée${rest > 1 ? "s" : ""} : la lecture porte sur les ${shown.length} premières valeurs, les suivantes ne changent pas le constat.</p>`
+    : "";
+  return `<div style="margin:8px 0;"><table style="width:100%;border-collapse:collapse;"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>${note}</div>`;
+}
+
 /** Libellé lisible d'une valeur (énumération technique, booléen, nombre). */
 export function humanizeValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "non renseigné";
   if (typeof value === "boolean") return value ? "oui" : "non";
-  if (typeof value === "number") return String(value);
+  if (typeof value === "number") return formatNumericCell("", value);
   const raw = String(value).trim();
   const mapped = VALUE_LABELS[raw.toLowerCase()];
   if (mapped) return mapped;
