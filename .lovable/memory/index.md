@@ -33,3 +33,6 @@
 - [Discrimination des constats](mem://tech/audit/report-discrimination-fixes-fr) — FAQ détectée balises retirées + croisement crawl, impact modulé par famille (fin du 68/100 générique), autorité de page recalculée avec astérisque/n-m, verdict pilier contesté départagé par le signal mesuré le plus marqué, modèle d'affaires jamais « non résolu » s'il sert un arbitrage
 
 - [Content Advisor étagé](mem://tech/architect/content-advisor-staged-queue-fr) — Découpage `staged: true` en 2 jobs job_queue (research → synthesis), checkpoint 23 clés dans async_jobs.result_data.__research, nettoyage \u0000 + retry sans HTML brut, crédits non rejoués à l'étape 2
+
+- [Workbench borné](mem://tech/architect/workbench-backlog-cap-fr) — workbench-hygiene : dédup double signature (titre + catégorie/URL), plafond 40 constats actifs par domaine/user, périmés en `dismissed` jamais `done`
+- [MCP dry_run_script](mem://tech/mcp/dry-run-script-resolver-fr) — dry_run_script cible dry-run-script (siteUrl+code) via ARG_RESOLVE sur site_script_rules avec contrôle de propriété ; target_url optionnel
