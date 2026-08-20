@@ -59,7 +59,7 @@ const RGPD = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
-                  <span>{t3(language, 'Paiements sécurisés via Stripe (PCI-DSS niveau 1) — aucune donnée bancaire stockée', 'Secure payments via Stripe (PCI-DSS Level 1) — no banking data stored', 'Pagos seguros a través de Stripe (PCI-DSS nivel 1) — ningún dato bancario almacenado')}</span>
+                  <span>{t3(language, 'Paiements sécurisés via Paddle (Merchant of Record) et Stripe (PCI-DSS niveau 1) — aucune donnée bancaire stockée', 'Secure payments via Paddle (Merchant of Record) and Stripe (PCI-DSS Level 1) — no banking data stored', 'Pagos seguros a través de Paddle (Merchant of Record) y Stripe (PCI-DSS nivel 1) — ningún dato bancario almacenado')}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
@@ -182,9 +182,9 @@ const RGPD = () => {
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language,
-                  'Les paiements sont traités exclusivement par notre prestataire Stripe, certifié PCI-DSS niveau 1 (plus haut niveau de sécurité).',
-                  'Payments are processed exclusively by our provider Stripe, PCI-DSS Level 1 certified (highest security level).',
-                  'Los pagos son procesados exclusivamente por nuestro proveedor Stripe, certificado PCI-DSS nivel 1 (el más alto nivel de seguridad).'
+                  'Les paiements sont traités par Paddle, Merchant of Record de nos commandes, et par Stripe (certifié PCI-DSS niveau 1) pour les circuits résiduels. Aucune donnée bancaire ne transite par nos serveurs.',
+                  'Payments are processed by Paddle, the Merchant of Record for our orders, and by Stripe (PCI-DSS Level 1 certified) for residual flows. No banking data passes through our servers.',
+                  'Los pagos son procesados por Paddle, Merchant of Record de nuestros pedidos, y por Stripe (certificado PCI-DSS nivel 1) para circuitos residuales. Ningún dato bancario pasa por nuestros servidores.'
                 )}
               </p>
               <div className="bg-muted/50 rounded-lg p-6">
@@ -219,8 +219,13 @@ const RGPD = () => {
                     </thead>
                     <tbody>
                       <tr className="border-b border-border/50">
+                        <td className="py-2 pr-4">Paddle.com Market Ltd.</td>
+                        <td className="py-2 pr-4">{t3(language, 'Merchant of Record : vente, abonnements, paiements, TVA, facturation', 'Merchant of Record: sale, subscriptions, payments, VAT, invoicing', 'Merchant of Record: venta, suscripciones, pagos, IVA, facturación')}</td>
+                        <td className="py-2">{t3(language, 'Royaume-Uni (décision d\'adéquation) et UE', 'United Kingdom (adequacy decision) and EU', 'Reino Unido (decisión de adecuación) y UE')}</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
                         <td className="py-2 pr-4">Stripe</td>
-                        <td className="py-2 pr-4">{t3(language, 'Paiements sécurisés (PCI-DSS niveau 1)', 'Secure payments (PCI-DSS Level 1)', 'Pagos seguros (PCI-DSS nivel 1)')}</td>
+                        <td className="py-2 pr-4">{t3(language, 'Paiements sécurisés, circuits résiduels (PCI-DSS niveau 1)', 'Secure payments, residual flows (PCI-DSS Level 1)', 'Pagos seguros, circuitos residuales (PCI-DSS nivel 1)')}</td>
                         <td className="py-2">{t3(language, 'UE (Dublin)', 'EU (Dublin)', 'UE (Dublín)')}</td>
                       </tr>
                       <tr className="border-b border-border/50">

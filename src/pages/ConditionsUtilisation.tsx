@@ -80,7 +80,11 @@ const ConditionsUtilisation = () => {
                 {t3(language, '3. Tarification et modalités de paiement', '3. Pricing and Payment Terms', '3. Precios y modalidades de pago')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                {t3(language, 'Les prix sont indiqués en euros TTC. Les paiements sont sécurisés par Stripe.', 'Prices are indicated in euros including VAT. Payments are secured by Stripe.', 'Los precios se indican en euros IVA incluido. Los pagos están asegurados por Stripe.')}
+                {t3(language,
+                  'Les prix sont indiqués en euros. Notre processus de commande est géré par notre revendeur en ligne Paddle.com, Merchant of Record de toutes nos commandes ; Paddle traite les demandes de service client liées aux paiements et gère les retours. Certaines commandes sont encaissées par Stripe, le circuit applicable étant affiché avant validation du paiement. Crawlers AI ne collecte ni ne stocke aucune donnée bancaire.',
+                  'Prices are shown in euros. Our order process is conducted by our online reseller Paddle.com, the Merchant of Record for all our orders; Paddle handles payment-related customer service inquiries and returns. Some orders are processed by Stripe, and the applicable flow is shown before payment is confirmed. Crawlers AI never collects or stores banking data.',
+                  'Los precios se indican en euros. Nuestro proceso de pedido es gestionado por nuestro revendedor en línea Paddle.com, Merchant of Record de todos nuestros pedidos; Paddle atiende las consultas de servicio al cliente relacionadas con los pagos y gestiona las devoluciones. Algunos pedidos son procesados por Stripe, indicándose el circuito aplicable antes de confirmar el pago. Crawlers AI nunca recoge ni almacena datos bancarios.'
+                )}
               </p>
               <div className="bg-muted/50 rounded-lg p-6 mb-4">
                 <h3 className="font-semibold text-foreground mb-3">{t3(language, 'Packs de crédits :', 'Credit packs:', 'Paquetes de créditos:')}</h3>
@@ -148,9 +152,9 @@ const ConditionsUtilisation = () => {
               </div>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'Pour exercer votre droit de rétractation sur des crédits non utilisés, contactez-nous à contact@crawlers.fr avec votre numéro de commande.',
-                  'To exercise your right of withdrawal on unused credits, contact us at contact@crawlers.fr with your order number.',
-                  'Para ejercer su derecho de desistimiento sobre créditos no utilizados, contáctenos en contact@crawlers.fr con su número de pedido.'
+                  'Pour exercer votre droit de rétractation sur la part non consommée (crédits, solde de wallet, abonnement, pass Marina non utilisé), rendez-vous sur paddle.net avec votre email d\'achat ou écrivez-nous à contact@crawlers.fr avec votre numéro de commande.',
+                  'To exercise your right of withdrawal on the unused portion (credits, wallet balance, subscription, unused Marina pass), go to paddle.net with your purchase email or contact us at contact@crawlers.fr with your order number.',
+                  'Para ejercer su derecho de desistimiento sobre la parte no consumida (créditos, saldo de wallet, suscripción, pase Marina no utilizado), visite paddle.net con su email de compra o escríbanos a contact@crawlers.fr con su número de pedido.'
                 )}
               </p>
             </section>
@@ -162,9 +166,9 @@ const ConditionsUtilisation = () => {
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'Les crédits sont crédités sur votre compte immédiatement après confirmation du paiement par Stripe. Les rapports d\'audit et les codes correctifs sont générés et accessibles instantanément après utilisation des crédits. Les contenus numériques sont disponibles dans votre espace personnel. L\'abonnement Pro Agency est activé immédiatement après confirmation du paiement.',
-                  'Credits are credited to your account immediately after payment confirmation by Stripe. Audit reports and corrective codes are generated and accessible instantly after using credits. Digital content is available in your personal space. The Pro Agency subscription is activated immediately after payment confirmation.',
-                  'Los créditos se acreditan en su cuenta inmediatamente después de la confirmación del pago por Stripe. Los informes de auditoría y los códigos correctivos se generan y son accesibles instantáneamente tras el uso de los créditos. Los contenidos digitales están disponibles en su espacio personal. La suscripción Pro Agency se activa inmediatamente tras la confirmación del pago.'
+                  'Les crédits, le solde du wallet développeur et les pass Marina sont portés au compte immédiatement après confirmation du paiement par Paddle ou Stripe. Les rapports d\'audit et les codes correctifs sont générés et accessibles instantanément après utilisation des crédits. Les contenus numériques sont disponibles dans votre espace personnel. Les abonnements Pro Agency et Pro Agency+ sont activés immédiatement après confirmation du paiement.',
+                  'Credits, developer wallet balance and Marina passes are added to your account immediately after payment confirmation by Paddle or Stripe. Audit reports and corrective codes are generated and accessible instantly after using credits. Digital content is available in your personal space. Pro Agency and Pro Agency+ subscriptions are activated immediately after payment confirmation.',
+                  'Los créditos, el saldo del wallet de desarrollador y los pases Marina se acreditan inmediatamente después de la confirmación del pago por Paddle o Stripe. Los informes de auditoría y los códigos correctivos se generan y son accesibles instantáneamente tras el uso de los créditos. Los contenidos digitales están disponibles en su espacio personal. Las suscripciones Pro Agency y Pro Agency+ se activan inmediatamente tras la confirmación del pago.'
                 )}
               </p>
             </section>
@@ -224,11 +228,18 @@ const ConditionsUtilisation = () => {
               <h2 className="text-xl font-semibold text-foreground mb-4">
                 {t3(language, '7. Remboursement', '7. Refund', '7. Reembolso')}
               </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {t3(language,
+                  'Vous disposez de 14 jours à compter de la date de commande pour demander le remboursement de la part non consommée de votre achat : crédits non utilisés, solde de wallet développeur, pass Marina non utilisé, ou abonnement non utilisé de manière substantielle. Les remboursements sont traités par notre prestataire de paiement Paddle : rendez-vous sur paddle.net avec votre email d\'achat, ou écrivez-nous à contact@crawlers.fr et nous transmettons la demande.',
+                  'You have 14 days from the order date to request a refund of the unused portion of your purchase: unused credits, developer wallet balance, unused Marina pass, or a subscription not substantially used. Refunds are processed by our payment provider Paddle: visit paddle.net with your purchase email, or contact us at contact@crawlers.fr and we will forward the request.',
+                  'Dispone de 14 días desde la fecha del pedido para solicitar el reembolso de la parte no consumida de su compra: créditos no utilizados, saldo del wallet de desarrollador, pase Marina no utilizado o suscripción no utilizada de forma sustancial. Los reembolsos son procesados por nuestro proveedor de pagos Paddle: visite paddle.net con su email de compra, o escríbanos a contact@crawlers.fr y trasladaremos la solicitud.'
+                )}
+              </p>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'En cas de problème technique empêchant la génération d\'un rapport ou d\'un code correctif après utilisation de crédits, les crédits concernés seront recrédités sur votre compte sous 48h. Pour toute réclamation, contactez contact@crawlers.fr avec les détails du problème rencontré.',
-                  'In case of a technical problem preventing the generation of a report or corrective code after using credits, the concerned credits will be recredited to your account within 48 hours. For any complaint, contact contact@crawlers.fr with details of the problem encountered.',
-                  'En caso de problema técnico que impida la generación de un informe o un código correctivo tras el uso de créditos, los créditos afectados se reacreditarán en su cuenta en un plazo de 48 horas. Para cualquier reclamación, contacte contact@crawlers.fr con los detalles del problema encontrado.'
+                  'Au-delà de ce délai, en cas de problème technique empêchant la génération d\'un rapport ou d\'un code correctif après utilisation de crédits, les crédits concernés sont recrédités sur votre compte sous 48h. Pour toute réclamation, contactez contact@crawlers.fr avec les détails du problème rencontré.',
+                  'Beyond that period, if a technical problem prevents the generation of a report or corrective code after credits were used, the affected credits are recredited to your account within 48 hours. For any complaint, contact contact@crawlers.fr with details of the problem.',
+                  'Pasado ese plazo, si un problema técnico impide la generación de un informe o código correctivo tras el uso de créditos, los créditos afectados se reacreditan en su cuenta en 48 horas. Para cualquier reclamación, contacte contact@crawlers.fr con los detalles del problema.'
                 )}
               </p>
             </section>
