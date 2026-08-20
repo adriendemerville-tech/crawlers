@@ -429,9 +429,19 @@ export function WorkbenchAdmin() {
                       </Badge>
                       <span className="text-[9px] text-muted-foreground">{item.domain}</span>
                       <span className="text-[9px] text-muted-foreground">{item.finding_category}</span>
+                      {item.is_quick_win && (
+                        <Badge variant="outline" className="text-[9px] border-yellow-500/50 text-yellow-500">quick win</Badge>
+                      )}
+                      {item.priority_score != null && (
+                        <span className="text-[9px] text-muted-foreground">prio {Math.round(item.priority_score)}</span>
+                      )}
+                      {item.roi_tier && (
+                        <span className="text-[9px] text-muted-foreground">ROI {item.roi_tier}</span>
+                      )}
                       {item.spiral_score != null && (
                         <span className="text-[9px] text-muted-foreground">{item.spiral_score}pts</span>
                       )}
+
                     </div>
                     {item.target_url && (
                       <p className="text-[9px] text-muted-foreground truncate mt-0.5">{item.target_url}</p>
