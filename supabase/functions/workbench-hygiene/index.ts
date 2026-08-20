@@ -44,10 +44,12 @@ Deno.serve(async (req) => {
   );
 
   let action = "full";
+  let body: any = {};
   try {
-    const body = await req.json().catch(() => ({}));
+    body = (await req.json().catch(() => ({}))) || {};
     action = body.action || "full";
   } catch { /* cron calls with no body */ }
+
 
   const results: Record<string, number> = {};
 
