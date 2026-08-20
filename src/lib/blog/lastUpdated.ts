@@ -67,7 +67,10 @@ export function resolveArticleDates(
 ): { datePublished: string | null; dateModified: string | null; displayUpdated: string | null } {
   const published = parse(publishedAt);
   const datePublished = published ? published.toISOString() : null;
-  const displayUpdated = resolveLastUpdated(publishedAt, updatedAt);
+  // Idempotence : une valeur déjà résolue (jour ISO) est conservée telle quelle.
+  const displayUpdated = /^\d{4}-\d{2}-\d{2}$/.test(updatedAt ?? '')
+    ? (updatedAt as string)
+    : resolveLastUpdated(publishedAt, updatedAt);
 
   return {
     datePublished,
