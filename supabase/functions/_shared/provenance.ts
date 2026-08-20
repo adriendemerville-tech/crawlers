@@ -91,7 +91,11 @@ export function provenanceBadge(level: ProvenanceLevel, lang?: string): string {
   // Pastille rendue en inline-block avec padding symétrique : html2canvas
   // (export PDF) ignore le centrage flex et collait le texte en haut de la
   // pastille. Ici la hauteur est intrinsèque, donc le texte est toujours centré.
-  return `<span data-provenance="${level}" title="${spec.definition[l].replace(/"/g, '&quot;')}" style="display:inline-block;border:1px solid ${spec.color};color:${spec.color};border-radius:999px;padding:4px 9px 3px;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:10px;text-align:center;white-space:nowrap;vertical-align:middle;">${spec.label[l]}</span>`;
+  // Paddings verticaux symétriques + line-height:1 : en rendu print (PDF), un
+  // line-height fixe décalait le texte vers le haut de la pilule. Le padding
+  // droit est réduit de 1px pour compenser l'espace de lettrage final.
+  return `<span data-provenance="${level}" title="${spec.definition[l].replace(/"/g, '&quot;')}" style="display:inline-block;border:1px solid ${spec.color};color:${spec.color};border-radius:999px;padding:3px 8px 3px 9px;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:1;text-align:center;white-space:nowrap;vertical-align:middle;box-sizing:border-box;">${spec.label[l]}</span>`;
+
 }
 
 
