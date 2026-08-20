@@ -346,6 +346,68 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
     setRunning(false);
   }, [items, runOne]);
 
+  /* ── Reprise d'un lot interrompu ───────────────────────────────────────────
+   * L'orchestration du lot vit dans cet onglet : un rechargement de page, une
+   * navigation ou une mise en veille tuait la boucle, laissant les URLs figées
+   * (« 67 % » éternel) et les suivantes jamais lancées, alors que les jobs
+   * étaient terminés côté serveur. On réconcilie donc l'état stocké avec la
+   * base, puis on relance la file sur les URLs restantes — sans nouveau débit,
+   * le forfait ayant déjà été prélevé au lancement. */
+  const resumeBatch = useCallback(async (saved: BatchItem[]) => {
+    // 1. Réconciliation : état réel des jobs déjà lancés.
+    const withJobs = saved.filter(i => i.jobId);
+    let reconciled = saved;
+    if (withJobs.length > 0) {
+      const { data } = await supabase
+        .from('async_jobs')
+        .select('id, status, progress')
+        .in('id', withJobs.map(i => i.jobId as string));
+      const byId = new Map((data || []).map((j: any) => [j.id as string, j]));
+      reconciled = saved.map(item => {
+        const job = item.jobId ? byId.get(item.jobId) : undefined;
+        if (!job) return item;
+        const status = String(job.status);
+        if (status === 'completed' || status === 'partial') {
+          return { ...item, status: status as ItemStatus, progress: 100 };
+        }
+        if (status === 'failed') {
+          return { ...item, status: 'failed' as ItemStatus, error: item.error || 'Échec de la génération' };
+        }
+        return { ...item, status: 'running' as ItemStatus, progress: (job.progress ?? item.progress) as number };
+      });
+      setItems(reconciled);
+    }
+
+    // 2. Reprise : suivi des jobs encore en vol + lancement des URLs en attente.
+    const todo = reconciled
+      .map((it, i) => ({ it, i }))
+      .filter(({ it }) => it.status === 'pending' || it.status === 'running');
+    if (todo.length === 0) return;
+
+    cancelRef.current = false;
+    setRunning(true);
+    const batch = batchRef.current;
+    let cursor = 0;
+    const worker = async (workerIndex: number) => {
+      if (workerIndex > 0) await new Promise(r => setTimeout(r, workerIndex * STAGGER_MS));
+      while (cursor < todo.length && !cancelRef.current) {
+        const { it, i } = todo[cursor++];
+        await runOne(i, it.url, batch ?? undefined, it.jobId);
+      }
+    };
+    await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, todo.length) }, (_, w) => worker(w)),
+    );
+    setRunning(false);
+  }, [runOne]);
+
+  /* Reprise déclenchée une seule fois, après restauration du lot stocké. */
+  useEffect(() => {
+    if (!pendingResume) return;
+    setPendingResume(null);
+    void resumeBatch(pendingResume);
+  }, [pendingResume, resumeBatch]);
+
 
   const handleCancel = () => {
     cancelRef.current = true;
