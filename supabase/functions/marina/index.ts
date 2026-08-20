@@ -676,13 +676,15 @@ function checkMark(val: boolean): string {
   return val ? '✅' : '❌';
 }
 
-function buildModuleSection(title: string, emoji: string, data: any): string {
+function buildModuleSection(title: string, _emoji: string, data: any): string {
   if (!data) return '';
+  // Pas d'emoji dans les livrables : le glyphe n'est pas rendu à l'impression PDF.
   return `<div data-marina-block="module" style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
-    <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">${emoji} ${title}</h3>
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">${title}</h3>
     ${renderJsonSection(data)}
   </div>`;
 }
+
 
 /**
  * Bloc « Positionnement Mots-clés » — rendu explicite en 3 sous-sections
@@ -2370,13 +2372,19 @@ function buildReportIntroHTML(
     ));
   }
 
-  // Les titres issus du Workbench peuvent être des paragraphes LLM : on les
-  // ramène à une accroche complète (jamais coupée en milieu de phrase).
+  // Les titres issus du Workbench peuvent être des paragraphes LLM : on garde la
+  // première phrase complète, jamais une coupe suivie de « … ».
+  const firstSentence = (raw: string): string => {
+    const s = String(raw || '').replace(/\s+/g, ' ').trim().replace(/[…\.]+$/, '');
+    const m = s.match(/^(.{30,220}?[.!?])(\s|$)/);
+    return (m ? m[1].replace(/[.!?]+$/, '') : s).trim();
+  };
   const takeaways = (ctx.plan || [])
     .filter((p) => ['critical', 'important'].includes(String(p.severity)))
     .slice(0, 3)
-    .map((p) => `<li style="margin:0 0 6px 0;">${splitLongTitle(p.title, '').title}</li>`)
+    .map((p) => `<li style="margin:0 0 6px 0;">${firstSentence(p.title)}</li>`)
     .join('');
+
 
   const li = (s: string) => `<li style="margin:0 0 6px 0;">${s}</li>`;
 

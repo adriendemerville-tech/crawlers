@@ -9,6 +9,8 @@
  */
 
 import { crawlUrlKey } from './crawlUrlFilter.ts';
+import { decodeEntities as sharedDecodeEntities } from './reportEditorial.ts';
+
 
 
 export interface ArchetypePageInput {
@@ -930,9 +932,14 @@ function list(items: string[], color: string, title: string): string {
   </div>`;
 }
 
+/** Les données source contiennent déjà des entités (`d&#039;installation`) :
+ *  on décode d'abord, puis on échappe une seule fois. */
 function escHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return sharedDecodeEntities(String(s ?? ''))
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+
 
 /** Exemples concrets : H1 lisible + lien cliquable vers la page représentative. */
 function renderExamples(g: ArchetypeGroup): string {
