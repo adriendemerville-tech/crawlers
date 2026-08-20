@@ -151,15 +151,24 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   // Garde-fou : au-delà de `maxSections`, on remonte d'un cran de granularité
   // (blocs parents) plutôt que de capturer des milliers de sous-blocs, ce qui
   // faisait tourner l'export indéfiniment sur les rapports fusionnés.
+  // On refuse en revanche les parents démesurés (plusieurs dizaines de pages) :
+  // html2canvas n'arrive pas à allouer un canvas de cette taille et renvoyait
+  // une image transparente, rendue NOIRE en JPEG (rapport entièrement noir).
+  const MAX_COARSE_PX = A4_CONTENT_PX * 4;
   if (sections.length > maxSections) {
     const coarse = dropNested(
       sections
-        .map((el) => (el.parentElement as HTMLElement | null) || el)
+        .map((el) => {
+          const parent = el.parentElement as HTMLElement | null;
+          if (!parent || parent.offsetHeight > MAX_COARSE_PX) return el;
+          return parent;
+        })
         .filter((el) => el.offsetHeight > 8),
     );
     if (coarse.length >= 1 && coarse.length < sections.length) sections = coarse;
     if (sections.length > maxSections) sections = sections.slice(0, maxSections);
   }
+
 
 
 
@@ -190,6 +199,45 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   let cursorY = marginTop;
   let isFirstElement = true;
 
+  // Limites de canvas des navigateurs : au-delà, l'allocation échoue en silence
+  // et html2canvas renvoie une image transparente, que le JPEG rend NOIRE.
+  const MAX_CANVAS_SIDE = 12000;
+  const MAX_CANVAS_AREA = 24_000_000;
+
+  /** Aplatit le canvas sur un fond opaque : la transparence deviendrait noire en JPEG. */
+  const flatten = (src: HTMLCanvasElement): HTMLCanvasElement => {
+    const out = document.createElement('canvas');
+    out.width = src.width;
+    out.height = src.height;
+    const ctx = out.getContext('2d');
+    if (!ctx) return src;
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, out.width, out.height);
+    ctx.drawImage(src, 0, 0);
+    return out;
+  };
+
+  /** Vrai si le canvas est uniformément d'une seule couleur (capture ratée). */
+  const isBlank = (c: HTMLCanvasElement): boolean => {
+    const ctx = c.getContext('2d');
+    if (!ctx) return false;
+    try {
+    const step = Math.max(1, Math.floor(c.height / 40));
+    let first: string | null = null;
+    for (let y = 0; y < c.height; y += step) {
+      const row = ctx.getImageData(0, y, Math.min(c.width, 200), 1).data;
+      for (let i = 0; i < row.length; i += 16) {
+        const key = `${row[i]},${row[i + 1]},${row[i + 2]}`;
+        if (first === null) first = key;
+        else if (key !== first) return false;
+      }
+    }
+    return true;
+    } catch {
+      return false; // canvas « tainted » : on ne peut pas l'inspecter
+    }
+  };
+
   let captured = 0;
   for (const section of sections) {
     captured += 1;
@@ -199,25 +247,41 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     // html2canvas ajoutait une bande blanche à droite.
     const measuredWidth = section.offsetWidth || section.scrollWidth || captureWidth;
     const nativeWidth = Math.max(1, Math.min(captureWidth, measuredWidth));
-    let canvas: HTMLCanvasElement;
-    try {
-      // Délai de garde : une capture qui ne rend jamais la main bloquait tout
-      // l'export (bouton figé sur « Génération… »).
-      const shot = html2canvas(section, {
-        scale,
-        useCORS: true,
-        allowTaint: true,
-        width: nativeWidth,
-        windowWidth: iframeWidth,
-        logging: false,
-        backgroundColor,
-      });
-      canvas = await Promise.race([
-        shot,
+    const sectionHeightPx = Math.max(1, section.offsetHeight || section.scrollHeight || 1);
+
+    // Échelle propre à ce bloc : jamais au-delà des limites de canvas.
+    const scaleBySide = MAX_CANVAS_SIDE / Math.max(nativeWidth, sectionHeightPx);
+    const scaleByArea = Math.sqrt(MAX_CANVAS_AREA / (nativeWidth * sectionHeightPx));
+    const sectionScale = Math.max(0.35, Math.min(scale, scaleBySide, scaleByArea));
+
+    const shoot = (s: number) =>
+      Promise.race([
+        html2canvas(section, {
+          scale: s,
+          useCORS: true,
+          allowTaint: true,
+          width: nativeWidth,
+          windowWidth: iframeWidth,
+          logging: false,
+          backgroundColor,
+        }),
         new Promise<HTMLCanvasElement>((_, reject) =>
           setTimeout(() => reject(new Error('html2canvas timeout')), 20000),
         ),
       ]);
+
+    let canvas: HTMLCanvasElement;
+    try {
+      canvas = await shoot(sectionScale);
+      // Une capture uniforme (allocation ratée) est retentée à échelle réduite
+      // avant d'être abandonnée : mieux vaut un bloc absent qu'une page noire.
+      if (isBlank(canvas) && sectionScale > 0.5) {
+        const retry = await shoot(Math.max(0.35, sectionScale / 2));
+        if (!isBlank(retry)) canvas = retry;
+        else continue;
+      } else if (isBlank(canvas)) {
+        continue;
+      }
     } catch {
 
       continue; // un bloc non capturable ne doit pas casser tout l'export
@@ -227,7 +291,9 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     // NaN/0 et faisait échouer jsPDF.addImage → PDF vide ou tronqué.
     if (!canvas.width || !canvas.height) continue;
 
+    canvas = flatten(canvas);
     const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
     const sectionWidthMm = usableWidthMm * (nativeWidth / captureWidth);
     const sectionX = marginSide + (usableWidthMm - sectionWidthMm) / 2;
     const sectionHeightMm = (canvas.height * sectionWidthMm) / canvas.width;
