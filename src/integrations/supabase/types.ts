@@ -7872,6 +7872,69 @@ export type Database = {
         }
         Relationships: []
       }
+      link_health_queue: {
+        Row: {
+          broken_count: number
+          created_at: string
+          external_broken: Json
+          fetch_error: string | null
+          first_detected_at: string | null
+          id: string
+          internal_broken: Json
+          last_checked_at: string
+          links_checked: number
+          priority_score: number
+          resolved_at: string | null
+          reviewed_by: string | null
+          severity: string
+          source: string
+          status: string
+          title: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          broken_count?: number
+          created_at?: string
+          external_broken?: Json
+          fetch_error?: string | null
+          first_detected_at?: string | null
+          id?: string
+          internal_broken?: Json
+          last_checked_at?: string
+          links_checked?: number
+          priority_score?: number
+          resolved_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          source?: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          broken_count?: number
+          created_at?: string
+          external_broken?: Json
+          fetch_error?: string | null
+          first_detected_at?: string | null
+          id?: string
+          internal_broken?: Json
+          last_checked_at?: string
+          links_checked?: number
+          priority_score?: number
+          resolved_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          source?: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       linkedin_features_catalog: {
         Row: {
           capture_route: string | null
