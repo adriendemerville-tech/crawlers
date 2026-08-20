@@ -76,7 +76,7 @@ export async function logContentCreation(
       tracked_site_id: params.trackedSiteId,
       config_id: params.configId ?? null,
       user_id: params.userId ?? null,
-      phase: params.phase || 'execute',
+      phase: PUBLISH_PHASE,
       action_type: PUBLISH_ACTION_TYPE,
       status: PUBLISH_STATUS,
       cycle_number: params.cycleNumber ?? null,
