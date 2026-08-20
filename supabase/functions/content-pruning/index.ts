@@ -246,6 +246,8 @@ Deno.serve(handleRequest(async (req) => {
         items_scored: verdicts.length,
         computed_at: new Date().toISOString(),
       })
+      if (debtErr) console.error('[content-pruning] site_pruning_debt insert:', debtErr.message)
+
 
       const actionable = verdicts
         .filter((v) => v.decision === 'merge' || v.decision === 'redirect' || v.decision === 'delete')
