@@ -74,16 +74,17 @@ let _ah: string | null = null;
 function handler(tool: string) {
   return async (args: Record<string, unknown>) => {
     const t0 = Date.now(); const ah = _ah; const isFree = FREE_TOOLS.has(tool);
-    if (!(await checkKillSwitch())) { await log(null, tool, args, 'blocked', 'disabled', Date.now() - t0); return { content: [{ type: 'text' as const, text: '🚫 MCP Crawlers temporairement désactivé.' }] }; }
+    if (!(await checkKillSwitch())) { await log(null, tool, args, 'blocked', 'disabled', Date.now() - t0); return { content: [{ type: 'text' as const, text: 'MCP Crawlers temporairement désactivé.' }] }; }
     let auth: Auth | null = null;
     if (!isFree) {
       auth = await authenticate(ah);
-      if (!auth) { await log(null, tool, args, 'unauthorized', 'no token', Date.now() - t0); return { content: [{ type: 'text' as const, text: '🔒 Pro Agency requis. https://crawlers.fr/tarifs' }] }; }
-      if (!auth.isAdmin && auth.planType !== 'agency_pro') { await log(auth.userId, tool, args, 'forbidden', 'not pro', Date.now() - t0); return { content: [{ type: 'text' as const, text: '⚠️ Réservé Pro Agency. https://crawlers.fr/tarifs' }] }; }
-      if (!(await rateOk(auth.userId, tool))) { await log(auth.userId, tool, args, 'rate_limited', '30/h', Date.now() - t0); return { content: [{ type: 'text' as const, text: '⏳ Limite 30/h atteinte.' }] }; }
+      if (!auth) { await log(null, tool, args, 'unauthorized', 'no token', Date.now() - t0); return { content: [{ type: 'text' as const, text: 'Accès Pro Agency requis. https://crawlers.fr/tarifs' }] }; }
+      if (!auth.isAdmin && auth.planType !== 'agency_pro') { await log(auth.userId, tool, args, 'forbidden', 'not pro', Date.now() - t0); return { content: [{ type: 'text' as const, text: 'Réservé Pro Agency. https://crawlers.fr/tarifs' }] }; }
+      if (!(await rateOk(auth.userId, tool))) { await log(auth.userId, tool, args, 'rate_limited', '30/h', Date.now() - t0); return { content: [{ type: 'text' as const, text: 'Limite de 30 appels par heure atteinte.' }] }; }
     } else { auth = await authenticate(ah); }
-    const res = await callFn(TOOL_TO_FUNCTION[tool], args, ah || undefined); const ms = Date.now() - t0;
-    if (res.error) { await log(auth?.userId || null, tool, args, 'error', res.error, ms); return { content: [{ type: 'text' as const, text: `❌ ${res.error}` }] }; }
+    const payload = ARG_ADAPT[tool] ? ARG_ADAPT[tool]!(args) : args;
+    const res = await callFn(TOOL_TO_FUNCTION[tool], payload, ah || undefined); const ms = Date.now() - t0;
+    if (res.error) { await log(auth?.userId || null, tool, args, 'error', res.error, ms); return { content: [{ type: 'text' as const, text: `Erreur: ${res.error}` }] }; }
     await log(auth?.userId || null, tool, args, 'success', null, ms);
     return { content: [{ type: 'text' as const, text: JSON.stringify(res.data, null, 2) }] };
   };
