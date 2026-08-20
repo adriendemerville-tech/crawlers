@@ -1,6 +1,7 @@
 import { Header } from '@/components/Header';
 import { FAQSection } from '@/components/FAQSection';
 import { GEOFAQSection } from '@/components/GEOFAQSection';
+import { PageEditorial } from '@/components/seo/PageEditorial';
 import { lazy, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
