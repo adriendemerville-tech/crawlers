@@ -978,7 +978,7 @@ try {
       }
 
       // Gel dur : en régime saturé, aucune création sans gap sémantique documenté.
-      const freeze = NEW_CONTENT_TASK_ACTIONS.includes(task.action_type as ActionType)
+      const freeze = ['create_content', 'publish_draft'].includes(String(task.action_type))
         ? isCreationFrozen(siteDebtRegime, {
             documentedSemanticGap: Boolean(task.metadata?.semantic_gap_documented),
             competingPages: Number(task.metadata?.competing_pages ?? 0),
