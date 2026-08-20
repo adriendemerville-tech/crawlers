@@ -19,6 +19,8 @@ import {
   type NetworkSynthesisFacts,
   type SiteStructureContext,
 } from './networkSynthesis';
+import { planFicheDetail } from './ficheDetail';
+
 
 
 export interface MarinaReportPart {
