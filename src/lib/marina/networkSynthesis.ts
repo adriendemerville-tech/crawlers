@@ -56,8 +56,13 @@ const LEVEL_SPEC: Record<Level, { label: string; color: string; title: string }>
 
 function badge(level: Level): string {
   const s = LEVEL_SPEC[level];
-  return `<span title="${s.title}" style="display:inline-flex;align-items:center;justify-content:center;text-align:center;border:1px solid ${s.color};color:${s.color};border-radius:999px;padding:2px 8px;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:1;white-space:nowrap;vertical-align:middle;min-height:18px;">${s.label}</span>`;
+  // Rendu print (Chromium/PDF) : inline-block avec paddings symétriques plutôt
+  // qu'inline-flex + min-height, qui décalait le texte vers le haut de la pilule.
+  // Le padding droit est réduit de 1px pour compenser l'espace de lettrage
+  // ajouté après le dernier caractère par letter-spacing (texte sinon décentré).
+  return `<span title="${s.title}" style="display:inline-block;border:1px solid ${s.color};color:${s.color};border-radius:999px;padding:3px 8px 3px 9px;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;line-height:1;text-align:center;white-space:nowrap;vertical-align:middle;box-sizing:border-box;">${s.label}</span>`;
 }
+
 
 function esc(v: string): string {
   return String(v)
