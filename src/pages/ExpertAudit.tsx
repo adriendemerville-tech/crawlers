@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { ExpertAuditDashboard, ExpertAuditContent, ExpertAuditFAQ } from '@/components/ExpertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -128,10 +127,6 @@ const ExpertAudit = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-        <script type="application/ld+json">{JSON.stringify(webPageSchema)}</script>
-      </Helmet>
       <Header />
       <main className="flex-1" role="main" aria-label="Audit Expert SEO & IA">
         <ExpertAuditDashboard onLoadingChange={setIsAuditLoading} />

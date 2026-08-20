@@ -1,4 +1,3 @@
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { lazy, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -186,10 +185,6 @@ export default function Methodologie() {
 
   return (
     <>
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-        <script type="application/ld+json">{JSON.stringify(howToSchema)}</script>
-      </Helmet>
       <Header />
       <main className="min-h-screen bg-background pt-20">
 
