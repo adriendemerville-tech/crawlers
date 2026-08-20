@@ -266,6 +266,12 @@ export function ParmenionExecutionStatus() {
                 {row.status && (
                   <Badge variant="outline" className="text-xs">{row.status}</Badge>
                 )}
+                {row.degradedCount7d > 0 && (
+                  <Badge variant="outline" className="border-orange-500/40 text-orange-700 dark:text-orange-300 text-xs">
+                    <AlertTriangle className="mr-1 h-3 w-3" />
+                    {row.degradedCount7d} incident{row.degradedCount7d > 1 ? 's' : ''} / 7 j
+                  </Badge>
+                )}
               </div>
             </div>
 
@@ -274,6 +280,38 @@ export function ParmenionExecutionStatus() {
                 <PhaseChip key={p} phase={p} status={row.phases[p]} />
               ))}
             </div>
+
+            {row.incidents.length > 0 && (
+              <div className="rounded-md border border-orange-500/30 bg-orange-500/5 p-3 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Cycles dégradés — causes
+                </div>
+                <ul className="space-y-1.5">
+                  {row.incidents.map((inc, i) => (
+                    <li key={`${inc.at}-${i}`} className="text-[11px] leading-relaxed text-muted-foreground">
+                      <span className="font-mono text-foreground">{inc.phase}</span>
+                      {' · '}
+                      <span className="uppercase">{inc.status}</span>
+                      {' · il y a '}
+                      {formatDistanceToNow(new Date(inc.at), { locale: fr })}
+                      {inc.messages.length > 0 ? (
+                        <div className="pl-2 border-l border-orange-500/30 mt-0.5">
+                          {inc.messages.map((m, j) => (
+                            <div key={j}>{m}</div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="pl-2 border-l border-orange-500/30 mt-0.5 italic">
+                          Aucune cause enregistrée par la fonction appelante
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
 
             {row.implementation_mode === 'dry_run' && (
               <p className="text-[11px] text-muted-foreground italic">
