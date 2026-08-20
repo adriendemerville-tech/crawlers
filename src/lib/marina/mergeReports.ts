@@ -288,7 +288,7 @@ function buildGlobalSummary(domain: string, metas: PageMeta[], domainVerdict: st
   const observations = crossPageObservations(metas);
 
   return `
-  <section class="marina-batch-summary section" style="page-break-after:always;padding:32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;border-left:6px solid #d4af37;">
+  <section id="synthese-executive" class="marina-batch-summary section" style="page-break-after:always;padding:32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;border-left:6px solid #d4af37;">
     <h2 style="font-size:22px;margin:0 0 6px 0;">Synthèse&nbsp;exécutive</h2>
     <p style="font-size:13px;color:#6b7280;margin:0 0 18px 0;">
       ${escapeHtml(domain)} — ${pageCount} URLs auditées. Cette synthèse reprend l'ensemble de l'audit : d'abord ce qui
@@ -448,7 +448,7 @@ export function mergeMarinaReports(
   // rapport : sans ce bandeau, la page d'ouverture ne nommerait ni le domaine ni
   // la date ni le nombre d'URLs couvertes.
   const networkSynthesis = synthesis.html
-    ? `<section class="marina-batch-opening" style="padding:0;">
+    ? `<section id="synthese-reseau" class="marina-batch-opening" style="padding:0;">
          <div style="padding:40px 32px 0 32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
            <p style="letter-spacing:.18em;text-transform:uppercase;font-size:11px;margin:0 0 8px 0;opacity:.7;">Crawlers — Marina · Rapport multipages</p>
            <p style="font-size:17px;font-weight:700;margin:0 0 4px 0;">${escapeHtml(domain)}</p>
@@ -541,7 +541,7 @@ export function mergeMarinaReports(
              Valable pour les ${parts.length} pages auditées — calculée une seule fois.
            </p>
          </div>
-         ${orderedSiteEntries.map(([, htmlBlock]) => htmlBlock).join('\n')}
+         ${orderedSiteEntries.map(([id, htmlBlock]) => `<a id="site-${id}"></a>${htmlBlock}`).join('\n')}
        </section>`
     : '';
 
@@ -603,7 +603,7 @@ export function mergeMarinaReports(
            </p>`
         : '';
       return `
-      <section class="marina-batch-part" style="page-break-before:always;">
+      <section id="fiche-${i + 1}" class="marina-batch-part" style="page-break-before:always;">
         <div style="padding:24px 32px 0 32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
           <p style="letter-spacing:.14em;text-transform:uppercase;font-size:11px;margin:0 0 4px 0;opacity:.7;">
             Fiche ${i + 1} / ${parts.length}${condensed ? ' — condensée' : ''}
