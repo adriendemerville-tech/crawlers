@@ -182,9 +182,9 @@ const RGPD = () => {
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language,
-                  'Les paiements sont traités exclusivement par notre prestataire Stripe, certifié PCI-DSS niveau 1 (plus haut niveau de sécurité).',
-                  'Payments are processed exclusively by our provider Stripe, PCI-DSS Level 1 certified (highest security level).',
-                  'Los pagos son procesados exclusivamente por nuestro proveedor Stripe, certificado PCI-DSS nivel 1 (el más alto nivel de seguridad).'
+                  'Les paiements sont traités par Paddle, Merchant of Record de nos commandes, et par Stripe (certifié PCI-DSS niveau 1) pour les circuits résiduels. Aucune donnée bancaire ne transite par nos serveurs.',
+                  'Payments are processed by Paddle, the Merchant of Record for our orders, and by Stripe (PCI-DSS Level 1 certified) for residual flows. No banking data passes through our servers.',
+                  'Los pagos son procesados por Paddle, Merchant of Record de nuestros pedidos, y por Stripe (certificado PCI-DSS nivel 1) para circuitos residuales. Ningún dato bancario pasa por nuestros servidores.'
                 )}
               </p>
               <div className="bg-muted/50 rounded-lg p-6">
