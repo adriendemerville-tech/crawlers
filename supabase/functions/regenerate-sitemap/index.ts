@@ -132,11 +132,73 @@ Deno.serve(handleRequest(async (req) => {
 
     console.log(`[regenerate-sitemap] ✅ ${formatted.length} URLs → ${BUCKET}/${SITEMAP_PATH}`);
 
+    // 7. IndexNow — notifie Bing/Yandex/Naver/Seznam des URL récentes (Google n'y participe pas)
+    let indexnow: { submitted: number; skipped: number; success: boolean; error?: string } | null = null;
+    if (body.indexnow !== false) {
+      try {
+        const explicit: string[] = Array.isArray(body.indexnow_urls)
+          ? body.indexnow_urls.filter((u: unknown) => typeof u === 'string')
+          : [];
+
+        // Par défaut : URL dont lastmod est dans les 7 derniers jours
+        const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString().split('T')[0];
+        const candidates = explicit.length > 0
+          ? explicit
+          : formatted.filter(e => e.lastmod >= since).map(e => e.loc);
+
+        if (candidates.length === 0) {
+          indexnow = { submitted: 0, skipped: 0, success: true };
+        } else {
+          // Déduplication : pas de resoumission d'une même URL sous 24 h
+          const cutoff = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+          const { data: recent } = await supabase
+            .from('url_indexing_submissions')
+            .select('url')
+            .eq('engine', 'indexnow')
+            .eq('success', true)
+            .gte('submitted_at', cutoff)
+            .in('url', candidates.slice(0, 500));
+
+          const already = new Set((recent || []).map((r: { url: string }) => r.url));
+          const pending = candidates.filter(u => !already.has(u));
+          const skipped = candidates.length - pending.length;
+
+          if (pending.length === 0) {
+            indexnow = { submitted: 0, skipped, success: true };
+          } else {
+            const result = await submitToIndexNow(pending, domain);
+            if (result.urls.length > 0) {
+              await supabase.from('url_indexing_submissions').insert(
+                result.urls.map(url => ({
+                  url,
+                  engine: 'indexnow',
+                  success: result.success,
+                  status_code: result.statusCode ?? null,
+                  error: result.error ?? null,
+                  source: body.trigger || 'sitemap_regeneration',
+                })),
+              );
+            }
+            indexnow = {
+              submitted: result.submitted,
+              skipped,
+              success: result.success,
+              ...(result.error ? { error: result.error } : {}),
+            };
+            console.log(`[regenerate-sitemap] IndexNow: ${result.submitted} soumises, ${skipped} ignorées, ok=${result.success}`);
+          }
+        }
+      } catch (e) {
+        console.error('[regenerate-sitemap] IndexNow error:', e instanceof Error ? e.message : String(e));
+      }
+    }
+
     return jsonOk({
       success: true,
       urls_count: formatted.length,
       storage_path: `${BUCKET}/${SITEMAP_PATH}`,
       etag,
+      indexnow,
     });
 
   } catch (err) {
