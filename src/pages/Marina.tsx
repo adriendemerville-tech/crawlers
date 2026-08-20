@@ -913,7 +913,6 @@ export default function Marina() {
                     />
                     <p className="text-xs text-muted-foreground mt-2">
                       {freeT.hint}
-                      {typeof freeRemaining === 'number' && ` — ${freeT.remaining(freeRemaining)}`}
                     </p>
                   </div>
                 )}
