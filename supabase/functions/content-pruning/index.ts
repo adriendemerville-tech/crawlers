@@ -247,7 +247,7 @@ Deno.serve(handleRequest(async (req) => {
         explanation: debt.explanation,
         items_scored: verdicts.length,
         computed_at: new Date().toISOString(),
-      })
+      }, { onConflict: 'user_id,domain' })
       if (debtErr) console.error('[content-pruning] site_pruning_debt insert:', debtErr.message)
 
 
