@@ -27,22 +27,39 @@ const csrfMiddleware = createCsrfMiddleware({
   filter: (ctx) => ctx.handlerType === "serverFn",
 });
 
-// SEO: `?lang=en` / `?lang=es` are thin duplicates of the FR pages. The client
-// hook already forced noindex + FR canonical after hydration, but crawlers read
-// the raw SSR HTML. This middleware rewrites the served HTML (and adds the
-// equivalent X-Robots-Tag header) for those variants only — FR traffic streams
-// untouched.
+// SEO: `?lang=es` / `?lang=en` sont des doublons fins des pages FR — la langue
+// est un réglage de compte (localStorage), jamais un paramètre d'URL. Ces URL
+// n'ont donc aucune raison d'exister côté crawl : on les redirige en 301 vers
+// l'URL FR propre (sans `lang`), ce qui consolide les signaux au lieu de se
+// contenter d'un noindex. Le repli noindex + canonical FR reste appliqué si la
+// requête n'est pas redirigeable (POST, non-HTML).
 const langVariantSeoMiddleware = createMiddleware().server(async ({ next, request, handlerType }) => {
-  const result = await next();
-  if (handlerType !== "router") return result;
-
-  let url: URL;
+  let url: URL | null = null;
   try {
     url = new URL(request.url);
   } catch {
-    return result;
+    url = null;
   }
-  if (!isNonFrLangVariant(url)) return result;
+
+  const isLangVariant = handlerType === "router" && url !== null && isNonFrLangVariant(url);
+
+  // 301 vers l'URL sans `lang` (les autres paramètres sont conservés).
+  if (isLangVariant && url && (request.method === "GET" || request.method === "HEAD")) {
+    const clean = new URL(url.toString());
+    clean.searchParams.delete("lang");
+    const target = `${clean.pathname.replace(/(.)\/+$/, "$1")}${clean.search}`;
+    return new Response(null, {
+      status: 301,
+      headers: {
+        location: target,
+        "x-robots-tag": "noindex, nofollow",
+        "cache-control": "public, max-age=3600",
+      },
+    });
+  }
+
+  const result = await next();
+  if (!isLangVariant || !url) return result;
 
   const response = result.response;
   const contentType = response.headers.get("content-type") ?? "";
