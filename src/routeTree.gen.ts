@@ -64,6 +64,7 @@ import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as ReferencementIaRouteImport } from './routes/referencement-ia'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RgpdRouteImport } from './routes/rgpd'
+import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
 import { Route as ScoreGeoRouteImport } from './routes/score-geo'
 import { Route as SeaSeoBridgeRouteImport } from './routes/sea-seo-bridge'
 import { Route as SignupRouteImport } from './routes/signup'
@@ -415,6 +416,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RgpdRoute = RgpdRouteImport.update({
   id: '/rgpd',
   path: '/rgpd',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RssDotxmlRoute = RssDotxmlRouteImport.update({
+  id: '/rss.xml',
+  path: '/rss.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScoreGeoRoute = ScoreGeoRouteImport.update({
@@ -828,6 +834,7 @@ export interface FileRoutesByFullPath {
   '/referencement-ia': typeof ReferencementIaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rgpd': typeof RgpdRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/score-geo': typeof ScoreGeoRoute
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
   '/signup': typeof SignupRoute
@@ -955,6 +962,7 @@ export interface FileRoutesByTo {
   '/referencement-ia': typeof ReferencementIaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rgpd': typeof RgpdRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/score-geo': typeof ScoreGeoRoute
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
   '/signup': typeof SignupRoute
@@ -1083,6 +1091,7 @@ export interface FileRoutesById {
   '/referencement-ia': typeof ReferencementIaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rgpd': typeof RgpdRoute
+  '/rss.xml': typeof RssDotxmlRoute
   '/score-geo': typeof ScoreGeoRoute
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
   '/signup': typeof SignupRoute
@@ -1212,6 +1221,7 @@ export interface FileRouteTypes {
     | '/referencement-ia'
     | '/reset-password'
     | '/rgpd'
+    | '/rss.xml'
     | '/score-geo'
     | '/sea-seo-bridge'
     | '/signup'
@@ -1339,6 +1349,7 @@ export interface FileRouteTypes {
     | '/referencement-ia'
     | '/reset-password'
     | '/rgpd'
+    | '/rss.xml'
     | '/score-geo'
     | '/sea-seo-bridge'
     | '/signup'
@@ -1466,6 +1477,7 @@ export interface FileRouteTypes {
     | '/referencement-ia'
     | '/reset-password'
     | '/rgpd'
+    | '/rss.xml'
     | '/score-geo'
     | '/sea-seo-bridge'
     | '/signup'
@@ -1594,6 +1606,7 @@ export interface RootRouteChildren {
   ReferencementIaRoute: typeof ReferencementIaRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RgpdRoute: typeof RgpdRoute
+  RssDotxmlRoute: typeof RssDotxmlRoute
   ScoreGeoRoute: typeof ScoreGeoRoute
   SeaSeoBridgeRoute: typeof SeaSeoBridgeRoute
   SignupRoute: typeof SignupRoute
@@ -2051,6 +2064,13 @@ declare module '@tanstack/react-router' {
       path: '/rgpd'
       fullPath: '/rgpd'
       preLoaderRoute: typeof RgpdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rss.xml': {
+      id: '/rss.xml'
+      path: '/rss.xml'
+      fullPath: '/rss.xml'
+      preLoaderRoute: typeof RssDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/score-geo': {
@@ -2602,6 +2622,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReferencementIaRoute: ReferencementIaRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RgpdRoute: RgpdRoute,
+  RssDotxmlRoute: RssDotxmlRoute,
   ScoreGeoRoute: ScoreGeoRoute,
   SeaSeoBridgeRoute: SeaSeoBridgeRoute,
   SignupRoute: SignupRoute,
