@@ -21,6 +21,7 @@ const CONCURRENCY = 2;
 // domaine avant que la suivante ne démarre (évite deux crawls simultanés).
 const STAGGER_MS = 20_000;
 const STORAGE_KEY = 'marina_batch_v2';
+const BATCH_KEY = 'marina_batch_v2_meta';
 
 function computeMultipageCost(pageCount: number): number {
   if (pageCount <= MULTIPAGE_BASE_PAGES) return MULTIPAGE_BASE_CREDITS;
@@ -101,6 +102,10 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       if (Array.isArray(parsed) && parsed.length > 0 && parsed.some(i => i.jobId)) {
         setItems(parsed);
         setOpen(true);
+        try {
+          const meta = localStorage.getItem(BATCH_KEY);
+          if (meta) batchRef.current = JSON.parse(meta);
+        } catch { /* ignore */ }
         setPendingResume(parsed);
       }
     } catch {
@@ -312,6 +317,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       size: initial.length,
     };
     batchRef.current = batch;
+    try { localStorage.setItem(BATCH_KEY, JSON.stringify(batch)); } catch { /* quota */ }
     const worker = async (workerIndex: number) => {
       // Le second worker attend que le premier ait initié le crawl mutualisé.
       if (workerIndex > 0) {
@@ -494,6 +500,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
     setRunning(false);
     try {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(BATCH_KEY);
     } catch {
       /* ignore */
     }
