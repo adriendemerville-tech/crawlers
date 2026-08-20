@@ -19,6 +19,8 @@ import {
   type NetworkSynthesisFacts,
   type SiteStructureContext,
 } from './networkSynthesis';
+import { planFicheDetail } from './ficheDetail';
+
 
 
 export interface MarinaReportPart {
@@ -491,6 +493,10 @@ export function mergeMarinaReports(
     : '';
 
 
+  // Niveau de détail par URL : un gabarit déjà détaillé n'est pas re-détaillé
+  // pour chacune de ses instances (la conclusion intermédiaire reste entière).
+  const detail = planFicheDetail(metas, synthesis.facts);
+
   const sections = parts
     .map((p, i) => {
       const split = splits[i];
@@ -502,19 +508,35 @@ export function mergeMarinaReports(
         ...split.pageBlocks.filter(b => b.id === 'page-verdict'),
         ...split.pageBlocks.filter(b => b.id !== 'page-verdict' && !(hasVerdict && b.id === 'summary')),
       ];
-      const content = split.tagged ? ordered.map(b => b.html).join('\n') : extractBody(p.html);
+      const path = split.meta?.path || pathOf(p.url);
+      const condensed = split.tagged && hasVerdict && detail.level.get(path) === 'condensed';
+      const kept = condensed
+        ? ordered.filter(b => b.id === 'page-verdict' || b.id === 'cocoon_page')
+        : ordered;
+      const content = split.tagged ? kept.map(b => b.html).join('\n') : extractBody(p.html);
+      const condensedNote = condensed
+        ? `<p style="margin:10px 32px 0 32px;font-size:12px;color:#6b7280;line-height:1.6;max-width:52em;">
+             Fiche condensée : cette URL est une instance du gabarit
+             <strong>${escapeHtml(detail.templateOf.get(path) || path)}</strong>, déjà détaillé par
+             <strong>${escapeHtml(detail.representativeOf.get(path) || '')}</strong>. Sa conclusion
+             intermédiaire, ses scores et ses actions propres figurent ci-dessous ; le diagnostic
+             technique et GEO détaillé du gabarit n'est pas répété.
+           </p>`
+        : '';
       return `
       <section class="marina-batch-part" style="page-break-before:always;">
         <div style="padding:24px 32px 0 32px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
           <p style="letter-spacing:.14em;text-transform:uppercase;font-size:11px;margin:0 0 4px 0;opacity:.7;">
-            Fiche ${i + 1} / ${parts.length}
+            Fiche ${i + 1} / ${parts.length}${condensed ? ' — condensée' : ''}
           </p>
           <p style="font-size:16px;font-weight:700;margin:0 0 4px 0;">${escapeHtml(p.url)}</p>
         </div>
+        ${condensedNote}
         ${content}
       </section>`;
     })
     .join('\n');
+
 
   const disclosureSection = disclosure
     ? `<section class="marina-batch-disclosure" style="page-break-before:always;">${disclosure}</section>`
