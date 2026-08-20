@@ -44,7 +44,16 @@ export interface PrunePageInput {
   http_status: number;
   /** true quand aucune donnée GSC n'est disponible pour le site. */
   metrics_missing?: boolean;
+  /**
+   * Meilleure position observée par une source externe (Semrush, DataForSEO)
+   * quand GSC ne remonte encore rien : une position naissante hors clics est
+   * un actif à défendre, pas une page morte.
+   */
+  external_best_position?: number | null;
+  /** Volume mensuel du mot-clé associé à cette position externe. */
+  external_keyword_volume?: number | null;
 }
+
 
 export interface PruneVerdict {
   url: string;
@@ -100,7 +109,12 @@ export function conservationScore(page: PrunePageInput): { score: number; reason
   return { score: Math.min(100, score), reasons };
 }
 
-/** Protections GSC : vetos absolus contre toute action destructive. */
+/** Borne haute de la « position naissante » : au-delà, la page n'est plus un actif en cours d'acquisition. */
+export const NASCENT_POSITION_MAX = 30;
+/** Seuil de contenu substantiel : au-dessus, aucune suppression sur simple absence de clics. */
+export const SUBSTANTIAL_WORD_COUNT = 1200;
+
+/** Protections GSC + positions naissantes : vetos absolus contre toute action destructive. */
 export function pruneProtection(page: PrunePageInput): { protected: boolean; reason?: string } {
   if (page.metrics_missing) {
     return { protected: true, reason: 'Aucune mesure GSC : suppression interdite sans preuve' };
@@ -112,8 +126,36 @@ export function pruneProtection(page: PrunePageInput): { protected: boolean; rea
   if (page.impressions_90d >= 20) {
     return { protected: true, reason: `${page.impressions_90d} impressions sur 90 j` };
   }
+  // Positions naissantes : une page en page 2 (16-30) n'a souvent aucun clic,
+  // et c'est précisément le palier où quelques points font basculer en page 1.
+  // La supprimer détruit un actif en cours d'acquisition.
+  if (page.position && page.position > 15 && page.position <= NASCENT_POSITION_MAX) {
+    return {
+      protected: true,
+      reason: `Position naissante ${Math.round(page.position)} (page 2, à défendre)`,
+    };
+  }
+  // Position connue seulement d'une source externe (Semrush / DataForSEO) :
+  // GSC peut ne rien remonter alors que la page est déjà classée.
+  const ext = page.external_best_position ?? 0;
+  if (ext > 0 && ext <= NASCENT_POSITION_MAX) {
+    const vol = page.external_keyword_volume ?? 0;
+    return {
+      protected: true,
+      reason: `Position externe ${Math.round(ext)}${vol > 0 ? ` sur un mot-clé à ${vol}/mois` : ''} : actif à défendre`,
+    };
+  }
+  // Contenu long déjà visible en SERP : il se réécrit ou se fusionne, jamais
+  // ne se supprime sur la seule absence de clics.
+  if (page.word_count >= SUBSTANTIAL_WORD_COUNT && page.impressions_90d >= 1) {
+    return {
+      protected: true,
+      reason: `Contenu substantiel (${page.word_count} mots) déjà visible en SERP`,
+    };
+  }
   return { protected: false };
 }
+
 
 export function decidePrune(score: number, page: PrunePageInput, isProtected: boolean): PruneDecision {
   if (page.http_status >= 400) return 'delete';

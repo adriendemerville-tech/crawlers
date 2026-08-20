@@ -30,6 +30,10 @@ const MAX_MERGES_PER_RUN = 1;
 const WEEKLY_ACTION_CAP = 3;
 /** Anti-bruit : nb max de constats poussés au Workbench par exécution. */
 const MAX_FINDINGS_PER_RUN = 6;
+/** Borne haute de la « position naissante » : 16-30 = page 2, actif à défendre. */
+const NASCENT_POSITION_MAX = 30;
+/** Au-dessus de ce volume de mots, aucune dépublication sur simple absence de clics. */
+const SUBSTANTIAL_WORD_COUNT = 1200;
 
 const STOPWORDS = new Set([
   'le', 'la', 'les', 'de', 'des', 'du', 'un', 'une', 'et', 'ou', 'pour', 'avec',
@@ -54,6 +58,10 @@ export interface PruneCandidate {
   clicks90d: number;
   impressions90d: number;
   bestPosition: number | null;
+  /** Meilleure position vue par une source externe (keyword_universe / Semrush). */
+  externalBestPosition: number | null;
+  externalKeywordVolume: number;
+
   thinScore: number;
   isThin: boolean;
   duplicateOf: string | null;
@@ -145,6 +153,7 @@ async function collectCandidates(sb: any): Promise<PruneCandidate[]> {
       targetKeyword: d.target_keyword || null,
       agentOwned: d?.generation_context?.source === 'agent-seo',
       clicks90d: 0, impressions90d: 0, bestPosition: null,
+      externalBestPosition: null, externalKeywordVolume: 0,
       thinScore: 0, isThin: false, duplicateOf: null, duplicateSimilarity: 0,
       decision: 'keep', reasons: [], executed: false,
     });
@@ -165,6 +174,7 @@ async function collectCandidates(sb: any): Promise<PruneCandidate[]> {
       targetKeyword: null,
       agentOwned: false,
       clicks90d: 0, impressions90d: 0, bestPosition: null,
+      externalBestPosition: null, externalKeywordVolume: 0,
       thinScore: 0, isThin: false, duplicateOf: null, duplicateSimilarity: 0,
       decision: 'keep', reasons: [], executed: false,
     });
@@ -212,6 +222,45 @@ async function attachGscSignals(sb: any, candidates: PruneCandidate[]): Promise<
   }
   return true;
 }
+
+/**
+ * Positions externes (Semrush / DataForSEO via `keyword_universe`).
+ * GSC n'associe une requête à une page que par recouvrement de jetons : une
+ * page classée en page 2 peut n'avoir aucun signal GSC exploitable. Cette
+ * source évite de dépublier un actif déjà positionné.
+ */
+async function attachExternalRanks(sb: any, candidates: PruneCandidate[]): Promise<void> {
+  const { data, error } = await sb
+    .from('keyword_universe')
+    .select('target_url, current_position, best_position, search_volume')
+    .eq('domain', DOMAIN)
+    .not('target_url', 'is', null)
+    .limit(5000);
+  if (error || !data?.length) return;
+
+  const byPath = new Map<string, PruneCandidate>();
+  for (const c of candidates) {
+    try { byPath.set(new URL(c.url).pathname.replace(/\/+$/, ''), c); } catch { /* url invalide */ }
+  }
+
+  for (const row of data) {
+    let path: string;
+    try { path = new URL(String(row.target_url)).pathname.replace(/\/+$/, ''); } catch { continue; }
+    const c = byPath.get(path);
+    if (!c) continue;
+    const positions = [row.current_position, row.best_position]
+      .map((p: unknown) => Number(p) || 0)
+      .filter((p: number) => p > 0);
+    if (positions.length === 0) continue;
+    const pos = Math.min(...positions);
+    if (c.externalBestPosition === null || pos < c.externalBestPosition) {
+      c.externalBestPosition = pos;
+      c.externalKeywordVolume = Number(row.search_volume) || 0;
+    }
+  }
+}
+
+
 
 /** Détection quasi-doublons + contenu pauvre (déterministe, 0 token). */
 async function attachIntegritySignals(candidates: PruneCandidate[], identity: SiteIdentity): Promise<void> {
@@ -278,6 +327,29 @@ function decide(c: PruneCandidate): void {
     c.reasons = [`${c.impressions90d} impression(s) sur ${GSC_WINDOW_DAYS} j — visibilité en construction.`];
     return;
   }
+  // Positions naissantes (page 2) : un classement 16-30 sans clic n'est pas une
+  // page morte, c'est un actif en cours d'acquisition. Le verdict calé sur les
+  // seuls clics GSC ignorerait ce palier.
+  if (c.bestPosition !== null && c.bestPosition > 15 && c.bestPosition <= NASCENT_POSITION_MAX) {
+    c.decision = 'keep';
+    c.reasons = [`Position naissante ${c.bestPosition.toFixed(0)} (page 2) — position à défendre, pas à dépublier.`];
+    return;
+  }
+  if (c.externalBestPosition !== null && c.externalBestPosition <= NASCENT_POSITION_MAX) {
+    c.decision = 'keep';
+    c.reasons = [
+      `Position externe ${c.externalBestPosition.toFixed(0)}${c.externalKeywordVolume ? ` sur un mot-clé à ${c.externalKeywordVolume}/mois` : ''} — actif à défendre.`,
+    ];
+    return;
+  }
+  // Contenu long : on le réécrit ou on le consolide, on ne le dépublie pas sur
+  // la seule absence de clics.
+  if (c.wordCount >= SUBSTANTIAL_WORD_COUNT) {
+    c.decision = 'keep';
+    c.reasons = [`Contenu substantiel (${c.wordCount} mots) — à réécrire ou consolider, jamais à dépublier sur absence de clics.`];
+    return;
+  }
+
 
   // ── Page morte : aucun clic, quasi aucune impression, hors top 30 ───
   const isDead =
@@ -367,6 +439,7 @@ export async function runPruneMergePass(sb: any, identity?: SiteIdentity | null)
     if (candidates.length === 0) return result;
 
     const gscAvailable = await attachGscSignals(sb, candidates);
+    await attachExternalRanks(sb, candidates);
     await attachIntegritySignals(candidates, {
       domain: DOMAIN,
       site_name: identity?.site_name || 'Crawlers',
