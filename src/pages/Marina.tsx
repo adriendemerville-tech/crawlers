@@ -563,7 +563,7 @@ const FREE_TRIAL_TEXTS = {
   fr: {
     title: `${MARINA_FREE_QUOTA} rapports complets offerts, sans compte, puis ${CREDIT_COST} crédits / rapport`,
     emailPlaceholder: 'votre@email.com',
-    hint: 'Votre email sert à vous envoyer le lien du rapport et à limiter les abus.',
+    hint: 'Votre email sert à vous envoyer le lien du rapport.',
     remaining: (n: number) => `${n} rapport${n > 1 ? 's' : ''} gratuit${n > 1 ? 's' : ''} restant${n > 1 ? 's' : ''} pour cette connexion`,
     exhausted: 'Vos rapports gratuits ont été utilisés. Créez un compte pour continuer.',
     emailRequired: 'Renseignez une adresse email valide',
