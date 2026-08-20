@@ -45,7 +45,7 @@ export const SILOS: Record<Silo['id'], Silo> = {
     },
     satellites: [
       { label: 'Méthode d’audit SEO GEO', to: '/audit-seo-geo' },
-      { label: 'GEO vs SEO : les différences', to: '/geo-vs-seo' },
+      { label: 'E-E-A-T : autorité et citations IA', to: '/eeat' },
       { label: 'Audit gratuit avec Marina', to: '/marina' },
     ],
   },
@@ -59,7 +59,7 @@ export const SILOS: Record<Silo['id'], Silo> = {
     },
     satellites: [
       { label: 'Audit expert 200+ critères', to: '/audit-expert' },
-      { label: 'Cocon sémantique 3D', to: '/app/cocoon' },
+      { label: 'Cocon sémantique 3D', to: '/features/cocoon' },
       { label: 'Modifier le code WordPress', to: '/modifier-code-wordpress' },
     ],
   },
