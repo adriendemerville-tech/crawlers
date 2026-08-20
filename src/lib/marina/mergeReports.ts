@@ -515,6 +515,23 @@ export function mergeMarinaReports(
   // pour chacune de ses instances (la conclusion intermédiaire reste entière).
   const detail = planFicheDetail(metas, synthesis.facts);
 
+  // Conclusions inter-pages strictement identiques : le bloc n'est rendu qu'une
+  // fois, les fiches suivantes renvoient à la fiche qui le porte. On ne
+  // mutualise jamais un texte qui diffère, même d'un mot — aucune information
+  // propre à une URL n'est perdue.
+  const conclusionOwner = new Map<string, number>();
+  const conclusionSkip: Array<number | null> = splits.map(() => null);
+  splits.forEach((s, i) => {
+    const block = s.pageBlocks.find(b => b.id === 'conclusion');
+    if (!block) return;
+    const key = block.html.replace(/\s+/g, ' ').trim();
+    if (!key) return;
+    const owner = conclusionOwner.get(key);
+    if (owner === undefined) conclusionOwner.set(key, i);
+    else conclusionSkip[i] = owner;
+  });
+
+
   const sections = parts
     .map((p, i) => {
       const split = splits[i];
@@ -528,10 +545,19 @@ export function mergeMarinaReports(
       ];
       const path = split.meta?.path || pathOf(p.url);
       const condensed = split.tagged && hasVerdict && detail.level.get(path) === 'condensed';
-      const kept = condensed
+      const dupOwner = conclusionSkip[i];
+      const kept = (condensed
         ? ordered.filter(b => b.id === 'page-verdict' || b.id === 'cocoon_page')
-        : ordered;
+        : ordered
+      ).filter(b => !(b.id === 'conclusion' && dupOwner !== null));
+      const dupConclusionNote = dupOwner !== null
+        ? `<p style="margin:10px 32px 0 32px;font-size:12px;color:#6b7280;line-height:1.6;max-width:52em;">
+             Conclusion intermédiaire identique, au mot près, à celle de la fiche
+             <strong>${dupOwner + 1}</strong> (${escapeHtml(pathOf(parts[dupOwner].url))}) : elle n'est pas répétée ici.
+           </p>`
+        : '';
       const content = split.tagged ? kept.map(b => b.html).join('\n') : extractBody(p.html);
+
       const condensedNote = condensed
         ? `<p style="margin:10px 32px 0 32px;font-size:12px;color:#6b7280;line-height:1.6;max-width:52em;">
              Fiche condensée : cette URL est une instance du gabarit
@@ -550,6 +576,7 @@ export function mergeMarinaReports(
           <p style="font-size:16px;font-weight:700;margin:0 0 4px 0;">${escapeHtml(p.url)}</p>
         </div>
         ${condensedNote}
+        ${dupConclusionNote}
         ${content}
       </section>`;
     })
