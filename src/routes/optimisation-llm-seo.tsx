@@ -1,17 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import KeywordPillarPage from "@/pages/KeywordPillarPage";
-import { pageHead } from "@/lib/seo/pageHead";
-import { KEYWORD_PILLARS } from "@/data/keywordPillars";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// Consolidation de cannibalisation : quasi-doublon du pilier GEO → 301 permanent.
 export const Route = createFileRoute("/optimisation-llm-seo")({
-  head: () => {
-    const pillar = KEYWORD_PILLARS["optimisation-llm-seo"];
-    return pageHead({
-      title: pillar.title,
-      description: pillar.metaDesc,
-      path: "/optimisation-llm-seo",
-      ogType: "article",
+  beforeLoad: () => {
+    throw redirect({
+      href: "/generative-engine-optimization",
+      statusCode: 301,
+      replace: true,
     });
   },
-  component: KeywordPillarPage,
 });
