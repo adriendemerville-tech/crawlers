@@ -17,6 +17,8 @@ const sections = [
   { id: 'usage-malveillant', title: '5 ter. Interdiction des Usages Malveillants' },
   { id: 'credits', title: '6. Système de Crédits' },
   { id: 'abonnement', title: '7. Abonnement Pro Agency' },
+  { id: 'paiement', title: '7 bis. Paiement, facturation et revendeur (Paddle)' },
+  { id: 'remboursement', title: '7 ter. Politique de remboursement' },
   { id: 'whitelabel', title: '8. Offre Marque Blanche (White Label)' },
   { id: 'veille', title: '8 bis. Analyse Concurrentielle & Veille Stratégique' },
   { id: 'pi', title: '9. Propriété Intellectuelle' },
@@ -124,13 +126,18 @@ const CGVU = () => {
               <p>L'offre se décline comme suit :</p>
               <ul>
                 <li><strong>Audit Flash gratuit</strong> (0 €) : analyse de base SEO/GEO avec rapport synthétique ;</li>
+                <li><strong>Audit Marina gratuit</strong> (0 €) : deux rapports Marina offerts par adresse IP, sans création de compte ;</li>
+                <li><strong>Pass Marina à l'unité</strong> (9 € TTC) : un rapport Marina complet (SEO + GEO, export PDF) hors abonnement et sans création de compte, une fois le quota gratuit épuisé ;</li>
                 <li><strong>Pack Essentiel</strong> (5 €) : 10 crédits d'analyse ;</li>
                 <li><strong>Pack Lite</strong> (19 €) : 50 crédits d'analyse ;</li>
                 <li><strong>Pack Premium</strong> (45 €) : 150 crédits d'analyse ;</li>
-                
+                <li><strong>Wallet développeur (API Crawlers, pay-as-you-go)</strong> : rechargement libre à partir de 1 € (presets 20, 50, 100 et 250 €), débité à l'usage à chaque job d'API exécuté. Le solde est consultable dans l'espace développeur ;</li>
                 <li><strong>Abonnement Pro Agency</strong> (29 €/mois sans engagement, ou 26,10 €/mois avec engagement annuel soit 313,20 €/an — remise de 10%) : accès illimité, marque blanche, dashboard agence dédié, export de rapports personnalisés, Fair Use Policy de 5 000 pages de crawl/mois incluses, 80 créations de pages/mois (Content Architect), 2 comptes inclus (1 collaborateur) ;</li>
                 <li><strong>Abonnement Pro Agency +</strong> (79 €/mois sans engagement, ou 71,10 €/mois avec engagement annuel soit 853,20 €/an — remise de 10%) : tout Pro Agency inclus + 50 000 pages de crawl/mois, Benchmark LLM & Profondeur LLM illimités (cache serveur de 2 heures), 150 créations de pages/mois (Content Architect), Google Business (GBP/GMB), 3 comptes inclus (2 collaborateurs).</li>
               </ul>
+              <p className="mt-2">
+                La Plateforme comprend également, sans supplément pour les formules concernées : le <strong>Copilot Crawlers</strong> (agents conversationnels Félix et Stratège, avec quotas de recherche live et de diagnostic marché différenciés par formule), l'<strong>API REST Crawlers v1</strong> (jobs asynchrones authentifiés par clé <code>crw_live_</code>, facturés depuis le wallet développeur), l'<strong>audit Marina multipages</strong> (30 crédits par rapport, plus 5 crédits par page additionnelle) et les <strong>agents autonomes</strong> de maintenance éditoriale, dont le périmètre d'autonomie est décrit à l'article 12.
+              </p>
             </section>
 
             {/* Article 4 */}
@@ -257,25 +264,20 @@ const CGVU = () => {
 
               <h3 className="text-lg font-semibold mt-4 mb-2">6.2. Achat et utilisation</h3>
               <p>
-                L'achat de packs de crédits s'effectue par paiement sécurisé via Stripe. Les crédits sont crédités instantanément sur le compte de l'utilisateur après confirmation du paiement. Les crédits achetés n'ont pas de date d'expiration tant que le compte utilisateur reste actif.
+                L'achat de packs de crédits, de pass Marina à l'unité et le rechargement du wallet développeur s'effectuent par paiement sécurisé via <strong>Paddle.com</strong> (revendeur et Merchant of Record — voir article 7 bis) ou via <strong>Stripe</strong> selon le circuit d'encaissement affiché au moment du paiement. Les crédits ou le solde sont portés instantanément au compte de l'utilisateur après confirmation du paiement. Les crédits achetés n'ont pas de date d'expiration tant que le compte utilisateur reste actif.
               </p>
 
-              <h3 className="text-lg font-semibold mt-4 mb-2">6.3. Droit de rétractation — Renonciation expresse</h3>
+              <h3 className="text-lg font-semibold mt-4 mb-2">6.3. Exécution immédiate et droit de rétractation</h3>
               <p>
-                Conformément à l'<strong>article L.221-28, 13° du Code de la consommation</strong>, l'achat de crédits constitue la fourniture d'un contenu numérique non fourni sur un support matériel dont l'exécution a commencé avec l'accord préalable exprès du consommateur.
+                Les crédits, pass Marina et recharges de wallet constituent un contenu numérique non fourni sur un support matériel. Conformément à l'<strong>article L.221-28, 13° du Code de la consommation</strong>, l'utilisateur demande l'exécution immédiate du service et reconnaît que son droit de rétractation ne peut plus être exercé <strong>pour la part déjà consommée</strong> (crédits utilisés, rapports générés et consultés, jobs d'API exécutés).
               </p>
               <p>
-                <strong>En procédant à l'achat, l'utilisateur reconnaît et accepte expressément :</strong>
+                <strong>La part non consommée reste remboursable</strong> pendant 14 jours dans les conditions de l'article 7 ter.
               </p>
-              <ul>
-                <li>Que l'exécution du service commence immédiatement après le paiement ;</li>
-                <li>Qu'il renonce expressément à son droit de rétractation de 14 jours prévu à l'article L.221-18 du Code de la consommation ;</li>
-                <li>Que cette renonciation prend effet dès la première utilisation d'un crédit ou la première consultation d'un rapport généré.</li>
-              </ul>
 
-              <h3 className="text-lg font-semibold mt-4 mb-2">6.4. Non-remboursabilité</h3>
+              <h3 className="text-lg font-semibold mt-4 mb-2">6.4. Dysfonctionnement technique</h3>
               <p>
-                Les crédits achetés et utilisés ne sont pas remboursables. En cas de dysfonctionnement technique avéré imputable à la Plateforme empêchant l'exécution normale du service, l'Éditeur s'engage à recréditer les crédits consommés à tort.
+                En cas de dysfonctionnement technique avéré imputable à la Plateforme empêchant l'exécution normale du service, l'Éditeur recrédite les crédits consommés à tort ou restitue le montant débité du wallet, sans que l'utilisateur ait à en faire la demande formelle lorsque l'incident est détecté automatiquement.
               </p>
             </section>
 
@@ -297,7 +299,7 @@ const CGVU = () => {
                 <li><strong>Pro Agency +</strong> : 853,20 € TTC par an (soit 71,10 €/mois), engagement de 12 mois, reconduction tacite annuelle.</li>
               </ul>
               <p className="mt-2">
-                Le paiement est prélevé automatiquement (mensuellement ou annuellement selon la formule choisie) via Stripe. L'utilisateur peut choisir sa formule de facturation lors de la souscription.
+                Le paiement est prélevé automatiquement (mensuellement ou annuellement selon la formule choisie) via <strong>Paddle.com</strong> ou <strong>Stripe</strong>, selon le circuit d'encaissement affiché lors de la souscription. L'utilisateur choisit sa formule de facturation au moment de la souscription. Les mécaniques de facturation, de taxe applicable et de gestion de l'abonnement sont régies, pour les commandes encaissées par Paddle, par les <a href="https://www.paddle.com/legal/checkout-buyer-terms" target="_blank" rel="noopener noreferrer" className="text-primary underline">Conditions Acheteur de Paddle</a>.
               </p>
 
               <h3 className="text-lg font-semibold mt-4 mb-2">7.2. Avantages inclus</h3>
@@ -328,12 +330,50 @@ const CGVU = () => {
 
               <h3 className="text-lg font-semibold mt-4 mb-2">7.3. Résiliation</h3>
               <p>
-                <strong>Formule mensuelle :</strong> L'utilisateur peut résilier son abonnement <strong>à tout moment, en un clic</strong>, depuis son espace personnel (Console &gt; Mon abonnement) ou via le portail de facturation Stripe. La résiliation prend effet à la fin de la période mensuelle en cours. Aucun remboursement prorata temporis n'est effectué pour le mois en cours.
+                <strong>Formule mensuelle :</strong> L'utilisateur peut résilier son abonnement <strong>à tout moment, en un clic</strong>, depuis son espace personnel (Console &gt; Mon abonnement), depuis le portail de facturation Paddle accessible via <a href="https://paddle.net" target="_blank" rel="noopener noreferrer" className="text-primary underline">paddle.net</a> ou via le portail Stripe selon le circuit d'encaissement de la commande. La résiliation prend effet à la fin de la période mensuelle en cours.
               </p>
               <p className="mt-2">
-                <strong>Formule annuelle :</strong> L'abonnement annuel engage l'utilisateur pour une durée de 12 mois. En cas de résiliation anticipée avant le terme de la période annuelle, <strong>aucun remboursement n'est effectué</strong> pour les mois restants. L'accès aux fonctionnalités est maintenu jusqu'à la fin de la période annuelle payée. Sans résiliation expresse, l'abonnement est reconduit tacitement pour une nouvelle période de 12 mois.
+                <strong>Formule annuelle :</strong> L'abonnement annuel engage l'utilisateur pour une durée de 12 mois. Passé le délai de remboursement de 14 jours prévu à l'article 7 ter, aucun remboursement prorata temporis n'est effectué pour les mois restants ; l'accès aux fonctionnalités est maintenu jusqu'au terme de la période payée. Sans résiliation expresse, l'abonnement est reconduit tacitement pour une nouvelle période de 12 mois, l'utilisateur étant informé avant chaque échéance.
               </p>
             </section>
+
+            {/* Article 7 bis */}
+            <section id="paiement">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">7 bis. Paiement, facturation et revendeur (Paddle)</h2>
+              <p>
+                Le contrat de service est conclu entre l'utilisateur et <strong>Crawlers AI</strong>, éditeur de la Plateforme. L'encaissement des commandes est en revanche opéré par un revendeur.
+              </p>
+              <p className="font-semibold">
+                Notre processus de commande est géré par notre revendeur en ligne Paddle.com. Paddle.com est le Merchant of Record (vendeur officiel) de toutes nos commandes. Paddle traite l'ensemble des demandes de service client et gère les retours.
+              </p>
+              <p>
+                Pour les commandes encaissées par Paddle, les modalités de paiement, de facturation, de taxes applicables (TVA et équivalents), d'annulation et de remboursement sont régies par les <a href="https://www.paddle.com/legal/checkout-buyer-terms" target="_blank" rel="noopener noreferrer" className="text-primary underline">Conditions Acheteur de Paddle</a> et la <a href="https://www.paddle.com/legal/refund-policy" target="_blank" rel="noopener noreferrer" className="text-primary underline">politique de remboursement Paddle</a>. Certaines commandes historiques ou circuits résiduels sont encaissés par <strong>Stripe Payments Europe Ltd.</strong> ; le circuit applicable est affiché avant validation du paiement et rappelé sur la facture.
+              </p>
+              <p>
+                Les prix sont affichés en euros. Selon le pays de résidence de l'utilisateur, le Merchant of Record peut ajouter ou ajuster la taxe applicable au moment du paiement. Aucune donnée bancaire n'est collectée, traitée ni stockée par Crawlers AI.
+              </p>
+            </section>
+
+            {/* Article 7 ter */}
+            <section id="remboursement">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">7 ter. Politique de remboursement</h2>
+              <p>
+                <strong>Vous disposez de 14 jours</strong> à compter de la date de commande pour demander le remboursement d'un achat, sans avoir à justifier de motif, pour :
+              </p>
+              <ul>
+                <li>Les <strong>packs de crédits</strong>, au prorata des crédits non consommés ;</li>
+                <li>Le <strong>solde non consommé du wallet développeur</strong> (API Crawlers) ;</li>
+                <li>Les <strong>abonnements</strong> Pro Agency et Pro Agency +, mensuels comme annuels, lorsque le service n'a pas été utilisé de manière substantielle ;</li>
+                <li>Les <strong>pass Marina à l'unité</strong>, tant que le rapport correspondant n'a pas été généré.</li>
+              </ul>
+              <p>
+                <strong>Comment demander un remboursement :</strong> les remboursements sont traités par notre prestataire de paiement Paddle. Rendez-vous sur <a href="https://paddle.net" target="_blank" rel="noopener noreferrer" className="text-primary underline">paddle.net</a> avec votre email d'achat, ou écrivez-nous à <a href="mailto:contact@crawlers.fr" className="text-primary underline">contact@crawlers.fr</a> : nous transmettons la demande et vous accompagnons jusqu'à son traitement.
+              </p>
+              <p>
+                Au-delà de ce délai, un remboursement reste possible en cas de dysfonctionnement technique avéré imputable à la Plateforme, de double facturation ou d'erreur de facturation. Les crédits et jobs d'API déjà consommés, ainsi que les rapports déjà générés et consultés, ne sont pas remboursables, l'exécution du service étant achevée.
+              </p>
+            </section>
+
 
             {/* Article 8 */}
             <section id="whitelabel">
