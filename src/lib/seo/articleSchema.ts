@@ -110,3 +110,41 @@ export function buildDefinedTermJsonLd(input: {
     url: `${SITE_URL}${input.path}`,
   };
 }
+
+/**
+ * ProfilePage + Person pour les pages auteur : signal E-E-A-T explicite
+ * (identité, rôle, expertises, profils externes) exploitable par Google
+ * comme par les moteurs génératifs.
+ */
+export function buildProfilePageJsonLd(input: {
+  name: string;
+  path: string;
+  jobTitle: string;
+  description: string;
+  knowsAbout?: string[];
+  sameAs?: string[];
+  image?: string | null;
+}) {
+  const url = `${SITE_URL}${input.path}`;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    url,
+    mainEntity: {
+      '@type': 'Person',
+      '@id': `${url}#person`,
+      name: input.name,
+      jobTitle: input.jobTitle,
+      description: input.description,
+      url,
+      ...(input.image ? { image: input.image } : {}),
+      ...(input.knowsAbout?.length ? { knowsAbout: input.knowsAbout } : {}),
+      ...(input.sameAs?.length ? { sameAs: input.sameAs } : {}),
+      worksFor: {
+        '@type': 'Organization',
+        name: 'Crawlers.fr',
+        url: SITE_URL,
+      },
+    },
+  };
+}
