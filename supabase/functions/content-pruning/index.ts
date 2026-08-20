@@ -57,19 +57,22 @@ function slugOf(url: string): string {
 }
 
 function attachMergeTargets(verdicts: (PruneVerdict & { merge_candidate?: string })[]): void {
-  const keepers = verdicts.filter((v) => v.decision === 'keep' || v.decision === 'update')
+  const keepers = verdicts
+    .filter((v) => v.decision === 'keep' || v.decision === 'update')
+    .map((v) => ({ url: v.url, slug: slugOf(v.url), tokens: tokensOf(slugOf(v.url)) }))
   for (const v of verdicts) {
     if (v.decision !== 'merge' && v.decision !== 'redirect' && v.decision !== 'delete') continue
     const s = slugOf(v.url)
     if (!s) continue
+    const st = tokensOf(s)
     let best: { url: string; score: number } | null = null
     for (const k of keepers) {
-      const ks = slugOf(k.url)
-      if (!ks || ks === s) continue
-      const score = ks.includes(s) || s.includes(ks) ? 0.9 : similarity(s, ks)
+      if (!k.slug || k.slug === s) continue
+      const score = k.slug.includes(s) || s.includes(k.slug) ? 0.9 : similarity(st, k.tokens)
       if (score > 0.45 && (!best || score > best.score)) best = { url: k.url, score }
     }
     if (best) v.merge_candidate = best.url
+
     // Une page morte qui recouvre sémantiquement une page conservée se fusionne :
     // sans profil de backlink page à page, le juge partagé conclurait à tort
     // à une suppression sèche et détruirait un signal réutilisable.
