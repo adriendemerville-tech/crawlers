@@ -515,6 +515,23 @@ export function mergeMarinaReports(
   // pour chacune de ses instances (la conclusion intermédiaire reste entière).
   const detail = planFicheDetail(metas, synthesis.facts);
 
+  // Conclusions inter-pages strictement identiques : le bloc n'est rendu qu'une
+  // fois, les fiches suivantes renvoient à la fiche qui le porte. On ne
+  // mutualise jamais un texte qui diffère, même d'un mot — aucune information
+  // propre à une URL n'est perdue.
+  const conclusionOwner = new Map<string, number>();
+  const conclusionSkip: Array<number | null> = splits.map(() => null);
+  splits.forEach((s, i) => {
+    const block = s.pageBlocks.find(b => b.id === 'conclusion');
+    if (!block) return;
+    const key = block.html.replace(/\s+/g, ' ').trim();
+    if (!key) return;
+    const owner = conclusionOwner.get(key);
+    if (owner === undefined) conclusionOwner.set(key, i);
+    else conclusionSkip[i] = owner;
+  });
+
+
   const sections = parts
     .map((p, i) => {
       const split = splits[i];
