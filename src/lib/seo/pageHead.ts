@@ -63,7 +63,7 @@ export function composeTitle(title: string): string {
   if (base.length <= TITLE_MAX) return base;
 
   const head = base.split(/\s+[:—–|]\s+/)[0].trim();
-  if (head.length >= 25 && head.length <= TITLE_MAX) return head;
+  if (head.length >= 15 && head.length <= TITLE_MAX) return head;
 
   return cutAtWord(base, TITLE_MAX);
 }
