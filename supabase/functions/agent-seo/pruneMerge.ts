@@ -278,6 +278,29 @@ function decide(c: PruneCandidate): void {
     c.reasons = [`${c.impressions90d} impression(s) sur ${GSC_WINDOW_DAYS} j — visibilité en construction.`];
     return;
   }
+  // Positions naissantes (page 2) : un classement 16-30 sans clic n'est pas une
+  // page morte, c'est un actif en cours d'acquisition. Le verdict calé sur les
+  // seuls clics GSC ignorerait ce palier.
+  if (c.bestPosition !== null && c.bestPosition > 15 && c.bestPosition <= NASCENT_POSITION_MAX) {
+    c.decision = 'keep';
+    c.reasons = [`Position naissante ${c.bestPosition.toFixed(0)} (page 2) — position à défendre, pas à dépublier.`];
+    return;
+  }
+  if (c.externalBestPosition !== null && c.externalBestPosition <= NASCENT_POSITION_MAX) {
+    c.decision = 'keep';
+    c.reasons = [
+      `Position externe ${c.externalBestPosition.toFixed(0)}${c.externalKeywordVolume ? ` sur un mot-clé à ${c.externalKeywordVolume}/mois` : ''} — actif à défendre.`,
+    ];
+    return;
+  }
+  // Contenu long : on le réécrit ou on le consolide, on ne le dépublie pas sur
+  // la seule absence de clics.
+  if (c.wordCount >= SUBSTANTIAL_WORD_COUNT) {
+    c.decision = 'keep';
+    c.reasons = [`Contenu substantiel (${c.wordCount} mots) — à réécrire ou consolider, jamais à dépublier sur absence de clics.`];
+    return;
+  }
+
 
   // ── Page morte : aucun clic, quasi aucune impression, hors top 30 ───
   const isDead =
