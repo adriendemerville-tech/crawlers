@@ -58,7 +58,7 @@ function slugOf(url: string): string {
 function attachMergeTargets(verdicts: (PruneVerdict & { merge_candidate?: string })[]): void {
   const keepers = verdicts.filter((v) => v.decision === 'keep' || v.decision === 'update')
   for (const v of verdicts) {
-    if (v.decision !== 'merge' && v.decision !== 'redirect') continue
+    if (v.decision !== 'merge' && v.decision !== 'redirect' && v.decision !== 'delete') continue
     const s = slugOf(v.url)
     if (!s) continue
     let best: { url: string; score: number } | null = null
@@ -69,8 +69,28 @@ function attachMergeTargets(verdicts: (PruneVerdict & { merge_candidate?: string
       if (score > 0.45 && (!best || score > best.score)) best = { url: k.url, score }
     }
     if (best) v.merge_candidate = best.url
+    // Une page morte qui recouvre sémantiquement une page conservée se fusionne :
+    // sans profil de backlink page à page, le juge partagé conclurait à tort
+    // à une suppression sèche et détruirait un signal réutilisable.
+    if (v.decision === 'delete' && v.merge_candidate) {
+      v.decision = 'merge'
+      v.reasons = [...v.reasons, 'Recouvrement sémantique avec une page conservée : fusion plutôt que suppression']
+    }
   }
 }
+
+/**
+ * Pages fonctionnelles (application, formulaires, pages légales) : elles n'ont
+ * aucune vocation à capter du trafic organique, donc leur absence de clic ne
+ * fonde aucun verdict destructif.
+ */
+const FUNCTIONAL_PATH =
+  /^\/(app|auth|login|connexion|signup|inscription|compte|dashboard|contact|panier|checkout|mentions|mentions-legales|cgv|cgu|cgvu|politique|privacy|confidentialite|plan-du-site|sitemap|merci|404)(\/|$)/i
+
+function isFunctionalUrl(url: string): boolean {
+  try { return FUNCTIONAL_PATH.test(new URL(url).pathname) } catch { return false }
+}
+
 
 const CATEGORY: Record<string, string> = {
   merge: 'cannibalization',
