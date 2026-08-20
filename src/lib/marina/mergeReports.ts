@@ -176,7 +176,10 @@ const SITE_BLOCK_LABELS: Record<string, string> = {
   cocoon: 'Cocon sémantique et maillage interne',
   indexation: "Santé d'indexation",
   llm: "Visibilité dans les moteurs de réponse IA",
+  strategic: 'Analyse stratégique du domaine (marché, autorité, backlinks)',
+  plan: "Plan d'action commun aux pages du lot",
 };
+
 
 const BAND_TEXT: Record<string, string> = {
   strong: 'solide',
@@ -347,10 +350,43 @@ export function mergeMarinaReports(
   const scopeLimits = siteBlocks.get('scope_limits') || '';
   siteBlocks.delete('scope_limits');
 
+  // Mutualisation mesurée : certains blocs balisés « page » (analyse stratégique,
+  // plan consolidé) contiennent en réalité des lectures de domaine (marché,
+  // autorité, backlinks) rigoureusement identiques d'une URL à l'autre. Répétés,
+  // ils gonflaient le PDF de plusieurs centaines de pages. On les remonte une
+  // seule fois quand leur contenu est strictement identique sur au moins deux
+  // URLs — jamais quand il diffère (aucune information perdue).
+  const NEVER_MUTUALISED = new Set(['page-verdict', 'summary', 'conclusion', 'degraded']);
+  const occurrences = new Map<string, number>();
+  for (const s of splits) {
+    const seen = new Set<string>();
+    for (const b of s.pageBlocks) {
+      if (NEVER_MUTUALISED.has(b.id)) continue;
+      const key = `${b.id}::${b.html.replace(/\s+/g, ' ').trim()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      occurrences.set(key, (occurrences.get(key) || 0) + 1);
+    }
+  }
+  const promoted = new Set<string>();
+  for (const s of splits) {
+    s.pageBlocks = s.pageBlocks.filter((b) => {
+      if (NEVER_MUTUALISED.has(b.id)) return true;
+      const key = `${b.id}::${b.html.replace(/\s+/g, ' ').trim()}`;
+      if ((occurrences.get(key) || 0) < 2) return true;
+      if (!promoted.has(key)) {
+        promoted.add(key);
+        if (!siteBlocks.has(b.id)) siteBlocks.set(b.id, b.html);
+      }
+      return false;
+    });
+  }
+
+
 
   // 'llm' (citabilité IA) remonte avant le cocon : c'est un bloc GEO, il doit
   // suivre l'analyse stratégique et non finir en fin de document.
-  const siteOrder = ['intro', 'crawl', 'archetypes', 'llm', 'cocoon', 'indexation'];
+  const siteOrder = ['intro', 'crawl', 'archetypes', 'strategic', 'llm', 'cocoon', 'indexation', 'plan'];
 
   const orderedSiteEntries = [
     ...siteOrder.filter(id => siteBlocks.has(id)).map(id => [id, siteBlocks.get(id)!] as const),
