@@ -85,13 +85,14 @@ Deno.serve(handleRequest(async (req) => {
       console.log('[regenerate-sitemap] lang variants excluded:', entries.length - indexable.length);
     }
 
-    // 3. Format dates to YYYY-MM-DD
+    // 3. Format dates to YYYY-MM-DD ; null = pas de <lastmod> émis
     const formatted = indexable.map(e => ({
       ...e,
       lastmod: typeof e.lastmod === 'string' && e.lastmod.includes('T')
         ? e.lastmod.split('T')[0]
-        : e.lastmod,
+        : (e.lastmod || null),
     }));
+
 
 
     // 3. Generate XML
