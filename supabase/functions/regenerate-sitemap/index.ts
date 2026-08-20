@@ -13,6 +13,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
+import { submitToIndexNow } from '../_shared/urlIndexing.ts'
 
 const DEFAULT_DOMAIN = 'crawlers.fr';
 const SITE_URL = 'https://crawlers.fr';
