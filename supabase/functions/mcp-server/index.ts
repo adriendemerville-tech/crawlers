@@ -17,6 +17,28 @@ const TOOL_TO_FUNCTION: Record<string, string> = {
   wordpress_sync: 'wpsync', fetch_serp_kpis: 'fetch-serp-kpis', calculate_ias: 'calculate-ias',
 };
 
+// Adapte les arguments MCP au contrat d'entrée réel de chaque edge function.
+function bareDomain(v: string): string {
+  return v.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '');
+}
+
+function toUrl(a: Record<string, unknown>): Record<string, unknown> {
+  const raw = String(a['url'] ?? a['domain'] ?? '').trim();
+  if (!raw) return a;
+  return { ...a, url: /^https?:\/\//i.test(raw) ? raw : `https://${raw}` };
+}
+
+const ARG_ADAPT: Record<string, (a: Record<string, unknown>) => Record<string, unknown>> = {
+  // check-geo et check-crawlers exigent une `url` absolue ; le schéma MCP expose `domain`.
+  check_geo_score: toUrl,
+  check_ai_crawlers: toUrl,
+  expert_seo_audit: toUrl,
+  strategic_ai_audit: toUrl,
+  generate_corrective_code: toUrl,
+  // check-llm-depth exige un domaine nu, sans protocole ni chemin.
+  check_llm_visibility: (a) => ({ ...a, domain: bareDomain(String(a['domain'] ?? a['url'] ?? '')) }),
+};
+
 async function checkKillSwitch(): Promise<boolean> {
   try { const { data } = await getServiceClient().from('system_config').select('value').eq('key', 'mcp_enabled').maybeSingle(); return !data || data.value !== false; } catch { return true; }
 }
