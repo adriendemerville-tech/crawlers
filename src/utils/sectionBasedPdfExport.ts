@@ -253,7 +253,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     // Échelle propre à ce bloc : jamais au-delà des limites de canvas.
     const scaleBySide = MAX_CANVAS_SIDE / Math.max(nativeWidth, sectionHeightPx);
     const scaleByArea = Math.sqrt(MAX_CANVAS_AREA / (nativeWidth * sectionHeightPx));
-    const sectionScale = Math.max(0.35, Math.min(scale, scaleBySide, scaleByArea));
+    const sectionScale = Math.max(0.7, Math.min(scale, scaleBySide, scaleByArea));
 
     const shoot = (s: number) =>
       Promise.race([
@@ -277,7 +277,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
       // Une capture uniforme (allocation ratée) est retentée à échelle réduite
       // avant d'être abandonnée : mieux vaut un bloc absent qu'une page noire.
       if (isBlank(canvas) && sectionScale > 0.5) {
-        const retry = await shoot(Math.max(0.35, sectionScale / 2));
+        const retry = await shoot(Math.max(0.6, sectionScale / 2));
         if (!isBlank(retry)) canvas = retry;
         else continue;
       } else if (isBlank(canvas)) {
