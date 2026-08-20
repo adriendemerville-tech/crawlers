@@ -386,7 +386,7 @@ export function mergeMarinaReports(
 
   // 'llm' (citabilité IA) remonte avant le cocon : c'est un bloc GEO, il doit
   // suivre l'analyse stratégique et non finir en fin de document.
-  const siteOrder = ['intro', 'crawl', 'archetypes', 'llm', 'cocoon', 'indexation'];
+  const siteOrder = ['intro', 'crawl', 'archetypes', 'strategic', 'llm', 'cocoon', 'indexation', 'plan'];
 
   const orderedSiteEntries = [
     ...siteOrder.filter(id => siteBlocks.has(id)).map(id => [id, siteBlocks.get(id)!] as const),
