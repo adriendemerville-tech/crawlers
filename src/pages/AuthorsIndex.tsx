@@ -1,4 +1,3 @@
-import { Helmet } from 'react-helmet-async';
 import { Link } from '@/lib/router-compat';
 import { lazy, Suspense } from 'react';
 import { Header } from '@/components/Header';
@@ -20,39 +19,11 @@ const authors = [
   },
 ];
 
-const collectionJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: 'Auteurs Crawlers.fr',
-  url: `${SITE_URL}/auteur`,
-  description: 'Découvrez les auteurs et experts derrière les articles, guides et audits Crawlers.fr.',
-  mainEntity: {
-    '@type': 'ItemList',
-    itemListElement: authors.map((a, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      item: {
-        '@type': 'Person',
-        '@id': `${SITE_URL}/auteur/${a.slug}#person`,
-        name: a.name,
-        url: `${SITE_URL}/auteur/${a.slug}`,
-        image: `${SITE_URL}${a.photo}`,
-        jobTitle: a.role,
-        description: a.bio,
-      },
-    })),
-  },
-};
-
 export default function AuthorsIndex() {
   useCanonicalHreflang('/auteur');
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(collectionJsonLd)}</script>
-      </Helmet>
-
       <Header />
 
       <main className="container mx-auto max-w-4xl px-4 py-16">
