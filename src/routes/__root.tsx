@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "alternate",
         type: "application/rss+xml",
         title: "Crawlers.fr — Blog SEO & GEO",
-        href: "https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/rss-feed",
+        href: "/rss.xml",
       },
       { rel: "sitemap", type: "application/xml", href: "/sitemap.xml", title: "Sitemap XML" },
       { rel: "author", href: "/llms.txt", type: "text/plain", title: "LLM Documentation" },

@@ -247,6 +247,9 @@ Allow: /
 # --------------------------------------------
 Sitemap: https://crawlers.fr/sitemap.xml
 
+# Flux RSS du blog (découverte rapide des nouveaux contenus) :
+#   https://crawlers.fr/rss.xml
+
 # Documentation LLM dédiée :
 #   https://crawlers.fr/llms.txt
 #   https://crawlers.fr/llms-full.txt
