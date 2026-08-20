@@ -151,15 +151,24 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
   // Garde-fou : au-delà de `maxSections`, on remonte d'un cran de granularité
   // (blocs parents) plutôt que de capturer des milliers de sous-blocs, ce qui
   // faisait tourner l'export indéfiniment sur les rapports fusionnés.
+  // On refuse en revanche les parents démesurés (plusieurs dizaines de pages) :
+  // html2canvas n'arrive pas à allouer un canvas de cette taille et renvoyait
+  // une image transparente, rendue NOIRE en JPEG (rapport entièrement noir).
+  const MAX_COARSE_PX = A4_CONTENT_PX * 4;
   if (sections.length > maxSections) {
     const coarse = dropNested(
       sections
-        .map((el) => (el.parentElement as HTMLElement | null) || el)
+        .map((el) => {
+          const parent = el.parentElement as HTMLElement | null;
+          if (!parent || parent.offsetHeight > MAX_COARSE_PX) return el;
+          return parent;
+        })
         .filter((el) => el.offsetHeight > 8),
     );
     if (coarse.length >= 1 && coarse.length < sections.length) sections = coarse;
     if (sections.length > maxSections) sections = sections.slice(0, maxSections);
   }
+
 
 
 
