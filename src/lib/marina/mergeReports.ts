@@ -460,6 +460,50 @@ export function mergeMarinaReports(
 
 
 
+  if (networkSynthesis) anchors.add('synthese-reseau');
+  if (globalSummary) anchors.add('synthese-executive');
+
+  const toc = parts
+    .map((p, i) => {
+      const label = `<span style="font-weight:600;">${escapeHtml(pathOf(p.url))}</span>
+        <span style="opacity:.65;"> — ${escapeHtml(hostOf(p.url))}</span>`;
+      const link = tocLink(`fiche-${i + 1}`, label);
+      if (!link) return '';
+      return `
+      <li style="margin:0 0 10px 0;">
+        <span style="display:inline-block;min-width:2.2em;font-weight:700;">${i + 1}.</span>
+        ${link}
+      </li>`;
+    })
+    .join('');
+
+  const sharedTocItems = orderedSiteEntries
+    .map(([id]) => {
+      const link = tocLink(`site-${id}`, escapeHtml(siteBlockLabel(id)));
+      return link ? `<li style="margin:0 0 8px 0;">${link}</li>` : '';
+    })
+    .join('');
+  const sharedToc = sharedTocItems
+    ? `<h2 style="font-size:18px;margin:26px 0 10px 0;">Analyse du site (commune aux ${parts.length} pages)</h2>
+       <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
+         ${sharedTocItems}
+       </ul>`
+    : '';
+
+  const openingItems = [
+    networkSynthesis
+      ? tocLink(
+          'synthese-reseau',
+          `Synthèse&nbsp;réseau, en ouverture de ce document — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés`,
+        )
+      : '',
+    globalSummary
+      ? tocLink('synthese-executive', 'Synthèse&nbsp;exécutive — verdict du domaine puis reprise page par page')
+      : `Reprise page par page — les rapports de ce lot ne portent pas les repères de synthèse`,
+  ]
+    .filter(Boolean)
+    .map((item) => `<li style="margin:0 0 8px 0;">${item}</li>`)
+    .join('');
 
   const cover = `
     <section class="marina-batch-cover" style="page-break-before:always;page-break-after:always;padding:64px 48px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
@@ -469,16 +513,12 @@ export function mergeMarinaReports(
       <p style="font-size:14px;opacity:.7;margin:0 0 30px 0;">${parts.length} pages auditées — ${generatedAt}</p>
       <h2 style="font-size:18px;margin:26px 0 10px 0;">Lecture d'ensemble</h2>
       <ul style="list-style:none;padding:0;margin:0 0 8px 0;font-size:14px;">
-        ${networkSynthesis
-          ? `<li style="margin:0 0 8px 0;">Synthèse&nbsp;réseau, en ouverture de ce document — ce que les ${parts.length} pages décrivent ensemble, en 8 blocs normalisés</li>`
-          : ''}
-        ${globalSummary
-          ? `<li style="margin:0 0 8px 0;">Synthèse&nbsp;exécutive — verdict du domaine puis reprise page par page</li>`
-          : `<li style="margin:0 0 8px 0;">Reprise page par page — les rapports de ce lot ne portent pas les repères de synthèse</li>`}
+        ${openingItems}
       </ul>
       ${sharedToc}
-      <h2 style="font-size:18px;margin:26px 0 10px 0;">Fiches par page</h2>
-      <ol style="list-style:none;padding:0;margin:0;font-size:14px;">${toc}</ol>
+      ${toc ? '<h2 style="font-size:18px;margin:26px 0 10px 0;">Fiches par page</h2>' : ''}
+      ${toc ? `<ol style="list-style:none;padding:0;margin:0;font-size:14px;">${toc}</ol>` : ''}
+
       <p style="margin-top:32px;font-size:12px;opacity:.7;max-width:46em;">
         ${mutualised
           ? `Les analyses de périmètre site (crawl, cocon sémantique, indexation, visibilité IA) sont
