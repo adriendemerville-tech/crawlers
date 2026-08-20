@@ -1841,9 +1841,25 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
 
   // Lot 6 — nommage lisible des clusters + regroupement des thématiques isolées
   // (un cluster à une page n'a aucune valeur de lecture en tant que cadre).
-  const clusterEntries: any[] = cocoonClusters && typeof cocoonClusters === 'object'
+  const rawClusterEntries: any[] = cocoonClusters && typeof cocoonClusters === 'object'
     ? Object.entries(cocoonClusters).map(([key, val]: [string, any]) => ({ cluster_id: key, ...(val || {}) }))
     : (clusterDetails || []);
+  // Le résumé de cluster ne porte souvent ni mots-clés ni pages : on rattache
+  // les nœuds du graphe pour que le nommage déterministe puisse aboutir
+  // (sans ce rattachement, tous les groupes sortaient « non nommés »).
+  const nodesByCluster = new Map<string, any[]>();
+  for (const node of Array.isArray(cocoonNodes) ? cocoonNodes : []) {
+    const cid = node?.cluster_id ?? node?.cluster ?? node?.clusterId ?? node?.group;
+    if (cid === null || cid === undefined) continue;
+    const k = String(cid);
+    if (!nodesByCluster.has(k)) nodesByCluster.set(k, []);
+    nodesByCluster.get(k)!.push(node);
+  }
+  const clusterEntries: any[] = rawClusterEntries.map((c: any) => {
+    if (Array.isArray(c?.pages) && c.pages.length > 0) return c;
+    const attached = nodesByCluster.get(String(c?.cluster_id ?? c?.id ?? '')) || [];
+    return attached.length > 0 ? { ...c, pages: attached } : c;
+  });
   const { clusters: namedClusters, isolatedCount: isolatedClusters } = consolidateClusters(clusterEntries as any[]);
 
 
