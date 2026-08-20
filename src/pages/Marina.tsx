@@ -561,7 +561,7 @@ const translations = {
 /* ─── Essai gratuit sans compte (2 rapports / IP, email requis) ─── */
 const FREE_TRIAL_TEXTS = {
   fr: {
-    title: `${MARINA_FREE_QUOTA} rapports complets offerts, sans compte`,
+    title: `${MARINA_FREE_QUOTA} rapports complets offerts, sans compte, puis ${CREDIT_COST} crédits / rapport`,
     emailPlaceholder: 'votre@email.com',
     hint: 'Votre email sert à vous envoyer le lien du rapport et à limiter les abus.',
     remaining: (n: number) => `${n} rapport${n > 1 ? 's' : ''} gratuit${n > 1 ? 's' : ''} restant${n > 1 ? 's' : ''} pour cette connexion`,
@@ -570,7 +570,7 @@ const FREE_TRIAL_TEXTS = {
     launched: 'Rapport gratuit lancé ! Génération en cours...',
   },
   en: {
-    title: `${MARINA_FREE_QUOTA} full reports free, no account needed`,
+    title: `${MARINA_FREE_QUOTA} full reports free, no account needed, then ${CREDIT_COST} credits / report`,
     emailPlaceholder: 'your@email.com',
     hint: 'Your email is used to send you the report link and to prevent abuse.',
     remaining: (n: number) => `${n} free report${n > 1 ? 's' : ''} left on this connection`,
@@ -579,9 +579,9 @@ const FREE_TRIAL_TEXTS = {
     launched: 'Free report started! Generating...',
   },
   es: {
-    title: `${MARINA_FREE_QUOTA} informes completos gratis, sin cuenta`,
+    title: `${MARINA_FREE_QUOTA} informes completos gratis, sin cuenta, luego ${CREDIT_COST} créditos / informe`,
     emailPlaceholder: 'tu@email.com',
-    hint: 'Tu email sirve para enviarte el enlace del informe y limitar los abusos.',
+    hint: 'Tu email sirve para enviarte el enlace del informe y limitar los abusos.'
     remaining: (n: number) => `${n} informe${n > 1 ? 's' : ''} gratuito${n > 1 ? 's' : ''} restante${n > 1 ? 's' : ''} en esta conexión`,
     exhausted: 'Tus informes gratuitos se han agotado. Crea una cuenta para continuar.',
     emailRequired: 'Introduce un email válido',
@@ -947,16 +947,13 @@ export default function Marina() {
                   refreshCredits={refreshCredits}
                 />
 
-                <div className="mt-3 flex items-center justify-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Coins className="w-3.5 h-3.5 text-primary" /> {CREDIT_COST} {t.hero.creditsPerReport}
-                  </span>
-                  {user && (
+                {user && (
+                  <div className="mt-3 flex items-center justify-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <CreditCard className="w-3.5 h-3.5" /> {t.hero.balance} : {credits} {t.hero.credits}
                     </span>
-                  )}
-                </div>
+                  </div>
+                )}
                 {!user && (
                   <div className="mt-4">
                     {freeRemaining === 0 && (
