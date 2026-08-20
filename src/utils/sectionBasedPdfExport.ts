@@ -293,7 +293,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     if (!canvas.width || !canvas.height) continue;
 
     canvas = flatten(canvas);
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const imgData = canvas.toDataURL('image/jpeg', 0.96);
 
     const sectionWidthMm = usableWidthMm * (nativeWidth / captureWidth);
     const sectionX = marginSide + (usableWidthMm - sectionWidthMm) / 2;
@@ -386,7 +386,7 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
           ctx.fillStyle = backgroundColor;
           ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
           ctx.drawImage(canvas, 0, srcYPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
-          place(sliceCanvas.toDataURL('image/jpeg', 0.92), cursorY, sectionWidthMm, sliceHeightMm);
+          place(sliceCanvas.toDataURL('image/jpeg', 0.96), cursorY, sectionWidthMm, sliceHeightMm);
         }
 
         srcYPx += sliceHeightPx;
