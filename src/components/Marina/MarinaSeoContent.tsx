@@ -38,13 +38,13 @@ const FAQ: Array<{ q: string; a: string }> = [
 
 export function MarinaSeoContent() {
   return (
-    <section className="py-16 border-t border-border" aria-labelledby="marina-audit-gratuit">
-      <div className="mx-auto max-w-3xl px-4">
+    <section className="py-10 border-t border-border" aria-labelledby="marina-audit-gratuit">
+      <div className="mx-auto max-w-5xl px-4">
         <h2 id="marina-audit-gratuit" className="text-2xl sm:text-3xl font-bold text-foreground text-center">
           Audit SEO et GEO gratuit : ce que mesure Marina
         </h2>
 
-        <blockquote className="citable-passage border-l-4 border-primary bg-muted/40 pl-4 py-3 my-6 text-base text-foreground italic">
+        <blockquote className="citable-passage border-l-4 border-primary bg-muted/40 pl-4 py-3 my-5 text-sm sm:text-base text-foreground italic">
           Marina est l'audit SEO et GEO gratuit de Crawlers.fr : {MARINA_FREE_QUOTA} rapports offerts sans carte
           bancaire, plus de 40 pages, une vingtaine de sous-audits et 9 questions réellement posées à ChatGPT,
           Gemini, Perplexity, Claude et Mistral pour mesurer le taux de citation du site dans les moteurs
@@ -52,7 +52,7 @@ export function MarinaSeoContent() {
           plan d'action priorisé par impact et effort. Audit disponible sur https://crawlers.fr/marina.
         </blockquote>
 
-        <div className="space-y-4 text-sm sm:text-base text-muted-foreground leading-relaxed">
+        <div className="columns-1 lg:columns-2 gap-8 space-y-4 text-sm text-muted-foreground leading-relaxed [&>p]:break-inside-avoid">
           <p>
             La plupart des outils d'audit gratuits se limitent à une checklist technique : balises manquantes,
             vitesse, liens cassés. Marina ajoute la couche qui décide désormais de la visibilité — la manière dont
@@ -91,18 +91,18 @@ export function MarinaSeoContent() {
 
       </div>
 
-      <div className="mx-auto max-w-3xl px-4">
-        <h3 className="text-xl font-bold text-foreground mt-14 mb-4">Questions fréquentes</h3>
-        <dl className="space-y-5">
+      <div className="mx-auto max-w-5xl px-4">
+        <h3 className="text-xl font-bold text-foreground mt-10 mb-4">Questions fréquentes</h3>
+        <dl className="grid gap-x-8 gap-y-4 md:grid-cols-2">
           {FAQ.map((item) => (
-            <div key={item.q} className="border-b border-border pb-4">
-              <dt className="font-semibold text-foreground">{item.q}</dt>
-              <dd className="mt-1 text-sm text-muted-foreground leading-relaxed">{item.a}</dd>
+            <div key={item.q} className="border-b border-border pb-3">
+              <dt className="font-semibold text-foreground text-sm">{item.q}</dt>
+              <dd className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">{item.a}</dd>
             </div>
           ))}
         </dl>
 
-        <div className="mt-10 text-center">
+        <div className="mt-6 text-center">
           <Button asChild variant="outline" size="lg">
             <a href="#marina-tabs">Lancer mon audit SEO GEO gratuit</a>
           </Button>
