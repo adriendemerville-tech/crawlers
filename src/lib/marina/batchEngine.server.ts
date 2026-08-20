@@ -144,7 +144,14 @@ async function launchItem(
   try {
     const res = await fetch(`${supabaseUrl}/functions/v1/marina`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${serviceKey}`,
+        // Second canal d'authentification serveur : les deux clés de service
+        // peuvent différer de format, le secret interne tranche.
+        ...(process.env['CRON_SECRET'] ? { 'x-internal-secret': process.env['CRON_SECRET'] as string } : {}),
+        'Content-Type': 'application/json',
+      },
+
       body: JSON.stringify({
         url: item.url,
         lang: batch.lang,
