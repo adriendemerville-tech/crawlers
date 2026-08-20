@@ -5275,9 +5275,17 @@ Deno.serve(handleRequest(async (req) => {
     // ═══ POST: Start pipeline or list jobs ═══
     const body = await req.json();
 
-    // ── Internal self-invocation with service role: skip auth ──
+    // ── Appel interne (self-invocation ou orchestrateur de lot) : auth serveur ──
+    // Le porteur de la clé de service est accepté, ainsi que l'orchestrateur des
+    // lots multipages qui présente le secret interne (les deux clés de service
+    // peuvent différer de format selon l'environnement, d'où ce second canal).
     const authHeader = req.headers.get('Authorization') || '';
-    const isServiceCall = authHeader === `Bearer ${SERVICE_KEY}`;
+    const internalSecret = Deno.env.get('CRON_SECRET') || '';
+    const providedInternal = req.headers.get('x-internal-secret') || '';
+    const isServiceCall =
+      (SERVICE_KEY.length > 0 && authHeader === `Bearer ${SERVICE_KEY}`) ||
+      (internalSecret.length > 0 && providedInternal === internalSecret);
+
 
     if (isServiceCall && body.action === 'run_job' && body.job_id) {
       const phase = body._phase || undefined;
