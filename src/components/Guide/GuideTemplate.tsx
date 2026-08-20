@@ -235,15 +235,19 @@ function GuideTemplateComponent({ guide }: GuideTemplateProps) {
 
         {/* Hero Image */}
         {guide.heroImage && (
-          <div className="max-w-4xl mx-auto px-4 pb-8">
+          <figure className="max-w-4xl mx-auto px-4 pb-8">
             <img
               src={guide.heroImage}
-              alt={guide.title}
+              alt={`Illustration du guide : ${guide.title}`}
               className="w-full rounded-xl max-h-[420px] object-cover"
               loading="eager"
             />
-          </div>
+            <figcaption className="mt-2 text-xs text-muted-foreground text-center">
+              {guide.subtitle || guide.title}
+            </figcaption>
+          </figure>
         )}
+
 
         {/* Article content */}
         <article className="max-w-4xl mx-auto px-4 space-y-10 pb-12">
