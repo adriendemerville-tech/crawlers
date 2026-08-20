@@ -28,9 +28,12 @@ function toRfc822(value: string): string {
 
 function renderItem(i: Item): string {
   const url = `${SITE}/blog/${i.slug}`;
+  const ext = (i.image?.split("?")[0]?.split(".").pop() ?? "").toLowerCase();
+  const mime =
+    ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : ext === "avif" ? "image/avif" : "image/jpeg";
   const enclosure =
     i.image && i.image.startsWith("https://")
-      ? `\n      <enclosure url="${escapeXml(i.image)}" type="image/jpeg" length="0" />`
+      ? `\n      <enclosure url="${escapeXml(i.image)}" type="${mime}" length="0" />`
       : "";
   return `    <item>
       <title>${escapeXml(i.title)}</title>
