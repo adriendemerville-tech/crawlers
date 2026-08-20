@@ -19,7 +19,7 @@ import {
   summarizeVerdicts,
   describeLinkHealth,
   type LinkVerdict,
-} from '../../../supabase/functions/_shared/linkVerdict';
+} from '../../../supabase/functions/_shared/linkVerdictShared';
 
 const SITE = 'https://crawlers.fr';
 const DOMAIN = 'crawlers.fr';

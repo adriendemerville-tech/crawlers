@@ -4,7 +4,7 @@ import {
   isFalsePositiveDomain,
   summarizeVerdicts,
   describeLinkHealth,
-} from '../../../supabase/functions/_shared/linkVerdict';
+} from '../../../supabase/functions/_shared/linkVerdictShared';
 
 describe('linkVerdict — juge unique des liens', () => {
   it('classe 404 et 410 en lien cassé confirmé, remontable au premier constat', () => {
