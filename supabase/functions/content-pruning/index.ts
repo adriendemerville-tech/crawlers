@@ -182,12 +182,36 @@ Deno.serve(handleRequest(async (req) => {
     const metrics = await fetchGscPageMetrics(sb, ownerId, bare, 90).catch(() => null)
     const metricsMissing = metrics === null
 
+    // 3 bis. Positions externes (Semrush / DataForSEO via keyword_universe).
+    // GSC peut ne remonter aucun clic sur une page pourtant classée en page 2 :
+    // ces positions naissantes sont des actifs à défendre, jamais à supprimer.
+    const externalRanks = new Map<string, { position: number; volume: number }>()
+    const { data: kwRows } = await sb.from('keyword_universe')
+      .select('target_url, current_position, best_position, search_volume')
+      .eq('domain', bare)
+      .not('target_url', 'is', null)
+      .limit(5000)
+    for (const row of (kwRows || []) as any[]) {
+      const positions = [row.current_position, row.best_position]
+        .map((p) => Number(p) || 0)
+        .filter((p) => p > 0)
+      if (positions.length === 0) continue
+      const pos = Math.min(...positions)
+      const key = normalizeUrlKey(String(row.target_url))
+      const prev = externalRanks.get(key)
+      if (!prev || pos < prev.position) {
+        externalRanks.set(key, { position: pos, volume: Number(row.search_volume) || 0 })
+      }
+    }
+
     // 4. Verdicts page par page
     const indexable = pages.filter((p) => p.is_indexable !== false && (p.http_status ?? 200) < 400)
     const verdicts: (PruneVerdict & {
       merge_candidate?: string; clicks_90d: number; impressions_90d: number; functional?: boolean
     })[] = indexable.map((p) => {
-        const m = metrics?.get(normalizeUrlKey(p.url))
+        const key = normalizeUrlKey(p.url)
+        const m = metrics?.get(key)
+        const ext = externalRanks.get(key)
         const v = pruneRoi({
           url: p.url,
           clicks_90d: m?.clicks ?? 0,
@@ -199,6 +223,8 @@ Deno.serve(handleRequest(async (req) => {
           title: p.title,
           http_status: p.http_status ?? 200,
           metrics_missing: metricsMissing,
+          external_best_position: ext?.position ?? null,
+          external_keyword_volume: ext?.volume ?? null,
         }, { pagesAnalyzed: indexable.length })
         if (isFunctionalUrl(p.url)) {
           return {
@@ -212,6 +238,7 @@ Deno.serve(handleRequest(async (req) => {
         }
         return { ...v, clicks_90d: m?.clicks ?? 0, impressions_90d: m?.impressions ?? 0 }
       })
+
     attachMergeTargets(verdicts)
 
 
