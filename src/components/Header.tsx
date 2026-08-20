@@ -440,27 +440,27 @@ export function Header() {
               {isHomePage ? (
                 <>
                   <Link to="/features">
-                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
                       Features
                     </Button>
                   </Link>
                   <Link to="/tarifs">
-                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
                       {language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}
                     </Button>
                   </Link>
                   <Link to="/audit-expert">
-                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-normal ${isAuditExpertPage ? 'text-primary bg-primary/10' : 'text-[#1e3a5f] dark:text-[#60a5fa]'}`}>
+                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-medium border hover:bg-muted/50 ${isAuditExpertPage ? 'text-primary border-primary/60 bg-primary/10' : 'text-foreground border-foreground/25 hover:border-foreground/60'}`}>
                       Audit
                     </Button>
                   </Link>
                   <Link to="/eeat">
-                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
                       E-E-A-T
                     </Button>
                   </Link>
                   <Link to="/app/ranking-serp">
-                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] text-muted-foreground hover:text-foreground">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
                       SERPs
                     </Button>
                   </Link>
