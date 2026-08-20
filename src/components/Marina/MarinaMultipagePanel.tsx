@@ -550,7 +550,10 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
               {targets.length} page(s) sélectionnée(s)
             </span>
             <span className="font-semibold">
-              {totalCost} crédits ({CREDIT_COST} / page)
+              {totalCost} crédits
+            </span>
+            <span className="text-muted-foreground">
+              Forfait {MULTIPAGE_BASE_PAGES} pages = {MULTIPAGE_BASE_CREDITS} crédits, +{MULTIPAGE_EXTRA_CREDITS_PER_PAGE} crédits/page supplémentaire
             </span>
             <span className="text-muted-foreground">
               Durée estimée : ~{Math.max(3, targets.length * 3)} min (audits exécutés l'un après l'autre)
