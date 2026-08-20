@@ -258,11 +258,15 @@ export function severityBadgeHTML(input: unknown): string {
   const sev = normalizeSeverity(input);
   if (!sev) return "";
   const s = SEVERITY_STYLE[sev];
-  return `<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:${s.bg};color:${s.fg};">${s.label}</span>`;
+  return `<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:transparent;border:1px solid ${s.fg};color:${s.fg};">${s.label}</span>`;
 }
 
+// La sévérité n'est détachée que si elle termine réellement le texte : la
+// version précédente amputait des phrases (« … Important — la » devenait un
+// libellé tronqué). `sévérité: <mot>` reste toléré car explicitement étiqueté.
 const TRAILING_SEVERITY_RE =
-  /\s*(?:[—–\-·|(\[]{1,2}\s*)?(critique|critical|important|majeur|mineur|minor|prioritaire|sévérité\s*:?\s*\w+|severity\s*:?\s*\w+)\s*[)\]]?\s*$/i;
+  /\s*(?:[—–\-·|(\[]{1,2}\s*)?(critique|critical|important|majeur|mineur|minor|prioritaire|(?:sévérité|severity)\s*:?\s*\w+)\s*[)\]]?[.]?\s*$/i;
+
 
 /**
  * Détache une étiquette de sévérité collée en fin de phrase.
