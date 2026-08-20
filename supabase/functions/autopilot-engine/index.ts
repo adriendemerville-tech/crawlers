@@ -1005,7 +1005,14 @@ async function executeCrawlersInternalPublish(
         target: slug, status: 'success', article_id: article.id,
         published: status === 'published', image_generated: imageGenerated,
       });
+      if (!existing) {
+        await logContentCreation(supabase, {
+          trackedSiteId: config.tracked_site_id, configId: config.id, userId: config.user_id,
+          phase, slug, title, published: status === 'published', via: 'crawlers-internal-publish',
+        });
+      }
       console.log(`[AutopilotEngine] crawlers.fr ${existing ? 'mis à jour' : 'créé'} : ${slug} (${status})`);
+
     } catch (err) {
       executionResults.push({
         function: 'crawlers-internal-publish', target: slug || 'unknown', status: 'error',
