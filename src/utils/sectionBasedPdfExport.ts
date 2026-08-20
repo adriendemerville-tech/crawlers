@@ -90,10 +90,11 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     await new Promise((r) => setTimeout(r, 250));
   }
 
-  // Échelle adaptative : un rapport fusionné multipages fait plusieurs dizaines de
-  // milliers de pixels de haut. À l'échelle 2, html2canvas saturait la mémoire de
-  // l'onglet et l'export ne rendait jamais la main.
-  const scale = options.scale ?? (fullHeight > 80000 ? 1 : fullHeight > 30000 ? 1.4 : 2);
+  // Échelle : chaque bloc est capturé séparément et déjà plafonné par les limites
+  // de canvas plus bas — on peut donc viser une échelle haute (texte net) sans
+  // saturer la mémoire, en ne dégradant que les documents véritablement énormes.
+  const scale = options.scale ?? (fullHeight > 150000 ? 1.6 : 2.2);
+
 
 
 
