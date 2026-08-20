@@ -298,7 +298,9 @@ type LexKey = 'software' | 'shop' | 'local_service' | 'agency' | 'nonprofit' | '
 const LEXICONS: Record<PromptLang, Record<LexKey, PromptLexicon>> = {
   fr: {
     software:      { seek: 'un logiciel',    comparePlural: 'les meilleurs logiciels',    noun: 'logiciel' },
-    shop:          { seek: 'un site',        comparePlural: 'les meilleurs sites',        noun: 'site' },
+    // On n'achète pas « un site » : on cherche une boutique. Le mot « site »
+    // est banni du lexique, il fausse la mesure de citabilité.
+    shop:          { seek: 'une boutique en ligne', comparePlural: 'les meilleures boutiques en ligne', noun: 'boutique en ligne' },
     local_service: { seek: 'une entreprise', comparePlural: 'les meilleures entreprises', noun: 'entreprise' },
     agency:        { seek: 'un prestataire', comparePlural: 'les meilleurs prestataires', noun: 'prestataire' },
     nonprofit:     { seek: 'une structure',  comparePlural: 'les meilleures structures',  noun: 'structure' },
