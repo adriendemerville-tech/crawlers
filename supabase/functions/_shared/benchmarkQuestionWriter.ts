@@ -242,7 +242,8 @@ export async function naturalizeBenchmarkQuestions(
   const out = benchmarks.map((b, i) => {
     const qs = byIndex.get(i) || [];
     const prompts = b.prompts.map((p, j) => {
-      const candidate = qs[j] || '';
+      // Filet déterministe : même si le modèle glisse « site », on le remplace.
+      const candidate = stripSiteWording(qs[j] || '', archetype);
       if (!isAcceptable(candidate, scrubTerms)) return p;
       // Ancrage : une reformulation ne peut pas faire disparaître le mot-clé
       // d'identité (« GEO », « SEO »…) que portait la version déterministe.
