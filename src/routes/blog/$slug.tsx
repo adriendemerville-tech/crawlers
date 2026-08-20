@@ -4,6 +4,7 @@ import { getArticleBySlug } from "@/data/blogArticles";
 import { supabase } from "@/integrations/supabase/client";
 import { pageHead } from "@/lib/seo/pageHead";
 import { buildArticleJsonLd, buildBreadcrumbJsonLd } from "@/lib/seo/articleSchema";
+import { resolveLastUpdated } from "@/lib/blog/lastUpdated";
 
 export interface BlogArticleLoaderData {
   found: boolean;
@@ -11,6 +12,8 @@ export interface BlogArticleLoaderData {
   description: string | null;
   image: string | null;
   date: string | null;
+  /** Jour ISO (YYYY-MM-DD) uniquement si le contenu a réellement été révisé */
+  updatedAt: string | null;
   /** Full DB row when the article lives in blog_articles (SSR body content) */
   db: Record<string, unknown> | null;
 }
@@ -29,6 +32,7 @@ export const Route = createFileRoute("/blog/$slug")({
         description: override?.description ?? staticArticle.description.fr,
         image: staticArticle.heroImage?.startsWith("https://") ? staticArticle.heroImage : null,
         date: staticArticle.date ?? null,
+        updatedAt: null,
         db: null,
       };
     }
@@ -47,11 +51,15 @@ export const Route = createFileRoute("/blog/$slug")({
         description: override?.description ?? data.excerpt ?? data.title,
         image: data.image_url ?? null,
         date: data.published_at ?? data.created_at ?? null,
+        updatedAt: resolveLastUpdated(
+          data.published_at ?? data.created_at ?? null,
+          (data as { updated_at?: string | null }).updated_at ?? null,
+        ),
         db: data as unknown as Record<string, unknown>,
       };
     }
 
-    return { found: false, title: null, description: null, image: null, date: null, db: null };
+    return { found: false, title: null, description: null, image: null, date: null, updatedAt: null, db: null };
   },
   head: ({ params, loaderData }) => {
     const path = `/blog/${params.slug}`;
@@ -74,7 +82,10 @@ export const Route = createFileRoute("/blog/$slug")({
         ...(loaderData.date
           ? [
               { property: "article:published_time", content: loaderData.date },
-              { property: "article:modified_time", content: loaderData.date },
+              {
+                property: "article:modified_time",
+                content: loaderData.updatedAt ?? loaderData.date,
+              },
             ]
           : []),
         { property: "article:author", content: "Adrien de Volontat" },
@@ -87,6 +98,7 @@ export const Route = createFileRoute("/blog/$slug")({
           path,
           image,
           datePublished: loaderData.date,
+          dateModified: loaderData.updatedAt,
         }),
         buildBreadcrumbJsonLd([
           { name: "Accueil", path: "/" },
