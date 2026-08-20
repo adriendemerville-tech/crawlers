@@ -409,7 +409,13 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
           <Layers className="w-4 h-4" />
           Multipages
           {items.length > 0 && (
-            <Badge variant="outline" className="ml-1">{completed.length}/{items.length}</Badge>
+            <Badge
+              variant="outline"
+              className="ml-1"
+              title="Audits terminés sur le total du lot"
+            >
+              {completed.length}/{items.length} terminés
+            </Badge>
           )}
         </Button>
       </div>
