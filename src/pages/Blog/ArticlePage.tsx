@@ -164,13 +164,13 @@ function ArticlePageComponent() {
     const translatedDbContent = getDbTranslated('content');
 
     if (useDbContent && translatedDbContent) {
-      return <HtmlContentRenderer html={translatedDbContent} />;
+      return <HtmlContentRenderer html={translatedDbContent} imageAltFallback={heroAlt} />;
     }
     if (staticContent) {
       return staticContent[language] || staticContent.fr;
     }
     if (translatedDbContent) {
-      return <HtmlContentRenderer html={translatedDbContent} />;
+      return <HtmlContentRenderer html={translatedDbContent} imageAltFallback={heroAlt} />;
     }
     return <p>Contenu non disponible</p>;
   };
