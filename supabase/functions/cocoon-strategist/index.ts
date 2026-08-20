@@ -960,11 +960,30 @@ try {
       const urlSpiralMax = Math.max(0, ...task.affected_urls.map((u: string) => spiralUrlScoreMap.get(u) || 0));
       if (urlSpiralMax >= 60) spiralBoost *= 1.2;
 
-      // Content priority mode: boost content creation/modification tasks
+      // Surprime contenu — dégressive selon la surface utile et la dette du site.
+      // Un ×1.8 plat traitait un site de 8 pages comme un site de 800 : une page
+      // neuve ajoute ~10 % de surface d'entrée dans le premier cas, 0,2 % et de la
+      // concurrence interne dans le second.
       let contentPriorityBoost = 1.0;
+      let premiumWhy = '';
       if (content_priority_mode && CONTENT_PRIORITY_ACTIONS.includes(task.action_type as ActionType)) {
-        contentPriorityBoost = 1.8; // Strong boost to push content tasks to top
+        const p = newContentPremium({
+          usefulPages: siteDebt?.useful_pages ?? 0,
+          recentCreations: 0,
+          regime: siteDebtRegime,
+          contentPriorityMode: true,
+        });
+        contentPriorityBoost = p.premium;
+        premiumWhy = p.explanation;
       }
+
+      // Gel dur : en régime saturé, aucune création sans gap sémantique documenté.
+      const freeze = NEW_CONTENT_TASK_ACTIONS.includes(task.action_type as ActionType)
+        ? isCreationFrozen(siteDebtRegime, {
+            documentedSemanticGap: Boolean(task.metadata?.semantic_gap_documented),
+            competingPages: Number(task.metadata?.competing_pages ?? 0),
+          })
+        : { frozen: false, reason: '' };
 
       task.priority = Math.round(sevWeight * catWeight * depthBoost * qualityBoost * spiralBoost * contentPriorityBoost * 10);
       task.urgency = deriveUrgency(task.estimated_impact, task.is_destructive);
@@ -973,7 +992,14 @@ try {
       task.metadata.spiral_phase = spiralPhase;
       task.metadata.spiral_score_avg = avgSpiralScore;
       task.metadata.content_priority_mode = content_priority_mode;
+      task.metadata.pruning_regime = siteDebtRegime;
+      if (premiumWhy) task.metadata.content_premium = { value: contentPriorityBoost, why: premiumWhy };
+      if (freeze.frozen) {
+        task.metadata.creation_frozen = true;
+        task.metadata.creation_frozen_reason = freeze.reason;
+      }
     }
+
 
     rawTasks.sort((a, b) => b.priority - a.priority);
 
