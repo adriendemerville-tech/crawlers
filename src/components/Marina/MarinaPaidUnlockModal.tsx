@@ -143,7 +143,7 @@ export function MarinaPaidUnlockModal({ open, onOpenChange, url, email, language
               : `Débloquer l'audit — ${MARINA_ONESHOT_PRICE_EUR} €`}
           </Button>
           <p className="text-xs text-muted-foreground text-center">
-            Créer un compte reste gratuit : 20 crédits offerts à l'inscription.
+            Créer un compte reste gratuit : 50 crédits offerts à l'inscription.
           </p>
         </div>
       </DialogContent>
