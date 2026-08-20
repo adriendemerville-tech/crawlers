@@ -137,18 +137,30 @@ export async function generateSectionBasedPDF(options: SectionPdfOptions): Promi
     return usable.flatMap((c) => expand(c, depth + 1));
   };
 
-  sections = sections.flatMap((s) => expand(s));
+  // `:scope > div` remonte à la fois des conteneurs et leurs enfants : sans ce
+  // filtre, un même contenu était capturé deux ou trois fois (rapport fusionné
+  // de 322 pages réelles exporté en 956 pages). On ne garde que les nœuds qui ne
+  // sont contenus par aucun autre nœud retenu.
+  const dropNested = (list: HTMLElement[]): HTMLElement[] => {
+    const uniq = list.filter((el, i, arr) => arr.indexOf(el) === i);
+    return uniq.filter((el) => !uniq.some((other) => other !== el && other.contains(el)));
+  };
+
+  sections = dropNested(sections.flatMap((s) => expand(s)));
 
   // Garde-fou : au-delà de `maxSections`, on remonte d'un cran de granularité
   // (blocs parents) plutôt que de capturer des milliers de sous-blocs, ce qui
   // faisait tourner l'export indéfiniment sur les rapports fusionnés.
   if (sections.length > maxSections) {
-    const coarse = sections
-      .map((el) => (el.parentElement as HTMLElement | null) || el)
-      .filter((el, i, arr) => arr.indexOf(el) === i && el.offsetHeight > 8);
+    const coarse = dropNested(
+      sections
+        .map((el) => (el.parentElement as HTMLElement | null) || el)
+        .filter((el) => el.offsetHeight > 8),
+    );
     if (coarse.length >= 1 && coarse.length < sections.length) sections = coarse;
     if (sections.length > maxSections) sections = sections.slice(0, maxSections);
   }
+
 
 
 
