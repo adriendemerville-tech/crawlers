@@ -260,13 +260,13 @@ export default function CoutChatGPTvsGoogleAds() {
               </Link>
             </li>
             <li>
-              <Link to="/visibilite-llm" className="flex items-center justify-between rounded-lg border border-border bg-card/40 p-4 hover:border-foreground/40 transition-colors">
+              <Link to="/generative-engine-optimization" className="flex items-center justify-between rounded-lg border border-border bg-card/40 p-4 hover:border-foreground/40 transition-colors">
                 <span className="font-medium">Mesurer sa visibilité LLM</span>
                 <ArrowRight className="h-4 w-4 text-foreground/60" />
               </Link>
             </li>
             <li>
-              <Link to="/optimisation-llm-seo" className="flex items-center justify-between rounded-lg border border-border bg-card/40 p-4 hover:border-foreground/40 transition-colors">
+              <Link to="/generative-engine-optimization" className="flex items-center justify-between rounded-lg border border-border bg-card/40 p-4 hover:border-foreground/40 transition-colors">
                 <span className="font-medium">Optimisation LLM SEO</span>
                 <ArrowRight className="h-4 w-4 text-foreground/60" />
               </Link>

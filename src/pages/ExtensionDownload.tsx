@@ -59,7 +59,7 @@ export default function ExtensionDownload() {
               </p>
               <div className="grid sm:grid-cols-2 gap-3">
                 {[
-                  { title: 'Audit stratégique IA (GEO)', desc: 'Visibilité dans les réponses IA, citabilité, fan-out, E-E-A-T sémantique.', href: '/score-geo' },
+                  { title: 'Audit stratégique IA (GEO)', desc: 'Visibilité dans les réponses IA, citabilité, fan-out, E-E-A-T sémantique.', href: '/generative-engine-optimization' },
                   { title: 'Audit Expert technique', desc: 'Performance, balises, HTTP, indexabilité, structure HTML.', href: '/audit-expert' },
                   { title: 'Score E-E-A-T', desc: 'Expertise, autorité, fiabilité — issues priorisés et plan correctif.', href: '/eeat' },
                   { title: 'Machine Layer scan', desc: 'JSON-LD, OpenGraph, robots.txt, llms.txt, signaux machine pour bots IA.', href: '/machine-layer-scanner' },

@@ -35,7 +35,7 @@ const GUIDE_TARGETS = [
 
 const CRAWLERS_TOOLS = [
   { name: 'Audit Expert', href: '/audit-expert', description: 'Audit SEO/GEO 168 critères' },
-  { name: 'Score GEO', href: '/score-geo', description: 'Score de visibilité IA' },
+  { name: 'Score GEO', href: '/generative-engine-optimization', description: 'Score de visibilité IA' },
   { name: 'Cocoon', href: '/app/cocoon', description: 'Maillage intelligent' },
   { name: 'Content Architect', href: '/content-architect', description: 'Création de contenu SEO' },
   { name: 'Autopilot', href: '/app/console', description: 'Pilote automatique SEO' },

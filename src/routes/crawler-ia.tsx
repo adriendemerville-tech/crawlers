@@ -1,17 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
-import KeywordPillarPage from "@/pages/KeywordPillarPage";
-import { pageHead } from "@/lib/seo/pageHead";
-import { KEYWORD_PILLARS } from "@/data/keywordPillars";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// Consolidation de cannibalisation : la sémantique "crawler IA" est portée par
+// l'article de référence qui ranke déjà (P8). 301 permanent.
 export const Route = createFileRoute("/crawler-ia")({
-  head: () => {
-    const pillar = KEYWORD_PILLARS["crawler-ia"];
-    return pageHead({
-      title: pillar.title,
-      description: pillar.metaDesc,
-      path: "/crawler-ia",
-      ogType: "article",
+  beforeLoad: () => {
+    throw redirect({
+      href: "/blog/crawler-definition-seo-geo",
+      statusCode: 301,
+      replace: true,
     });
   },
-  component: KeywordPillarPage,
 });

@@ -172,14 +172,14 @@ function getFeatures(lang: 'fr' | 'en' | 'es'): { category: string; items: Featu
           icon: Globe,
           title: 'Score GEO',
           description: lang === 'fr' ? 'Mesurez votre visibilité dans les moteurs de recherche génératifs (ChatGPT, Gemini…).' : lang === 'es' ? 'Mida su visibilidad en los motores de búsqueda generativos.' : 'Measure your visibility in generative search engines (ChatGPT, Gemini…).',
-          href: '/score-geo',
+          href: '/generative-engine-optimization',
           color: 'from-blue-400 to-cyan-500',
         },
         {
           icon: Brain,
           title: lang === 'fr' ? 'Visibilité LLM' : lang === 'es' ? 'Visibilidad LLM' : 'LLM Visibility',
           description: lang === 'fr' ? 'Testez si votre marque est citée par les LLM et analysez le sentiment associé.' : lang === 'es' ? 'Compruebe si su marca es citada por los LLM y analice el sentimiento asociado.' : 'Test if your brand is cited by LLMs and analyze the associated sentiment.',
-          href: '/visibilite-llm',
+          href: '/generative-engine-optimization',
           color: 'from-pink-500 to-rose-600',
         },
         {

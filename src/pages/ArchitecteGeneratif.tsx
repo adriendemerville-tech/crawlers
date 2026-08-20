@@ -492,7 +492,7 @@ export default function ArchitecteGeneratif() {
       <ClusterMesh
         currentPath="/architecte-generatif"
         currentLabel="Architecte génératif"
-        pillar={{"href":"/score-geo","label":"Score GEO","description":"Pilier : mesurez votre visibilité ChatGPT, Claude, Perplexity."}}
+        pillar={{"href":"/generative-engine-optimization","label":"Score GEO","description":"Pilier : mesurez votre visibilité ChatGPT, Claude, Perplexity."}}
         sisters={[{"href":"/analyse-bots-ia","label":"Analyse bots IA","description":"GPTBot, ClaudeBot, PerplexityBot."},{"href":"/comparatif-claude-vs-crawlers","label":"Claude vs Crawlers","description":"Comparatif GEO."},{"href":"/comparatif-crawlers-semrush","label":"Crawlers vs Semrush","description":"Comparatif outils SEO."}]}
       />
       </main>

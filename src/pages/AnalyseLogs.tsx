@@ -213,14 +213,14 @@ const AnalyseLogs = () => {
                 L'analyse de logs serveur est la seule méthode qui offre une <strong>vue exhaustive et en temps réel</strong> de chaque
                 requête effectuée par chaque robot sur votre site. C'est le complément indispensable de vos audits{' '}
                 <Link to="/audit-expert" className="text-primary">SEO</Link> et{' '}
-                <Link to="/score-geo" className="text-primary">GEO</Link>.
+                <Link to="/generative-engine-optimization" className="text-primary">GEO</Link>.
               </p>
 
               <h3>L'ère des bots IA dans vos logs</h3>
               <p>
                 Depuis 2024, les crawlers IA représentent une part croissante du trafic bot. Comprendre leur comportement dans
                 vos logs permet d'optimiser votre{' '}
-                <Link to="/visibilite-llm" className="text-primary">visibilité LLM</Link> et de vérifier que votre{' '}
+                <Link to="/generative-engine-optimization" className="text-primary">visibilité LLM</Link> et de vérifier que votre{' '}
                 <code>robots.txt</code> est correctement configuré.
               </p>
 
@@ -341,8 +341,8 @@ const AnalyseLogs = () => {
             <div className="flex flex-wrap gap-2">
               {[
                 { to: '/analyse-bots-ia', label: 'Analyse Bots IA' },
-                { to: '/score-geo', label: 'Score GEO' },
-                { to: '/visibilite-llm', label: 'Visibilité LLM' },
+                { to: '/generative-engine-optimization', label: 'Score GEO' },
+                { to: '/generative-engine-optimization', label: 'Visibilité LLM' },
                 { to: '/pagespeed', label: 'PageSpeed' },
                 { to: '/audit-expert', label: 'Audit Expert' },
                 { to: '/app/site-crawl', label: 'Crawl Multi-Pages' },

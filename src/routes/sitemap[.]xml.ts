@@ -12,7 +12,6 @@ const FALLBACK_PATHS = [
   "/guides",
   "/observatoire",
   "/audit-seo-geo",
-  "/referencement-ia",
   "/generative-engine-optimization",
   "/a-propos",
   "/faq",

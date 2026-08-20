@@ -638,7 +638,7 @@ export default function Methodologie() {
               <div className="flex flex-wrap gap-3">
                 {[
                   { to: '/audit-expert', label: 'Audit Expert SEO/GEO' },
-                  { to: '/score-geo', label: 'Score GEO' },
+                  { to: '/generative-engine-optimization', label: 'Score GEO' },
                   { to: '/comparatif-claude-vs-crawlers', label: 'Claude vs Crawlers' },
                   { to: '/app/ranking-serp', label: 'Ranking SERP' },
                   { to: '/features', label: 'Features' },
