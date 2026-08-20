@@ -324,18 +324,29 @@ const LEXICONS: Record<PromptLang, Record<LexKey, PromptLexicon>> = {
   },
 };
 
+/** Signaux d'une activité de prestation (travaux, intervention, conseil). */
+const SERVICE_OFFER_RE = /travaux|r[eé]novation|chantier|artisan|installation|d[eé]pannage|entretien|ma[îi]trise d.?\s?œuvre|entreprise g[eé]n[eé]rale|prestation|pose\b|am[eé]nagement|construction|isolation|plomberie|[eé]lectricit[eé]|toiture|ma[çc]onnerie|peinture|conseil|cabinet|formation|agence/i;
+
 function resolveLexKey(ctx: SiteContext): LexKey {
   const model = (ctx.business_model || '').trim().toLowerCase();
   const entity = (ctx.entity_type || '').trim().toLowerCase();
+  const offer = String((ctx as Record<string, unknown>)['products_services'] ?? '');
+  const isServiceOffer = SERVICE_OFFER_RE.test(offer);
 
-  if (model.startsWith('saas')) return 'software';
-  if (model.startsWith('ecommerce') || model.startsWith('marketplace')) return 'shop';
-  if (model === 'service_local' || model === 'leadgen') return 'local_service';
-  if (model === 'service_agency') return 'agency';
-  if (model === 'nonprofit') return 'nonprofit';
+  if (model.startsWith('saas') || model === 'software') return 'software';
+  // Un prestataire doté d'une boutique secondaire reste un prestataire : on ne
+  // bascule sur le lexique boutique que si l'offre décrite ne relève pas
+  // d'abord d'une prestation (cf. avenir-renovations : travaux + e-boutique).
+  if (model.startsWith('ecommerce') || model.startsWith('marketplace')) {
+    return isServiceOffer ? 'local_service' : 'shop';
+  }
+  if (model === 'service_local' || model === 'local_service' || model === 'leadgen' || model === 'lead_gen' || model === 'artisan') return 'local_service';
+  if (model === 'service_agency' || model === 'agency') return 'agency';
+  if (model === 'nonprofit' || model === 'non_commercial') return 'nonprofit';
 
   if (entity === 'saas') return 'software';
-  if (entity === 'ecommerce' || entity === 'marketplace') return 'shop';
+  if ((entity === 'ecommerce' || entity === 'marketplace') && !isServiceOffer) return 'shop';
+  if (isServiceOffer) return 'local_service';
   return 'service';
 }
 
