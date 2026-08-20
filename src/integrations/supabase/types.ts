@@ -15376,6 +15376,7 @@ export type Database = {
         Args: { p_lease_id: string }
         Returns: boolean
       }
+      reset_stuck_workbench_items: { Args: never; Returns: number }
       resolve_human_sample_rate: {
         Args: { p_user_id: string }
         Returns: number

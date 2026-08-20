@@ -13,6 +13,13 @@ type PhaseStatus = 'completed' | 'dry_run' | 'failed' | 'degraded' | 'partial' |
 
 const PHASES: Phase[] = ['audit', 'diagnose', 'prescribe', 'execute', 'validate'];
 
+interface Incident {
+  phase: string;
+  status: string;
+  at: string;
+  messages: string[];
+}
+
 interface SiteRow {
   domain: string;
   label: string;
@@ -23,7 +30,28 @@ interface SiteRow {
   total_cycles_run: number;
   last_cycle_number: number | null;
   phases: Record<Phase, PhaseStatus>;
+  degradedCount7d: number;
+  incidents: Incident[];
 }
+
+/** `execution_error` est stocké soit en JSON (tableau d'erreurs de phase), soit en texte brut. */
+function parseErrorMessages(raw: unknown): string[] {
+  if (!raw) return [];
+  if (typeof raw !== 'string') return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((e) => (typeof e === 'string' ? e : [e?.function, e?.message].filter(Boolean).join(' — ')))
+        .filter(Boolean);
+    }
+    if (parsed && typeof parsed === 'object' && 'message' in parsed) return [String(parsed.message)];
+  } catch {
+    /* texte brut */
+  }
+  return [raw.slice(0, 300)];
+}
+
 
 interface TrackedSiteRef {
   id: string;
@@ -153,6 +181,26 @@ export function ParmenionExecutionStatus() {
         }
       }
 
+
+      // Incidents des 7 derniers jours : un cycle dégradé/partiel/échoué n'était
+      // visible nulle part (le chip de phase ne portait ni cause ni compteur).
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: incidentRows } = await supabase
+        .from('parmenion_decision_log')
+        .select('pipeline_phase, status, created_at, execution_error, action_type')
+        .eq('domain', t.domain)
+        .in('status', ['degraded', 'partial', 'failed'])
+        .gte('created_at', sevenDaysAgo)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      const incidents: Incident[] = (incidentRows || []).slice(0, 5).map((row) => ({
+        phase: (row.pipeline_phase as string) || (row.action_type as string) || '—',
+        status: row.status as string,
+        at: row.created_at as string,
+        messages: parseErrorMessages(row.execution_error),
+      }));
+
       result.push({
         domain: t.domain,
         label: t.label,
@@ -163,7 +211,10 @@ export function ParmenionExecutionStatus() {
         total_cycles_run: cfg?.total_cycles_run ?? 0,
         last_cycle_number: lastCycleNumber,
         phases,
+        degradedCount7d: (incidentRows || []).length,
+        incidents,
       });
+
     }
 
     setRows(result);
@@ -215,6 +266,12 @@ export function ParmenionExecutionStatus() {
                 {row.status && (
                   <Badge variant="outline" className="text-xs">{row.status}</Badge>
                 )}
+                {row.degradedCount7d > 0 && (
+                  <Badge variant="outline" className="border-orange-500/40 text-orange-700 dark:text-orange-300 text-xs">
+                    <AlertTriangle className="mr-1 h-3 w-3" />
+                    {row.degradedCount7d} incident{row.degradedCount7d > 1 ? 's' : ''} / 7 j
+                  </Badge>
+                )}
               </div>
             </div>
 
@@ -223,6 +280,38 @@ export function ParmenionExecutionStatus() {
                 <PhaseChip key={p} phase={p} status={row.phases[p]} />
               ))}
             </div>
+
+            {row.incidents.length > 0 && (
+              <div className="rounded-md border border-orange-500/30 bg-orange-500/5 p-3 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Cycles dégradés — causes
+                </div>
+                <ul className="space-y-1.5">
+                  {row.incidents.map((inc, i) => (
+                    <li key={`${inc.at}-${i}`} className="text-[11px] leading-relaxed text-muted-foreground">
+                      <span className="font-mono text-foreground">{inc.phase}</span>
+                      {' · '}
+                      <span className="uppercase">{inc.status}</span>
+                      {' · il y a '}
+                      {formatDistanceToNow(new Date(inc.at), { locale: fr })}
+                      {inc.messages.length > 0 ? (
+                        <div className="pl-2 border-l border-orange-500/30 mt-0.5">
+                          {inc.messages.map((m, j) => (
+                            <div key={j}>{m}</div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="pl-2 border-l border-orange-500/30 mt-0.5 italic">
+                          Aucune cause enregistrée par la fonction appelante
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
 
             {row.implementation_mode === 'dry_run' && (
               <p className="text-[11px] text-muted-foreground italic">

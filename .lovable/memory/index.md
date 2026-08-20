@@ -36,3 +36,5 @@
 
 - [Workbench borné](mem://tech/architect/workbench-backlog-cap-fr) — workbench-hygiene : dédup double signature (titre + catégorie/URL), plafond 40 constats actifs par domaine/user, périmés en `dismissed` jamais `done`
 - [MCP dry_run_script](mem://tech/mcp/dry-run-script-resolver-fr) — dry_run_script cible dry-run-script (siteUrl+code) via ARG_RESOLVE sur site_script_rules avec contrôle de propriété ; target_url optionnel
+- [Workbench reset bloqués](mem://tech/architect/workbench-reset-stuck-fr) — RPC reset_stuck_workbench_items + cron SQL 15 min qui repasse en pending les in_progress de plus de 2 h
+- [Parménion cycles dégradés](mem://tech/autopilot/degraded-visibility-fr) — Compteur incidents 7 j + causes execution_error dans l'UI admin, kick advisor 3 tentatives (async, retry, staged) avant de dégrader
