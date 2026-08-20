@@ -41,6 +41,7 @@ import { Route as DiagnosticWafRouteImport } from './routes/diagnostic-waf'
 import { Route as EeatRouteImport } from './routes/eeat'
 import { Route as ExtensionRouteImport } from './routes/extension'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as FeedDotxmlRouteImport } from './routes/feed[.]xml'
 import { Route as GenerativeEngineOptimizationRouteImport } from './routes/generative-engine-optimization'
 import { Route as GeoVsSeoRouteImport } from './routes/geo-vs-seo'
 import { Route as GoogleBusinessRouteImport } from './routes/google-business'
@@ -107,7 +108,6 @@ import { Route as EtudesCoutReponseChatgptVsGoogleAdsRouteImport } from './route
 import { Route as FeaturesIndexRouteImport } from './routes/features/index'
 import { Route as FeaturesCocoonRouteImport } from './routes/features/cocoon'
 import { Route as FeaturesConsoleRouteImport } from './routes/features/console'
-import { Route as FeedXmlRouteImport } from './routes/feed.xml'
 import { Route as GuideSlugRouteImport } from './routes/guide/$slug'
 import { Route as GuidesIndexRouteImport } from './routes/guides/index'
 import { Route as GuidesGeoVsSeoRouteImport } from './routes/guides/geo-vs-seo'
@@ -299,6 +299,11 @@ const ExtensionRoute = ExtensionRouteImport.update({
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedDotxmlRoute = FeedDotxmlRouteImport.update({
+  id: '/feed.xml',
+  path: '/feed.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GenerativeEngineOptimizationRoute =
@@ -638,11 +643,6 @@ const FeaturesConsoleRoute = FeaturesConsoleRouteImport.update({
   path: '/features/console',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FeedXmlRoute = FeedXmlRouteImport.update({
-  id: '/feed/xml',
-  path: '/feed/xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const GuideSlugRoute = GuideSlugRouteImport.update({
   id: '/guide/$slug',
   path: '/guide/$slug',
@@ -824,6 +824,7 @@ export interface FileRoutesByFullPath {
   '/eeat': typeof EeatRoute
   '/extension': typeof ExtensionRoute
   '/faq': typeof FaqRoute
+  '/feed.xml': typeof FeedDotxmlRoute
   '/generative-engine-optimization': typeof GenerativeEngineOptimizationRoute
   '/geo-vs-seo': typeof GeoVsSeoRoute
   '/google-business': typeof GoogleBusinessRoute
@@ -886,7 +887,6 @@ export interface FileRoutesByFullPath {
   '/etudes/cout-reponse-chatgpt-vs-google-ads': typeof EtudesCoutReponseChatgptVsGoogleAdsRoute
   '/features/cocoon': typeof FeaturesCocoonRoute
   '/features/console': typeof FeaturesConsoleRoute
-  '/feed/xml': typeof FeedXmlRoute
   '/guide/$slug': typeof GuideSlugRoute
   '/guides/geo-vs-seo': typeof GuidesGeoVsSeoRoute
   '/landing/$slug': typeof LandingSlugRoute
@@ -954,6 +954,7 @@ export interface FileRoutesByTo {
   '/eeat': typeof EeatRoute
   '/extension': typeof ExtensionRoute
   '/faq': typeof FaqRoute
+  '/feed.xml': typeof FeedDotxmlRoute
   '/generative-engine-optimization': typeof GenerativeEngineOptimizationRoute
   '/geo-vs-seo': typeof GeoVsSeoRoute
   '/google-business': typeof GoogleBusinessRoute
@@ -1016,7 +1017,6 @@ export interface FileRoutesByTo {
   '/etudes/cout-reponse-chatgpt-vs-google-ads': typeof EtudesCoutReponseChatgptVsGoogleAdsRoute
   '/features/cocoon': typeof FeaturesCocoonRoute
   '/features/console': typeof FeaturesConsoleRoute
-  '/feed/xml': typeof FeedXmlRoute
   '/guide/$slug': typeof GuideSlugRoute
   '/guides/geo-vs-seo': typeof GuidesGeoVsSeoRoute
   '/landing/$slug': typeof LandingSlugRoute
@@ -1085,6 +1085,7 @@ export interface FileRoutesById {
   '/eeat': typeof EeatRoute
   '/extension': typeof ExtensionRoute
   '/faq': typeof FaqRoute
+  '/feed.xml': typeof FeedDotxmlRoute
   '/generative-engine-optimization': typeof GenerativeEngineOptimizationRoute
   '/geo-vs-seo': typeof GeoVsSeoRoute
   '/google-business': typeof GoogleBusinessRoute
@@ -1147,7 +1148,6 @@ export interface FileRoutesById {
   '/etudes/cout-reponse-chatgpt-vs-google-ads': typeof EtudesCoutReponseChatgptVsGoogleAdsRoute
   '/features/cocoon': typeof FeaturesCocoonRoute
   '/features/console': typeof FeaturesConsoleRoute
-  '/feed/xml': typeof FeedXmlRoute
   '/guide/$slug': typeof GuideSlugRoute
   '/guides/geo-vs-seo': typeof GuidesGeoVsSeoRoute
   '/landing/$slug': typeof LandingSlugRoute
@@ -1217,6 +1217,7 @@ export interface FileRouteTypes {
     | '/eeat'
     | '/extension'
     | '/faq'
+    | '/feed.xml'
     | '/generative-engine-optimization'
     | '/geo-vs-seo'
     | '/google-business'
@@ -1279,7 +1280,6 @@ export interface FileRouteTypes {
     | '/etudes/cout-reponse-chatgpt-vs-google-ads'
     | '/features/cocoon'
     | '/features/console'
-    | '/feed/xml'
     | '/guide/$slug'
     | '/guides/geo-vs-seo'
     | '/landing/$slug'
@@ -1347,6 +1347,7 @@ export interface FileRouteTypes {
     | '/eeat'
     | '/extension'
     | '/faq'
+    | '/feed.xml'
     | '/generative-engine-optimization'
     | '/geo-vs-seo'
     | '/google-business'
@@ -1409,7 +1410,6 @@ export interface FileRouteTypes {
     | '/etudes/cout-reponse-chatgpt-vs-google-ads'
     | '/features/cocoon'
     | '/features/console'
-    | '/feed/xml'
     | '/guide/$slug'
     | '/guides/geo-vs-seo'
     | '/landing/$slug'
@@ -1477,6 +1477,7 @@ export interface FileRouteTypes {
     | '/eeat'
     | '/extension'
     | '/faq'
+    | '/feed.xml'
     | '/generative-engine-optimization'
     | '/geo-vs-seo'
     | '/google-business'
@@ -1539,7 +1540,6 @@ export interface FileRouteTypes {
     | '/etudes/cout-reponse-chatgpt-vs-google-ads'
     | '/features/cocoon'
     | '/features/console'
-    | '/feed/xml'
     | '/guide/$slug'
     | '/guides/geo-vs-seo'
     | '/landing/$slug'
@@ -1608,6 +1608,7 @@ export interface RootRouteChildren {
   EeatRoute: typeof EeatRoute
   ExtensionRoute: typeof ExtensionRoute
   FaqRoute: typeof FaqRoute
+  FeedDotxmlRoute: typeof FeedDotxmlRoute
   GenerativeEngineOptimizationRoute: typeof GenerativeEngineOptimizationRoute
   GeoVsSeoRoute: typeof GeoVsSeoRoute
   GoogleBusinessRoute: typeof GoogleBusinessRoute
@@ -1670,7 +1671,6 @@ export interface RootRouteChildren {
   EtudesCoutReponseChatgptVsGoogleAdsRoute: typeof EtudesCoutReponseChatgptVsGoogleAdsRoute
   FeaturesCocoonRoute: typeof FeaturesCocoonRoute
   FeaturesConsoleRoute: typeof FeaturesConsoleRoute
-  FeedXmlRoute: typeof FeedXmlRoute
   GuideSlugRoute: typeof GuideSlugRoute
   GuidesGeoVsSeoRoute: typeof GuidesGeoVsSeoRoute
   LandingSlugRoute: typeof LandingSlugRoute
@@ -1930,6 +1930,13 @@ declare module '@tanstack/react-router' {
       path: '/faq'
       fullPath: '/faq'
       preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feed.xml': {
+      id: '/feed.xml'
+      path: '/feed.xml'
+      fullPath: '/feed.xml'
+      preLoaderRoute: typeof FeedDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/generative-engine-optimization': {
@@ -2394,13 +2401,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeaturesConsoleRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/feed/xml': {
-      id: '/feed/xml'
-      path: '/feed/xml'
-      fullPath: '/feed/xml'
-      preLoaderRoute: typeof FeedXmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/guide/$slug': {
       id: '/guide/$slug'
       path: '/guide/$slug'
@@ -2640,6 +2640,7 @@ const rootRouteChildren: RootRouteChildren = {
   EeatRoute: EeatRoute,
   ExtensionRoute: ExtensionRoute,
   FaqRoute: FaqRoute,
+  FeedDotxmlRoute: FeedDotxmlRoute,
   GenerativeEngineOptimizationRoute: GenerativeEngineOptimizationRoute,
   GeoVsSeoRoute: GeoVsSeoRoute,
   GoogleBusinessRoute: GoogleBusinessRoute,
@@ -2704,7 +2705,6 @@ const rootRouteChildren: RootRouteChildren = {
     EtudesCoutReponseChatgptVsGoogleAdsRoute,
   FeaturesCocoonRoute: FeaturesCocoonRoute,
   FeaturesConsoleRoute: FeaturesConsoleRoute,
-  FeedXmlRoute: FeedXmlRoute,
   GuideSlugRoute: GuideSlugRoute,
   GuidesGeoVsSeoRoute: GuidesGeoVsSeoRoute,
   LandingSlugRoute: LandingSlugRoute,

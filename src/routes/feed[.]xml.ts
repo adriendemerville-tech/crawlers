@@ -3,7 +3,7 @@ import { buildFeed } from "@/lib/rss/buildFeed";
 
 const SITE = "https://crawlers.fr";
 
-export const Route = createFileRoute("/feed/xml")({
+export const Route = createFileRoute("/feed.xml")({
   server: {
     handlers: {
       GET: async () => {
