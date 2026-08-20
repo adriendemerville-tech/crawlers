@@ -114,7 +114,7 @@ Deno.serve(handleRequest(async (req) => {
     }
 
     // 5. Compute ETag for cache validation
-    const maxLastmod = formatted.reduce((max, e) => e.lastmod > max ? e.lastmod : max, '');
+    const maxLastmod = formatted.reduce((max, e) => (e.lastmod || '') > max ? (e.lastmod as string) : max, '');
     const etag = `"se-${formatted.length}-${maxLastmod}"`;
 
     // 6. Log to analytics
