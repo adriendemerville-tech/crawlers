@@ -7,7 +7,7 @@ export const Route = createFileRoute("/comparatif-plateforme-seo-ia")({
     title: "Plateforme SEO/GEO vs agents IA généralistes (Claude, GPT)",
     description: "Pourquoi une plateforme SEO/GEO dédiée qui croise vos données surpasse Claude, ChatGPT ou Cowork pour le référencement naturel.",
     path: "/comparatif-plateforme-seo-ia",
-    noIndex: true,
+    ogType: "article",
   }),
   component: ComparatifPlateforme,
 });

@@ -4,8 +4,8 @@ import { pageHead } from "@/lib/seo/pageHead";
 
 export const Route = createFileRoute("/observatoire")({
   head: () => pageHead({
-    title: "Observatoire des citations IA & statistiques SEO du web FR",
-    description: "Domaines et types de contenus les plus cités par les moteurs IA (ChatGPT, Perplexity, Gemini), plus les statistiques SEO du web francophone : JSON-LD, Core Web Vitals, HTTPS. Données anonymisées Crawlers.fr.",
+    title: "Observatoire des citations IA — statistiques SEO FR",
+    description: "Domaines et contenus les plus cités par ChatGPT, Perplexity et Gemini, plus les statistiques SEO du web francophone (JSON-LD, Core Web Vitals, HTTPS).",
     path: "/observatoire",
     keywords: "domaines les plus cités par les moteurs ia, types de contenus cités par les moteurs ia, observatoire geo, statistiques seo france",
     jsonLd: [

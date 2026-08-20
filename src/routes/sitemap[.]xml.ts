@@ -30,14 +30,15 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;");
 }
 
-type Entry = { loc: string; lastmod: string; changefreq?: string | null; priority?: number | null };
+type Entry = { loc: string; lastmod: string | null; changefreq?: string | null; priority?: number | null };
 
 function toXml(entries: Entry[]): string {
   const body = entries
     .map(
       (e) => `  <url>
-    <loc>${escapeXml(e.loc)}</loc>
-    <lastmod>${e.lastmod}</lastmod>${e.changefreq ? `\n    <changefreq>${e.changefreq}</changefreq>` : ""}${
+    <loc>${escapeXml(e.loc)}</loc>${e.lastmod ? `\n    <lastmod>${e.lastmod}</lastmod>` : ""}${
+        e.changefreq ? `\n    <changefreq>${e.changefreq}</changefreq>` : ""
+      }${
         e.priority != null ? `\n    <priority>${e.priority}</priority>` : ""
       }
   </url>`,
@@ -51,8 +52,6 @@ ${body}
 }
 
 async function buildSitemap(): Promise<{ xml: string; source: "db" | "fallback"; count: number }> {
-  const today = new Date().toISOString().slice(0, 10);
-
   try {
     const url = process.env["SUPABASE_URL"];
     const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
@@ -79,12 +78,13 @@ async function buildSitemap(): Promise<{ xml: string; source: "db" | "fallback";
 
       if (!error && data && data.length > 0) {
         // Site mono-langue : les variantes ?lang= sont servies en noindex.
+        // lastmod n'est émis que s'il existe une date de modification réelle en base.
         const rows = (data as Entry[])
           .filter((e) => !!e.loc && !/[?&]lang=/i.test(e.loc))
           .map((e) => ({
             ...e,
             lastmod:
-              typeof e.lastmod === "string" && e.lastmod.includes("T") ? e.lastmod.split("T")[0]! : e.lastmod || today,
+              typeof e.lastmod === "string" && e.lastmod.includes("T") ? e.lastmod.split("T")[0]! : e.lastmod || null,
           }));
         if (rows.length > 0) return { xml: toXml(rows), source: "db", count: rows.length };
       }
@@ -95,10 +95,11 @@ async function buildSitemap(): Promise<{ xml: string; source: "db" | "fallback";
 
   const rows: Entry[] = FALLBACK_PATHS.map((p) => ({
     loc: `${SITE}${p}`,
-    lastmod: today,
+    lastmod: null,
     changefreq: p === "/" || p === "/blog" ? "daily" : "weekly",
     priority: p === "/" ? 1.0 : 0.7,
   }));
+
   return { xml: toXml(rows), source: "fallback", count: rows.length };
 }
 

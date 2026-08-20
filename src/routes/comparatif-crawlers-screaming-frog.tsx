@@ -10,7 +10,7 @@ export const Route = createFileRoute("/comparatif-crawlers-screaming-frog")({
     pageHead({
       title: "Alternative Screaming Frog 2026 : crawl en ligne sans limite",
       description:
-        "Comparatif Crawlers.fr vs Screaming Frog sur 10 critères : crawl en ligne jusqu'à 10 000 URL, rendu JavaScript, cocon sémantique, visibilité ChatGPT, rapports client.",
+        "Crawlers.fr vs Screaming Frog sur 10 critères : crawl en ligne jusqu'à 10 000 URL, rendu JavaScript, cocon sémantique, visibilité ChatGPT.",
       path: "/comparatif-crawlers-screaming-frog",
       ogType: "article",
       jsonLd: SCREAMING_FROG_JSONLD,

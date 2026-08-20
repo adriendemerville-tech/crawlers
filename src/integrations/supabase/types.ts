@@ -12974,7 +12974,7 @@ export type Database = {
           domain: string
           id: string
           is_active: boolean | null
-          lastmod: string
+          lastmod: string | null
           loc: string
           page_type: string | null
           priority: number | null
@@ -12986,7 +12986,7 @@ export type Database = {
           domain?: string
           id?: string
           is_active?: boolean | null
-          lastmod?: string
+          lastmod?: string | null
           loc: string
           page_type?: string | null
           priority?: number | null
@@ -12998,7 +12998,7 @@ export type Database = {
           domain?: string
           id?: string
           is_active?: boolean | null
-          lastmod?: string
+          lastmod?: string | null
           loc?: string
           page_type?: string | null
           priority?: number | null

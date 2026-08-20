@@ -4,11 +4,10 @@ import { pageHead } from "@/lib/seo/pageHead";
 
 export const Route = createFileRoute("/modifier-code-wordpress")({
   head: () => pageHead({
-    title: "Comment modifier le code de son site WordPress facilement ? | Crawlers.fr",
+    title: "Modifier le code de son site WordPress : guide 2026",
     description: "Guide en 4 étapes pour injecter automatiquement les balises SEO et GEO sur WordPress via le plugin Crawlers.fr.",
     path: "/modifier-code-wordpress",
     ogType: "article",
-    noIndex: true,
   }),
   component: ModifierCodeWordPress,
 });

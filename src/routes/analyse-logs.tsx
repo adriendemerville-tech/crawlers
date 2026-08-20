@@ -4,11 +4,10 @@ import { pageHead } from "@/lib/seo/pageHead";
 
 export const Route = createFileRoute("/analyse-logs")({
   head: () => pageHead({
-    title: "Analyse de logs serveur — crawl Google & IA | Crawlers",
-    description: "Analysez vos logs serveur pour comprendre comment Googlebot et les bots IA explorent votre site. Détectez le budget crawl gaspillé, les pages orphelines et optimisez votre indexation.",
+    title: "Analyse de logs serveur : crawl Google et bots IA",
+    description: "Analysez vos logs serveur pour voir comment Googlebot et les bots IA explorent votre site : budget de crawl gaspillé, pages orphelines, fréquence de passage.",
     path: "/analyse-logs",
     ogType: "article",
-    noIndex: true,
   }),
   component: AnalyseLogs,
 });

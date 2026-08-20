@@ -39,12 +39,12 @@ function hasLangParam(loc: string): boolean {
   return /[?&]lang=/i.test(loc);
 }
 
-function generateSitemapXml(entries: Array<{ loc: string; lastmod: string; changefreq?: string; priority?: number }>): string {
+function generateSitemapXml(entries: Array<{ loc: string; lastmod: string | null; changefreq?: string; priority?: number }>): string {
   const urlEntries = entries.map(e => `
   <url>
-    <loc>${escapeXml(e.loc)}</loc>
-    <lastmod>${e.lastmod}</lastmod>${e.changefreq ? `\n    <changefreq>${e.changefreq}</changefreq>` : ''}${e.priority != null ? `\n    <priority>${e.priority}</priority>` : ''}
+    <loc>${escapeXml(e.loc)}</loc>${e.lastmod ? `\n    <lastmod>${e.lastmod}</lastmod>` : ''}${e.changefreq ? `\n    <changefreq>${e.changefreq}</changefreq>` : ''}${e.priority != null ? `\n    <priority>${e.priority}</priority>` : ''}
   </url>`).join('');
+
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -85,13 +85,14 @@ Deno.serve(handleRequest(async (req) => {
       console.log('[regenerate-sitemap] lang variants excluded:', entries.length - indexable.length);
     }
 
-    // 3. Format dates to YYYY-MM-DD
+    // 3. Format dates to YYYY-MM-DD ; null = pas de <lastmod> émis
     const formatted = indexable.map(e => ({
       ...e,
       lastmod: typeof e.lastmod === 'string' && e.lastmod.includes('T')
         ? e.lastmod.split('T')[0]
-        : e.lastmod,
+        : (e.lastmod || null),
     }));
+
 
 
     // 3. Generate XML
@@ -113,7 +114,7 @@ Deno.serve(handleRequest(async (req) => {
     }
 
     // 5. Compute ETag for cache validation
-    const maxLastmod = formatted.reduce((max, e) => e.lastmod > max ? e.lastmod : max, '');
+    const maxLastmod = formatted.reduce((max, e) => (e.lastmod || '') > max ? (e.lastmod as string) : max, '');
     const etag = `"se-${formatted.length}-${maxLastmod}"`;
 
     // 6. Log to analytics
@@ -144,7 +145,7 @@ Deno.serve(handleRequest(async (req) => {
         const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString().split('T')[0];
         const candidates = explicit.length > 0
           ? explicit
-          : formatted.filter(e => e.lastmod >= since).map(e => e.loc);
+          : formatted.filter(e => (e.lastmod || '') >= since).map(e => e.loc);
 
         if (candidates.length === 0) {
           indexnow = { submitted: 0, skipped: 0, success: true };

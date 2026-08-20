@@ -16,9 +16,9 @@ const FAQ: Array<[string, string]> = [
 export const Route = createFileRoute("/marina")({
   head: () =>
     pageHead({
-      title: "Audit SEO GEO gratuit — 40 pages, 2 rapports offerts | Marina",
+      title: "Audit SEO GEO gratuit — 2 rapports offerts | Marina",
       description:
-        "Audit SEO et GEO gratuit : 2 rapports offerts sans carte bancaire. 40+ pages, ~20 sous-audits, visibilité mesurée dans ChatGPT, Gemini, Perplexity, Claude et Mistral, plan d'action priorisé.",
+        "Audit SEO et GEO gratuit : 2 rapports offerts sans carte bancaire. 40+ pages analysées, visibilité mesurée dans ChatGPT, Gemini et Perplexity, plan d'action.",
       path: "/marina",
       keywords:
         "audit seo geo gratuit, audit seo gratuit, audit gratuit référencement, audit visibilité IA, audit GEO",
