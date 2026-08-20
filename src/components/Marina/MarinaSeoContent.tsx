@@ -91,18 +91,18 @@ export function MarinaSeoContent() {
 
       </div>
 
-      <div className="mx-auto max-w-3xl px-4">
-        <h3 className="text-xl font-bold text-foreground mt-14 mb-4">Questions fréquentes</h3>
-        <dl className="space-y-5">
+      <div className="mx-auto max-w-5xl px-4">
+        <h3 className="text-xl font-bold text-foreground mt-10 mb-4">Questions fréquentes</h3>
+        <dl className="grid gap-x-8 gap-y-4 md:grid-cols-2">
           {FAQ.map((item) => (
-            <div key={item.q} className="border-b border-border pb-4">
-              <dt className="font-semibold text-foreground">{item.q}</dt>
-              <dd className="mt-1 text-sm text-muted-foreground leading-relaxed">{item.a}</dd>
+            <div key={item.q} className="border-b border-border pb-3">
+              <dt className="font-semibold text-foreground text-sm">{item.q}</dt>
+              <dd className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">{item.a}</dd>
             </div>
           ))}
         </dl>
 
-        <div className="mt-10 text-center">
+        <div className="mt-6 text-center">
           <Button asChild variant="outline" size="lg">
             <a href="#marina-tabs">Lancer mon audit SEO GEO gratuit</a>
           </Button>
