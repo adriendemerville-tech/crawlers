@@ -239,6 +239,12 @@ function renderJsonSection(data: any, depth = 0): string {
     // Lot 6 — un tableau d'objets dont toutes les valeurs numériques sont à zéro
     // est un remplissage : on ne le rend pas.
     if (data.every((it) => it && typeof it === 'object') && isFillerTable(data as Array<Record<string, unknown>>)) return '';
+    // Une distribution homogène (`key / count / share`) se lit en tableau :
+    // sans ça, la sortie brute de l'API remplissait des pages entières.
+    if (data.every((it) => it && typeof it === 'object' && !Array.isArray(it))) {
+      const table = flatTableHTML(data as Array<Record<string, unknown>>);
+      if (table) return table;
+    }
     // Array of objects
     return data.map((item) => {
       if (typeof item === 'string') return `<div style="padding:6px 12px;margin-bottom:4px;background:#f9fafb;border-radius:4px;font-size:13px;">${item}</div>`;
