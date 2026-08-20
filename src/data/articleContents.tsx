@@ -1695,6 +1695,26 @@ Allow: /`}</pre>
           description="Découvrez tous les crawlers IA qui parcourent le web et comment les gérer"
         />
 
+        <h2 className="text-2xl font-bold mt-10 mb-4">Crawler : traduction française, définition courte et synonymes</h2>
+        <p>
+          <strong>Traduction de « crawler » en français</strong> : le terme officiel recommandé est <strong>« robot d'indexation »</strong>. On rencontre aussi <strong>« explorateur de web »</strong>, <strong>« collecteur »</strong> et l'image d'origine, <strong>« araignée du web »</strong> (de l'anglais <em>web spider</em>), parce que le robot suit les liens comme une araignée suit sa toile. Le verbe anglais <em>to crawl</em> signifie littéralement « ramper, avancer pas à pas » : c'est exactement ce que fait le robot, page après page, lien après lien.
+        </p>
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg citable-passage">
+          Définition : un crawler (en français « robot d'indexation ») est un programme automatisé qui parcourt les pages d'un site en suivant ses liens, télécharge leur contenu et le transmet à un index — celui d'un moteur de recherche comme Google, ou celui d'un modèle d'IA comme ChatGPT.
+        </blockquote>
+        <h3 className="text-xl font-semibold mt-6 mb-3">Les équivalents et leurs nuances</h3>
+        <ul className="list-disc pl-6 space-y-2 my-4">
+          <li><strong>Robot d'indexation</strong> — traduction institutionnelle, employée dans les textes officiels et la documentation Google en français.</li>
+          <li><strong>Spider / araignée</strong> — le plus ancien synonyme, hérité des premiers moteurs des années 1990.</li>
+          <li><strong>Bot</strong> — terme générique : tous les crawlers sont des bots, mais tous les bots ne crawlent pas (un bot peut se contenter de vérifier un lien ou d'envoyer un formulaire).</li>
+          <li><strong>Scraper</strong> — faux ami fréquent : un crawler découvre et parcourt des URL, un scraper extrait des données précises d'une page. Le second implique souvent un usage non autorisé du contenu.</li>
+          <li><strong>Agent utilisateur (user-agent)</strong> — ce n'est pas un synonyme mais la signature que le crawler déclare en se connectant : <code>Googlebot</code>, <code>GPTBot</code>, <code>PerplexityBot</code>.</li>
+        </ul>
+        <h3 className="text-xl font-semibold mt-6 mb-3">Crawler, crawl, crawling : quelle différence ?</h3>
+        <p>
+          Le <strong>crawler</strong> est le robot. Le <strong>crawl</strong> (ou <strong>crawling</strong>, « exploration » en français) est l'action de parcourir le site. L'<strong>indexation</strong> est l'étape suivante : le contenu collecté est enregistré dans l'index et devient éligible à l'affichage. Une page peut donc être crawlée sans être indexée — c'est l'un des diagnostics les plus courants dans un <a href="/crawl" className="text-primary hover:underline">audit de crawl de site web</a>.
+        </p>
+
         <h2 className="text-2xl font-bold mt-10 mb-4">SEO vs GEO : deux types de crawlers, deux objectifs</h2>
         <p>
           La distinction entre crawlers SEO et crawlers GEO est cruciale pour comprendre le web de 2026. Les crawlers SEO traditionnels (Googlebot, Bingbot, Yandexbot) parcourent le web pour alimenter les <strong>moteurs de recherche classiques</strong>. Leur objectif : créer un index de pages web consultable par les utilisateurs via des requêtes par mots-clés.
