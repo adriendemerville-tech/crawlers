@@ -1,14 +1,14 @@
 import { memo, useState } from 'react';
-import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch, Network, ChevronUp, Terminal, Eye, Share2, Activity } from 'lucide-react';
+import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch, Network, ChevronUp, Terminal, Eye, Share2, Activity, Rss } from 'lucide-react';
 import { Link, useLocation } from '@/lib/router-compat';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
 
 /** On audit-expert page, all internal links open in a new tab */
-function SmartLink({ to, className, title, children }: { to: string; className?: string; title?: string; children: React.ReactNode }) {
+function SmartLink({ to, className, title, external, children }: { to: string; className?: string; title?: string; external?: boolean; children: React.ReactNode }) {
   const { pathname } = useLocation();
   const isAuditPage = pathname.startsWith('/audit-expert');
-  if (isAuditPage) {
+  if (external || isAuditPage) {
     return <a href={to} target="_blank" rel="noopener noreferrer" className={className} title={title}>{children}</a>;
   }
   return <Link to={to} className={className} title={title}>{children}</Link>;
@@ -84,6 +84,12 @@ function FooterComponent() {
       label: 'Platform API',
       href: '/developers',
       description: t3(language, 'Plateforme développeurs : clés API, quotas, webhooks', 'Developer platform: API keys, quotas, webhooks', 'Plataforma de desarrolladores: claves API, cuotas, webhooks')
+    },
+    {
+      label: t3(language, 'Flux RSS', 'RSS Feed', 'Feed RSS'),
+      href: '/rss.xml',
+      description: t3(language, 'Nouveaux articles et guides SEO/GEO', 'New SEO/GEO articles and guides', 'Nuevos artículos y guías SEO/GEO'),
+      external: true
     },
   ];
 
@@ -292,6 +298,7 @@ function FooterComponent() {
                     <li key={link.href}>
                       <SmartLink
                         to={link.href}
+                        external={(link as any).external}
                         className={`text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                         title={link.description}
                       >
@@ -343,10 +350,19 @@ function FooterComponent() {
                 ))}
               </nav>
 
-              <p className="text-xs text-muted-foreground">
-                © {new Date().getFullYear()} Crawlers - crawlers.fr | 
-                {t3(language, ' Tous droits réservés', ' All rights reserved', ' Todos los derechos reservados')}
-              </p>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span>© {new Date().getFullYear()} Crawlers - crawlers.fr | {t3(language, ' Tous droits réservés', ' All rights reserved', ' Todos los derechos reservados')}</span>
+                <a
+                  href="/rss.xml"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 hover:text-primary transition-colors"
+                  title={t3(language, 'Flux RSS — nouveaux articles SEO/GEO', 'RSS feed — new SEO/GEO articles', 'Feed RSS — nuevos artículos SEO/GEO')}
+                >
+                  <Rss className="h-3 w-3" />
+                  <span className="hidden sm:inline">{t3(language, 'RSS', 'RSS', 'RSS')}</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
