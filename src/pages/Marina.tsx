@@ -65,7 +65,7 @@ const translations = {
       balance: 'Solde',
       credits: 'crédits',
       loginCta: 'Connectez-vous pour lancer un rapport',
-      signupOffer: '20 crédits offerts à l\'inscription',
+      signupOffer: '50 crédits offerts à l\'inscription',
       apiDocLink: 'Documentation API Marina',
     },
     toasts: {
@@ -196,7 +196,7 @@ const translations = {
         price: '30 crédits',
         detail: 'par rapport Marina',
         cta: 'Acheter des crédits',
-        ctaSignup: 'S\'inscrire — 20 crédits offerts',
+        ctaSignup: 'S\'inscrire — 50 crédits offerts',
       },
       pro: {
         title: 'Pro Agency',
@@ -236,7 +236,7 @@ const translations = {
       balance: 'Balance',
       credits: 'credits',
       loginCta: 'Sign in to generate a report',
-      signupOffer: '20 free credits on signup',
+      signupOffer: '50 free credits on signup',
       apiDocLink: 'Marina API Documentation',
     },
     toasts: {
@@ -367,7 +367,7 @@ const translations = {
         price: '30 credits',
         detail: 'per Marina report',
         cta: 'Buy credits',
-        ctaSignup: 'Sign up — 20 free credits',
+        ctaSignup: 'Sign up — 50 free credits',
       },
       pro: {
         title: 'Pro Agency',
@@ -407,7 +407,7 @@ const translations = {
       balance: 'Saldo',
       credits: 'créditos',
       loginCta: 'Inicia sesión para generar un informe',
-      signupOffer: '20 créditos gratis al registrarte',
+      signupOffer: '50 créditos gratis al registrarte',
       apiDocLink: 'Documentación API Marina',
     },
     toasts: {
@@ -538,7 +538,7 @@ const translations = {
         price: '30 créditos',
         detail: 'por informe Marina',
         cta: 'Comprar créditos',
-        ctaSignup: 'Registrarse — 20 créditos gratis',
+        ctaSignup: 'Registrarse — 50 créditos gratis',
       },
       pro: {
         title: 'Pro Agency',
