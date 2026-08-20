@@ -8,6 +8,8 @@ import { buildImageSrcSet, buildImageUrl } from '@/lib/blog/imageUrl';
 interface HtmlContentRendererProps {
   html: string;
   className?: string;
+  /** Alt de repli pour les images du CMS dépourvues de texte alternatif. */
+  imageAltFallback?: string;
 }
 
 /**
@@ -17,7 +19,7 @@ interface HtmlContentRendererProps {
  * - Première image : loading="eager" + fetchpriority="high" (LCP)
  * - Autres images : loading="lazy"
  */
-function optimizeImages(html: string): string {
+function optimizeImages(html: string, altFallback = ''): string {
   let imageIndex = 0;
   
   return html.replace(
@@ -31,7 +33,9 @@ function optimizeImages(html: string): string {
       imageIndex++;
       
       const altMatch = attrs.match(/alt=["']([^"']*)["']/);
-      const alt = altMatch ? altMatch[1] : '';
+      const rawAlt = altMatch ? altMatch[1].trim() : '';
+      // Un alt vide ou absent est remplacé par une description contextuelle.
+      const alt = (rawAlt || altFallback).replace(/"/g, '&quot;');
       
       const srcset = buildImageSrcSet(src, [
         { width: 640, quality: 75 },
@@ -62,6 +66,11 @@ function optimizeImages(html: string): string {
       if (isFirst && !/fetchpriority/i.test(attrs)) {
         enhanced = enhanced.replace('<img ', '<img fetchpriority="high" ');
       }
+      if (alt && (!altMatch || !rawAlt)) {
+        enhanced = altMatch
+          ? enhanced.replace(/alt=["'][^"']*["']/i, `alt="${alt}"`)
+          : enhanced.replace('<img ', `<img alt="${alt}" `);
+      }
       
       return enhanced;
     }
@@ -87,7 +96,7 @@ function demoteBodyH1(html: string): string {
  * servi aux robots contient bien le corps de l'article), puis passe
  * DOMPurify après hydratation en défense en profondeur.
  */
-function HtmlContentRendererComponent({ html, className = '' }: HtmlContentRendererProps) {
+function HtmlContentRendererComponent({ html, className = '', imageAltFallback = '' }: HtmlContentRendererProps) {
   const [sanitizedHtml, setSanitizedHtml] = useState(() => sanitizeHtmlDeterministic(html));
 
   useEffect(() => {
@@ -108,7 +117,7 @@ function HtmlContentRendererComponent({ html, className = '' }: HtmlContentRende
 
 
   // Optimize images
-  const optimizedHtml = demoteBodyH1(optimizeImages(linkedHtml));
+  const optimizedHtml = demoteBodyH1(optimizeImages(linkedHtml, imageAltFallback));
 
   return (
     <div 

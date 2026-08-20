@@ -173,7 +173,7 @@ function generateCROReportHTML(data: CROReportData, domain: string): string {
       <h2 style="font-size:20px;font-weight:700;margin:0 0 16px;color:#111827;">Analyse visuelle</h2>
       <div style="display:flex;gap:20px;align-items:flex-start;">
         <div style="flex-shrink:0;width:55%;max-width:600px;">
-          <img src="${data.screenshot_url}" style="width:100%;border-radius:10px;border:1px solid #e5e7eb;box-shadow:0 4px 12px rgba(0,0,0,0.08);" />
+          <img src="${data.screenshot_url}" alt="Capture d&#39;écran de la page analysée" style="width:100%;border-radius:10px;border:1px solid #e5e7eb;box-shadow:0 4px 12px rgba(0,0,0,0.08);" />
         </div>
         ${annotations.length > 0 ? `<div style="flex:1;display:flex;flex-direction:column;gap:8px;max-height:800px;overflow-y:auto;">
           ${annotationsHTML}

@@ -144,20 +144,33 @@ function ArticlePageComponent() {
   const date = dbArticle?.published_at || dbArticle?.created_at || staticArticle?.date || new Date().toISOString();
   const updatedAt = (loaderData?.updatedAt as string | null) ?? null;
   const heroImage = dbArticle?.image_url || staticArticle?.heroImage || '';
-  const heroAlt = staticArticle?.heroAlt[language] || staticArticle?.heroAlt?.fr || title;
+  // Alt descriptif : jamais le seul titre brut pour les articles issus du CMS.
+  const heroAlt =
+    staticArticle?.heroAlt[language] ||
+    staticArticle?.heroAlt?.fr ||
+    (title
+      ? language === 'en'
+        ? `Illustration for the article: ${title}`
+        : language === 'es'
+          ? `Ilustración del artículo: ${title}`
+          : `Illustration de l'article : ${title}`
+      : '');
+  // Légende du hero : l'accroche de l'article, sinon l'alt.
+  const heroCaption = description || heroAlt;
+
   const sources = staticArticle?.sources || [];
 
   const renderContent = () => {
     const translatedDbContent = getDbTranslated('content');
 
     if (useDbContent && translatedDbContent) {
-      return <HtmlContentRenderer html={translatedDbContent} />;
+      return <HtmlContentRenderer html={translatedDbContent} imageAltFallback={heroAlt} />;
     }
     if (staticContent) {
       return staticContent[language] || staticContent.fr;
     }
     if (translatedDbContent) {
-      return <HtmlContentRenderer html={translatedDbContent} />;
+      return <HtmlContentRenderer html={translatedDbContent} imageAltFallback={heroAlt} />;
     }
     return <p>Contenu non disponible</p>;
   };
@@ -171,6 +184,8 @@ function ArticlePageComponent() {
       updatedAt={updatedAt}
       heroImage={heroImage}
       heroAlt={heroAlt}
+      heroCaption={heroCaption}
+
       sources={sources}
       slug={slug}
     >

@@ -48,7 +48,7 @@ export function DarkSocialCard({ data }: DarkSocialCardProps) {
           <div className="flex gap-3">
             {data.ogImage ? (
               <div className="w-16 h-16 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                <img src={data.ogImage} alt="og:image" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <img src={data.ogImage} alt="Aperçu de l'image de partage social de la page analysée" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               </div>
             ) : (
               <div className="w-16 h-16 rounded bg-muted flex items-center justify-center shrink-0">
