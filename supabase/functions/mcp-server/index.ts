@@ -12,7 +12,7 @@ const FREE_TOOLS = new Set(['check_geo_score', 'check_llm_visibility', 'check_ai
 const TOOL_TO_FUNCTION: Record<string, string> = {
   check_geo_score: 'check-geo', check_llm_visibility: 'check-llm-depth', check_ai_crawlers: 'check-crawlers',
   expert_seo_audit: 'audit-expert-seo', strategic_ai_audit: 'audit-strategique-ia',
-  generate_corrective_code: 'generate-corrective-code', dry_run_script: 'process-script-queue',
+  generate_corrective_code: 'generate-corrective-code', dry_run_script: 'dry-run-script',
   calculate_cocoon_logic: 'calculate-cocoon-logic', measure_audit_impact: 'auto-measure-predictions',
   wordpress_sync: 'wpsync', fetch_serp_kpis: 'fetch-serp-kpis', calculate_ias: 'calculate-ias',
 };
@@ -37,6 +37,58 @@ const ARG_ADAPT: Record<string, (a: Record<string, unknown>) => Record<string, u
   generate_corrective_code: toUrl,
   // check-llm-depth exige un domaine nu, sans protocole ni chemin.
   check_llm_visibility: (a) => ({ ...a, domain: bareDomain(String(a['domain'] ?? a['url'] ?? '')) }),
+};
+
+/**
+ * Résolveurs asynchrones : traduisent les arguments MCP en contrat réel de la
+ * fonction cible quand une lecture base est nécessaire.
+ *
+ * `dry_run_script` : le schéma MCP expose `script_id` + `target_url`, alors que
+ * `dry-run-script` attend `{ siteUrl, code }`. On résout le code depuis
+ * `site_script_rules` en vérifiant la propriété de la règle (isolation multi-tenant).
+ */
+type Resolved = { payload: Record<string, unknown> } | { error: string };
+
+const ARG_RESOLVE: Record<string, (a: Record<string, unknown>, auth: Auth | null) => Promise<Resolved>> = {
+  dry_run_script: async (a, auth) => {
+    const scriptId = String(a['script_id'] ?? '').trim();
+    const rawUrl = String(a['target_url'] ?? a['url'] ?? '').trim();
+    if (!scriptId) return { error: 'script_id est requis.' };
+    if (!auth) return { error: 'Authentification requise.' };
+    if (!/^[0-9a-f-]{36}$/i.test(scriptId)) return { error: 'script_id doit être un identifiant de règle (UUID).' };
+
+    const sb = getServiceClient();
+    let q = sb
+      .from('site_script_rules')
+      .select('id, user_id, script_source, payload_data, url_pattern, domain_id')
+      .eq('id', scriptId);
+    if (!auth.isAdmin) q = q.eq('user_id', auth.userId);
+    const { data: rule, error } = await q.maybeSingle();
+    if (error) return { error: `Lecture de la règle impossible : ${error.message}` };
+    if (!rule) return { error: 'Script introuvable ou non accessible avec ce compte.' };
+
+    const pd = (rule as any).payload_data as Record<string, unknown> | null;
+    const code = String(
+      (rule as any).script_source ?? pd?.['code'] ?? pd?.['script'] ?? pd?.['script_source'] ?? '',
+    ).trim();
+    if (!code) return { error: 'Cette règle ne contient aucun code généré (génération en attente).' };
+
+    // URL de test : celle fournie, sinon le domaine de la règle.
+    let siteUrl = rawUrl;
+    if (!siteUrl) {
+      const { data: site } = await sb
+        .from('tracked_sites')
+        .select('domain')
+        .eq('id', (rule as any).domain_id)
+        .maybeSingle();
+      const dom = (site as any)?.domain;
+      if (!dom) return { error: 'target_url est requis (domaine de la règle introuvable).' };
+      siteUrl = `https://${bareDomain(String(dom))}`;
+    }
+    if (!/^https?:\/\//i.test(siteUrl)) siteUrl = `https://${siteUrl}`;
+
+    return { payload: { siteUrl, code } };
+  },
 };
 
 async function checkKillSwitch(): Promise<boolean> {
@@ -82,7 +134,14 @@ function handler(tool: string) {
       if (!auth.isAdmin && auth.planType !== 'agency_pro') { await log(auth.userId, tool, args, 'forbidden', 'not pro', Date.now() - t0); return { content: [{ type: 'text' as const, text: 'Réservé Pro Agency. https://crawlers.fr/tarifs' }] }; }
       if (!(await rateOk(auth.userId, tool))) { await log(auth.userId, tool, args, 'rate_limited', '30/h', Date.now() - t0); return { content: [{ type: 'text' as const, text: 'Limite de 30 appels par heure atteinte.' }] }; }
     } else { auth = await authenticate(ah); }
-    const payload = ARG_ADAPT[tool] ? ARG_ADAPT[tool]!(args) : args;
+    let payload: Record<string, unknown>;
+    if (ARG_RESOLVE[tool]) {
+      const r = await ARG_RESOLVE[tool]!(args, auth);
+      if ('error' in r) { await log(auth?.userId || null, tool, args, 'error', r.error, Date.now() - t0); return { content: [{ type: 'text' as const, text: `Erreur: ${r.error}` }] }; }
+      payload = r.payload;
+    } else {
+      payload = ARG_ADAPT[tool] ? ARG_ADAPT[tool]!(args) : args;
+    }
     const res = await callFn(TOOL_TO_FUNCTION[tool], payload, ah || undefined); const ms = Date.now() - t0;
     if (res.error) { await log(auth?.userId || null, tool, args, 'error', res.error, ms); return { content: [{ type: 'text' as const, text: `Erreur: ${res.error}` }] }; }
     await log(auth?.userId || null, tool, args, 'success', null, ms);
@@ -104,7 +163,7 @@ mcp.tool("check_ai_crawlers", { description: "AI bot analysis (GPTBot, ClaudeBot
 mcp.tool("expert_seo_audit", { description: "200-point SEO audit. Pro Agency required.", inputSchema: urlSchema, handler: handler('expert_seo_audit') });
 mcp.tool("strategic_ai_audit", { description: "Strategic AI audit: SEO+GEO+competitive. Pro Agency required.", inputSchema: { type: "object" as const, properties: { url: { type: "string" as const }, sector: { type: "string" as const } }, required: ["url" as const] }, handler: handler('strategic_ai_audit') });
 mcp.tool("generate_corrective_code", { description: "Generate JS corrective code for SEO/GEO fixes. Pro Agency required.", inputSchema: { type: "object" as const, properties: { url: { type: "string" as const }, audit_id: { type: "string" as const } }, required: ["url" as const] }, handler: handler('generate_corrective_code') });
-mcp.tool("dry_run_script", { description: "Sandbox test of corrective script. Pro Agency required.", inputSchema: { type: "object" as const, properties: { script_id: { type: "string" as const }, target_url: { type: "string" as const } }, required: ["script_id" as const, "target_url" as const] }, handler: handler('dry_run_script') });
+mcp.tool("dry_run_script", { description: "Sandbox test of a generated corrective script (site_script_rules id) on the live page: JS errors, CLS, JSON-LD validity. Pro Agency required.", inputSchema: { type: "object" as const, properties: { script_id: { type: "string" as const, description: "site_script_rules UUID" }, target_url: { type: "string" as const, description: "Optional test URL; defaults to the rule domain" } }, required: ["script_id" as const] }, handler: handler('dry_run_script') });
 mcp.tool("calculate_cocoon_logic", { description: "Semantic cocoon via TF-IDF. Pro Agency required.", inputSchema: { type: "object" as const, properties: { domain: { type: "string" as const }, tracked_site_id: { type: "string" as const } }, required: ["domain" as const, "tracked_site_id" as const] }, handler: handler('calculate_cocoon_logic') });
 mcp.tool("measure_audit_impact", { description: "Impact T+30/T+60/T+90 via GSC/GA4. Pro Agency required.", inputSchema: { type: "object" as const, properties: { domain: { type: "string" as const }, audit_id: { type: "string" as const } }, required: ["domain" as const] }, handler: handler('measure_audit_impact') });
 mcp.tool("wordpress_sync", { description: "Inject fixes into WordPress via Bridge CMS. Pro Agency required.", inputSchema: { type: "object" as const, properties: { tracked_site_id: { type: "string" as const }, script_id: { type: "string" as const } }, required: ["tracked_site_id" as const, "script_id" as const] }, handler: handler('wordpress_sync') });

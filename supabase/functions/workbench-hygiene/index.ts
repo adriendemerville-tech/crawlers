@@ -5,6 +5,34 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/** Nombre max de constats actifs conservés par (domaine, utilisateur). */
+const ACTIVE_CAP_PER_DOMAIN = 40;
+/** Au-delà, les constats sont écartés (`dismissed`) — jamais supprimés. */
+const ACTIVE_STATUSES = ["pending", "in_progress", "assigned"];
+
+function normUrl(u: string | null): string {
+  if (!u) return "";
+  return u.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/+$/, "").replace(/^www\./, "");
+}
+
+function severityRank(s: string | null): number {
+  return s === "critical" ? 3 : s === "high" ? 2 : s === "medium" ? 1 : 0;
+}
+
+/** Score de conservation : priorité manuelle > gravité > score spirale > fraîcheur. */
+function keepScore(i: any): number {
+  return (i.manual_priority != null ? 1_000_000 : 0)
+    + severityRank(i.severity) * 10_000
+    + (Number(i.spiral_score) || 0)
+    + (i.status === "in_progress" ? 500 : 0);
+}
+
+async function updateInBatches(supabase: any, ids: string[], patch: Record<string, unknown>) {
+  for (let i = 0; i < ids.length; i += 100) {
+    await supabase.from("architect_workbench").update(patch as any).in("id", ids.slice(i, i + 100));
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -23,52 +51,50 @@ Deno.serve(async (req) => {
 
   const results: Record<string, number> = {};
 
-  // ── 1. Purge duplicates (same domain + user_id + normalized title, keep best) ──
+  // ── 1. Déduplication : même domaine + user + (titre normalisé OU catégorie+URL cible) ──
   if (action === "full" || action === "purge_duplicates") {
     const { data: items } = await supabase
       .from("architect_workbench")
-      .select("id, title, domain, user_id, spiral_score, manual_priority, status, created_at")
-      .in("status", ["pending", "in_progress", "assigned"])
-      .order("spiral_score", { ascending: false })
-      .limit(1000);
+      .select("id, title, domain, user_id, spiral_score, manual_priority, status, severity, finding_category, target_url, created_at")
+      .in("status", ACTIVE_STATUSES)
+      .order("created_at", { ascending: false })
+      .limit(3000);
 
+    const toDelete: string[] = [];
     if (items && items.length > 0) {
       const seen = new Map<string, any>();
-      const toDelete: string[] = [];
 
       for (const item of items) {
-        const key = `${item.domain}::${item.user_id}::${(item.title || "").trim().toLowerCase()}`;
-        if (seen.has(key)) {
-          const existing = seen.get(key);
-          // Keep the one with manual_priority or higher spiral_score
-          if (item.manual_priority != null && existing.manual_priority == null) {
-            toDelete.push(existing.id);
-            seen.set(key, item);
-          } else if ((item.spiral_score || 0) > (existing.spiral_score || 0) && existing.manual_priority == null) {
-            toDelete.push(existing.id);
-            seen.set(key, item);
-          } else {
-            toDelete.push(item.id);
-          }
+        const base = `${item.domain}::${item.user_id}`;
+        // Deux signatures : le titre exact, et la paire (catégorie, URL cible).
+        // Un doublon sur l'une ou l'autre suffit à écarter le constat.
+        const keys = [
+          `${base}::t::${(item.title || "").trim().toLowerCase().replace(/\s+/g, " ")}`,
+          `${base}::c::${item.finding_category || ""}::${normUrl(item.target_url)}`,
+        ];
+
+        const rival = keys.map((k) => seen.get(k)).find(Boolean);
+        if (rival) {
+          const loser = keepScore(item) > keepScore(rival) ? rival : item;
+          const winner = loser === rival ? item : rival;
+          toDelete.push(loser.id);
+          for (const k of keys) seen.set(k, winner);
         } else {
-          seen.set(key, item);
+          for (const k of keys) seen.set(k, item);
         }
       }
 
-      if (toDelete.length > 0) {
-        // Delete in batches of 50
-        for (let i = 0; i < toDelete.length; i += 50) {
-          const batch = toDelete.slice(i, i + 50);
-          await supabase.from("architect_workbench").delete().in("id", batch);
-        }
+      const uniqueDelete = [...new Set(toDelete)];
+      for (let i = 0; i < uniqueDelete.length; i += 100) {
+        await supabase.from("architect_workbench").delete().in("id", uniqueDelete.slice(i, i + 100));
       }
-      results.deleted = toDelete.length;
+      results.deleted = uniqueDelete.length;
     } else {
       results.deleted = 0;
     }
   }
 
-  // ── 2. Archive stale items (pending > 60 days, or validate_attempts > 3) ──
+  // ── 2. Archivage : pending > 60 jours, ou plus de 3 échecs de validation ──
   if (action === "full" || action === "archive_stale") {
     const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -77,41 +103,65 @@ Deno.serve(async (req) => {
       .select("id")
       .eq("status", "pending")
       .lt("created_at", sixtyDaysAgo)
-      .limit(200);
+      .limit(500);
 
     const { data: failedValidation } = await supabase
       .from("architect_workbench")
       .select("id")
       .in("status", ["pending", "in_progress"])
       .gt("validate_attempts", 3)
-      .limit(100);
+      .limit(200);
 
-    const archiveIds = [
+    const uniqueIds = [...new Set([
       ...(stale || []).map((s: any) => s.id),
       ...(failedValidation || []).map((s: any) => s.id),
-    ];
-    const uniqueIds = [...new Set(archiveIds)];
+    ])];
 
     if (uniqueIds.length > 0) {
-      for (let i = 0; i < uniqueIds.length; i += 50) {
-        const batch = uniqueIds.slice(i, i + 50);
-        await supabase
-          .from("architect_workbench")
-          .update({ status: "done" } as any)
-          .in("id", batch);
-      }
+      // `dismissed` et non `done` : rien n'a été exécuté, il ne faut pas le compter comme fait.
+      await updateInBatches(supabase, uniqueIds, { status: "dismissed" });
     }
     results.archived = uniqueIds.length;
   }
 
-  // ── 3. Recalc spiral_score for active items via score_spiral_priority ──
+  // ── 3. Plafond par domaine : garder les N meilleurs constats actifs, écarter le reste ──
+  // Sans ce plafond la file grossit indéfiniment (Marina réécrit des centaines de
+  // constats par lot multipages) et le scoring ne redescend jamais en exécution.
+  if (action === "full" || action === "cap_backlog") {
+    const { data: active } = await supabase
+      .from("architect_workbench")
+      .select("id, domain, user_id, status, severity, spiral_score, manual_priority, created_at")
+      .in("status", ACTIVE_STATUSES)
+      .order("created_at", { ascending: false })
+      .limit(5000);
+
+    const groups = new Map<string, any[]>();
+    for (const item of (active || [])) {
+      const k = `${item.domain}::${item.user_id}`;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k)!.push(item);
+    }
+
+    const overflow: string[] = [];
+    for (const list of groups.values()) {
+      if (list.length <= ACTIVE_CAP_PER_DOMAIN) continue;
+      list.sort((a, b) => keepScore(b) - keepScore(a));
+      for (const item of list.slice(ACTIVE_CAP_PER_DOMAIN)) overflow.push(item.id);
+    }
+
+    if (overflow.length > 0) {
+      await updateInBatches(supabase, overflow, { status: "dismissed" });
+    }
+    results.capped = overflow.length;
+  }
+
+  // ── 4. Recalcul du spiral_score pour les constats actifs restants ──
   if (action === "full" || action === "recalc_scores") {
-    // Get distinct domain+user pairs
     const { data: pairs } = await supabase
       .from("architect_workbench")
       .select("domain, user_id")
-      .in("status", ["pending", "in_progress", "assigned"])
-      .limit(500);
+      .in("status", ACTIVE_STATUSES)
+      .limit(2000);
 
     const uniquePairs = new Map<string, { domain: string; user_id: string }>();
     for (const p of (pairs || [])) {
@@ -126,36 +176,31 @@ Deno.serve(async (req) => {
         p_limit: 100,
       });
 
-      if (scored && scored.length > 0) {
-        for (const item of scored) {
-          await supabase
-            .from("architect_workbench")
-            .update({ spiral_score: item.spiral_score } as any)
-            .eq("id", item.item_id);
-          updated++;
-        }
+      for (const item of (scored || [])) {
+        await supabase
+          .from("architect_workbench")
+          .update({ spiral_score: item.spiral_score } as any)
+          .eq("id", item.item_id);
+        updated++;
       }
     }
     results.updated = updated;
   }
 
-  // ── 4. Reset stuck in_progress items (> 2h) ──
-  if (action === "full") {
+  // ── 5. Réinitialisation des constats bloqués en in_progress (> 2 h) ──
+  if (action === "full" || action === "reset_stuck") {
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
     const { data: stuck } = await supabase
       .from("architect_workbench")
       .select("id")
       .eq("status", "in_progress")
       .lt("updated_at", twoHoursAgo)
-      .limit(50);
+      .limit(500);
 
     if (stuck && stuck.length > 0) {
-      await supabase
-        .from("architect_workbench")
-        .update({ status: "pending" } as any)
-        .in("id", stuck.map((s: any) => s.id));
-      results.reset_stuck = stuck.length;
+      await updateInBatches(supabase, stuck.map((s: any) => s.id), { status: "pending" });
     }
+    results.reset_stuck = stuck?.length ?? 0;
   }
 
   console.log("[workbench-hygiene]", action, results);
