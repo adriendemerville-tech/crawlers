@@ -56,6 +56,8 @@ import { checkSemanticGate } from '../_shared/autopilot/semanticGate.ts';
 import { buildOriginalImageBrief } from '../_shared/parmenion/imageOriginality.ts';
 import { markDeployedItems } from '../_shared/autopilot/postExecute.ts';
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
+import { countRecentContentCreations, logContentCreation } from '../_shared/contentThrottle.ts';
+
 
 /** Slugify FR title for iktracker create-post. */
 function slugifyFr(s: string): string {
