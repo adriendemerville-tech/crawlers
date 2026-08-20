@@ -175,12 +175,30 @@ const SITE_BLOCK_LABELS: Record<string, string> = {
   intro: 'Comment lire ce rapport (périmètre, précision, sources)',
   crawl: 'Crawl multi-pages',
   archetypes: 'Audit par type de page (rôle business de chaque gabarit)',
+  'archetype-mix': 'Répartition des types de page',
   cocoon: 'Cocon sémantique et maillage interne',
   indexation: "Santé d'indexation",
   llm: "Visibilité dans les moteurs de réponse IA",
   strategic: 'Analyse stratégique du domaine (marché, autorité, backlinks)',
   plan: "Plan d'action commun aux pages du lot",
+  // Aucun identifiant technique ne doit atteindre le sommaire : « identity »,
+  // « host-duplication », « owner-performance »… étaient rendus tels quels.
+  identity: 'Identité du site',
+  'host-duplication': 'Duplication entre versions du domaine (apex et www)',
+  'owner-performance': 'Performances relevées côté propriétaire du site',
+  verdict: 'Verdict stratégique du domaine',
+  tech: 'Audit technique',
+  keywords: 'Mots-clés et positions',
+  'keywords-sub': 'Détail des mots-clés',
+  module: 'Analyse complémentaire',
 };
+
+/** Dernier filet : un identifiant inconnu devient un libellé lisible en français. */
+function siteBlockLabel(id: string): string {
+  return SITE_BLOCK_LABELS[id]
+    || (id.replace(/[-_]+/g, ' ').replace(/^./, (c) => c.toUpperCase()));
+}
+
 
 
 const BAND_TEXT: Record<string, string> = {
