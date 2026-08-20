@@ -300,10 +300,12 @@ function FooterComponent() {
                       <SmartLink
                         to={link.href}
                         external={(link as any).external}
-                        className={`text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                        className={`inline-flex items-center gap-1.5 text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : (link as any).rss ? 'text-foreground hover:text-primary font-medium' : 'text-muted-foreground hover:text-primary'}`}
                         title={link.description}
                       >
+                        {(link as any).rss && <Rss className="h-3.5 w-3.5" />}
                         {link.label}
+                        {(link as any).external && !(link as any).rss && <ExternalLink className="h-3 w-3 opacity-60" />}
                       </SmartLink>
                     </li>
                   ))}
