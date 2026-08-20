@@ -8,6 +8,8 @@ import { AuthorBio } from './AuthorBio';
 import { SourcesSection } from './SourcesSection';
 import { RelatedArticlesSection } from './RelatedArticlesSection';
 import { ResponsiveHeroImage } from './ResponsiveHeroImage';
+import { buildImageSrcSet, buildImageUrl } from '@/lib/blog/imageUrl';
+
 import { useLanguage } from '@/contexts/LanguageContext';
 interface ArticleLayoutProps {
   title: string;
@@ -51,15 +53,20 @@ function ArticleLayoutComponent({
     <>
       <Helmet>
         {/* Preload hero image for faster LCP */}
-        {heroImage && heroImage.includes('unsplash.com') && (
-          <link 
-            rel="preload" 
-            as="image" 
-            href={`${heroImage.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '')}${heroImage.includes('?') ? '&' : '?'}w=828&q=75&auto=format`}
-            imageSrcSet={`${heroImage.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '')}${heroImage.includes('?') ? '&' : '?'}w=640&q=75&auto=format 640w, ${heroImage.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '')}${heroImage.includes('?') ? '&' : '?'}w=828&q=75&auto=format 828w, ${heroImage.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '')}${heroImage.includes('?') ? '&' : '?'}w=1200&q=80&auto=format 1200w`}
+        {heroImage && buildImageSrcSet(heroImage) && (
+          <link
+            rel="preload"
+            as="image"
+            href={buildImageUrl(heroImage, { width: 828, quality: 75 })}
+            imageSrcSet={buildImageSrcSet(heroImage, [
+              { width: 640, quality: 75 },
+              { width: 828, quality: 75 },
+              { width: 1200, quality: 80 },
+            ])}
             imageSizes="100vw"
           />
         )}
+
       </Helmet>
 
       <div className="min-h-screen bg-background">

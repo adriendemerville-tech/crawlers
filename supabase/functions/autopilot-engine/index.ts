@@ -968,11 +968,13 @@ async function executeCrawlersInternalPublish(
           const binaryStr = atob(base64Match[1]);
           const bytes = new Uint8Array(binaryStr.length);
           for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
-          const fileName = `parmenion/crawlers.fr/${Date.now()}_${slug.slice(0, 30)}.png`;
-          const { error: upErr } = await supabase.storage.from('image-references')
+          // Bucket public : une couverture d'article doit rester lisible sans session.
+          const fileName = `blog-covers/${Date.now()}_${slug.slice(0, 30)}.png`;
+          const { error: upErr } = await supabase.storage.from('public-assets')
             .upload(fileName, bytes, { contentType: 'image/png', upsert: true });
           if (!upErr) {
-            const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(fileName);
+            const { data: urlData } = supabase.storage.from('public-assets').getPublicUrl(fileName);
+
             await supabase.from('blog_articles').update({ image_url: urlData.publicUrl }).eq('id', article.id);
             imageGenerated = true;
           }
@@ -1134,7 +1136,8 @@ async function generateAndAttachImage(cmsAction: any, funcResult: any, site: Sit
       return false;
     }
 
-    const imgFileName = `parmenion/${site.domain}/${Date.now()}_${(cmsAction.body.slug || 'article').slice(0, 30)}.png`;
+    // Bucket public : une couverture d'article doit rester lisible sans session.
+    const imgFileName = `blog-covers/${Date.now()}_${(cmsAction.body.slug || 'article').slice(0, 30)}.png`;
     const base64Match = imgResult.dataUri.match(/^data:image\/\w+;base64,(.+)$/);
     if (!base64Match) {
       console.error(`[AutopilotEngine] Unexpected dataUri format for "${articleTitle}"`);
@@ -1146,7 +1149,7 @@ async function generateAndAttachImage(cmsAction: any, funcResult: any, site: Sit
     for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
 
     const { error: uploadErr } = await supabase.storage
-      .from('image-references')
+      .from('public-assets')
       .upload(imgFileName, bytes, { contentType: 'image/png', upsert: true });
 
     if (uploadErr) {
@@ -1154,7 +1157,8 @@ async function generateAndAttachImage(cmsAction: any, funcResult: any, site: Sit
       return false;
     }
 
-    const { data: urlData } = supabase.storage.from('image-references').getPublicUrl(imgFileName);
+    const { data: urlData } = supabase.storage.from('public-assets').getPublicUrl(imgFileName);
+
     const slug = cmsAction.body.slug || funcResult?.result?.slug;
     if (!slug) {
       console.error(`[AutopilotEngine] No slug available to attach image for "${articleTitle}"`);

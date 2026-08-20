@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { buildImageSrcSet, buildImageUrl } from '@/lib/blog/imageUrl';
 
 interface ResponsiveHeroImageProps {
   src: string;
@@ -8,24 +9,11 @@ interface ResponsiveHeroImageProps {
 }
 
 /**
- * Génère un srcset optimisé pour les images Unsplash
- * Réduit la taille de téléchargement en servant des images adaptées au viewport
+ * Génère un srcset optimisé pour les hôtes qui redimensionnent à la volée.
+ * Les URLs sont construites via l'API URL (chaîne de requête toujours valide).
  */
 function generateSrcSet(src: string): string | undefined {
-  // Unsplash URLs can be optimized with width parameter
-  if (src.includes('unsplash.com')) {
-    const baseUrl = src.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '');
-    const separator = baseUrl.includes('?') ? '&' : '?';
-    
-    return [
-      `${baseUrl}${separator}w=640&q=75&auto=format 640w`,
-      `${baseUrl}${separator}w=828&q=75&auto=format 828w`,
-      `${baseUrl}${separator}w=1200&q=80&auto=format 1200w`,
-      `${baseUrl}${separator}w=1920&q=80&auto=format 1920w`,
-    ].join(', ');
-  }
-  
-  return undefined;
+  return buildImageSrcSet(src);
 }
 
 /**
@@ -39,14 +27,9 @@ function getSizes(): string {
  * Optimise l'URL source pour la taille par défaut
  */
 function getOptimizedSrc(src: string): string {
-  if (src.includes('unsplash.com')) {
-    // Pour les écrans standards, 1200px est suffisant
-    const baseUrl = src.replace(/[?&]w=\d+/, '').replace(/[?&]q=\d+/, '');
-    const separator = baseUrl.includes('?') ? '&' : '?';
-    return `${baseUrl}${separator}w=1200&q=80&auto=format`;
-  }
-  return src;
+  return buildImageUrl(src, { width: 1200, quality: 80 });
 }
+
 
 function ResponsiveHeroImageComponent({
   src,
