@@ -160,7 +160,34 @@ export function WorkbenchAdmin() {
   }, [filterDomain, filterStatus, searchQuery, toast]);
 
 
-  useEffect(() => { loadStats(); loadItems(); }, [loadStats, loadItems]);
+  useEffect(() => { loadStats(); loadItems(); loadDebts(); }, [loadStats, loadItems, loadDebts]);
+
+  /** Passe de priorité : recalcule la dette du site puis rejuge tous les constats. */
+  const handlePriorityPass = async () => {
+    setActing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('workbench-hygiene', {
+        body: {
+          action: 'priority_pass',
+          ...(filterDomain !== 'all' ? { domain: filterDomain } : {}),
+          limit: filterDomain !== 'all' ? 1 : 20,
+        },
+      });
+      if (error) throw error;
+      toast({
+        title: 'Priorités recalculées',
+        description: `${data?.priority_items || 0} constat(s) sur ${data?.priority_sites || 0} site(s)${data?.creations_frozen ? ` — ${data.creations_frozen} création(s) gelée(s)` : ''}`,
+      });
+      loadItems();
+      loadDebts();
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e.message, variant: 'destructive' });
+    } finally {
+      setActing(false);
+    }
+  };
+
+
 
   const handlePurgeDuplicates = async () => {
     setActing(true);
