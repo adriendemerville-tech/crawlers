@@ -176,7 +176,10 @@ const SITE_BLOCK_LABELS: Record<string, string> = {
   cocoon: 'Cocon sémantique et maillage interne',
   indexation: "Santé d'indexation",
   llm: "Visibilité dans les moteurs de réponse IA",
+  strategic: 'Analyse stratégique du domaine (marché, autorité, backlinks)',
+  plan: "Plan d'action commun aux pages du lot",
 };
+
 
 const BAND_TEXT: Record<string, string> = {
   strong: 'solide',
