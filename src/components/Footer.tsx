@@ -350,10 +350,19 @@ function FooterComponent() {
                 ))}
               </nav>
 
-              <p className="text-xs text-muted-foreground">
-                © {new Date().getFullYear()} Crawlers - crawlers.fr | 
-                {t3(language, ' Tous droits réservés', ' All rights reserved', ' Todos los derechos reservados')}
-              </p>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span>© {new Date().getFullYear()} Crawlers - crawlers.fr | {t3(language, ' Tous droits réservés', ' All rights reserved', ' Todos los derechos reservados')}</span>
+                <a
+                  href="/rss.xml"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 hover:text-primary transition-colors"
+                  title={t3(language, 'Flux RSS — nouveaux articles SEO/GEO', 'RSS feed — new SEO/GEO articles', 'Feed RSS — nuevos artículos SEO/GEO')}
+                >
+                  <Rss className="h-3 w-3" />
+                  <span className="hidden sm:inline">{t3(language, 'RSS', 'RSS', 'RSS')}</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
