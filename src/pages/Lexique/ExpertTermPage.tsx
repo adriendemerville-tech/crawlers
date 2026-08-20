@@ -157,6 +157,13 @@ export default function ExpertTermPage() {
           </Button>
         </section>
 
+        {/* Maillage montant : la fiche remonte vers son pilier */}
+        <SiloNav
+          silo={siloForLexiqueTerm(term.slug, term.category)}
+          heading="Remonter au pilier"
+          className="mt-10"
+        />
+
         {/* Back Link */}
         <div className="mt-10">
           <Link to="/lexique" className="inline-flex items-center gap-2 text-primary hover:underline">
