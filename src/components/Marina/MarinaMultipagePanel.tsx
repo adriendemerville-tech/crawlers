@@ -186,25 +186,20 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
   };
 
   /* ── Exécution : un job Marina par URL, 2 en parallèle ── */
-  const runOne = useCallback(async (index: number, url: string, batch?: { id: string; size: number }): Promise<void> => {
+  const runOne = useCallback(async (index: number, url: string, batch?: { id: string; size: number }, skipDebit = false): Promise<void> => {
     const setItem = (patch: Partial<BatchItem>) =>
       setItems(prev => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
 
     setItem({ status: 'running', progress: 0 });
 
-    // Le débit de crédits passe par un RPC : une coupure réseau ponctuelle ne doit
-    // pas condamner l'URL. On retente 3 fois avec backoff, et on n'échoue
-    // définitivement que sur un refus métier (crédits insuffisants, non autorisé).
-    let debit = await useCredit(`Rapport Marina — ${url}`, CREDIT_COST);
-    for (let attempt = 1; attempt < 3 && !debit.success && !cancelRef.current; attempt++) {
-      const msg = (debit.error || '').toLowerCase();
-      if (msg.includes('insufficient') || msg.includes('crédit') || msg.includes('unauthorized') || msg.includes('authenticated')) break;
-      await new Promise(r => setTimeout(r, attempt * 3000));
-      debit = await useCredit(`Rapport Marina — ${url}`, CREDIT_COST);
-    }
-    if (!debit.success) {
-      setItem({ status: 'failed', error: debit.error || 'Débit de crédits impossible' });
-      return;
+    // Le débit du forfait multipages est effectué une seule fois au lancement du lot.
+    // Les relances d'URLs en échec ne débitent pas à nouveau.
+    if (!skipDebit) {
+      const debit = await useCredit(`Rapport Marina — ${url}`, 0);
+      if (!debit.success) {
+        setItem({ status: 'failed', error: debit.error || 'Débit de crédits impossible' });
+        return;
+      }
     }
 
     let jobId: string | null = null;
