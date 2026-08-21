@@ -1,0 +1,281 @@
+# Marketplace Crawlers — Moteurs d'appariement Backlink & Collab Instagram
+
+Document conceptuel et technique. Statut : cadrage (non implémenté).
+Date : 2026-08-21 · Auteur : Lovable · Périmètre : v1 backlink, v1.5 collab Instagram.
+
+---
+
+## 1. Principe général
+
+Crawlers ne construit pas un catalogue à parcourir mais un **moteur d'appariement**
+alimenté par des diagnostics déjà produits par la plateforme.
+
+- Côté **demande** : les besoins sont déjà écrits dans `architect_workbench`
+  (`low_authority`, `thin_backlinks`, `backlink_target`, `remediation_channel='netlinking'`),
+  avec page cible et ancres suggérées. Pour le social, le déficit de notoriété externe
+  détecté par l'E-E-A-T v3 déclenche une offre « collab ».
+- Côté **offre** : toute page d'un compte ayant connecté GSC est valorisable sans
+  déclaration du vendeur (clics/impressions/position par page + autorité domaine +
+  qualité de contenu + thématique + visibilité IA).
+
+Commission Crawlers : **25 %** du prix payé par l'acheteur, sur les deux verticales.
+
+Invariant transversal : **le prix est toujours calculé serveur**, jamais transmis par le client.
+Aucune mise en vente sans **opt-in explicite** du vendeur (les données GSC sont personnelles).
+
+---
+
+## 2. Moteur d'appariement Backlink
+
+### 2.1 Inventaire (offre)
+
+Une unité vendable = **une page** (`marketplace_link_assets`), pas un domaine.
+
+Signaux collectés par page :
+
+| Signal | Source | Poids pricing |
+|---|---|---|
+| Autorité du domaine (domain rank, referring domains, diversité IP/ancres) | `check-backlinks` (DataForSEO) | 30 % |
+| Proximité sémantique page vendeur ↔ thématique acheteur | empreinte lexicale Cocoon | 25 % |
+| Trafic réel de la page (clics/impressions/position 90j) | `gscPages.ts` | 20 % |
+| Qualité de contenu | `computeSeoScoreV2` + E-E-A-T v3 + fraîcheur | 15 % |
+| Visibilité IA (citations, benchmark GEO) | benchmark SERP multi-providers + scoring GEO | 10 % |
+
+Prix indicatif = `base × Σ(poids × score normalisé)`, borné par un plancher et un plafond
+(v1 : 40 € – 350 €). Le prix est recalculé à chaque rafraîchissement des signaux et **figé
+au moment de la commande**.
+
+### 2.2 Score de compatibilité (appariement)
+
+Pour un couple (besoin acheteur, page vendeur) :
+
+```
+compat = 0.35 × proximité_sémantique
+       + 0.25 × écart_autorité_positif   (vendeur > acheteur, sinon 0)
+       + 0.20 × trafic_page_normalisé
+       + 0.10 × qualité_contenu
+       + 0.10 × visibilité_IA
+```
+
+Exclusions dures (compat = 0) :
+- lien déjà existant entre les deux domaines ;
+- réciprocité détectée (A→B et B→A, même différée) ;
+- même propriétaire / grappe de comptes liés (même IP, même CMS connecté, même Kbis) ;
+- plafond de liens sortants atteint (page : 1 lien dofollow vendu ; domaine : 20/an) ;
+- thématiques exclues (jeux d'argent, crypto, adulte).
+
+Notification des deux faces au-delà d'un seuil (`compat ≥ 0.6`).
+
+### 2.3 Prévisualisation du paragraphe d'accueil du lien
+
+Point central du produit : le lien n'est pas posé « quelque part », il est inséré dans un
+**paragraphe rédigé par Crawlers** (Parménion), prévisualisé et validé par les deux parties.
+
+Workflow :
+
+1. **Génération** — à la commande, Parménion produit un bloc d'insertion à partir du contexte
+   réel de la page vendeur (`paragraph_html`, position d'insertion, ancre, attribut du lien).
+   Contraintes reprises des règles éditoriales : pas d'emoji, une seule ancre, cohérence de
+   voix avec le contenu existant, aucune promesse de classement, tactique SEO ≠ sujet.
+2. **Prévisualisation** — rendu côte à côte : page originale / page avec insertion mise en
+   surbrillance (diff visuel). Vue mobile et desktop.
+3. **Feedback bilatéral** — chaque partie peut demander une révision (commentaire libre +
+   motifs prédéfinis : ancre inadaptée, ton, position, longueur, imprécision factuelle).
+   Chaque tour de révision est journalisé (`marketplace_link_revisions`).
+   Limite : **3 tours** par commande, puis arbitrage Crawlers ou annulation sans frais.
+4. **Double validation** — l'ordre passe en `approved` seulement quand vendeur ET acheteur
+   ont validé la même version (`revision_id`).
+5. **Publication** — push CMS via le bridge existant (HTML obligatoire, conversion défensive
+   Markdown→HTML) ou insertion manuelle par le vendeur avec preuve.
+6. **Vérification** — crawl de contrôle : présence de l'ancre, de l'URL cible, de l'attribut
+   attendu, statut HTTP via `_shared/linkVerdictShared.ts`. Contrôle récurrent mensuel ;
+   disparition du lien → suspension du paiement / remboursement au prorata.
+
+### 2.4 Attribut du lien
+
+Trois modes techniquement supportés : `dofollow`, `rel="sponsored"`, choix vendeur.
+Le mode retenu est stocké par annonce et affiché à l'acheteur avant paiement.
+L'UI ne présente **jamais** de garantie de classement.
+
+### 2.5 Rémunération
+
+v1 : crédit du **wallet Crawlers** du vendeur (non convertible en euros), réutilisable sur la
+plateforme — un lien vendu par mois rembourse l'abonnement. v2 : virement réel via
+Stripe Connect (KYC, comptes connectés, reversement à J+30 après vérification du lien).
+
+---
+
+## 3. Moteur d'appariement Collab Instagram (v1.5)
+
+Deuxième type d'offre dans la même marketplace, même wallet, même commission, logique
+d'évaluation distincte.
+
+| Backlink | Collab Instagram |
+|---|---|
+| Actif : une page | Actif : un compte + un format (feed / reel / story) |
+| Valeur : autorité, trafic, sémantique | Valeur : reach, engagement, affinité d'audience |
+| Vérification : présence du lien au crawl | Vérification : publication + mention via API Meta |
+| Conformité : `sponsored` / dofollow | Conformité : mention #pub / #sponso (ARPP, FTC) |
+| Livrable permanent | Story éphémère (24 h) ou feed/reel permanent |
+
+Le vendeur connecte un compte **Business ou Creator** (scopes `instagram_basic`,
+`instagram_manage_insights`, `instagram_content_publish`, `pages_read_engagement`) :
+followers, reach, impressions, engagement, démographie d'audience, insights par média
+deviennent disponibles et servent au pricing.
+
+```
+prix_collab = base_format × f(reach_moyen) × g(engagement_réel)
+            × h(affinité_thématique_audience ↔ acheteur) × k(qualité_créative)
+```
+
+Anti-fraude : détection de reach acheté (engagement/followers hors bornes), variations de
+followers en escalier, audience géographique incohérente avec la cible.
+
+Prévisualisation : même mécanique bilatérale que le backlink, appliquée au **brief créatif**
+(accroche, légende, mention obligatoire, lien bio/sticker), avec 3 tours de feedback maximum.
+
+Vérification post-publication : `media_id` récupéré via API, contrôle de la mention de
+conformité, capture visuelle archivée, insights à J+7 pour le reporting acheteur.
+
+---
+
+## 4. Modèle de données (esquisse)
+
+Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `service_role`) :
+
+- `marketplace_link_assets` — page vendeur, opt-in, signaux, prix calculé, plafonds.
+- `marketplace_social_assets` — compte Instagram, formats, métriques, prix calculé.
+- `marketplace_needs` — besoin acheteur dérivé de `architect_workbench` / E-E-A-T.
+- `marketplace_matches` — couples besoin↔actif, `compat_score`, statut de notification.
+- `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`.
+- `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
+- `marketplace_feedback` — commentaires et motifs par révision.
+- `marketplace_verifications` — contrôles récurrents (verdict lien, publication social).
+- `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers.
+
+Écritures de prix, de commission et de statut : **server functions uniquement**
+(`src/lib/marketplace/*.functions.ts`), jamais depuis le client.
+
+---
+
+## 5. Modifications front — Console
+
+1. **Nouveau module « Marketplace »** dans `ConsoleSidebar.tsx` (réordonnable et masquable
+   comme les autres, persistance `user_console_preferences`).
+2. Quatre onglets :
+   - **Opportunités** — appariements entrants, filtrés par `compat_score`, avec « pourquoi ce match ».
+   - **Je vends** — inventaire de mes pages avec prix estimé, opt-in par page, plafonds,
+     revenus cumulés, message « 1 lien vendu ce mois = abonnement remboursé ».
+   - **J'achète** — besoins détectés automatiquement (page cible + ancre suggérée),
+     actifs proposés, panier, paiement.
+   - **Commandes** — suivi de cycle de vie, prévisualisation, feedback, validations, vérifications.
+3. **Composant `LinkInsertionPreview`** — diff visuel avant/après, surbrillance du paragraphe
+   inséré, bascule mobile/desktop, panneau de feedback latéral, historique des révisions.
+4. **Composant `CollabBriefPreview`** — maquette de post/story, légende, mention de conformité,
+   même panneau de feedback.
+5. **Intégrations dans l'existant** :
+   - onglet Netlinking : remplacement des offres externes vides par l'inventaire interne ;
+   - `architect_workbench` : bouton « Trouver un lien » sur les tâches `remediation_channel='netlinking'` ;
+   - wallet : ligne « revenus marketplace » et solde vendeur.
+6. **Gating** : `useTeamPermissions().can('marketplace_manage')` pour vendre/acheter ;
+   auditeur en lecture seule.
+7. **Design** : violet / or / noir / blanc, boutons bordure + texte, aucun emoji, aucun bleu IA.
+
+---
+
+## 6. Landing page dédiée
+
+- Route : `src/routes/marketplace-backlinks.tsx` (pilier), satellite `/collab-instagram`.
+- `head()` propre : titre < 60 caractères, description < 160, og/twitter, JSON-LD `Service`
+  + `FAQPage`, canonical via `pageHead.ts`.
+- Structure : H1 unique, promesse (« vendez un lien par mois, votre abonnement est remboursé »),
+  explication du pricing algorithmique (les 5 signaux), démonstration de la prévisualisation
+  du paragraphe, garde-fous (anti-réciprocité, plafonds, conformité), grille de commission,
+  `blockquote.citable-passage` pour la visibilité IA, CTA double (vendre / acheter).
+- Contenu SSR complet, pas d'accordéon Radix pour les FAQ (`<details>` natif).
+- Rattachement au silo netlinking/autorité, pas de nouveau pilier.
+
+---
+
+## 7. Plan gratuit « Jeune entreprise »
+
+- Éligibilité : entreprise de **moins de 12 mois** (Kbis à l'appui), sur candidature,
+  **30 comptes maximum**.
+- Accès **complet à toute la plateforme** pendant 12 mois, avec **plafond dur de 60 crédits/mois**,
+  non cumulables, reset au 1er du mois, blocage strict au dépassement.
+- Actions chères bornées : Marina prospection (30 crédits) limitée à 1/mois.
+- Crons dégradés (surveillance hebdomadaire au lieu de quotidienne).
+- Routage LLM économique (Gemini Flash / Groq) sur les tâches non critiques de ces comptes.
+- Support communautaire uniquement, mentionné explicitement dans les conditions.
+- Technique : flag `startup_offer` + `startup_offer_expires_at` sur le profil, quota dédié dans
+  le moteur de crédits, séquence de conversion automatique à M10.
+- Économie : ~1,75 €/compte/mois, soit ~780 €/an pour 30 comptes ; largement couvert par les
+  packs de crédits en dépassement et la commission marketplace.
+
+---
+
+## 8. Textes à modifier
+
+### 8.1 Tarifs (`/tarifs`)
+- Nouveau bloc « Jeune entreprise — 12 mois offerts » (60 crédits/mois, sur candidature,
+  30 places), positionné avant Pro Agency.
+- Mention marketplace sur chaque plan payant : « revendez des liens depuis vos pages,
+  25 % de commission Crawlers — un lien vendu par mois peut rembourser votre abonnement ».
+- Précision crédits : les crédits gagnés en vendant sont utilisables sur toute la plateforme.
+
+### 8.2 Audit stratégique
+- Le bloc Marché & Autorité passe d'un constat à une **proposition concrète** :
+  page cible identifiée, ancre recommandée, fourchette de prix, nombre d'actifs correspondants
+  disponibles, lien vers l'onglet Marketplace.
+
+### 8.3 Rapports Marina
+- Section « Autorité » : quand le déficit est externe, afficher 2 à 3 **propositions de liens
+  concrètes** (thématique, autorité, trafic de la page, prix indicatif) au lieu d'une
+  recommandation générique.
+- Idem pour le déficit de notoriété sociale : proposition de collab.
+- Contraintes de rendu PDF respectées (espaces normaux, badges centrés, pas d'emoji).
+
+### 8.4 Home
+- Nouvelle section « Marketplace d'autorité » : les deux faces (vendre / acheter), le pricing
+  algorithmique, l'appariement automatique, la prévisualisation du paragraphe.
+- Un seul CTA vers la landing marketplace ; respect strict du design system.
+
+### 8.5 CGVU
+Ajouts obligatoires :
+- Statut de Crawlers : **intermédiaire technique**, pas éditeur du contenu vendu.
+- Commission 25 %, base de calcul, moment de prélèvement.
+- Obligations du vendeur : propriété du domaine/compte vérifiée, maintien du lien
+  (durée minimale 12 mois), conformité éditoriale, mention de publicité pour le social.
+- Obligations de l'acheteur : légalité de la page cible, absence de contenu prohibé.
+- Attribut du lien : information de l'acheteur, absence de garantie de classement.
+- Prévisualisation, feedback, 3 tours de révision, arbitrage et annulation sans frais.
+- Retrait ou disparition du lien : suspension du paiement, remboursement au prorata.
+- Wallet : crédits non convertibles en euros en v1, non remboursables, durée de validité.
+- Données : partage limité et consenti des signaux de page entre les parties (RGPD).
+- Interdictions : échanges réciproques, fermes de liens, achat d'engagement.
+- Plan Jeune entreprise : conditions d'éligibilité, plafond de crédits, support communautaire,
+  fin automatique à 12 mois.
+
+---
+
+## 9. Séquencement
+
+| Lot | Contenu |
+|---|---|
+| L1 | Schéma + pricing serveur + inventaire opt-in + onglet « Je vends » |
+| L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » |
+| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet |
+| L4 | Vérification récurrente des liens + reporting |
+| L5 | Landing page, home, tarifs, audits, Marina, CGVU |
+| L6 | Plan Jeune entreprise (quota, flags, crons dégradés, routage LLM) |
+| L7 | Collab Instagram (OAuth Meta, métriques, brief, vérification) |
+
+## 10. Risques
+
+- **Reversement en euros** : Stripe Connect + KYC, hors v1.
+- **Conformité Google** : zone grise du lien payé ; position assumée et jamais présentée
+  comme une garantie.
+- **Dilution de l'E-E-A-T de crawlers.fr** : plafonds stricts, jamais depuis les 4 piliers.
+- **Liquidité** : le maillon rare est la demande, pas l'offre — amorcer par les besoins
+  déjà détectés dans les workbenches existants.
+- **Support** : les comptes gratuits génèrent plus de sollicitations que les payants.
