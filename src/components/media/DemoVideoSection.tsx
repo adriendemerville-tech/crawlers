@@ -76,9 +76,19 @@ export function DemoVideoSection({
           </figcaption>
         </figure>
 
-        <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-6">
-          <h2 className="text-lg font-semibold text-white font-display">{labels.transcriptTitle}</h2>
-          <p className="text-sm text-white/50 mt-2">{labels.transcriptIntro}</p>
+        <details className="group mt-8 rounded-xl border border-white/10 bg-white/5 p-6">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-4">
+            <span className="block">
+              <span className="block text-lg font-semibold text-white font-display">
+                {labels.transcriptTitle}
+              </span>
+              <span className="mt-2 block text-sm text-white/50">{labels.transcriptIntro}</span>
+            </span>
+            <ChevronDown
+              className="mt-1 h-5 w-5 shrink-0 text-white/70 transition-transform group-open:rotate-180"
+              aria-hidden="true"
+            />
+          </summary>
           <dl className="mt-5 space-y-3">
             {segments.map((segment) => (
               <div key={segment.time} className="grid grid-cols-[3.5rem_1fr] gap-3">
@@ -87,7 +97,7 @@ export function DemoVideoSection({
               </div>
             ))}
           </dl>
-        </div>
+        </details>
       </div>
     </section>
   );
