@@ -53,6 +53,8 @@ import { routeCmsActions } from '../_shared/autopilot/cmsActionRouter.ts';
 import { trackAnalyticsEvent, pushIktrackerEvent } from '../_shared/autopilot/iktrackerBridge.ts';
 import { runPostAudit, runPostDiagnose } from '../_shared/autopilot/postDiagnose.ts';
 import { checkSemanticGate } from '../_shared/autopilot/semanticGate.ts';
+import { resolveEditorialSubject, buildEditorialBrief } from '../_shared/autopilot/editorialSubjectGuard.ts';
+
 import { buildOriginalImageBrief } from '../_shared/parmenion/imageOriginality.ts';
 import { markDeployedItems } from '../_shared/autopilot/postExecute.ts';
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
