@@ -6,10 +6,11 @@ import {
   BarChart3, Network, Code2, PenTool, Eye, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
-import consoleDashboard from '@/assets/screenshots/crawlers.fr_console-seo-monitoring-dashboard.webp';
-import cocoonGraph from '@/assets/screenshots/crawlers.fr_cocon-semantique-3d-maillage-interne.webp';
-import architectCode from '@/assets/screenshots/crawlers.fr_architecte-code-correctif-seo.webp';
-import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.webp';
+import consoleDashboard from '@/assets/screenshots/console-pilotage.png.asset.json';
+import indexationSerp from '@/assets/screenshots/indexation-serp.png.asset.json';
+import integrationsApi from '@/assets/screenshots/integrations-api.png.asset.json';
+import cocoonGraph from '@/assets/screenshots/cocon-3d.png.asset.json';
+import architectCode from '@/assets/screenshots/code-architect.png.asset.json';
 
 const ProductShowcaseSection = memo(() => {
   const { language } = useLanguage();
@@ -20,7 +21,7 @@ const ProductShowcaseSection = memo(() => {
 
   const slides = [
     {
-      image: consoleDashboard,
+      image: consoleDashboard.url,
       title: language === 'fr' ? 'Console de pilotage' : 'Control Console',
       desc: language === 'fr'
         ? 'Scores SEO, GEO, Performance et Visibilité IA en temps réel.'
@@ -30,7 +31,27 @@ const ProductShowcaseSection = memo(() => {
       link: '/app/console',
     },
     {
-      image: cocoonGraph,
+      image: indexationSerp.url,
+      title: language === 'fr' ? 'Indexation & SERP' : 'Indexing & SERP',
+      desc: language === 'fr'
+        ? 'Positions réelles consolidées sur plusieurs fournisseurs de SERP.'
+        : 'Real positions consolidated across multiple SERP providers.',
+      icon: Eye,
+      badgeColor: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
+      link: '/app/console',
+    },
+    {
+      image: integrationsApi.url,
+      title: language === 'fr' ? 'Intégrations & CMS' : 'Integrations & CMS',
+      desc: language === 'fr'
+        ? 'Search Console, Analytics, Google Business et votre CMS en API REST.'
+        : 'Search Console, Analytics, Google Business and your CMS via REST API.',
+      icon: PenTool,
+      badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+      link: '/app/console',
+    },
+    {
+      image: cocoonGraph.url,
       title: language === 'fr' ? 'Cocon sémantique 3D' : '3D Semantic Cocoon',
       desc: language === 'fr'
         ? 'Architecture de contenu, maillage interne et clusters thématiques.'
@@ -40,7 +61,7 @@ const ProductShowcaseSection = memo(() => {
       link: '/app/cocoon',
     },
     {
-      image: architectCode,
+      image: architectCode.url,
       title: 'Code Architect',
       desc: language === 'fr'
         ? 'Script correctif sur-mesure : Schema.org, PageSpeed, anti-hallucination IA.'
@@ -49,17 +70,8 @@ const ProductShowcaseSection = memo(() => {
       badgeColor: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
       link: '/audit-expert',
     },
-    {
-      image: contentArchitectPreview,
-      title: 'Content Architect',
-      desc: language === 'fr'
-        ? 'Pages SEO complètes en quelques secondes, publiées sur votre CMS.'
-        : 'Complete SEO pages in seconds, published to your CMS.',
-      icon: PenTool,
-      badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-      link: '/content-architect',
-    },
   ];
+
 
   const navigate = useCallback((dir: 1 | -1) => {
     setIsTransitioning((transitioning) => {
