@@ -48,8 +48,3 @@ export const COCOON_VIDEO_TRANSCRIPT: Record<TranscriptLang, TranscriptSegment[]
     { time: '01:26', text: 'Las prescripciones de enlazado se despliegan en un clic al CMS conectado, con el ancla semántica de 2 a 5 palabras sugerida por el motor.' },
   ],
 };
-
-/** Transcription à plat (FR) pour la propriété `transcript` du VideoObject. */
-export const COCOON_VIDEO_TRANSCRIPT_TEXT = COCOON_VIDEO_TRANSCRIPT.fr
-  .map((segment) => `${segment.time} — ${segment.text}`)
-  .join(' ');
