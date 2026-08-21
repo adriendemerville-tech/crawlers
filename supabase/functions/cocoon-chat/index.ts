@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
+import { aiGatewayCallStream } from "../_shared/aiGatewayFetch.ts";
 import { logSilentError } from "../_shared/silentErrorLogger.ts";
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
@@ -546,21 +546,20 @@ LIMITE : 1500 caractères max (l'analyse est plus longue qu'un message normal).`
 
     const systemPrompt = basePrompt + LEXIQUE_PROMPT_BLOCK + analysisPrompt + subdomainPrompt;
 
-    const response = await aiGatewayFetch( {
+    // Cascade de résilience : Claude (OpenRouter seul) → Gemini/GPT servis aussi
+    // par Lovable AI, donc épargnés par une panne de crédits OpenRouter (402).
+    const response = await aiGatewayCallStream({
       callerFunction: 'cocoon-chat',
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "anthropic/claude-haiku-4.5",
+      primary: 'anthropic/claude-haiku-4.5',
+      fallback1: 'google/gemini-3-flash-preview',
+      fallback2: 'openai/gpt-5.4-mini',
+      timeoutMs: 30_000,
+      body: {
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
         ],
-        stream: true,
-      }),
+      },
     });
 
     if (!response.ok) {
@@ -571,8 +570,10 @@ LIMITE : 1500 caractères max (l'analyse est plus longue qu'un message normal).`
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required" }), {
-          status: 402,
+        return new Response(JSON.stringify({
+          error: "Service IA momentanément indisponible (quota fournisseur). Réessaie dans quelques minutes.",
+        }), {
+          status: 503,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -588,6 +589,7 @@ LIMITE : 1500 caractères max (l'analyse est plus longue qu'un message normal).`
     const totalPromptChars = systemPrompt.length + messages.reduce((s: number, m: any) => s + (m.content?.length || 0), 0);
     const supabaseLog = getServiceClient();
     logAIUsageEstimated(supabaseLog, "anthropic/claude-haiku-4.5", "cocoon-chat", totalPromptChars, 600);
+
 
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },

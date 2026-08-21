@@ -1090,7 +1090,13 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       });
 
       if (resp.status === 429) { upsertAssistant(t.rateLimit); setIsLoading(false); return; }
-      if (resp.status === 402) { upsertAssistant('Credits insuffisants.'); setIsLoading(false); return; }
+      if (resp.status === 402 || resp.status === 503) {
+        // 402/503 = quota côté fournisseur IA, pas les crédits de l'utilisateur.
+        const msg = await resp.json().catch(() => null);
+        upsertAssistant(msg?.error || 'Service IA momentanément indisponible. Réessaie dans quelques minutes.');
+        setIsLoading(false);
+        return;
+      }
       if (!resp.ok || !resp.body) throw new Error('Stream failed');
 
       const reader = resp.body.getReader();
