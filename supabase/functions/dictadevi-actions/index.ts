@@ -190,8 +190,28 @@ const getPost = (apiKey: string, slug: string) => callDictadevi('GET', `/posts/$
 
 async function createPost(apiKey: string, body: Record<string, unknown>, supabase: any) {
   ensureHtmlContent(body, `create-post:${(body.slug as string) || '(no-slug)'}`)
+
+  // Garde dure « ligne éditoriale DictaDevi » : un sujet hors brief (SEO local,
+  // netlinking, marketing générique, comparatif de logiciels, crypto/no-code…)
+  // ne doit jamais être créé sur dictadevi.io.
+  const topicText = [body.title, body.meta_title, body.slug, body.excerpt]
+    .filter((v): v is string => typeof v === 'string')
+    .join(' — ')
+  const briefVerdict = checkDictadeviTopicAgainstBrief(topicText)
+  if (briefVerdict.off_brief) {
+    console.warn(`[dictadevi-actions] BRIEF GUARD BLOCKED create-post: ${briefVerdict.reason}`)
+    return {
+      status: 422,
+      data: null,
+      error: `Sujet hors brief éditorial DictaDevi — ${briefVerdict.reason}`,
+      _editorial_guard: true,
+      _original_action: 'create-post',
+    }
+  }
+
   // Mode prod : publication directe par défaut. Le prescripteur peut forcer 'draft' explicitement.
   if (!body.status) body.status = 'published'
+
   if (body.status === 'published' && !body.published_at) {
     body.published_at = new Date().toISOString()
   }
