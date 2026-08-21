@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { aiGatewayFetch } from "../_shared/aiGatewayFetch.ts";
+import { aiGatewayCallStream } from "../_shared/aiGatewayFetch.ts";
 import { logSilentError } from "../_shared/silentErrorLogger.ts";
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
