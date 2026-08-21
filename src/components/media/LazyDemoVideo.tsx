@@ -66,14 +66,6 @@ export function LazyDemoVideo({
     return () => observer.disconnect();
   }, []);
 
-  const toggle = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    setActivated(true);
-    if (video.paused) void video.play().catch(() => undefined);
-    else video.pause();
-  };
-
   return (
     <div ref={containerRef} className={`relative ${className ?? ''}`}>
       <video
