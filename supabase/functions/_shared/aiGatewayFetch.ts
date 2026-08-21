@@ -258,6 +258,29 @@ function logGatewayUsage(
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// Disjoncteur OpenRouter (crédits épuisés / quota)
+// Quand OpenRouter renvoie 402 ou 429, TOUS les appels suivants payaient
+// un aller-retour perdu avant de basculer sur Lovable AI : latence doublée
+// sur chaque étape des workflows (architecte de code, Marina, Parménion).
+// On mémorise la panne 10 min en mémoire process et on route directement
+// vers Lovable AI pour les modèles google/* et openai/*.
+// ═══════════════════════════════════════════════════════════════════
+const OPENROUTER_BREAKER_MS = 10 * 60_000;
+let openRouterOutUntil = 0;
+
+function openRouterIsOut(): boolean {
+  return Date.now() < openRouterOutUntil;
+}
+
+function tripOpenRouterBreaker(status: number): void {
+  if (status !== 402 && status !== 429) return;
+  if (!openRouterIsOut()) {
+    console.warn(`[aiGatewayCall] OpenRouter ${status} → disjoncteur armé ${OPENROUTER_BREAKER_MS / 60000} min (routage direct Lovable AI)`);
+  }
+  openRouterOutUntil = Date.now() + OPENROUTER_BREAKER_MS;
+}
+
 /** Clone la réponse pour en extraire `usage`, logge, puis rend la réponse intacte. */
 function withUsageLog(
   resp: Response,
