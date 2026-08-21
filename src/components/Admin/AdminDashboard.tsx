@@ -350,6 +350,8 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         {readOnly && <ReadOnlyBanner />}
         <BrowserlessAlert />
         <ApiGatewayFallbackAlert />
+        {!readOnly && <DemoModeToggle />}
+
 
         {isMobile ? (
           /* ── Mobile: horizontal carousel nav + stacked content ── */
