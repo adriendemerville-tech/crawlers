@@ -575,7 +575,9 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium">{modelName}</span>
-                    {found ? (
+                    {progress?.status ? (
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    ) : found ? (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -590,7 +592,11 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
                     )}
                   </div>
 
-                  {iteration > 0 ? (
+                  {progress?.status ? (
+                    <div className="text-sm font-semibold text-muted-foreground">
+                      {progress.status === 'unavailable' ? t.statusUnavailable : t.statusError}
+                    </div>
+                  ) : iteration > 0 ? (
                     <StreamingCounter iteration={iteration} found={found} modelName={modelName} />
                   ) : (
                     <div className="flex items-baseline gap-1.5">
@@ -598,6 +604,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
                       <span className="text-[10px] text-muted-foreground/40">/ {MAX_ITERATIONS}</span>
                     </div>
                   )}
+
 
                   {found && progress?.mentioned_as && (
                     <motion.p
