@@ -8,8 +8,8 @@
  */
 
 import { SITE_URL } from '@/lib/seo/pageHead';
-import { COCOON_VIDEO_TRANSCRIPT_TEXT } from '@/lib/media/cocoonVideoTranscript';
-import cocoonVideoMp4 from '@/assets/cocoon-3d-720.mp4.asset.json';
+import { buildVideoObjectSchema } from '@/lib/media/demoVideo';
+import { COCOON_DEMO_VIDEO } from '@/lib/media/demoVideos.registry';
 
 const ORG = { '@type': 'Organization', name: 'Crawlers.fr', url: SITE_URL };
 const SITE = { '@type': 'WebSite', name: 'Crawlers.fr', url: SITE_URL };
