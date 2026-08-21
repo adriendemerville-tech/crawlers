@@ -146,10 +146,11 @@ Trois modes d'échange :
 
 Règles :
 - L'échange cross-média (`link_for_story`) est le mode **mis en avant par défaut** dans l'UI : c'est le seul totalement sûr côté Google et celui qui apparie naturellement un site à autorité avec un compte à audience.
+- Le **lien réciproque direct** (A→B contre B→A) est **exclu du périmètre** : Google dévalue ce pattern depuis 2005 (link scheme), les deux liens sont décotés au lieu de gagner, et la triangulation n'est qu'un masquage grey-hat détectable. Le seul échange « gagnant-gagnant » passe par des médias différents (lien à sens unique contre story), jamais par un lien contre un lien.
 - Équivalence de valeur calculée par le moteur : palier de prix du lien (P1–P4) confronté à la valeur estimée de la story (reach × engagement, section 3). L'écart résiduel est réglé en crédits par la partie la moins « chère ».
 - Commission Crawlers sur un troc : 10 % de la valeur estimée de chaque côté, prélevée en crédits (moins que les 25 % d'une vente cash, l'échange n'impliquant aucun encaissement).
 - Le troc suit le même workflow de prévisualisation (2.3) et de double feedback que la vente.
-- Plafonds : maximum 2 échanges actifs par site sortant et par mois ; le détecteur de réciprocité bloque toute paire A↔B déjà liée.
+- Plafonds : maximum 2 échanges actifs par site sortant et par mois.
 
 ---
 
