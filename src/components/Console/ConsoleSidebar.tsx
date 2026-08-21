@@ -11,7 +11,7 @@ import {
   Settings, FileText, CheckSquare, Wallet, Lock, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
   Shield, Code2, ChevronDown, Search, Sparkles, Database, Link2,
-  Plus, Loader2, Check, X, GripVertical,
+  Plus, Loader2, Check, X, GripVertical, PanelLeftClose, PanelLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConsoleViewMode } from '@/contexts/ConsoleViewModeContext';
