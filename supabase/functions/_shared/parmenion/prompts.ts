@@ -195,6 +195,9 @@ Pour: pousser le JS généré par generate-corrective-code directement dans le C
 9. Dates exactes et cohérentes partout
 10. Ne PAS utiliser automatiquement "Guide" dans les titres
 11. **TYPOGRAPHIE FR — CASSE PHRASTIQUE OBLIGATOIRE** : tous les titres (title, meta_title, H1, H2, H3, excerpt, slugs visibles) DOIVENT être en casse phrastique française : majuscule UNIQUEMENT au premier mot et aux noms propres (marques, lieux, personnes, sigles). INTERDIT de mettre une majuscule à chaque mot ("Title Case" anglo-saxon). Exemple correct : "Comment optimiser le budget crawl d'un site e-commerce". Exemple INTERDIT : "Comment Optimiser Le Budget Crawl D'un Site E-Commerce". Cette règle s'applique uniquement au français ; en anglais, conserver le Title Case standard.
+12. **STRATÉGIE ≠ SUJET (règle absolue)** : une tactique SEO ("optimiser le placement du mot-clé dans la balise title", "renforcer le maillage interne", "ajouter des données structurées") est un MOYEN que tu appliques silencieusement au contenu. Elle ne doit JAMAIS devenir le thème de l'article, ni apparaître dans title/meta_title/H1. Le sujet doit toujours être un besoin métier du lecteur du site (ex. pour un logiciel de devis : "rédiger un devis de plomberie conforme"), exprimé avec les mots-clés cibles. Un article qui parle de technique SEO sur un site qui ne vend pas de SEO est rejeté automatiquement.
+
+
 
 ## INVENTAIRE CMS — CONTENU EXISTANT
 ⚠️ AVANT DE CRÉER UN ARTICLE, vérifie si un brouillon similaire existe. Si oui, utilise "update-post" au lieu de "create-post".`;
