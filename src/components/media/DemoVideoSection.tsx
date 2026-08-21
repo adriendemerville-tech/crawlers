@@ -55,8 +55,6 @@ export function DemoVideoSection({
             width={video.width}
             height={video.height}
             label={labels.videoLabel}
-            playLabel={labels.playLabel}
-            pauseLabel={labels.pauseLabel}
             tracks={video.captionLangs.map((lang) => ({
               src: video.captionSrc(lang),
               srcLang: lang,
