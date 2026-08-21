@@ -122,7 +122,38 @@ v1 : crédit du **wallet Crawlers** du vendeur (non convertible en euros), réut
 plateforme — un lien vendu par mois rembourse l'abonnement. v2 : virement réel via
 Stripe Connect (KYC, comptes connectés, reversement à J+30 après vérification du lien).
 
+### 2.6 Responsabilité du vendeur
+
+Crawlers ne vérifie pas la propriété juridique des sites mis en vente et n'exige aucune preuve
+de mandat. Chacun est responsable des sites qu'il déclare : au moment de la mise en vente, le
+vendeur coche une déclaration ferme (« je suis autorisé à publier un lien sur ce site »), tracée
+avec horodatage et IP. Toute contestation d'un tiers entraîne le retrait immédiat de l'annonce
+et le remboursement de l'acheteur ; la responsabilité reste au vendeur. Cette clause figure aux
+CGVU (section 8.5).
+
+### 2.7 Incentive : troc (barter)
+
+Le frein principal n'est pas le prix mais l'absence de raison de vendre : un site sans excédent
+d'autorité n'a pas d'intérêt monétaire à céder un lien. L'incentive retenu est donc l'**échange**,
+avec la même commission Crawlers prélevée en crédits, et non un flux d'argent.
+
+Trois modes d'échange :
+
+| Mode | Contenu | Contrainte anti-pattern |
+|---|---|---|
+| `link_for_link` | lien A→B contre lien B→A | interdit en direct ; obligatoirement **triangulé** (A→B, B→C, C→A) pour éviter la réciprocité détectable |
+| `link_for_story` | lien A→B contre story/post Instagram de B mentionnant A | pas de contrainte de triangulation : les médias sont différents, aucun signal d'échange de liens |
+| `story_for_story` | mention croisée Instagram | libre, hors périmètre SEO |
+
+Règles :
+- L'échange cross-média (`link_for_story`) est le mode **mis en avant par défaut** dans l'UI : c'est le seul totalement sûr côté Google et celui qui apparie naturellement un site à autorité avec un compte à audience.
+- Équivalence de valeur calculée par le moteur : palier de prix du lien (P1–P4) confronté à la valeur estimée de la story (reach × engagement, section 3). L'écart résiduel est réglé en crédits par la partie la moins « chère ».
+- Commission Crawlers sur un troc : 10 % de la valeur estimée de chaque côté, prélevée en crédits (moins que les 25 % d'une vente cash, l'échange n'impliquant aucun encaissement).
+- Le troc suit le même workflow de prévisualisation (2.3) et de double feedback que la vente.
+- Plafonds : maximum 2 échanges actifs par site sortant et par mois ; le détecteur de réciprocité bloque toute paire A↔B déjà liée.
+
 ---
+
 
 ## 3. Moteur d'appariement Collab Instagram (v1.5)
 
