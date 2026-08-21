@@ -75,6 +75,32 @@ function ProfileContent() {
     }
   }, [searchParams]);
 
+  // Load sidebar collapsed preference
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('user_console_preferences')
+      .select('sidebar_collapsed')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && typeof data.sidebar_collapsed === 'boolean') {
+          setSidebarCollapsed(data.sidebar_collapsed);
+        }
+      });
+  }, [user]);
+
+  const handleSidebarCollapsedChange = (collapsed: boolean) => {
+    setSidebarCollapsed(collapsed);
+    if (!user) return;
+    supabase
+      .from('user_console_preferences')
+      .upsert({ user_id: user.id, sidebar_collapsed: collapsed }, { onConflict: 'user_id' })
+      .then(({ error }) => {
+        if (error) toast.error('Préférence non enregistrée', { description: error.message });
+      });
+  };
+
   const handleTabChange = (tab: string) => {
     if (tab === 'tracking-api') {
       setActiveTab('tracking');
