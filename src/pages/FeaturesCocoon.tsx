@@ -210,14 +210,14 @@ export default function FeaturesCocoon() {
               {t.badge}
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-bold font-display text-white leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-display text-white leading-tight whitespace-nowrap">
               {t.heroTitle1}
               <span className="bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] bg-clip-text text-transparent">
                 {t.heroHighlight}
               </span>
             </h1>
 
-            <p className="text-lg text-white/60 max-w-2xl mx-auto leading-relaxed">{t.heroDesc}</p>
+            <p className="text-lg text-white/60 max-w-4xl mx-auto leading-[1.7]">{t.heroDesc}</p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/app/cocoon">
