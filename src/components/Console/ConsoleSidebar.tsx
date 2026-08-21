@@ -58,6 +58,8 @@ interface ConsoleSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onSiteSelect?: (siteId: string | null, domain: string | null) => void;
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: ConsoleSidebarProps) {
