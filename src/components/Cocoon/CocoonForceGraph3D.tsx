@@ -73,19 +73,20 @@ const JUICE_COLORS: Record<JuiceType, string> = {
 };
 
 const PAGE_TYPE_COLORS: Record<string, string> = {
-  homepage: "#ffc83c",
+  homepage: "#ffcc00",
   blog: "#8c78ff",
-  produit: "#3cdca0",
-  "catégorie": "#50aaff",
-  faq: "#ff9650",
-  contact: "#f078b4",
-  tarifs: "#ffc83c",
-  guide: "#b48cff",
+  produit: "#00f0a0",
+  "catégorie": "#3db8ff",
+  faq: "#ff8030",
+  contact: "#ff5caa",
+  tarifs: "#f59e0b",
+  guide: "#c07aff",
   "légal": "#a0aab4",
-  "à propos": "#50dce6",
+  "à propos": "#00e5f0",
   page: "#7a7a9e",
   unknown: "#7a7a9e",
 };
+
 
 // ─── Props ───
 interface CocoonForceGraph3DProps {
