@@ -88,7 +88,10 @@ function hasSubtitle(text?: unknown): boolean {
 
 
 function computeStats(articles: Article[]): EditorialStats {
-  const published = articles.filter(a => a.status === 'published' || a.status === 'publish');
+  const published = articles.filter(a => {
+    const s = toText(a.status).toLowerCase();
+    return s === 'published' || s === 'publish' || s === 'live' || s === '';
+  });
   
   const authorsSet = new Set<string>();
   const topicsMap = new Map<string, number>();
@@ -103,7 +106,7 @@ function computeStats(articles: Article[]): EditorialStats {
   const dates: number[] = [];
 
   for (const a of published) {
-    const body = a.body || a.content || '';
+    const body = toText(a.body) || toText(a.content);
     const words = countWords(body);
     totalWords += words;
 
@@ -114,15 +117,17 @@ function computeStats(articles: Article[]): EditorialStats {
     if (!a.meta_description && !a.excerpt) { missingMeta++; seoAlerts++; }
     if (!hasSubtitle(body)) { missingSubtitle++; seoAlerts++; }
 
-    const author = a.author || a.author_id || 'unknown';
+    const author = toText(a.author) || toText(a.author_id) || 'unknown';
     authorsSet.add(author);
 
-    const cats = a.categories || (a.category ? [a.category] : []) as string[];
-    for (const c of cats) {
+    const rawCats = Array.isArray(a.categories) ? a.categories : (a.category ? [a.category] : []);
+    for (const rc of rawCats) {
+      const c = toText(rc).trim();
       if (c && c !== 'Uncategorized' && c !== 'Non classé') {
         topicsMap.set(c, (topicsMap.get(c) || 0) + 1);
       }
     }
+
 
     const dateStr = a.published_at || a.created_at;
     if (dateStr) dates.push(new Date(dateStr).getTime());
