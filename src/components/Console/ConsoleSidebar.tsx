@@ -62,7 +62,7 @@ interface ConsoleSidebarProps {
   onCollapsedChange?: (collapsed: boolean) => void;
 }
 
-export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: ConsoleSidebarProps) {
+export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed = false, onCollapsedChange }: ConsoleSidebarProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const { isAgencyPro, planType } = useCredits();
