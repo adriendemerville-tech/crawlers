@@ -19,6 +19,10 @@ import {
   extractDictadeviSources,
   type DictadeviContext,
 } from "./dictadeviContext.ts";
+import {
+  getDictadeviEditorialBrief,
+  renderDictadeviBriefBlock,
+} from "./dictadeviEditorialBrief.ts";
 
 // ----------------------------------------------------------------------------
 // TYPES
@@ -494,9 +498,22 @@ async function stage2_writer(
     }
   }
 
-  const dictadeviRules = dictadeviBlock
+  // ── Brief éditorial DictaDevi (repères de ligne éditoriale, cache 6 h) ──────
+  let briefBlock = '';
+  if (isDictadeviDomain(input.domain)) {
+    try {
+      const editorialBrief = await getDictadeviEditorialBrief();
+      briefBlock = `\n\nBRIEF ÉDITORIAL DU SITE :\n${renderDictadeviBriefBlock(editorialBrief)}`;
+      console.log(`[editorial-pipeline] Brief éditorial DictaDevi injecté (source=${editorialBrief.source})`);
+    } catch (e) {
+      console.warn('[editorial-pipeline] Brief éditorial DictaDevi indisponible (non-bloquant)', e);
+    }
+  }
+
+  const dictadeviRules = (dictadeviBlock
     ? `\n\nCONTEXTE MÉTIER ANCRÉ (sources Dictadevi) :\n${dictadeviBlock}\n\nRÈGLES STRICTES (non-négociables) :\n- Si tu cites une norme (ex: DTU 25.41), tu DOIS référencer le source_reference exact présent dans <dictadevi_context>.\n- Si tu donnes un prix, utilise UNIQUEMENT les fourchettes de catalog_ranges. JAMAIS de prix inventé.\n- Réutilise le vocabulaire EXACT des terms du lexique pour matcher la longue traîne SEO.`
-    : '';
+    : '') + briefBlock;
+
 
   const prompt = `Tu es le Rédacteur. Rédige le contenu en suivant strictement la stratégie fournie.
 
