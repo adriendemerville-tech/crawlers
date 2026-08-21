@@ -943,8 +943,9 @@ Deno.serve(handleRequest(async (req) => {
         // Send final result
         send({ type: 'done', data: finalData })
 
-        console.log(`[check-llm-depth] ${allEmpty ? '❌ ALL MODELS FAILED' : '✅'} ${domain}: brand="${brand}" avgDepth=${avgDepth}`,
-          successResults.map(r => `${r.llm}=${r.iterations}${r.found ? '✓' : '✗'}`).join(', '))
+        console.log(`[check-llm-depth] ${allEmpty ? '❌ ALL MODELS FAILED' : '✅'} ${domain}: brand="${brand}" avgDepth=${avgDepth} mesurés=${observations}/${settledResults.length}`,
+          settledResults.map(r => `${r.llm}=${r.status === 'error' ? 'ERR' : r.status === 'unavailable' ? 'N/A' : `${r.iterations}${r.found ? '✓' : '✗'}${r.status === 'degraded' ? '~' : ''}`}`).join(', '))
+
 
         controller.close()
       },
