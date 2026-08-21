@@ -32,14 +32,11 @@ export function LazyDemoVideo({
   height,
   label,
   tracks = [],
-  playLabel,
-  pauseLabel,
   className,
 }: LazyDemoVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [activated, setActivated] = useState(false);
-  const [playing, setPlaying] = useState(false);
 
   // Charge les sources et pilote la lecture selon la visibilité réelle.
   useEffect(() => {
