@@ -229,7 +229,8 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
   const selectedSite = sites.find(s => s.id === selectedSiteId);
 
   // Main navigation items
-  const items: SidebarItem[] = [
+  const baseItems: SidebarItem[] = [
+
     { value: 'tracking', label: t.tracking, icon: Search },
     { value: 'geo', label: t.geo, icon: Sparkles },
     { value: 'action-plans', label: t.actionPlans, icon: CheckSquare, hideOnMobile: true },
