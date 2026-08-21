@@ -180,8 +180,11 @@ Deno.serve(handleRequest(async (req) => {
       }
 
       // Auto-discover gmb_account_id if missing
-      let accountId = conn.gmb_account_id
-      let locationId = conn.gmb_location_id
+      // Legacy rows may store full resource names ("accounts/123", "locations/456") — normalize to bare IDs
+      const bareId = (v: string | null | undefined): string | null =>
+        v ? (v.includes('/') ? v.split('/').pop() || null : v) : null
+      let accountId = bareId(conn.gmb_account_id)
+      let locationId = bareId(conn.gmb_location_id)
       // Capture Google API error to surface to UI (e.g. 429 RESOURCE_EXHAUSTED, 403 PERMISSION_DENIED)
       let googleApiError: { status: number; reason?: string; message?: string; raw?: string } | null = null
 
