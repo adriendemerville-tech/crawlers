@@ -73,19 +73,20 @@ const JUICE_COLORS: Record<JuiceType, string> = {
 };
 
 const PAGE_TYPE_COLORS: Record<string, string> = {
-  homepage: "#ffc83c",
+  homepage: "#ffcc00",
   blog: "#8c78ff",
-  produit: "#3cdca0",
-  "catégorie": "#50aaff",
-  faq: "#ff9650",
-  contact: "#f078b4",
-  tarifs: "#ffc83c",
-  guide: "#b48cff",
+  produit: "#00f0a0",
+  "catégorie": "#3db8ff",
+  faq: "#ff8030",
+  contact: "#ff5caa",
+  tarifs: "#f59e0b",
+  guide: "#c07aff",
   "légal": "#a0aab4",
-  "à propos": "#50dce6",
+  "à propos": "#00e5f0",
   page: "#7a7a9e",
   unknown: "#7a7a9e",
 };
+
 
 // ─── Props ───
 interface CocoonForceGraph3DProps {
@@ -346,14 +347,14 @@ function NodeSphere({
         </mesh>
       )}
 
-      {/* ── Non-Home: Silver-white halo ── */}
+      {/* ── Non-Home: halo teinté par le type de page ── */}
       {!node.isHome && !isGhost && (
         <mesh>
           <sphereGeometry args={[r * 1.55, 24, 24]} />
           <meshBasicMaterial
-            color="#e0e8f0"
+            color={color}
             transparent
-            opacity={0.07}
+            opacity={0.12}
             depthWrite={false}
             side={THREE.BackSide}
           />
@@ -379,11 +380,11 @@ function NodeSphere({
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={isGhost ? 0.3 : node.isHome ? 0.85 : 0.35}
+          opacity={isGhost ? 0.3 : node.isHome ? 0.85 : 0.5}
         />
       </mesh>
 
-      {/* Core sphere — solid opaque fill with strong emissive glow for color visibility */}
+      {/* Core sphere — teinte non métallique pour préserver le code couleur par type */}
       <mesh
         ref={meshRef}
         onPointerOver={(e) => { e.stopPropagation(); onPointerOver(); }}
@@ -394,26 +395,27 @@ function NodeSphere({
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={node.isHome ? emissiveIntensity : emissiveIntensity * 0.8}
+          emissiveIntensity={node.isHome ? emissiveIntensity : emissiveIntensity * 0.9}
           transparent
-          opacity={isGhost ? 0.08 : node.isHome ? 0.9 : 0.85}
-          roughness={node.isHome ? 0.15 : 0.25}
-          metalness={node.isHome ? 0.5 : 0.4}
+          opacity={isGhost ? 0.08 : node.isHome ? 0.95 : 1}
+          roughness={node.isHome ? 0.4 : 0.55}
+          metalness={0}
         />
       </mesh>
 
-      {/* Inner bright core */}
+      {/* Inner bright core — teinté, pour ne pas blanchir la couleur du type */}
       {!isGhost && (
         <mesh>
-          <sphereGeometry args={[r * (node.isHome ? 0.35 : 0.5), 16, 16]} />
+          <sphereGeometry args={[r * (node.isHome ? 0.35 : 0.42), 16, 16]} />
           <meshBasicMaterial
-            color="#ffffff"
+            color={node.isHome ? "#ffffff" : color}
             transparent
-            opacity={node.isHome ? 0.5 : 0.2}
+            opacity={node.isHome ? 0.5 : 0.35}
             depthWrite={false}
           />
         </mesh>
       )}
+
 
       {(isSelected || isHovered) && (
         <Billboard position={[0, -r - 1.5, 0]}>
@@ -789,11 +791,12 @@ function SceneContent({
    return (
     <>
       {/* Ambient + directional light */}
-      <ambientLight intensity={isDayMode ? 0.7 : 0.35} color={isDayMode ? "#ffffff" : "#8878e7"} />
+      <ambientLight intensity={isDayMode ? 0.7 : 0.55} color={isDayMode ? "#ffffff" : "#d8d2f0"} />
       <directionalLight position={[10, 10, 10]} intensity={isDayMode ? 0.8 : 0.6} color="#ffffff" />
       <directionalLight position={[0, 30, 5]} intensity={isDayMode ? 0.6 : 0.6} color={isDayMode ? "#ffffff" : "#e0d8f0"} />
-      <pointLight position={[0, 0, 0]} intensity={isDayMode ? 0.3 : 0.8} color="#ffc83c" distance={200} decay={2} />
-      <hemisphereLight args={["#6c5ce7", "#1a1030", isDayMode ? 0.3 : 0.25]} />
+      <pointLight position={[0, 0, 0]} intensity={isDayMode ? 0.3 : 0.55} color="#ffc83c" distance={200} decay={2} />
+      <hemisphereLight args={["#a89ff0", "#1a1030", isDayMode ? 0.3 : 0.2]} />
+
 
       {/* Background */}
       <color attach="background" args={[sceneBgColor]} />
