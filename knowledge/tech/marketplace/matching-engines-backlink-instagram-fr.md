@@ -137,20 +137,43 @@ Le frein principal n'est pas le prix mais l'absence de raison de vendre : un sit
 d'autorité n'a pas d'intérêt monétaire à céder un lien. L'incentive retenu est donc l'**échange**,
 avec la même commission Crawlers prélevée en crédits, et non un flux d'argent.
 
-Trois modes d'échange :
+Modes d'échange retenus, par ordre de priorité produit :
 
 | Mode | Contenu | Contrainte anti-pattern |
 |---|---|---|
-| `link_for_story` | lien A→B contre story/post Instagram de B mentionnant A | pas de contrainte de triangulation : les médias sont différents, aucun signal d'échange de liens |
+| `link_for_linkedin` | lien A→B contre post LinkedIn de B citant A (avec lien) | mode **de premier plan** : le post est durable, indexable, à forte E-E-A-T professionnelle, et porte un lien nofollow natif — aucun signal d'échange de liens SEO |
+| `link_for_story` | lien A→B contre story/post Instagram de B mentionnant A | second choix : reach réel mais éphémère (24 h), non indexable |
 | `story_for_story` | mention croisée Instagram | libre, hors périmètre SEO |
 
 Règles :
-- L'échange cross-média (`link_for_story`) est le mode **mis en avant par défaut** dans l'UI : c'est le seul totalement sûr côté Google et celui qui apparie naturellement un site à autorité avec un compte à audience.
-- Le **lien réciproque direct** (A→B contre B→A) est **exclu du périmètre** : Google dévalue ce pattern depuis 2005 (link scheme), les deux liens sont décotés au lieu de gagner, et la triangulation n'est qu'un masquage grey-hat détectable. Le seul échange « gagnant-gagnant » passe par des médias différents (lien à sens unique contre story), jamais par un lien contre un lien.
-- Équivalence de valeur calculée par le moteur : palier de prix du lien (P1–P4) confronté à la valeur estimée de la story (reach × engagement, section 3). L'écart résiduel est réglé en crédits par la partie la moins « chère ».
+- `link_for_linkedin` est le mode **mis en avant par défaut** : valeur quantifiée par les impressions et l'engagement du post vendeur (moyenne de ses 10 derniers posts), publication vérifiée via l'URN/URL stable du post et le connecteur LinkedIn. À défaut d'impressions organiques exposées par l'API, la valeur est estimée sur followers × taux d'engagement observé sur les réactions et commentaires publics.
+- Le **lien réciproque direct** (A→B contre B→A) est **exclu du périmètre** : Google dévalue ce pattern depuis 2005 (link scheme), les deux liens sont décotés au lieu de gagner, et la triangulation n'est qu'un masquage grey-hat détectable. Le seul échange « gagnant-gagnant » passe par des médias différents (lien à sens unique contre publication sociale), jamais par un lien contre un lien.
+- Équivalence de valeur calculée par le moteur : palier de prix du lien (P1–P4) confronté à la valeur estimée de la publication. L'écart résiduel est réglé en crédits par la partie la moins « chère ».
 - Commission Crawlers sur un troc : 10 % de la valeur estimée de chaque côté, prélevée en crédits (moins que les 25 % d'une vente cash, l'échange n'impliquant aucun encaissement).
 - Le troc suit le même workflow de prévisualisation (2.3) et de double feedback que la vente.
 - Plafonds : maximum 2 échanges actifs par site sortant et par mois.
+
+### 2.8 Autres contreparties pour équilibrer un lien
+
+Toutes suivent la même règle : la contrepartie ne doit **jamais** être un lien retour vers le site
+acheteur. Elles sont évaluées par le même moteur d'équivalence et réglées en crédits pour l'écart.
+
+| Contrepartie | Valeur pour l'acheteur | Vérifiable par Crawlers |
+|---|---|---|
+| Crédits Crawlers | le vendeur est payé en usage plateforme (coût réel ~0,05 €/crédit) — marge Crawlers maximale | oui, natif |
+| Remise / mois d'abonnement offerts | rend le coût net d'abonnement du vendeur proche de zéro : incentive le plus fort pour un petit site | oui, natif |
+| Post LinkedIn ou story Instagram | cf. 2.7 | oui, via connecteurs |
+| Newsletter : mention dans un envoi | audience qualifiée, non indexable, aucun signal SEO | partiellement (capture d'écran + nombre d'abonnés déclaré) |
+| Citation dans un contenu tiers (podcast, interview, étude co-signée) | E-E-A-T réel, mention de marque exploitée par les LLM | manuel |
+| Donnée / étude exclusive fournie au vendeur | le vendeur reçoit un contenu à publier, l'acheteur obtient la citation de source | oui (contenu généré côté Crawlers) |
+| Audit Marina offert au vendeur | contrepartie à coût marginal quasi nul, forte valeur perçue | oui, natif |
+| Mise en avant dans l'annuaire/observatoire Crawlers | visibilité interne, pas de lien sortant vers l'acheteur | oui, natif |
+
+Les trois contreparties à prioriser en v1 parce qu'elles sont natives, à coût marginal faible et
+sans risque Google : **crédits**, **mois d'abonnement offerts**, **audit Marina offert**. Les
+contreparties sociales (`link_for_linkedin`, `link_for_story`) arrivent avec les connecteurs. Les
+contreparties non vérifiables automatiquement (newsletter, podcast) restent hors v1 et hors garantie.
+
 
 ---
 
@@ -197,8 +220,9 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - `marketplace_social_assets` — compte Instagram, formats, métriques, prix calculé.
 - `marketplace_needs` — besoin acheteur dérivé de `architect_workbench` / E-E-A-T.
 - `marketplace_matches` — couples besoin↔actif, `compat_score`, statut de notification.
-- `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`, `deal_type` (`cash` | `link_for_story` | `story_for_story`).
-- `marketplace_exchanges` — jambes d'un troc (2 pour un échange cross-média : le lien + la story), valeur estimée par jambe, solde en crédits, commission 10 %.
+- `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`, `deal_type` (`cash` | `credits` | `subscription_months` | `marina_audit` | `link_for_linkedin` | `link_for_story` | `story_for_story`).
+- `marketplace_exchanges` — jambes d'un troc (2 jambes : le lien + la contrepartie), nature de la contrepartie, valeur estimée par jambe, solde en crédits, commission 10 %.
+
 - `marketplace_ownership_claims` — déclaration de responsabilité vendeur : horodatage, IP, texte accepté.
 - `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
 - `marketplace_feedback` — commentaires et motifs par révision.
