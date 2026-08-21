@@ -332,12 +332,27 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
     const model = chain[i];
     const isLast = i === chain.length - 1;
     try {
+      // Disjoncteur: OpenRouter en panne de crédits → on saute l'aller-retour perdu.
+      if (openRouterIsOut() && lovableCanServe(model)) {
+        try {
+          const direct = await callOnce(model, body, cache, timeoutMs, headers, 'lovable');
+          if (direct.ok) return withUsageLog(direct, model, 'lovable', callerFunction, true);
+          if (!shouldFallback(direct.status) || isLast) return direct;
+          lastResp = direct;
+          continue;
+        } catch (e) {
+          if (isLast) throw e;
+          continue;
+        }
+      }
+
       // Tentative primaire: OpenRouter pour tous les modèles.
       const resp = await callOnce(model, body, cache, timeoutMs, headers);
       if (resp.ok) {
         if (i > 0) console.info(`[aiGatewayCall] Fallback success: ${model} (level ${i})`);
         return withUsageLog(resp, model, 'openrouter', callerFunction, i > 0);
       }
+      tripOpenRouterBreaker(resp.status);
 
       // Filet de sécurité Lovable AI pour google/* et openai/* si OpenRouter échoue.
       if (shouldFallback(resp.status) && lovableCanServe(model)) {
