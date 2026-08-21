@@ -694,3 +694,9 @@
   :root[data-text-size="small"] { font-size: 16px; }
   :root[data-text-size="large"] { font-size: 19.5px; }
 }
+
+/* Hide the native disclosure marker so our custom chevron is the only indicator. */
+summary::-webkit-details-marker {
+  display: none;
+}
+
