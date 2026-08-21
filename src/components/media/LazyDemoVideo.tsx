@@ -80,8 +80,6 @@ export function LazyDemoVideo({
         controls
         preload="none"
         aria-label={label}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
       >
         {activated && (
           <>
