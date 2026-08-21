@@ -141,7 +141,6 @@ Trois modes d'échange :
 
 | Mode | Contenu | Contrainte anti-pattern |
 |---|---|---|
-| `link_for_link` | lien A→B contre lien B→A | interdit en direct ; obligatoirement **triangulé** (A→B, B→C, C→A) pour éviter la réciprocité détectable |
 | `link_for_story` | lien A→B contre story/post Instagram de B mentionnant A | pas de contrainte de triangulation : les médias sont différents, aucun signal d'échange de liens |
 | `story_for_story` | mention croisée Instagram | libre, hors périmètre SEO |
 
