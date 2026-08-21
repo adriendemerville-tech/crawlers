@@ -258,6 +258,29 @@ function logGatewayUsage(
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// Disjoncteur OpenRouter (crédits épuisés / quota)
+// Quand OpenRouter renvoie 402 ou 429, TOUS les appels suivants payaient
+// un aller-retour perdu avant de basculer sur Lovable AI : latence doublée
+// sur chaque étape des workflows (architecte de code, Marina, Parménion).
+// On mémorise la panne 10 min en mémoire process et on route directement
+// vers Lovable AI pour les modèles google/* et openai/*.
+// ═══════════════════════════════════════════════════════════════════
+const OPENROUTER_BREAKER_MS = 10 * 60_000;
+let openRouterOutUntil = 0;
+
+function openRouterIsOut(): boolean {
+  return Date.now() < openRouterOutUntil;
+}
+
+function tripOpenRouterBreaker(status: number): void {
+  if (status !== 402 && status !== 429) return;
+  if (!openRouterIsOut()) {
+    console.warn(`[aiGatewayCall] OpenRouter ${status} → disjoncteur armé ${OPENROUTER_BREAKER_MS / 60000} min (routage direct Lovable AI)`);
+  }
+  openRouterOutUntil = Date.now() + OPENROUTER_BREAKER_MS;
+}
+
 /** Clone la réponse pour en extraire `usage`, logge, puis rend la réponse intacte. */
 function withUsageLog(
   resp: Response,
@@ -309,12 +332,27 @@ export async function aiGatewayCall(opts: AICallOptions): Promise<Response> {
     const model = chain[i];
     const isLast = i === chain.length - 1;
     try {
+      // Disjoncteur: OpenRouter en panne de crédits → on saute l'aller-retour perdu.
+      if (openRouterIsOut() && lovableCanServe(model)) {
+        try {
+          const direct = await callOnce(model, body, cache, timeoutMs, headers, 'lovable');
+          if (direct.ok) return withUsageLog(direct, model, 'lovable', callerFunction, true);
+          if (!shouldFallback(direct.status) || isLast) return direct;
+          lastResp = direct;
+          continue;
+        } catch (e) {
+          if (isLast) throw e;
+          continue;
+        }
+      }
+
       // Tentative primaire: OpenRouter pour tous les modèles.
       const resp = await callOnce(model, body, cache, timeoutMs, headers);
       if (resp.ok) {
         if (i > 0) console.info(`[aiGatewayCall] Fallback success: ${model} (level ${i})`);
         return withUsageLog(resp, model, 'openrouter', callerFunction, i > 0);
       }
+      tripOpenRouterBreaker(resp.status);
 
       // Filet de sécurité Lovable AI pour google/* et openai/* si OpenRouter échoue.
       if (shouldFallback(resp.status) && lovableCanServe(model)) {
@@ -430,11 +468,19 @@ export async function aiGatewayCallStream(opts: AICallOptions): Promise<Response
     const model = chain[i];
     const isLast = i === chain.length - 1;
     try {
+      if (openRouterIsOut() && lovableCanServe(model)) {
+        const direct = await callOnce(model, streamBody, cache, timeoutMs, headers, 'lovable', true);
+        if (direct.ok) return direct;
+        if (!shouldFallback(direct.status) || isLast) return direct;
+        try { await direct.body?.cancel(); } catch { /* noop */ }
+        continue;
+      }
       const resp = await callOnce(model, streamBody, cache, timeoutMs, headers, undefined, true);
       if (resp.ok) {
         if (i > 0) console.info(`[aiGatewayCallStream] Fallback success: ${model} (level ${i})`);
         return resp;
       }
+      tripOpenRouterBreaker(resp.status);
       if (shouldFallback(resp.status) && lovableCanServe(model)) {
         try {
           const lov = await callOnce(model, streamBody, cache, timeoutMs, headers, 'lovable', true);

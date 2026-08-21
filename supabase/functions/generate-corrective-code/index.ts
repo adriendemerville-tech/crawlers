@@ -453,6 +453,8 @@ async function adaptSolutionWithAI(
   try {
     const response = await aiGatewayFetch( {
       method: 'POST',
+      timeoutMs: 60_000,
+      callerFunction: 'generate-corrective-code',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
@@ -644,6 +646,8 @@ RAPPEL: JSON valide uniquement, pas de markdown.`;
   try {
     const response = await aiGatewayFetch( {
       method: 'POST',
+      timeoutMs: 120_000,
+      callerFunction: 'generate-corrective-code',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
@@ -2128,6 +2132,10 @@ IMPORTANT:
   try {
     const response = await aiGatewayFetch( {
       method: 'POST',
+      // Modèle de raisonnement + prompt long : le défaut 8s expirait et faisait
+      // refaire le travail (cause de la lenteur perçue de l'architecte).
+      timeoutMs: 120_000,
+      callerFunction: 'generate-corrective-code',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
@@ -3121,13 +3129,14 @@ Deno.serve(handleRequest(async (req) => {
     // ÉTAPE 2: Adapter les solutions existantes via IA
     // ══════════════════════════════════════════════════════════════
     const adaptedSnippets = new Map<string, string>();
-    
-    for (const fixId of libraryHits) {
+
+    // Adaptations en parallèle : en série, chaque correctif de la bibliothèque
+    // ajoutait un appel LLM complet au temps total (latence cumulée).
+    await Promise.all(libraryHits.map(async (fixId) => {
       const match = solutionMatches.get(fixId)!;
       if (match.similarity === 'close' || !match.is_generic) {
-        // Adapter le snippet existant aux spécificités du site
         const adapted = await adaptSolutionWithAI(
-          match.code_snippet, siteName, siteUrl, 
+          match.code_snippet, siteName, siteUrl,
           enabledFixes.find(f => f.id === fixId)?.label || fixId,
           language
         );
@@ -3135,9 +3144,8 @@ Deno.serve(handleRequest(async (req) => {
           adaptedSnippets.set(fixId, adapted);
         }
       }
-      // Incrémenter le compteur d'usage
-      await incrementSolutionUsage(match.id);
-    }
+      await incrementSolutionUsage(match.id).catch(() => {});
+    }));
 
     // Récupérer le contexte du registre + workbench si demandé
     let registryContext = '';
