@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { PageEditorial } from "@/components/seo/PageEditorial";
 import cocoonGraph from '@/assets/screenshots/crawlers.fr_cocon-semantique-3d-maillage-interne.webp';
+import cocoonVideo from '@/assets/cocoon-3d.mp4.asset.json';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
