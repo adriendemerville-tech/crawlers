@@ -27,14 +27,31 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 const MAX_ITERATIONS = 7
 
 // ─── Models ──────────────────────────────────────────────────────────────────
+// Résilience (audit 2026-08-21) : OpenRouter reste primaire, Lovable AI sert de
+// filet. Lovable ne sert QUE google/* et openai/* :
+//   - ChatGPT / Gemini  → même modèle côté Lovable (filet transparent)
+//   - Claude            → substitut openai/gpt-5.4-mini, résultat marqué `degraded`
+//                         (l'observation n'est plus celle d'Anthropic, on le dit)
+//   - Perplexity        → aucun équivalent Lovable → marqué `unavailable`
+//                         plutôt que compté comme « non cité » (faux 7/7).
 type Gateway = 'openrouter' | 'lovable'
-interface ModelDef { id: string; name: string; model: string; gateway: Gateway; fallbackGateway?: Gateway }
+type ModelStatus = 'ok' | 'degraded' | 'error' | 'unavailable'
+interface ModelDef {
+  id: string
+  name: string
+  model: string
+  gateway: Gateway
+  fallbackGateway?: Gateway
+  /** Modèle utilisé côté fallback quand le provider de secours ne sert pas `model`. */
+  fallbackModel?: string
+}
 const MODELS: ModelDef[] = [
-  { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-5.4-mini',         gateway: 'openrouter' },
-  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-3-flash-preview',    gateway: 'openrouter', fallbackGateway: 'lovable' },
-  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-3-haiku',   gateway: 'openrouter' },
-  { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar',           gateway: 'openrouter' },
+  { id: 'chatgpt',    name: 'ChatGPT',     model: 'openai/gpt-5.4-mini',           gateway: 'openrouter', fallbackGateway: 'lovable' },
+  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-3-flash-preview', gateway: 'openrouter', fallbackGateway: 'lovable' },
+  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-haiku-4.5',    gateway: 'openrouter', fallbackGateway: 'lovable', fallbackModel: 'openai/gpt-5.4-mini' },
+  { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar',              gateway: 'openrouter' },
 ]
+
 
 const LOVABLE_AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
@@ -269,6 +286,11 @@ function buildFetchArgs(
 
 // ─── Resilient fetch with gateway fallback ──────────────────────────────────
 
+/** Statuts pour lesquels basculer sur le provider de secours (cf. ai-gateway-error-semantics). */
+function shouldFallback(status: number): boolean {
+  return status === 402 || status === 408 || status === 429 || status >= 500
+}
+
 async function resilientFetch(
   gateway: Gateway,
   fallbackGateway: Gateway | undefined,
@@ -277,24 +299,39 @@ async function resilientFetch(
   messages: { role: string; content: string }[],
   opts: { temperature?: number; max_tokens?: number } = {},
   context?: string,
-): Promise<{ response: Response; usedGateway: Gateway; didFallback: boolean }> {
+  fallbackModel?: string,
+): Promise<{ response: Response; usedGateway: Gateway; usedModel: string; didFallback: boolean }> {
   const [url, init] = buildFetchArgs(gateway, keys, model, messages, opts)
-  const response = await fetch(url, init)
-
-  // If primary fails with 402/429 and we have a fallback, try it
-  if ((response.status === 402 || response.status === 429) && fallbackGateway && keys[fallbackGateway]) {
-    console.warn(`[check-llm-depth] ${gateway} returned ${response.status} for ${model}, falling back to ${fallbackGateway}${context ? ` (${context})` : ''}`)
-
-    // Log fallback event for admin monitoring
-    logFallbackEvent(gateway, fallbackGateway, model, response.status, context)
-
-    const [fbUrl, fbInit] = buildFetchArgs(fallbackGateway, keys, model, messages, opts)
-    const fbResponse = await fetch(fbUrl, fbInit)
-    return { response: fbResponse, usedGateway: fallbackGateway, didFallback: true }
+  let response: Response
+  try {
+    response = await fetch(url, init)
+  } catch (e) {
+    // Panne réseau / timeout côté primaire : on tente quand même le filet.
+    if (fallbackGateway && keys[fallbackGateway]) {
+      const fbModel = fallbackModel || model
+      logFallbackEvent(gateway, fallbackGateway, fbModel, 0, context)
+      const [fbUrl, fbInit] = buildFetchArgs(fallbackGateway, keys, fbModel, messages, opts)
+      const fbResponse = await fetch(fbUrl, fbInit)
+      return { response: fbResponse, usedGateway: fallbackGateway, usedModel: fbModel, didFallback: true }
+    }
+    throw e
   }
 
-  return { response, usedGateway: gateway, didFallback: false }
+  if (shouldFallback(response.status) && fallbackGateway && keys[fallbackGateway]) {
+    const fbModel = fallbackModel || model
+    console.warn(`[check-llm-depth] ${gateway} returned ${response.status} for ${model}, falling back to ${fallbackGateway}/${fbModel}${context ? ` (${context})` : ''}`)
+
+    // Log fallback event for admin monitoring
+    logFallbackEvent(gateway, fallbackGateway, fbModel, response.status, context)
+
+    const [fbUrl, fbInit] = buildFetchArgs(fallbackGateway, keys, fbModel, messages, opts)
+    const fbResponse = await fetch(fbUrl, fbInit)
+    return { response: fbResponse, usedGateway: fallbackGateway, usedModel: fbModel, didFallback: true }
+  }
+
+  return { response, usedGateway: gateway, usedModel: model, didFallback: false }
 }
+
 
 // ─── Fallback event logger ──────────────────────────────────────────────────
 
@@ -423,6 +460,18 @@ interface DepthResult {
   conversation_summary: string
   angles_tested: string[]
   conversation_turns: ConversationTurn[]
+  /**
+   * ok          → mesuré sur le modèle attendu
+   * degraded    → mesuré via un modèle substitut (Lovable AI ne sert pas ce vendeur)
+   * error       → aucune phase n'a abouti (provider en erreur) : hors dénominateur
+   * unavailable → aucun provider ne sert ce modèle : hors dénominateur
+   */
+  status?: ModelStatus
+  /** Modèle réellement interrogé (peut différer de `model` en mode `degraded`). */
+  effective_model?: string
+  /** Dernier code HTTP d'erreur observé, pour diagnostic UI. */
+  error_status?: number
+
 }
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
@@ -492,8 +541,30 @@ async function runDepthConversation(
   let lastAssistantContent = ''
   const conversationTurns: ConversationTurn[] = []
 
-  // Track which gateway is active (may change on fallback)
+  // Track which gateway/model is active (may change on fallback)
   let activeGateway: Gateway = modelDef.gateway
+  let activeModel = modelDef.model
+  let substituted = false
+  let successfulPhases = 0
+  let lastErrorStatus = 0
+
+  // Le provider primaire n'est pas configuré et aucun filet n'existe :
+  // le modèle est structurellement indisponible (cas Perplexity sans OpenRouter).
+  if (!keys[modelDef.gateway] && !(modelDef.fallbackGateway && keys[modelDef.fallbackGateway])) {
+    onProgress?.({ type: 'unavailable', model: modelDef.name })
+    return {
+      llm: modelDef.name,
+      model: modelDef.model,
+      iterations: 0,
+      found: false,
+      mentioned_as: null,
+      conversation_summary: '',
+      angles_tested: [],
+      conversation_turns: [],
+      status: 'unavailable',
+      effective_model: modelDef.model,
+    }
+  }
 
   for (let i = 0; i < Math.min(prompts.length, MAX_ITERATIONS); i++) {
     messages.push({ role: 'user', content: prompts[i] })
@@ -503,31 +574,41 @@ async function runDepthConversation(
     onProgress?.({ type: 'iteration', model: modelDef.name, iteration: i + 1, found: false })
 
     try {
-      const { response, usedGateway, didFallback } = await resilientFetch(
-        activeGateway, modelDef.fallbackGateway, keys, modelDef.model, messages,
+      const { response, usedGateway, usedModel, didFallback } = await resilientFetch(
+        activeGateway, activeGateway === modelDef.gateway ? modelDef.fallbackGateway : undefined,
+        keys, activeModel, messages,
         { temperature: 0.7, max_tokens: 1000 },
         `${domain} phase ${i + 1}`,
+        modelDef.fallbackModel,
       )
 
       // If we fell back, stick with fallback for remaining phases
-      if (didFallback) activeGateway = usedGateway
+      if (didFallback) {
+        activeGateway = usedGateway
+        if (usedModel !== activeModel) {
+          substituted = true
+          activeModel = usedModel
+        }
+      }
 
       if (!response.ok) {
-        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status} (${usedGateway})`)
+        lastErrorStatus = response.status
+        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status} (${usedGateway}/${usedModel})`)
         continue
       }
 
       const data = await response.json()
       const content = data.choices?.[0]?.message?.content || ''
       if (content) lastAssistantContent = content
+      successfulPhases++
 
       const provider = usedGateway === 'lovable' ? 'lovable-ai' : 'openrouter'
-      trackPaidApiCall('check-llm-depth', provider, modelDef.model, domain)
+      trackPaidApiCall('check-llm-depth', provider, activeModel, domain)
 
       messages.push({ role: 'assistant', content })
 
       // Summarize response to 3 sentences for storage
-      const summary = await summarizeResponse(keys, activeGateway, modelDef.model, content, lang)
+      const summary = await summarizeResponse(keys, activeGateway, activeModel, content, lang)
       conversationTurns.push({
         iteration: i + 1,
         prompt: prompts[i],
@@ -536,7 +617,7 @@ async function runDepthConversation(
 
       // Semantic brand detection (uses active gateway)
       const detection = await detectBrandSemantically(
-        keys, activeGateway, modelDef.model, content, brand, domain, lang,
+        keys, activeGateway, activeModel, content, brand, domain, lang,
       )
 
       if (detection.found) {
@@ -550,6 +631,8 @@ async function runDepthConversation(
           conversation_summary: content.slice(0, 400),
           angles_tested: anglesTested,
           conversation_turns: conversationTurns,
+          status: substituted ? 'degraded' : 'ok',
+          effective_model: activeModel,
         }
       }
 
@@ -557,6 +640,25 @@ async function runDepthConversation(
       await delay(500)
     } catch (err) {
       console.error(`[check-llm-depth] Error ${modelDef.name} phase ${i + 1}:`, err)
+    }
+  }
+
+  // Aucune phase n'a abouti : c'est une panne provider, pas une absence de citation.
+  // On ne rend PAS 7/7 (faux négatif historique affiché comme « non cité »).
+  if (successfulPhases === 0) {
+    onProgress?.({ type: 'error', model: modelDef.name })
+    return {
+      llm: modelDef.name,
+      model: modelDef.model,
+      iterations: 0,
+      found: false,
+      mentioned_as: null,
+      conversation_summary: '',
+      angles_tested: anglesTested,
+      conversation_turns: [],
+      status: 'error',
+      effective_model: activeModel,
+      ...(lastErrorStatus ? { error_status: lastErrorStatus } : {}),
     }
   }
 
@@ -569,8 +671,11 @@ async function runDepthConversation(
     conversation_summary: lastAssistantContent.slice(0, 400),
     angles_tested: anglesTested,
     conversation_turns: conversationTurns,
+    status: substituted ? 'degraded' : 'ok',
+    effective_model: activeModel,
   }
 }
+
 
 // ─── Persistence ─────────────────────────────────────────────────────────────
 
@@ -582,7 +687,12 @@ async function persistResults(
 ) {
   if (!trackedSiteId || !userId) return
 
-  const rows = results.map(r => ({
+  // Seuls les modèles réellement mesurés entrent en base : persister une panne
+  // provider comme « marque non trouvée » fausserait l'historique de visibilité.
+  const measured = results.filter(r => r.status !== 'error' && r.status !== 'unavailable')
+  if (measured.length === 0) return
+
+  const rows = measured.map(r => ({
     tracked_site_id: trackedSiteId,
     user_id: userId,
     llm_name: r.llm,
@@ -592,6 +702,7 @@ async function persistResults(
     response_text: r.conversation_summary.slice(0, 500) || null,
     source_function: 'check-llm-depth',
   }))
+
 
   const { error } = await supabase.from('llm_test_executions').insert(rows)
   if (error) console.error('[check-llm-depth] Persist error:', error)
@@ -775,32 +886,39 @@ Deno.serve(handleRequest(async (req) => {
         )
         const results = await Promise.allSettled(resultPromises)
 
-        const successResults: DepthResult[] = results
+        const settledResults: DepthResult[] = results
           .filter((r): r is PromiseFulfilledResult<DepthResult> => r.status === 'fulfilled')
           .map(r => r.value)
 
-        const allEmpty = successResults.every(r => !r.found && !r.conversation_summary)
+        // Un modèle en panne (error) ou sans provider (unavailable) n'est PAS une
+        // observation : il sort de la moyenne et de la couverture, mais reste dans
+        // `results` pour que l'UI affiche « Erreur / Indisponible » au lieu de 7/7.
+        const measured = settledResults.filter(r => r.status !== 'error' && r.status !== 'unavailable')
+        const failed = settledResults.filter(r => r.status === 'error' || r.status === 'unavailable')
+        const allEmpty = measured.length === 0
 
-        const scores = successResults.map(r => r.iterations)
+        const scores = measured.map(r => r.iterations)
         const avgDepth = scores.length > 0
           ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1))
           : null
 
         // Persist to user tables
         if (!allEmpty) {
-          await persistResults(sb, tracked_site_id || null, user_id || null, successResults)
+          await persistResults(sb, tracked_site_id || null, user_id || null, measured)
         }
 
         // Couverture : un modèle est une observation, une apparition de la marque
         // est un hit. Les modèles en panne sont hors dénominateur.
-        const observations = successResults.length
-        const hits = successResults.filter(r => r.found).length
+        const observations = measured.length
+        const hits = measured.filter(r => r.found).length
 
         const finalData = {
           brand,
           domain,
-          avg_depth: allEmpty ? null : avgDepth,
-          results: allEmpty ? [] : successResults,
+          avg_depth: avgDepth,
+          results: settledResults,
+          measured_models: observations,
+          failed_models: failed.map(r => ({ llm: r.llm, status: r.status, error_status: r.error_status ?? null })),
           coverage: allEmpty ? null : computeCoverage(hits, observations),
           reliability: allEmpty ? null : assessReliability(observations, 1),
           ...(identityDisclosure ? { identity: identityDisclosure } : {}),
@@ -809,6 +927,7 @@ Deno.serve(handleRequest(async (req) => {
           measured_at: new Date().toISOString(),
           ...(allEmpty ? { error_code: 'credits_exhausted' } : {}),
         }
+
 
         // Write to shared domain cache (2h TTL — Pro Agency+ can refresh unlimited but backend throttles to every 2h)
         if (!allEmpty) {
@@ -824,8 +943,9 @@ Deno.serve(handleRequest(async (req) => {
         // Send final result
         send({ type: 'done', data: finalData })
 
-        console.log(`[check-llm-depth] ${allEmpty ? '❌ ALL MODELS FAILED' : '✅'} ${domain}: brand="${brand}" avgDepth=${avgDepth}`,
-          successResults.map(r => `${r.llm}=${r.iterations}${r.found ? '✓' : '✗'}`).join(', '))
+        console.log(`[check-llm-depth] ${allEmpty ? '❌ ALL MODELS FAILED' : '✅'} ${domain}: brand="${brand}" avgDepth=${avgDepth} mesurés=${observations}/${settledResults.length}`,
+          settledResults.map(r => `${r.llm}=${r.status === 'error' ? 'ERR' : r.status === 'unavailable' ? 'N/A' : `${r.iterations}${r.found ? '✓' : '✗'}${r.status === 'degraded' ? '~' : ''}`}`).join(', '))
+
 
         controller.close()
       },

@@ -19,6 +19,8 @@ interface ConversationTurn {
   response_summary: string;
 }
 
+type ModelStatus = 'ok' | 'degraded' | 'error' | 'unavailable';
+
 interface DepthResult {
   llm: string;
   model: string;
@@ -27,16 +29,22 @@ interface DepthResult {
   mentioned_as: string | null;
   conversation_summary: string;
   angles_tested: string[];
+  status?: ModelStatus;
+  effective_model?: string;
+  error_status?: number;
 }
+
 
 interface LLMDepthData {
   brand: string;
   domain: string;
   avg_depth: number | null;
   results: DepthResult[];
+  measured_models?: number;
   prompt_strategy: string;
   measured_at: string;
   error_code?: string;
+
 }
 
 interface SiteContext {
@@ -64,7 +72,9 @@ interface ModelProgress {
   iteration: number;
   found: boolean;
   mentioned_as?: string | null;
+  status?: 'error' | 'unavailable';
 }
+
 
 const translations = {
   fr: {
@@ -85,6 +95,12 @@ const translations = {
     expertRequired: 'Audit expert requis',
     expertRequiredDesc: 'Lancez un audit stratégique pour obtenir votre profondeur LLM avec des données de simulation intelligentes.',
     scanning: 'Scan en cours…',
+    statusError: 'Erreur provider',
+    statusUnavailable: 'Indisponible',
+    statusDegraded: 'Modèle substitut',
+    excludedFromAvg: 'Exclu de la moyenne',
+    measuredOn: (n: number, total: number) => `Mesuré sur ${n}/${total} modèles`,
+
   },
   en: {
     title: 'LLM Depth',
@@ -104,6 +120,12 @@ const translations = {
     expertRequired: 'Expert audit required',
     expertRequiredDesc: 'Run a strategic audit to get your LLM depth with smart simulated data.',
     scanning: 'Scanning…',
+    statusError: 'Provider error',
+    statusUnavailable: 'Unavailable',
+    statusDegraded: 'Substitute model',
+    excludedFromAvg: 'Excluded from average',
+    measuredOn: (n: number, total: number) => `Measured on ${n}/${total} models`,
+
   },
   es: {
     title: 'Profundidad LLM',
@@ -123,6 +145,12 @@ const translations = {
     expertRequired: 'Auditoría experta requerida',
     expertRequiredDesc: 'Ejecute una auditoría estratégica para obtener su profundidad LLM con datos simulados inteligentes.',
     scanning: 'Escaneando…',
+    statusError: 'Error del proveedor',
+    statusUnavailable: 'No disponible',
+    statusDegraded: 'Modelo sustituto',
+    excludedFromAvg: 'Excluido del promedio',
+    measuredOn: (n: number, total: number) => `Medido en ${n}/${total} modelos`,
+
   },
 };
 
@@ -470,6 +498,14 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
                 ...prev,
                 [evt.model]: { iteration: evt.iteration, found: true, mentioned_as: evt.mentioned_as },
               }));
+            } else if (evt.type === 'error' || evt.type === 'unavailable') {
+              // Panne provider : on l'affiche comme telle au lieu de laisser le
+              // compteur monter jusqu'à 7/7 (faux « non cité »).
+              setStreamProgress(prev => ({
+                ...prev,
+                [evt.model]: { iteration: 0, found: false, status: evt.type as 'error' | 'unavailable' },
+              }));
+
             } else if (evt.type === 'done') {
               const responseData = evt.data as LLMDepthData;
 
@@ -539,7 +575,9 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium">{modelName}</span>
-                    {found ? (
+                    {progress?.status ? (
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    ) : found ? (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -554,7 +592,11 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
                     )}
                   </div>
 
-                  {iteration > 0 ? (
+                  {progress?.status ? (
+                    <div className="text-sm font-semibold text-muted-foreground">
+                      {progress.status === 'unavailable' ? t.statusUnavailable : t.statusError}
+                    </div>
+                  ) : iteration > 0 ? (
                     <StreamingCounter iteration={iteration} found={found} modelName={modelName} />
                   ) : (
                     <div className="flex items-baseline gap-1.5">
@@ -562,6 +604,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
                       <span className="text-[10px] text-muted-foreground/40">/ {MAX_ITERATIONS}</span>
                     </div>
                   )}
+
 
                   {found && progress?.mentioned_as && (
                     <motion.p
@@ -741,42 +784,67 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
           </div>
         </div>
 
+        {/* Couverture réelle : les modèles en panne ne sont pas comptés comme « non cité » */}
+        {typeof data.measured_models === 'number' && data.measured_models < data.results.length && (
+          <p className="text-[10px] text-muted-foreground">
+            {t.measuredOn(data.measured_models, data.results.length)}
+          </p>
+        )}
+
         {/* Per-model results */}
         <div className="grid grid-cols-2 gap-2">
           {data.results.map((result) => {
             const isDark = document.documentElement.classList.contains('dark');
             const color = isDark ? iterationHslColorDark(result.iterations) : iterationHslColor(result.iterations);
+            const isBroken = result.status === 'error' || result.status === 'unavailable';
 
             return (
               <div
                 key={result.llm}
-                className="rounded-lg border bg-card p-2.5 space-y-1.5"
+                className={`rounded-lg border bg-card p-2.5 space-y-1.5 ${isBroken ? 'opacity-70 border-dashed' : ''}`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">{result.llm}</span>
-                  {result.found ? (
+                  {isBroken ? (
+                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                  ) : result.found ? (
                     <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
                   ) : (
                     <XCircle className="h-3.5 w-3.5 text-red-400" />
                   )}
                 </div>
-                <div className="flex items-baseline gap-1.5">
-                  <span
-                    className="text-lg font-semibold"
-                    style={{ color }}
-                  >
-                    {result.found ? result.iterations : `${MAX_DISPLAY}+`}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {result.found ? t.found : t.notFound}
-                  </span>
-                </div>
-                {result.found && result.mentioned_as && (
-                  <p className="text-[10px] text-muted-foreground truncate" title={result.mentioned_as}>
-                    → {result.mentioned_as}
-                  </p>
+                {isBroken ? (
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-semibold text-muted-foreground">
+                      {result.status === 'unavailable' ? t.statusUnavailable : t.statusError}
+                      {result.error_status ? ` (${result.error_status})` : ''}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">{t.excludedFromAvg}</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-lg font-semibold" style={{ color }}>
+                        {result.found ? result.iterations : `${MAX_DISPLAY}+`}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {result.found ? t.found : t.notFound}
+                      </span>
+                    </div>
+                    {result.status === 'degraded' && (
+                      <p className="text-[10px] text-muted-foreground truncate" title={result.effective_model}>
+                        {t.statusDegraded}: {result.effective_model}
+                      </p>
+                    )}
+                    {result.found && result.mentioned_as && (
+                      <p className="text-[10px] text-muted-foreground truncate" title={result.mentioned_as}>
+                        → {result.mentioned_as}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
+
             );
           })}
         </div>
