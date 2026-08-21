@@ -50,17 +50,42 @@ interface EditorialStats {
   seo_alerts: number;
 }
 
-function countWords(text?: string | null): number {
-  if (!text) return 0;
+// CMS payloads are not consistently typed: content can arrive as a string,
+// as { rendered | html | value | body | text }, or as an array of blocks.
+// Coerce defensively — never assume String methods exist.
+function toText(value: unknown, depth = 0): string {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (depth > 3) return '';
+  if (Array.isArray(value)) return value.map((v) => toText(v, depth + 1)).join(' ');
+  if (typeof value === 'object') {
+    const o = value as Record<string, unknown>;
+    for (const k of ['rendered', 'html', 'html_content', 'value', 'body', 'content', 'text', 'raw']) {
+      if (k in o) {
+        const t = toText(o[k], depth + 1);
+        if (t) return t;
+      }
+    }
+    return Object.values(o).map((v) => toText(v, depth + 1)).join(' ');
+  }
+  return '';
+}
+
+function countWords(text?: unknown): number {
+  const raw = toText(text);
+  if (!raw) return 0;
   // Strip HTML tags
-  const clean = text.replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/gi, ' ');
+  const clean = raw.replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/gi, ' ');
   return clean.split(/\s+/).filter(w => w.length > 0).length;
 }
 
-function hasSubtitle(text?: string | null): boolean {
-  if (!text) return false;
-  return /<h[2-6][^>]*>/i.test(text);
+function hasSubtitle(text?: unknown): boolean {
+  const raw = toText(text);
+  if (!raw) return false;
+  return /<h[2-6][^>]*>/i.test(raw);
 }
+
 
 function computeStats(articles: Article[]): EditorialStats {
   const published = articles.filter(a => a.status === 'published' || a.status === 'publish');
