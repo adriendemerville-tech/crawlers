@@ -118,6 +118,12 @@ const translations = {
     expertRequired: 'Expert audit required',
     expertRequiredDesc: 'Run a strategic audit to get your LLM depth with smart simulated data.',
     scanning: 'Scanning…',
+    statusError: 'Provider error',
+    statusUnavailable: 'Unavailable',
+    statusDegraded: 'Substitute model',
+    excludedFromAvg: 'Excluded from average',
+    measuredOn: (n: number, total: number) => `Measured on ${n}/${total} models`,
+
   },
   es: {
     title: 'Profundidad LLM',
