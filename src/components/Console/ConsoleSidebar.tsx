@@ -256,6 +256,34 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     { value: 'tracking-api', label: 'API', icon: Network, hideOnMobile: true, advancedOnly: true },
   ];
 
+  // Applique l'ordre personnalisé : items connus d'abord (dans l'ordre choisi), nouveaux modules à la suite.
+  const items: SidebarItem[] = sidebarOrder.length
+    ? [
+        ...sidebarOrder
+          .map(v => baseItems.find(i => i.value === v))
+          .filter((i): i is SidebarItem => !!i),
+        ...baseItems.filter(i => !sidebarOrder.includes(i.value)),
+      ]
+    : baseItems;
+
+  const handleDrop = (targetValue: string) => {
+    const source = dragValue;
+    setDragValue(null);
+    setDragOverValue(null);
+    if (!source || source === targetValue) return;
+    const current = items.map(i => i.value);
+    const from = current.indexOf(source);
+    const to = current.indexOf(targetValue);
+    if (from < 0 || to < 0) return;
+    const next = [...current];
+    next.splice(from, 1);
+    next.splice(to, 0, source);
+    setSidebarOrder(next);
+    void persistOrder(next);
+  };
+
+
+
   // Bottom items: Pro Agency, Wallet, Settings, Creator, API
   const bottomItems: SidebarItem[] = [
     {
