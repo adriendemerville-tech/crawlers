@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { LazyDemoVideo } from './LazyDemoVideo';
 import {
@@ -42,6 +43,8 @@ export function DemoVideoSection({
   frameClassName = 'rounded-2xl overflow-hidden border border-[#4c1d95]/30 shadow-2xl shadow-[#4c1d95]/10',
 }: DemoVideoSectionProps) {
   const segments = video.transcript[language] ?? video.transcript.fr;
+  const [liveCaption, setLiveCaption] = useState('');
+  const handleCaptionChange = useCallback((text: string) => setLiveCaption(text), []);
 
   return (
     <section id={`demo-${video.id}`} className="py-12 px-4">
@@ -59,9 +62,20 @@ export function DemoVideoSection({
               src: video.captionSrc(lang),
               srcLang: lang,
               label: CAPTION_LANG_LABELS[lang],
-              default: lang === language,
             }))}
+            captionLang={language}
+            onCaptionChange={handleCaptionChange}
           />
+          {/* Légende animée synchronisée : rendue en HTML sous le lecteur,
+              jamais superposée à l'image. */}
+          <p
+            aria-live="polite"
+            className={`mt-3 min-h-[2.5rem] text-center text-sm leading-relaxed text-white/90 transition-opacity duration-300 ${
+              liveCaption ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            {liveCaption}
+          </p>
           {labels.description && (
             <p className="mt-3 text-center text-xs text-white/80 leading-relaxed">
               {labels.description}
