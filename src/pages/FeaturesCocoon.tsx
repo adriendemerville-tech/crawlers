@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { PageEditorial } from "@/components/seo/PageEditorial";
-import cocoonGraph from '@/assets/screenshots/crawlers.fr_cocon-semantique-3d-maillage-interne.webp';
 import cocoonVideoMp4 from '@/assets/cocoon-3d-720.mp4.asset.json';
 import cocoonVideoWebm from '@/assets/cocoon-3d.webm.asset.json';
 import { LazyDemoVideo } from '@/components/media/LazyDemoVideo';
@@ -261,7 +260,7 @@ export default function FeaturesCocoon() {
                 className="rounded-2xl overflow-hidden border border-[#4c1d95]/30 shadow-2xl shadow-[#4c1d95]/10"
                 webmSrc={cocoonVideoWebm.url}
                 mp4Src={cocoonVideoMp4.url}
-                poster={cocoonGraph}
+                poster="/media/cocoon-3d-poster.webp"
                 width={1280}
                 height={738}
                 label={t.screenshotAlt}
