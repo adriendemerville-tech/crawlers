@@ -286,6 +286,11 @@ function buildFetchArgs(
 
 // ─── Resilient fetch with gateway fallback ──────────────────────────────────
 
+/** Statuts pour lesquels basculer sur le provider de secours (cf. ai-gateway-error-semantics). */
+function shouldFallback(status: number): boolean {
+  return status === 402 || status === 408 || status === 429 || status >= 500
+}
+
 async function resilientFetch(
   gateway: Gateway,
   fallbackGateway: Gateway | undefined,
@@ -294,24 +299,39 @@ async function resilientFetch(
   messages: { role: string; content: string }[],
   opts: { temperature?: number; max_tokens?: number } = {},
   context?: string,
-): Promise<{ response: Response; usedGateway: Gateway; didFallback: boolean }> {
+  fallbackModel?: string,
+): Promise<{ response: Response; usedGateway: Gateway; usedModel: string; didFallback: boolean }> {
   const [url, init] = buildFetchArgs(gateway, keys, model, messages, opts)
-  const response = await fetch(url, init)
-
-  // If primary fails with 402/429 and we have a fallback, try it
-  if ((response.status === 402 || response.status === 429) && fallbackGateway && keys[fallbackGateway]) {
-    console.warn(`[check-llm-depth] ${gateway} returned ${response.status} for ${model}, falling back to ${fallbackGateway}${context ? ` (${context})` : ''}`)
-
-    // Log fallback event for admin monitoring
-    logFallbackEvent(gateway, fallbackGateway, model, response.status, context)
-
-    const [fbUrl, fbInit] = buildFetchArgs(fallbackGateway, keys, model, messages, opts)
-    const fbResponse = await fetch(fbUrl, fbInit)
-    return { response: fbResponse, usedGateway: fallbackGateway, didFallback: true }
+  let response: Response
+  try {
+    response = await fetch(url, init)
+  } catch (e) {
+    // Panne réseau / timeout côté primaire : on tente quand même le filet.
+    if (fallbackGateway && keys[fallbackGateway]) {
+      const fbModel = fallbackModel || model
+      logFallbackEvent(gateway, fallbackGateway, fbModel, 0, context)
+      const [fbUrl, fbInit] = buildFetchArgs(fallbackGateway, keys, fbModel, messages, opts)
+      const fbResponse = await fetch(fbUrl, fbInit)
+      return { response: fbResponse, usedGateway: fallbackGateway, usedModel: fbModel, didFallback: true }
+    }
+    throw e
   }
 
-  return { response, usedGateway: gateway, didFallback: false }
+  if (shouldFallback(response.status) && fallbackGateway && keys[fallbackGateway]) {
+    const fbModel = fallbackModel || model
+    console.warn(`[check-llm-depth] ${gateway} returned ${response.status} for ${model}, falling back to ${fallbackGateway}/${fbModel}${context ? ` (${context})` : ''}`)
+
+    // Log fallback event for admin monitoring
+    logFallbackEvent(gateway, fallbackGateway, fbModel, response.status, context)
+
+    const [fbUrl, fbInit] = buildFetchArgs(fallbackGateway, keys, fbModel, messages, opts)
+    const fbResponse = await fetch(fbUrl, fbInit)
+    return { response: fbResponse, usedGateway: fallbackGateway, usedModel: fbModel, didFallback: true }
+  }
+
+  return { response, usedGateway: gateway, usedModel: model, didFallback: false }
 }
+
 
 // ─── Fallback event logger ──────────────────────────────────────────────────
 
