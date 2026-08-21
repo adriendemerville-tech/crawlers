@@ -9,6 +9,8 @@ export interface DemoVideoSectionLabels {
   /** Équivalent du `alt` : décrit le contenu visuel de la capture. */
   videoLabel: string;
   caption: string;
+  /** Description visible immédiatement sous le lecteur (SEO/GEO indexable). */
+  description?: string;
   playLabel: string;
   pauseLabel: string;
   transcriptTitle: string;
@@ -63,7 +65,14 @@ export function DemoVideoSection({
               default: lang === language,
             }))}
           />
-          <figcaption className="text-center text-sm text-white/30 mt-4">{labels.caption}</figcaption>
+          {labels.description && (
+            <p className="mt-3 text-center text-sm text-white/80 leading-relaxed">
+              {labels.description}
+            </p>
+          )}
+          <figcaption className={`text-center text-xs text-white/40 ${labels.description ? 'mt-2' : 'mt-4'}`}>
+            {labels.caption}
+          </figcaption>
         </figure>
 
         <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-6">
