@@ -183,6 +183,29 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       });
   }, [user]);
 
+  // Charge l'ordre personnalisé du menu
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('user_console_preferences')
+      .select('sidebar_order')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (Array.isArray(data?.sidebar_order)) setSidebarOrder(data.sidebar_order as string[]);
+      });
+  }, [user]);
+
+  const persistOrder = async (order: string[]) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('user_console_preferences')
+      .upsert({ user_id: user.id, sidebar_order: order }, { onConflict: 'user_id' });
+    if (error) toast.error('Ordre non enregistré', { description: error.message });
+  };
+
+
+
   // Liste des onglets cachés en vue simplifiée — doit rester synchro avec advancedOnly ci-dessous.
   const ADVANCED_ONLY_TABS = [
     'corrective-codes', 'crawls', 'sea-seo', 'indexation', 'gsc-bigquery',
