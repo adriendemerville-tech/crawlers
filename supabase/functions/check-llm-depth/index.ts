@@ -687,7 +687,12 @@ async function persistResults(
 ) {
   if (!trackedSiteId || !userId) return
 
-  const rows = results.map(r => ({
+  // Seuls les modèles réellement mesurés entrent en base : persister une panne
+  // provider comme « marque non trouvée » fausserait l'historique de visibilité.
+  const measured = results.filter(r => r.status !== 'error' && r.status !== 'unavailable')
+  if (measured.length === 0) return
+
+  const rows = measured.map(r => ({
     tracked_site_id: trackedSiteId,
     user_id: userId,
     llm_name: r.llm,
@@ -697,6 +702,7 @@ async function persistResults(
     response_text: r.conversation_summary.slice(0, 500) || null,
     source_function: 'check-llm-depth',
   }))
+
 
   const { error } = await supabase.from('llm_test_executions').insert(rows)
   if (error) console.error('[check-llm-depth] Persist error:', error)
