@@ -143,6 +143,12 @@ const translations = {
     expertRequired: 'Auditoría experta requerida',
     expertRequiredDesc: 'Ejecute una auditoría estratégica para obtener su profundidad LLM con datos simulados inteligentes.',
     scanning: 'Escaneando…',
+    statusError: 'Error del proveedor',
+    statusUnavailable: 'No disponible',
+    statusDegraded: 'Modelo sustituto',
+    excludedFromAvg: 'Excluido del promedio',
+    measuredOn: (n: number, total: number) => `Medido en ${n}/${total} modelos`,
+
   },
 };
 
