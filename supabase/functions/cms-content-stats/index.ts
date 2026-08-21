@@ -491,7 +491,7 @@ Deno.serve(handleRequest(async (req) => {
 
   // Build a lightweight article list for the UI (title, status, type, url, date)
   const list = articles.map((a) => {
-    const rawStatus = (a.status || 'published').toLowerCase();
+    const rawStatus = (toText(a.status) || 'published').toLowerCase();
     const normalizedStatus =
       rawStatus === 'publish' || rawStatus === 'published' || rawStatus === 'live'
         ? 'published'
@@ -500,13 +500,16 @@ Deno.serve(handleRequest(async (req) => {
         : rawStatus === 'archived' || rawStatus === 'trash'
         ? 'archived'
         : rawStatus;
-    const isPage = (a.categories || []).some((c) => c === 'Page' || c === 'Landing Page');
+    const cats = (Array.isArray(a.categories) ? a.categories : []).map((c) => toText(c));
+    const isPage = cats.some((c) => c === 'Page' || c === 'Landing Page');
+    const slug = toText(a.slug) || null;
     return {
-      title: a.title || '(sans titre)',
-      slug: a.slug || null,
+      title: toText(a.title) || '(sans titre)',
+      slug,
       status: normalizedStatus,
       type: isPage ? 'page' : 'post',
       published_at: a.published_at || a.created_at || null,
+
       url: a.slug
         ? domain.includes('crawlers')
           ? isPage
