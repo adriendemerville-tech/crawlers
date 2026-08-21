@@ -23,6 +23,7 @@ import { enrichKeywordsForPrescribe } from '../_shared/parmenion/keywordEnrichme
 import { callLLMWithTools } from '../_shared/parmenion/llmClient.ts';
 import { writePrescriptionsToWorkbench } from '../_shared/parmenion/prescriptionWorkbench.ts';
 import { isSeoTacticText, siteSellsSeo } from '../_shared/autopilot/editorialSubjectGuard.ts';
+import { getDictadeviEditorialBrief, renderDictadeviBriefBlock } from '../_shared/dictadeviEditorialBrief.ts';
 
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
 import { loadPersonaRotation, buildPersonaPromptBlock, recordPersonaServed } from '../_shared/parmenion/personaEngine.ts';
@@ -966,8 +967,21 @@ try {
             }
           }
         }
+        // Brief éditorial du site cible (DictaDevi) — repères de ligne éditoriale, cache 6 h
+        let dictadeviBriefBlock: string | null = null;
+        if (isDictadevi) {
+          try {
+            const brief = await getDictadeviEditorialBrief();
+            dictadeviBriefBlock = renderDictadeviBriefBlock(brief);
+            console.log(`[Parménion] Brief éditorial DictaDevi injecté (source=${brief.source})`);
+          } catch (e) {
+            console.warn('[Parménion] Brief éditorial DictaDevi indisponible (non-bloquant)', e);
+          }
+        }
+
         decision = await askParmenionLLM({
           domain,
+          editorialBriefBlock: dictadeviBriefBlock,
           cycle_number,
           currentPhase,
           conservativeMode,
@@ -2254,6 +2268,8 @@ async function askParmenionLLM(context: {
   scoredWorkbenchItems: any[];
   cmsInventory?: CmsContentInventory | null;
   baselineSeoScore?: SeoScoreV2 | null;
+  editorialBriefBlock?: string | null;
+
   iktrackerDrafts?: any[];
 }): Promise<ParmenionDecision | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -2288,9 +2304,14 @@ async function askParmenionLLM(context: {
 
   const phaseInstructions = buildPhaseInstructions(context);
 
+  const editorialBrief = context.editorialBriefBlock
+    ? `\n\n## BRIEF ÉDITORIAL DU SITE CIBLE (à respecter pour tout contenu)\n${context.editorialBriefBlock}`
+    : '';
+
   const systemPrompt = `Tu es Parménion, moteur d'exécution AUTONOME de l'autopilote Crawlers.fr. Tu NE RECOMMANDES PAS, tu AGIS.
 
-${phaseInstructions}
+${phaseInstructions}${editorialBrief}
+
 
 ## RÈGLES ABSOLUES
 1. Tu ne peux utiliser QUE les fonctions de la phase actuelle
