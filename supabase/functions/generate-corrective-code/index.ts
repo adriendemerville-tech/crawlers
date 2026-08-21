@@ -2128,6 +2128,10 @@ IMPORTANT:
   try {
     const response = await aiGatewayFetch( {
       method: 'POST',
+      // Modèle de raisonnement + prompt long : le défaut 8s expirait et faisait
+      // refaire le travail (cause de la lenteur perçue de l'architecte).
+      timeoutMs: 120_000,
+      callerFunction: 'generate-corrective-code',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
