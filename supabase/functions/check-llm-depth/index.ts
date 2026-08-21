@@ -27,14 +27,31 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 const MAX_ITERATIONS = 7
 
 // ─── Models ──────────────────────────────────────────────────────────────────
+// Résilience (audit 2026-08-21) : OpenRouter reste primaire, Lovable AI sert de
+// filet. Lovable ne sert QUE google/* et openai/* :
+//   - ChatGPT / Gemini  → même modèle côté Lovable (filet transparent)
+//   - Claude            → substitut openai/gpt-5.4-mini, résultat marqué `degraded`
+//                         (l'observation n'est plus celle d'Anthropic, on le dit)
+//   - Perplexity        → aucun équivalent Lovable → marqué `unavailable`
+//                         plutôt que compté comme « non cité » (faux 7/7).
 type Gateway = 'openrouter' | 'lovable'
-interface ModelDef { id: string; name: string; model: string; gateway: Gateway; fallbackGateway?: Gateway }
+type ModelStatus = 'ok' | 'degraded' | 'error' | 'unavailable'
+interface ModelDef {
+  id: string
+  name: string
+  model: string
+  gateway: Gateway
+  fallbackGateway?: Gateway
+  /** Modèle utilisé côté fallback quand le provider de secours ne sert pas `model`. */
+  fallbackModel?: string
+}
 const MODELS: ModelDef[] = [
-  { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-5.4-mini',         gateway: 'openrouter' },
-  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-3-flash-preview',    gateway: 'openrouter', fallbackGateway: 'lovable' },
-  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-3-haiku',   gateway: 'openrouter' },
-  { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar',           gateway: 'openrouter' },
+  { id: 'chatgpt',    name: 'ChatGPT',     model: 'openai/gpt-5.4-mini',           gateway: 'openrouter', fallbackGateway: 'lovable' },
+  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-3-flash-preview', gateway: 'openrouter', fallbackGateway: 'lovable' },
+  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-haiku-4.5',    gateway: 'openrouter', fallbackGateway: 'lovable', fallbackModel: 'openai/gpt-5.4-mini' },
+  { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar',              gateway: 'openrouter' },
 ]
+
 
 const LOVABLE_AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
