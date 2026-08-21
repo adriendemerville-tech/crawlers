@@ -29,8 +29,6 @@ const i18n = {
     screenshotAlt: "Visualisation 3D du cocon sémantique — maillage interne et clusters thématiques",
     screenshotCaption: "Vue 3D interactive : chaque nœud représente une page, chaque lien une connexion sémantique pondérée.",
     videoDescription: "La taille de chaque nœud reflète le trafic organique de la page. La pulsation indique l'évolution récente de ce trafic.",
-    videoPlay: "Lire",
-    videoPause: "Pause",
     transcriptTitle: "Transcription de la démonstration",
     transcriptIntro: "Les moteurs de recherche et les moteurs génératifs n'interprètent pas le contenu visuel d'une vidéo : voici la transcription horodatée de ce qui est montré à l'écran. Les mêmes textes sont disponibles en sous-titres dans le lecteur.",
 
@@ -88,8 +86,6 @@ const i18n = {
     screenshotAlt: "3D semantic cocoon visualization — internal linking and thematic clusters",
     screenshotCaption: "Interactive 3D view: each node represents a page, each link a weighted semantic connection.",
     videoDescription: "Each node size reflects the page's organic traffic. The pulse shows its recent traffic evolution.",
-    videoPlay: "Play",
-    videoPause: "Pause",
     transcriptTitle: "Demo transcript",
     transcriptIntro: "Search engines and generative engines do not interpret the visual content of a video: here is the timestamped transcript of what is shown on screen. The same text is available as subtitles in the player.",
 
@@ -147,8 +143,6 @@ const i18n = {
     screenshotAlt: "Visualización 3D del cocoon semántico — enlazado interno y clusters temáticos",
     screenshotCaption: "Vista 3D interactiva: cada nodo representa una página, cada enlace una conexión semántica ponderada.",
     videoDescription: "El tamaño de cada nodo refleja el tráfico orgánico de la página. El pulso indica su evolución reciente.",
-    videoPlay: "Reproducir",
-    videoPause: "Pausa",
     transcriptTitle: "Transcripción de la demostración",
     transcriptIntro: "Los buscadores y los motores generativos no interpretan el contenido visual de un vídeo: esta es la transcripción con marcas de tiempo de lo que se muestra en pantalla. El mismo texto está disponible como subtítulos en el reproductor.",
 
@@ -260,8 +254,6 @@ export default function FeaturesCocoon() {
             videoLabel: t.screenshotAlt,
             caption: t.screenshotCaption,
             description: t.videoDescription,
-            playLabel: t.videoPlay,
-            pauseLabel: t.videoPause,
             transcriptTitle: t.transcriptTitle,
             transcriptIntro: t.transcriptIntro,
           }}

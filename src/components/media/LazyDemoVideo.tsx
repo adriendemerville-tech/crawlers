@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Play, Pause } from 'lucide-react';
 
 export interface LazyDemoVideoProps {
   webmSrc: string;
@@ -11,8 +10,6 @@ export interface LazyDemoVideoProps {
   label: string;
   /** Pistes WebVTT — la première est activée par défaut. */
   tracks?: Array<{ src: string; srcLang: string; label: string; default?: boolean }>;
-  playLabel: string;
-  pauseLabel: string;
   className?: string;
 }
 
@@ -35,14 +32,11 @@ export function LazyDemoVideo({
   height,
   label,
   tracks = [],
-  playLabel,
-  pauseLabel,
   className,
 }: LazyDemoVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [activated, setActivated] = useState(false);
-  const [playing, setPlaying] = useState(false);
 
   // Charge les sources et pilote la lecture selon la visibilité réelle.
   useEffect(() => {
@@ -72,14 +66,6 @@ export function LazyDemoVideo({
     return () => observer.disconnect();
   }, []);
 
-  const toggle = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    setActivated(true);
-    if (video.paused) void video.play().catch(() => undefined);
-    else video.pause();
-  };
-
   return (
     <div ref={containerRef} className={`relative ${className ?? ''}`}>
       <video
@@ -94,8 +80,6 @@ export function LazyDemoVideo({
         controls
         preload="none"
         aria-label={label}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
       >
         {activated && (
           <>
@@ -115,15 +99,6 @@ export function LazyDemoVideo({
         ))}
       </video>
 
-      <button
-        type="button"
-        onClick={toggle}
-        aria-label={playing ? pauseLabel : playLabel}
-        className="absolute top-3 right-3 flex items-center gap-2 rounded-full border border-white/40 bg-transparent px-3 py-1.5 text-xs text-white backdrop-blur-sm transition-colors hover:border-white"
-      >
-        {playing ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-        {playing ? pauseLabel : playLabel}
-      </button>
     </div>
   );
 }

@@ -12,8 +12,6 @@ export interface DemoVideoSectionLabels {
   caption: string;
   /** Description visible immédiatement sous le lecteur (SEO/GEO indexable). */
   description?: string;
-  playLabel: string;
-  pauseLabel: string;
   transcriptTitle: string;
   transcriptIntro: string;
 }
@@ -57,8 +55,6 @@ export function DemoVideoSection({
             width={video.width}
             height={video.height}
             label={labels.videoLabel}
-            playLabel={labels.playLabel}
-            pauseLabel={labels.pauseLabel}
             tracks={video.captionLangs.map((lang) => ({
               src: video.captionSrc(lang),
               srcLang: lang,
