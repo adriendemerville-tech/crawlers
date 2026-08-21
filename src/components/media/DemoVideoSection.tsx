@@ -67,7 +67,7 @@ export function DemoVideoSection({
             }))}
           />
           {labels.description && (
-            <p className="mt-3 text-center text-sm text-white/80 leading-relaxed">
+            <p className="mt-3 text-center text-xs text-white/80 leading-relaxed">
               {labels.description}
             </p>
           )}
