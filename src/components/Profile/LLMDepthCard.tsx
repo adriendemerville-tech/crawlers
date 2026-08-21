@@ -496,6 +496,14 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
                 ...prev,
                 [evt.model]: { iteration: evt.iteration, found: true, mentioned_as: evt.mentioned_as },
               }));
+            } else if (evt.type === 'error' || evt.type === 'unavailable') {
+              // Panne provider : on l'affiche comme telle au lieu de laisser le
+              // compteur monter jusqu'à 7/7 (faux « non cité »).
+              setStreamProgress(prev => ({
+                ...prev,
+                [evt.model]: { iteration: 0, found: false, status: evt.type as 'error' | 'unavailable' },
+              }));
+
             } else if (evt.type === 'done') {
               const responseData = evt.data as LLMDepthData;
 
