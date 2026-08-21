@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react';
 import { LazyDemoVideo } from './LazyDemoVideo';
 import {
   CAPTION_LANG_LABELS,
