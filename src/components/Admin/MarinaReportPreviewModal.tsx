@@ -21,19 +21,51 @@ export function MarinaReportPreviewModal({ isOpen, onClose, htmlContent, domain 
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  /**
+   * PDF vectoriel imprimé par un Chromium réel côté serveur.
+   * L'ancien export (html2canvas) réimplémentait la mise en page du texte : il
+   * perdait des espaces dans les titres et décentrait le texte des pastilles.
+   * Il ne sert plus que de repli si le rendu serveur échoue.
+   */
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      const { generateSectionBasedPDF } = await import('@/utils/sectionBasedPdfExport');
       const { getReportFilename } = await import('@/utils/reportFilename');
       const filename = getReportFilename(domain, 'marina' as any, 'pdf');
-      await generateSectionBasedPDF({
-        htmlContent,
-        filename,
-        disclaimer: { auditType: 'marina', domain, target: domain, language: 'fr' },
-        onProgress: (done, total) => setPdfProgress({ done, total }),
-      });
 
+      let vectorOk = false;
+      try {
+        const res = await fetch('/api/render-report-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ html: htmlContent }),
+        });
+        if (res.ok && res.headers.get('content-type')?.includes('pdf')) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          URL.revokeObjectURL(url);
+          vectorOk = true;
+        } else {
+          console.warn('[marina-pdf] rendu vectoriel indisponible', res.status);
+        }
+      } catch (e) {
+        console.warn('[marina-pdf] rendu vectoriel injoignable', e);
+      }
+
+      if (!vectorOk) {
+        toast.info('Rendu haute fidélité indisponible, export de secours en cours…');
+        const { generateSectionBasedPDF } = await import('@/utils/sectionBasedPdfExport');
+        await generateSectionBasedPDF({
+          htmlContent,
+          filename,
+          disclaimer: { auditType: 'marina', domain, target: domain, language: 'fr' },
+          onProgress: (done, total) => setPdfProgress({ done, total }),
+        });
+      }
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error('Erreur de génération PDF');

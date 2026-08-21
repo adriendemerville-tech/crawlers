@@ -79,6 +79,7 @@ import { Route as StrategeCocoonRouteImport } from './routes/stratege-cocoon'
 import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as VisibiliteLlmRouteImport } from './routes/visibilite-llm'
 import { Route as ApiExternalAuditImportRouteImport } from './routes/api/external-audit-import'
+import { Route as ApiRenderReportPdfRouteImport } from './routes/api/render-report-pdf'
 import { Route as AppAuditCompareRouteImport } from './routes/app/audit-compare'
 import { Route as AppBotActivityRouteImport } from './routes/app/bot-activity'
 import { Route as AppCocoonRouteImport } from './routes/app/cocoon'
@@ -500,6 +501,11 @@ const ApiExternalAuditImportRoute = ApiExternalAuditImportRouteImport.update({
   path: '/api/external-audit-import',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRenderReportPdfRoute = ApiRenderReportPdfRouteImport.update({
+  id: '/api/render-report-pdf',
+  path: '/api/render-report-pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAuditCompareRoute = AppAuditCompareRouteImport.update({
   id: '/app/audit-compare',
   path: '/app/audit-compare',
@@ -882,6 +888,7 @@ export interface FileRoutesByFullPath {
   '/tarifs': typeof TarifsRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
   '/api/external-audit-import': typeof ApiExternalAuditImportRoute
+  '/api/render-report-pdf': typeof ApiRenderReportPdfRoute
   '/app/audit-compare': typeof AppAuditCompareRoute
   '/app/bot-activity': typeof AppBotActivityRoute
   '/app/cocoon': typeof AppCocoonRoute
@@ -1015,6 +1022,7 @@ export interface FileRoutesByTo {
   '/tarifs': typeof TarifsRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
   '/api/external-audit-import': typeof ApiExternalAuditImportRoute
+  '/api/render-report-pdf': typeof ApiRenderReportPdfRoute
   '/app/audit-compare': typeof AppAuditCompareRoute
   '/app/bot-activity': typeof AppBotActivityRoute
   '/app/cocoon': typeof AppCocoonRoute
@@ -1149,6 +1157,7 @@ export interface FileRoutesById {
   '/tarifs': typeof TarifsRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
   '/api/external-audit-import': typeof ApiExternalAuditImportRoute
+  '/api/render-report-pdf': typeof ApiRenderReportPdfRoute
   '/app/audit-compare': typeof AppAuditCompareRoute
   '/app/bot-activity': typeof AppBotActivityRoute
   '/app/cocoon': typeof AppCocoonRoute
@@ -1284,6 +1293,7 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/visibilite-llm'
     | '/api/external-audit-import'
+    | '/api/render-report-pdf'
     | '/app/audit-compare'
     | '/app/bot-activity'
     | '/app/cocoon'
@@ -1417,6 +1427,7 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/visibilite-llm'
     | '/api/external-audit-import'
+    | '/api/render-report-pdf'
     | '/app/audit-compare'
     | '/app/bot-activity'
     | '/app/cocoon'
@@ -1550,6 +1561,7 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/visibilite-llm'
     | '/api/external-audit-import'
+    | '/api/render-report-pdf'
     | '/app/audit-compare'
     | '/app/bot-activity'
     | '/app/cocoon'
@@ -1684,6 +1696,7 @@ export interface RootRouteChildren {
   TarifsRoute: typeof TarifsRoute
   VisibiliteLlmRoute: typeof VisibiliteLlmRoute
   ApiExternalAuditImportRoute: typeof ApiExternalAuditImportRoute
+  ApiRenderReportPdfRoute: typeof ApiRenderReportPdfRoute
   AppAuditCompareRoute: typeof AppAuditCompareRoute
   AppBotActivityRoute: typeof AppBotActivityRoute
   AppCocoonRoute: typeof AppCocoonRoute
@@ -2239,6 +2252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExternalAuditImportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/render-report-pdf': {
+      id: '/api/render-report-pdf'
+      path: '/api/render-report-pdf'
+      fullPath: '/api/render-report-pdf'
+      preLoaderRoute: typeof ApiRenderReportPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/audit-compare': {
       id: '/app/audit-compare'
       path: '/app/audit-compare'
@@ -2740,6 +2760,7 @@ const rootRouteChildren: RootRouteChildren = {
   TarifsRoute: TarifsRoute,
   VisibiliteLlmRoute: VisibiliteLlmRoute,
   ApiExternalAuditImportRoute: ApiExternalAuditImportRoute,
+  ApiRenderReportPdfRoute: ApiRenderReportPdfRoute,
   AppAuditCompareRoute: AppAuditCompareRoute,
   AppBotActivityRoute: AppBotActivityRoute,
   AppCocoonRoute: AppCocoonRoute,
