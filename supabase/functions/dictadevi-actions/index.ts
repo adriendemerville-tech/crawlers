@@ -2,6 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
 import { DICTADEVI_BASE_URL, DICTADEVI_PUBLIC_RESOURCES, getDictadeviApiKey } from '../_shared/domainUtils.ts'
 import { checkEditorialGuard } from '../_shared/parmenionEditorialGuard.ts'
+import { checkDictadeviTopicAgainstBrief } from '../_shared/dictadeviEditorialBrief.ts'
 import { marked } from 'https://esm.sh/marked@12.0.2'
 
 const DICTADEVI_DOMAIN = 'dictadevi.io'
