@@ -100,8 +100,9 @@ async function buildV3CmsActionsForIktracker(
   try {
     const { data: kws } = await supabase
       .from('keyword_universe')
-      .select('keyword')
+      .select('keyword, search_volume')
       .eq('tracked_site_id', config.tracked_site_id)
+      .order('search_volume', { ascending: false, nullsFirst: false })
       .limit(20);
     siteKeywords = (kws || []).map((k: { keyword: string }) => k.keyword).filter(Boolean);
   } catch { /* keyword universe optionnel */ }
@@ -114,8 +115,8 @@ async function buildV3CmsActionsForIktracker(
   if (resolved.note) console.log(`[AutopilotEngine][V3→cms] ${resolved.note}`);
 
   const title = resolved.subject;
-  const keywords = resolved.keywords;
   const tacticDirective = resolved.source === 'business_keyword' ? (missing?.title || task?.title || null) : null;
+
   const brief = buildEditorialBrief(resolved, {
     rationale: missing?.rationale || null,
     tacticDirective,
