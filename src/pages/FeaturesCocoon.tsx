@@ -11,7 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { PageEditorial } from "@/components/seo/PageEditorial";
 import cocoonGraph from '@/assets/screenshots/crawlers.fr_cocon-semantique-3d-maillage-interne.webp';
-import cocoonVideo from '@/assets/cocoon-3d.mp4.asset.json';
+import cocoonVideoMp4 from '@/assets/cocoon-3d-720.mp4.asset.json';
+import cocoonVideoWebm from '@/assets/cocoon-3d.webm.asset.json';
+import { LazyDemoVideo } from '@/components/media/LazyDemoVideo';
+import { COCOON_VIDEO_TRANSCRIPT } from '@/lib/media/cocoonVideoTranscript';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -28,6 +31,10 @@ const i18n = {
 
     screenshotAlt: "Visualisation 3D du cocon sémantique — maillage interne et clusters thématiques",
     screenshotCaption: "Vue 3D interactive : chaque nœud représente une page, chaque lien une connexion sémantique pondérée.",
+    videoPlay: "Lire",
+    videoPause: "Pause",
+    transcriptTitle: "Transcription de la démonstration",
+    transcriptIntro: "Les moteurs de recherche et les moteurs génératifs n'interprètent pas le contenu visuel d'une vidéo : voici la transcription horodatée de ce qui est montré à l'écran. Les mêmes textes sont disponibles en sous-titres dans le lecteur.",
 
     geoTitle: "Pourquoi le ",
     geoHighlight: "GEO",
@@ -82,6 +89,10 @@ const i18n = {
 
     screenshotAlt: "3D semantic cocoon visualization — internal linking and thematic clusters",
     screenshotCaption: "Interactive 3D view: each node represents a page, each link a weighted semantic connection.",
+    videoPlay: "Play",
+    videoPause: "Pause",
+    transcriptTitle: "Demo transcript",
+    transcriptIntro: "Search engines and generative engines do not interpret the visual content of a video: here is the timestamped transcript of what is shown on screen. The same text is available as subtitles in the player.",
 
     geoTitle: "Why ",
     geoHighlight: "GEO",
@@ -136,6 +147,10 @@ const i18n = {
 
     screenshotAlt: "Visualización 3D del cocoon semántico — enlazado interno y clusters temáticos",
     screenshotCaption: "Vista 3D interactiva: cada nodo representa una página, cada enlace una conexión semántica ponderada.",
+    videoPlay: "Reproducir",
+    videoPause: "Pausa",
+    transcriptTitle: "Transcripción de la demostración",
+    transcriptIntro: "Los buscadores y los motores generativos no interpretan el contenido visual de un vídeo: esta es la transcripción con marcas de tiempo de lo que se muestra en pantalla. El mismo texto está disponible como subtítulos en el reproductor.",
 
     geoTitle: "Por qué el ",
     geoHighlight: "GEO",
@@ -236,32 +251,45 @@ export default function FeaturesCocoon() {
           </div>
         </section>
 
-        {/* Démonstration vidéo : la capture animée remplace la capture fixe,
-            qui reste utilisée comme poster (affiché avant lecture et par les crawlers). */}
-        <section className="py-12 px-4">
+        {/* Démonstration vidéo : chargement différé (IntersectionObserver), poster
+            servi seul tant que la section n'est pas visible, sous-titres WebVTT et
+            transcription texte rendue en SSR pour le SEO / GEO. */}
+        <section id="demo-cocoon" className="py-12 px-4">
           <div className="max-w-[44.8rem] mx-auto">
             <figure className="m-0">
-              <div className="relative rounded-2xl overflow-hidden border border-[#4c1d95]/30 shadow-2xl shadow-[#4c1d95]/10">
-                <video
-                  src={cocoonVideo.url}
-                  poster={cocoonGraph}
-                  width={1440}
-                  height={810}
-                  className="w-full h-auto block"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  aria-label={t.screenshotAlt}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a1e]/60 via-transparent to-transparent pointer-events-none" />
-              </div>
+              <LazyDemoVideo
+                className="rounded-2xl overflow-hidden border border-[#4c1d95]/30 shadow-2xl shadow-[#4c1d95]/10"
+                webmSrc={cocoonVideoWebm.url}
+                mp4Src={cocoonVideoMp4.url}
+                poster={cocoonGraph}
+                width={1280}
+                height={738}
+                label={t.screenshotAlt}
+                playLabel={t.videoPlay}
+                pauseLabel={t.videoPause}
+                tracks={[
+                  { src: '/media/cocoon-3d.fr.vtt', srcLang: 'fr', label: 'Français', default: language === 'fr' },
+                  { src: '/media/cocoon-3d.en.vtt', srcLang: 'en', label: 'English', default: language === 'en' },
+                  { src: '/media/cocoon-3d.es.vtt', srcLang: 'es', label: 'Español', default: language === 'es' },
+                ]}
+              />
               <figcaption className="text-center text-sm text-white/30 mt-4">{t.screenshotCaption}</figcaption>
             </figure>
+
+            <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-6">
+              <h2 className="text-lg font-semibold text-white font-display">{t.transcriptTitle}</h2>
+              <p className="text-sm text-white/50 mt-2">{t.transcriptIntro}</p>
+              <dl className="mt-5 space-y-3">
+                {(COCOON_VIDEO_TRANSCRIPT[language] || COCOON_VIDEO_TRANSCRIPT.fr).map((segment) => (
+                  <div key={segment.time} className="grid grid-cols-[3.5rem_1fr] gap-3">
+                    <dt className="text-xs font-mono text-[#fbbf24]/80 pt-0.5">{segment.time}</dt>
+                    <dd className="text-sm text-white/70 leading-relaxed m-0">{segment.text}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
         </section>
-
 
         {/* GEO vs SEO */}
         <section className="py-20 px-4 border-t border-[hsl(263,70%,15%)]">

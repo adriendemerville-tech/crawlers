@@ -1,0 +1,37 @@
+WEBVTT
+
+NOTE
+Capture d'écran sans piste audio. Ces sous-titres décrivent ce qui est
+montré à l'écran (accessibilité + indexation du contenu de la vidéo).
+
+1
+00:00:00.000 --> 00:00:12.000
+Vue 3D du cocon sémantique : chaque nœud est une page du site, chaque arête un lien interne pondéré.
+
+2
+00:00:12.000 --> 00:00:24.000
+Le code couleur des nœuds reprend le type de page : pilier, satellite, catégorie, conversion ou page technique.
+
+3
+00:00:24.000 --> 00:00:36.000
+La taille du nœud dépend du trafic organique de la page ; la pulsation traduit son évolution récente.
+
+4
+00:00:36.000 --> 00:00:48.000
+Rotation du graphe : les clusters thématiques apparaissent naturellement, séparés par la distance sémantique.
+
+5
+00:00:48.000 --> 00:01:00.000
+Sélection d'un nœud : le panneau affiche l'intention de la page, ses liens entrants et sortants et son ROI prédictif.
+
+6
+00:01:00.000 --> 00:01:12.000
+Les paires en cannibalisation sont mises en évidence : deux pages ciblant la même intention se substituent en SERP.
+
+7
+00:01:12.000 --> 00:01:26.000
+Le mode X-Ray isole le flux de link juice : en or les liens descendants, en violet les liens de remontée vers le pilier.
+
+8
+00:01:26.000 --> 00:01:41.208
+Les prescriptions de maillage se déploient ensuite en un clic vers le CMS connecté, avec l'ancre proposée par le moteur.

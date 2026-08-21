@@ -1,0 +1,37 @@
+WEBVTT
+
+NOTE
+Screen capture with no audio track. These captions describe what is shown
+on screen (accessibility + indexing of the video content).
+
+1
+00:00:00.000 --> 00:00:12.000
+3D view of the semantic cocoon: each node is a page, each edge a weighted internal link.
+
+2
+00:00:12.000 --> 00:00:24.000
+Node colours match the page type: pillar, satellite, category, conversion or technical page.
+
+3
+00:00:24.000 --> 00:00:36.000
+Node size reflects the page's organic traffic; the pulse shows its recent trend.
+
+4
+00:00:36.000 --> 00:00:48.000
+Rotating the graph: thematic clusters emerge naturally, separated by semantic distance.
+
+5
+00:00:48.000 --> 00:01:00.000
+Selecting a node: the panel shows the page intent, inbound and outbound links and predicted ROI.
+
+6
+00:01:00.000 --> 00:01:12.000
+Cannibalising pairs are highlighted: two pages targeting one intent replace each other in the SERP.
+
+7
+00:01:12.000 --> 00:01:26.000
+X-Ray mode isolates link juice flow: gold for descending links, purple for links back to the pillar.
+
+8
+00:01:26.000 --> 00:01:41.208
+Linking prescriptions then deploy in one click to the connected CMS, with the anchor suggested by the engine.
