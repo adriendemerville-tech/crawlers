@@ -767,42 +767,67 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
           </div>
         </div>
 
+        {/* Couverture réelle : les modèles en panne ne sont pas comptés comme « non cité » */}
+        {typeof data.measured_models === 'number' && data.measured_models < data.results.length && (
+          <p className="text-[10px] text-muted-foreground">
+            {t.measuredOn(data.measured_models, data.results.length)}
+          </p>
+        )}
+
         {/* Per-model results */}
         <div className="grid grid-cols-2 gap-2">
           {data.results.map((result) => {
             const isDark = document.documentElement.classList.contains('dark');
             const color = isDark ? iterationHslColorDark(result.iterations) : iterationHslColor(result.iterations);
+            const isBroken = result.status === 'error' || result.status === 'unavailable';
 
             return (
               <div
                 key={result.llm}
-                className="rounded-lg border bg-card p-2.5 space-y-1.5"
+                className={`rounded-lg border bg-card p-2.5 space-y-1.5 ${isBroken ? 'opacity-70 border-dashed' : ''}`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">{result.llm}</span>
-                  {result.found ? (
+                  {isBroken ? (
+                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                  ) : result.found ? (
                     <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
                   ) : (
                     <XCircle className="h-3.5 w-3.5 text-red-400" />
                   )}
                 </div>
-                <div className="flex items-baseline gap-1.5">
-                  <span
-                    className="text-lg font-semibold"
-                    style={{ color }}
-                  >
-                    {result.found ? result.iterations : `${MAX_DISPLAY}+`}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {result.found ? t.found : t.notFound}
-                  </span>
-                </div>
-                {result.found && result.mentioned_as && (
-                  <p className="text-[10px] text-muted-foreground truncate" title={result.mentioned_as}>
-                    → {result.mentioned_as}
-                  </p>
+                {isBroken ? (
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-semibold text-muted-foreground">
+                      {result.status === 'unavailable' ? t.statusUnavailable : t.statusError}
+                      {result.error_status ? ` (${result.error_status})` : ''}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">{t.excludedFromAvg}</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-lg font-semibold" style={{ color }}>
+                        {result.found ? result.iterations : `${MAX_DISPLAY}+`}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {result.found ? t.found : t.notFound}
+                      </span>
+                    </div>
+                    {result.status === 'degraded' && (
+                      <p className="text-[10px] text-muted-foreground truncate" title={result.effective_model}>
+                        {t.statusDegraded}: {result.effective_model}
+                      </p>
+                    )}
+                    {result.found && result.mentioned_as && (
+                      <p className="text-[10px] text-muted-foreground truncate" title={result.mentioned_as}>
+                        → {result.mentioned_as}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
+
             );
           })}
         </div>
