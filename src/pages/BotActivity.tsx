@@ -33,6 +33,8 @@ function safeParseTs(ts: string): Date {
   return d;
 }
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { getDemoBotEntries, DEMO_SITE } from '@/lib/demo/consoleDemoData';
 
 interface BotEntry {
   id: string;
@@ -64,6 +66,7 @@ export default function BotActivityPage() {
   const [selectedTrust, setSelectedTrust] = useState<string>('all');
   const [isLive, setIsLive] = useState(true);
   const [loading, setLoading] = useState(true);
+  const { isDemoMode } = useDemoMode();
 
   const fetchSites = useCallback(async () => {
     if (!user) return;
@@ -71,11 +74,22 @@ export default function BotActivityPage() {
       .from('tracked_sites')
       .select('id, domain')
       .eq('user_id', user.id);
-    if (data) setSites(data);
-  }, [user]);
+    if (data?.length) setSites(data);
+    else if (isDemoMode) setSites([DEMO_SITE]);
+  }, [user, isDemoMode]);
 
   const fetchEntries = useCallback(async () => {
     if (!user || sites.length === 0) return;
+
+    if (isDemoMode) {
+      const site = selectedSite === 'all' ? sites[0] : sites.find(s => s.id === selectedSite) || sites[0];
+      let demo = getDemoBotEntries(site.id, site.domain) as BotEntry[];
+      if (selectedIntent !== 'all') demo = demo.filter(e => getBotIntent(e.bot_name) === selectedIntent);
+      if (selectedTrust !== 'all') demo = demo.filter(e => (e.verification_status || 'unverified') === selectedTrust);
+      setEntries(demo);
+      setLoading(false);
+      return;
+    }
 
     const siteIds = selectedSite === 'all' ? sites.map(s => s.id) : [selectedSite];
     const domainMap = Object.fromEntries(sites.map(s => [s.id, s.domain]));
@@ -108,7 +122,7 @@ export default function BotActivityPage() {
       setEntries(filtered);
     }
     setLoading(false);
-  }, [user, sites, selectedSite, selectedIntent, selectedTrust]);
+  }, [user, sites, selectedSite, selectedIntent, selectedTrust, isDemoMode]);
 
   useEffect(() => { fetchSites(); }, [fetchSites]);
   useEffect(() => { if (sites.length > 0) fetchEntries(); }, [sites, fetchEntries]);

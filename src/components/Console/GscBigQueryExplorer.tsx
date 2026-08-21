@@ -7,7 +7,7 @@
  *   3. Long-tail opportunities — 4+ word queries near page 2
  *   4. CTR gap quick-wins — pages on top 10 with low CTR
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Database, Zap } from 'lucide-react';
 import { toast } from 'sonner';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { getDemoBigQueryResult } from '@/lib/demo/consoleDemoData';
 
 interface Props {
   siteId: string;
@@ -75,9 +77,17 @@ export function GscBigQueryExplorer({ siteId }: Props) {
   const [activeKind, setActiveKind] = useState<QueryKind>('top_queries_30d');
   const [results, setResults] = useState<Record<string, QueryResult | undefined>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const { isDemoMode } = useDemoMode();
 
   const runQuery = async (kind: QueryKind) => {
     setLoading((s) => ({ ...s, [kind]: true }));
+    if (isDemoMode) {
+      // Mode démo : données fictives en mémoire, aucun appel BigQuery.
+      await new Promise((r) => setTimeout(r, 400));
+      setResults((s) => ({ ...s, [kind]: getDemoBigQueryResult(kind) as QueryResult }));
+      setLoading((s) => ({ ...s, [kind]: false }));
+      return;
+    }
     try {
       const { data, error } = await supabase.functions.invoke('gsc-bigquery-query', {
         body: { action: 'query', site_id: siteId, kind, params: { limit: 200 } },
@@ -92,6 +102,12 @@ export function GscBigQueryExplorer({ siteId }: Props) {
       setLoading((s) => ({ ...s, [kind]: false }));
     }
   };
+
+  useEffect(() => {
+    if (!isDemoMode) return;
+    if (results[activeKind] || loading[activeKind]) return;
+    runQuery(activeKind);
+  }, [isDemoMode, activeKind, results, loading]);
 
   const renderTable = (kind: QueryKind, result: QueryResult | undefined) => {
     if (!result) {
