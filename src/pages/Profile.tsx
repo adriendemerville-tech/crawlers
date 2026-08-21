@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from '@/lib/router-compat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -64,6 +65,7 @@ function ProfileContent() {
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [openApiPanel, setOpenApiPanel] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Sync tab with URL params
   useEffect(() => {
@@ -72,6 +74,32 @@ function ProfileContent() {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
+
+  // Load sidebar collapsed preference
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('user_console_preferences')
+      .select('sidebar_collapsed')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && typeof data.sidebar_collapsed === 'boolean') {
+          setSidebarCollapsed(data.sidebar_collapsed);
+        }
+      });
+  }, [user]);
+
+  const handleSidebarCollapsedChange = (collapsed: boolean) => {
+    setSidebarCollapsed(collapsed);
+    if (!user) return;
+    supabase
+      .from('user_console_preferences')
+      .upsert({ user_id: user.id, sidebar_collapsed: collapsed }, { onConflict: 'user_id' })
+      .then(({ error }) => {
+        if (error) toast.error('Préférence non enregistrée', { description: error.message });
+      });
+  };
 
   const handleTabChange = (tab: string) => {
     if (tab === 'tracking-api') {
@@ -196,9 +224,13 @@ function ProfileContent() {
               setSelectedSiteId(siteId);
               setSelectedDomain(domain);
             }}
-            
+            collapsed={sidebarCollapsed}
+            onCollapsedChange={handleSidebarCollapsedChange}
           />
-          <main className={cn('flex-1 min-w-0 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-2 w-full max-w-7xl xl:max-w-[1600px] 2xl:max-w-[1920px]', !isMobile && 'ml-[200px]')}>
+          <main className={cn(
+            'flex-1 min-w-0 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-2 w-full max-w-7xl xl:max-w-[1600px] 2xl:max-w-[1920px]',
+            !isMobile && (sidebarCollapsed ? 'ml-14' : 'ml-[200px]'),
+          )}>
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 10 }}

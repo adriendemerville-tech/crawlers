@@ -11,7 +11,7 @@ import {
   Settings, FileText, CheckSquare, Wallet, Lock, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
   Shield, Code2, ChevronDown, Search, Sparkles, Database, Link2,
-  Plus, Loader2, Check, X, GripVertical,
+  Plus, Loader2, Check, X, GripVertical, PanelLeftClose, PanelLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConsoleViewMode } from '@/contexts/ConsoleViewModeContext';
@@ -58,9 +58,11 @@ interface ConsoleSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onSiteSelect?: (siteId: string | null, domain: string | null) => void;
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
-export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: ConsoleSidebarProps) {
+export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed = false, onCollapsedChange }: ConsoleSidebarProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const { isAgencyPro, planType } = useCredits();
@@ -305,20 +307,22 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     const isLocked = item.proOnly && !isProUser;
     const Icon = item.icon as LucideIcon;
     const href = item.href ?? `/app/console?tab=${item.value}`;
-    const canDrag = reorderable && !isMobile;
+    const canDrag = reorderable && !isMobile && !collapsed;
 
     const content = (
       <>
-        <Icon className={cn('h-4 w-4 shrink-0', item.value === 'wallet' && 'text-yellow-500')} />
-        <span className="flex-1 truncate">
-          {item.beta && <span className="text-muted-foreground text-[9px] font-normal mr-1 uppercase">beta</span>}
-          {item.value === 'wallet' ? (
-            <span className="font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
-              {item.label}
-            </span>
-          ) : item.label}
-        </span>
-        {isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
+        <Icon className={cn('h-4 w-4 shrink-0', item.value === 'wallet' && 'text-yellow-500', collapsed && 'mx-auto')} />
+        {!collapsed && (
+          <span className="flex-1 truncate">
+            {item.beta && <span className="text-muted-foreground text-[9px] font-normal mr-1 uppercase">beta</span>}
+            {item.value === 'wallet' ? (
+              <span className="font-semibold bg-gradient-to-r from-[hsl(262,83%,58%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
+                {item.label}
+              </span>
+            ) : item.label}
+          </span>
+        )}
+        {!collapsed && isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
         {canDrag && !isLocked && (
           <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors" />
         )}
@@ -327,6 +331,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
     const className = cn(
       'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-normal transition-colors text-left',
+      collapsed && 'justify-center px-2',
       isActive
         ? 'bg-accent/60 text-foreground font-medium'
         : 'text-foreground/75 hover:text-foreground hover:bg-accent/30',
@@ -391,15 +396,38 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
 
   return (
     <aside className={cn(
-      'border-border/50 flex flex-col',
+      'border-border/50 flex flex-col transition-all duration-200',
       isMobile
         ? 'w-full border-b border-r-0 pb-2 bg-background/50'
         // Desktop : fixed pleine hauteur — fond opaque pour ne pas laisser transparaître le footer dessous
-        : 'fixed top-0 left-0 w-[200px] h-screen border-r overflow-y-auto z-30 bg-background',
+        : cn(
+            'fixed top-0 left-0 h-screen border-r overflow-y-auto z-30 bg-background',
+            collapsed ? 'w-14' : 'w-[200px]',
+          ),
     )}>
+      {/* Collapse toggle — toujours visible en haut */}
+      {!isMobile && (
+        <div className={cn('flex items-center', collapsed ? 'justify-center px-2 pt-4 pb-2' : 'justify-end px-2 pt-3 pb-1')}>
+          <button
+            type="button"
+            onClick={() => onCollapsedChange?.(!collapsed)}
+            aria-pressed={collapsed}
+            title={collapsed ? 'Déplier la sidebar' : 'Replier la sidebar'}
+            className={cn(
+              'flex items-center justify-center rounded-md transition-colors border',
+              collapsed
+                ? 'h-8 w-8 border-foreground/20 text-foreground hover:bg-accent/30'
+                : 'h-7 w-7 border-foreground/20 text-foreground hover:bg-accent/30',
+            )}
+          >
+            {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </button>
+        </div>
+      )}
+
       {/* Domain selector */}
-      {!isMobile && sites.length > 0 && (
-        <div className="px-2 pt-6 pb-1 space-y-1">
+      {!isMobile && !collapsed && sites.length > 0 && (
+        <div className="px-2 pt-2 pb-1 space-y-1">
           <div className="relative">
             <button
               onClick={() => setSelectorOpen(!selectorOpen)}
