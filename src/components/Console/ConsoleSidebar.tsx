@@ -396,15 +396,38 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
 
   return (
     <aside className={cn(
-      'border-border/50 flex flex-col',
+      'border-border/50 flex flex-col transition-all duration-200',
       isMobile
         ? 'w-full border-b border-r-0 pb-2 bg-background/50'
         // Desktop : fixed pleine hauteur — fond opaque pour ne pas laisser transparaître le footer dessous
-        : 'fixed top-0 left-0 w-[200px] h-screen border-r overflow-y-auto z-30 bg-background',
+        : cn(
+            'fixed top-0 left-0 h-screen border-r overflow-y-auto z-30 bg-background',
+            collapsed ? 'w-14' : 'w-[200px]',
+          ),
     )}>
+      {/* Collapse toggle — toujours visible en haut */}
+      {!isMobile && (
+        <div className={cn('flex items-center', collapsed ? 'justify-center px-2 pt-4 pb-2' : 'justify-end px-2 pt-3 pb-1')}>
+          <button
+            type="button"
+            onClick={() => onCollapsedChange?.(!collapsed)}
+            aria-pressed={collapsed}
+            title={collapsed ? 'Déplier la sidebar' : 'Replier la sidebar'}
+            className={cn(
+              'flex items-center justify-center rounded-md transition-colors border',
+              collapsed
+                ? 'h-8 w-8 border-foreground/20 text-foreground hover:bg-accent/30'
+                : 'h-7 w-7 border-foreground/20 text-foreground hover:bg-accent/30',
+            )}
+          >
+            {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </button>
+        </div>
+      )}
+
       {/* Domain selector */}
-      {!isMobile && sites.length > 0 && (
-        <div className="px-2 pt-6 pb-1 space-y-1">
+      {!isMobile && !collapsed && sites.length > 0 && (
+        <div className="px-2 pt-2 pb-1 space-y-1">
           <div className="relative">
             <button
               onClick={() => setSelectorOpen(!selectorOpen)}
