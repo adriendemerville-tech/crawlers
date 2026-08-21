@@ -40,9 +40,11 @@ interface LLMDepthData {
   domain: string;
   avg_depth: number | null;
   results: DepthResult[];
+  measured_models?: number;
   prompt_strategy: string;
   measured_at: string;
   error_code?: string;
+
 }
 
 interface SiteContext {
