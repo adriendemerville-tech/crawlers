@@ -75,6 +75,59 @@ export function LazyDemoVideo({
     return () => observer.disconnect();
   }, []);
 
+  // Les pistes WebVTT restent chargées (accessibilité, SEO) mais ne sont
+  // jamais peintes sur l'image : le texte de la cue active est remonté au
+  // parent, qui l'affiche sous le lecteur.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !onCaptionChange) return;
+
+    const textTracks = video.textTracks;
+
+    const pickTrack = () => {
+      let target: TextTrack | null = null;
+      for (let i = 0; i < textTracks.length; i += 1) {
+        const track = textTracks[i]!;
+        track.mode = 'hidden';
+        if (!captionLang || track.language === captionLang) {
+          if (!target) target = track;
+        }
+      }
+      return target;
+    };
+
+    let active = pickTrack();
+
+    const handleCueChange = () => {
+      const cues = active?.activeCues;
+      if (!cues || cues.length === 0) {
+        onCaptionChange('');
+        return;
+      }
+      const text = Array.from(cues)
+        .map((cue) => (cue as VTTCue).text ?? '')
+        .join(' ')
+        .replace(/<[^>]+>/g, '')
+        .trim();
+      onCaptionChange(text);
+    };
+
+    const handleAddTrack = () => {
+      active?.removeEventListener('cuechange', handleCueChange);
+      active = pickTrack();
+      active?.addEventListener('cuechange', handleCueChange);
+      handleCueChange();
+    };
+
+    active?.addEventListener('cuechange', handleCueChange);
+    textTracks.addEventListener?.('addtrack', handleAddTrack);
+
+    return () => {
+      active?.removeEventListener('cuechange', handleCueChange);
+      textTracks.removeEventListener?.('addtrack', handleAddTrack);
+    };
+  }, [captionLang, onCaptionChange]);
+
   return (
     <div ref={containerRef} className={`relative ${className ?? ''}`}>
       <video
