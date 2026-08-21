@@ -50,20 +50,48 @@ interface EditorialStats {
   seo_alerts: number;
 }
 
-function countWords(text?: string | null): number {
-  if (!text) return 0;
+// CMS payloads are not consistently typed: content can arrive as a string,
+// as { rendered | html | value | body | text }, or as an array of blocks.
+// Coerce defensively — never assume String methods exist.
+function toText(value: unknown, depth = 0): string {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (depth > 3) return '';
+  if (Array.isArray(value)) return value.map((v) => toText(v, depth + 1)).join(' ');
+  if (typeof value === 'object') {
+    const o = value as Record<string, unknown>;
+    for (const k of ['rendered', 'html', 'html_content', 'value', 'body', 'content', 'text', 'raw']) {
+      if (k in o) {
+        const t = toText(o[k], depth + 1);
+        if (t) return t;
+      }
+    }
+    return Object.values(o).map((v) => toText(v, depth + 1)).join(' ');
+  }
+  return '';
+}
+
+function countWords(text?: unknown): number {
+  const raw = toText(text);
+  if (!raw) return 0;
   // Strip HTML tags
-  const clean = text.replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/gi, ' ');
+  const clean = raw.replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/gi, ' ');
   return clean.split(/\s+/).filter(w => w.length > 0).length;
 }
 
-function hasSubtitle(text?: string | null): boolean {
-  if (!text) return false;
-  return /<h[2-6][^>]*>/i.test(text);
+function hasSubtitle(text?: unknown): boolean {
+  const raw = toText(text);
+  if (!raw) return false;
+  return /<h[2-6][^>]*>/i.test(raw);
 }
 
+
 function computeStats(articles: Article[]): EditorialStats {
-  const published = articles.filter(a => a.status === 'published' || a.status === 'publish');
+  const published = articles.filter(a => {
+    const s = toText(a.status).toLowerCase();
+    return s === 'published' || s === 'publish' || s === 'live' || s === '';
+  });
   
   const authorsSet = new Set<string>();
   const topicsMap = new Map<string, number>();
@@ -78,7 +106,7 @@ function computeStats(articles: Article[]): EditorialStats {
   const dates: number[] = [];
 
   for (const a of published) {
-    const body = a.body || a.content || '';
+    const body = toText(a.body) || toText(a.content);
     const words = countWords(body);
     totalWords += words;
 
@@ -89,15 +117,17 @@ function computeStats(articles: Article[]): EditorialStats {
     if (!a.meta_description && !a.excerpt) { missingMeta++; seoAlerts++; }
     if (!hasSubtitle(body)) { missingSubtitle++; seoAlerts++; }
 
-    const author = a.author || a.author_id || 'unknown';
+    const author = toText(a.author) || toText(a.author_id) || 'unknown';
     authorsSet.add(author);
 
-    const cats = a.categories || (a.category ? [a.category] : []) as string[];
-    for (const c of cats) {
+    const rawCats = Array.isArray(a.categories) ? a.categories : (a.category ? [a.category] : []);
+    for (const rc of rawCats) {
+      const c = toText(rc).trim();
       if (c && c !== 'Uncategorized' && c !== 'Non classé') {
         topicsMap.set(c, (topicsMap.get(c) || 0) + 1);
       }
     }
+
 
     const dateStr = a.published_at || a.created_at;
     if (dateStr) dates.push(new Date(dateStr).getTime());
@@ -461,7 +491,7 @@ Deno.serve(handleRequest(async (req) => {
 
   // Build a lightweight article list for the UI (title, status, type, url, date)
   const list = articles.map((a) => {
-    const rawStatus = (a.status || 'published').toLowerCase();
+    const rawStatus = (toText(a.status) || 'published').toLowerCase();
     const normalizedStatus =
       rawStatus === 'publish' || rawStatus === 'published' || rawStatus === 'live'
         ? 'published'
@@ -470,22 +500,25 @@ Deno.serve(handleRequest(async (req) => {
         : rawStatus === 'archived' || rawStatus === 'trash'
         ? 'archived'
         : rawStatus;
-    const isPage = (a.categories || []).some((c) => c === 'Page' || c === 'Landing Page');
+    const cats = (Array.isArray(a.categories) ? a.categories : []).map((c) => toText(c));
+    const isPage = cats.some((c) => c === 'Page' || c === 'Landing Page');
+    const slug = toText(a.slug) || null;
     return {
-      title: a.title || '(sans titre)',
-      slug: a.slug || null,
+      title: toText(a.title) || '(sans titre)',
+      slug,
       status: normalizedStatus,
       type: isPage ? 'page' : 'post',
       published_at: a.published_at || a.created_at || null,
-      url: a.slug
+
+      url: slug
         ? domain.includes('crawlers')
           ? isPage
-            ? `https://crawlers.fr/landing/${a.slug}`
-            : `https://crawlers.fr/blog/${a.slug}`
+            ? `https://crawlers.fr/landing/${slug}`
+            : `https://crawlers.fr/blog/${slug}`
           : domain.includes('iktracker')
           ? isPage
-            ? `https://iktracker.fr/${a.slug}`
-            : `https://iktracker.fr/blog/${a.slug}`
+            ? `https://iktracker.fr/${slug}`
+            : `https://iktracker.fr/blog/${slug}`
           : null
         : null,
     };
