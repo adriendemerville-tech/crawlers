@@ -197,11 +197,14 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - `marketplace_social_assets` — compte Instagram, formats, métriques, prix calculé.
 - `marketplace_needs` — besoin acheteur dérivé de `architect_workbench` / E-E-A-T.
 - `marketplace_matches` — couples besoin↔actif, `compat_score`, statut de notification.
-- `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`.
+- `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`, `deal_type` (`cash` | `link_for_link` | `link_for_story` | `story_for_story`).
+- `marketplace_exchanges` — jambes d'un troc (2 ou 3 pour une triangulation), valeur estimée par jambe, solde en crédits, commission 10 %.
+- `marketplace_ownership_claims` — déclaration de responsabilité vendeur : horodatage, IP, texte accepté.
 - `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
 - `marketplace_feedback` — commentaires et motifs par révision.
 - `marketplace_verifications` — contrôles récurrents (verdict lien, publication social).
 - `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers.
+
 
 Écritures de prix, de commission et de statut : **server functions uniquement**
 (`src/lib/marketplace/*.functions.ts`), jamais depuis le client.
