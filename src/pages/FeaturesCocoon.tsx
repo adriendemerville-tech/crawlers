@@ -259,6 +259,7 @@ export default function FeaturesCocoon() {
           labels={{
             videoLabel: t.screenshotAlt,
             caption: t.screenshotCaption,
+            description: t.videoDescription,
             playLabel: t.videoPlay,
             pauseLabel: t.videoPause,
             transcriptTitle: t.transcriptTitle,
