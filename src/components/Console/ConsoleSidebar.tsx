@@ -548,7 +548,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
           })
         ) : (
           <>
-            {items.map(renderItem)}
+            {items.map(item => renderItem(item, true))}
             {/* Pro Agency, Paramètres, Administration : remontés directement sous API,
                 séparés par un mince filet pour rester visuellement distincts */}
             <div className="my-1 border-t border-border/40" />
