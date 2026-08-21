@@ -9,6 +9,8 @@ export interface DemoVideoSectionLabels {
   /** Équivalent du `alt` : décrit le contenu visuel de la capture. */
   videoLabel: string;
   caption: string;
+  /** Description visible immédiatement sous le lecteur (SEO/GEO indexable). */
+  description?: string;
   playLabel: string;
   pauseLabel: string;
   transcriptTitle: string;

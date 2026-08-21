@@ -28,6 +28,7 @@ const i18n = {
 
     screenshotAlt: "Visualisation 3D du cocon sémantique — maillage interne et clusters thématiques",
     screenshotCaption: "Vue 3D interactive : chaque nœud représente une page, chaque lien une connexion sémantique pondérée.",
+    videoDescription: "La taille de chaque nœud reflète le trafic organique de la page. La pulsation indique l'évolution récente de ce trafic.",
     videoPlay: "Lire",
     videoPause: "Pause",
     transcriptTitle: "Transcription de la démonstration",
@@ -86,6 +87,7 @@ const i18n = {
 
     screenshotAlt: "3D semantic cocoon visualization — internal linking and thematic clusters",
     screenshotCaption: "Interactive 3D view: each node represents a page, each link a weighted semantic connection.",
+    videoDescription: "Each node size reflects the page's organic traffic. The pulse shows its recent traffic evolution.",
     videoPlay: "Play",
     videoPause: "Pause",
     transcriptTitle: "Demo transcript",
@@ -144,6 +146,7 @@ const i18n = {
 
     screenshotAlt: "Visualización 3D del cocoon semántico — enlazado interno y clusters temáticos",
     screenshotCaption: "Vista 3D interactiva: cada nodo representa una página, cada enlace una conexión semántica ponderada.",
+    videoDescription: "El tamaño de cada nodo refleja el tráfico orgánico de la página. El pulso indica su evolución reciente.",
     videoPlay: "Reproducir",
     videoPause: "Pausa",
     transcriptTitle: "Transcripción de la demostración",
