@@ -10,10 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { PageEditorial } from "@/components/seo/PageEditorial";
-import cocoonVideoMp4 from '@/assets/cocoon-3d-720.mp4.asset.json';
-import cocoonVideoWebm from '@/assets/cocoon-3d.webm.asset.json';
-import { LazyDemoVideo } from '@/components/media/LazyDemoVideo';
-import { COCOON_VIDEO_TRANSCRIPT } from '@/lib/media/cocoonVideoTranscript';
+import { DemoVideoSection } from '@/components/media/DemoVideoSection';
+import { COCOON_DEMO_VIDEO } from '@/lib/media/demoVideos.registry';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -250,45 +248,20 @@ export default function FeaturesCocoon() {
           </div>
         </section>
 
-        {/* Démonstration vidéo : chargement différé (IntersectionObserver), poster
-            servi seul tant que la section n'est pas visible, sous-titres WebVTT et
-            transcription texte rendue en SSR pour le SEO / GEO. */}
-        <section id="demo-cocoon" className="py-12 px-4">
-          <div className="max-w-[44.8rem] mx-auto">
-            <figure className="m-0">
-              <LazyDemoVideo
-                className="rounded-2xl overflow-hidden border border-[#4c1d95]/30 shadow-2xl shadow-[#4c1d95]/10"
-                webmSrc={cocoonVideoWebm.url}
-                mp4Src={cocoonVideoMp4.url}
-                poster="/media/cocoon-3d-poster.webp"
-                width={1280}
-                height={738}
-                label={t.screenshotAlt}
-                playLabel={t.videoPlay}
-                pauseLabel={t.videoPause}
-                tracks={[
-                  { src: '/media/cocoon-3d.fr.vtt', srcLang: 'fr', label: 'Français', default: language === 'fr' },
-                  { src: '/media/cocoon-3d.en.vtt', srcLang: 'en', label: 'English', default: language === 'en' },
-                  { src: '/media/cocoon-3d.es.vtt', srcLang: 'es', label: 'Español', default: language === 'es' },
-                ]}
-              />
-              <figcaption className="text-center text-sm text-white/30 mt-4">{t.screenshotCaption}</figcaption>
-            </figure>
-
-            <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-6">
-              <h2 className="text-lg font-semibold text-white font-display">{t.transcriptTitle}</h2>
-              <p className="text-sm text-white/50 mt-2">{t.transcriptIntro}</p>
-              <dl className="mt-5 space-y-3">
-                {(COCOON_VIDEO_TRANSCRIPT[language] || COCOON_VIDEO_TRANSCRIPT.fr).map((segment) => (
-                  <div key={segment.time} className="grid grid-cols-[3.5rem_1fr] gap-3">
-                    <dt className="text-xs font-mono text-[#fbbf24]/80 pt-0.5">{segment.time}</dt>
-                    <dd className="text-sm text-white/70 leading-relaxed m-0">{segment.text}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </div>
-        </section>
+        {/* Démonstration vidéo — section normalisée : lecteur différé, sous-titres
+            WebVTT et transcription SSR. Voir src/lib/media/demoVideo.ts. */}
+        <DemoVideoSection
+          video={COCOON_DEMO_VIDEO}
+          language={language}
+          labels={{
+            videoLabel: t.screenshotAlt,
+            caption: t.screenshotCaption,
+            playLabel: t.videoPlay,
+            pauseLabel: t.videoPause,
+            transcriptTitle: t.transcriptTitle,
+            transcriptIntro: t.transcriptIntro,
+          }}
+        />
 
         {/* GEO vs SEO */}
         <section className="py-20 px-4 border-t border-[hsl(263,70%,15%)]">
