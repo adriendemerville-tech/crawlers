@@ -86,8 +86,6 @@ const i18n = {
     screenshotAlt: "3D semantic cocoon visualization — internal linking and thematic clusters",
     screenshotCaption: "Interactive 3D view: each node represents a page, each link a weighted semantic connection.",
     videoDescription: "Each node size reflects the page's organic traffic. The pulse shows its recent traffic evolution.",
-    videoPlay: "Play",
-    videoPause: "Pause",
     transcriptTitle: "Demo transcript",
     transcriptIntro: "Search engines and generative engines do not interpret the visual content of a video: here is the timestamped transcript of what is shown on screen. The same text is available as subtitles in the player.",
 
