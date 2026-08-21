@@ -346,14 +346,14 @@ function NodeSphere({
         </mesh>
       )}
 
-      {/* ── Non-Home: Silver-white halo ── */}
+      {/* ── Non-Home: halo teinté par le type de page ── */}
       {!node.isHome && !isGhost && (
         <mesh>
           <sphereGeometry args={[r * 1.55, 24, 24]} />
           <meshBasicMaterial
-            color="#e0e8f0"
+            color={color}
             transparent
-            opacity={0.07}
+            opacity={0.12}
             depthWrite={false}
             side={THREE.BackSide}
           />
@@ -379,11 +379,11 @@ function NodeSphere({
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={isGhost ? 0.3 : node.isHome ? 0.85 : 0.35}
+          opacity={isGhost ? 0.3 : node.isHome ? 0.85 : 0.5}
         />
       </mesh>
 
-      {/* Core sphere — solid opaque fill with strong emissive glow for color visibility */}
+      {/* Core sphere — teinte non métallique pour préserver le code couleur par type */}
       <mesh
         ref={meshRef}
         onPointerOver={(e) => { e.stopPropagation(); onPointerOver(); }}
@@ -394,26 +394,27 @@ function NodeSphere({
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={node.isHome ? emissiveIntensity : emissiveIntensity * 0.8}
+          emissiveIntensity={node.isHome ? emissiveIntensity : emissiveIntensity * 0.9}
           transparent
-          opacity={isGhost ? 0.08 : node.isHome ? 0.9 : 0.85}
-          roughness={node.isHome ? 0.15 : 0.25}
-          metalness={node.isHome ? 0.5 : 0.4}
+          opacity={isGhost ? 0.08 : node.isHome ? 0.95 : 1}
+          roughness={node.isHome ? 0.4 : 0.55}
+          metalness={0}
         />
       </mesh>
 
-      {/* Inner bright core */}
+      {/* Inner bright core — teinté, pour ne pas blanchir la couleur du type */}
       {!isGhost && (
         <mesh>
-          <sphereGeometry args={[r * (node.isHome ? 0.35 : 0.5), 16, 16]} />
+          <sphereGeometry args={[r * (node.isHome ? 0.35 : 0.42), 16, 16]} />
           <meshBasicMaterial
-            color="#ffffff"
+            color={node.isHome ? "#ffffff" : color}
             transparent
-            opacity={node.isHome ? 0.5 : 0.2}
+            opacity={node.isHome ? 0.5 : 0.35}
             depthWrite={false}
           />
         </mesh>
       )}
+
 
       {(isSelected || isHovered) && (
         <Billboard position={[0, -r - 1.5, 0]}>
