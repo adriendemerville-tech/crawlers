@@ -19,6 +19,8 @@ interface ConversationTurn {
   response_summary: string;
 }
 
+type ModelStatus = 'ok' | 'degraded' | 'error' | 'unavailable';
+
 interface DepthResult {
   llm: string;
   model: string;
@@ -27,7 +29,11 @@ interface DepthResult {
   mentioned_as: string | null;
   conversation_summary: string;
   angles_tested: string[];
+  status?: ModelStatus;
+  effective_model?: string;
+  error_status?: number;
 }
+
 
 interface LLMDepthData {
   brand: string;
