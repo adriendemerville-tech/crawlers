@@ -269,32 +269,32 @@ export function Header() {
         {!isProfilePage && isHomePage && (
           <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
             <Link to="/features">
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
+              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
                 Features
               </Button>
             </Link>
             <Link to="/tarifs">
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
+              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
                 {language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}
               </Button>
             </Link>
             <Link to="/audit-expert">
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
+              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
                 Audit
               </Button>
             </Link>
             <Link to="/eeat">
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
+              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
                 E-E-A-T
               </Button>
             </Link>
             <Link to="/app/ranking-serp">
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
+              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
                 SERPs
               </Button>
             </Link>
             <Link to={user ? "/developers" : "/developers/login"}>
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
+              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
                 Platform API
               </Button>
             </Link>
@@ -440,27 +440,27 @@ export function Header() {
               {isHomePage ? (
                 <>
                   <Link to="/features">
-                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground hover:bg-muted/50">
                       Features
                     </Button>
                   </Link>
                   <Link to="/tarifs">
-                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground hover:bg-muted/50">
                       {language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}
                     </Button>
                   </Link>
                   <Link to="/audit-expert">
-                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-medium border hover:bg-muted/50 ${isAuditExpertPage ? 'text-primary border-primary/60 bg-primary/10' : 'text-foreground border-foreground/25 hover:border-foreground/60'}`}>
+                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-medium hover:bg-muted/50 ${isAuditExpertPage ? 'text-primary bg-primary/10' : 'text-foreground'}`}>
                       Audit
                     </Button>
                   </Link>
                   <Link to="/eeat">
-                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground hover:bg-muted/50">
                       E-E-A-T
                     </Button>
                   </Link>
                   <Link to="/app/ranking-serp">
-                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground border border-foreground/25 hover:border-foreground/60 hover:bg-muted/50">
+                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground hover:bg-muted/50">
                       SERPs
                     </Button>
                   </Link>
@@ -605,7 +605,7 @@ export function Header() {
             ) : (
               <div className="flex items-center gap-1.5">
                 <Link to="/auth" aria-label={t.login}>
-                  <Button variant="outline" size="sm" className="gap-2" aria-label={t.login}>
+                  <Button variant="ghost" size="sm" className="gap-2 text-foreground hover:bg-muted/50" aria-label={t.login}>
                     <LogIn className="h-4 w-4" aria-hidden="true" />
                     <span className="hidden sm:inline">{t.login}</span>
                   </Button>
