@@ -1,5 +1,6 @@
 import { useEffect, lazy, Suspense, useState, Component, ErrorInfo, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useNavigate, useSearchParams } from '@/lib/router-compat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from 'framer-motion';
@@ -52,6 +53,7 @@ function ProfileContent() {
   const t = translations[language as keyof typeof translations] || translations.fr;
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [simulatedDataEnabled, setSimulatedDataEnabled] = useState(true);
+  const { isDemoMode } = useDemoMode();
   const [gscBigQueryHidden, setGscBigQueryHidden] = useState(false);
   const [showGoogleOnboarding, setShowGoogleOnboarding] = useState(false);
   const isMobile = useIsMobile();
@@ -159,7 +161,7 @@ function ProfileContent() {
       case 'sea-seo': return isProUser ? <SeaSeoBridgeTab /> : null;
       case 'indexation': return <IndexationMonitor externalSiteId={selectedSiteId} externalDomain={selectedDomain} />;
       case 'gsc-bigquery': return isProUser && (!gscBigQueryHidden || isAdmin) ? <GscBigQueryPanel /> : null;
-      case 'gmb': return <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled} />;
+      case 'gmb': return <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled || isDemoMode} />;
       case 'reports-tab': return isProUser ? <MyReportsTab /> : null;
       case 'bundle': return isAdmin ? <BundleOptionTab /> : null;
       case 'netlinking': return <Netlinking />;
