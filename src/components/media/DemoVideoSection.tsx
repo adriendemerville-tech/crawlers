@@ -12,8 +12,6 @@ export interface DemoVideoSectionLabels {
   caption: string;
   /** Description visible immédiatement sous le lecteur (SEO/GEO indexable). */
   description?: string;
-  playLabel: string;
-  pauseLabel: string;
   transcriptTitle: string;
   transcriptIntro: string;
 }
