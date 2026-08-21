@@ -10,6 +10,13 @@ export interface LazyDemoVideoProps {
   label: string;
   /** Pistes WebVTT — la première est activée par défaut. */
   tracks?: Array<{ src: string; srcLang: string; label: string; default?: boolean }>;
+  /**
+   * Langue de la piste dont les cues doivent être remontées au parent pour un
+   * affichage HTML **sous** le lecteur (aucun texte n'est peint sur l'image).
+   */
+  captionLang?: string;
+  /** Reçoit le texte de la cue active (chaîne vide entre deux cues). */
+  onCaptionChange?: (text: string) => void;
   className?: string;
 }
 
