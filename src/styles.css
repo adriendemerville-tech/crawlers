@@ -1,6 +1,4 @@
-/* Critical font only — Inter for body text (font-display: swap via fontsource) */
-@import '@fontsource-variable/inter/wght.css';
-
+/* Critical font — Inter (latin subset) served from /public so it can be preloaded */
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
