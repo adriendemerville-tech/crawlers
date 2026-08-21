@@ -77,6 +77,11 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
   const [addHover, setAddHover] = useState(false);
   const [newDomain, setNewDomain] = useState('');
   const [adding, setAdding] = useState(false);
+  // Ordre personnalisé des modules (drag & drop), persisté en base
+  const [sidebarOrder, setSidebarOrder] = useState<string[]>([]);
+  const [dragValue, setDragValue] = useState<string | null>(null);
+  const [dragOverValue, setDragOverValue] = useState<string | null>(null);
+
 
   const handleAddDomain = async (e?: React.FormEvent) => {
     e?.preventDefault();
