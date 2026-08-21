@@ -510,15 +510,15 @@ Deno.serve(handleRequest(async (req) => {
       type: isPage ? 'page' : 'post',
       published_at: a.published_at || a.created_at || null,
 
-      url: a.slug
+      url: slug
         ? domain.includes('crawlers')
           ? isPage
-            ? `https://crawlers.fr/landing/${a.slug}`
-            : `https://crawlers.fr/blog/${a.slug}`
+            ? `https://crawlers.fr/landing/${slug}`
+            : `https://crawlers.fr/blog/${slug}`
           : domain.includes('iktracker')
           ? isPage
-            ? `https://iktracker.fr/${a.slug}`
-            : `https://iktracker.fr/blog/${a.slug}`
+            ? `https://iktracker.fr/${slug}`
+            : `https://iktracker.fr/blog/${slug}`
           : null
         : null,
     };
