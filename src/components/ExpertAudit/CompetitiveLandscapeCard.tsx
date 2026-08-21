@@ -45,15 +45,21 @@ function CompetitorCard({
               {role}
             </Badge>
           </div>
-          <div className="flex items-center justify-between gap-2">
-            <h4 className="font-semibold text-foreground">
+          <div className="min-w-0">
+            <h4 className="font-semibold text-foreground break-words">
               {actor.name}
             </h4>
-            <Badge variant="outline" className="text-[10px] shrink-0 gap-1 border-primary/30 text-primary">
-              <Shield className="h-2.5 w-2.5" />
-              Autorité : {actor.authority_factor}
-            </Badge>
+            {actor.authority_factor ? (
+              <Badge
+                variant="outline"
+                className="mt-1 flex w-full items-start gap-1 whitespace-normal break-words text-left text-[10px] leading-snug border-primary/30 text-primary"
+              >
+                <Shield className="h-2.5 w-2.5 shrink-0 mt-[2px]" />
+                <span className="min-w-0">Autorité : {actor.authority_factor}</span>
+              </Badge>
+            ) : null}
           </div>
+
           {(() => {
             // Build URL: use actor.url if provided, otherwise try to construct from name
             const domainMatch = actor.name.match(/([a-zA-Z0-9-]+\.[a-z]{2,})/);
