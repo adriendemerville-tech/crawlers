@@ -10,8 +10,6 @@ export interface LazyDemoVideoProps {
   label: string;
   /** Pistes WebVTT — la première est activée par défaut. */
   tracks?: Array<{ src: string; srcLang: string; label: string; default?: boolean }>;
-  playLabel: string;
-  pauseLabel: string;
   className?: string;
 }
 
