@@ -220,8 +220,9 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - `marketplace_social_assets` — compte Instagram, formats, métriques, prix calculé.
 - `marketplace_needs` — besoin acheteur dérivé de `architect_workbench` / E-E-A-T.
 - `marketplace_matches` — couples besoin↔actif, `compat_score`, statut de notification.
-- `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`, `deal_type` (`cash` | `link_for_story` | `story_for_story`).
-- `marketplace_exchanges` — jambes d'un troc (2 pour un échange cross-média : le lien + la story), valeur estimée par jambe, solde en crédits, commission 10 %.
+- `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`, `deal_type` (`cash` | `credits` | `subscription_months` | `marina_audit` | `link_for_linkedin` | `link_for_story` | `story_for_story`).
+- `marketplace_exchanges` — jambes d'un troc (2 jambes : le lien + la contrepartie), nature de la contrepartie, valeur estimée par jambe, solde en crédits, commission 10 %.
+
 - `marketplace_ownership_claims` — déclaration de responsabilité vendeur : horodatage, IP, texte accepté.
 - `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
 - `marketplace_feedback` — commentaires et motifs par révision.
