@@ -235,24 +235,32 @@ export default function FeaturesCocoon() {
           </div>
         </section>
 
-        {/* Screenshot */}
+        {/* Démonstration vidéo : la capture animée remplace la capture fixe,
+            qui reste utilisée comme poster (affiché avant lecture et par les crawlers). */}
         <section className="py-12 px-4">
           <div className="max-w-5xl mx-auto">
-            <div className="relative rounded-2xl overflow-hidden border border-[#4c1d95]/30 shadow-2xl shadow-[#4c1d95]/10">
-              <img
-                src={cocoonGraph}
-                alt={t.screenshotAlt}
-                width={1440}
-                height={810}
-                className="w-full h-auto"
-                loading="eager"
-                fetchPriority="high"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a1e]/60 via-transparent to-transparent pointer-events-none" />
-            </div>
-            <p className="text-center text-sm text-white/30 mt-4">{t.screenshotCaption}</p>
+            <figure className="m-0">
+              <div className="relative rounded-2xl overflow-hidden border border-[#4c1d95]/30 shadow-2xl shadow-[#4c1d95]/10">
+                <video
+                  src={cocoonVideo.url}
+                  poster={cocoonGraph}
+                  width={1440}
+                  height={810}
+                  className="w-full h-auto block"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label={t.screenshotAlt}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f0a1e]/60 via-transparent to-transparent pointer-events-none" />
+              </div>
+              <figcaption className="text-center text-sm text-white/30 mt-4">{t.screenshotCaption}</figcaption>
+            </figure>
           </div>
         </section>
+
 
         {/* GEO vs SEO */}
         <section className="py-20 px-4 border-t border-[hsl(263,70%,15%)]">
