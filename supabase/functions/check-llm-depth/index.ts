@@ -460,6 +460,18 @@ interface DepthResult {
   conversation_summary: string
   angles_tested: string[]
   conversation_turns: ConversationTurn[]
+  /**
+   * ok          → mesuré sur le modèle attendu
+   * degraded    → mesuré via un modèle substitut (Lovable AI ne sert pas ce vendeur)
+   * error       → aucune phase n'a abouti (provider en erreur) : hors dénominateur
+   * unavailable → aucun provider ne sert ce modèle : hors dénominateur
+   */
+  status?: ModelStatus
+  /** Modèle réellement interrogé (peut différer de `model` en mode `degraded`). */
+  effective_model?: string
+  /** Dernier code HTTP d'erreur observé, pour diagnostic UI. */
+  error_status?: number
+
 }
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
