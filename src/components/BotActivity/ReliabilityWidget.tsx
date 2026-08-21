@@ -76,7 +76,7 @@ export function ReliabilityWidget({ siteIds, sinceISO }: Props) {
     }
     load();
     return () => { cancelled = true; };
-  }, [siteIds.join(','), sinceISO]);
+  }, [siteIds.join(','), sinceISO, isDemoMode]);
 
   if (loading || !kpis) {
     return (
