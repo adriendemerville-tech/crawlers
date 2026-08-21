@@ -11,7 +11,7 @@ const translations = {
   fr: {
     title: 'Mode Démo',
     active: 'ACTIF',
-    desc: 'Tolérance zéro erreur : suppression des erreurs front, retry auto, masquage des cards en échec',
+    desc: 'Données fictives dans les modules Console (GSC, indexation, bots, social) + tolérance zéro erreur pour les captures vidéo',
     enabled: 'Mode Démo activé — tolérance zéro erreur',
     disabled: 'Mode Démo désactivé',
     error: 'Erreur lors du changement de mode',
@@ -19,7 +19,7 @@ const translations = {
   en: {
     title: 'Demo Mode',
     active: 'ACTIVE',
-    desc: 'Zero error tolerance: suppress front-end errors, auto retry, hide failed cards',
+    desc: 'Fictional data across Console modules (GSC, indexation, bots, social) + zero error tolerance for video captures',
     enabled: 'Demo Mode enabled — zero error tolerance',
     disabled: 'Demo Mode disabled',
     error: 'Error changing mode',
@@ -27,7 +27,7 @@ const translations = {
   es: {
     title: 'Modo Demo',
     active: 'ACTIVO',
-    desc: 'Tolerancia cero errores: supresión de errores front, reintento auto, ocultación de cards fallidas',
+    desc: 'Datos ficticios en los módulos de Consola (GSC, indexación, bots, social) + tolerancia cero errores',
     enabled: 'Modo Demo activado — tolerancia cero errores',
     disabled: 'Modo Demo desactivado',
     error: 'Error al cambiar el modo',
