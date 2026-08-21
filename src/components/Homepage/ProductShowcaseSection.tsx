@@ -58,7 +58,7 @@ const ProductShowcaseSection = memo(() => {
         : 'Content architecture, internal linking and thematic clusters.',
       icon: Network,
       badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-      link: '/app/cocoon',
+      link: '/features/cocoon',
     },
     {
       image: architectCode.url,
