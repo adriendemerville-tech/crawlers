@@ -261,7 +261,7 @@ export default function FeaturesCocoon() {
                 className="rounded-2xl overflow-hidden border border-[#4c1d95]/30 shadow-2xl shadow-[#4c1d95]/10"
                 webmSrc={cocoonVideoWebm.url}
                 mp4Src={cocoonVideoMp4.url}
-                poster={cocoonGraph}
+                poster="/media/cocoon-3d-poster.webp"
                 width={1280}
                 height={738}
                 label={t.screenshotAlt}
