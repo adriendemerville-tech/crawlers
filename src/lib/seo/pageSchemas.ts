@@ -8,6 +8,8 @@
  */
 
 import { SITE_URL } from '@/lib/seo/pageHead';
+import { COCOON_VIDEO_TRANSCRIPT_TEXT } from '@/lib/media/cocoonVideoTranscript';
+import cocoonVideoMp4 from '@/assets/cocoon-3d-720.mp4.asset.json';
 
 const ORG = { '@type': 'Organization', name: 'Crawlers.fr', url: SITE_URL };
 const SITE = { '@type': 'WebSite', name: 'Crawlers.fr', url: SITE_URL };
@@ -309,12 +311,12 @@ export const cocoonJsonLd = [
       { '@type': 'Clip', name: 'Cannibalisation et mode X-Ray du link juice', startOffset: 60, endOffset: 86, url: `${SITE_URL}/features/cocoon#demo-cocoon` },
       { '@type': 'Clip', name: 'Déploiement des prescriptions de maillage', startOffset: 86, endOffset: 101, url: `${SITE_URL}/features/cocoon#demo-cocoon` },
     ],
-    transcript: TRANSCRIPT_COCOON_3D,
+    transcript: COCOON_VIDEO_TRANSCRIPT_TEXT,
     caption: `${SITE_URL}/media/cocoon-3d.fr.vtt`,
     encodingFormat: ['video/webm', 'video/mp4'],
     width: 1280,
     height: 738,
-    publisher: SITE_PUBLISHER,
+    publisher: ORG,
   },
 ];
 
