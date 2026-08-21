@@ -24,7 +24,9 @@ const PRINT_CSS = `
   html, body { background: #ffffff !important; }
   body { padding: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .marina-toolbar { display: none !important; }
-  .section, .toc, .reco-card, .stat-card, table, tr, figure { break-inside: avoid; }
+  .section, .toc, .reco-card, .stat-card, figure { break-inside: avoid; }
+  table { break-inside: auto; }
+  thead { display: table-header-group; }
   h1, h2, h3, h4 { break-after: avoid; }
   .marina-batch-part, .marina-batch-shared, .marina-batch-disclosure { break-before: page; }
   img { max-width: 100% !important; }
