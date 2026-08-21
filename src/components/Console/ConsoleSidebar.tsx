@@ -297,7 +297,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     ...(hasAdminAccess ? [{ value: 'admin', label: t.creator, icon: Shield }] : []),
   ];
 
-  const renderItem = (item: SidebarItem) => {
+  const renderItem = (item: SidebarItem, reorderable = false) => {
     if (item.hideOnMobile && isMobile) return null;
     if (item.advancedOnly && !advanced) return null;
 
@@ -305,6 +305,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
     const isLocked = item.proOnly && !isProUser;
     const Icon = item.icon as LucideIcon;
     const href = item.href ?? `/app/console?tab=${item.value}`;
+    const canDrag = reorderable && !isMobile;
 
     const content = (
       <>
@@ -318,6 +319,9 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
           ) : item.label}
         </span>
         {isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
+        {canDrag && !isLocked && (
+          <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors" />
+        )}
       </>
     );
 
@@ -329,18 +333,45 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       isLocked && 'opacity-40 cursor-not-allowed',
     );
 
+    const dragProps = canDrag
+      ? {
+          draggable: true,
+          onDragStart: (e: React.DragEvent) => {
+            setDragValue(item.value);
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', item.value);
+          },
+          onDragOver: (e: React.DragEvent) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (dragOverValue !== item.value) setDragOverValue(item.value);
+          },
+          onDragLeave: () => setDragOverValue(prev => (prev === item.value ? null : prev)),
+          onDrop: (e: React.DragEvent) => { e.preventDefault(); handleDrop(item.value); },
+          onDragEnd: () => { setDragValue(null); setDragOverValue(null); },
+        }
+      : {};
+
+    const wrapperClass = cn(
+      'group rounded-md',
+      canDrag && 'cursor-grab',
+      dragValue === item.value && 'opacity-40',
+      dragOverValue === item.value && dragValue && dragValue !== item.value && 'ring-1 ring-primary/60',
+    );
+
     if (isLocked) {
       return (
-        <div key={item.value}>
+        <div key={item.value} className={wrapperClass} {...dragProps}>
           <button disabled className={className}>{content}</button>
         </div>
       );
     }
 
     return (
-      <div key={item.value}>
+      <div key={item.value} className={wrapperClass} {...dragProps}>
         <a
           href={href}
+          draggable={false}
           onClick={(e) => {
             // Allow native behavior for modifier-clicks (new tab/window) and middle-click
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
@@ -356,6 +387,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect }: Console
       </div>
     );
   };
+
 
   return (
     <aside className={cn(
