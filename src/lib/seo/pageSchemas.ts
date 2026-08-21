@@ -292,32 +292,7 @@ export const cocoonJsonLd = [
       a: "Oui. Un LLM extrait plus facilement une réponse d'un ensemble de pages hiérarchisé et non redondant : la page pilier fournit la définition citable, les satellites les cas d'usage.",
     },
   ]),
-  {
-    '@context': 'https://schema.org',
-    '@type': 'VideoObject',
-    name: 'Démonstration du cocon sémantique 3D de Crawlers',
-    description:
-      "Capture d'écran commentée du module Cocoon : graphe 3D du maillage interne, code couleur par type de page, détection de cannibalisation, mode X-Ray du link juice et déploiement des prescriptions vers le CMS.",
-    thumbnailUrl: [`${SITE_URL}/media/cocoon-3d-poster.webp`],
-    uploadDate: '2026-08-21T09:10:02+00:00',
-    duration: 'PT1M41S',
-    contentUrl: `${SITE_URL}${cocoonVideoMp4.url}`,
-    embedUrl: `${SITE_URL}/features/cocoon`,
-    inLanguage: 'fr-FR',
-    isFamilyFriendly: true,
-    hasPart: [
-      { '@type': 'Clip', name: 'Graphe 3D et code couleur par type de page', startOffset: 0, endOffset: 24, url: `${SITE_URL}/features/cocoon#demo-cocoon` },
-      { '@type': 'Clip', name: 'Clusters thématiques et distance sémantique', startOffset: 24, endOffset: 60, url: `${SITE_URL}/features/cocoon#demo-cocoon` },
-      { '@type': 'Clip', name: 'Cannibalisation et mode X-Ray du link juice', startOffset: 60, endOffset: 86, url: `${SITE_URL}/features/cocoon#demo-cocoon` },
-      { '@type': 'Clip', name: 'Déploiement des prescriptions de maillage', startOffset: 86, endOffset: 101, url: `${SITE_URL}/features/cocoon#demo-cocoon` },
-    ],
-    transcript: COCOON_VIDEO_TRANSCRIPT_TEXT,
-    caption: `${SITE_URL}/media/cocoon-3d.fr.vtt`,
-    encodingFormat: ['video/webm', 'video/mp4'],
-    width: 1280,
-    height: 738,
-    publisher: ORG,
-  },
+  buildVideoObjectSchema(COCOON_DEMO_VIDEO, SITE_URL, ORG),
 ];
 
 
