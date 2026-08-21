@@ -886,32 +886,39 @@ Deno.serve(handleRequest(async (req) => {
         )
         const results = await Promise.allSettled(resultPromises)
 
-        const successResults: DepthResult[] = results
+        const settledResults: DepthResult[] = results
           .filter((r): r is PromiseFulfilledResult<DepthResult> => r.status === 'fulfilled')
           .map(r => r.value)
 
-        const allEmpty = successResults.every(r => !r.found && !r.conversation_summary)
+        // Un modèle en panne (error) ou sans provider (unavailable) n'est PAS une
+        // observation : il sort de la moyenne et de la couverture, mais reste dans
+        // `results` pour que l'UI affiche « Erreur / Indisponible » au lieu de 7/7.
+        const measured = settledResults.filter(r => r.status !== 'error' && r.status !== 'unavailable')
+        const failed = settledResults.filter(r => r.status === 'error' || r.status === 'unavailable')
+        const allEmpty = measured.length === 0
 
-        const scores = successResults.map(r => r.iterations)
+        const scores = measured.map(r => r.iterations)
         const avgDepth = scores.length > 0
           ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1))
           : null
 
         // Persist to user tables
         if (!allEmpty) {
-          await persistResults(sb, tracked_site_id || null, user_id || null, successResults)
+          await persistResults(sb, tracked_site_id || null, user_id || null, measured)
         }
 
         // Couverture : un modèle est une observation, une apparition de la marque
         // est un hit. Les modèles en panne sont hors dénominateur.
-        const observations = successResults.length
-        const hits = successResults.filter(r => r.found).length
+        const observations = measured.length
+        const hits = measured.filter(r => r.found).length
 
         const finalData = {
           brand,
           domain,
-          avg_depth: allEmpty ? null : avgDepth,
-          results: allEmpty ? [] : successResults,
+          avg_depth: avgDepth,
+          results: settledResults,
+          measured_models: observations,
+          failed_models: failed.map(r => ({ llm: r.llm, status: r.status, error_status: r.error_status ?? null })),
           coverage: allEmpty ? null : computeCoverage(hits, observations),
           reliability: allEmpty ? null : assessReliability(observations, 1),
           ...(identityDisclosure ? { identity: identityDisclosure } : {}),
@@ -920,6 +927,7 @@ Deno.serve(handleRequest(async (req) => {
           measured_at: new Date().toISOString(),
           ...(allEmpty ? { error_code: 'credits_exhausted' } : {}),
         }
+
 
         // Write to shared domain cache (2h TTL — Pro Agency+ can refresh unlimited but backend throttles to every 2h)
         if (!allEmpty) {
