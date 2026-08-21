@@ -29,8 +29,6 @@ const i18n = {
     screenshotAlt: "Visualisation 3D du cocon sémantique — maillage interne et clusters thématiques",
     screenshotCaption: "Vue 3D interactive : chaque nœud représente une page, chaque lien une connexion sémantique pondérée.",
     videoDescription: "La taille de chaque nœud reflète le trafic organique de la page. La pulsation indique l'évolution récente de ce trafic.",
-    videoPlay: "Lire",
-    videoPause: "Pause",
     transcriptTitle: "Transcription de la démonstration",
     transcriptIntro: "Les moteurs de recherche et les moteurs génératifs n'interprètent pas le contenu visuel d'une vidéo : voici la transcription horodatée de ce qui est montré à l'écran. Les mêmes textes sont disponibles en sous-titres dans le lecteur.",
 
