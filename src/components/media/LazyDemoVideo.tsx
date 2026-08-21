@@ -114,15 +114,6 @@ export function LazyDemoVideo({
         ))}
       </video>
 
-      <button
-        type="button"
-        onClick={toggle}
-        aria-label={playing ? pauseLabel : playLabel}
-        className="absolute top-3 right-3 flex items-center gap-2 rounded-full border border-white/40 bg-transparent px-3 py-1.5 text-xs text-white backdrop-blur-sm transition-colors hover:border-white"
-      >
-        {playing ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-        {playing ? pauseLabel : playLabel}
-      </button>
     </div>
   );
 }
