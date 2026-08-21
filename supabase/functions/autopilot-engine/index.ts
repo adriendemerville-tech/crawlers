@@ -53,6 +53,8 @@ import { routeCmsActions } from '../_shared/autopilot/cmsActionRouter.ts';
 import { trackAnalyticsEvent, pushIktrackerEvent } from '../_shared/autopilot/iktrackerBridge.ts';
 import { runPostAudit, runPostDiagnose } from '../_shared/autopilot/postDiagnose.ts';
 import { checkSemanticGate } from '../_shared/autopilot/semanticGate.ts';
+import { resolveEditorialSubject, buildEditorialBrief } from '../_shared/autopilot/editorialSubjectGuard.ts';
+
 import { buildOriginalImageBrief } from '../_shared/parmenion/imageOriginality.ts';
 import { markDeployedItems } from '../_shared/autopilot/postExecute.ts';
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
@@ -90,13 +92,37 @@ async function buildV3CmsActionsForIktracker(
   if (!isContent) return null;
 
   const missing = task?.metadata?.strategic_priorities?.missing_pages?.[0];
-  const title: string = missing?.title || task?.title || '';
-  if (!title || title.length < 5) {
-    console.warn('[AutopilotEngine][V3→cms] No usable title in strategist_task');
+
+  // ─── Garde stratégie vs sujet ───
+  // Une tactique SEO ("optimiser le placement du mot-clé dans la balise title")
+  // est un MOYEN, jamais un SUJET d'article : sinon on publie du hors-sujet.
+  let siteKeywords: string[] = [];
+  try {
+    const { data: kws } = await supabase
+      .from('keyword_universe')
+      .select('keyword, search_volume')
+      .eq('tracked_site_id', config.tracked_site_id)
+      .order('search_volume', { ascending: false, nullsFirst: false })
+      .limit(20);
+    siteKeywords = (kws || []).map((k: { keyword: string }) => k.keyword).filter(Boolean);
+  } catch { /* keyword universe optionnel */ }
+
+  const resolved = resolveEditorialSubject({ domain: site.domain, missingPage: missing, task, siteKeywords });
+  if (!resolved.ok) {
+    console.warn(`[AutopilotEngine][V3→cms] BLOQUÉ — ${resolved.reason} (libellé: "${resolved.tacticLabel}")`);
     return null;
   }
-  const keywords: string[] = (missing?.target_keywords || task?.metadata?.target_keywords || []).slice(0, 5);
-  const brief = `${title}${keywords.length ? `\nMots-clés cibles: ${keywords.join(', ')}` : ''}${missing?.rationale ? `\n${missing.rationale}` : ''}`;
+  if (resolved.note) console.log(`[AutopilotEngine][V3→cms] ${resolved.note}`);
+
+  const title = resolved.subject;
+  const tacticDirective = resolved.source === 'business_keyword' ? (missing?.title || task?.title || null) : null;
+
+  const brief = buildEditorialBrief(resolved, {
+    rationale: missing?.rationale || null,
+    tacticDirective,
+    domain: site.domain,
+  });
+
 
   try {
     console.log(`[AutopilotEngine][V3→cms] Running editorial pipeline for "${title}" on ${site.domain}`);
