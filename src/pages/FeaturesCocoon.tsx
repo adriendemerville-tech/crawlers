@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { PageEditorial } from "@/components/seo/PageEditorial";
-import cocoonGraph from '@/assets/screenshots/crawlers.fr_cocon-semantique-3d-maillage-interne.webp';
 import cocoonVideoMp4 from '@/assets/cocoon-3d-720.mp4.asset.json';
 import cocoonVideoWebm from '@/assets/cocoon-3d.webm.asset.json';
 import { LazyDemoVideo } from '@/components/media/LazyDemoVideo';
