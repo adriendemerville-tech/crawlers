@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Play, Pause } from 'lucide-react';
 
 export interface LazyDemoVideoProps {
   webmSrc: string;
