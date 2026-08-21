@@ -1,0 +1,37 @@
+WEBVTT
+
+NOTE
+Captura de pantalla sin pista de audio. Estos subtítulos describen lo que se
+muestra en pantalla (accesibilidad + indexación del contenido del vídeo).
+
+1
+00:00:00.000 --> 00:00:12.000
+Vista 3D del cocoon semántico: cada nodo es una página, cada arista un enlace interno ponderado.
+
+2
+00:00:12.000 --> 00:00:24.000
+El color de los nodos corresponde al tipo de página: pilar, satélite, categoría, conversión o página técnica.
+
+3
+00:00:24.000 --> 00:00:36.000
+El tamaño del nodo depende del tráfico orgánico; la pulsación refleja su evolución reciente.
+
+4
+00:00:36.000 --> 00:00:48.000
+Rotación del grafo: los clústeres temáticos aparecen de forma natural, separados por distancia semántica.
+
+5
+00:00:48.000 --> 00:01:00.000
+Al seleccionar un nodo: el panel muestra la intención de la página, sus enlaces y su ROI previsto.
+
+6
+00:01:00.000 --> 00:01:12.000
+Se resaltan los pares canibalizados: dos páginas con la misma intención se sustituyen en la SERP.
+
+7
+00:01:12.000 --> 00:01:26.000
+El modo X-Ray aísla el flujo de link juice: en oro los enlaces descendentes, en violeta los de retorno al pilar.
+
+8
+00:01:26.000 --> 00:01:41.208
+Las prescripciones de enlazado se despliegan en un clic al CMS conectado, con el ancla sugerida por el motor.
