@@ -149,14 +149,20 @@ async function resolveGmbToken(userId: string, trackedSiteId: string): Promise<G
 
   if (!conn?.access_token) return null
 
+  // Legacy rows may store full resource names ("accounts/123") — normalize to bare IDs
+  const bareId = (v: string | null | undefined): string | null =>
+    v ? (v.includes('/') ? v.split('/').pop() || null : v) : null
+  const accountIdNorm = bareId(conn.gmb_account_id)
+  const locationIdNorm = bareId(conn.gmb_location_id)
+
   // 4. Check if token needs refresh
   if (conn.token_expiry && new Date(conn.token_expiry) < new Date()) {
     const refreshed = await refreshGoogleToken(conn.refresh_token, connectionId, sb)
     if (!refreshed) return null
-    return { access_token: refreshed, account_id: conn.gmb_account_id, location_id: conn.gmb_location_id }
+    return { access_token: refreshed, account_id: accountIdNorm, location_id: locationIdNorm }
   }
 
-  return { access_token: conn.access_token, account_id: conn.gmb_account_id, location_id: conn.gmb_location_id }
+  return { access_token: conn.access_token, account_id: accountIdNorm, location_id: locationIdNorm }
 }
 
 async function refreshGoogleToken(refreshToken: string, connectionId: string, sb: any): Promise<string | null> {
