@@ -39,6 +39,8 @@ export function LazyDemoVideo({
   height,
   label,
   tracks = [],
+  captionLang,
+  onCaptionChange,
   className,
 }: LazyDemoVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
