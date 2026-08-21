@@ -5,6 +5,8 @@ import { ShieldCheck, ShieldAlert, EyeOff, ShieldQuestion, Info } from 'lucide-r
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { getDemoReliabilityKPIs } from '@/lib/demo/consoleDemoData';
 
 interface ReliabilityKPIs {
   total: number;
@@ -24,11 +26,17 @@ interface Props {
 export function ReliabilityWidget({ siteIds, sinceISO }: Props) {
   const [kpis, setKpis] = useState<ReliabilityKPIs | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isDemoMode } = useDemoMode();
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
+      if (isDemoMode) {
+        setKpis(getDemoReliabilityKPIs());
+        setLoading(false);
+        return;
+      }
       if (siteIds.length === 0) {
         setKpis({ total: 0, verified: 0, suspect: 0, stealth: 0, unverified: 0, topImpostors: [] });
         setLoading(false);
@@ -68,7 +76,7 @@ export function ReliabilityWidget({ siteIds, sinceISO }: Props) {
     }
     load();
     return () => { cancelled = true; };
-  }, [siteIds.join(','), sinceISO]);
+  }, [siteIds.join(','), sinceISO, isDemoMode]);
 
   if (loading || !kpis) {
     return (

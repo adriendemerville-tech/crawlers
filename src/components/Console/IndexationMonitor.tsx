@@ -11,6 +11,8 @@ import { SerpBenchmark, type SerpBenchmarkHandle } from './SerpBenchmark';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { getDemoIndexationChecks, DEMO_SITE } from '@/lib/demo/consoleDemoData';
 
 const t3 = (lang: string, fr: string, en: string, es: string) =>
   lang === 'fr' ? fr : lang === 'es' ? es : en;
@@ -60,6 +62,7 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
   const [inspectingManual, setInspectingManual] = useState(false);
   const [inspectMode, setInspectMode] = useState<'batch' | 'cible'>('batch');
   const serpBenchmarkRef = useRef<SerpBenchmarkHandle>(null);
+  const { isDemoMode } = useDemoMode();
 
   // Load tracked sites
   useEffect(() => {
@@ -72,9 +75,12 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
         if (data?.length) {
           setTrackedSites(data);
           if (!externalSiteId) setSelectedSiteId(data[0].id);
+        } else if (isDemoMode) {
+          setTrackedSites([DEMO_SITE]);
+          if (!externalSiteId) setSelectedSiteId(DEMO_SITE.id);
         }
       });
-  }, [user, externalSiteId]);
+  }, [user, externalSiteId, isDemoMode]);
 
   // Sync with external site selection from console sidebar
   useEffect(() => {
@@ -86,6 +92,13 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
   // Load existing checks
   const loadChecks = useCallback(async () => {
     if (!selectedSiteId) return;
+    const demoDomain = trackedSites.find((s) => s.id === selectedSiteId)?.domain;
+    if (isDemoMode) {
+      // Mode démo : jeu de données fictif, aucun appel API d'inspection.
+      setChecks(getDemoIndexationChecks(demoDomain) as IndexationCheck[]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('check-indexation', {
@@ -98,7 +111,7 @@ export function IndexationMonitor({ externalSiteId, externalDomain }: Indexation
     } finally {
       setLoading(false);
     }
-  }, [selectedSiteId]);
+  }, [selectedSiteId, isDemoMode, trackedSites]);
 
   useEffect(() => { loadChecks(); }, [loadChecks]);
 

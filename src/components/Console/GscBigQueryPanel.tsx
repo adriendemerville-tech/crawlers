@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Globe } from 'lucide-react';
 import { GscBigQuerySettings } from './GscBigQuerySettings';
 import { GscBigQueryExplorer } from './GscBigQueryExplorer';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { DEMO_SITE } from '@/lib/demo/consoleDemoData';
 
 interface TrackedSite {
   id: string;
@@ -20,6 +22,7 @@ export function GscBigQueryPanel() {
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const { isDemoMode } = useDemoMode();
 
   useEffect(() => {
     if (!user) return;
@@ -32,13 +35,14 @@ export function GscBigQueryPanel() {
         .eq('user_id', user.id)
         .order('domain');
       if (!active) return;
-      const list = (data ?? []) as TrackedSite[];
+      let list = (data ?? []) as TrackedSite[];
+      if (list.length === 0 && isDemoMode) list = [DEMO_SITE];
       setSites(list);
       if (list.length > 0 && !selectedSiteId) setSelectedSiteId(list[0].id);
       setLoading(false);
     })();
     return () => { active = false; };
-  }, [user]);
+  }, [user, isDemoMode]);
 
   if (loading) {
     return (

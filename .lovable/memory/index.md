@@ -39,3 +39,4 @@
 - [Workbench reset bloqués](mem://tech/architect/workbench-reset-stuck-fr) — RPC reset_stuck_workbench_items + cron SQL 15 min qui repasse en pending les in_progress de plus de 2 h
 - [Parménion cycles dégradés](mem://tech/autopilot/degraded-visibility-fr) — Compteur incidents 7 j + causes execution_error dans l'UI admin, kick advisor 3 tentatives (async, retry, staged) avant de dégrader
 - [Audit infra & coûts 08/2026](mem://tech/audits/infra-db-serverfn-costs-2026-08-fr) — Amplification d'écritures process-crawl-queue, rétention analytics_events, surface SECURITY DEFINER, getSiteStructure public, coûts LLM
+- [Mode démo console](mem://features/console/demo-mode-fixtures-fr) — Interrupteur Administration + fixtures front-only (GSC BQ, Indexation, Logs bots, SEA→SEO, GMB), aucune écriture en base
