@@ -468,11 +468,19 @@ export async function aiGatewayCallStream(opts: AICallOptions): Promise<Response
     const model = chain[i];
     const isLast = i === chain.length - 1;
     try {
+      if (openRouterIsOut() && lovableCanServe(model)) {
+        const direct = await callOnce(model, streamBody, cache, timeoutMs, headers, 'lovable', true);
+        if (direct.ok) return direct;
+        if (!shouldFallback(direct.status) || isLast) return direct;
+        try { await direct.body?.cancel(); } catch { /* noop */ }
+        continue;
+      }
       const resp = await callOnce(model, streamBody, cache, timeoutMs, headers, undefined, true);
       if (resp.ok) {
         if (i > 0) console.info(`[aiGatewayCallStream] Fallback success: ${model} (level ${i})`);
         return resp;
       }
+      tripOpenRouterBreaker(resp.status);
       if (shouldFallback(resp.status) && lovableCanServe(model)) {
         try {
           const lov = await callOnce(model, streamBody, cache, timeoutMs, headers, 'lovable', true);
