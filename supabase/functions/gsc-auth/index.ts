@@ -142,21 +142,21 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
           const gmbData = await gmbResp.json();
           const accounts = gmbData.accounts || [];
           if (accounts.length > 0) {
-            // accounts[0].name = "accounts/123456"
-            gmbAccountId = accounts[0].name || null;
+            // accounts[0].name = "accounts/123456" → store the bare ID only
+            gmbAccountId = accounts[0].name?.replace('accounts/', '') || null;
             console.log(`[gsc-auth] Auto-detected GMB account: ${gmbAccountId} for ${googleEmail}`);
 
             // Try to get the first location
             try {
               const locResp = await fetch(
-                `https://mybusinessbusinessinformation.googleapis.com/v1/${gmbAccountId}/locations?readMask=name,title,storefrontAddress`,
+                `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${gmbAccountId}/locations?readMask=name,title,storefrontAddress`,
                 { headers: { Authorization: `Bearer ${tokens.access_token}` } }
               );
               if (locResp.ok) {
                 const locData = await locResp.json();
                 const locations = locData.locations || [];
                 if (locations.length > 0) {
-                  gmbLocationId = locations[0].name || null;
+                  gmbLocationId = locations[0].name?.split('/').pop() || null;
                   console.log(`[gsc-auth] Auto-detected GMB location: ${gmbLocationId} for ${googleEmail}`);
                 }
               } else {
