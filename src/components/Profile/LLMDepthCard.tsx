@@ -72,7 +72,9 @@ interface ModelProgress {
   iteration: number;
   found: boolean;
   mentioned_as?: string | null;
+  status?: 'error' | 'unavailable';
 }
+
 
 const translations = {
   fr: {
