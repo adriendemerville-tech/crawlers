@@ -14501,18 +14501,21 @@ export type Database = {
       user_console_preferences: {
         Row: {
           created_at: string
+          sidebar_collapsed: boolean
           sidebar_order: string[]
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          sidebar_collapsed?: boolean
           sidebar_order?: string[]
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          sidebar_collapsed?: boolean
           sidebar_order?: string[]
           updated_at?: string
           user_id?: string
