@@ -239,7 +239,7 @@ export default function FeaturesCocoon() {
         {/* Démonstration vidéo : la capture animée remplace la capture fixe,
             qui reste utilisée comme poster (affiché avant lecture et par les crawlers). */}
         <section className="py-12 px-4">
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-[44.8rem] mx-auto">
             <figure className="m-0">
               <div className="relative rounded-2xl overflow-hidden border border-[#4c1d95]/30 shadow-2xl shadow-[#4c1d95]/10">
                 <video
