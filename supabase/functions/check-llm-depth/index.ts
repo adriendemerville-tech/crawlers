@@ -541,8 +541,30 @@ async function runDepthConversation(
   let lastAssistantContent = ''
   const conversationTurns: ConversationTurn[] = []
 
-  // Track which gateway is active (may change on fallback)
+  // Track which gateway/model is active (may change on fallback)
   let activeGateway: Gateway = modelDef.gateway
+  let activeModel = modelDef.model
+  let substituted = false
+  let successfulPhases = 0
+  let lastErrorStatus = 0
+
+  // Le provider primaire n'est pas configuré et aucun filet n'existe :
+  // le modèle est structurellement indisponible (cas Perplexity sans OpenRouter).
+  if (!keys[modelDef.gateway] && !(modelDef.fallbackGateway && keys[modelDef.fallbackGateway])) {
+    onProgress?.({ type: 'unavailable', model: modelDef.name })
+    return {
+      llm: modelDef.name,
+      model: modelDef.model,
+      iterations: 0,
+      found: false,
+      mentioned_as: null,
+      conversation_summary: '',
+      angles_tested: [],
+      conversation_turns: [],
+      status: 'unavailable',
+      effective_model: modelDef.model,
+    }
+  }
 
   for (let i = 0; i < Math.min(prompts.length, MAX_ITERATIONS); i++) {
     messages.push({ role: 'user', content: prompts[i] })
@@ -552,31 +574,41 @@ async function runDepthConversation(
     onProgress?.({ type: 'iteration', model: modelDef.name, iteration: i + 1, found: false })
 
     try {
-      const { response, usedGateway, didFallback } = await resilientFetch(
-        activeGateway, modelDef.fallbackGateway, keys, modelDef.model, messages,
+      const { response, usedGateway, usedModel, didFallback } = await resilientFetch(
+        activeGateway, activeGateway === modelDef.gateway ? modelDef.fallbackGateway : undefined,
+        keys, activeModel, messages,
         { temperature: 0.7, max_tokens: 1000 },
         `${domain} phase ${i + 1}`,
+        modelDef.fallbackModel,
       )
 
       // If we fell back, stick with fallback for remaining phases
-      if (didFallback) activeGateway = usedGateway
+      if (didFallback) {
+        activeGateway = usedGateway
+        if (usedModel !== activeModel) {
+          substituted = true
+          activeModel = usedModel
+        }
+      }
 
       if (!response.ok) {
-        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status} (${usedGateway})`)
+        lastErrorStatus = response.status
+        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status} (${usedGateway}/${usedModel})`)
         continue
       }
 
       const data = await response.json()
       const content = data.choices?.[0]?.message?.content || ''
       if (content) lastAssistantContent = content
+      successfulPhases++
 
       const provider = usedGateway === 'lovable' ? 'lovable-ai' : 'openrouter'
-      trackPaidApiCall('check-llm-depth', provider, modelDef.model, domain)
+      trackPaidApiCall('check-llm-depth', provider, activeModel, domain)
 
       messages.push({ role: 'assistant', content })
 
       // Summarize response to 3 sentences for storage
-      const summary = await summarizeResponse(keys, activeGateway, modelDef.model, content, lang)
+      const summary = await summarizeResponse(keys, activeGateway, activeModel, content, lang)
       conversationTurns.push({
         iteration: i + 1,
         prompt: prompts[i],
@@ -585,7 +617,7 @@ async function runDepthConversation(
 
       // Semantic brand detection (uses active gateway)
       const detection = await detectBrandSemantically(
-        keys, activeGateway, modelDef.model, content, brand, domain, lang,
+        keys, activeGateway, activeModel, content, brand, domain, lang,
       )
 
       if (detection.found) {
@@ -599,6 +631,8 @@ async function runDepthConversation(
           conversation_summary: content.slice(0, 400),
           angles_tested: anglesTested,
           conversation_turns: conversationTurns,
+          status: substituted ? 'degraded' : 'ok',
+          effective_model: activeModel,
         }
       }
 
@@ -606,6 +640,25 @@ async function runDepthConversation(
       await delay(500)
     } catch (err) {
       console.error(`[check-llm-depth] Error ${modelDef.name} phase ${i + 1}:`, err)
+    }
+  }
+
+  // Aucune phase n'a abouti : c'est une panne provider, pas une absence de citation.
+  // On ne rend PAS 7/7 (faux négatif historique affiché comme « non cité »).
+  if (successfulPhases === 0) {
+    onProgress?.({ type: 'error', model: modelDef.name })
+    return {
+      llm: modelDef.name,
+      model: modelDef.model,
+      iterations: 0,
+      found: false,
+      mentioned_as: null,
+      conversation_summary: '',
+      angles_tested: anglesTested,
+      conversation_turns: [],
+      status: 'error',
+      effective_model: activeModel,
+      ...(lastErrorStatus ? { error_status: lastErrorStatus } : {}),
     }
   }
 
@@ -618,8 +671,11 @@ async function runDepthConversation(
     conversation_summary: lastAssistantContent.slice(0, 400),
     angles_tested: anglesTested,
     conversation_turns: conversationTurns,
+    status: substituted ? 'degraded' : 'ok',
+    effective_model: activeModel,
   }
 }
+
 
 // ─── Persistence ─────────────────────────────────────────────────────────────
 
