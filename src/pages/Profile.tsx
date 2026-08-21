@@ -65,6 +65,7 @@ function ProfileContent() {
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [openApiPanel, setOpenApiPanel] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Sync tab with URL params
   useEffect(() => {
