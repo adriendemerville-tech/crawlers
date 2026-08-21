@@ -545,20 +545,20 @@ export function renderConsolidatedPlanHTML(
       ? `<div style="font-size:10.5px;color:#6b7280;margin-top:4px;">Gabarits concernés : ${escapeHtml(it.templates.slice(0, 8).join(', '))}</div>`
       : '';
     return `<tr style="border-bottom:1px solid #e5e7eb;">
-      <td style="padding:10px 12px;font-weight:700;color:#111827;font-size:13px;">${it.rank}</td>
-      <td style="padding:10px 12px;">
+      <td style="padding:10px 12px;font-weight:700;color:#111827;font-size:13px;vertical-align:top;">${it.rank}</td>
+      <td style="padding:10px 12px;vertical-align:top;">
         <div style="font-weight:600;font-size:13px;color:#111827;margin-bottom:3px;">${escapeHtml(title)}</div>
         ${description ? `<div style="font-size:12px;color:#4b5563;line-height:1.45;">${escapeHtml(description)}</div>` : ''}
         ${scope}
         ${it.roi ? `<div style="font-size:11px;color:#6b7280;margin-top:5px;">${escapeHtml(it.roi.roi_note)}</div>` : ''}
         ${acc ? `<div style="font-size:10.5px;color:#9ca3af;margin-top:4px;">Base de l'estimation : ${escapeHtml(acc.traffic_basis)}</div>` : ''}
       </td>
-      <td style="padding:10px 12px;white-space:nowrap;">
+      <td style="padding:10px 12px;white-space:nowrap;vertical-align:top;">
         <span style="background:${badge.bg};color:${badge.fg};padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">${badge.label}</span>
       </td>
-      <td style="padding:10px 12px;white-space:nowrap;">${roiCell}</td>
-      <td style="padding:10px 12px;">${accCell}</td>
-      <td style="padding:10px 12px;white-space:nowrap;">${origin}</td>
+      <td style="padding:10px 12px;vertical-align:top;">${roiCell}</td>
+      <td style="padding:10px 12px;vertical-align:top;">${accCell}</td>
+      <td style="padding:10px 12px;vertical-align:top;">${origin}</td>
     </tr>`;
   }).join('');
 
