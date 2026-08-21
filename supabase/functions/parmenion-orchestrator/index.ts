@@ -2105,6 +2105,24 @@ ${templateBlock}`;
     }
   }
 
+  // ── GARDE STRATÉGIE vs SUJET ──
+  // Un titre d'article qui décrit une TACTIQUE SEO (balise title, maillage,
+  // données structurées…) est un moyen, pas un sujet : on l'écarte, sauf pour
+  // les sites dont le SEO est justement le produit (crawlers.fr).
+  if (!siteSellsSeo(context.domain, context.siteKeywords)) {
+    for (let i = cmsActions.length - 1; i >= 0; i--) {
+      const a = cmsActions[i];
+      const isCreation = a._channel === 'content_editorial' && (a.action === 'create-post' || a.action === 'create-page');
+      const candidate = `${a.body?.title || ''} ${a.body?.meta_title || ''}`.trim();
+      if (isCreation && isSeoTacticText(candidate)) {
+        console.warn(`[Parménion] 🛑 Action éditoriale écartée (sujet = tactique SEO, hors-sujet pour ${context.domain}) : "${a.body?.title}"`);
+        cmsActions.splice(i, 1);
+      }
+    }
+  }
+
+
+
   // ── EDITORIAL PIPELINE ENRICHMENT (opt-in via autopilot_configs.use_editorial_pipeline) ──
   // For each create-post / create-page action, optionally regenerate the body via the
   // shared 4-stage pipeline (Briefing → Strategist → Writer → Tonalizer).
