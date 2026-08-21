@@ -117,6 +117,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "dns-prefetch", href: "https://images.unsplash.com" },
       {
         rel: "preload",
+        href: "/fonts/inter-latin-wght-normal.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "preload",
         href: "/fonts/space-grotesk-latin-wght-normal.woff2",
         as: "font",
         type: "font/woff2",
