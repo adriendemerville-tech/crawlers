@@ -453,6 +453,8 @@ async function adaptSolutionWithAI(
   try {
     const response = await aiGatewayFetch( {
       method: 'POST',
+      timeoutMs: 60_000,
+      callerFunction: 'generate-corrective-code',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
