@@ -590,7 +590,15 @@ export function renderConsolidatedPlanHTML(
       projection de trafic.
     </p>
 
-    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+    <table style="width:100%;table-layout:fixed;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+      <colgroup>
+        <col style="width:4%;" />
+        <col style="width:46%;" />
+        <col style="width:10%;" />
+        <col style="width:13%;" />
+        <col style="width:17%;" />
+        <col style="width:10%;" />
+      </colgroup>
       <thead><tr style="background:#f9fafb;">
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">#</th>
         <th style="padding:10px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Action</th>
