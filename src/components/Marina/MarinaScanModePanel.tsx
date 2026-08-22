@@ -19,8 +19,7 @@ const COPY: Record<Lang, {
 }> = {
   fr: {
     title: 'Trois modes de scan, bascule automatique',
-    subtitle:
-      "Marina mesure d'abord la taille réelle du site (sitemap, map, CMS), puis choisit seule le mode. Le mode retenu et la couverture atteinte sont écrits dans l'introduction du rapport.",
+    subtitle: '',
     cols: ['Mode', 'Déclenchement', 'Pages analysées'],
     rows: [
       ['Approfondi', 'Site ≤ 120 URLs découvertes', "Jusqu'à 120 — couverture quasi exhaustive"],
@@ -32,8 +31,7 @@ const COPY: Record<Lang, {
   },
   en: {
     title: 'Three scan modes, automatic switching',
-    subtitle:
-      "Marina first measures the site's real size (sitemap, map, CMS), then picks the mode itself. The selected mode and achieved coverage are stated in the report introduction.",
+    subtitle: '',
     cols: ['Mode', 'Trigger', 'Pages analysed'],
     rows: [
       ['Deep', 'Site ≤ 120 discovered URLs', 'Up to 120 — near-exhaustive coverage'],
@@ -45,8 +43,7 @@ const COPY: Record<Lang, {
   },
   es: {
     title: 'Tres modos de escaneo, conmutación automática',
-    subtitle:
-      'Marina mide primero el tamaño real del sitio y luego elige el modo. El modo y la cobertura se indican en la introducción del informe.',
+    subtitle: '',
     cols: ['Modo', 'Activación', 'Páginas analizadas'],
     rows: [
       ['Profundo', 'Sitio ≤ 120 URL descubiertas', 'Hasta 120 — cobertura casi exhaustiva'],
@@ -105,7 +102,6 @@ export function MarinaScanModePanel({
             <Layers className="w-4 h-4 mt-0.5 text-primary shrink-0" />
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-foreground">{t.title}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">{t.subtitle}</p>
             </div>
           </div>
           <ChevronDown
