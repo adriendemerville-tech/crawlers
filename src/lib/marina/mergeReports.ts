@@ -612,8 +612,11 @@ export function mergeMarinaReports(
       const condensed = split.tagged && hasVerdict && detail.level.get(path) === 'condensed';
       const dupOwner = conclusionSkip[i];
       const kept = (condensed
-        ? ordered.filter(b => b.id === 'page-verdict' || b.id === 'cocoon_page')
+        // Une fiche condensée conserve tout de même les mesures propres à l'URL
+        // (benchmark IA redescendu au périmètre page) : elles sont déjà payées.
+        ? ordered.filter(b => b.id === 'page-verdict' || b.id === 'cocoon_page' || demotedToPage.has(b.id))
         : ordered
+
       ).filter(b => !(b.id === 'conclusion' && dupOwner !== null));
       const dupConclusionNote = dupOwner !== null
         ? `<p style="margin:10px 32px 0 32px;font-size:12px;color:#6b7280;line-height:1.6;max-width:52em;">
