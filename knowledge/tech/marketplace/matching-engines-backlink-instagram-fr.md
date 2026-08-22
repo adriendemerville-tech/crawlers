@@ -814,9 +814,12 @@ confirmée à J+7) → `maintained` (contrôles récurrents OK) → `broken` (pr
 
 Conséquences d'une rupture, appliquées côté serveur sans intervention manuelle :
 - verdict `hard_broken` / lien absent / `nofollow` ajouté à la place de l'attribut convenu →
-  jambe `broken`, paiement suspendu, fenêtre de remise en conformité de 7 jours ;
-- non-corrigé après la fenêtre → remboursement au prorata du temps restant, **événement de balance
-  inverse** (§2.7.3) et impact sur le standing du vendeur ;
+  jambe `broken`, **calendrier de déblocage du séquestre gelé** (§2.5.1), fenêtre de remise en
+  conformité de 7 jours ;
+- non-corrigé après la fenêtre → remboursement au prorata du temps restant, prélevé d'abord sur le
+  séquestre `held` puis selon la cascade de récupération de §2.5.1 (jamais de solde négatif : le
+  reliquat devient une dette de wallet), **événement de balance inverse** (§2.7.3) et impact sur le
+  standing du vendeur ;
 - OAuth révoqué (LinkedIn / Meta) → impossibilité de vérifier assimilée à une rupture, l'actif
   repasse `unverified` (§2.6) ;
 - blocage de crawl (403 bot, robots.txt, coquille JS non-SSR) → escalade de rendu avant tout verdict
