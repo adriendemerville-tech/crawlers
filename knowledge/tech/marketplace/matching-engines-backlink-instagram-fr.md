@@ -361,6 +361,63 @@ reprendre des crédits déjà dépensés.
    compte connecté suit le même calendrier de tranches ; la récupération après versement utilise
    le reversal Stripe, puis retombe sur la dette de wallet si le reversal échoue.
 
+#### 2.5.2 Fiscalité du troc — TVA 20 % et facturation réciproque
+
+Un échange lien / story / post **n'est pas neutre fiscalement** : c'est un double
+échange de services à titre onéreux. Chaque jambe est une prestation imposable, valorisée à sa
+propre valeur, même si aucun euro ne circule. La plateforme est conçue pour produire les pièces
+correspondantes automatiquement.
+
+**Règle centrale.** Pour un troc entre deux assujettis établis en France : deux prestations,
+deux factures, **TVA à 20 %** de part et d'autre, base = `marketplace_exchanges.value_cents` de la
+jambe fournie (HT). Les TVA se compensent économiquement mais doivent être facturées et déclarées
+chacune de son côté. La soulte suit le même régime : elle est un complément de prix de la jambe la
+plus faible, TVA 20 % incluse dans sa facture, jamais un flux « hors taxe ».
+
+| Flux | Émetteur → destinataire | Base | TVA v1 |
+|---|---|---|---|
+| Jambe A (lien, story, post) | vendeur A → bénéficiaire B | `value_cents` de la jambe A | 20 % si A assujetti FR |
+| Jambe B | vendeur B → bénéficiaire A | `value_cents` de la jambe B | 20 % si B assujetti FR |
+| Soulte | payeur → bénéficiaire | `soulte_cents` | même régime que la jambe qu'elle complète |
+| Commission Crawlers 15 % | Crawlers → les deux parties, au prorata des jambes | 15 % de la valeur de chaque jambe | 20 % (prestation d'entremise FR) |
+| Crédit wallet | Crawlers → vendeur | — | pas une opération TVA : simple moyen de règlement d'une prestation déjà facturée |
+
+**Statut fiscal déclaré, bloquant à la mise en vente.** Le profil vendeur porte
+`tax_status` (`assujetti_fr` | `assujetti_ue` | `assujetti_hors_ue` | `franchise` |
+`non_assujetti`), un numéro de TVA intracommunautaire validé via VIES quand il est renseigné, et
+le pays d'établissement. Conséquences :
+- `assujetti_fr` → TVA 20 % sur la jambe et sur la commission ;
+- `assujetti_ue` avec numéro VIES valide → autoliquidation : jambe **hors TVA** avec mention
+  « autoliquidation par le preneur, art. 283-2 du CGI » ; la commission Crawlers suit le même
+  régime B2B intracommunautaire ;
+- `franchise` (micro-entreprise en franchise en base) → mention « TVA non applicable,
+  art. 293 B du CGI », pas de TVA collectée, TVA de la commission non déductible ;
+- `non_assujetti` (particulier) → **la vente et le troc de liens sont refusés en v1** : impossible
+  d'émettre la facture réciproque exigée. Seuls des professionnels peuvent vendre.
+
+**Facturation réciproque (self-billing).** Crawlers émet les factures **au nom et pour le compte**
+de chaque partie, sous mandat de facturation accepté à l'onboarding (CGVU) : une facture par jambe,
+une facture de commission, numérotation continue par mandant, PDF archivé 10 ans, mentions
+obligatoires complètes (identités, TVA, date d'exécution = date de preuve de publication de §2.13,
+nature « insertion de lien éditorial » ou « publication sponsorisée », valeur HT, taux, montant de
+TVA). La date d'exigibilité retenue est la **date de la première preuve de publication**, pas la
+date d'acceptation du match. En cas de remboursement au prorata (§2.13), un **avoir** est émis sur
+la même base, TVA incluse, et rattaché à la commande.
+
+**Obligations déclaratives.** Déclaration d'échange de services (DES) pour les jambes
+intracommunautaires ; **DAC7** : Crawlers, en tant qu'opérateur de plateforme, collecte
+l'identification des vendeurs (identité, TVA/SIREN, pays) et déclare annuellement les
+contreparties perçues — **y compris les jambes en troc, valorisées à `value_cents`**, et les
+crédits wallet. Le rapport annuel est mis à disposition du vendeur dans la Console.
+
+**Implémentation.** Tables ajoutées en §4 : `marketplace_tax_profiles` (statut, TVA, pays,
+validation VIES, mandat de self-billing accepté) et `marketplace_invoices` (une ligne par pièce :
+`order_id`, `leg_id`, `kind` `leg` | `soulte` | `commission` | `credit_note`, `issuer_id`,
+`recipient_id`, `base_cents`, `vat_rate`, `vat_cents`, `total_cents`, `number`, `issued_at`,
+`pdf_path`). La TVA n'est jamais recalculée à l'affichage : elle est figée sur la pièce.
+
+*Cadre de mise en œuvre, pas un conseil fiscal : à faire valider par l'expert-comptable avant
+ouverture du troc.*
 
 
 ### 2.6 Vérification de propriété et responsabilité du vendeur
