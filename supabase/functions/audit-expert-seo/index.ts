@@ -1433,57 +1433,6 @@ async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
 
 // ==================== PAGESPEED & SAFE BROWSING ====================
 
-async function fetchPageSpeedData(url: string): Promise<any | null> {
-  const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=PERFORMANCE&category=SEO&category=BEST_PRACTICES&key=${GOOGLE_API_KEY}`;
-  
-  // Try up to 2 attempts (initial + 1 retry)
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    console.log(`[PSI] Tentative ${attempt}/2 — Récupération données PageSpeed...`);
-    
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-      
-      const response = await fetch(apiUrl, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        console.error(`[PSI] Erreur HTTP ${response.status} (tentative ${attempt}):`, error?.error?.message || response.status);
-        
-        // If rate limited (429), wait before retry
-        if (response.status === 429 && attempt < 2) {
-          console.log('[PSI] Rate limited, attente 3s avant retry...');
-          await new Promise(r => setTimeout(r, 3000));
-          continue;
-        }
-        if (attempt < 2) continue;
-        return null;
-      }
-      
-      const data = await response.json();
-      
-      // Validate that we actually got lighthouse data
-      if (!data?.lighthouseResult?.categories?.performance) {
-        console.warn('[PSI] Réponse reçue mais sans données Lighthouse valides');
-        if (attempt < 2) continue;
-        return null;
-      }
-      
-      console.log('[PSI] ✅ Données PageSpeed récupérées avec succès');
-      return data;
-    } catch (error) {
-      const isAbort = error instanceof DOMException && error.name === 'AbortError';
-      console.error(`[PSI] ${isAbort ? 'Timeout' : 'Erreur réseau'} (tentative ${attempt}):`, error);
-      if (attempt < 2) {
-        await new Promise(r => setTimeout(r, 2000));
-        continue;
-      }
-      return null;
-    }
-  }
-  return null;
-}
 
 async function checkSafeBrowsing(url: string): Promise<{ safe: boolean; threats: string[] }> {
   const apiUrl = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GOOGLE_API_KEY}`;
