@@ -155,6 +155,11 @@ const RE_SUBCONTRACT = /sous-?trait|pour le compte de|marque blanche|white ?labe
 const RE_PRIME = /donneur d'ordre|ma[iî]tre d'[oœ]uvre|ma[iî]trise d'[oœ]uvre|entreprise g[eé]n[eé]rale|coordination de chantier|nous confions/i;
 const RE_FRANCHISE = /franchise|franchis[eé]|r[eé]seau d'agences|nos agences|succursales?/i;
 const RE_B2G = /collectivit[eé]s?|march[eé]s? publics?|mairie|administration|secteur public/i;
+const RE_LIBERALE = /avocat|notaire|huissier|expert[- ]comptable|architecte|kin[eé]sith[eé]rapeute|ost[eé]opathe|m[eé]decin|dentiste|infirmi[eè]re?|sage[- ]femme|psychologue|orthophoniste|v[eé]t[eé]rinaire|profession lib[eé]rale|cabinet lib[eé]ral/i;
+const RE_ASSOCIATION = /association(?:\s+loi\s+1901)?|but non lucratif|adh[eé]rents?|b[eé]n[eé]vol|fondation|ONG/i;
+const RE_SERVICE_PUBLIC = /mairie de|commune de|conseil d[eé]partemental|conseil r[eé]gional|pr[eé]fecture|[eé]tablissement public|CCAS|EPCI|communaut[eé] de communes|service public/i;
+const RE_BOUTIQUE_ENLIGNE = /boutique en ligne|e-?commer[çc]|vente en ligne|panier|ajouter au panier|livraison en \d|frais de port/i;
+const RE_COACHING = /coach|coaching|mentorat|bilan de comp[eé]tences|programme d'accompagnement/i;
 
 function relationFromModel(model: string, entity: string, blob: string): CustomerRelation | null {
   if (/b2b2c/.test(model)) return 'b2b2c';
