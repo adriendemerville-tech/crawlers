@@ -323,6 +323,46 @@ v1 : crédit du **wallet Crawlers** du vendeur (non convertible en euros), réut
 plateforme — un lien vendu par mois rembourse l'abonnement. v2 : virement réel via
 Stripe Connect (KYC, comptes connectés, reversement à J+30 après vérification du lien).
 
+#### 2.5.1 Séquestre, acquisition progressive et récupération (clawback)
+
+Le prorata de §2.13 n'est pas un remboursement rétroactif improvisé : il est rendu possible par
+un **séquestre avec acquisition progressive**, de sorte que le cas normal ne nécessite jamais de
+reprendre des crédits déjà dépensés.
+
+1. **Séquestre à la commande.** Au figeage, le net vendeur (`price_cents − commission_cents`)
+   est inscrit au wallet du vendeur en état `held`. Il est visible mais **non dépensable**.
+2. **Déblocage.** Première tranche débloquée à **J+30** après preuve de publication confirmée
+   (§2.13), puis une tranche par mois d'engagement tenu :
+   `tranche = net_vendeur / commitment_months` (12 pour un lien, 1 pour un contenu social).
+   Chaque tranche passe `held` → `available` seulement si le dernier contrôle de maintien est
+   `maintained`. Un contrôle `broken` **gèle** le calendrier : aucune tranche ne se débloque
+   pendant la fenêtre de remise en conformité de 7 jours.
+3. **Rupture non corrigée.** La totalité du reste en `held` est annulée (`cancelled`) et
+   remboursée à l'acheteur, en crédits, au prorata des mois restants. Dans la très grande
+   majorité des cas, le remboursement est intégralement couvert par le séquestre : rien à
+   reprendre au vendeur.
+4. **Récupération quand le séquestre ne suffit pas** (rupture détectée tardivement, correctif
+   frauduleux, litige tranché en faveur de l'acheteur), dans cet ordre strict :
+   a. reste `held` de la commande concernée ;
+   b. solde `available` du wallet vendeur ;
+   c. reste `held` des **autres** commandes du même vendeur, de la plus récente à la plus ancienne ;
+   d. solde insuffisant → **le solde du wallet ne devient jamais négatif**. Le reliquat est
+   inscrit comme **dette de wallet** (`marketplace_wallet_debts`), qui : gèle la mise en vente et
+   l'achat sur la place d'échange, s'apure automatiquement sur les prochains crédits perçus
+   (100 % des entrées y passent avant d'être `available`), et peut être réglée volontairement par
+   paiement. Aucun débit forcé du moyen de paiement en v1.
+5. **Plafond et prescription.** La récupération est plafonnée au net réellement perçu par le
+   vendeur sur la commande concernée — jamais plus, jamais de pénalité additionnelle. Aucun
+   clawback n'est ouvert après `commitment_ends_at + 30 jours`.
+6. **Standing plutôt que sanction financière.** Au-delà du plafond, la conséquence est
+   réputationnelle et opérationnelle : baisse du standing vendeur, sortie de la file de priorité,
+   événement de balance inverse (§2.7.3), et suspension d'inventaire au 2ᵉ clawback sur 12 mois.
+7. **v2 Stripe Connect.** Le séquestre est porté par le solde de la plateforme et le versement au
+   compte connecté suit le même calendrier de tranches ; la récupération après versement utilise
+   le reversal Stripe, puis retombe sur la dette de wallet si le reversal échoue.
+
+
+
 ### 2.6 Vérification de propriété et responsabilité du vendeur
 
 **Aucune mise en vente n'est possible sans propriété vérifiée.** La vérification est un
@@ -774,9 +814,12 @@ confirmée à J+7) → `maintained` (contrôles récurrents OK) → `broken` (pr
 
 Conséquences d'une rupture, appliquées côté serveur sans intervention manuelle :
 - verdict `hard_broken` / lien absent / `nofollow` ajouté à la place de l'attribut convenu →
-  jambe `broken`, paiement suspendu, fenêtre de remise en conformité de 7 jours ;
-- non-corrigé après la fenêtre → remboursement au prorata du temps restant, **événement de balance
-  inverse** (§2.7.3) et impact sur le standing du vendeur ;
+  jambe `broken`, **calendrier de déblocage du séquestre gelé** (§2.5.1), fenêtre de remise en
+  conformité de 7 jours ;
+- non-corrigé après la fenêtre → remboursement au prorata du temps restant, prélevé d'abord sur le
+  séquestre `held` puis selon la cascade de récupération de §2.5.1 (jamais de solde négatif : le
+  reliquat devient une dette de wallet), **événement de balance inverse** (§2.7.3) et impact sur le
+  standing du vendeur ;
 - OAuth révoqué (LinkedIn / Meta) → impossibilité de vérifier assimilée à une rupture, l'actif
   repasse `unverified` (§2.6) ;
 - blocage de crawl (403 bot, robots.txt, coquille JS non-SSR) → escalade de rendu avant tout verdict
@@ -948,6 +991,18 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
 - `marketplace_verifications` — contrôles de publication et de maintien (§2.13) : `leg_id`, `method`
   (`crawl` | `linkedin_api` | `meta_api`), `verdict`, preuve, capture, `checked_at`, `next_check_at`,
   état de la jambe (`published` | `verified` | `maintained` | `broken` | `resolved` | `refunded`).
+- `marketplace_wallet_entries` — séquestre et acquisition progressive du net vendeur (§2.5.1) :
+  `order_id`, `leg_id`, `seller_id`, `amount_cents` (tranche), `tranche_index`, `vest_at`,
+  `state` (`held` | `available` | `cancelled` | `clawed_back`), `state_changed_at`, `reason`.
+  Une ligne par tranche ; le net vendeur d'une commande est la somme des tranches, aucune valeur
+  de jambe n'est recopiée (§4.1). Le solde dépensable d'un vendeur = somme des tranches
+  `available` moins la dette ouverte.
+- `marketplace_wallet_debts` — dette de wallet quand la récupération excède le séquestre et le
+  solde (§2.5.1) : `seller_id`, `order_id` (origine), `amount_cents`, `recovered_cents`,
+  `status` (`open` | `settled` | `written_off`), `opened_at`, `settled_at`.
+  Une dette `open` gèle la mise en vente et l'achat, et absorbe 100 % des crédits entrants avant
+  tout passage en `available`. Le solde du wallet ne peut jamais être négatif.
+
 
 
 ---

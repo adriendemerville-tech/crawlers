@@ -81,3 +81,13 @@ Aucune valeur GSC exacte n'est jamais exposée à un acheteur ou en public : uni
 - Une commande ne donne aucun accès supplémentaire : le suivi post-publication porte sur la
   présence du lien, pas sur son trafic.
 - L'opt-in de mise en vente énumère explicitement ce qui sera visible et ce qui ne le sera jamais.
+
+## Séquestre, acquisition progressive et clawback
+Le net vendeur est mis en séquestre (`held`) au figeage, débloqué par tranches
+(`net / commitment_months`), 1ʳᵉ tranche à J+30 après preuve de publication, tranche suivante
+seulement si le dernier contrôle de maintien est `maintained` ; un verdict `broken` gèle le
+calendrier. Remboursement au prorata prélevé dans cet ordre : `held` de la commande → `available`
+→ `held` des autres commandes → dette de wallet. **Le solde du wallet n'est jamais négatif** : le
+reliquat devient une dette (`marketplace_wallet_debts`) qui gèle vente et achat et absorbe 100 %
+des crédits entrants. Récupération plafonnée au net perçu sur la commande, prescrite après
+`commitment_ends_at + 30 j`. Tables : `marketplace_wallet_entries`, `marketplace_wallet_debts`.
