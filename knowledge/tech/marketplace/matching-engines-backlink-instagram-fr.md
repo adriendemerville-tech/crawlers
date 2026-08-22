@@ -1254,7 +1254,7 @@ Ajouts obligatoires :
 |---|---|
 | L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € (**P1 40 € · P2 90 € · P3 150 € · P4 250 € · P5 350 €**) + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
 | L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » + **calcul de la valeur d'appariement page et domaine (§2.11)** |
-| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 % prélevée en crédits (contrôle des soldes avant figeage, taux figé), **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
+| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 % (cash retenue sur le flux, crédits obligatoires sur le troc avec contrôle des soldes avant figeage et taux figé), **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
 | L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
 | L5 | Landing page, home, tarifs, **valeur d'appariement dans l'Audit stratégique et Marina (page + domaine)**, bloc « Ma balance » comme produit de rétention (§2.14), CGVU |
 
