@@ -1,11 +1,16 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Layers, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
 
 /**
  * Explicite les trois modes de scan Marina et le fait que la bascule est
  * automatique (déduite du nombre d'URLs réellement découvertes sur le domaine).
  * Purement informatif : aucun réglage manuel n'est exposé, par choix produit.
+ *
+ * Le composant est scindé en deux :
+ *  - MarinaScanModePanel : la carte-en-tête (titre + chevron), alignée en
+ *    hauteur avec la carte "Carte d'identité" dans la grille.
+ *  - MarinaScanModeDetail : le détail (mode actif + tableau + note), rendu en
+ *    pleine largeur SOUS les deux cartes pour rester lisible.
  */
 
 type Lang = 'fr' | 'en' | 'es';
@@ -65,38 +70,44 @@ export interface ActiveScanMode {
 
 const MODE_ROW_INDEX: Record<ActiveScanMode['mode'], number> = { deep: 0, standard: 1, sample: 2 };
 
+function resolve(language?: string): Lang {
+  return (language as Lang) in COPY ? (language as Lang) : 'fr';
+}
+
+function activeLine(lang: Lang, t: (typeof COPY)[Lang], active: ActiveScanMode | null, pagesCrawled: number | null): string | null {
+  if (!active) return null;
+  const i = MODE_ROW_INDEX[active.mode];
+  return lang === 'en'
+    ? `Mode applied to this run: ${t.rows[i][0]} — up to ${active.maxPages} pages${active.discoveredUrls ? `, ${active.discoveredUrls} discovered URLs` : ''}${active.coveragePct !== null ? `, target coverage ${active.coveragePct}%` : ''}${pagesCrawled ? ` · ${pagesCrawled} pages crawled so far` : ''}.`
+    : lang === 'es'
+      ? `Modo aplicado a esta ejecución: ${t.rows[i][0]} — hasta ${active.maxPages} páginas${active.discoveredUrls ? `, ${active.discoveredUrls} URL descubiertas` : ''}${active.coveragePct !== null ? `, cobertura objetivo ${active.coveragePct} %` : ''}${pagesCrawled ? ` · ${pagesCrawled} páginas rastreadas` : ''}.`
+      : `Mode retenu pour ce run : ${t.rows[i][0]} — jusqu'à ${active.maxPages} pages${active.discoveredUrls ? `, ${active.discoveredUrls} URLs découvertes` : ''}${active.coveragePct !== null ? `, couverture visée ${active.coveragePct} %` : ''}${pagesCrawled ? ` · ${pagesCrawled} pages déjà crawlées` : ''}.`;
+}
+
 export function MarinaScanModePanel({
   language = 'fr',
   active = null,
   pagesCrawled = null,
+  open = false,
+  onOpenChange,
 }: {
   language?: string;
-  /** Mode réellement retenu pour le run en cours (renvoyé par le job). */
   active?: ActiveScanMode | null;
   pagesCrawled?: number | null;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const lang: Lang = (language as Lang) in COPY ? (language as Lang) : 'fr';
+  const lang = resolve(language);
   const t = COPY[lang];
-  const activeIndex = active ? MODE_ROW_INDEX[active.mode] : -1;
-
-  const activeLine = active
-    ? lang === 'en'
-      ? `Mode applied to this run: ${t.rows[activeIndex][0]} — up to ${active.maxPages} pages${active.discoveredUrls ? `, ${active.discoveredUrls} discovered URLs` : ''}${active.coveragePct !== null ? `, target coverage ${active.coveragePct}%` : ''}${pagesCrawled ? ` · ${pagesCrawled} pages crawled so far` : ''}.`
-      : lang === 'es'
-        ? `Modo aplicado a esta ejecución: ${t.rows[activeIndex][0]} — hasta ${active.maxPages} páginas${active.discoveredUrls ? `, ${active.discoveredUrls} URL descubiertas` : ''}${active.coveragePct !== null ? `, cobertura objetivo ${active.coveragePct} %` : ''}${pagesCrawled ? ` · ${pagesCrawled} páginas rastreadas` : ''}.`
-        : `Mode retenu pour ce run : ${t.rows[activeIndex][0]} — jusqu'à ${active.maxPages} pages${active.discoveredUrls ? `, ${active.discoveredUrls} URLs découvertes` : ''}${active.coveragePct !== null ? `, couverture visée ${active.coveragePct} %` : ''}${pagesCrawled ? ` · ${pagesCrawled} pages déjà crawlées` : ''}.`
-    : null;
-
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Card className="mt-4 h-full border-border/60 bg-card/50 text-left">
-      <CardContent className="flex h-full flex-col p-5">
+    <Card className="h-full border-border/60 bg-card/50 text-left">
+      <CardContent className="flex h-full flex-col justify-center p-5">
         <button
           type="button"
-          onClick={() => setIsOpen((v) => !v)}
+          onClick={() => onOpenChange?.(!open)}
           className="flex w-full items-start justify-between gap-3 text-left"
-          aria-expanded={isOpen}
+          aria-expanded={open}
         >
           <div className="flex items-start gap-3 min-w-0">
             <Layers className="w-4 h-4 mt-0.5 text-primary shrink-0" />
@@ -105,48 +116,63 @@ export function MarinaScanModePanel({
             </div>
           </div>
           <ChevronDown
-            className={`w-4 h-4 mt-0.5 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 mt-0.5 text-muted-foreground shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
             aria-hidden="true"
           />
         </button>
-
-        {isOpen && (
-          <>
-            {activeLine && (
-              <p className="mt-3 rounded-md border border-primary/40 px-3 py-2 text-xs font-medium leading-relaxed text-foreground">
-                {activeLine}
-              </p>
-            )}
-
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-left text-muted-foreground">
-                    {t.cols.map((c) => (
-                      <th key={c} className="border-b border-border/60 pb-2 pr-4 font-medium uppercase tracking-wide">
-                        {c}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {t.rows.map((r, i) => (
-                    <tr key={r[0]} className={i === activeIndex ? 'align-top bg-primary/10' : 'align-top'}>
-                      <td className="border-b border-border/40 py-2 pr-4 font-semibold text-foreground whitespace-nowrap">
-                        {r[0]}
-                      </td>
-                      <td className="border-b border-border/40 py-2 pr-4 text-muted-foreground">{r[1]}</td>
-                      <td className="border-b border-border/40 py-2 text-muted-foreground">{r[2]}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t.note}</p>
-          </>
-        )}
       </CardContent>
     </Card>
+  );
+}
+
+export function MarinaScanModeDetail({
+  language = 'fr',
+  active = null,
+  pagesCrawled = null,
+}: {
+  language?: string;
+  active?: ActiveScanMode | null;
+  pagesCrawled?: number | null;
+}) {
+  const lang = resolve(language);
+  const t = COPY[lang];
+  const activeIndex = active ? MODE_ROW_INDEX[active.mode] : -1;
+  const line = activeLine(lang, t, active, pagesCrawled);
+
+  return (
+    <div className="rounded-lg border border-border/60 bg-card/50 p-5 text-left">
+      {line && (
+        <p className="mb-4 rounded-md border border-primary/40 px-3 py-2 text-xs font-medium leading-relaxed text-foreground">
+          {line}
+        </p>
+      )}
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="text-left text-muted-foreground">
+              {t.cols.map((c) => (
+                <th key={c} className="border-b border-border/60 pb-2 pr-4 font-medium uppercase tracking-wide">
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {t.rows.map((r, i) => (
+              <tr key={r[0]} className={i === activeIndex ? 'align-top bg-primary/10' : 'align-top'}>
+                <td className="border-b border-border/40 py-2 pr-4 font-semibold text-foreground whitespace-nowrap">
+                  {r[0]}
+                </td>
+                <td className="border-b border-border/40 py-2 pr-4 text-muted-foreground">{r[1]}</td>
+                <td className="border-b border-border/40 py-2 text-muted-foreground">{r[2]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t.note}</p>
+    </div>
   );
 }
