@@ -4636,6 +4636,21 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           console.warn('[Marina] Workbench write failed (non-fatal):', wbWriteErr);
         }
 
+        // Les plafonds de cohérence sont des causes racines : on les pousse aussi
+        // dans le workbench en sévérité critique, avec leur preuve chiffrée.
+        try {
+          await writeGatesToWorkbench(sb, unifiedGates, {
+            domain,
+            url,
+            userId: parentJob.user_id,
+            trackedSiteId: trackedSiteId || null,
+          });
+        } catch (gateErr) {
+          console.warn('[Marina] Gate workbench write failed (non-fatal):', gateErr);
+        }
+
+
+
         // ─── Step B: now read the workbench (Marina findings included) ───
         let workbenchTasks: WorkbenchTask[] = [];
         try {
