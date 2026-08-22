@@ -42,7 +42,7 @@ const COPY: Record<Lang, {
       'Above 1,000 URLs a full crawl cannot fit in a single run: template sampling yields the same diagnosis without blowing up runtime or cost.',
   },
   es: {
-    title: 'Tres modos de escaneo, conmutación automática',
+    title: 'Tres modos de escaneo',
     subtitle: '',
     cols: ['Modo', 'Activación', 'Páginas analizadas'],
     rows: [
