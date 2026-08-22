@@ -32,6 +32,8 @@ import {
 import { buildGeoSubSignals, geoSubSignalsBlockHTML } from '../_shared/geoSubSignals.ts';
 import {
   gatesPriorityBlockHTML,
+  scorePenaltyBlockHTML,
+
   mergeGates,
   normalizeGates,
   writeGatesToWorkbench,
