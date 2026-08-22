@@ -624,7 +624,13 @@ export function mergeMarinaReports(
              <strong>${dupOwner + 1}</strong> (${escapeHtml(pathOf(parts[dupOwner].url))}) : elle n'est pas répétée ici.
            </p>`
         : '';
-      const content = split.tagged ? kept.map(b => b.html).join('\n') : extractBody(p.html);
+      const rawContent = split.tagged ? kept.map(b => b.html).join('\n') : extractBody(p.html);
+      // Cohérence de périmètre : dès que la visibilité IA est mesurée par URL,
+      // la mention « présentée une seule fois pour le domaine » serait fausse.
+      const content = demotedToPage.has('llm')
+        ? rawContent.replace(/,\s*visibilité IA\)/gi, ')')
+        : rawContent;
+
 
       const condensedNote = condensed
         ? `<p style="margin:10px 32px 0 32px;font-size:12px;color:#6b7280;line-height:1.6;max-width:52em;">
