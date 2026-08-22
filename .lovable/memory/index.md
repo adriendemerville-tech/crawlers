@@ -42,4 +42,4 @@
 - [Mode démo console](mem://features/console/demo-mode-fixtures-fr) — Interrupteur Administration + fixtures front-only (GSC BQ, Indexation, Logs bots, SEA→SEO, GMB), aucune écriture en base
 - [Brief éditorial DictaDevi](mem://features/dictadevi/editorial-brief-endpoint-fr) — Endpoint /api/v1/editorial-brief injecté dans Parménion + garde dure des sujets hors ligne éditoriale
 - [Norme vidéos de démonstration](mem://tech/media/demo-video-standard-fr) — Registre demoVideos.registry + DemoVideoSection + buildVideoObjectSchema : lazy-load, transcription SSR, WebVTT, VideoObject
-- [Place d'échange règles v1](mem://features/marketplace/v1-core-rules-fr) — Commission unique 15 %, link_for_link bridé (21 j, 1/trimestre, anti-cycle, décote 0,70), propriété vérifiée avant mise en vente, bornes dures 40-350 € par paliers de 10 €
+- [Place d'échange règles v1](mem://features/marketplace/v1-core-rules-fr) — Commission unique 15 %, link_for_link bridé (21 j, 1/trimestre, anti-cycle, décote 0,70), propriété vérifiée avant mise en vente, bornes dures 40-350 € par paliers de 10 €, signaux GSC exposés en fourchettes uniquement
