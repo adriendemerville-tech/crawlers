@@ -354,6 +354,20 @@ Workflow :
 est imposé par le serveur au figeage de la commande, et `dofollow` n'est accessible que si toutes
 les conditions de gating ci-dessous sont réunies.
 
+#### Qui décide — chaîne de décision
+
+| Acteur | Pouvoir sur l'attribut |
+|---|---|
+| **Crawlers (serveur)** | **Décide.** Calcule l'attribut applicable au figeage de la commande à partir de `sell_risk`, du palier, des plafonds page/domaine et du `deal_type`. Non négociable, aucune dérogation admin. |
+| **Vendeur** | **Droit de veto uniquement.** Il peut refuser un `dofollow` autorisé et rester en `sponsored` (c'est son domaine, sa responsabilité éditoriale et son risque de pénalité). Il ne peut jamais forcer un `dofollow` refusé par le serveur. |
+| **Acheteur** | **Aucun pouvoir.** Il voit l'attribut applicable avant paiement et accepte ou renonce. Il ne peut ni demander ni surpayer un `dofollow`. |
+
+Autrement dit : Crawlers ne fait pas une « recommandation », il fixe le plafond ; le vendeur peut
+seulement descendre en dessous ; l'acheteur constate. Le prix étant indépendant de l'attribut
+(§2.1), un veto vendeur ne modifie ni le montant ni la commission — il ne crée donc aucune
+négociation cachée. Le veto est journalisé sur la commande (`link_attribute_requested` vs
+`link_attribute_final`) pour l'arbitrage (§2.16).
+
 Justification :
 - **Cohérence juridique** : la place d'échange qualifie déjà chaque jambe de prestation à titre
   onéreux soumise à TVA (§2.5.2). Une prestation onéreuse déclarée à l'administration et déclarée
