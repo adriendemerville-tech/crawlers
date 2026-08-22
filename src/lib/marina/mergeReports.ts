@@ -402,7 +402,10 @@ export function mergeMarinaReports(
   // ils gonflaient le PDF de plusieurs centaines de pages. On les remonte une
   // seule fois quand leur contenu est strictement identique sur au moins deux
   // URLs — jamais quand il diffère (aucune information perdue).
-  const NEVER_MUTUALISED = new Set(['page-verdict', 'summary', 'conclusion', 'degraded']);
+  // Un bloc redescendu au périmètre page (mesure propre à l'URL) ne doit jamais
+  // être re-mutualisé par la comparaison de contenu ci-dessous.
+  const NEVER_MUTUALISED = new Set(['page-verdict', 'summary', 'conclusion', 'degraded', ...demotedToPage]);
+
   const occurrences = new Map<string, number>();
   for (const s of splits) {
     const seen = new Set<string>();
