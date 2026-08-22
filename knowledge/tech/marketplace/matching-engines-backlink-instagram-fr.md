@@ -51,8 +51,8 @@ La Place d'échange ferme la boucle : au lieu de s'arrêter au diagnostic « il 
 liens ou de la visibilité », Crawlers permet de **satisfaire ce besoin en interne**.
 
 Bénéfices pour Crawlers :
-- **Monétisation sur l'existant** : commission de 25 % sur chaque transaction, sans coût
-  d'acquisition supplémentaire (l'acheteur est déjà un utilisateur diagnostiqué).
+- **Monétisation sur l'existant** : commission unique de 15 % sur chaque transaction (cash comme
+  troc), sans coût d'acquisition supplémentaire (l'acheteur est déjà un utilisateur diagnostiqué).
 - **Données de pricing uniques** : aucun acteur ne tarifie des liens à partir de signaux
   GSC + visibilité IA ; c'est un avantage concurrentiel difficile à copier.
 - **Effet de réseau** : chaque vendeur est aussi un acheteur potentiel (et inversement) ;
@@ -81,10 +81,18 @@ alimenté par des diagnostics déjà produits par la plateforme.
   déclaration du vendeur (clics/impressions/position par page + autorité domaine +
   qualité de contenu + thématique + visibilité IA).
 
-Commission Crawlers : **25 %** du prix payé par l'acheteur, sur les deux verticales.
+**Décisions structurantes de la v1 (valables dans tout le document, aucune exception) :**
+
+| Règle | Valeur v1 |
+|---|---|
+| Commission Crawlers | **15 %**, taux unique sur les deux verticales et sur tous les `deal_type` (`cash`, `credits`, `barter`) |
+| `link_for_link` | **autorisé, flaggé et bridé** : délai 21 j, décote d'équité, quota 1 réciprocité / trimestre / site, blocage si cycle détecté |
+| Propriété du vendeur | **vérification obligatoire avant mise en vente** (GSC/DNS pour un domaine, OAuth pour LinkedIn/Instagram) |
+| Bornes de prix | **40 € plancher, 350 € plafond, dures**, paliers multiples de **10 €**, toutes devises et tous actifs |
 
 Invariant transversal : **le prix est toujours calculé serveur**, jamais transmis par le client.
-Aucune mise en vente sans **opt-in explicite** du vendeur (les données GSC sont personnelles).
+Aucune mise en vente sans **opt-in explicite** du vendeur (les données GSC sont personnelles) **et
+sans propriété vérifiée** (voir §2.6).
 
 ---
 
@@ -104,24 +112,28 @@ Signaux collectés par page :
 | Qualité de contenu | `computeSeoScoreV2` + E-E-A-T v3 + fraîcheur | 15 % |
 | Visibilité IA (citations, benchmark GEO) | benchmark SERP multi-providers + scoring GEO | 10 % |
 
-Prix indicatif = `base × Σ(poids × score normalisé)`, borné par un plancher et un plafond
-(v1 : 40 € – 350 €). Le prix est recalculé à chaque rafraîchissement des signaux et **figé
-au moment de la commande**.
+Prix indicatif = `base × Σ(poids × score normalisé)`, borné par un **plancher dur de 40 €** et un
+**plafond dur de 350 €**. Aucun actif ne sort de ces bornes en v1, quelle que soit son autorité :
+pas de dérogation, pas de file de validation admin. Le prix est recalculé à chaque rafraîchissement
+des signaux et **figé au moment de la commande**.
 
 **Grille de prix (détail retenu).** Le prix algorithmique choisit un **palier fixe**, il ne
 l'invente pas : pas de prix continu, lisibilité acheteur/vendeur, pas de négociation au cas
-par cas. Quatre paliers calés **légèrement sous le marché** constaté (lien contextuel France,
-SEO/GEO) sans casser la perception qualité :
+par cas. Tous les paliers sont des **multiples de 10 €** (règle d'arrondi unique dans toute la
+place d'échange, y compris pour les soultes et les valorisations d'actifs sociaux). Quatre
+paliers calés **légèrement sous le marché** constaté (lien contextuel France, SEO/GEO) sans
+casser la perception qualité :
 
 | Palier | Prix | Profil vendeur (marché constaté) |
 |---|---|---|
-| P1 | **49 €** | Petit site / blog de niche (DR 20-40, faible trafic) — marché 40-80 € |
-| P2 | **89 €** | Site SaaS / média spécialisé correct (DR 40-60, trafic qualifié) — marché 80-180 € |
-| P3 | **149 €** | Site fort / média reconnu (DR 60+, trafic significatif) — marché 180-350 € |
-| P4 | **249 €** | Premium / très forte autorité — marché 350 €+ |
+| P1 | **40 €** | Petit site / blog de niche (DR 20-40, faible trafic) — marché 40-80 € |
+| P2 | **90 €** | Site SaaS / média spécialisé correct (DR 40-60, trafic qualifié) — marché 80-180 € |
+| P3 | **150 €** | Site fort / média reconnu (DR 60+, trafic significatif) — marché 180-350 € |
+| P4 | **250 €** | Premium / très forte autorité — marché 350 €+ |
 
 Sélection du palier : le score normalisé global (`Σ(poids × score normalisé)`) mappe vers le
-palier le plus proche, avec maintien du plancher 40 € / plafond 350 € comme bornes dures.
+palier le plus proche. P1 vaut exactement le plancher, P4 reste sous le plafond : les bornes
+40 € / 350 € encadrent aussi les prix ajustés par une soulte.
 **Différenciation data** : seul acteur du marché à pricer la page à l'unité sur des faits
 mesurés (autorité + sémantique + trafic GSC réel + qualité + visibilité IA), là où
 Rocketlinks / Getfluence s'appuient sur du déclaratif.
@@ -185,14 +197,31 @@ v1 : crédit du **wallet Crawlers** du vendeur (non convertible en euros), réut
 plateforme — un lien vendu par mois rembourse l'abonnement. v2 : virement réel via
 Stripe Connect (KYC, comptes connectés, reversement à J+30 après vérification du lien).
 
-### 2.6 Responsabilité du vendeur
+### 2.6 Vérification de propriété et responsabilité du vendeur
 
-Crawlers ne vérifie pas la propriété juridique des sites mis en vente et n'exige aucune preuve
-de mandat. Chacun est responsable des sites qu'il déclare : au moment de la mise en vente, le
-vendeur coche une déclaration ferme (« je suis autorisé à publier un lien sur ce site »), tracée
-avec horodatage et IP. Toute contestation d'un tiers entraîne le retrait immédiat de l'annonce
-et le remboursement de l'acheteur ; la responsabilité reste au vendeur. Cette clause figure aux
-CGVU (section 8.5).
+**Aucune mise en vente n'est possible sans propriété vérifiée.** La vérification est un
+prérequis technique bloquant, pas une déclaration : un actif reste en statut `unverified` et
+n'entre ni dans l'inventaire, ni dans l'appariement, ni dans un troc.
+
+| Type d'actif | Preuve acceptée | Contrôle |
+|---|---|---|
+| Domaine / page | propriété GSC confirmée sur le compte connecté, ou enregistrement DNS `TXT crawlers-verify=<token>`, ou fichier `/.well-known/crawlers-verify.txt` | automatique, revérifié tous les 30 j |
+| Compte LinkedIn | OAuth LinkedIn du compte qui publiera (URN de l'auteur) | automatique |
+| Compte Instagram | OAuth Meta du compte professionnel | automatique |
+
+Règles :
+- Perte de la preuve (GSC déconnecté, TXT supprimé, OAuth révoqué) → actif repassé
+  `unverified`, retiré de l'inventaire ; les commandes en cours sont honorées ou remboursées.
+- La vérification s'ajoute à la déclaration de responsabilité (« je suis autorisé à publier un
+  lien sur ce site »), tracée avec horodatage et IP dans `marketplace_ownership_claims` : la
+  preuve technique établit le contrôle du site, pas le mandat juridique.
+- Toute contestation d'un tiers entraîne le retrait immédiat de l'annonce et le remboursement
+  de l'acheteur ; la responsabilité juridique reste au vendeur.
+- Un domaine ne peut être vérifié que par **un seul compte** à la fois ; en cas de conflit, le
+  premier vérifié conserve l'actif et le second est refusé (même logique que
+  `ownershipCheck.ts` côté injection).
+
+Cette clause figure aux CGVU (section 8.5).
 
 ### 2.7 Incentive : troc (barter)
 
@@ -238,17 +267,26 @@ Lecture par `trade_type`, besoin dominant servi de chaque côté :
 Règles :
 - L'UI n'affiche **jamais** un gain SEO ou GEO pour une jambe Instagram : la valeur annoncée est
   strictement l'audience et le clic.
-- `link_for_link` est autorisé mais **signalé comme à risque** dans l'UI (pattern de lien
-  réciproque dévalué par Google) : les deux publications sont **décorrélées dans le temps**
-  (délai minimum de 21 jours entre les deux jambes, jamais de publication simultanée), et une
-  pondération de décote est appliquée à la valeur de chaque jambe dans le calcul d'équité.
+- `link_for_link` est **autorisé, signalé comme à risque et bridé**. Quatre garde-fous cumulés,
+  tous appliqués serveur, aucun contournable depuis l'UI :
+  1. **Flag de risque** visible des deux côtés avant acceptation (pattern de lien réciproque
+     dévalué par Google), avec formulation explicite du risque encouru ;
+  2. **Décorrélation temporelle** : délai minimum de 21 jours entre les deux jambes, jamais de
+     publication simultanée, ordre de publication tiré au sort ;
+  3. **Quota** : maximum **1 réciprocité directe par trimestre et par site**, dans les deux sens
+     confondus, et jamais deux fois avec le même partenaire sur 12 mois glissants ;
+  4. **Détection de cycle** : le graphe des liens échangés est parcouru avant validation ; toute
+     boucle détectée (A→B→A, A→B→C→A, jusqu'à 4 sauts) **bloque** la proposition en 409, sans
+     possibilité de forçage.
 - La valeur d'une jambe LinkedIn est estimée sur les impressions et l'engagement des 10 derniers
   posts du vendeur, publication vérifiée via l'URN/URL stable du post. À défaut d'impressions
-  exposées par l'API : followers × taux d'engagement observé sur les réactions publiques.
-- Commission Crawlers sur un troc : 10 % de la valeur estimée de chaque côté, prélevée en crédits
-  (moins que les 25 % d'une vente cash, l'échange n'impliquant aucun encaissement).
+  exposées par l'API : followers × taux d'engagement observé sur les réactions publiques. La
+  valeur obtenue est arrondie au palier de 10 € et bornée à 40 € – 350 € comme un lien.
+- Commission Crawlers sur un troc : **15 %** de la valeur estimée de chaque côté, prélevée en
+  crédits — **même taux que la vente cash**, aucune exception de devise ni de `deal_type`.
 - Le troc suit le même workflow de prévisualisation (2.3) et de double feedback que la vente.
-- Plafonds : maximum 2 échanges actifs par site sortant et par mois.
+- Plafonds : maximum 2 échanges actifs par site sortant et par mois, dont **au plus 1
+  `link_for_link` par trimestre** (règle 3 ci-dessus, la plus contraignante l'emporte).
 
 #### 2.7.2 Sélection du `trade_type` et de la soulte
 
@@ -271,11 +309,17 @@ Le moteur ne demande pas aux parties de choisir : il propose. Séquence détermi
          |écart| >  15 %  → soulte réglée par la partie avantagée,
                             uniquement sous deux formes :
                               a) cash : le prix en euros de la commande augmente
-                                 du montant de l'écart (paliers P1–P4)
+                                 du montant de l'écart, arrondi au palier de 10 €
+                                 et borné de sorte que le total reste dans 40–350 €
                               b) crédits : transfert de crédits Crawlers
                                  de wallet à wallet entre les deux users
-5. Décote  : si trade_type = link_for_link, value de chaque jambe × facteur de décote
-             réciproque avant calcul de l'écart.
+                                 (même arrondi 10 €, 1 crédit = 1 € pour l'équité)
+0. Garde   : les deux actifs doivent être en statut `verified` (§2.6),
+             sinon la proposition n'est pas générée.
+5. Décote  : si trade_type = link_for_link, value de chaque jambe × 0,70
+             (facteur de décote réciproque v1) avant calcul de l'écart,
+             puis contrôle du quota trimestriel et de l'absence de cycle :
+             échec → proposition bloquée, pas de repli sur un autre trade_type.
 6. Sortie  : { trade_type, jambe_A, jambe_B, soulte, devise_soulte, risk_flags[] }
              présenté aux deux parties, acceptation explicite des deux côtés requise.
 ```
@@ -455,7 +499,7 @@ schéma dévalué.
 
 | Critère | BabyLoveGrowth / Keytomic | RocketLinks / Getfluence / Collaborator | Échange manuel entre pairs | Place d'échange Crawlers |
 |---|---|---|---|---|
-| Modèle | Abonnement, liens distribués automatiquement | Achat à l'unité, commission | Gré à gré | Achat cash **et** troc, commission 25 % |
+| Modèle | Abonnement, liens distribués automatiquement | Achat à l'unité, commission | Gré à gré | Achat cash **et** troc, commission unique 15 % |
 | Devises d'échange | Aucune (bundle) | Euros | Lien contre lien | Lien, LinkedIn, Instagram, crédits, euros |
 | Contrôle du voisinage | Faible (base non filtrée) | Éditorial (curation Getfluence) | Aucun | Filtrage thématique + standing vendeur |
 | Empreinte / risque de pattern | Élevé (attribution uniforme) | Moyen (articles sponsorisés massifs) | Élevé (réciprocité directe) | `link_for_link` flaggé, décorrélation 21 j, décote d'équité |
@@ -527,7 +571,8 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`, `deal_type` (`cash` | `credits` | `barter`), et si `barter` : `trade_type` (`link_for_link` | `link_for_linkedin` | `link_for_insta` | `linkedin_for_linkedin` | `insta_for_insta`), `soulte_cents`, `soulte_currency` (`eur` | `credits` uniquement), `soulte_payer_id`, `soulte_payee_id`, `risk_flags[]`.
 - `marketplace_needs` porte `need_primary` / `need_secondary` (`seo` | `geo` | `conversion`) : entrée de la matrice 2.7.1 pour les deux parties.
 
-- `marketplace_exchanges` — jambes d'un troc (2 jambes : le lien + la contrepartie), nature de la contrepartie, valeur estimée par jambe, solde en crédits, commission 10 %.
+- `marketplace_exchanges` — jambes d'un troc (2 jambes : le lien + la contrepartie), nature de la contrepartie, valeur estimée par jambe (arrondie au palier de 10 €, bornée 40–350 €), solde en crédits, commission 15 %, `reciprocity_quarter` (clé de quota `link_for_link`), `cycle_check_verdict`.
+- `marketplace_ownership_verifications` — preuve de propriété par actif : `method` (`gsc` | `dns_txt` | `file` | `oauth_linkedin` | `oauth_meta`), `token`, `verified_at`, `last_checked_at`, `status` (`verified` | `unverified` | `revoked`). Unicité : un domaine vérifié par un seul compte.
 
 - `marketplace_ownership_claims` — déclaration de responsabilité vendeur : horodatage, IP, texte accepté.
 - `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
@@ -603,7 +648,7 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - Nouveau bloc « Jeune entreprise — 12 mois offerts » (60 crédits/mois, sur candidature,
   30 places), positionné avant Pro Agency.
 - Mention marketplace sur chaque plan payant : « revendez des liens depuis vos pages,
-  25 % de commission Crawlers — un lien vendu par mois peut rembourser votre abonnement ».
+  15 % de commission Crawlers — un lien vendu par mois peut rembourser votre abonnement ».
 - Précision crédits : les crédits gagnés en vendant sont utilisables sur toute la plateforme.
 
 ### 8.2 Audit stratégique
@@ -626,16 +671,22 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 ### 8.5 CGVU
 Ajouts obligatoires :
 - Statut de Crawlers : **intermédiaire technique**, pas éditeur du contenu vendu.
-- Commission 25 %, base de calcul, moment de prélèvement.
-- Obligations du vendeur : propriété du domaine/compte vérifiée, maintien du lien
-  (durée minimale 12 mois), conformité éditoriale, mention de publicité pour le social.
+- Commission **15 %**, taux unique cash et troc, base de calcul, moment de prélèvement.
+- Obligations du vendeur : **propriété du domaine ou du compte vérifiée par Crawlers avant toute
+  mise en vente** (GSC/DNS/fichier, OAuth pour le social), maintien du lien (durée minimale
+  12 mois), conformité éditoriale, mention de publicité pour le social.
 - Obligations de l'acheteur : légalité de la page cible, absence de contenu prohibé.
 - Attribut du lien : information de l'acheteur, absence de garantie de classement.
 - Prévisualisation, feedback, 3 tours de révision, arbitrage et annulation sans frais.
 - Retrait ou disparition du lien : suspension du paiement, remboursement au prorata.
 - Wallet : crédits non convertibles en euros en v1, non remboursables, durée de validité.
 - Données : partage limité et consenti des signaux de page entre les parties (RGPD).
-- Interdictions : échanges réciproques, fermes de liens, achat d'engagement.
+- **Échanges réciproques (`link_for_link`) : autorisés mais encadrés** — délai de 21 jours entre
+  les deux publications, une seule réciprocité par trimestre et par site, jamais deux fois avec
+  le même partenaire sur 12 mois, refus automatique en cas de boucle de liens. Le risque de
+  dévaluation par les moteurs est porté à la connaissance des deux parties et assumé par elles.
+- Interdictions fermes : fermes de liens, réseaux de sites détenus par un même bénéficiaire,
+  achat d'engagement, revente d'un actif dont la propriété n'est pas vérifiée.
 - Plan Jeune entreprise : conditions d'éligibilité, plafond de crédits, support communautaire,
   fin automatique à 12 mois.
 
@@ -645,9 +696,9 @@ Ajouts obligatoires :
 
 | Lot | Contenu |
 |---|---|
-| L1 | Schéma + pricing serveur + inventaire opt-in + onglet « Je vends » |
+| L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € + inventaire opt-in + onglet « Je vends » |
 | L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » |
-| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet |
+| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 %, **quota `link_for_link` + détection de cycles** |
 | L4 | Vérification récurrente des liens + reporting |
 | L5 | Landing page, home, tarifs, audits, Marina, CGVU |
 | L6 | Plan Jeune entreprise (quota, flags, crons dégradés, routage LLM) |
