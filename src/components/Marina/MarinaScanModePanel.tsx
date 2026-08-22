@@ -43,8 +43,7 @@ const COPY: Record<Lang, {
   },
   es: {
     title: 'Tres modos de escaneo, conmutación automática',
-    subtitle:
-      'Marina mide primero el tamaño real del sitio y luego elige el modo. El modo y la cobertura se indican en la introducción del informe.',
+    subtitle: '',
     cols: ['Modo', 'Activación', 'Páginas analizadas'],
     rows: [
       ['Profundo', 'Sitio ≤ 120 URL descubiertas', 'Hasta 120 — cobertura casi exhaustiva'],
