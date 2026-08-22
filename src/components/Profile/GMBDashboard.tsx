@@ -1219,6 +1219,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
             </Button>
           </CardContent>
         </Card>
+        <GmbUrlAuditTab />
       </div>
     );
   }
