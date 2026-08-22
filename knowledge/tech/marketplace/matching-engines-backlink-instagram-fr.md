@@ -642,7 +642,7 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - Nouveau bloc « Jeune entreprise — 12 mois offerts » (60 crédits/mois, sur candidature,
   30 places), positionné avant Pro Agency.
 - Mention marketplace sur chaque plan payant : « revendez des liens depuis vos pages,
-  25 % de commission Crawlers — un lien vendu par mois peut rembourser votre abonnement ».
+  15 % de commission Crawlers — un lien vendu par mois peut rembourser votre abonnement ».
 - Précision crédits : les crédits gagnés en vendant sont utilisables sur toute la plateforme.
 
 ### 8.2 Audit stratégique
