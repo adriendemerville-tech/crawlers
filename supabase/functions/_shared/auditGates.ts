@@ -203,10 +203,9 @@ export function scorePenaltyBlockHTML(
     lines.push(
       t(
         `La performance mobile grève le score SEO de <strong>${perf.pointsLost} points</strong> sur ${techMax}. ${
-          lcpS ? `Le LCP mesuré est de ${lcpS}` : 'Le LCP mesuré dépasse le seuil Core Web Vitals'
-        } contre une cible de 2,50 s : l’axe performance est ramené à ${perf.target ? '' : ''}${
-          perf.evidence || ''
-        }`.replace(/\s+$/, ''),
+          lcpS ? `Le LCP mobile mesuré est de ${lcpS}` : 'Le LCP mobile mesuré dépasse le seuil Core Web Vitals'
+        } pour une cible de 2,50 s : l’axe performance est ramené au plafond (${perf.evidence || 'plafond de cohérence appliqué'}).`,
+
         `Mobile performance costs the SEO score <strong>${perf.pointsLost} points</strong> out of ${techMax}. ${
           lcpS ? `Measured LCP is ${lcpS}` : 'Measured LCP exceeds the Core Web Vitals threshold'
         } against a 2.50 s target: ${perf.evidence || ''}`.replace(/\s+$/, ''),
