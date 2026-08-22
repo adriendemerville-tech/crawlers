@@ -410,6 +410,15 @@ export function buildPageVerdictHTML(
     )}</p>` : ''}`
     : '';
 
+  // Bloc « Pourquoi c'est prioritaire » : plafonds techniques et GEO fusionnés,
+  // ordonnés par cause racine, avec la preuve chiffrée (mesuré → cible).
+  const gatesHTML = gatesPriorityBlockHTML(
+    mergeGates(normalizeGates(ctx.scoreGates, 'technical'), ctx.geoGates || []),
+    lang,
+    'page',
+  );
+
+
   const html = `
   <div class="section" data-marina-scope="page" data-marina-block="page-verdict" data-pdf-section
        data-marina-page-meta="${encodeURIComponent(JSON.stringify(meta))}"
