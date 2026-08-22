@@ -379,7 +379,8 @@ Lecture par `trade_type`, besoin dominant servi de chaque côté :
 
 | `trade_type` | Acheteur sert | Vendeur sert | Cas d'usage type |
 |---|---|---|---|
-| `link_for_link` | SEO | SEO | deux sites à besoin SEO symétrique et thématiques non concurrentes |
+| `link_chain` | SEO | SEO | besoin SEO des deux côtés — **retenu en premier** dès qu'un tiers C ferme la boucle |
+| `link_for_link` | SEO | SEO | deux sites à besoin SEO symétrique, seulement si aucune chaîne n'est constructible |
 | `link_for_linkedin` | SEO | GEO | acheteur veut de l'autorité, vendeur veut être cité par les IA |
 | `link_for_insta` | SEO | Conversion | vendeur B2C cherche du trafic et des ventes, pas du PageRank |
 | `linkedin_for_linkedin` | GEO | GEO | deux marques B2B qui veulent exister dans les réponses génératives |
@@ -388,17 +389,28 @@ Lecture par `trade_type`, besoin dominant servi de chaque côté :
 Règles :
 - L'UI n'affiche **jamais** un gain SEO ou GEO pour une jambe Instagram : la valeur annoncée est
   strictement l'audience et le clic.
-- `link_for_link` est **autorisé, signalé comme à risque et bridé**. Quatre garde-fous cumulés,
-  tous appliqués serveur, aucun contournable depuis l'UI :
+- `link_chain` est le **mode par défaut pour un besoin SEO symétrique**. Cadre :
+  1. Boucle de 3 ou 4 participants (`A→B→C→A`), enregistrée sous un `exchange_id` unique avec une
+     jambe par arête et un ordre de publication fixé ;
+  2. **7 jours minimum** entre deux jambes de la même boucle, aucune publication simultanée ;
+  3. Aucune décote : la valeur de chaque jambe reste la valeur pleine (pas de facteur 0,70) ;
+  4. Un site ne participe pas à deux boucles actives contenant le même partenaire direct ;
+  5. Si une jambe n'est pas publiée dans le délai, la boucle est annulée : les jambes déjà
+     publiées sont requalifiées en vente cash au prix de l'actif, à la charge du bénéficiaire.
+- `link_for_link` est **autorisé mais en dernier recours**, signalé comme à risque et bridé. Le
+  moteur ne le propose que si la recherche de `link_chain` n'a trouvé aucun tiers compatible.
+  Quatre garde-fous cumulés, tous appliqués serveur, aucun contournable depuis l'UI :
   1. **Flag de risque** visible des deux côtés avant acceptation (pattern de lien réciproque
      dévalué par Google), avec formulation explicite du risque encouru ;
   2. **Décorrélation temporelle** : délai minimum de 21 jours entre les deux jambes, jamais de
-     publication simultanée, ordre de publication tiré au sort ;
+     publication simultanée, ordre de publication tiré au sort. La 2ᵉ jambe d'un troc accepté
+     n'est **jamais** bloquée par la règle « lien déjà existant » ni par la détection de cycle
+     (exemption explicite de §2.2, portée par le `exchange_id`) ;
   3. **Quota** : maximum **1 réciprocité directe par trimestre et par site**, dans les deux sens
      confondus, et jamais deux fois avec le même partenaire sur 12 mois glissants ;
   4. **Détection de cycle** : le graphe des liens échangés est parcouru avant validation ; toute
-     boucle détectée (A→B→A, A→B→C→A, jusqu'à 4 sauts) **bloque** la proposition en 409, sans
-     possibilité de forçage.
+     boucle **non déclarée** (fermée de fait, sans `exchange_id` de type `link_chain` ou
+     `link_for_link` accepté) **bloque** la proposition en 409, sans possibilité de forçage.
 - La valeur d'une jambe LinkedIn est estimée sur les impressions et l'engagement des 10 derniers
   posts du vendeur, publication vérifiée via l'URN/URL stable du post. À défaut d'impressions
   exposées par l'API : followers × taux d'engagement observé sur les réactions publiques. La
@@ -407,7 +419,8 @@ Règles :
   crédits — **même taux que la vente cash**, aucune exception de devise ni de `deal_type`.
 - Le troc suit le même workflow de prévisualisation (2.3) et de double feedback que la vente.
 - Plafonds : maximum 2 échanges actifs par site sortant et par mois, dont **au plus 1
-  `link_for_link` par trimestre** (règle 3 ci-dessus, la plus contraignante l'emporte).
+  `link_for_link` par trimestre** (règle 3 ci-dessus, la plus contraignante l'emporte). Les
+  boucles `link_chain` comptent dans les 2 échanges actifs mais pas dans le quota trimestriel.
 
 #### 2.7.2 Sélection du `trade_type` et de la soulte
 
