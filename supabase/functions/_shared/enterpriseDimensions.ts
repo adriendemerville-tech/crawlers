@@ -368,11 +368,14 @@ export function selectBenchmarkDimensions(
       app: 'une application',
       marketplace: 'une place de marché ou un intermédiaire de confiance',
       service: 'un prestataire capable de réaliser la prestation',
-      conseil: 'un cabinet ou un expert pour être accompagné',
+      conseil: 'un cabinet, un consultant ou un coach pour être accompagné',
       commerce: 'un commerçant ou une boutique où acheter',
       artisanat: 'un artisan ou une entreprise qui intervient sur place',
       produits: 'un fabricant ou un fournisseur du produit',
       contenu: 'une source fiable pour se documenter',
+      profession_liberale: 'un praticien ou un professionnel libéral à consulter, pour un rendez-vous',
+      association: 'une structure à but non lucratif pour être aidé, adhérer ou soutenir une cause',
+      service_public: 'une démarche, un droit ou un service administratif',
     };
     relevant.push({
       key: 'delivery_mode', value: delivery, weight: 1,
@@ -391,8 +394,12 @@ export function selectBenchmarkDimensions(
     skip('customer_relation', relation, "vente au particulier : un consommateur ne se présente pas comme tel dans sa question");
   }
 
-  // Rôle chaîne de valeur — pertinent seulement en prestation/produit vendue à des pros.
-  const roleUseful = (dims.value_chain_role === 'sous_traitant' || dims.value_chain_role === 'mixte')
+  // Rôle chaîne de valeur — la question ne se pose PAS pour un commerce, une
+  // boutique en ligne, un SaaS, une marketplace, du conseil ou du coaching, une
+  // profession libérale, une association ou un service public.
+  const roleOutOfScope = !!delivery && ROLE_IRRELEVANT_DELIVERY.has(delivery);
+  const roleUseful = !roleOutOfScope
+    && (dims.value_chain_role === 'sous_traitant' || dims.value_chain_role === 'mixte')
     && (relation === 'b2b' || relation === 'b2b2c')
     && !!delivery && CAPACITY_DELIVERY.has(delivery);
   if (roleUseful) {
@@ -401,8 +408,8 @@ export function selectBenchmarkDimensions(
       directive: "L'entreprise travaille en sous-traitance : une question doit être posée par un donneur d'ordre qui cherche un partenaire à qui confier une partie du travail.",
     });
   } else {
-    skip('value_chain_role', dims.value_chain_role, delivery === 'saas' || delivery === 'commerce'
-      ? "l'acheteur d'un abonnement ou d'un produit ne raisonne pas en chaîne de sous-traitance"
+    skip('value_chain_role', dims.value_chain_role, roleOutOfScope
+      ? `mode de livraison « ${delivery} » : la sous-traitance n'entre pas dans la décision d'achat`
       : 'aucune sous-traitance déclarée dans ce qui est vendu');
   }
 
