@@ -80,7 +80,7 @@ export function gateAxisLabel(axis: string, lang?: string): string {
 
 /** Normalise les plafonds bruts d'un moteur en gates ordonnés et dédoublonnés. */
 export function normalizeGates(
-  raw: Array<{ axis?: string; reason?: string; evidence?: string; measured?: string | null; target?: string | null }> | null | undefined,
+  raw: Array<{ axis?: string; reason?: string; evidence?: string; pointsLost?: number | null; measured?: string | null; target?: string | null }> | null | undefined,
   source: GateSource,
 ): AuditGate[] {
   if (!Array.isArray(raw)) return [];
@@ -93,18 +93,21 @@ export function normalizeGates(
     const key = `${source}|${axis}`;
     if (seen.has(key)) continue;
     seen.add(key);
+    const lost = Number(g?.pointsLost);
     out.push({
       axis,
       reason,
       evidence: String(g?.evidence || '').trim(),
       source,
       rank: rankFor(axis),
+      pointsLost: Number.isFinite(lost) && lost > 0 ? Math.round(lost) : null,
       measured: g?.measured ?? null,
       target: g?.target ?? null,
     });
   }
   return out;
 }
+
 
 /** Fusionne plusieurs listes et les trie par rang d'entrée. */
 export function mergeGates(...lists: Array<AuditGate[] | null | undefined>): AuditGate[] {
