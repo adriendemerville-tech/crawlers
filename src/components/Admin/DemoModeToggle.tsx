@@ -35,13 +35,16 @@ const translations = {
 };
 
 export function DemoModeToggle() {
-  const { isDemoMode } = useDemoMode();
+  const { isDemoMode, setDemoMode, refreshDemoMode } = useDemoMode();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const [toggling, setToggling] = useState(false);
 
   const handleToggle = async (checked: boolean) => {
     setToggling(true);
+    // Bascule optimiste : le realtime n'est pas garanti d'arriver, l'écran ne
+    // doit jamais rester bloqué sur l'ancien état.
+    setDemoMode(checked);
     try {
       const { error } = await supabase
         .from('system_config')
@@ -51,14 +54,24 @@ export function DemoModeToggle() {
         );
 
       if (error) throw error;
-      toast.success(checked ? t.enabled : t.disabled);
+
+      // Relecture de la source de vérité : si l'écriture a été refusée en
+      // silence (RLS), l'interrupteur revient à l'état réel.
+      await refreshDemoMode();
+      // Les toasts sont neutralisés pendant le mode démo : on ne confirme donc
+      // que la sortie de mode, sinon rien ne s'afficherait.
+      if (checked) toast.success(t.enabled);
+      else toast.success(t.disabled);
     } catch (err) {
       console.error('Erreur toggle demo mode:', err);
+      setDemoMode(!checked);
+      await refreshDemoMode();
       toast.error(t.error);
     } finally {
       setToggling(false);
     }
   };
+
 
   return (
     <Card className={`border-2 transition-colors ${isDemoMode ? 'border-emerald-500 bg-emerald-500/5' : 'border-border'}`}>
