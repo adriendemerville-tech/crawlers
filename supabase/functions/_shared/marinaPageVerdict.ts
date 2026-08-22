@@ -14,6 +14,8 @@
  * 100 % déterministe : 0 token LLM.
  */
 
+import { gatesPriorityBlockHTML, mergeGates, normalizeGates, type AuditGate } from './auditGates.ts';
+
 export interface PageVerdictMeta {
   url: string;
   path: string;
