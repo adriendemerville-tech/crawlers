@@ -359,11 +359,20 @@ export function buildPageVerdictHTML(
       ${cell(t('GEO / citabilité IA', 'GEO / AI citability'), geo === null ? 'n/d' : `${geo}/100`)}
       ${f && f.linksIn !== null ? cell(t('Liens internes entrants', 'Inbound links'), String(f.linksIn)) : ''}
     </div>
-    ${actions.length ? `
+    ${pageActionRows.length ? `
     <p style="font-size:13px;font-weight:600;color:#111827;margin:14px 0 6px 0;">${t('À corriger sur cette page', 'To fix on this page')}</p>
     <ol style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0;">
-      ${actions.map((a) => `<li style="margin:0 0 6px 0;">${esc(a)}</li>`).join('')}
-    </ol>` : ''}
+      ${pageActionRows.map((a) => `<li style="margin:0 0 6px 0;">${esc(a.title)}${a.evidence ? `<br><span style="font-size:12px;color:#6b7280;">${esc(a.evidence)}</span>` : ''}</li>`).join('')}
+    </ol>` : `
+    <p style="font-size:12.5px;color:#6b7280;margin:14px 0 0 0;">${t(
+      'Aucun défaut mesuré propre à cette URL : les correctifs restants relèvent du domaine.',
+      'No measured defect specific to this URL: remaining fixes belong to the domain.',
+    )}</p>`}
+    ${inherited.length ? `
+    <p style="font-size:12.5px;font-weight:600;color:#6b7280;margin:14px 0 4px 0;">${t('Hérité du domaine — non spécifique à cette page', 'Inherited from the domain — not specific to this page')}</p>
+    <ul style="padding-left:20px;font-size:12.5px;color:#6b7280;line-height:1.65;margin:0;">
+      ${inherited.map((a) => `<li style="margin:0 0 4px 0;">${esc(a)}</li>`).join('')}
+    </ul>` : ''}
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
       ${t(
         `Ces scores sont propres à cette URL et ne sont jamais moyennés avec les autres pages auditées. Les analyses de périmètre site (crawl, cocon global, indexation, visibilité IA) sont présentées une seule fois pour le domaine.`,
