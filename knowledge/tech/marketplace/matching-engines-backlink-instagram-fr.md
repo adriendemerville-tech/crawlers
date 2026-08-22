@@ -565,7 +565,8 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`, `deal_type` (`cash` | `credits` | `barter`), et si `barter` : `trade_type` (`link_for_link` | `link_for_linkedin` | `link_for_insta` | `linkedin_for_linkedin` | `insta_for_insta`), `soulte_cents`, `soulte_currency` (`eur` | `credits` uniquement), `soulte_payer_id`, `soulte_payee_id`, `risk_flags[]`.
 - `marketplace_needs` porte `need_primary` / `need_secondary` (`seo` | `geo` | `conversion`) : entrée de la matrice 2.7.1 pour les deux parties.
 
-- `marketplace_exchanges` — jambes d'un troc (2 jambes : le lien + la contrepartie), nature de la contrepartie, valeur estimée par jambe, solde en crédits, commission 10 %.
+- `marketplace_exchanges` — jambes d'un troc (2 jambes : le lien + la contrepartie), nature de la contrepartie, valeur estimée par jambe (arrondie au palier de 10 €, bornée 40–350 €), solde en crédits, commission 15 %, `reciprocity_quarter` (clé de quota `link_for_link`), `cycle_check_verdict`.
+- `marketplace_ownership_verifications` — preuve de propriété par actif : `method` (`gsc` | `dns_txt` | `file` | `oauth_linkedin` | `oauth_meta`), `token`, `verified_at`, `last_checked_at`, `status` (`verified` | `unverified` | `revoked`). Unicité : un domaine vérifié par un seul compte.
 
 - `marketplace_ownership_claims` — déclaration de responsabilité vendeur : horodatage, IP, texte accepté.
 - `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
