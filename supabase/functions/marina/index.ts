@@ -4595,7 +4595,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             .neq('status', 'done')
             .order('created_at', { ascending: false })
             .limit(50);
-          workbenchTasks = (wb as WorkbenchTask[]) || [];
+          // Lot 1 — le rapport d'une URL ne doit jamais importer les actions
+          // ciblées sur une AUTRE URL (même domaine compris) : c'est ce qui
+          // faisait apparaître Marseille, Créteil ou Pau dans la fiche de
+          // Saint-Rémy. Les tâches sans cible restent (périmètre domaine).
+          const urlKeyForWb = pageKey(url);
+          workbenchTasks = ((wb as WorkbenchTask[]) || []).filter((task: any) => {
+            const target = task?.target_url ? String(task.target_url) : '';
+            return target ? pageKey(target) === urlKeyForWb : true;
+          });
         } catch (wbErr) {
           console.warn('[Marina] Workbench fetch failed (non-fatal):', wbErr);
         }
