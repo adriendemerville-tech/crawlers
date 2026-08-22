@@ -521,6 +521,130 @@ ou laisser croire qu'une jambe Instagram apporte du SEO ou du GEO.
 
 ---
 
+### 2.11 Valeur d'appariement exposée dans les audits (page et domaine)
+
+La Place d'échange n'est pas un module isolé : sa métrique cœur, la **valeur d'appariement**, est
+affichée là où l'utilisateur constate son déficit — l'Audit stratégique GEO et les rapports Marina.
+
+**Niveau page — `match_value(page)`** (audit d'une URL) :
+
+```
+match_value(page) = valeur_vendeur(page)   // ce que cette page peut rapporter en la vendant
+                  ⊕ valeur_acheteur(page)  // ce qu'un lien entrant vers cette page rapporterait
+```
+
+- `valeur_vendeur(page)` = prix serveur borné 40–350 € (paliers de 10 €), calculé par le moteur de
+  pricing (§2.1), + nombre de besoins acheteurs actifs dont `compat ≥ 0.6` avec cette page.
+- `valeur_acheteur(page)` = gain de position attendu (ETV potentiel), nombre d'actifs vendeurs
+  disponibles à `compat ≥ 0.6`, fourchette de prix constatée et ancre recommandée.
+- Affichage : bloc unique « Valeur d'appariement » avec les deux faces, la source de chaque chiffre
+  (mesuré / estimé, badges centrés) et un lien vers l'onglet Place d'échange pré-filtré sur la page.
+- Aucune valeur n'est affichée si la propriété du domaine n'est pas vérifiée : le bloc invite alors à
+  vérifier (§2.6) au lieu d'annoncer un prix non commercialisable.
+
+**Niveau domaine — `global_match_value(site)`** (audit de domaine, Marina multipages) :
+
+```
+global_match_value(site) = Σ valeur_vendeur(p) sur les pages éligibles à la vente (§2.12)
+                         + Σ valeur_acheteur(p) sur les pages en déficit d'autorité
+                         − plafonds appliqués (1 lien dofollow/page, 20/an/domaine)
+```
+
+Restitué en trois chiffres, jamais en score composite opaque :
+1. **Potentiel de vente** (€/an, plafonds inclus) et nombre de pages éligibles ;
+2. **Besoin d'achat** (€ estimé pour combler le déficit) et nombre de pages concernées ;
+3. **Solde d'appariement** = potentiel de vente − besoin d'achat, avec la lecture métier
+   (« votre domaine est net vendeur / net acheteur d'autorité »).
+
+Règles de restitution : mêmes garde-fous que le reste des audits — pas de promesse de classement,
+disclosure méthodologique (mutualisation, fraîcheur des données), fourchettes plutôt que chiffres
+faussement exacts, cache site-scoped 24 h aligné sur Marina. Aucun appel LLM supplémentaire :
+la valeur d'appariement est **entièrement déterministe**, calculée par server function à partir du
+pricing, du graphe de liens et des besoins déjà présents dans `architect_workbench`.
+
+### 2.12 Ciblage des pages présentant le moins de risque d'autorité à la vente
+
+Vendre un lien coûte de l'autorité. Le moteur ne propose donc à la vente que les pages dont la
+cession est **la moins pénalisante pour le site vendeur**, avec un score de risque explicite :
+
+```
+sell_risk(page) = 0.30 × poids_stratégique      (pilier, page de conversion, page money)
+                + 0.25 × dépendance_interne     (part du PageRank interne transitant par la page)
+                + 0.20 × momentum_GSC           (progression récente de positions / impressions)
+                + 0.15 × saturation_sortante    (liens externes déjà présents sur la page)
+                + 0.10 × fragilité_technique    (page récente, thin, non indexée, instable)
+```
+
+Éligibilité à la vente : `sell_risk ≤ 0.35`. Trois classes affichées côté vendeur :
+**Sûr** (≤ 0.20) · **Modéré** (0.20–0.35, avertissement) · **Déconseillé** (> 0.35, opt-in bloqué).
+
+Exclusions dures, indépendantes du score :
+- pages piliers des 4 silos et pages de conversion (devis, tarifs, contact) ;
+- pages sous surveillance du Drop Detector ou en cours de pruning / consolidation ;
+- pages générées par l'agent SEO depuis moins de 90 jours (historique GSC insuffisant) ;
+- pages hors du périmètre de propriété vérifiée.
+
+Le classement de l'inventaire « Je vends » est trié par `valeur_vendeur / sell_risk` décroissant :
+le meilleur revenu au moindre coût d'autorité, avec la raison affichée pour chaque page.
+Le score est recalculé à chaque crawl et un passage en « Déconseillé » retire automatiquement la
+page de l'inventaire (les commandes en cours sont honorées).
+
+### 2.13 Vérification de publication et de maintien de publication
+
+Une jambe n'est réputée livrée que **prouvée**, et elle doit le rester pendant la durée engagée
+(par défaut 12 mois pour un lien, 30 jours pour un contenu social).
+
+| Actif | Preuve de publication | Maintien |
+|---|---|---|
+| Lien / page | crawl de la page : ancre attendue, URL cible, attribut (`dofollow` / `sponsored`), statut HTTP et verdict via `_shared/linkVerdictShared.ts` ; capture visuelle archivée | recrawl J+1, J+7 puis mensuel jusqu'à la fin de l'engagement |
+| Post LinkedIn | API LinkedIn : URN du post, auteur, texte, présence du lien et de la mention de conformité | contrôle J+1, J+7, J+30 puis mensuel ; suppression détectée = disparition |
+| Story / Reel Instagram | API Meta : `media_id`, type de média, sticker/lien, mention de conformité, insights J+7 | story : preuve d'affichage sur la fenêtre de 24 h, archivage de la capture ; Reel : contrôle mensuel |
+
+Machine à états d'une jambe : `pending` → `published` (première preuve) → `verified` (preuve
+confirmée à J+7) → `maintained` (contrôles récurrents OK) → `broken` (preuve perdue) →
+`resolved` | `refunded`.
+
+Conséquences d'une rupture, appliquées côté serveur sans intervention manuelle :
+- verdict `hard_broken` / lien absent / `nofollow` ajouté à la place de l'attribut convenu →
+  jambe `broken`, paiement suspendu, fenêtre de remise en conformité de 7 jours ;
+- non-corrigé après la fenêtre → remboursement au prorata du temps restant, **événement de balance
+  inverse** (§2.7.3) et impact sur le standing du vendeur ;
+- OAuth révoqué (LinkedIn / Meta) → impossibilité de vérifier assimilée à une rupture, l'actif
+  repasse `unverified` (§2.6) ;
+- blocage de crawl (403 bot, robots.txt, coquille JS non-SSR) → escalade de rendu avant tout verdict
+  négatif : jamais de rupture prononcée sur un simple échec de récupération.
+
+Tous les contrôles sont journalisés dans `marketplace_verifications` (une ligne par contrôle :
+méthode, verdict, preuve, capture) — c'est cette table qui sert de preuve en cas de litige.
+
+### 2.14 Balance d'autorité comme produit de rétention
+
+La balance d'autorité (§2.7.3) n'est pas qu'un garde-fou d'équité : c'est le **mécanisme de
+rétention** de la Place d'échange, parce qu'elle crée une dette réciproque qui n'a de valeur qu'à
+l'intérieur de la plateforme.
+
+Leviers de rétention :
+- **Un actif qui ne se transporte pas** : un déficit d'autorité et sa priorité d'achat associée
+  n'existent que dans Crawlers ; partir revient à renoncer à la contrepartie déjà cédée.
+- **Priorité d'achat comme récompense** : plus un site a cédé d'autorité, plus il passe devant sur
+  les actifs rares (§2.7.3), file recalculée quotidiennement — bénéfice visible et périssable.
+- **Amortissement 24 mois** : le solde décroît avec le temps, donc l'avantage se consomme si le site
+  reste inactif. Rappel explicite : « votre priorité d'achat expire dans X jours ».
+- **Historique long** : le journal `marketplace_balance_events` constitue une mémoire de deux ans
+  (autorité cédée, reçue, partenaires) qu'aucun concurrent ne restitue (§2.10).
+- **Lecture dans les audits** : la balance et le solde d'appariement (§2.11) apparaissent dans
+  l'Audit stratégique et Marina, donc à chaque rapport, pas seulement dans le module marketplace.
+
+Restitution UI (onglet Place d'échange, bloc « Ma balance ») : solde d'autorité et solde de
+visibilité séparés (ils ne se compensent jamais), courbe sur 24 mois, rang dans la file de
+priorité, prochaine échéance d'amortissement, et les trois dernières jambes ayant bougé la balance.
+
+Garde-fous : aucune gamification (pas de badge, pas de classement public entre utilisateurs), aucune
+promesse de gain SEO liée au solde, et un déficit ne bloque jamais l'achat — il ne fait que
+prioriser. La balance est une comptabilité lisible, pas un score de fidélité.
+
+
+
 
 
 
@@ -577,7 +701,15 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - `marketplace_ownership_claims` — déclaration de responsabilité vendeur : horodatage, IP, texte accepté.
 - `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
 - `marketplace_feedback` — commentaires et motifs par révision.
-- `marketplace_verifications` — contrôles récurrents (verdict lien, publication social).
+- `marketplace_verifications` — contrôles de publication et de maintien (§2.13) : `leg_id`, `method`
+  (`crawl` | `linkedin_api` | `meta_api`), `verdict`, preuve, capture, `checked_at`, `next_check_at`,
+  état de la jambe (`published` | `verified` | `maintained` | `broken` | `resolved` | `refunded`).
+- `marketplace_page_sell_risk` — cache par page (§2.12) : `sell_risk`, composantes, classe
+  (`safe` | `moderate` | `discouraged`), motif d'exclusion dure, `recomputed_at` (à chaque crawl).
+- `marketplace_match_values` — cache par page et par domaine (§2.11) : `valeur_vendeur_cents`,
+  `valeur_acheteur_cents`, `global_match_value_cents`, `matches_count`, `computed_at` (TTL 24 h,
+  site-scoped comme Marina).
+
 - `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers.
 
 
@@ -655,13 +787,22 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - Le bloc Marché & Autorité passe d'un constat à une **proposition concrète** :
   page cible identifiée, ancre recommandée, fourchette de prix, nombre d'actifs correspondants
   disponibles, lien vers l’onglet Place d’échange.
+- Nouveau bloc **« Valeur d'appariement »** (§2.11) : face vendeur / face acheteur pour la page
+  auditée, et pour un audit de domaine les trois chiffres globaux (potentiel de vente, besoin
+  d'achat, solde d'appariement) plus le rappel de la balance d'autorité (§2.14).
+- Les pages proposées à la vente sont filtrées par `sell_risk` (§2.12) : jamais un pilier, jamais
+  une page de conversion, jamais une page en momentum.
 
 ### 8.3 Rapports Marina
 - Section « Autorité » : quand le déficit est externe, afficher 2 à 3 **propositions de liens
   concrètes** (thématique, autorité, trafic de la page, prix indicatif) au lieu d'une
   recommandation générique.
+- Rapport page : valeur d'appariement de la page. Rapport multipages : **valeur globale
+  d'appariement** du domaine et liste des pages les moins risquées à vendre (§2.11, §2.12).
 - Idem pour le déficit de notoriété sociale : proposition de collab.
-- Contraintes de rendu PDF respectées (espaces normaux, badges centrés, pas d'emoji).
+- Contraintes de rendu PDF respectées (espaces normaux, badges centrés, pas d'emoji), badges
+  « mesuré » / « estimé » sur chaque chiffre d'appariement.
+
 
 ### 8.4 Home
 - Nouvelle section « Place d’échange d’autorité » : les deux faces (vendre / acheter), le pricing
@@ -696,11 +837,12 @@ Ajouts obligatoires :
 
 | Lot | Contenu |
 |---|---|
-| L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € + inventaire opt-in + onglet « Je vends » |
-| L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » |
+| L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + onglet « Je vends » |
+| L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » + **calcul de la valeur d'appariement page et domaine (§2.11)** |
 | L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 %, **quota `link_for_link` + détection de cycles** |
-| L4 | Vérification récurrente des liens + reporting |
-| L5 | Landing page, home, tarifs, audits, Marina, CGVU |
+| L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
+| L5 | Landing page, home, tarifs, **valeur d'appariement dans l'Audit stratégique et Marina (page + domaine)**, bloc « Ma balance » comme produit de rétention (§2.14), CGVU |
+
 | L6 | Plan Jeune entreprise (quota, flags, crons dégradés, routage LLM) |
 | L7 | Collab Instagram (OAuth Meta, métriques, brief, vérification) |
 
