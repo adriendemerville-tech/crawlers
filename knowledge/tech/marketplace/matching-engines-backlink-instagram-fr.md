@@ -1102,6 +1102,10 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `soulte_payer_id`, `soulte_payee_id`.
   Sur un troc, la commission est portée **par jambe** (`marketplace_exchanges`) : `commission_credits` de la
   commande est la somme des commissions de jambe.
+  `commission_support` (`cash` | `credits`) et `buyer_payment_support` (`cash` | `credits` |
+  `barter`) : le premier pilote le calcul de `escrow_cents`, le second **le support de
+  remboursement** en cas de rupture (§2.5.1, jamais de cash remboursé en crédits).
+
   Engagement et cycle de vie : `commitment_months` (12 lien · 1 post LinkedIn ou Reel · 0 story,
   base du prorata de §2.13), `escrow_cents` (montant séquestré au figeage, §2.5.1),
   `published_at`, `commitment_ends_at` (= `published_at` + `commitment_months`, ou +24 h si 0),
