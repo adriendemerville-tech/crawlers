@@ -51,7 +51,7 @@ La Place d'échange ferme la boucle : au lieu de s'arrêter au diagnostic « il 
 liens ou de la visibilité », Crawlers permet de **satisfaire ce besoin en interne**.
 
 Bénéfices pour Crawlers :
-- **Monétisation sur l'existant** : commission unique de 15 % sur chaque transaction (cash comme
+- **Monétisation sur l'existant** : commission unique de 15 % sur chaque transaction, toujours prélevée en crédits Crawlers (cash comme
   troc), sans coût d'acquisition supplémentaire (l'acheteur est déjà un utilisateur diagnostiqué).
 - **Données de pricing uniques** : aucun acteur ne tarifie des liens à partir de signaux
   GSC + visibilité IA ; c'est un avantage concurrentiel difficile à copier.
@@ -339,6 +339,29 @@ L'UI ne présente **jamais** de garantie de classement.
 v1 : crédit du **wallet Crawlers** du vendeur (non convertible en euros), réutilisable sur la
 plateforme — un lien vendu par mois rembourse l'abonnement. v2 : virement réel via
 Stripe Connect (KYC, comptes connectés, reversement à J+30 après vérification du lien).
+
+**Commission toujours payée en crédits Crawlers (règle v1, invariante).** Quelle que soit la
+nature de la transaction — cash, troc `link_chain`, `link_for_link`, contenu social — la
+commission de 15 % est prélevée en **crédits**, jamais par un flux cash séparé.
+
+- **Origine des crédits indifférente.** Crédits achetés, offerts (bienvenue, parrainage, plan
+  Jeune entreprise), gagnés ou versés en dédommagement : tous paient la commission, sans poche
+  distincte ni ordre de consommation particulier. L'exposition maximale d'une dotation offerte
+  est de quelques dizaines de crédits, très inférieure au coût d'implémentation et de support
+  d'un solde à deux poches.
+- **Qui paie.** La commission porte sur chaque **jambe vendue**. Sur une commande cash, elle est
+  au vendeur. Sur un troc, les deux parties vendent une jambe : **chacune paie la commission sur
+  la valeur de sa propre jambe**, en crédits.
+- **Vérification avant figeage.** Les soldes de crédits de toutes les parties sont contrôlés
+  **avant** le figeage de la commande. Solde insuffisant chez une partie → la commande n'est pas
+  figée (message explicite, proposition de recharge). Aucun figeage à crédit, aucun solde négatif.
+- **Taux figé.** Le taux crédits→euros utilisé pour la conversion est **écrit sur la commande au
+  figeage** (`credit_eur_rate_at_freeze`) et sur la facture de commission. Il n'est jamais
+  recalculé après coup, même si la grille de crédits évolue.
+- **TVA en euros.** La commission est une prestation Crawlers taxable : la facture porte la
+  contre-valeur en euros figée et la TVA de 20 % (§2.5.2), due en euros. Le règlement en crédits
+  ne change ni la base d'imposition ni le montant de TVA.
+
 
 #### 2.5.1 Séquestre, acquisition progressive et récupération (clawback)
 
@@ -1023,8 +1046,12 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `anchor` (ancre validée), `anchor_kind` (`brand` | `exact` | `semi` | `url` | `natural`),
   `link_attribute` (`dofollow` | `nofollow` | `sponsored`).
   Économie : `deal_type` (`cash` | `credits` | `barter`), `price_cents` (prix figé),
-  `commission_cents` (15 %), `soulte_cents`, `soulte_currency` (`eur` | `credits`),
+  `commission_cents` (15 %, contre-valeur euros figée), `commission_credits` (montant réellement
+  débité, **toujours en crédits**, §2.5), `credit_eur_rate_at_freeze` (taux figé au figeage, base
+  de la facture et de la TVA), `soulte_cents`, `soulte_currency` (`eur` | `credits`),
   `soulte_payer_id`, `soulte_payee_id`.
+  Sur un troc, la commission est portée **par jambe** (`marketplace_exchanges`) : `commission_credits` de la
+  commande est la somme des commissions de jambe.
   Engagement et cycle de vie : `commitment_months` (défaut **12**, base du prorata de §2.13),
   `published_at`, `commitment_ends_at` (= `published_at` + `commitment_months`),
   `status`, `approved_revision_id`, `risk_flags[]`, `frozen_at` (figeage), `created_at`.
@@ -1039,7 +1066,11 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `insta_for_insta`), `reciprocity_quarter` (quota `link_for_link` uniquement),
   `cycle_check_verdict` (les cycles déclarés portant un `exchange_id` accepté sont exemptés, cf.
   §2.2), `delivered_at`.
-- `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers, référence `order_id`.
+  Commission : `commission_payer_id` (le vendeur de la jambe), `commission_cents` (15 % de
+  `value_cents`, contre-valeur euros figée) et `commission_credits` (débit effectif en crédits,
+  §2.5). Le débit est écrit au figeage, après contrôle du solde de chaque payeur.
+- `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers (toujours en crédits),
+  référence `order_id` et `leg_id`.
 
 ### 4.4 Balance d'autorité et file d'achat
 
@@ -1211,7 +1242,7 @@ Ajouts obligatoires :
 |---|---|
 | L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € (**P1 40 € · P2 90 € · P3 150 € · P4 250 € · P5 350 €**) + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
 | L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » + **calcul de la valeur d'appariement page et domaine (§2.11)** |
-| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 %, **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
+| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 % prélevée en crédits (contrôle des soldes avant figeage, taux figé), **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
 | L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
 | L5 | Landing page, home, tarifs, **valeur d'appariement dans l'Audit stratégique et Marina (page + domaine)**, bloc « Ma balance » comme produit de rétention (§2.14), CGVU |
 

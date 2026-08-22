@@ -10,8 +10,22 @@ documentation est une incohérence à corriger.
 
 ## Commission
 **15 %**, taux unique. Aucune distinction entre `deal_type` (`cash`, `credits`, `barter`) ni
-entre verticales. Prélevée en euros sur une vente cash, en crédits sur un troc (15 % de la
-valeur estimée de chaque jambe).
+entre verticales.
+
+**Toujours payée en crédits Crawlers**, quel que soit le type de transaction. Jamais de flux cash
+séparé pour la commission.
+- **Origine des crédits indifférente** : crédits achetés, offerts (bienvenue, parrainage, plan
+  Jeune entreprise) ou versés en dédommagement paient tous la commission. Pas de solde à deux
+  poches — décision explicite de l'utilisateur : l'exposition d'une dotation offerte est
+  négligeable face au coût d'implémentation et de support.
+- **Payeur** : le vendeur de chaque jambe. Sur un troc, les deux parties vendent une jambe, donc
+  **chacune paie sa commission** sur la valeur de sa propre jambe.
+- **Contrôle avant figeage** : soldes de crédits de toutes les parties vérifiés avant le figeage.
+  Solde insuffisant → commande non figée. Jamais de figeage à crédit ni de solde négatif.
+- **Taux figé** : `credit_eur_rate_at_freeze` écrit sur la commande au figeage, jamais recalculé.
+- **TVA 20 % en euros** sur la contre-valeur figée : le règlement en crédits ne change ni la base
+  d'imposition ni le montant dû.
+
 
 ## Hiérarchie des échanges sans cash
 Ordre de préférence imposé au moteur d'appariement :
