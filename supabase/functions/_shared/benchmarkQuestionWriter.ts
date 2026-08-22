@@ -21,6 +21,14 @@
 import { callRoutedAI } from './aiRouter.ts';
 import { buildBrandScrubTerms, scrubBrandFromText, type SiteContext, type PromptLang } from './naturalPrompts.ts';
 import { identityKeywords, questionHasKeyword, keywordCoverage, type LlmBenchmark } from './llmBenchmarks.ts';
+import {
+  deriveEnterpriseDimensions,
+  selectBenchmarkDimensions,
+  dimensionsPromptBlock,
+  describeDimensionSelection,
+  type EnterpriseDimensions,
+  type DimensionInput,
+} from './enterpriseDimensions.ts';
 
 /** Part minimale des questions devant contenir un mot-clé de la carte d'identité. */
 const MIN_KEYWORD_COVERAGE = 0.75;
