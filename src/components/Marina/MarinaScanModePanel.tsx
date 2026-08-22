@@ -18,7 +18,7 @@ const COPY: Record<Lang, {
   note: string;
 }> = {
   fr: {
-    title: 'Trois modes de scan, bascule automatique',
+    title: 'Trois modes de scan',
     subtitle: '',
     cols: ['Mode', 'Déclenchement', 'Pages analysées'],
     rows: [
