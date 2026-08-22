@@ -18,8 +18,11 @@ crawl technique, benchmarks LLM, E-E-A-T) en **diagnostics actionnables et en co
 correctif prêt à l'emploi**, sans compétences techniques lourdes côté client.
 
 Positionnement distinctif :
-- **Multi-silo** : audit technique, SEO éditorial, GEO, Google Business, netlinking et
-  concurrentiel traités dans un seul outil (pas de boîte à outils éclatée).
+- **Multi-domaine** : audit technique, SEO éditorial, GEO, Google Business, autorité / netlinking
+  et concurrentiel traités dans un seul outil (pas de boîte à outils éclatée). Côté architecture
+  éditoriale, cela reste **4 piliers** (crawler, GEO, outil-crawl, comparatifs) : l'autorité et le
+  netlinking sont des satellites du pilier GEO, jamais un 5ᵉ pilier.
+
 - **IA agentique contrôlée** : des agents (Parménion, Félix, Code Architecte, Marina) qui
   produisent du contenu et des correctifs, **jamais** de code sans validation humaine.
 - **Marque blanche & multi-compte** : adapté aux agences qui revendent les rapports.
@@ -295,7 +298,10 @@ Règles d'application :
 5. Ces bornes sont **cumulatives** avec les garde-fous vendeur et avec le quota `link_for_link` :
    la contrainte la plus stricte l'emporte, aucune dérogation admin en v1.
 6. `sell_risk` (§2.12) protège les pages du vendeur ; le symétrique côté acheteur est un
-   `buy_risk` calculé sur ces sept dimensions et affiché avant validation du panier.
+   `buy_risk` calculé sur les **six dimensions du tableau ci-dessus** (vitesse, rampe nouvel
+   entrant, concentration vendeur, concentration page cible, diversité d'ancre, cohérence
+   thématique) et affiché avant validation du panier.
+
 
 **Ajout DB** — `marketplace_buyer_limits` (§4) : cache par domaine acheteur des compteurs de
 vitesse, de concentration, de diversité d'ancre et de cohérence, avec `next_allowed_at` et
@@ -343,12 +349,14 @@ Stripe Connect (KYC, comptes connectés, reversement à J+30 après vérificatio
 **Mode de règlement de la commission (règle v1).** Le taux est de 15 % dans tous les cas ; seul le
 **support de paiement** varie selon la présence ou non d'un flux d'argent.
 
-| Type de transaction | Support de la commission | Mécanique |
+| `deal_type` de la commande | Support de la commission | Mécanique |
 |---|---|---|
-| Commande **cash** (carte) | **Cash, prélevé sur le flux** (défaut) | La commission est retenue sur le paiement de l'acheteur ; le vendeur est crédité du net (`price_cents − commission_cents`). Aucun solde de crédits requis. |
-| Commande cash, option vendeur | Crédits | Le vendeur peut choisir de régler la commission en crédits et d'être crédité du brut. Option, jamais imposée. |
-| **Troc** (`link_chain`, `link_for_link`, cross-média) | **Crédits, obligatoire** | Aucun flux d'argent à prélever : chaque partie paie sa commission en crédits sur la valeur de sa propre jambe. |
-| Soulte en crédits | Crédits | Suit le régime du troc. |
+| `cash` (carte) | **Cash, prélevé sur le flux** (défaut) | La commission est retenue sur le paiement de l'acheteur ; le vendeur est crédité du net (`price_cents − commission_cents`). Aucun solde de crédits requis. |
+| `cash`, option vendeur | Crédits | Le vendeur peut choisir de régler la commission en crédits et d'être crédité du brut. Option, jamais imposée. |
+| `credits` (acheteur paie intégralement en crédits transférés) | **Crédits, obligatoire** | Aucun flux d'argent à prélever : la commission est débitée du wallet du vendeur au figeage, comme sur un troc. Le solde vendeur est contrôlé avant figeage. |
+| `barter` (`link_chain`, `link_for_link`, cross-média) | **Crédits, obligatoire** | Chaque partie paie sa commission en crédits sur la valeur de sa propre jambe. |
+| Soulte en crédits sur une commande `cash` | Crédits pour la part soulte, cash pour la part cash | Deux lignes de commission distinctes sur la même commande, chacune au régime de son support. |
+
 
 Règles communes :
 
@@ -359,11 +367,13 @@ Règles communes :
   distincte ni ordre de consommation particulier. L'exposition maximale d'une dotation offerte
   est de quelques dizaines de crédits, très inférieure au coût d'implémentation et de support
   d'un solde à deux poches.
-- **Vérification avant figeage (troc uniquement).** Les soldes de crédits de toutes les parties
-  sont contrôlés **avant** le figeage. Solde insuffisant chez une partie → la commande n'est pas
-  figée (message explicite, proposition de recharge). Aucun figeage à crédit, aucun solde négatif.
-  Sur une commande cash au régime par défaut, aucun solde n'est requis : un vendeur ne peut jamais
-  être bloqué faute de crédits.
+- **Vérification avant figeage (dès qu'une commission est en crédits).** Sur `barter`, `credits`
+  et sur l'option crédits d'une commande `cash`, les soldes de crédits des parties concernées sont
+  contrôlés **avant** le figeage. Solde insuffisant → la commande n'est pas figée (message
+  explicite, proposition de recharge). Aucun figeage à crédit, aucun solde négatif. Sur une
+  commande `cash` au régime par défaut, aucun solde n'est requis : un vendeur ne peut jamais être
+  bloqué faute de crédits.
+
 - **Taux figé.** Dès qu'une commission est réglée en crédits, le taux crédits→euros est **écrit sur
   la commande au figeage** (`credit_eur_rate_at_freeze`) et repris sur la facture. Il n'est jamais
   recalculé après coup, même si la grille de crédits évolue.
@@ -378,18 +388,31 @@ Le prorata de §2.13 n'est pas un remboursement rétroactif improvisé : il est 
 un **séquestre avec acquisition progressive**, de sorte que le cas normal ne nécessite jamais de
 reprendre des crédits déjà dépensés.
 
-1. **Séquestre à la commande.** Au figeage, le net vendeur (`price_cents − commission_cents`)
-   est inscrit au wallet du vendeur en état `held`. Il est visible mais **non dépensable**.
+1. **Séquestre à la commande.** Au figeage, le **montant séquestré** est le montant réellement dû
+   au vendeur, qui dépend du support de commission (§2.5) :
+   `escrow_cents = price_cents − commission_cash_cents`, où `commission_cash_cents` vaut la
+   commission quand elle est retenue sur le flux (`cash` par défaut) et **0** quand elle est réglée
+   en crédits (`barter`, `credits`, option vendeur) — dans ce dernier cas le séquestre porte le
+   **brut**, la commission ayant déjà été débitée du wallet. Le montant est inscrit au wallet du
+   vendeur en état `held` : visible, **non dépensable**. La commission n'est jamais séquestrée et
+   n'est jamais remboursée par cette cascade.
 2. **Déblocage.** Première tranche débloquée à **J+30** après preuve de publication confirmée
    (§2.13), puis une tranche par mois d'engagement tenu :
-   `tranche = net_vendeur / commitment_months` (12 pour un lien, 1 pour un contenu social).
-   Chaque tranche passe `held` → `available` seulement si le dernier contrôle de maintien est
+   `tranche = escrow_cents / commitment_months` (12 pour un lien, 1 pour un post LinkedIn ou un
+   Reel). Chaque tranche passe `held` → `available` seulement si le dernier contrôle de maintien est
    `maintained`. Un contrôle `broken` **gèle** le calendrier : aucune tranche ne se débloque
    pendant la fenêtre de remise en conformité de 7 jours.
-3. **Rupture non corrigée.** La totalité du reste en `held` est annulée (`cancelled`) et
-   remboursée à l'acheteur, en crédits, au prorata des mois restants. Dans la très grande
-   majorité des cas, le remboursement est intégralement couvert par le séquestre : rien à
-   reprendre au vendeur.
+   **Cas particulier story Instagram (24 h)** : aucun engagement de maintien n'est possible, donc
+   `commitment_months = 0`, aucun prorata et **une seule tranche** libérée à J+2 sur la seule preuve
+   d'affichage de la fenêtre de 24 h (§2.13). Une story non publiée ou publiée sans la mention de
+   conformité est un défaut total : séquestre annulé, remboursement intégral.
+3. **Rupture non corrigée.** La totalité du reste en `held` est annulée (`cancelled`) et remboursée
+   à l'acheteur **dans le support qu'il a lui-même utilisé** : remboursement cash (avoirs Stripe /
+   remboursement du paiement) pour une commande `cash`, crédits pour `credits` et pour la soulte en
+   crédits, crédits sur la valeur de la jambe pour un `barter`. Aucun remboursement d'un paiement
+   cash en crédits sans accord écrit de l'acheteur. Dans la très grande majorité des cas, le
+   remboursement est intégralement couvert par le séquestre : rien à reprendre au vendeur.
+
 4. **Récupération quand le séquestre ne suffit pas** (rupture détectée tardivement, correctif
    frauduleux, litige tranché en faveur de l'acheteur), dans cet ordre strict :
    a. reste `held` de la commande concernée ;
@@ -651,9 +674,14 @@ authority_balance(site)  = Σ sign(j) × value(j) × w(j)   pour j ∈ jambes li
 visibility_balance(site) = Σ sign(j) × value(j) × w(j)   pour j ∈ jambes story / post LinkedIn
 ```
 
-Les jambes cash et crédits n'entrent dans aucune des deux balances : ce sont des règlements, pas des
-actifs de visibilité. Les deux balances sont indépendantes et ne se compensent jamais entre elles :
-une story reçue ne comble pas un déficit d'autorité.
+Ce qui n'entre dans aucune balance, ce sont les **règlements** (euros encaissés, crédits
+transférés, soulte) : un flux monétaire n'est ni un transfert d'autorité ni une exposition. En
+revanche, **toute jambe livrée compte, quel que soit le `deal_type`** : un lien vendu en cash
+transfère autant d'autorité qu'un lien troqué, donc il est inscrit avec le même `sign` et la même
+valeur. La distinction est jambe (comptée) vs règlement (jamais compté). Les deux balances sont
+indépendantes et ne se compensent jamais entre elles : une story reçue ne comble pas un déficit
+d'autorité.
+
 
 **Mise à jour**
 
@@ -904,9 +932,13 @@ page de l'inventaire (les commandes en cours sont honorées).
 ### 2.13 Vérification de publication et de maintien de publication
 
 Une jambe n'est réputée livrée que **prouvée**, et elle doit le rester pendant la durée engagée,
-portée par `marketplace_orders.commitment_months` (défaut **12** pour un lien, **1** — 30 jours —
-pour un contenu social) et matérialisée par `commitment_ends_at`. C'est cette colonne, et elle
-seule, qui sert de base au calcul de prorata en cas de retrait anticipé.
+portée par `marketplace_orders.commitment_months` : **12** pour un lien, **1** (30 jours) pour un
+post LinkedIn ou un Reel permanent, **0** pour une story Instagram — un format qui expire en 24 h
+ne peut porter aucun engagement de maintien, donc ni prorata ni contrôle mensuel : la preuve
+d'affichage sur la fenêtre de 24 h vaut livraison définitive (§2.5.1, tranche unique à J+2).
+`commitment_ends_at` matérialise la durée (égal à `published_at + 24 h` pour une story). C'est cette
+colonne, et elle seule, qui sert de base au calcul de prorata en cas de retrait anticipé.
+
 
 | Actif | Preuve de publication | Maintien |
 |---|---|---|
@@ -982,7 +1014,14 @@ deviennent disponibles et servent au pricing.
 ```
 prix_collab = base_format × f(reach_moyen) × g(engagement_réel)
             × h(affinité_thématique_audience ↔ acheteur) × k(qualité_créative)
+prix_final  = palier(clamp(prix_collab, 40 €, 350 €))     -- mêmes bornes et mêmes paliers
+                                                          -- P1 40 · P2 90 · P3 150 · P4 250 · P5 350
 ```
+
+Le résultat est **borné et arrondi exactement comme un lien** (§2.1) : bornes dures 40 € – 350 €,
+arrondi au palier de 10 €, aucun prix hors grille, aucune dérogation. Une valeur calculée sous
+40 € rend l'actif non vendable (affiché « valeur insuffisante ») plutôt que vendu sous la borne.
+
 
 Anti-fraude : détection de reach acheté (engagement/followers hors bornes), variations de
 followers en escalier, audience géographique incohérente avec la cible.
@@ -1063,8 +1102,13 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `soulte_payer_id`, `soulte_payee_id`.
   Sur un troc, la commission est portée **par jambe** (`marketplace_exchanges`) : `commission_credits` de la
   commande est la somme des commissions de jambe.
-  Engagement et cycle de vie : `commitment_months` (défaut **12**, base du prorata de §2.13),
-  `published_at`, `commitment_ends_at` (= `published_at` + `commitment_months`),
+  `commission_support` (`cash` | `credits`) et `buyer_payment_support` (`cash` | `credits` |
+  `barter`) : le premier pilote le calcul de `escrow_cents`, le second **le support de
+  remboursement** en cas de rupture (§2.5.1, jamais de cash remboursé en crédits).
+
+  Engagement et cycle de vie : `commitment_months` (12 lien · 1 post LinkedIn ou Reel · 0 story,
+  base du prorata de §2.13), `escrow_cents` (montant séquestré au figeage, §2.5.1),
+  `published_at`, `commitment_ends_at` (= `published_at` + `commitment_months`, ou +24 h si 0),
   `status`, `approved_revision_id`, `risk_flags[]`, `frozen_at` (figeage), `created_at`.
   Contraintes : `price_cents + soulte_cents ≤ 35000`, multiples de 1000 (paliers de 10 €).
   Aucune valeur de jambe stockée ici (§4.1).
@@ -1169,7 +1213,9 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
 
 ## 6. Landing page dédiée
 
-- Route : `src/routes/marketplace-backlinks.tsx` (pilier), satellite `/collab-instagram`.
+- Route : `src/routes/marketplace-backlinks.tsx` (**satellite du pilier GEO**, pas un nouveau
+  pilier), satellite secondaire `/collab-instagram`.
+
 - `head()` propre : titre < 60 caractères, description < 160, og/twitter, JSON-LD `Service`
   + `FAQPage`, canonical via `pageHead.ts`.
 - Structure : H1 unique, promesse (« vendez un lien par mois, votre abonnement est remboursé »),
@@ -1177,7 +1223,10 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   du paragraphe, garde-fous (anti-réciprocité, plafonds, conformité), grille de commission,
   `blockquote.citable-passage` pour la visibilité IA, CTA double (vendre / acheter).
 - Contenu SSR complet, pas d'accordéon Radix pour les FAQ (`<details>` natif).
-- Rattachement au silo netlinking/autorité, pas de nouveau pilier.
+- **Rattachement : satellite du pilier GEO** (autorité et citations). L'architecture reste à
+  4 piliers (crawler, GEO, outil-crawl, comparatifs) : aucun silo « netlinking » n'est créé, les
+  pages Place d'échange maillent vers le pilier GEO et sont référencées depuis son hub.
+
 
 ---
 
@@ -1257,8 +1306,8 @@ Ajouts obligatoires :
 | L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 % (cash retenue sur le flux, crédits obligatoires sur le troc avec contrôle des soldes avant figeage et taux figé), **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
 | L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
 | L5 | Landing page, home, tarifs, **valeur d'appariement dans l'Audit stratégique et Marina (page + domaine)**, bloc « Ma balance » comme produit de rétention (§2.14), CGVU |
-
 | L6 | Collab Instagram (OAuth Meta, métriques, brief, vérification) |
+
 
 ## 9. Risques
 

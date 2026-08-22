@@ -16,16 +16,18 @@ entre verticales.
 - **Commande cash (carte)** : commission **retenue sur le flux**, le vendeur est crédité du net.
   Aucun solde de crédits requis — un vendeur n'est jamais bloqué faute de crédits. Le vendeur peut
   **optionnellement** choisir de payer en crédits et recevoir le brut.
-- **Troc** (`link_chain`, `link_for_link`, cross-média) et soulte en crédits : commission
-  **obligatoirement en crédits**, faute de flux à retenir.
+- **Troc** (`link_chain`, `link_for_link`, cross-média), commande `deal_type = credits` (acheteur
+  payant intégralement en crédits transférés) et part soulte en crédits : commission
+  **obligatoirement en crédits**, faute de flux à retenir. Sur une commande cash avec soulte en
+  crédits, deux lignes de commission distinctes, chacune au régime de son support.
 - **Origine des crédits indifférente** : crédits achetés, offerts (bienvenue, parrainage, plan
   Jeune entreprise) ou versés en dédommagement paient tous la commission. Pas de solde à deux
   poches — décision explicite de l'utilisateur : l'exposition d'une dotation offerte est
   négligeable face au coût d'implémentation et de support.
 - **Payeur** : le vendeur de chaque jambe. Sur un troc, les deux parties vendent une jambe, donc
   **chacune paie sa commission** sur la valeur de sa propre jambe.
-- **Contrôle avant figeage** : sur un troc, soldes de crédits de toutes les parties vérifiés avant
-  le figeage. Solde insuffisant → commande non figée. Jamais de figeage à crédit ni de solde négatif.
+- **Contrôle avant figeage** : dès qu'une commission est en crédits (`barter`, `credits`, option
+  vendeur sur cash), soldes de crédits des parties concernées vérifiés avant le figeage. Solde insuffisant → commande non figée. Jamais de figeage à crédit ni de solde négatif.
 - **Taux figé** : quand la commission est réglée en crédits, `credit_eur_rate_at_freeze` est écrit
   sur la commande au figeage et sur la facture, jamais recalculé.
 - **TVA 20 % en euros, toujours**, sur la contre-valeur figée : le règlement en crédits ne change
@@ -120,3 +122,25 @@ Crawlers facture au nom et pour le compte du vendeur (mandat de self-billing acc
 l'onboarding) ; exigibilité = 1ʳᵉ preuve de publication ; avoir en cas de prorata ; DAC7 déclare
 aussi les jambes en troc et les crédits. Tables : `marketplace_tax_profiles`,
 `marketplace_invoices` (montants et TVA figés à l'émission).
+
+
+## Séquestre, remboursement et engagement (ajouts du 2026-08-22)
+- `escrow_cents = price_cents − commission_cash_cents` : la commission réglée en crédits n'est pas
+  déduite du séquestre (celui-ci porte alors le brut). La commission n'est jamais séquestrée ni
+  remboursée.
+- **Support de remboursement = support de paiement de l'acheteur** : une commande payée en cash est
+  remboursée en cash, jamais en crédits sans accord écrit. `credits` → crédits, `barter` → crédits
+  sur la valeur de la jambe.
+- **Durée d'engagement** : 12 mois pour un lien, 1 mois pour un post LinkedIn ou un Reel,
+  **0 pour une story Instagram** (format 24 h : aucun maintien, aucun prorata, tranche unique
+  libérée à J+2 sur la preuve d'affichage).
+- **Bornes de prix universelles** : les collabs Instagram suivent les mêmes bornes dures
+  40 € – 350 € et les mêmes paliers (P1 40 · P2 90 · P3 150 · P4 250 · P5 350) que les liens ; une
+  valeur calculée sous 40 € rend l'actif non vendable.
+- **Balance d'autorité** : toute jambe livrée compte quel que soit le `deal_type` (un lien vendu en
+  cash transfère la même autorité qu'un lien troqué) ; seuls les **règlements** (euros, crédits,
+  soulte) n'entrent dans aucune balance.
+- **Architecture éditoriale** : la Place d'échange est un **satellite du pilier GEO**, pas un 5ᵉ
+  pilier ni un silo « netlinking ».
+- `buy_risk` est calculé sur **six** dimensions (vitesse, rampe nouvel entrant, concentration
+  vendeur, concentration page cible, diversité d'ancre, cohérence thématique).
