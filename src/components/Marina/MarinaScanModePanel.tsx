@@ -19,8 +19,7 @@ const COPY: Record<Lang, {
 }> = {
   fr: {
     title: 'Trois modes de scan, bascule automatique',
-    subtitle:
-      "Marina mesure d'abord la taille réelle du site (sitemap, map, CMS), puis choisit seule le mode. Le mode retenu et la couverture atteinte sont écrits dans l'introduction du rapport.",
+    subtitle: '',
     cols: ['Mode', 'Déclenchement', 'Pages analysées'],
     rows: [
       ['Approfondi', 'Site ≤ 120 URLs découvertes', "Jusqu'à 120 — couverture quasi exhaustive"],
