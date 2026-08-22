@@ -14,8 +14,18 @@ générosité ouverte : elle est plafonnée en nombre de comptes, en durée et e
 
 ## 2. Éligibilité
 
-- Entreprise de **moins de 12 mois** à la date de candidature, **Kbis (ou équivalent UE) à l'appui**.
-- **Sur candidature**, validation manuelle admin (un compte par entreprise, un par dirigeant).
+- **12 mois de gratuité** réservés aux entreprises **créées depuis moins de 12 mois** à la date de
+  candidature.
+- **Double vérification obligatoire** :
+  1. **SIRET** saisi au formulaire, contrôlé automatiquement contre l'API publique Recherche
+     d'entreprises (INSEE/annuaire-entreprises) : existence, état actif, **date de création**
+     (`date_creation`) < 12 mois, dénomination et dirigeant retournés.
+  2. **Kbis** (ou équivalent UE) de **moins de 3 mois** déposé en pièce jointe, contrôlé
+     visuellement par l'admin : cohérence SIREN / dénomination / dirigeant avec le SIRET vérifié.
+- L'ancienneté fait foi sur la **date de création INSEE**, jamais sur la déclaration de l'utilisateur.
+  Écart entre Kbis et INSEE → refus.
+- **Sur candidature**, validation manuelle admin après succès du contrôle SIRET (un compte par
+  entreprise/SIREN, un par dirigeant).
 - **30 comptes maximum** en simultané ; au-delà, liste d'attente.
 - Non cumulable avec un autre avantage commercial (code promo, remise agence, essai en cours).
 - Refus si le domaine déclaré appartient déjà à un compte payant ou a déjà bénéficié de l'offre.
