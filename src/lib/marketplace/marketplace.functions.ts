@@ -13,6 +13,10 @@ import { listInventory, setOptIn } from './inventory.server';
 import { verifyOwnership, recordClaim, buildToken, normalizeDomain } from './ownership.server';
 import { loadConstants } from './constants.server';
 import { readTaxProfile, saveTaxProfile } from './taxProfile.server';
+import { deriveNeeds, confirmObjective } from './needs.server';
+import { evaluateBuyerLimits, loadLegs, countersFrom } from './buyerLimits.server';
+import { computeMatches, listIncomingMatches } from './matching.server';
+import { getMatchValues } from './matchValue.server';
 
 export const getMarketplaceConstants = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
@@ -102,4 +106,71 @@ export const saveMarketplaceTaxProfile = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data, context }) => {
     return saveTaxProfile(context.supabase as never, context.userId, data);
+  });
+
+export const getMarketplaceNeeds = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    return deriveNeeds(context.supabase as never, context.userId);
+  });
+
+export const confirmNeedObjective = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        needId: z.string().uuid(),
+        objective: z.enum(['autorite', 'geo', 'trafic', 'mixte']),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    return confirmObjective(context.supabase as never, {
+      userId: context.userId,
+      needId: data.needId,
+      objective: data.objective,
+    });
+  });
+
+export const getMarketplaceBuyerLimits = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    return evaluateBuyerLimits(context.supabase as never, context.userId);
+  });
+
+export const getMarketplaceMatches = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = context.supabase as never;
+    const needs = await deriveNeeds(sb, context.userId);
+    const limits = await evaluateBuyerLimits(sb, context.userId);
+    const counters = countersFrom(await loadLegs(sb, context.userId));
+    const matches = await computeMatches(sb, {
+      userId: context.userId,
+      needs: needs.filter((n) => n.need_objective_confirmed_at !== null),
+      perSeller: counters.perSeller,
+      perTarget: counters.perTarget,
+      perSellerMax: limits.per_seller_12m_max,
+      sameTargetMax: limits.same_target_url_12m_max,
+    });
+    return { needs, limits, matches };
+  });
+
+export const getMarketplaceIncomingMatches = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    return listIncomingMatches(context.supabase as never, context.userId);
+  });
+
+export const getMarketplaceMatchValues = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z.object({ domain: z.string().min(3), force: z.boolean().optional() }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    return getMatchValues(context.supabase as never, {
+      userId: context.userId,
+      domain: data.domain,
+      force: data.force,
+    });
   });

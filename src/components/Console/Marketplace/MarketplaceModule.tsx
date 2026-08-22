@@ -1,11 +1,14 @@
 import { InventoryTable } from './InventoryTable';
 import { OwnershipCard } from './OwnershipCard';
 import { TaxProfileCard } from './TaxProfileCard';
+import { BuyTab } from './BuyTab';
+import { OpportunitiesTab } from './OpportunitiesTab';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTeamPermissions } from '@/hooks/useTeamPermissions';
 
 /**
- * Place d'échange — vue vendeur (lot L1a).
- * L'achat, l'appariement et le Studio arrivent aux lots L2 et L3.
+ * Place d'échange — vente (L1a), appariement et achat (L2).
+ * La commande, le séquestre et le Studio arrivent au lot L3.
  */
 export function MarketplaceModule() {
   const { can } = useTeamPermissions();
@@ -29,12 +32,29 @@ export function MarketplaceModule() {
         </p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <OwnershipCard />
-        <TaxProfileCard />
-      </div>
+      <Tabs defaultValue="sell">
+        <TabsList>
+          <TabsTrigger value="sell">Vendre</TabsTrigger>
+          <TabsTrigger value="opportunities">Demandes reçues</TabsTrigger>
+          <TabsTrigger value="buy">Acheter</TabsTrigger>
+        </TabsList>
 
-      <InventoryTable />
+        <TabsContent value="sell" className="space-y-6 pt-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <OwnershipCard />
+            <TaxProfileCard />
+          </div>
+          <InventoryTable />
+        </TabsContent>
+
+        <TabsContent value="opportunities" className="pt-6">
+          <OpportunitiesTab />
+        </TabsContent>
+
+        <TabsContent value="buy" className="pt-6">
+          <BuyTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
