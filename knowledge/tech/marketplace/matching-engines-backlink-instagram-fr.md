@@ -701,7 +701,15 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - `marketplace_ownership_claims` — déclaration de responsabilité vendeur : horodatage, IP, texte accepté.
 - `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
 - `marketplace_feedback` — commentaires et motifs par révision.
-- `marketplace_verifications` — contrôles récurrents (verdict lien, publication social).
+- `marketplace_verifications` — contrôles de publication et de maintien (§2.13) : `leg_id`, `method`
+  (`crawl` | `linkedin_api` | `meta_api`), `verdict`, preuve, capture, `checked_at`, `next_check_at`,
+  état de la jambe (`published` | `verified` | `maintained` | `broken` | `resolved` | `refunded`).
+- `marketplace_page_sell_risk` — cache par page (§2.12) : `sell_risk`, composantes, classe
+  (`safe` | `moderate` | `discouraged`), motif d'exclusion dure, `recomputed_at` (à chaque crawl).
+- `marketplace_match_values` — cache par page et par domaine (§2.11) : `valeur_vendeur_cents`,
+  `valeur_acheteur_cents`, `global_match_value_cents`, `matches_count`, `computed_at` (TTL 24 h,
+  site-scoped comme Marina).
+
 - `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers.
 
 
