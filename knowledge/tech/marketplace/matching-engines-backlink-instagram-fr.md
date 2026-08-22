@@ -888,13 +888,27 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `links_bought_7d`, `distinct_sellers_12m`, `top_seller_share`, `exact_anchor_ratio`,
   `target_url_counts` (jsonb), `topical_coherence_ratio`, `buy_risk`, `next_allowed_at`,
   `throttle_reason`, `recomputed_at`. Dérivé des jambes livrées, jamais des commandes créées.
+  **Fenêtres glissantes, pas de mois calendaire** : `links_bought_30d` compte les jambes livrées
+  sur les 30 derniers jours et `links_bought_7d` sur les 7 derniers (bornes : 4 et 2). La
+  formulation « 4 par mois » de §2.2.1 se lit donc « 4 sur 30 jours glissants » — un acheteur ne
+  peut pas remettre son compteur à zéro en attendant le 1er du mois.
 
 ### 4.3 Transaction
 
-- `marketplace_orders` — commande : `deal_type` (`cash` | `credits` | `barter`), prix figé,
-  commission 15 %, statut, `approved_revision_id`, `soulte_cents`, `soulte_currency`
-  (`eur` | `credits`), `soulte_payer_id`, `soulte_payee_id`, `risk_flags[]`. Aucune valeur de jambe
-  stockée ici.
+- `marketplace_orders` — commande. Identité et objet :
+  `buyer_id`, `seller_id` (uuid → `auth.users`), `buyer_domain`, `seller_domain`,
+  `asset_id` (→ `marketplace_link_assets` ou `marketplace_social_assets`, avec `asset_kind`),
+  `need_id` (→ `marketplace_needs`), `target_url` (URL cible chez l'acheteur),
+  `anchor` (ancre validée), `anchor_kind` (`brand` | `exact` | `semi` | `url` | `natural`),
+  `link_attribute` (`dofollow` | `nofollow` | `sponsored`).
+  Économie : `deal_type` (`cash` | `credits` | `barter`), `price_cents` (prix figé),
+  `commission_cents` (15 %), `soulte_cents`, `soulte_currency` (`eur` | `credits`),
+  `soulte_payer_id`, `soulte_payee_id`.
+  Engagement et cycle de vie : `commitment_months` (défaut **12**, base du prorata de §2.13),
+  `published_at`, `commitment_ends_at` (= `published_at` + `commitment_months`),
+  `status`, `approved_revision_id`, `risk_flags[]`, `frozen_at` (figeage), `created_at`.
+  Contraintes : `price_cents + soulte_cents ≤ 35000`, multiples de 1000 (paliers de 10 €).
+  Aucune valeur de jambe stockée ici (§4.1).
 - `marketplace_exchanges` — **jambes** de la commande (2 pour un troc, 3 ou 4 pour une boucle
   `link_chain`, 1 pour un achat cash) : `order_id`, `exchange_id` (identifiant du troc ou de la
   boucle, partagé par toutes ses jambes), `leg_index`, `publish_after` (décorrélation : +21 j pour
