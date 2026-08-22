@@ -823,6 +823,12 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
 ### 4.2 Actifs, besoins, appariement
 
 - `marketplace_link_assets` — page vendeur, opt-in, signaux, prix calculé, plafonds.
+  `SELECT` des colonnes de signaux brutes (clics/impressions/position/requêtes) réservé au
+  propriétaire (`auth.uid()`) et à `service_role`.
+- `marketplace_asset_public_signals` (vue) — projection exposable d'un actif : scores normalisés
+  0–100, **fourchettes** de clics/impressions/position, thématiques (clusters), tendance,
+  top pays. Aucune valeur GSC exacte, aucune requête, aucun agrégat domaine (§2.1.1).
+  C'est la **seule** source lue par les écrans et API acheteur.
 - `marketplace_social_assets` — compte Instagram / LinkedIn, formats, métriques, prix calculé.
 - `marketplace_needs` — besoin acheteur dérivé de `architect_workbench` / E-E-A-T, avec
   `need_primary` / `need_secondary` (`seo` | `geo` | `conversion`) : entrée de la matrice §2.7.1.
