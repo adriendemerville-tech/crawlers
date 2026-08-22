@@ -2220,6 +2220,16 @@ function buildExecutiveSummaryHTML(
   const geo100 = ctx.strategicData?.overallScore ? Math.round(Number(ctx.strategicData.overallScore)) : null;
   const pages = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pages?.length || null;
 
+  // Coût chiffré des plafonds (performance mobile / LCP en tête) : le lecteur
+  // doit savoir de combien de points son score est grevé, et par quoi.
+  const penaltyHTML = scorePenaltyBlockHTML(
+    normalizeGates(ctx.expertData?.scores?.gates, 'technical'),
+    lang,
+    { lcpMs: ctx.expertData?.scores?.performance?.lcp ?? null, techMax },
+  );
+
+
+
   const parts = [tech100, geo100].filter((v): v is number => typeof v === 'number' && v > 0);
   const global = parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length) : null;
 
