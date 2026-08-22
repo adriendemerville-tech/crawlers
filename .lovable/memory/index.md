@@ -1,45 +1,26 @@
-- [Marina Portée & limites](mem://features/marina/scope-and-limits-backend-fr) — Section « Portée et limites » toujours générée backend depuis le domaine (_shared/scopeAndLimits.ts), fallback dans compileMarinaReport, mutualisée en dernière section des rapports multipages
-- [Cocoon workbench & déploiement](mem://tech/cocoon/workbench-and-deploy-tracking-fr) — cocoon-strategist écrit ses findings critiques dans architect_workbench (_shared/cocoonWorkbench.ts, clé idempotente cocoon_<domain>_<findingId>) et cocoon-deploy-links marque is_deployed = true + deployment_method, en ignorant les liens déjà déployés
-- [Cocoon coût & sessions](mem://tech/cocoon/cost-logging-and-session-persistence-fr) — aiGatewayFetch/aiGatewayCall loggent dans ai_gateway_usage via l'option callerFunction ; persist-cocoon-session appelée après calculate-cocoon-logic
-- [Cocoon P2 fiabilité/design/cycle](mem://tech/cocoon/p2-confidence-emoji-lifecycle-fr) — seuil 30 pages inconclusive, zéro emoji (marqueur d'axes »), expiration 30j des recommandations et tâches
-- [Parménion correctifs 2026-08-11](mem://tech/autopilot/parmenion-audit-p0-fixes-2026-08-11) — Skip audit (sources réelles + cooldown 24h), coût LLM loggé, prescriptions dans workbench, error_category
-- [Marina structure narrative](mem://features/marina/report-narrative-structure-fr) — Intro « comment lire ce rapport », chapeaux pédagogiques par section, conclusion 0-90j, garde d'exigence du verdict si actions critiques, et découpe PDF sans cadres coupés
-- [Marina verdict stratégique](mem://features/marina/strategic-verdict-fr) — Paragraphe gras déterministe posture SEO/GEO + fourchette de gain 12 mois dans la synthèse exécutive ; PSI toujours en profil mobile
-- [Marina audit par type de page](mem://features/marina/page-archetype-audit-fr) — Section « Audit par type de page » : groupes par gabarit (agence/produit/service/avis/éditorial), verdict et conclusion intermédiaire par type, synthèse business globale
-- [Mémoire de marché & calibration](mem://features/marina/market-memory-and-calibration-fr) — market_observations historisées (ML-ready) + archetype_mix_benchmarks p20/p50/p80 par secteur × modèle commercial (cron dimanche 03h, min 5 domaines), taxonomie sectorielle déterministe, prescriptions archétypes dans architect_workbench
-- [Marina carte d'identité pré-crawl](mem://features/marina/identity-panel-precrawl-fr) — Panneau /marina d'édition/verrouillage de la carte d'identité (actions identity_resolve/recompute/lock sur la fonction marina), carte user_manual jamais réinférée
-- [Marina modes de scan](mem://features/marina/scan-modes-fr) — deep ≤120 URLs (120 p) / standard ≤1000 (150 p) / sample >1000 (60 p par gabarit), bascule automatique via _shared/marinaScanMode.ts, mode explicité dans l'intro du rapport et panneau /marina
-- [Marina données propriétaires](mem://features/marina/owner-first-party-data-fr) — Section 3b GSC+GA4 conditionnelle (module _shared/marinaOwnerData.ts), absente si aucune connexion Google vérifiée ne couvre le domaine
-- [Spiral score & trigger](mem://tech/autopilot/spiral-score-trigger-conflict-fr) — Trigger qui écrasait le score 10-signaux, neutralité 7/15 sans cluster, crons réconciliation Parménion (horaire) + retry cluster (6h)
-- [Pool SERP mutualisé](mem://tech/serp/pool-mutualise-fr) — Toute requête SERP via _shared/serpPool.ts (getSerp/ingestExternalSerp), TTL 24h/7j/30j, fan-out positions keyword_universe, journal serp_pool_hits
-- [Marina reprise sur checkpoint](mem://features/marina/checkpoint-resume-fr) — Checkpoint de phase dans audit_cache, reprise auto (cron 5 min, max 6 reprises) au lieu d'échouer les jobs tués par le wall-time, tours de crawl courts en phase 2
-- [Marina multipages périmètre page](mem://features/marina/multipage-page-scope-fr) — Crawl mutualisé domaine mais score tech/GEO/cocon propres à chaque URL, conclusion intermédiaire par URL + synthèse exécutive globale du rapport fusionné
-- [Éditorialisation rapports (Lot 6)](mem://features/marina/editorialization-lot6-fr) — _shared/reportEditorial.ts : champs bruts traduits, sévérité en badge, tableaux tout-à-zéro supprimés, clusters nommés par terme dominant et clusters isolés regroupés
-- [Discrimination rapports (Lot 7)](mem://features/marina/report-discrimination-lot7-fr) — Impact plafonné 97 et bases de gravité abaissées, gains de trafic répartis par levier, barème technique 220 réconcilié, Top-3 de section non répétés, clusters nommés depuis les pages, candidats fondateur non cités
-- [Questions visibilité LLM](mem://features/geo/llm-visibility-prompt-rules-fr) — Censure marque/domaine dans les prompts + question locale réservée à service_local/leadgen/nonprofit
-- [Rédaction LLM des questions de benchmark](mem://features/geo/benchmark-question-writer-fr) — benchmarkQuestionWriter.ts : 1 appel LLM reformule les 9 questions en langage prospect, axes/besoins/intentions restent déterministes, repli question par question
-- [Ancrage mots-clés & question concurrent](mem://features/geo/benchmark-keyword-anchoring-fr) — 75 % des 9 questions doivent porter un mot-clé de la carte d'identité (SEO/GEO…), 1 question « alternative à <concurrent> » pour SaaS/e-commerce/agence/média
-- [Marina cohérence rapports](mem://features/marina/report-consistency-guards-fr) — Web Vitals canoniques (X,XX s), justifications par levier, toxicité si référents hors-sujet, concurrents marché dans la carte d'identité, disclaimer échantillon GEO
-- [Lentilles de ciblage Parménion](mem://tech/autopilot/targeting-lenses-fr) — Sprint 2 : lens_bonus max +8 sur items de création (cluster/persona/localisation), quota de slots contenu via share_pct plafonné 50%, cap 2/cluster prioritaire
-- [Identité ancrée contenu](mem://tech/architecture/identity-grounding-fr) — Interdiction d'inférer l'activité depuis le nom de domaine ; réutilisation de carte limitée aux sources ancrées (marina/crawl/user)
-- [Score visibilité LLM](mem://tech/geo/llm-visibility-scoring-formula-fr) — Couverture binaire + Wilson 95%, qualité pondérée par axe (ranked ×2,0 / covered ×1,5 / demand ×1,0), fiabilité par nombre de runs, bloc potentiel GEO vs citation mesurée
-- [Signaux de confiance Lot A](mem://tech/audit/trust-signals-lot-a-fr) — Surclaims (5 catégories, critical si secteur régulé), autorité citée hors compétence (table curée DGFiP/URSSAF, CNIL/ANSSI…), URLs mortes priorisées (canonical mort > liens internes > pages mortes > liens cassés), calculés au crawl et restitués dans E-E-A-T Marina
-- [Contre-vérification des absences Lot 3](mem://tech/audit/absence-verification-lot3-fr) — Aucune absence H1/JSON-LD/meta affirmée sans re-test en rendu complet (3 pages max), verdicts absent_partout vs absent_pour_les_bots, encart « Fiabilité des constats de contenu », sitemap découvert via robots.txt
-- [GEO 10 sous-signaux Lot B](mem://tech/audit/geo-sub-signals-lot-b-fr) — GEO décomposé en compréhension machine (50) vs autorité perçue (50), verdict d'écart authority_lag/comprehension_lag/both_low, sous-signaux non mesurés exclus du dénominateur, verdict pilier/satellite (301, arbitrage, refonte, satellites légitimes) sur la cannibalisation
-- [Taxonomie de provenance](mem://tech/audit/provenance-taxonomy-fr) — Pastilles Mesuré/Testé/Déduit/Estimé via _shared/provenance.ts, table METRIC_PROVENANCE source unique de vérité, scores = Déduit (jamais « mesurés »), légende une seule fois par rapport
+# Project Memory
 
-- [Proposition de valeur & archétypes de questions](mem://features/identity/value-proposition-benchmarks-fr) — value_proposition + secondary_propositions dans la carte d'identité, axe value_prop réservé au benchmark n°1, questions directes géolocalisées pour les commerces/services locaux, directives par archétype dans le rédacteur LLM
+## Core
+- **Security:** Multi-tenant isolation MUST use `auth.uid()`, ignore client `user_id`.
+- **Database:** Base tables containing secrets have `SELECT` revoked; use secure views.
+- **SSR:** Jamais `DOMPurify.sanitize` pendant le rendu serveur — voir [Sanitisation isomorphe](mem://tech/ssr/isomorphic-sanitizer-fr).
+- **Tech Stack:** TS/Deno ONLY for backend/ML stack (Edge Functions). No external Python services.
+- **Content:** Raw HTML/code manual editing is disabled (use injection catalog). Markdown uses `@tailwindcss/typography` (`prose` class).
+- **CMS Push:** Tous les push CMS doivent envoyer du HTML. dictadevi-actions convertit défensivement Markdown→HTML via marked sur create/update-post.
+- **Access:** API keys & UI global configs use read-only RLS without `user_id` filter.
+- **Images:** NO_TEXT_GUARD forbids text in AI-generated images unless specifically requested.
+- **SEO:** Métadonnées via `head()` TanStack + `src/lib/seo/pageHead.ts` (jamais Helmet pour title/description/canonical/og). Include `blockquote.citable-passage` for AI visibility.
+- **Silos:** 4 piliers seulement (crawler, GEO, outil-crawl, comparatifs) — voir [Architecture en 4 silos](mem://tech/seo/silo-architecture-4-pillars-fr).
+- **Auth:** Client-side rate limiting on login + Server-side GoTrue. OAuth disconnects must revoke tokens.
+- **Queue:** Jobs prioritized by plan: agency_premium(10) > agency_pro(20) > new_user(30) > registered(40).
+- **Team Roles:** owner/editor/auditor — gate actions via `useTeamPermissions().can('permission_key')`.
+- **Agents:** Agent SEO autonome sur le CONTENU (publication directe, max 1/semaine, dépublication auto) ; JAMAIS sur le CODE (validation humaine obligatoire).
+- **Audit:** Ne jamais conclure « contenu pauvre » sur le seul HTML servi — détecter la coquille JS (non-SSR) et remonter la cause racine.
+- **Liens:** Tout contrôle de liens passe par `_shared/linkVerdictShared.ts` (hard_broken/soft_broken/blocked/ok) — jamais de seuil HTTP local.
+- **Benchmarks GEO:** Le mot « site » est interdit dans les questions ; une activité mixte (prestation + e-boutique) reste un prestataire — voir [Formulation des questions de benchmark](mem://tech/geo/benchmark-question-wording-fr).
+- **Éditorial:** Une tactique SEO (balise title, maillage, schema) n'est JAMAIS un sujet d'article, sauf sur crawlers.fr — voir [Garde stratégie ≠ sujet](mem://tech/autopilot/strategy-vs-subject-guard-fr).
 
-- [Discrimination des constats](mem://tech/audit/report-discrimination-fixes-fr) — FAQ détectée balises retirées + croisement crawl, impact modulé par famille (fin du 68/100 générique), autorité de page recalculée avec astérisque/n-m, verdict pilier contesté départagé par le signal mesuré le plus marqué, modèle d'affaires jamais « non résolu » s'il sert un arbitrage
-
-- [Content Advisor étagé](mem://tech/architect/content-advisor-staged-queue-fr) — Découpage `staged: true` en 2 jobs job_queue (research → synthesis), checkpoint 23 clés dans async_jobs.result_data.__research, nettoyage \u0000 + retry sans HTML brut, crédits non rejoués à l'étape 2
-
-- [Workbench borné](mem://tech/architect/workbench-backlog-cap-fr) — workbench-hygiene : dédup double signature (titre + catégorie/URL), plafond 40 constats actifs par domaine/user, périmés en `dismissed` jamais `done`
-- [MCP dry_run_script](mem://tech/mcp/dry-run-script-resolver-fr) — dry_run_script cible dry-run-script (siteUrl+code) via ARG_RESOLVE sur site_script_rules avec contrôle de propriété ; target_url optionnel
-- [Workbench reset bloqués](mem://tech/architect/workbench-reset-stuck-fr) — RPC reset_stuck_workbench_items + cron SQL 15 min qui repasse en pending les in_progress de plus de 2 h
-- [Parménion cycles dégradés](mem://tech/autopilot/degraded-visibility-fr) — Compteur incidents 7 j + causes execution_error dans l'UI admin, kick advisor 3 tentatives (async, retry, staged) avant de dégrader
-- [Audit infra & coûts 08/2026](mem://tech/audits/infra-db-serverfn-costs-2026-08-fr) — Amplification d'écritures process-crawl-queue, rétention analytics_events, surface SECURITY DEFINER, getSiteStructure public, coûts LLM
-- [Mode démo console](mem://features/console/demo-mode-fixtures-fr) — Interrupteur Administration + fixtures front-only (GSC BQ, Indexation, Logs bots, SEA→SEO, GMB), aucune écriture en base
-- [Brief éditorial DictaDevi](mem://features/dictadevi/editorial-brief-endpoint-fr) — Endpoint /api/v1/editorial-brief injecté dans Parménion + garde dure des sujets hors ligne éditoriale
-- [Norme vidéos de démonstration](mem://tech/media/demo-video-standard-fr) — Registre demoVideos.registry + DemoVideoSection + buildVideoObjectSchema : lazy-load, transcription SSR, WebVTT, VideoObject
-- [Place d'échange règles v1](mem://features/marketplace/v1-core-rules-fr) — Commission unique 15 %, boucles link_chain A→B→C→A privilégiées et link_for_link en dernier recours (21 j, 1/trimestre, anti-cycle non déclaré, exemption 2ᵉ jambe, décote 0,70), propriété vérifiée avant mise en vente, bornes dures 40-350 € par paliers de 10 €, signaux GSC exposés en fourchettes uniquement
+## Memories
+- [Plan Jeune Entreprise v1](mem://features/pricing/plan-jeune-entreprise-v1-fr) — Gratuité 12 mois FR, vérif SIRET+Kbis, quotas F1-F10, F6 = dégradation 1j, F8 purge non tranché
+- [Garde stratégie ≠ sujet](mem://tech/autopilot/strategy-vs-subject-guard-fr) — editorialSubjectGuard : requalification en mot-clé métier ou blocage de la publication
+- [Formulation des questions de benchmark](mem://tech/geo/benchmark-question-wording-fr) — Interdiction du mot « site », règle de dominance service vs e-commerce, archétype piloté par la page auditée
