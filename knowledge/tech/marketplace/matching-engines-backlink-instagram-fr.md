@@ -267,17 +267,26 @@ Lecture par `trade_type`, besoin dominant servi de chaque côté :
 Règles :
 - L'UI n'affiche **jamais** un gain SEO ou GEO pour une jambe Instagram : la valeur annoncée est
   strictement l'audience et le clic.
-- `link_for_link` est autorisé mais **signalé comme à risque** dans l'UI (pattern de lien
-  réciproque dévalué par Google) : les deux publications sont **décorrélées dans le temps**
-  (délai minimum de 21 jours entre les deux jambes, jamais de publication simultanée), et une
-  pondération de décote est appliquée à la valeur de chaque jambe dans le calcul d'équité.
+- `link_for_link` est **autorisé, signalé comme à risque et bridé**. Quatre garde-fous cumulés,
+  tous appliqués serveur, aucun contournable depuis l'UI :
+  1. **Flag de risque** visible des deux côtés avant acceptation (pattern de lien réciproque
+     dévalué par Google), avec formulation explicite du risque encouru ;
+  2. **Décorrélation temporelle** : délai minimum de 21 jours entre les deux jambes, jamais de
+     publication simultanée, ordre de publication tiré au sort ;
+  3. **Quota** : maximum **1 réciprocité directe par trimestre et par site**, dans les deux sens
+     confondus, et jamais deux fois avec le même partenaire sur 12 mois glissants ;
+  4. **Détection de cycle** : le graphe des liens échangés est parcouru avant validation ; toute
+     boucle détectée (A→B→A, A→B→C→A, jusqu'à 4 sauts) **bloque** la proposition en 409, sans
+     possibilité de forçage.
 - La valeur d'une jambe LinkedIn est estimée sur les impressions et l'engagement des 10 derniers
   posts du vendeur, publication vérifiée via l'URN/URL stable du post. À défaut d'impressions
-  exposées par l'API : followers × taux d'engagement observé sur les réactions publiques.
-- Commission Crawlers sur un troc : 10 % de la valeur estimée de chaque côté, prélevée en crédits
-  (moins que les 25 % d'une vente cash, l'échange n'impliquant aucun encaissement).
+  exposées par l'API : followers × taux d'engagement observé sur les réactions publiques. La
+  valeur obtenue est arrondie au palier de 10 € et bornée à 40 € – 350 € comme un lien.
+- Commission Crawlers sur un troc : **15 %** de la valeur estimée de chaque côté, prélevée en
+  crédits — **même taux que la vente cash**, aucune exception de devise ni de `deal_type`.
 - Le troc suit le même workflow de prévisualisation (2.3) et de double feedback que la vente.
-- Plafonds : maximum 2 échanges actifs par site sortant et par mois.
+- Plafonds : maximum 2 échanges actifs par site sortant et par mois, dont **au plus 1
+  `link_for_link` par trimestre** (règle 3 ci-dessus, la plus contraignante l'emporte).
 
 #### 2.7.2 Sélection du `trade_type` et de la soulte
 
