@@ -2342,7 +2342,9 @@ Deno.serve(handleRequest(async (req) => {
     // ou contenu non extractible), le score total ne peut pas franchir la zone
     // « excellent ». Un audit qui se contredit ne sert à personne.
     const blockingGate = scoreGates.some((g) => g.axis === 'performance' || g.axis === 'technical');
-    if (blockingGate && totalScore > 130) {
+    const estimatedGate = scoreGates.some((g) => g.axis === 'estimated');
+    const totalCap = blockingGate ? 130 : (estimatedGate ? 150 : null);
+    if (totalCap !== null && totalScore > totalCap) {
       scoreGates.push({
         axis: 'total',
         reason: 'Défaut bloquant mesuré : le score global est plafonné hors de la zone « excellent »',
