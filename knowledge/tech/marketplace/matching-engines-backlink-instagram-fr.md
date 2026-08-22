@@ -173,7 +173,7 @@ Garde-fous complémentaires :
 **Grille de prix (détail retenu).** Le prix algorithmique choisit un **palier fixe**, il ne
 l'invente pas : pas de prix continu, lisibilité acheteur/vendeur, pas de négociation au cas
 par cas. Tous les paliers sont des **multiples de 10 €** (règle d'arrondi unique dans toute la
-place d'échange, y compris pour les soultes et les valorisations d'actifs sociaux). Quatre
+place d'échange, y compris pour les soultes et les valorisations d'actifs sociaux). Cinq
 paliers calés **légèrement sous le marché** constaté (lien contextuel France, SEO/GEO) sans
 casser la perception qualité :
 
@@ -183,10 +183,16 @@ casser la perception qualité :
 | P2 | **90 €** | Site SaaS / média spécialisé correct (DR 40-60, trafic qualifié) — marché 80-180 € |
 | P3 | **150 €** | Site fort / média reconnu (DR 60+, trafic significatif) — marché 180-350 € |
 | P4 | **250 €** | Premium / très forte autorité — marché 350 €+ |
+| P5 | **350 €** | Exceptionnel : autorité de référence sur la thématique, trafic GSC élevé et visibilité IA constatée — marché 500 €+ |
 
 Sélection du palier : le score normalisé global (`Σ(poids × score normalisé)`) mappe vers le
-palier le plus proche. P1 vaut exactement le plancher, P4 reste sous le plafond : les bornes
-40 € / 350 € encadrent aussi les prix ajustés par une soulte.
+palier le plus proche. P1 vaut exactement le plancher **et P5 exactement le plafond** : les bornes
+40 € / 350 € sont donc atteignables par le pricing lui-même, et encadrent aussi les prix ajustés
+par une soulte. P5 n'est attribué que si l'actif est `verified`, dispose d'au moins 90 jours de
+signaux GSC opt-in et d'un `sell_risk` faible (§2.12) ; sinon le moteur redescend à P4.
+Conséquence sur la soulte : lorsque la jambe est déjà à P5, aucune soulte cash ne peut être
+ajoutée (le total serait hors plafond) — l'écart est alors réglé en crédits ou l'échange est
+rééquilibré sur un autre actif.
 **Différenciation data** : seul acteur du marché à pricer la page à l'unité sur des faits
 mesurés (autorité + sémantique + trafic GSC réel + qualité + visibilité IA), là où
 Rocketlinks / Getfluence s'appuient sur du déclaratif.
@@ -249,7 +255,7 @@ explicite, jamais un blocage silencieux) :
 
 | Garde-fou | Borne v1 | Portée |
 |---|---|---|
-| **Vitesse d'acquisition** | ≤ 4 liens entrants achetés / mois / domaine acheteur, et ≤ 2 sur une fenêtre de 7 jours glissants | anti-pic de vélocité |
+| **Vitesse d'acquisition** | ≤ 4 liens entrants achetés par **30 jours glissants** / domaine acheteur, et ≤ 2 sur 7 jours glissants (fenêtres glissantes, jamais mois calendaire — cf. `marketplace_buyer_limits`, §4.2) | anti-pic de vélocité |
 | **Rampe nouvel entrant** | 1er mois : max 2 liens ; 2e mois : 3 ; à partir du 3e : 4 | un domaine jeune ne construit pas 12 liens en 30 jours |
 | **Concentration par vendeur** | ≤ 2 liens du même domaine vendeur sur 12 mois glissants, et ≤ 20 % des liens achetés sur la période | diversité des sources |
 | **Diversité minimale** | à partir du 5e lien acheté, au moins 4 domaines vendeurs distincts | pas de profil mono-source |
@@ -490,7 +496,7 @@ Pour chaque jambe j livrée et vérifiée :
    sign(j)  = +1 si le site REÇOIT de l'autorité (achat / jambe entrante)
               −1 si le site CÈDE de l'autorité   (vente / jambe sortante)
    value(j) = valeur € estimée de la jambe au moment du deal (prix figé,
-              ou valeur du palier P1–P4 pour une jambe troquée),
+              ou valeur du palier P1–P5 pour une jambe troquée),
               × facteur de décote réciproque si trade_type = link_for_link
    age_m(j) = mois écoulés depuis delivered_at
    w(j)     = max(0, 1 − age_m(j) / 24)          -- 0 au-delà de 24 mois
@@ -566,7 +572,7 @@ doit toujours être fournie par l'un des deux users — jamais par Crawlers.
 
 | Contrepartie | Valeur pour l'acheteur | Vérifiable par Crawlers |
 |---|---|---|
-| Euros (hausse du prix de la commande) | règlement direct de l'écart, paliers P1–P4 | oui, natif |
+| Euros (hausse du prix de la commande) | règlement direct de l'écart, paliers P1–P5 | oui, natif |
 | Crédits Crawlers transférés d'un wallet à l'autre | le vendeur est payé en usage plateforme, sans sortie de cash côté acheteur | oui, natif |
 | Post LinkedIn ou story Instagram | cf. 2.7 | oui, via connecteurs |
 | Newsletter : mention dans un envoi | audience qualifiée, non indexable, aucun signal SEO | partiellement (capture d'écran + nombre d'abonnés déclaré) |
@@ -751,8 +757,10 @@ page de l'inventaire (les commandes en cours sont honorées).
 
 ### 2.13 Vérification de publication et de maintien de publication
 
-Une jambe n'est réputée livrée que **prouvée**, et elle doit le rester pendant la durée engagée
-(par défaut 12 mois pour un lien, 30 jours pour un contenu social).
+Une jambe n'est réputée livrée que **prouvée**, et elle doit le rester pendant la durée engagée,
+portée par `marketplace_orders.commitment_months` (défaut **12** pour un lien, **1** — 30 jours —
+pour un contenu social) et matérialisée par `commitment_ends_at`. C'est cette colonne, et elle
+seule, qui sert de base au calcul de prorata en cas de retrait anticipé.
 
 | Actif | Preuve de publication | Maintien |
 |---|---|---|
@@ -855,7 +863,7 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
 |---|---|---|
 | Valeur d'une jambe (lien, story, post) | `marketplace_exchanges.value_cents` | référencée par `leg_id`, jamais recopiée |
 | Prix figé de la commande et commission 15 % | `marketplace_orders` | dérivé des jambes au moment du figeage, jamais recalculé après |
-| Soulte (écart entre les deux jambes) | `marketplace_orders.soulte_cents` | colonne générée / calculée à partir des jambes de la commande |
+| Soulte (écart entre les deux jambes) | `marketplace_orders.soulte_cents` | **valeur écrite** par la server function au figeage de la commande, jamais une colonne générée : elle dépend de la décote 0,70 (`link_for_link`), de l'arrondi au palier de 10 € et du plafond total de 350 €, donc elle n'est pas recalculable par simple différence des jambes. Immuable après figeage |
 | Impact sur la balance d'autorité | `marketplace_balance_events` | ne stocke **aucun** montant : `leg_id` + `sign` ; la valeur est lue par jointure |
 | Soldes agrégés | `marketplace_site_balances` | cache recalculable, jamais autoritaire |
 | Valeur d'appariement (estimation, pas transaction) | `marketplace_match_values` | cache TTL 24 h, sans lien avec les montants réels |
@@ -882,13 +890,27 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `links_bought_7d`, `distinct_sellers_12m`, `top_seller_share`, `exact_anchor_ratio`,
   `target_url_counts` (jsonb), `topical_coherence_ratio`, `buy_risk`, `next_allowed_at`,
   `throttle_reason`, `recomputed_at`. Dérivé des jambes livrées, jamais des commandes créées.
+  **Fenêtres glissantes, pas de mois calendaire** : `links_bought_30d` compte les jambes livrées
+  sur les 30 derniers jours et `links_bought_7d` sur les 7 derniers (bornes : 4 et 2). La
+  formulation « 4 par mois » de §2.2.1 se lit donc « 4 sur 30 jours glissants » — un acheteur ne
+  peut pas remettre son compteur à zéro en attendant le 1er du mois.
 
 ### 4.3 Transaction
 
-- `marketplace_orders` — commande : `deal_type` (`cash` | `credits` | `barter`), prix figé,
-  commission 15 %, statut, `approved_revision_id`, `soulte_cents`, `soulte_currency`
-  (`eur` | `credits`), `soulte_payer_id`, `soulte_payee_id`, `risk_flags[]`. Aucune valeur de jambe
-  stockée ici.
+- `marketplace_orders` — commande. Identité et objet :
+  `buyer_id`, `seller_id` (uuid → `auth.users`), `buyer_domain`, `seller_domain`,
+  `asset_id` (→ `marketplace_link_assets` ou `marketplace_social_assets`, avec `asset_kind`),
+  `need_id` (→ `marketplace_needs`), `target_url` (URL cible chez l'acheteur),
+  `anchor` (ancre validée), `anchor_kind` (`brand` | `exact` | `semi` | `url` | `natural`),
+  `link_attribute` (`dofollow` | `nofollow` | `sponsored`).
+  Économie : `deal_type` (`cash` | `credits` | `barter`), `price_cents` (prix figé),
+  `commission_cents` (15 %), `soulte_cents`, `soulte_currency` (`eur` | `credits`),
+  `soulte_payer_id`, `soulte_payee_id`.
+  Engagement et cycle de vie : `commitment_months` (défaut **12**, base du prorata de §2.13),
+  `published_at`, `commitment_ends_at` (= `published_at` + `commitment_months`),
+  `status`, `approved_revision_id`, `risk_flags[]`, `frozen_at` (figeage), `created_at`.
+  Contraintes : `price_cents + soulte_cents ≤ 35000`, multiples de 1000 (paliers de 10 €).
+  Aucune valeur de jambe stockée ici (§4.1).
 - `marketplace_exchanges` — **jambes** de la commande (2 pour un troc, 3 ou 4 pour une boucle
   `link_chain`, 1 pour un achat cash) : `order_id`, `exchange_id` (identifiant du troc ou de la
   boucle, partagé par toutes ses jambes), `leg_index`, `publish_after` (décorrélation : +21 j pour
@@ -1034,7 +1056,7 @@ Ajouts obligatoires :
 
 | Lot | Contenu |
 |---|---|
-| L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
+| L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € (**P1 40 € · P2 90 € · P3 150 € · P4 250 € · P5 350 €**) + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
 | L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » + **calcul de la valeur d'appariement page et domaine (§2.11)** |
 | L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 %, **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
 | L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |

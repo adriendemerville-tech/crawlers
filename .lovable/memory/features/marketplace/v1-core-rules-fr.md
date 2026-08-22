@@ -50,8 +50,19 @@ contrôle du site, pas le mandat juridique).
 Plancher **40 €** et plafond **350 €** durs, sans dérogation ni validation admin. Tous les prix
 sont des multiples de **10 €**, y compris les soultes et les valorisations d'actifs sociaux
 (LinkedIn, Instagram), qui utilisent la même échelle que les liens.
-Paliers v1 : P1 40 € · P2 90 € · P3 150 € · P4 250 €.
-Une soulte ne peut porter le total au-delà du plafond. 1 crédit = 1 € pour le calcul d'équité.
+Paliers v1 : P1 40 € · P2 90 € · P3 150 € · P4 250 € · **P5 350 €** (P5 = plafond atteignable par le pricing lui-même, réservé aux actifs `verified`, 90 j de signaux GSC et `sell_risk` faible ; aucune soulte cash au-dessus de P5).
+Une soulte ne peut porter le total au-delà du plafond (`price_cents + soulte_cents ≤ 35000`).
+1 crédit = 1 € pour le calcul d'équité. La soulte est une **valeur écrite** par la server function au
+figeage de la commande (décote 0,70 + arrondi + plafond), jamais une colonne générée.
+
+## Fenêtres acheteur
+Toutes les bornes acheteur sont des **fenêtres glissantes**, jamais des mois calendaires :
+≤ 4 liens entrants / 30 jours glissants et ≤ 2 / 7 jours glissants (`links_bought_30d`,
+`links_bought_7d`).
+
+## Engagement
+`marketplace_orders.commitment_months` (défaut 12 pour un lien, 1 pour un contenu social) est la
+seule base du prorata de remboursement en cas de retrait anticipé ; `commitment_ends_at` en dérive.
 
 ## Exposition des signaux GSC (confidentialité)
 Aucune valeur GSC exacte n'est jamais exposée à un acheteur ou en public : uniquement des
