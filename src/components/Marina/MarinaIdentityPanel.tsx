@@ -183,7 +183,7 @@ export default function MarinaIdentityPanel({ url, isAuthenticated }: Props) {
       </button>
 
       {open && (
-        <div className="mt-2 rounded-lg border border-border bg-card/40 p-4 space-y-4">
+        <div className="mt-3 space-y-4">
           <p className="text-xs text-muted-foreground">
             Le secteur et le modèle d’affaires calibrent les fourchettes de mix de pages du rapport.
             Vérifiez-les avant de lancer le crawl : une carte verrouillée est réputée exacte et n’est plus réinférée.
