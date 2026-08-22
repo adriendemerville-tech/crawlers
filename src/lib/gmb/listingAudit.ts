@@ -15,7 +15,19 @@
  * confortable.
  */
 
-import type { AuditGate } from './auditGates.ts';
+/**
+ * Plafond de cohérence, même forme que `_shared/auditGates.ts` côté audits Marina :
+ * axe plafonné, cause lisible, preuve chiffrée, rang d'entrée.
+ */
+export interface AuditGate {
+  axis: string;
+  reason: string;
+  evidence: string;
+  source: 'technical' | 'geo';
+  rank: number;
+  measured?: string | null;
+  target?: string | null;
+}
 
 export interface PlaceFacts {
   place_id: string;
