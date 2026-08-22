@@ -431,9 +431,16 @@ Le moteur ne demande pas aux parties de choisir : il propose. Séquence détermi
                dérivés de architect_workbench, du profil E-E-A-T et des actifs connectés.
 2. Candidats : trade_types dont la jambe reçue par A couvre need(A)
                ET la jambe reçue par B couvre need(B)   → "besoins concordants"
+2b. Priorité : si need(A) = need(B) = seo, on cherche d'abord un tiers C
+               (voire D) fermant une boucle A→B→C→A : compat(B,C) ≥ 0.6
+               et compat(C,A) ≥ 0.6, aucun lien préexistant sur les arêtes.
+               Trouvé → trade_type = link_chain, on saute l'étape 5.
+               Non trouvé → link_for_link reste candidat, en dernier rang.
 3. Si candidats ≠ ∅ :
       juste échange → on retient le trade_type au meilleur couple
-      (couverture_besoin × faisabilité des actifs connectés)
+      (couverture_besoin × faisabilité des actifs connectés), l'ordre de
+      préférence de §2.2 départageant les ex æquo
+      (link_chain > cross-média > link_for_link)
 4. Si candidats = ∅ (besoins non concordants) :
       on retient le trade_type que le vendeur peut honorer,
       puis on équilibre par l'équité :
@@ -452,8 +459,9 @@ Le moteur ne demande pas aux parties de choisir : il propose. Séquence détermi
              sinon la proposition n'est pas générée.
 5. Décote  : si trade_type = link_for_link, value de chaque jambe × 0,70
              (facteur de décote réciproque v1) avant calcul de l'écart,
-             puis contrôle du quota trimestriel et de l'absence de cycle :
-             échec → proposition bloquée, pas de repli sur un autre trade_type.
+             puis contrôle du quota trimestriel et de l'absence de cycle non
+             déclaré : échec → proposition bloquée, pas de repli sur un autre
+             trade_type. link_chain n'est jamais décoté.
 6. Sortie  : { trade_type, jambe_A, jambe_B, soulte, devise_soulte, risk_flags[] }
              présenté aux deux parties, acceptation explicite des deux côtés requise.
 ```
