@@ -183,7 +183,7 @@ export async function freezeOrder(
       need_objective: need.need_objective,
       need_objective_source: need.need_objective_source,
       need_objective_confirmed_at: need.need_objective_confirmed_at,
-      attribute_basis: decision.attribute_basis,
+      attribute_basis: decision.attribute_basis as Record<string, never>,
       deal_type: input.dealType,
       price_cents: economics.price_cents,
       commission_cents: economics.commission_cents,
