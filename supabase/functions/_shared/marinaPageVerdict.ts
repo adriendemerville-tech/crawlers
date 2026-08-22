@@ -250,6 +250,12 @@ export function buildPageVerdictHTML(
     lcpMs?: number | null;
     /** Résumé d'intégrité du contenu (quasi-doublons et pages pauvres mesurés). */
     integrity?: any;
+    /**
+     * Plafonds de cohérence appliqués au score (LCP « poor », contenu non
+     * extractible, mesures indisponibles). Rendus tels quels pour que le score
+     * affiché ne contredise jamais les faits du rapport.
+     */
+    scoreGates?: Array<{ axis: string; reason: string; evidence: string }>;
   },
 ): { html: string; meta: PageVerdictMeta } {
   const isEn = lang === 'en';
