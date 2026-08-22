@@ -18,7 +18,7 @@ const COPY: Record<Lang, {
   note: string;
 }> = {
   fr: {
-    title: 'Trois modes de scan, bascule automatique',
+    title: 'Trois modes de scan',
     subtitle: '',
     cols: ['Mode', 'Déclenchement', 'Pages analysées'],
     rows: [
@@ -30,7 +30,7 @@ const COPY: Record<Lang, {
       "Au-delà de 1 000 URLs, un crawl intégral ne tient pas dans un seul run : l'échantillon par gabarit (accueil, catégorie, service, conversion, avis, éditorial) donne le même diagnostic sans exploser le temps d'exécution ni le coût.",
   },
   en: {
-    title: 'Three scan modes, automatic switching',
+    title: 'Three scan modes',
     subtitle: '',
     cols: ['Mode', 'Trigger', 'Pages analysed'],
     rows: [
@@ -42,7 +42,7 @@ const COPY: Record<Lang, {
       'Above 1,000 URLs a full crawl cannot fit in a single run: template sampling yields the same diagnosis without blowing up runtime or cost.',
   },
   es: {
-    title: 'Tres modos de escaneo, conmutación automática',
+    title: 'Tres modos de escaneo',
     subtitle: '',
     cols: ['Modo', 'Activación', 'Páginas analizadas'],
     rows: [
