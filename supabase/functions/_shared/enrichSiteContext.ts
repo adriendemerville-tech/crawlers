@@ -146,6 +146,33 @@ export interface OnsiteEvidence {
   structured?: StructuredIdentitySignals | null
 }
 
+/**
+ * Catégorie officielle de la fiche Google Business liée au domaine, quand elle
+ * existe en base. C'est le signal le plus fiable pour trancher le mode de
+ * livraison : l'entreprise l'a choisie dans une liste fermée de Google, elle
+ * n'est pas rédigée en langage marketing. Jamais bloquant.
+ */
+async function fetchGmbCategory(domain: string): Promise<string | null> {
+  const clean = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '')
+  if (!clean) return null
+  const sbUrl = Deno.env.get('SUPABASE_URL')
+  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (!sbUrl || !sbKey) return null
+  try {
+    const sb = createClient(sbUrl, sbKey)
+    const { data } = await sb
+      .from('gmb_locations')
+      .select('category')
+      .ilike('website', `%${clean}%`)
+      .not('category', 'is', null)
+      .limit(1)
+    return (data?.[0]?.category as string) || null
+  } catch (e) {
+    console.warn(`[enrich-site] GMB category lookup failed for ${clean}: ${(e as Error).message}`)
+    return null
+  }
+}
+
 export async function fetchHomepageEvidence(domain: string): Promise<OnsiteEvidence | null> {
   const clean = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '')
   const urls = [`https://${clean}`, `https://www.${clean}`]
