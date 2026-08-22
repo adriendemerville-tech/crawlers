@@ -256,6 +256,14 @@ export function buildPageVerdictHTML(
      * affiché ne contredise jamais les faits du rapport.
      */
     scoreGates?: Array<{ axis: string; reason: string; evidence: string }>;
+    /**
+     * Lot 4B — pondérations réellement appliquées au score GEO de cette URL.
+     * On affiche pour chaque sous-signal : son poids annoncé, la valeur mesurée
+     * et les points obtenus (poids × valeur / 100). Un sous-signal non mesuré
+     * est signalé comme tel plutôt que compté à zéro : sans cette distinction,
+     * le lecteur ne peut pas savoir si un axe est mauvais ou simplement absent.
+     */
+    geoSignals?: Array<{ key?: string; label: string; family?: string; weight: number; value: number | null }>;
   },
 ): { html: string; meta: PageVerdictMeta } {
   const isEn = lang === 'en';
@@ -349,6 +357,52 @@ export function buildPageVerdictHTML(
       <div style="font-size:19px;font-weight:700;color:#111827;">${v}</div>
     </div>`;
 
+  // ── Lot 4B : pondérations appliquées, axe par axe ──
+  const gs = (ctx.geoSignals || []).filter((s) => s && s.label && Number(s.weight) > 0);
+  const gsMeasured = gs.filter((s) => s.value !== null);
+  const gsMissing = gs.filter((s) => s.value === null);
+  const gsWeight = gsMeasured.reduce((a, s) => a + Number(s.weight), 0);
+  const gsPoints = gsMeasured.reduce((a, s) => a + (Number(s.weight) * Number(s.value)) / 100, 0);
+  const weightsHTML = gsMeasured.length
+    ? `
+    <p style="font-size:12.5px;font-weight:600;color:#111827;margin:14px 0 4px 0;">${t('Pondérations appliquées au score GEO de cette page', 'Weights applied to this page GEO score')}</p>
+    <table style="width:100%;border-collapse:collapse;font-size:11.5px;color:#374151;">
+      <thead>
+        <tr style="color:#6b7280;text-align:left;">
+          <th style="padding:3px 6px 3px 0;font-weight:600;">${t('Axe', 'Axis')}</th>
+          <th style="padding:3px 6px;font-weight:600;text-align:right;">${t('Poids', 'Weight')}</th>
+          <th style="padding:3px 6px;font-weight:600;text-align:right;">${t('Mesuré', 'Measured')}</th>
+          <th style="padding:3px 0 3px 6px;font-weight:600;text-align:right;">${t('Points', 'Points')}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${gsMeasured
+          .slice()
+          .sort((a, b2) => Number(b2.weight) - Number(a.weight))
+          .map((s) => {
+            const pts = (Number(s.weight) * Number(s.value)) / 100;
+            return `<tr style="border-top:1px solid #f3f4f6;">
+          <td style="padding:3px 6px 3px 0;">${esc(s.label)}</td>
+          <td style="padding:3px 6px;text-align:right;color:#6b7280;">${Number(s.weight)}</td>
+          <td style="padding:3px 6px;text-align:right;">${Math.round(Number(s.value))}/100</td>
+          <td style="padding:3px 0 3px 6px;text-align:right;font-weight:600;">${pts.toFixed(1)}</td>
+        </tr>`;
+          })
+          .join('')}
+        <tr style="border-top:1px solid #e5e7eb;">
+          <td style="padding:4px 6px 4px 0;font-weight:600;">${t('Total mesuré', 'Measured total')}</td>
+          <td style="padding:4px 6px;text-align:right;font-weight:600;">${gsWeight}</td>
+          <td style="padding:4px 6px;"></td>
+          <td style="padding:4px 0 4px 6px;text-align:right;font-weight:700;">${gsPoints.toFixed(1)}</td>
+        </tr>
+      </tbody>
+    </table>
+    ${gsMissing.length ? `<p style="font-size:11.5px;color:#6b7280;line-height:1.6;margin:5px 0 0 0;">${t(
+      `Non mesuré sur ce run (donc exclu du calcul, pas compté à zéro) : ${gsMissing.map((s) => s.label).join(', ')}.`,
+      `Not measured in this run (excluded from the calculation, not counted as zero): ${gsMissing.map((s) => s.label).join(', ')}.`,
+    )}</p>` : ''}`
+    : '';
+
   const html = `
   <div class="section" data-marina-scope="page" data-marina-block="page-verdict" data-pdf-section
        data-marina-page-meta="${encodeURIComponent(JSON.stringify(meta))}"
@@ -384,6 +438,7 @@ export function buildPageVerdictHTML(
     <ul style="padding-left:20px;font-size:12px;color:#4b5563;line-height:1.65;margin:0;">
       ${(ctx.scoreGates || []).map((g) => `<li style="margin:0 0 4px 0;">${esc(g.reason)} — <span style="color:#6b7280;">${esc(g.evidence)}</span></li>`).join('')}
     </ul>` : ''}
+    ${weightsHTML}
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
       ${t(
         `Ces scores sont propres à cette URL et ne sont jamais moyennés avec les autres pages auditées. Les analyses de périmètre site (crawl, cocon global, indexation, visibilité IA) sont présentées une seule fois pour le domaine.`,

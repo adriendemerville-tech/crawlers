@@ -538,9 +538,7 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         market_sector: enrichedSite.market_sector,
         products_services: enrichedSite.products_services,
         target_audience: enrichedSite.target_audience,
-        // Page localisée : la question de contexte doit citer la ville de la
-        // page, pas la zone de chalandise globale du domaine.
-        commercial_area: (pageScoped && pageFocus!.locality) || enrichedSite.commercial_area,
+        commercial_area: enrichedSite.commercial_area,
         entity_type: enrichedSite.entity_type,
         media_specialties: enrichedSite.media_specialties,
         business_model: enrichedSite.business_model,
@@ -556,6 +554,13 @@ const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
         // Page avis / témoignages : 1 question sur 9 en preuve sociale, les
         // 8 autres restent des questions d'achat sur la prestation.
         page_secondary_angle: pageFocus?.secondaryAngle ?? null,
+        // Périmètre géographique : la localité PROUVÉE par la page auditée
+        // l'emporte sur la zone déclarée du domaine, puis la fiche Google
+        // Business, puis le code postal de l'adresse. Sans preuve, aucune
+        // question localisée n'est posée (voir _shared/geoScope.ts).
+        page_locality: pageScoped ? pageFocus!.locality : null,
+        gmb_city: (enrichedSite as any).gmb_city ?? null,
+        address: (enrichedSite as any).address ?? null,
 
       },
       'fr',
