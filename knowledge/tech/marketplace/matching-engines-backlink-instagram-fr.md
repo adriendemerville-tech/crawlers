@@ -233,30 +233,63 @@ L'équité par échange ne suffit pas : un site qui vend un lien contre une stor
 les meilleurs vendeurs et vide la marketplace de ses inventaires de qualité. On tient donc, en plus
 de l'équité par transaction, une **balance d'autorité par site**, cumulée dans le temps.
 
+**Formule (amortissement linéaire 24 mois)**
+
 ```
-authority_balance(site) = Σ autorité reçue (liens entrants obtenus via la marketplace)
-                        − Σ autorité cédée (liens sortants vendus/échangés)
-   chaque jambe pondérée par la valeur € estimée de la jambe au moment du deal,
-   et amortie dans le temps (décroissance ~24 mois, un lien ancien pèse moins).
-   Les jambes non-autorité (story, post LinkedIn, crédits, cash) ne créditent
-   PAS cette balance : elles alimentent une balance distincte (visibilité).
+Pour chaque jambe j livrée et vérifiée :
+   sign(j)  = +1 si le site REÇOIT de l'autorité (achat / jambe entrante)
+              −1 si le site CÈDE de l'autorité   (vente / jambe sortante)
+   value(j) = valeur € estimée de la jambe au moment du deal (prix figé,
+              ou valeur du palier P1–P4 pour une jambe troquée),
+              × facteur de décote réciproque si trade_type = link_for_link
+   age_m(j) = mois écoulés depuis delivered_at
+   w(j)     = max(0, 1 − age_m(j) / 24)          -- 0 au-delà de 24 mois
+
+authority_balance(site)  = Σ sign(j) × value(j) × w(j)   pour j ∈ jambes link_*
+visibility_balance(site) = Σ sign(j) × value(j) × w(j)   pour j ∈ jambes story / post LinkedIn
 ```
 
-Usage dans le moteur :
+Les jambes cash et crédits n'entrent dans aucune des deux balances : ce sont des règlements, pas des
+actifs de visibilité. Les deux balances sont indépendantes et ne se compensent jamais entre elles :
+une story reçue ne comble pas un déficit d'autorité.
 
-1. **Priorité d'appariement** : à besoin équivalent, un site dont `authority_balance < 0` passe
-   devant dans la file des acheteurs de liens (boost de matching proportionnel au déficit).
-2. **Éligibilité vendeur** : sous un seuil de déficit, un site ne peut plus vendre de jambe
-   `link_*` tant qu'il n'a pas reçu au moins un lien — protection anti-épuisement, pas une sanction.
-3. **Alerte transparente** : un vendeur qui accepte `link_for_insta` voit affiché « vous cédez de
+**Mise à jour**
+
+- Un événement de balance est écrit **par jambe**, au passage au statut `delivered` (lien détecté
+  live par le vérificateur, ou story/post constaté par le connecteur) — jamais à la commande.
+- Une jambe annulée, remboursée, ou dont le lien disparaît au contrôle de vie (`link_health_queue`)
+  génère un événement **inverse** de même valeur : la balance revient à son état antérieur.
+- Le poids `w(j)` étant fonction du temps, les balances sont recalculées quotidiennement (cron) à
+  partir du journal ; le journal reste la source de vérité, les balances sont un cache.
+- Chaque vente ou achat touche **deux sites** : le site sortant (−) et le site cible du lien (+).
+
+**File de passage à l'achat de liens (priorité au déficit)**
+
+```
+deficit(site)  = max(0, − authority_balance(site))            en centimes €
+priority_score = deficit × ancienneté_en_file^0.5              (anti-famine)
+```
+
+1. À besoin équivalent et à budget équivalent, l'inventaire disponible est proposé d'abord aux
+   sites au `priority_score` le plus élevé ; à `deficit = 0`, l'ordre est chronologique (FIFO).
+2. Une jambe d'inventaire peut être **réservée** un temps borné (48 h) au site prioritaire avant
+   d'être ouverte au reste de la file.
+3. **Éligibilité vendeur** : sous un seuil de déficit, un site ne peut plus vendre de jambe `link_*`
+   tant qu'il n'a pas reçu au moins un lien — protection anti-épuisement, pas une sanction.
+4. **Alerte transparente** : un vendeur qui accepte `link_for_insta` voit affiché « vous cédez de
    l'autorité contre de la visibilité — vous serez prioritaire sur les prochains achats de lien ».
-4. **Aucune dette Crawlers** : la priorité est un droit de passage dans la file, jamais un crédit
+5. **Aucune dette Crawlers** : la priorité est un droit de passage dans la file, jamais un crédit
    offert. Le site prioritaire paie toujours son lien (euros, crédits ou troc).
 
-Ajouts DB : `marketplace_site_balances` (`site_id`, `authority_balance_cents`,
-`visibility_balance_cents`, `updated_at`) recalculée à chaque jambe livrée, et
-`marketplace_balance_events` (journal auditable par jambe : `order_id`, `leg`, `currency_kind`,
-`value_cents`, `amortized_until`).
+**Ajouts DB**
+
+- `marketplace_balance_events` — journal auditable, une ligne par jambe : `site_domain`, `order_id`,
+  `leg` (`incoming` | `outgoing`), `currency_kind` (`link` | `story` | `linkedin`), `sign`,
+  `value_cents`, `delivered_at`, `reversal_of` (jambe annulée), `risk_flags[]`.
+- `marketplace_site_balances` — cache par site : `site_domain`, `authority_balance_cents`,
+  `visibility_balance_cents`, `deficit_cents`, `can_sell_links` (bool), `recomputed_at`.
+- `marketplace_link_queue` — file d'achat : `site_domain`, `need`, `budget_cents`, `priority_score`,
+  `enqueued_at`, `reserved_offer_id`, `reserved_until`, `status`.
 
 
 ### 2.8 Autres contreparties pour équilibrer un lien
