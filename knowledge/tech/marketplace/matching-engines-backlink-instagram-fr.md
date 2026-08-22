@@ -112,24 +112,28 @@ Signaux collectés par page :
 | Qualité de contenu | `computeSeoScoreV2` + E-E-A-T v3 + fraîcheur | 15 % |
 | Visibilité IA (citations, benchmark GEO) | benchmark SERP multi-providers + scoring GEO | 10 % |
 
-Prix indicatif = `base × Σ(poids × score normalisé)`, borné par un plancher et un plafond
-(v1 : 40 € – 350 €). Le prix est recalculé à chaque rafraîchissement des signaux et **figé
-au moment de la commande**.
+Prix indicatif = `base × Σ(poids × score normalisé)`, borné par un **plancher dur de 40 €** et un
+**plafond dur de 350 €**. Aucun actif ne sort de ces bornes en v1, quelle que soit son autorité :
+pas de dérogation, pas de file de validation admin. Le prix est recalculé à chaque rafraîchissement
+des signaux et **figé au moment de la commande**.
 
 **Grille de prix (détail retenu).** Le prix algorithmique choisit un **palier fixe**, il ne
 l'invente pas : pas de prix continu, lisibilité acheteur/vendeur, pas de négociation au cas
-par cas. Quatre paliers calés **légèrement sous le marché** constaté (lien contextuel France,
-SEO/GEO) sans casser la perception qualité :
+par cas. Tous les paliers sont des **multiples de 10 €** (règle d'arrondi unique dans toute la
+place d'échange, y compris pour les soultes et les valorisations d'actifs sociaux). Quatre
+paliers calés **légèrement sous le marché** constaté (lien contextuel France, SEO/GEO) sans
+casser la perception qualité :
 
 | Palier | Prix | Profil vendeur (marché constaté) |
 |---|---|---|
-| P1 | **49 €** | Petit site / blog de niche (DR 20-40, faible trafic) — marché 40-80 € |
-| P2 | **89 €** | Site SaaS / média spécialisé correct (DR 40-60, trafic qualifié) — marché 80-180 € |
-| P3 | **149 €** | Site fort / média reconnu (DR 60+, trafic significatif) — marché 180-350 € |
-| P4 | **249 €** | Premium / très forte autorité — marché 350 €+ |
+| P1 | **40 €** | Petit site / blog de niche (DR 20-40, faible trafic) — marché 40-80 € |
+| P2 | **90 €** | Site SaaS / média spécialisé correct (DR 40-60, trafic qualifié) — marché 80-180 € |
+| P3 | **150 €** | Site fort / média reconnu (DR 60+, trafic significatif) — marché 180-350 € |
+| P4 | **250 €** | Premium / très forte autorité — marché 350 €+ |
 
 Sélection du palier : le score normalisé global (`Σ(poids × score normalisé)`) mappe vers le
-palier le plus proche, avec maintien du plancher 40 € / plafond 350 € comme bornes dures.
+palier le plus proche. P1 vaut exactement le plancher, P4 reste sous le plafond : les bornes
+40 € / 350 € encadrent aussi les prix ajustés par une soulte.
 **Différenciation data** : seul acteur du marché à pricer la page à l'unité sur des faits
 mesurés (autorité + sémantique + trafic GSC réel + qualité + visibilité IA), là où
 Rocketlinks / Getfluence s'appuient sur du déclaratif.
