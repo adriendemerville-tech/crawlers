@@ -888,11 +888,15 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   commission 15 %, statut, `approved_revision_id`, `soulte_cents`, `soulte_currency`
   (`eur` | `credits`), `soulte_payer_id`, `soulte_payee_id`, `risk_flags[]`. Aucune valeur de jambe
   stockée ici.
-- `marketplace_exchanges` — **jambes** de la commande (2 pour un troc, 1 pour un achat cash) :
-  `order_id`, `leg_index`, `currency_kind` (`link` | `story` | `linkedin`), `value_cents` (palier de
-  10 €, borné 40–350 €), `trade_type` (`link_for_link` | `link_for_linkedin` | `link_for_insta` |
-  `linkedin_for_linkedin` | `insta_for_insta`), `reciprocity_quarter` (quota `link_for_link`),
-  `cycle_check_verdict`, `delivered_at`.
+- `marketplace_exchanges` — **jambes** de la commande (2 pour un troc, 3 ou 4 pour une boucle
+  `link_chain`, 1 pour un achat cash) : `order_id`, `exchange_id` (identifiant du troc ou de la
+  boucle, partagé par toutes ses jambes), `leg_index`, `publish_after` (décorrélation : +21 j pour
+  `link_for_link`, +7 j entre jambes d'une boucle), `currency_kind` (`link` | `story` |
+  `linkedin`), `value_cents` (palier de 10 €, borné 40–350 €), `trade_type` (`link_chain` |
+  `link_for_link` | `link_for_linkedin` | `link_for_insta` | `linkedin_for_linkedin` |
+  `insta_for_insta`), `reciprocity_quarter` (quota `link_for_link` uniquement),
+  `cycle_check_verdict` (les cycles déclarés portant un `exchange_id` accepté sont exemptés, cf.
+  §2.2), `delivered_at`.
 - `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers, référence `order_id`.
 
 ### 4.4 Balance d'autorité et file d'achat
