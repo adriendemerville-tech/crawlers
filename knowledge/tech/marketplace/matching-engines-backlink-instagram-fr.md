@@ -237,7 +237,7 @@ acheteur. Elles sont évaluées par le même moteur d'équivalence et réglées 
 
 Les trois contreparties à prioriser en v1 parce qu'elles sont natives, à coût marginal faible et
 sans risque Google : **crédits**, **mois d'abonnement offerts**, **audit Marina offert**. Les
-contreparties sociales (`link_for_linkedin`, `link_for_story`) arrivent avec les connecteurs. Les
+contreparties sociales (jambes LinkedIn et Instagram, cf. 2.7) arrivent avec les connecteurs. Les
 contreparties non vérifiables automatiquement (newsletter, podcast) restent hors v1 et hors garantie.
 
 
