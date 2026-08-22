@@ -454,7 +454,10 @@ export function selectBenchmarkDimensions(
   // Statut légal et identifiants — jamais dans une question.
   skip('legal_form', dims.legal_form, "signal de confiance (E-E-A-T) : aucun prospect ne cherche par forme juridique");
   skip('siren', dims.siren, 'identifiant administratif : sert à vérifier une entreprise, pas à la trouver');
-  skip('naf_code', dims.naf_code, 'code administratif : sert à classer, pas à formuler une requête');
+  skip('naf_code', dims.naf_code, dims.naf_reliability === 'divergent'
+    ? "code administratif contredit par ce qui est réellement vendu : ce que dit le site l'emporte"
+    : "code administratif : il ne dit ni l'activité réelle ni la place dans la chaîne de valeur");
+  skip('naf_reliability', dims.naf_reliability, 'métadonnée de traçabilité interne');
 
   relevant.sort((a, b) => a.weight - b.weight);
   return { relevant, ignored };
