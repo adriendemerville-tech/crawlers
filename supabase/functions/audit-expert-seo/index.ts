@@ -2206,12 +2206,17 @@ Deno.serve(handleRequest(async (req) => {
     // Step 2: Run all checks in parallel (including broken links)
     const doc = new DOMParser().parseFromString(smartFetchResult.html, 'text/html');
     
-    const [psiData, safeBrowsing, robotsAnalysis, brokenLinksAnalysis] = await Promise.all([
-      fetchPageSpeedData(normalizedUrl),
+    // Performance mobile : terrain CrUX d'abord, sinon médiane de runs PSI.
+    // Un plafond de score ne doit jamais reposer sur un run isolé (cf. cas
+    // avenir-renovations : 2,0 s puis 11,3 s sur la même page).
+    const [perf, safeBrowsing, robotsAnalysis, brokenLinksAnalysis] = await Promise.all([
+      measurePerformance(normalizedUrl, GOOGLE_API_KEY),
       checkSafeBrowsing(normalizedUrl),
       checkRobotsTxt(normalizedUrl),
       doc ? checkBrokenLinks(doc, normalizedUrl) : Promise.resolve({ total: 0, broken: [], checked: 0, corsBlocked: 0, verdict: 'optimal' as const })
     ]);
+    const psiData = perf.psiData;
+
     
     // Step 2b: Check sitemap/robots.txt coherence (depends on robotsAnalysis)
     const sitemapRobotsCoherence = await checkSitemapRobotsCoherence(normalizedUrl, robotsAnalysis.content, robotsAnalysis.exists);
