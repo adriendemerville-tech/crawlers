@@ -257,6 +257,13 @@ export function buildPageVerdictHTML(
      */
     scoreGates?: Array<{ axis: string; reason: string; evidence: string }>;
     /**
+     * Plafonds de cohérence GEO (citabilité, mise en forme, données structurées,
+     * compréhension) issus de geoSubSignals pour cette URL. Fusionnés avec les
+     * plafonds techniques dans le bloc « Pourquoi c'est prioritaire ».
+     */
+    geoGates?: AuditGate[] | null;
+
+    /**
      * Lot 4B — pondérations réellement appliquées au score GEO de cette URL.
      * On affiche pour chaque sous-signal : son poids annoncé, la valeur mesurée
      * et les points obtenus (poids × valeur / 100). Un sous-signal non mesuré
