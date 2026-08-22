@@ -226,6 +226,37 @@ transférés de wallet à wallet. Aucun mois d'abonnement offert, aucun audit of
 plateforme n'entre dans le calcul d'équité : ce serait Crawlers qui paierait l'écart entre deux
 tiers. Crawlers ne prélève que sa commission.
 
+#### 2.7.3 Équilibrage réseau long terme (balance d'autorité)
+
+L'équité par échange ne suffit pas : un site qui vend un lien contre une story cède de l'autorité
+(devise rare, effet durable) contre de la visibilité (devise périssable). Répété, ce schéma appauvrit
+les meilleurs vendeurs et vide la marketplace de ses inventaires de qualité. On tient donc, en plus
+de l'équité par transaction, une **balance d'autorité par site**, cumulée dans le temps.
+
+```
+authority_balance(site) = Σ autorité reçue (liens entrants obtenus via la marketplace)
+                        − Σ autorité cédée (liens sortants vendus/échangés)
+   chaque jambe pondérée par la valeur € estimée de la jambe au moment du deal,
+   et amortie dans le temps (décroissance ~24 mois, un lien ancien pèse moins).
+   Les jambes non-autorité (story, post LinkedIn, crédits, cash) ne créditent
+   PAS cette balance : elles alimentent une balance distincte (visibilité).
+```
+
+Usage dans le moteur :
+
+1. **Priorité d'appariement** : à besoin équivalent, un site dont `authority_balance < 0` passe
+   devant dans la file des acheteurs de liens (boost de matching proportionnel au déficit).
+2. **Éligibilité vendeur** : sous un seuil de déficit, un site ne peut plus vendre de jambe
+   `link_*` tant qu'il n'a pas reçu au moins un lien — protection anti-épuisement, pas une sanction.
+3. **Alerte transparente** : un vendeur qui accepte `link_for_insta` voit affiché « vous cédez de
+   l'autorité contre de la visibilité — vous serez prioritaire sur les prochains achats de lien ».
+4. **Aucune dette Crawlers** : la priorité est un droit de passage dans la file, jamais un crédit
+   offert. Le site prioritaire paie toujours son lien (euros, crédits ou troc).
+
+Ajouts DB : `marketplace_site_balances` (`site_id`, `authority_balance_cents`,
+`visibility_balance_cents`, `updated_at`) recalculée à chaque jambe livrée, et
+`marketplace_balance_events` (journal auditable par jambe : `order_id`, `leg`, `currency_kind`,
+`value_cents`, `amortized_until`).
 
 
 ### 2.8 Autres contreparties pour équilibrer un lien
