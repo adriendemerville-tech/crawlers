@@ -18,6 +18,10 @@ import { evaluateBuyerLimits, loadLegs, countersFrom } from './buyerLimits.serve
 import { computeMatches, listIncomingMatches } from './matching.server';
 import { getMatchValues } from './matchValue.server';
 import { freezeOrder, acceptOrder, cancelOrder, declarePublication, listOrders } from './orders.server';
+import { findBarterRoute } from './barter.server';
+import { listRevisions, proposeRevision, decideRevision } from './revisions.server';
+import { listVariants, generateVariants, approveVariant, selectVariant } from './studio.server';
+import { openDispute, listDisputes } from './disputes.server';
 
 export const getMarketplaceConstants = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
@@ -239,4 +243,117 @@ export const declareMarketplacePublication = createServerFn({ method: 'POST' })
       userId: context.userId,
       orderId: data.orderId,
     });
+  });
+
+export const getMarketplaceBarterRoute = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        buyerDomain: z.string().min(3),
+        sellerUserId: z.string().uuid(),
+        sellerDomain: z.string().min(3),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    return findBarterRoute({ buyerUserId: context.userId, ...data });
+  });
+
+export const getMarketplaceRevisions = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ orderId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    return listRevisions(context.supabase as never, { userId: context.userId, orderId: data.orderId });
+  });
+
+export const proposeMarketplaceRevision = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        orderId: z.string().uuid(),
+        variantId: z.string().uuid().nullable().optional(),
+        htmlBefore: z.string().max(20000),
+        htmlAfter: z.string().min(10).max(20000),
+        paragraphExcerpt: z.string().max(2000).nullable().optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    return proposeRevision(context.supabase as never, { userId: context.userId, ...data });
+  });
+
+export const decideMarketplaceRevision = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        revisionId: z.string().uuid(),
+        verdict: z.enum(['accepted', 'rejected']),
+        comment: z.string().max(1000).nullable().optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    return decideRevision(context.supabase as never, { userId: context.userId, ...data });
+  });
+
+export const getMarketplaceStudio = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ orderId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    return listVariants(context.supabase as never, { userId: context.userId, orderId: data.orderId });
+  });
+
+export const generateMarketplaceVariants = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ orderId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    return generateVariants(context.supabase as never, { userId: context.userId, orderId: data.orderId });
+  });
+
+export const approveMarketplaceVariant = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ variantId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    return approveVariant(context.supabase as never, { userId: context.userId, variantId: data.variantId });
+  });
+
+export const selectMarketplaceVariant = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ variantId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    return selectVariant(context.supabase as never, { userId: context.userId, variantId: data.variantId });
+  });
+
+export const openMarketplaceDispute = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        orderId: z.string().uuid(),
+        reason: z.enum([
+          'not_published',
+          'attribute_mismatch',
+          'anchor_mismatch',
+          'removed_early',
+          'content_refused',
+          'payment',
+          'other',
+        ]),
+        detail: z.string().max(2000).optional(),
+        appealOf: z.string().uuid().nullable().optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    return openDispute(context.supabase as never, { userId: context.userId, ...data });
+  });
+
+export const getMarketplaceDisputes = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ orderId: z.string().uuid().optional() }).parse(data ?? {}))
+  .handler(async ({ data, context }) => {
+    return listDisputes(context.supabase as never, data.orderId);
   });
