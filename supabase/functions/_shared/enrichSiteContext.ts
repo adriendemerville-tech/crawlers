@@ -201,7 +201,7 @@ async function inferContextFromDomain(
   domain: string,
   siteName: string,
   existingContext?: SiteContext,
-  evidence?: OnsiteEvidence | null,
+  evidence?: SiteEvidence | OnsiteEvidence | null,
 ): Promise<SiteContext | null> {
   const lovableKey = Deno.env.get('LOVABLE_API_KEY')
   const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
@@ -220,18 +220,21 @@ async function inferContextFromDomain(
 - Taille: ${existingContext.company_size || '?'}`
     : ''
 
+  const multi = (evidence as SiteEvidence | null | undefined)
   const evidenceBlock = evidence
     ? `\n\nCONTENU RÉEL DE LA PAGE D'ACCUEIL (source de vérité, prioritaire sur toute intuition liée au nom de domaine) :
 Title: ${evidence.title || '—'}
 Meta description: ${evidence.description || '—'}
 Titres (H1-H3): ${evidence.headings.slice(0, 20).join(' | ') || '—'}${renderStructuredEvidenceBlock(evidence.structured)}
-Texte visible: ${evidence.text}
+Texte visible: ${evidence.text}${renderSecondaryPagesBlock(multi?.pages ? multi : null)}${renderStructuralBlock(multi?.structural)}
 
 Règles impératives :
 - Déduis le secteur, les produits/services et la cible EXCLUSIVEMENT de ce contenu.
 - N'interprète JAMAIS le nom de domaine pour inventer une activité (ex: un domaine contenant "dicta" ne signifie pas que le site vend de la transcription).
+- Les faits structurels et les pages secondaires (offre, tarifs, mentions légales) l'emportent sur les formules marketing de l'accueil.
 - Si le contexte existant contredit ce contenu, corrige-le.`
     : `\n\nAucun contenu de page n'a pu être récupéré : reste très générique, ne devine pas une activité précise à partir du nom de domaine.`
+
 
   const prompt = `Analyse le site "${domain}" (nom du site : "${siteName || domain}").${evidenceBlock}${existingHint}
 
