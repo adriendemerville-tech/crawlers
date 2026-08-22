@@ -368,6 +368,54 @@ référencée par `marketplace_orders.approved_revision_id`.
 
 ---
 
+### 2.10 Paysage concurrentiel — services analogues
+
+Trois familles existent déjà. Aucune ne combine troc multi-devises, balance d'autorité et
+génération de livrables adossée à un audit du site hôte.
+
+**Famille A — réseaux d'échange automatisés en abonnement.** BabyLoveGrowth (~99 $/mois) publie
+des articles quotidiens sur le blog du client et redistribue des liens entre ses abonnés ; même
+modèle chez Keytomic (~99 $/mois, « 30 opportunités de liens DR élevé »), RankYak (49–299 $) et
+AutoSEO. Faiblesses documentées : empreinte machine uniforme (une même phrase d'attribution sur
+plusieurs milliers de domaines référents), absence de filtrage du voisinage thématique, et
+confusion volume d'articles / autorité gagnée.
+
+**Famille B — marketplaces d'articles sponsorisés (achat cash).** RocketLinks (200 000+ sites),
+Getfluence (~45 000 médias, positionnement premium), Collaborator/Collaba (40 000+ sites),
+Linkhouse, Adsy, Prnews.io. Inventaire large, prix fixé par l'éditeur, commission plateforme,
+paiement en euros uniquement. Pas de troc, pas de réciprocité, pas de mesure de ce que le
+vendeur cède en autorité.
+
+**Famille C — outils de mise en relation / échange manuel** (groupes Slack, annuaires,
+« link swap » entre pairs) : gratuit, non instrumenté, non traçable, réciprocité directe donc
+schéma dévalué.
+
+| Critère | BabyLoveGrowth / Keytomic | RocketLinks / Getfluence / Collaborator | Échange manuel entre pairs | Place d'échange Crawlers |
+|---|---|---|---|---|
+| Modèle | Abonnement, liens distribués automatiquement | Achat à l'unité, commission | Gré à gré | Achat cash **et** troc, commission 25 % |
+| Devises d'échange | Aucune (bundle) | Euros | Lien contre lien | Lien, LinkedIn, Instagram, crédits, euros |
+| Contrôle du voisinage | Faible (base non filtrée) | Éditorial (curation Getfluence) | Aucun | Filtrage thématique + standing vendeur |
+| Empreinte / risque de pattern | Élevé (attribution uniforme) | Moyen (articles sponsorisés massifs) | Élevé (réciprocité directe) | `link_for_link` flaggé, décorrélation 21 j, décote d'équité |
+| Appariement au besoin réel | Non | Filtres manuels (DR, trafic, thème) | Non | Matrice besoin ↔ devise (SEO / GEO / conversion) des deux parties |
+| Équité de l'échange | Non calculée | Prix éditeur | Négociée à l'œil | Score d'équité, soulte en euros ou crédits (jamais financée par Crawlers) |
+| Mémoire long terme | Non | Non | Non | Balance d'autorité par site amortie 24 mois + file de priorité |
+| Production du contenu | IA générique, non validée | À la charge de l'acheteur ou option payante | Manuelle | Studio 3 versions (éditoriale / citable / action), veto vendeur, arbitrage acheteur |
+| Ancrage GEO | Marginal | Revendiqué (citations IA) sans mesure | Non | Passage citable mesuré, Score GEO et rapports Marina |
+| Vérification de la livraison | Interne opaque | Contrôle plateforme | Aucune | `link_health_queue`, événements inverses si retrait |
+
+**Positionnement retenu.** Ni un réseau de liens en abonnement (empreinte), ni une régie
+d'articles sponsorisés (cash uniquement) : une place d'échange instrumentée, où chaque
+transaction est arbitrée par les besoins mesurés des deux sites et où l'autorité cédée est
+comptabilisée. Les arguments différenciants à reprendre en landing : mesure du besoin,
+troc multi-devises, balance d'autorité, studio de contenu, vérification post-publication.
+
+**À éviter dans la communication** : promettre un volume de liens, afficher un « DR garanti »,
+ou laisser croire qu'une jambe Instagram apporte du SEO ou du GEO.
+
+---
+
+
+
 
 
 
