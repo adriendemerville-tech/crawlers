@@ -751,8 +751,10 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
 - `marketplace_site_balances` — cache par site : `site_domain`, `authority_balance_cents`,
   `visibility_balance_cents`, `deficit_cents`, `can_sell_links` (bool), `recomputed_at`
   (amortissement 24 mois, recalculable à 100 % depuis `marketplace_balance_events`).
-- `marketplace_link_queue` — file d'achat : `site_domain`, `need`, `budget_cents`, `priority_score`,
-  `enqueued_at`, `reserved_offer_id`, `reserved_until`, `status`.
+- `marketplace_link_queue` — file d'achat : `site_domain`, `need`, `budget_cents`,
+  `unserved_need_cents`, `need_score`, `deficit_cede_cents`, `priority_score`, `enqueued_at`,
+  `reserved_offer_id`, `reserved_until`, `status`, `recomputed_at` (cron : besoin non servi dérivé de
+  `marketplace_needs` moins les jambes `link_*` entrantes servies sur 90 j).
 
 ### 4.5 Propriété, contenu, vérification
 
