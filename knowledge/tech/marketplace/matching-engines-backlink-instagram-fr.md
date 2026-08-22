@@ -370,28 +370,49 @@ une story reçue ne comble pas un déficit d'autorité.
   partir du journal ; le journal reste la source de vérité, les balances sont un cache.
 - Chaque vente ou achat touche **deux sites** : le site sortant (−) et le site cible du lien (+).
 
-**File de passage à l'achat de liens (priorité au déficit)**
+**File de passage à l'achat de liens (déficit cédé + besoin diagnostiqué)**
+
+La priorité ne récompense pas seulement l'autorité cédée : elle sert aussi le besoin objectivé et non
+encore servi. Sans quoi un acheteur pur ou un nouvel entrant, dont la balance est ≥ 0, resterait
+structurellement en fin de file — l'inverse de l'intention.
 
 ```
-deficit(site)  = max(0, − authority_balance(site))            en centimes €
-priority_score = deficit × ancienneté_en_file^0.5              (anti-famine)
+deficit_cede(site) = max(0, − authority_balance(site))                    centimes €
+besoin_non_servi(site) = Σ valeur_acheteur_cents(besoins ouverts)         centimes €
+                         − Σ value_cents(jambes link_* entrantes servies sur 90 j)
+besoin_non_servi(site) = max(0, besoin_non_servi(site))
+
+need_score     = min(besoin_non_servi, plafond_besoin)        plafond 350 € × 3
+priority_score = (deficit_cede + 0,6 × need_score) × ancienneté_en_file^0.5
 ```
 
-1. À besoin équivalent et à budget équivalent, l'inventaire disponible est proposé d'abord aux
-   sites au `priority_score` le plus élevé ; à `deficit = 0`, l'ordre est chronologique (FIFO).
-2. Une jambe d'inventaire peut être **réservée** un temps borné (48 h) au site prioritaire avant
+1. `deficit_cede` capte l'autorité déjà donnée (troc `link_for_insta`, vente nette) ; `need_score`
+   capte le besoin diagnostiqué par les audits (`marketplace_needs`, §2.11) et non encore couvert par
+   des liens reçus. Le coefficient 0,6 garde la dette réelle prioritaire sur le besoin déclaratif.
+2. `need_score` n'existe que sur des besoins **diagnostiqués** — issus de `architect_workbench` /
+   E-E-A-T / Marina — jamais d'une simple déclaration d'intention dans l'UI : pas de gonflage.
+3. **Nouvel entrant** : ses besoins ouverts sont valorisés dès le premier audit, donc son
+   `priority_score` est immédiatement > 0 même sans historique de vente. Un plafond
+   (`plafond_besoin`) empêche qu'un très gros besoin monopolise la file.
+4. À `priority_score` égal (typiquement deux sites sans dette ni besoin ouvert), l'ordre est
+   chronologique (FIFO).
+5. **Décroissance** : chaque lien entrant servi retire sa valeur de `besoin_non_servi`, donc fait
+   baisser la priorité du site — rotation garantie, pas de capture de la file.
+6. Une jambe d'inventaire peut être **réservée** un temps borné (48 h) au site prioritaire avant
    d'être ouverte au reste de la file.
-3. **Éligibilité vendeur** : sous un seuil de déficit, un site ne peut plus vendre de jambe `link_*`
+7. **Éligibilité vendeur** : sous un seuil de déficit, un site ne peut plus vendre de jambe `link_*`
    tant qu'il n'a pas reçu au moins un lien — protection anti-épuisement, pas une sanction.
-4. **Alerte transparente** : un vendeur qui accepte `link_for_insta` voit affiché « vous cédez de
+8. **Alerte transparente** : un vendeur qui accepte `link_for_insta` voit affiché « vous cédez de
    l'autorité contre de la visibilité — vous serez prioritaire sur les prochains achats de lien ».
-5. **Aucune dette Crawlers** : la priorité est un droit de passage dans la file, jamais un crédit
+9. **Aucune dette Crawlers** : la priorité est un droit de passage dans la file, jamais un crédit
    offert. Le site prioritaire paie toujours son lien (euros, crédits ou troc).
 
 **Ajouts DB** : `marketplace_balance_events`, `marketplace_site_balances` et
 `marketplace_link_queue` — définition unique en §4 (aucun schéma n'est décrit ailleurs dans ce
 document). Point clé : un événement de balance ne stocke pas de montant propre, il pointe la jambe
-(`leg_id`) et n'en porte que le signe.
+(`leg_id`) et n'en porte que le signe ; `need_score` et `priority_score` sont des colonnes de
+`marketplace_link_queue`, recalculées par cron depuis `marketplace_needs` et le journal.
+
 
 
 
