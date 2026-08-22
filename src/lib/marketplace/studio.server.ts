@@ -165,7 +165,7 @@ export async function generateVariants(
     });
   }
 
-  const { error } = await supabaseAdmin.from('marketplace_content_variants').insert(rows);
+  const { error } = await supabaseAdmin.from('marketplace_content_variants').insert(rows as never);
   if (error) throw new Error(`Variantes non enregistrées : ${error.message}`);
 
   return {
