@@ -444,10 +444,19 @@ export async function ensureSiteContext(
    * livraison). Déterministe, sauf le croisement SIRENE (API publique gratuite,
    * jamais bloquant). Ces dimensions ne servent PAS toutes aux questions de
    * benchmark : le tri de pertinence est fait plus tard, croisé avec l'offre.
+   *
+   * Le mode de livraison est désormais tranché par des FAITS (catégorie GMB
+   * officielle, puis signaux structurels du HTML) avant tout recours au
+   * vocabulaire de l'offre.
    */
-  const legalBlob = [evidence?.text, evidence?.description, ...(evidence?.headings || [])].filter(Boolean).join(' ')
+  const legalBlob = [
+    evidence?.description,
+    ...(evidence?.pages || []).map((p) => `${p.headings.join(' ')} ${p.text}`),
+    evidence?.text,
+  ].filter(Boolean).join(' ')
   const declaredSiren = (currentContext as Record<string, any>).siren_siret || extractSirenSiret(legalBlob)
   const sirene = declaredSiren ? await lookupSirene(String(declaredSiren)) : null
+  const gmbCategory = await fetchGmbCategory(domain)
   const dimensions = deriveEnterpriseDimensions({
     products_services: merged.products_services,
     value_proposition: merged.value_proposition,
@@ -460,9 +469,16 @@ export async function ensureSiteContext(
     siren_siret: declaredSiren ? String(declaredSiren) : null,
     legal_html: legalBlob,
     sirene,
+    structural: evidence?.structural || null,
+    gmb_category: gmbCategory,
   })
   ;(merged as Record<string, any>).enterprise_dimensions = dimensions
-  console.log(`[enrich-site] dimensions ${domain}: ${dimensions.delivery_mode || '?'} / ${dimensions.customer_relation || '?'} / ${dimensions.economy_tier || '?'}${sirene ? ' (SIRENE croisé)' : ''}`)
+  console.log(
+    `[enrich-site] dimensions ${domain}: ${dimensions.delivery_mode || '?'} (via ${dimensions.delivery_origin || '?'})` +
+    ` / ${dimensions.customer_relation || '?'} / ${dimensions.economy_tier || '?'}` +
+    `${sirene ? ' (SIRENE croisé)' : ''}${gmbCategory ? ` (GMB: ${gmbCategory})` : ''}`,
+  )
+
 
   // Persist enriched data via Identity Gateway (single write point)
   if (siteId) {
