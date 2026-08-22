@@ -13,6 +13,18 @@ interface QuickWinTask {
   completed: boolean;
 }
 
+/**
+ * Constats dont la remédiation passe par un lien externe (L2.9) :
+ * ils ouvrent la Place d'échange au lieu du générateur de contenu.
+ */
+const NETLINKING_CATEGORIES = new Set([
+  'autorité',
+  'authority',
+  'competitive_gap',
+  'linking',
+  'serp_analysis',
+]);
+
 interface ContentArchitectTasksPanelProps {
   domain?: string;
   trackedSiteId?: string;
