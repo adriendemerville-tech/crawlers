@@ -30,6 +30,7 @@ import {
   type PromptLang,
 } from './naturalPrompts.ts';
 import { isActorTopic, isToolLikeSite, type TopicSelection } from './questionTopics.ts';
+import { resolveGeoScope, geoPhrase, describeGeoScope, type GeoScope } from './geoScope.ts';
 
 export interface BenchmarkPrompt {
   intent: string;
@@ -300,6 +301,17 @@ export function buildLlmBenchmarks(
      */
     page_secondary_angle?: 'reputation' | null;
 
+    /**
+     * Localité PROUVÉE par l'URL auditée (slug, title, H1). Elle l'emporte sur
+     * la zone déclarée du domaine : dans un audit multipages, c'est ce qui rend
+     * la question locale propre à chaque page.
+     */
+    page_locality?: string | null;
+    /** Ville de la fiche Google Business, quand elle est connectée. */
+    gmb_city?: string | null;
+    /** Adresse structurée (le code postal sert de repli au niveau département). */
+    address?: string | null;
+
   },
   lang: PromptLang = 'fr',
   extraBrandNames: (string | null | undefined)[] = [],
@@ -326,8 +338,29 @@ export function buildLlmBenchmarks(
 
   const needs = cleanTopics.length ? cleanTopics.slice(0, 3) : [mainNeedOf(ctx, lang)];
   const target = (ctx.target_audience || '').trim();
-  const area = (ctx.commercial_area || '').trim();
-  const localOk = isLocalQuestionRelevant(ctx) && !!area;
+  /**
+   * Périmètre géographique RÉELLEMENT testable (Lot 4).
+   * Aucune mention de lieu n'est fabriquée : sans localité prouvée (page, fiche
+   * Google Business, code postal) ou avec une zone déclarée large (« France
+   * entière », « Europe »), `geoScope` vaut null et la question localisée est
+   * purement et simplement remplacée par une question d'achat.
+   */
+  const geoScope = isLocalQuestionRelevant(ctx)
+    ? resolveGeoScope({
+        pageLocality: site.page_locality,
+        gmbCity: site.gmb_city,
+        address: site.address,
+        commercialArea: ctx.commercial_area,
+        activityBlob: [ctx.products_services, ctx.market_sector, (ctx as any).business_model, (ctx as any).entity_type]
+          .filter(Boolean).join(' '),
+      })
+    : null;
+  const localOk = geoScope !== null;
+  if (localOk) {
+    console.log(`[llmBenchmarks] périmètre local retenu : ${describeGeoScope(geoScope!)}`);
+  } else {
+    console.log("[llmBenchmarks] aucune localité prouvée → aucune question localisée (zone jamais inventée)");
+  }
   const feminine = lex.seek.startsWith('une');
   const L = AXIS_LABELS[lang];
   const pageKeywords = (site.page_keywords || [])
@@ -394,7 +427,16 @@ export function buildLlmBenchmarks(
     // Commerce / service de proximité : la ville entre dès la question de
     // découverte (« je cherche un fleuriste à Salon-de-Provence »), sinon la
     // mesure ne reflète pas la vraie requête d'un prospect local.
-    const geo = localOk ? (lang === 'en' ? ` in ${area}` : lang === 'es' ? ` en ${area}` : ` à ${area}`) : '';
+    // La mention géographique est rendue par `geoPhrase` : préposition et
+    // article viennent d'une table (« à Chantilly », « dans l'Oise »,
+    // « en Île-de-France »), et la tournure tourne avec l'index du benchmark
+    // pour ne pas répéter neuf fois la même phrase. Déterministe : deux audits
+    // identiques produisent les mêmes questions.
+    // Le besoin peut déjà porter la ville (mots-clés de la page auditée) :
+    // dans ce cas on ne l'ajoute pas une seconde fois.
+    const alreadyLocated = localOk
+      && framed.toLowerCase().includes((geoScope as GeoScope).label.toLowerCase());
+    const geo = localOk && !alreadyLocated ? ` ${geoPhrase(geoScope as GeoScope, lang, v)}` : '';
     const need = `${framed}${geo}`;
     if (lang === 'en') {
       const discovery = [
@@ -411,7 +453,7 @@ export function buildLlmBenchmarks(
         { intent: 'discovery', text: discovery[v] },
         { intent: 'comparison', text: comparison[v] },
         localOk
-          ? { intent: 'local', text: `I'm looking for ${lex.seek} for ${framed} near ${area} — who should I trust locally?` }
+          ? { intent: 'local', text: `I'm looking for ${lex.seek} for ${framed} ${geoPhrase(geoScope as GeoScope, lang, v + 1)} — who should I trust locally?` }
           : audience
             ? { intent: 'audience', text: `I'm a ${audience} and I need ${framed}: which option would you recommend and why?` }
             : { intent: 'usecase', text: `In which situations is ${lex.seek} for ${need} genuinely worth it, and who should I trust?` },
@@ -432,7 +474,7 @@ export function buildLlmBenchmarks(
         { intent: 'discovery', text: discovery[v] },
         { intent: 'comparison', text: comparison[v] },
         localOk
-          ? { intent: 'local', text: `Busco ${lex.seek} para ${framed} cerca de ${area}, ¿en quién puedo confiar?` }
+          ? { intent: 'local', text: `Busco ${lex.seek} para ${framed} ${geoPhrase(geoScope as GeoScope, lang, v + 1)}, ¿en quién puedo confiar?` }
           : audience
             ? { intent: 'audience', text: `Soy ${audience} y necesito ${framed}: ¿qué opción recomiendas y por qué?` }
             : { intent: 'usecase', text: `¿En qué casos merece la pena ${lex.seek} para ${need} y en quién confiar?` },
@@ -452,7 +494,7 @@ export function buildLlmBenchmarks(
       { intent: 'discovery', text: discovery[v] },
       { intent: 'comparison', text: comparison[v] },
       localOk
-        ? { intent: 'local', text: `Je cherche ${lex.seek} pour ${framed} à proximité de ${area} : à qui puis-je faire confiance ?` }
+        ? { intent: 'local', text: `Je cherche ${lex.seek} pour ${framed} ${geoPhrase(geoScope as GeoScope, lang, v + 1)} : à qui puis-je faire confiance ?` }
         : audience
           ? { intent: 'audience', text: `Je suis ${audience} et j'ai besoin ${deOf(framed)} : tu me recommandes quoi et pourquoi ?` }
           : { intent: 'usecase', text: `Dans quels cas ${lex.seek} pour ${need} est-${feminine ? 'elle' : 'il'} vraiment utile, et à qui faire confiance ?` },
@@ -518,10 +560,10 @@ export function buildLlmBenchmarks(
   if (reputationOk) {
     const first = result[0];
     const need = framedNeed(needs[0]).need;
-    const placeRaw = (pageKeywords.find((k) => /^[A-ZÉÈÀÂÎÔÛ]/.test(k)) || (ctx.commercial_area || '').trim());
-    // Jamais deux fois la même ville : le besoin peut déjà la porter.
-    const place = placeRaw && !need.toLowerCase().includes(placeRaw.toLowerCase()) ? placeRaw : '';
-    const at = place ? (lang === 'en' ? ` in ${place}` : lang === 'es' ? ` en ${place}` : ` à ${place}`) : '';
+    // Le lieu vient du périmètre résolu, jamais d'un mot-clé capitalisé au
+    // hasard (« Rénovation », « Devis » passaient pour des villes).
+    const localityAlreadyInNeed = localOk && need.toLowerCase().includes((geoScope as GeoScope).label.toLowerCase());
+    const at = localOk && !localityAlreadyInNeed ? ` ${geoPhrase(geoScope as GeoScope, lang, 0)}` : '';
 
     const text = lang === 'en'
       ? `Who has the best customer reviews for ${need}${at}, and are those reviews trustworthy?`
