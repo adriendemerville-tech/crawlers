@@ -1741,7 +1741,9 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       ${topHtmlKw}
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
         <div class="score-badge" style="background:${scoreColor(stratScore, 100)}">${stratScore} / 100</div>
+        ${strategicData?._mutualized_from_domain ? `<div style="font-size:12px;color:#6b7280;line-height:1.5;">Score de niveau <strong>domaine</strong> (analyse stratégique mutualisée sur ${domain}). Le score GEO propre à cette URL est celui des dix sous-signaux ci-dessous.</div>` : ''}
       </div>
+
       ${stratIntro?.presentation ? `<div class="intro-text">${stratIntro.presentation}</div>` : ''}
       ${stratIntro?.strengths ? `<div class="intro-text"><strong>${tr.strengths}:</strong> ${stratIntro.strengths}</div>` : ''}
       ${stratIntro?.improvement ? `<div class="intro-text"><strong>${tr.improvements}:</strong> ${stratIntro.improvement}</div>` : ''}
