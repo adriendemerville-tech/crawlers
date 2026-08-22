@@ -62,12 +62,12 @@ Règles transverses non négociables pour toutes les tâches ci-dessous :
 
 | # | Fichier | Contenu |
 |---|---|---|
-| L1a.16 | `src/components/Console/Marketplace/MarketplaceModule.tsx` | coquille du module + 4 onglets (les 3 autres inertes en L1a) |
-| L1a.17 | `ConsoleSidebar.tsx` | entrée « Place d'échange », réordonnable et masquable, persistance `user_console_preferences` |
-| L1a.18 | `SellTab.tsx` | inventaire de mes pages : prix estimé, palier, classe `sell_risk` avec motif lisible, plafonds restants, toggle opt-in, revenus cumulés, message « 1 lien vendu ce mois = abonnement remboursé » |
-| L1a.19 | `OwnershipVerificationCard.tsx` | parcours GSC / DNS / fichier, états `verified` / `unverified` / `revoked`, blocage explicite de la mise en vente |
-| L1a.20 | `TaxProfileForm.tsx` | statut fiscal, TVA (contrôle VIES), mandat d'auto-facturation à accepter |
-| L1a.21 | `useTeamPermissions` | ajout de `marketplace_manage` ; auditeur en lecture seule |
+| L1a.17 | `src/components/Console/Marketplace/MarketplaceModule.tsx` | coquille du module + 4 onglets (les 3 autres inertes en L1a) |
+| L1a.18 | `ConsoleSidebar.tsx` | entrée « Place d'échange », réordonnable et masquable, persistance `user_console_preferences` |
+| L1a.19 | `SellTab.tsx` | inventaire de mes pages : prix estimé, palier, classe `sell_risk` avec motif lisible, plafonds restants, toggle opt-in, revenus cumulés, message « 1 lien vendu ce mois = abonnement remboursé » |
+| L1a.20 | `OwnershipVerificationCard.tsx` | parcours GSC / DNS / fichier, états `verified` / `unverified` / `revoked`, acceptation de la déclaration de responsabilité, blocage explicite de la mise en vente |
+| L1a.21 | `TaxProfileForm.tsx` | statut fiscal, TVA (contrôle VIES), mandat d'auto-facturation à accepter |
+| L1a.22 | `useTeamPermissions` | ajout de `marketplace_manage` ; auditeur en lecture seule |
 
 ---
 
