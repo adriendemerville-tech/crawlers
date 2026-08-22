@@ -313,7 +313,62 @@ LinkedIn et Instagram, cf. 2.7) arrivent avec les connecteurs. Les contreparties
 automatiquement (newsletter, podcast, étude) restent hors v1 et hors garantie.
 
 
+### 2.9 Studio de création (générateur de livrables, 3 versions)
+
+Aucun livrable n'est rédigé par les users : **Crawlers produit le contenu**, en 3 versions,
+et les deux parties s'accordent sur celle qui sera publiée. Le studio couvre les quatre formats
+de jambe : section ou page d'accueil du lien, post LinkedIn (+ média), reel Instagram, story
+Instagram.
+
+#### Entrées du générateur (toutes déterministes, calculées avant tout appel LLM)
+
+| Entrée | Source |
+|---|---|
+| Besoin acheteur (`seo` / `geo` / `conversion`) | `marketplace_needs.need_primary`, dérivé de `architect_workbench` |
+| Page cible, ancre, mot-clé, intention | tâche workbench + `keyword_universe` (SSOT) |
+| Cible/audience du vendeur | GSC (requêtes, pays, device) ou insights Meta / LinkedIn |
+| Ton et distance de jargon du vendeur | Voice DNA + `jargon_distance` de la carte d'identité du site vendeur |
+| Standing du vendeur | autorité de domaine, `authority_balance`, qualité éditoriale, format (média, marque, satellite) |
+| Contexte réel de la page hôte | contenu crawlé de la page vendeur (`crawl_pages`), pour l'insertion |
+| Contraintes de conformité | attribut du lien, mention #pub / #sponso, mentions ARPP/FTC |
+
+Le brief est construit par `buildContentBrief()` (pipeline déterministe pré-LLM) puis passé au
+pipeline éditorial 4 étapes (briefing → stratégiste → rédacteur → tonaliseur). Règles reprises
+sans exception : aucun emoji, une seule ancre par livrable, aucune promesse de classement,
+tactique SEO ≠ sujet, HTML pour tout push CMS.
+
+#### Les 3 versions
+
+Chaque commande génère exactement trois variantes, différenciées par **angle et registre**, pas
+par de simples reformulations :
+
+| Version | Axe | Usage typique |
+|---|---|---|
+| A — Éditoriale | contexte métier du vendeur, lien contextuel discret | standing élevé, média, ton neutre |
+| B — Utilitaire | réponse à une question concrète, passage citable de 40–80 mots | besoin GEO de l'acheteur |
+| C — Orientée action | bénéfice explicite + CTA sobre | besoin conversion, jambe LinkedIn / reel |
+
+Le standing du vendeur borne les versions proposées : au-delà d'un seuil d'autorité, la version C
+est retirée (elle abîme la page hôte et fait tomber la jambe dans le publicitaire brut).
+
+#### Arbitrage et dernier mot
+
+1. Génération des 3 versions par Crawlers (coût LLM mutualisé, cache par commande).
+2. Le **vendeur** classe / écarte : il peut refuser une version pour incompatibilité avec sa page,
+   sa ligne éditoriale ou son audience — motif obligatoire, journalisé.
+3. L'**acheteur tranche** parmi les versions restées acceptables : son choix est décisif.
+4. Si le vendeur écarte les trois, un seul cycle de régénération est déclenché (nouveau brief
+   contraint par les motifs de refus), puis arbitrage Crawlers ou annulation sans frais.
+5. Les tours de révision restent plafonnés à **3** (cf. 2.3) et sont partagés avec le studio :
+   les révisions ne sont pas un canal de rédaction gratuit.
+
+Traçabilité : chaque version est une ligne `marketplace_content_variants` (variante A/B/C, brief
+figé, sortie, modèle utilisé, coût), les refus dans `marketplace_feedback`, la version retenue
+référencée par `marketplace_orders.approved_revision_id`.
+
 ---
+
+
 
 
 ## 3. Moteur d'appariement Collab Instagram (v1.5)
