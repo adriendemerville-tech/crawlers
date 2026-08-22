@@ -5,6 +5,69 @@ Date : 2026-08-21 · Auteur : Lovable · Périmètre : v1 backlink, v1.5 collab 
 
 ---
 
+## 0. Présentation de Crawlers
+
+### 0.1 Positionnement et proposition de valeur
+
+Crawlers est une **plateforme de référencement SEO/GEO tout-en-un** pensée pour les
+agences, consultants et éditeurs de sites qui veulent piloter leur visibilité à la fois sur
+les moteurs de recherche classiques **et** sur les réponses génératives (LLM, GEO).
+
+Proposition de valeur : transformer des **données de terrain réelles** (Search Console,
+crawl technique, benchmarks LLM, E-E-A-T) en **diagnostics actionnables et en code
+correctif prêt à l'emploi**, sans compétences techniques lourdes côté client.
+
+Positionnement distinctif :
+- **Multi-silo** : audit technique, SEO éditorial, GEO, Google Business, netlinking et
+  concurrentiel traités dans un seul outil (pas de boîte à outils éclatée).
+- **IA agentique contrôlée** : des agents (Parménion, Félix, Code Architecte, Marina) qui
+  produisent du contenu et des correctifs, **jamais** de code sans validation humaine.
+- **Marque blanche & multi-compte** : adapté aux agences qui revendent les rapports.
+- **Géographique** : ancré marché francophone (crawlers.fr), modèles anglais/espagnol disponibles.
+
+### 0.2 Outils et tarifs
+
+| Offre | Prix | Positionnement |
+|---|---|---|
+| **Freemium / à l'unité** | crédits ou paiement unique 3 € – 12 € par module | Découverte, audit ponctuel |
+| **Pro Agency** | **29 €/mois** (26,10 €/an) | Agences/consultants : 5 000 pages/mois, 10 pages/scan, audits & code illimités, benchmark LLM, GMB, marque blanche + 2 comptes, benchmark rank SERP |
+| **Pro Agency+** | **79 €/mois** (71,10 €/an) | Scaling : 50 000 pages/mois, 50 pages/scan, benchmark LLM & profondeur illimités, GMB, marque blanche + 3 comptes, Conversion Optimizer, API Marina, analyse des logs, stratégie concurrentielle |
+| **Enterprise** | Sur devis | Tout illimité, comptes sur mesure, serveur dédié et isolé, SLA, SSO SAML, rôles admin/auditeur/éditeur |
+
+Packs de crédits complémentaires (10 / 50 / 150 crédits, de ~0,44 € à 0,30 € l'unité selon
+volume) pour les modules stratégiques sans abonnement.
+
+Outils couverts : audit stratégique (Marina), Cocoon (maillage & cannibalisation),
+benchmark LLM/GEO multi-modèles, E-E-A-T v3, Content Architect + agents éditoriaux,
+Code Architecte (correctifs techniques), Conversion Optimizer, Google Business (GMB),
+Observatoire sectoriel, dictadevi (génération de contenu).
+
+### 0.3 Pourquoi ajouter la Place d'échange
+
+La plateforme diagnostique déjà des **besoins** (déficit d'autorité, backlinks minces,
+notoriété externe faible) et dispose des **données de valorisation** de chaque page
+(autorité, trafic réel, qualité de contenu, visibilité IA) via les comptes GSC connectés.
+La Place d'échange ferme la boucle : au lieu de s'arrêter au diagnostic « il vous faut des
+liens ou de la visibilité », Crawlers permet de **satisfaire ce besoin en interne**.
+
+Bénéfices pour Crawlers :
+- **Monétisation sur l'existant** : commission de 25 % sur chaque transaction, sans coût
+  d'acquisition supplémentaire (l'acheteur est déjà un utilisateur diagnostiqué).
+- **Données de pricing uniques** : aucun acteur ne tarifie des liens à partir de signaux
+  GSC + visibilité IA ; c'est un avantage concurrentiel difficile à copier.
+- **Effet de réseau** : chaque vendeur est aussi un acheteur potentiel (et inversement) ;
+  la liquidité de la place croît avec le nombre de sites connectés.
+- **Rétention** : l'utilisateur ne quitte plus la plateforme pour aller chercher un
+  netlinker ou un influenceur ailleurs.
+
+Bénéfices pour les utilisateurs :
+- **Un seul écosystème** : diagnostiquer, corriger et acquérir de la visibilité au même endroit.
+- **Troc possible** : pas uniquement de l'achat cash — lien contre lien, lien contre
+  post LinkedIn/Instagram, post contre post (voir §2.7) — utile aux sites sans budget.
+- **Prix transparents** : grille de paliers calculée serveur, pas de négociation opaque.
+
+---
+
 ## 1. Principe général
 
 Crawlers ne construit pas un catalogue à parcourir mais un **moteur d'appariement**
