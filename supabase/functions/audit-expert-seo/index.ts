@@ -2245,9 +2245,15 @@ Deno.serve(handleRequest(async (req) => {
     const psiPerformance = psiAvailable ? (categories.performance?.score || 0) : null;
     const psiSeo = psiAvailable ? (categories.seo?.score || 0) : null;
 
-    // LCP mesuré (lab PSI). C'est un fait, pas une estimation : il plafonne le
-    // score de performance même quand la catégorie PSI est absente ou flatteuse.
-    const lcpMsMeasured = Number(audits['largest-contentful-paint']?.numericValue) || null;
+    // LCP retenu : terrain CrUX (p75 utilisateurs réels) si disponible, sinon
+    // médiane des runs PSI. C'est un fait reproductible, pas un run isolé — il
+    // plafonne le score même quand la catégorie PSI est absente ou flatteuse.
+    const lcpMsMeasured = perf.lcpMs;
+    const perfSourceLabel = perf.source.startsWith('field_')
+      ? 'terrain CrUX p75 (utilisateurs réels, mobile)'
+      : perf.labLcpRuns.length > 1
+        ? `médiane de ${perf.labLcpRuns.length} runs PageSpeed mobile`
+        : 'run PageSpeed mobile unique';
 
     let performanceScore = psiPerformance !== null ? Math.round(psiPerformance * 40) : 20; // 50% fallback
     let technicalScore = (psiSeo !== null ? Math.round(psiSeo * 30) : 15) + 20; // 50% of PSI SEO part as fallback
@@ -2261,7 +2267,10 @@ Deno.serve(handleRequest(async (req) => {
     // plutôt que d'annoncer un plafond sans en montrer le coût.
     const scoreGates: Array<{ axis: string; reason: string; evidence: string; pointsLost?: number; measured?: string | null; target?: string | null }> = [];
 
-    if (lcpMsMeasured !== null && lcpMsMeasured > 4000) {
+    // Un seul run dégradé sans confirmation ne plafonne pas : c'est exactement
+    // le faux positif observé (11,3 s au run 1, 2,0 s en réalité).
+    const lcpIsConfirmed = perf.source.startsWith('field_') || perf.labLcpRuns.length > 1;
+    if (lcpMsMeasured !== null && lcpMsMeasured > 4000 && lcpIsConfirmed) {
       // Seuil Core Web Vitals : > 4 s = « poor ». Au-delà de 8 s, la page est
       // hors jeu pour l'utilisateur mobile.
       const cap = lcpMsMeasured > 8000 ? 6 : 12;
@@ -2269,7 +2278,7 @@ Deno.serve(handleRequest(async (req) => {
         const lost = performanceScore - cap;
         scoreGates.push({
           axis: 'performance',
-          reason: 'LCP mobile mesuré au-delà du seuil Core Web Vitals',
+          reason: `LCP mobile confirmé au-delà du seuil Core Web Vitals (${perfSourceLabel})`,
           evidence: `${(lcpMsMeasured / 1000).toFixed(2)}s mesuré → cible 2,50s (score plafonné à ${cap}/40, soit −${lost} points)`,
           pointsLost: lost,
           measured: `${(lcpMsMeasured / 1000).toFixed(2)}s`,
@@ -2277,7 +2286,10 @@ Deno.serve(handleRequest(async (req) => {
         });
         performanceScore = cap;
       }
+    } else if (lcpMsMeasured !== null && lcpMsMeasured > 4000) {
+      console.warn(`[PERF] LCP ${lcpMsMeasured}ms non confirmé (run unique) → aucun plafond appliqué`);
     }
+
 
     // Contenu non extractible : le HTML est servi mais le texte visible est
     // quasi absent (coquille JS). Le score technique ne peut pas rester haut :
