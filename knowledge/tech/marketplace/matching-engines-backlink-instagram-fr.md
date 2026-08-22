@@ -780,6 +780,10 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   site-scoped comme Marina).
 - `marketplace_page_sell_risk` — cache par page (§2.12) : `sell_risk`, composantes, classe
   (`safe` | `moderate` | `discouraged`), motif d'exclusion dure, `recomputed_at` (à chaque crawl).
+- `marketplace_buyer_limits` — cache par domaine acheteur (§2.2.1) : `links_bought_30d`,
+  `links_bought_7d`, `distinct_sellers_12m`, `top_seller_share`, `exact_anchor_ratio`,
+  `target_url_counts` (jsonb), `topical_coherence_ratio`, `buy_risk`, `next_allowed_at`,
+  `throttle_reason`, `recomputed_at`. Dérivé des jambes livrées, jamais des commandes créées.
 
 ### 4.3 Transaction
 
