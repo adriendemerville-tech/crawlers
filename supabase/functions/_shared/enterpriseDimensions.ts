@@ -173,16 +173,38 @@ function relationFromModel(model: string, entity: string, blob: string): Custome
   return null;
 }
 
-function deliveryFromContext(model: string, entity: string, blob: string): DeliveryMode | null {
+/**
+ * Résolution ORDONNÉE du mode de livraison. L'ordre n'est pas cosmétique : il
+ * fixe quelles autres dimensions deviennent hors sujet ensuite (voir
+ * `ROLE_IRRELEVANT_DELIVERY`). Les statuts qui déterminent à eux seuls la
+ * posture du prospect (service public, association, profession libérale,
+ * plateforme, boutique en ligne) sont donc tranchés AVANT les régularités
+ * lexicales plus faibles (« service », « prestation »).
+ */
+function deliveryFromContext(
+  model: string, entity: string, blob: string, legalForm: string | null,
+): DeliveryMode | null {
+  const form = String(legalForm || '').toUpperCase();
+
+  // 1. Statuts qui l'emportent sur tout le reste.
+  if (RE_SERVICE_PUBLIC.test(blob) || /^(SEM|EPIC|EPA)$/.test(form)) return 'service_public';
+  if (RE_ASSOCIATION.test(blob) || /ASSOCIATION|FONDATION|SCIC/.test(form)) return 'association';
+  if (RE_LIBERALE.test(blob) || /^SEL(ARL|AS)$/.test(form)) return 'profession_liberale';
+
+  // 2. Modes portés par le modèle économique déclaré.
   if (/^saas/.test(model) || entity === 'saas') return 'saas';
   if (/^marketplace/.test(model) || entity === 'marketplace') return 'marketplace';
+  if (/^ecommerce/.test(model) || entity === 'ecommerce' || RE_BOUTIQUE_ENLIGNE.test(blob)) return 'commerce';
+
+  // 3. Métiers reconnaissables à ce qui est vendu.
   if (RE_ARTISANAT.test(blob)) return 'artisanat';
-  if (RE_CONSEIL.test(blob)) return 'conseil';
+  if (RE_COACHING.test(blob) || RE_CONSEIL.test(blob)) return 'conseil';
   if (RE_PRODUITS.test(blob)) return 'produits';
-  if (/^ecommerce/.test(model) || entity === 'ecommerce') return 'commerce';
   if (RE_COMMERCE.test(blob)) return 'commerce';
   if (RE_CONTENU.test(blob) || entity === 'media' || model === 'media_publisher') return 'contenu';
   if (/application mobile|app store|application/i.test(blob)) return 'app';
+
+  // 4. Repli le plus faible : prestation générique.
   if (model === 'service_agency' || model === 'service_local' || /service|prestation|intervention/i.test(blob)) return 'service';
   return null;
 }
