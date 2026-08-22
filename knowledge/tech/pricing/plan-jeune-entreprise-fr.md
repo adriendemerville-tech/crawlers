@@ -258,5 +258,6 @@ par une nouvelle candidature. Purge des pièces des dossiers refusés à 12 mois
   mensuel du coût moyen et le levier de fermeture aux nouvelles candidatures.
 - **Charge de support** : bornée par le support communautaire, à surveiller mensuellement.
 - **Cannibalisation** : une agence pourrait préférer l'offre gratuite à Pro Agency → ancienneté
-  stricte, 3 domaines max (F2), priorité de file `registered`.
+  stricte, unicité SIREN/RNA, priorité de file `registered`, suivi mensuel du coût moyen ; la
+  suppression de la limite de domaines suivis (F2) reporte la protection sur ce suivi.
 - **Coût LLM** : borné par F6 (0,50 €/jour/compte) sous le plafond de dépense agents de 1 €/jour.
