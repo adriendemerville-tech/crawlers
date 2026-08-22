@@ -171,6 +171,46 @@ compat_link_for_link = compat × 0.70
 
 Notification des deux faces au-delà d'un seuil (`compat ≥ 0.6`).
 
+#### 2.2.1 Garde-fous côté acheteur (empreinte entrante)
+
+Le vendeur borne son empreinte sortante (1 lien dofollow par page, 20/an/domaine), mais c'est
+l'acheteur qui encaisse le risque de pénalité sur son propre profil de liens. Les mêmes bornes
+existent donc côté entrant, appliquées **serveur** au moment de la commande (409 avec motif
+explicite, jamais un blocage silencieux) :
+
+| Garde-fou | Borne v1 | Portée |
+|---|---|---|
+| **Vitesse d'acquisition** | ≤ 4 liens entrants achetés / mois / domaine acheteur, et ≤ 2 sur une fenêtre de 7 jours glissants | anti-pic de vélocité |
+| **Rampe nouvel entrant** | 1er mois : max 2 liens ; 2e mois : 3 ; à partir du 3e : 4 | un domaine jeune ne construit pas 12 liens en 30 jours |
+| **Concentration par vendeur** | ≤ 2 liens du même domaine vendeur sur 12 mois glissants, et ≤ 20 % des liens achetés sur la période | diversité des sources |
+| **Diversité minimale** | à partir du 5e lien acheté, au moins 4 domaines vendeurs distincts | pas de profil mono-source |
+| **Concentration par page cible** | ≤ 3 liens achetés vers la même URL cible sur 12 mois | anti-suroptimisation d'une page |
+| **Diversité d'ancre** | ≤ 1 ancre exacte (mot-clé cible strict) par tranche de 4 liens achetés vers le même domaine ; le reste en ancre de marque, URL nue ou semi-générique | anti-pattern d'ancres |
+| **Cohérence thématique** | au moins 60 % des liens achetés sur 12 mois dans le champ sémantique du domaine acheteur | anti-profil incohérent |
+
+Règles d'application :
+
+1. Les compteurs sont dérivés des commandes livrées (`marketplace_verifications` à l'état
+   `verified` ou `maintained`), pas des commandes créées : une commande annulée ne consomme rien.
+2. Les liens acquis **hors Crawlers** et détectés au crawl (profil de backlinks connu du domaine)
+   alimentent le compteur de vitesse à titre indicatif et déclenchent un avertissement, sans
+   bloquer — Crawlers ne borne durement que ce qu'il a lui-même vendu.
+3. Un dépassement n'est pas un refus définitif : l'appariement passe en `throttled`, l'offre reste
+   réservée et la commande devient possible à la date affichée (« disponible le JJ/MM »).
+4. La console affiche en permanence, côté « J'achète », un bandeau **Empreinte entrante** :
+   liens ce mois / plafond, nombre de vendeurs distincts, part du vendeur dominant, répartition
+   des ancres, avec le motif du prochain déblocage.
+5. Ces bornes sont **cumulatives** avec les garde-fous vendeur et avec le quota `link_for_link` :
+   la contrainte la plus stricte l'emporte, aucune dérogation admin en v1.
+6. `sell_risk` (§2.12) protège les pages du vendeur ; le symétrique côté acheteur est un
+   `buy_risk` calculé sur ces sept dimensions et affiché avant validation du panier.
+
+**Ajout DB** — `marketplace_buyer_limits` (§4) : cache par domaine acheteur des compteurs de
+vitesse, de concentration, de diversité d'ancre et de cohérence, avec `next_allowed_at` et
+`buy_risk`.
+
+
+
 ### 2.3 Prévisualisation du paragraphe d'accueil du lien
 
 Point central du produit : le lien n'est pas posé « quelque part », il est inséré dans un
@@ -740,6 +780,10 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   site-scoped comme Marina).
 - `marketplace_page_sell_risk` — cache par page (§2.12) : `sell_risk`, composantes, classe
   (`safe` | `moderate` | `discouraged`), motif d'exclusion dure, `recomputed_at` (à chaque crawl).
+- `marketplace_buyer_limits` — cache par domaine acheteur (§2.2.1) : `links_bought_30d`,
+  `links_bought_7d`, `distinct_sellers_12m`, `top_seller_share`, `exact_anchor_ratio`,
+  `target_url_counts` (jsonb), `topical_coherence_ratio`, `buy_risk`, `next_allowed_at`,
+  `throttle_reason`, `recomputed_at`. Dérivé des jambes livrées, jamais des commandes créées.
 
 ### 4.3 Transaction
 
