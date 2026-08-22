@@ -1,4 +1,4 @@
-# Marketplace Crawlers — Moteurs d'appariement Backlink & Collab Instagram
+# Place d’échange Crawlers — Moteurs d'appariement liens, LinkedIn & Instagram
 
 Document conceptuel et technique. Statut : cadrage (non implémenté).
 Date : 2026-08-21 · Auteur : Lovable · Périmètre : v1 backlink, v1.5 collab Instagram.
@@ -373,7 +373,7 @@ référencée par `marketplace_orders.approved_revision_id`.
 
 ## 3. Moteur d'appariement Collab Instagram (v1.5)
 
-Deuxième type d'offre dans la même marketplace, même wallet, même commission, logique
+Deuxième type d'offre dans la même place d’échange, même wallet, même commission, logique
 d'évaluation distincte.
 
 | Backlink | Collab Instagram |
@@ -432,7 +432,7 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 
 ## 5. Modifications front — Console
 
-1. **Nouveau module « Marketplace »** dans `ConsoleSidebar.tsx` (réordonnable et masquable
+1. **Nouveau module « Place d’échange »** dans `ConsoleSidebar.tsx` (réordonnable et masquable
    comme les autres, persistance `user_console_preferences`).
 2. Quatre onglets :
    - **Opportunités** — appariements entrants, filtrés par `compat_score`, avec « pourquoi ce match ».
@@ -448,7 +448,7 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 5. **Intégrations dans l'existant** :
    - onglet Netlinking : remplacement des offres externes vides par l'inventaire interne ;
    - `architect_workbench` : bouton « Trouver un lien » sur les tâches `remediation_channel='netlinking'` ;
-   - wallet : ligne « revenus marketplace » et solde vendeur.
+   - wallet : ligne « revenus place d’échange » et solde vendeur.
 6. **Gating** : `useTeamPermissions().can('marketplace_manage')` pour vendre/acheter ;
    auditeur en lecture seule.
 7. **Design** : violet / or / noir / blanc, boutons bordure + texte, aucun emoji, aucun bleu IA.
@@ -498,7 +498,7 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 ### 8.2 Audit stratégique
 - Le bloc Marché & Autorité passe d'un constat à une **proposition concrète** :
   page cible identifiée, ancre recommandée, fourchette de prix, nombre d'actifs correspondants
-  disponibles, lien vers l'onglet Marketplace.
+  disponibles, lien vers l’onglet Place d’échange.
 
 ### 8.3 Rapports Marina
 - Section « Autorité » : quand le déficit est externe, afficher 2 à 3 **propositions de liens
@@ -508,7 +508,7 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - Contraintes de rendu PDF respectées (espaces normaux, badges centrés, pas d'emoji).
 
 ### 8.4 Home
-- Nouvelle section « Marketplace d'autorité » : les deux faces (vendre / acheter), le pricing
+- Nouvelle section « Place d’échange d’autorité » : les deux faces (vendre / acheter), le pricing
   algorithmique, l'appariement automatique, la prévisualisation du paragraphe.
 - Un seul CTA vers la landing marketplace ; respect strict du design system.
 
