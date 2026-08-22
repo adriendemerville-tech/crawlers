@@ -474,6 +474,8 @@ export default function Netlinking() {
             </Card>
           )}
 
+          <InternalInventorySection />
+
           {offers.length === 0 && !loading && hasActiveFilters && (
             <Card className="p-10 text-center">
               <div className="flex flex-col items-center gap-3 text-muted-foreground">
