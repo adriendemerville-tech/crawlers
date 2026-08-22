@@ -1209,9 +1209,11 @@ monnaie électronique (agrément ACPR, DSP2).
 
 Décision : la fonctionnalité est **conservée mais gelée en implémentation** jusqu'à validation
 écrite d'un juriste spécialisé paiement — même niveau d'exigence que la validation du cadrage
-fiscal par l'expert-comptable (§2.5.2), et **avant L1** puisqu'elle touche le modèle de données du
-wallet. Repli sans risque si la validation est négative : soulte en cash uniquement, ou soulte
-absorbée par un ajustement de palier des deux jambes.
+fiscal par l'expert-comptable (§2.5.2). Le schéma du wallet est codé dès L1b **avec le transfert
+crédit-à-crédit derrière un feature flag fermé** (§8) : la consultation est ouverte au jour 1 (L0)
+et le flag ne s'ouvre qu'après avis écrit — elle ne bloque donc jamais le chemin critique. Repli
+sans risque si la validation est négative : soulte en cash uniquement, ou soulte absorbée par un
+ajustement de palier des deux jambes.
 
 #### 2.16.2 Arbitrage Crawlers — processus minimal
 
