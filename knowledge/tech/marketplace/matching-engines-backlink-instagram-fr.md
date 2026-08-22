@@ -861,7 +861,7 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
 |---|---|---|
 | Valeur d'une jambe (lien, story, post) | `marketplace_exchanges.value_cents` | référencée par `leg_id`, jamais recopiée |
 | Prix figé de la commande et commission 15 % | `marketplace_orders` | dérivé des jambes au moment du figeage, jamais recalculé après |
-| Soulte (écart entre les deux jambes) | `marketplace_orders.soulte_cents` | colonne générée / calculée à partir des jambes de la commande |
+| Soulte (écart entre les deux jambes) | `marketplace_orders.soulte_cents` | **valeur écrite** par la server function au figeage de la commande, jamais une colonne générée : elle dépend de la décote 0,70 (`link_for_link`), de l'arrondi au palier de 10 € et du plafond total de 350 €, donc elle n'est pas recalculable par simple différence des jambes. Immuable après figeage |
 | Impact sur la balance d'autorité | `marketplace_balance_events` | ne stocke **aucun** montant : `leg_id` + `sign` ; la valeur est lue par jointure |
 | Soldes agrégés | `marketplace_site_balances` | cache recalculable, jamais autoritaire |
 | Valeur d'appariement (estimation, pas transaction) | `marketplace_match_values` | cache TTL 24 h, sans lien avec les montants réels |
