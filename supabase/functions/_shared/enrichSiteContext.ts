@@ -380,12 +380,18 @@ export async function ensureSiteContext(
   const siteName = (site.site_name as string) || ''
   const siteId = site.id as string
 
-  console.log(`[enrich-site] 🔍 ${domain} needs ${enrichmentType} enrichment, fetching homepage evidence...`)
+  console.log(`[enrich-site] 🔍 ${domain} needs ${enrichmentType} enrichment, collecting multi-page evidence...`)
 
-  const evidence = await fetchHomepageEvidence(domain)
+  const evidence = await fetchSiteEvidence(domain)
   if (!evidence) {
     console.warn(`[enrich-site] ⚠️ No onsite evidence for ${domain} — degraded inference`)
+  } else {
+    console.log(
+      `[enrich-site] 📄 ${domain}: ${evidence.pages.length} page(s) lue(s) [${evidence.pages.map((p) => p.kind).join(', ')}], ` +
+      `${evidence.textWords} mots, signaux structurels: ${evidence.structural.evidence.length || 'aucun'}`,
+    )
   }
+
 
   const inferred = await inferContextFromDomain(
     domain,
