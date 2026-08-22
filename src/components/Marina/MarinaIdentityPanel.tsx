@@ -165,11 +165,11 @@ export default function MarinaIdentityPanel({ url, isAuthenticated }: Props) {
   const set = (k: keyof Fields, v: string) => setFields((f) => ({ ...f, [k]: v }));
 
   return (
-    <div className="mt-3 text-left">
+    <div className="mt-3 flex h-full flex-col rounded-lg border border-border bg-card/50 px-4 py-3 text-left">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-2 rounded-lg border border-border bg-card/50 px-4 py-3 text-sm text-foreground hover:bg-card transition-colors"
+        className="w-full flex items-center justify-between gap-2 text-sm text-foreground"
       >
         <span className="flex items-center gap-2">
           <IdCard className="w-4 h-4 text-primary" />
@@ -183,7 +183,7 @@ export default function MarinaIdentityPanel({ url, isAuthenticated }: Props) {
       </button>
 
       {open && (
-        <div className="mt-2 rounded-lg border border-border bg-card/40 p-4 space-y-4">
+        <div className="mt-3 space-y-4">
           <p className="text-xs text-muted-foreground">
             Le secteur et le modèle d’affaires calibrent les fourchettes de mix de pages du rapport.
             Vérifiez-les avant de lancer le crawl : une carte verrouillée est réputée exacte et n’est plus réinférée.

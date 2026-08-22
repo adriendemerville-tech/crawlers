@@ -90,8 +90,8 @@ export function MarinaScanModePanel({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Card className="mt-4 border-border/60 bg-card/50 text-left">
-      <CardContent className="p-5">
+    <Card className="mt-4 h-full border-border/60 bg-card/50 text-left">
+      <CardContent className="flex h-full flex-col p-5">
         <button
           type="button"
           onClick={() => setIsOpen((v) => !v)}
