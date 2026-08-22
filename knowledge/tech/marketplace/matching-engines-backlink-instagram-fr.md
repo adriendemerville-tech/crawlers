@@ -1046,8 +1046,12 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `anchor` (ancre validée), `anchor_kind` (`brand` | `exact` | `semi` | `url` | `natural`),
   `link_attribute` (`dofollow` | `nofollow` | `sponsored`).
   Économie : `deal_type` (`cash` | `credits` | `barter`), `price_cents` (prix figé),
-  `commission_cents` (15 %), `soulte_cents`, `soulte_currency` (`eur` | `credits`),
+  `commission_cents` (15 %, contre-valeur euros figée), `commission_credits` (montant réellement
+  débité, **toujours en crédits**, §2.5), `credit_eur_rate_at_freeze` (taux figé au figeage, base
+  de la facture et de la TVA), `soulte_cents`, `soulte_currency` (`eur` | `credits`),
   `soulte_payer_id`, `soulte_payee_id`.
+  Sur un troc, la commission est portée **par jambe** (§4.4bis) : `commission_credits` de la
+  commande est la somme des commissions de jambe.
   Engagement et cycle de vie : `commitment_months` (défaut **12**, base du prorata de §2.13),
   `published_at`, `commitment_ends_at` (= `published_at` + `commitment_months`),
   `status`, `approved_revision_id`, `risk_flags[]`, `frozen_at` (figeage), `created_at`.
