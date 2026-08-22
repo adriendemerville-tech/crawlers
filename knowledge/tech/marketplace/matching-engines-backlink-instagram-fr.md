@@ -1158,7 +1158,13 @@ Ajouts obligatoires :
 - Attribut du lien : information de l'acheteur, absence de garantie de classement.
 - Prévisualisation, feedback, 3 tours de révision, arbitrage et annulation sans frais.
 - Retrait ou disparition du lien : suspension du paiement, remboursement au prorata.
-- Wallet : crédits non convertibles en euros en v1, non remboursables, durée de validité.
+- Wallet : crédits non convertibles en euros en v1, non remboursables, durée de validité ;
+  séquestre et acquisition par tranches, cascade de récupération et dette de wallet (§2.5.1).
+- **Fiscalité du troc (§2.5.2)** : chaque jambe est une prestation imposable valorisée à sa propre
+  valeur, TVA 20 % pour les assujettis FR, autoliquidation UE sur numéro VIES valide, franchise en
+  base mentionnée ; **mandat de facturation au nom et pour le compte du vendeur** accepté à
+  l'onboarding ; avoir émis en cas de remboursement au prorata ; déclaration DAC7 incluant les
+  jambes en troc et les crédits ; vente réservée aux professionnels.
 - Données : partage limité et consenti des signaux de page entre les parties (RGPD). L'acheteur
   reçoit uniquement des **fourchettes** et des scores normalisés ; les valeurs GSC exactes, les
   requêtes, les courbes temporelles et les agrégats de domaine ne sont jamais exposés (§2.1.1).
