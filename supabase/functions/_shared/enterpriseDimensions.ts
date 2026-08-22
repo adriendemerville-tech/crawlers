@@ -32,7 +32,8 @@ export type ValueChainRole = 'sous_traitant' | 'donneur_ordre' | 'mixte' | 'dire
 export type CustomerRelation = 'b2b' | 'b2c' | 'b2b2c' | 'b2g' | 'mixte';
 export type DeliveryMode =
   | 'saas' | 'app' | 'marketplace' | 'service' | 'conseil'
-  | 'commerce' | 'artisanat' | 'produits' | 'contenu';
+  | 'commerce' | 'artisanat' | 'produits' | 'contenu'
+  | 'profession_liberale' | 'association' | 'service_public';
 
 export interface EnterpriseDimensions {
   economy_tier: EconomyTier | null;
@@ -40,6 +41,13 @@ export interface EnterpriseDimensions {
   legal_form: string | null;
   siren: string | null;
   naf_code: string | null;
+  /**
+   * Fiabilité du NAF face à ce qu'on observe réellement sur le site :
+   * `confirme` (concordant), `divergent` (le site contredit le code — le site
+   * gagne), `seul_signal` (aucune observation exploitable). Jamais utilisé pour
+   * décider seul de l'activité.
+   */
+  naf_reliability: 'confirme' | 'divergent' | 'seul_signal' | null;
   /** Tranche d'effectifs lisible (« 10 à 19 salariés »). */
   employees_range: string | null;
   structuration: Structuration | null;
@@ -50,9 +58,21 @@ export interface EnterpriseDimensions {
   sources: Record<string, 'declared' | 'sirene' | 'derived'>;
 }
 
+/**
+ * Modes de livraison pour lesquels la question « sous-traitant ou donneur
+ * d'ordre » n'a aucun sens : personne n'achète un abonnement logiciel, un
+ * produit en boutique, une consultation libérale, une adhésion associative ou
+ * une prestation de conseil en raisonnant en chaîne de sous-traitance.
+ */
+export const ROLE_IRRELEVANT_DELIVERY = new Set<DeliveryMode>([
+  'saas', 'app', 'marketplace', 'commerce', 'conseil', 'contenu',
+  'profession_liberale', 'association', 'service_public',
+]);
+
 export function emptyDimensions(): EnterpriseDimensions {
   return {
     economy_tier: null, legal_form: null, siren: null, naf_code: null,
+    naf_reliability: null,
     employees_range: null, structuration: null, value_chain_role: null,
     customer_relation: null, delivery_mode: null, sources: {},
   };
@@ -154,6 +174,11 @@ const RE_SUBCONTRACT = /sous-?trait|pour le compte de|marque blanche|white ?labe
 const RE_PRIME = /donneur d'ordre|ma[iî]tre d'[oœ]uvre|ma[iî]trise d'[oœ]uvre|entreprise g[eé]n[eé]rale|coordination de chantier|nous confions/i;
 const RE_FRANCHISE = /franchise|franchis[eé]|r[eé]seau d'agences|nos agences|succursales?/i;
 const RE_B2G = /collectivit[eé]s?|march[eé]s? publics?|mairie|administration|secteur public/i;
+const RE_LIBERALE = /avocat|notaire|huissier|expert[- ]comptable|architecte|kin[eé]sith[eé]rapeute|ost[eé]opathe|m[eé]decin|dentiste|infirmi[eè]re?|sage[- ]femme|psychologue|orthophoniste|v[eé]t[eé]rinaire|profession lib[eé]rale|cabinet lib[eé]ral/i;
+const RE_ASSOCIATION = /association(?:\s+loi\s+1901)?|but non lucratif|adh[eé]rents?|b[eé]n[eé]vol|fondation|ONG/i;
+const RE_SERVICE_PUBLIC = /mairie de|commune de|conseil d[eé]partemental|conseil r[eé]gional|pr[eé]fecture|[eé]tablissement public|CCAS|EPCI|communaut[eé] de communes|service public/i;
+const RE_BOUTIQUE_ENLIGNE = /boutique en ligne|e-?commer[çc]|vente en ligne|panier|ajouter au panier|livraison en \d|frais de port/i;
+const RE_COACHING = /coach|coaching|mentorat|bilan de comp[eé]tences|programme d'accompagnement/i;
 
 function relationFromModel(model: string, entity: string, blob: string): CustomerRelation | null {
   if (/b2b2c/.test(model)) return 'b2b2c';
@@ -167,16 +192,38 @@ function relationFromModel(model: string, entity: string, blob: string): Custome
   return null;
 }
 
-function deliveryFromContext(model: string, entity: string, blob: string): DeliveryMode | null {
+/**
+ * Résolution ORDONNÉE du mode de livraison. L'ordre n'est pas cosmétique : il
+ * fixe quelles autres dimensions deviennent hors sujet ensuite (voir
+ * `ROLE_IRRELEVANT_DELIVERY`). Les statuts qui déterminent à eux seuls la
+ * posture du prospect (service public, association, profession libérale,
+ * plateforme, boutique en ligne) sont donc tranchés AVANT les régularités
+ * lexicales plus faibles (« service », « prestation »).
+ */
+function deliveryFromContext(
+  model: string, entity: string, blob: string, legalForm: string | null,
+): DeliveryMode | null {
+  const form = String(legalForm || '').toUpperCase();
+
+  // 1. Statuts qui l'emportent sur tout le reste.
+  if (RE_SERVICE_PUBLIC.test(blob) || /^(SEM|EPIC|EPA)$/.test(form)) return 'service_public';
+  if (RE_ASSOCIATION.test(blob) || /ASSOCIATION|FONDATION|SCIC/.test(form)) return 'association';
+  if (RE_LIBERALE.test(blob) || /^SEL(ARL|AS)$/.test(form)) return 'profession_liberale';
+
+  // 2. Modes portés par le modèle économique déclaré.
   if (/^saas/.test(model) || entity === 'saas') return 'saas';
   if (/^marketplace/.test(model) || entity === 'marketplace') return 'marketplace';
+  if (/^ecommerce/.test(model) || entity === 'ecommerce' || RE_BOUTIQUE_ENLIGNE.test(blob)) return 'commerce';
+
+  // 3. Métiers reconnaissables à ce qui est vendu.
   if (RE_ARTISANAT.test(blob)) return 'artisanat';
-  if (RE_CONSEIL.test(blob)) return 'conseil';
+  if (RE_COACHING.test(blob) || RE_CONSEIL.test(blob)) return 'conseil';
   if (RE_PRODUITS.test(blob)) return 'produits';
-  if (/^ecommerce/.test(model) || entity === 'ecommerce') return 'commerce';
   if (RE_COMMERCE.test(blob)) return 'commerce';
   if (RE_CONTENU.test(blob) || entity === 'media' || model === 'media_publisher') return 'contenu';
   if (/application mobile|app store|application/i.test(blob)) return 'app';
+
+  // 4. Repli le plus faible : prestation générique.
   if (model === 'service_agency' || model === 'service_local' || /service|prestation|intervention/i.test(blob)) return 'service';
   return null;
 }
@@ -222,16 +269,33 @@ export function deriveEnterpriseDimensions(input: DimensionInput): EnterpriseDim
     dims.employees_range = String(input.company_size); dims.sources.employees_range = 'declared';
   }
 
-  // Économie : NAF si connu, sinon vocabulaire de l'offre.
-  const tier = nafToEconomyTier(dims.naf_code);
-  if (tier) { dims.economy_tier = tier; dims.sources.economy_tier = 'sirene'; }
-  else {
-    const derived: EconomyTier | null =
-      /agricole|agriculture|[eé]levage|p[eê]che|forestier|viticole/i.test(blob) ? 'primaire'
-      : RE_ARTISANAT.test(blob) || RE_PRODUITS.test(blob) ? 'secondaire'
-      : /^saas/.test(model) || entity === 'saas' || /logiciel|donn[eé]es|intelligence artificielle|plateforme/i.test(blob) ? 'quaternaire'
-      : blob ? 'tertiaire' : null;
-    if (derived) { dims.economy_tier = derived; dims.sources.economy_tier = 'derived'; }
+  // Relation client & mode de livraison — calculés d'abord : ils conditionnent
+  // la lecture de toutes les autres dimensions.
+  const relation = relationFromModel(model, entity, blob);
+  if (relation) { dims.customer_relation = relation; dims.sources.customer_relation = model ? 'declared' : 'derived'; }
+  const delivery = deliveryFromContext(model, entity, blob, dims.legal_form);
+  if (delivery) { dims.delivery_mode = delivery; dims.sources.delivery_mode = model ? 'declared' : 'derived'; }
+
+  // Économie : ce qui est réellement vendu PRIME sur le code NAF. Le NAF est un
+  // code administratif déclaré une fois à l'immatriculation : il ne dit ni
+  // l'activité réelle, ni la place dans la chaîne de valeur. Il ne sert donc
+  // qu'à corroborer l'observation du site, ou à combler son absence.
+  const nafTier = nafToEconomyTier(dims.naf_code);
+  const observedTier: EconomyTier | null =
+    /agricole|agriculture|[eé]levage|p[eê]che|forestier|viticole/i.test(blob) ? 'primaire'
+    : RE_ARTISANAT.test(blob) || RE_PRODUITS.test(blob) || delivery === 'artisanat' || delivery === 'produits' ? 'secondaire'
+    : /^saas/.test(model) || entity === 'saas' || delivery === 'saas' || delivery === 'app'
+      || /logiciel|donn[eé]es|intelligence artificielle|plateforme/i.test(blob) ? 'quaternaire'
+    : blob || delivery ? 'tertiaire' : null;
+
+  if (observedTier) {
+    dims.economy_tier = observedTier;
+    dims.sources.economy_tier = 'derived';
+    dims.naf_reliability = !nafTier ? null : nafTier === observedTier ? 'confirme' : 'divergent';
+  } else if (nafTier) {
+    dims.economy_tier = nafTier;
+    dims.sources.economy_tier = 'sirene';
+    dims.naf_reliability = 'seul_signal';
   }
 
   // Structuration
@@ -244,17 +308,14 @@ export function deriveEnterpriseDimensions(input: DimensionInput): EnterpriseDim
     : dims.siren ? 'independant' : null;
   if (structuration) { dims.structuration = structuration; dims.sources.structuration = RE_FRANCHISE.test(blob) ? 'declared' : 'derived'; }
 
-  // Rôle dans la chaîne de valeur
-  const sub = RE_SUBCONTRACT.test(blob);
-  const prime = RE_PRIME.test(blob);
+  // Rôle dans la chaîne de valeur — la question ne se pose même pas pour un
+  // commerce, un SaaS, une association, une profession libérale, un service
+  // public, une marketplace ou un cabinet de conseil : la valeur reste `direct`.
+  const roleApplies = !delivery || !ROLE_IRRELEVANT_DELIVERY.has(delivery);
+  const sub = roleApplies && RE_SUBCONTRACT.test(blob);
+  const prime = roleApplies && RE_PRIME.test(blob);
   const role: ValueChainRole | null = sub && prime ? 'mixte' : sub ? 'sous_traitant' : prime ? 'donneur_ordre' : blob ? 'direct' : null;
   if (role) { dims.value_chain_role = role; dims.sources.value_chain_role = sub || prime ? 'declared' : 'derived'; }
-
-  // Relation client & mode de livraison
-  const relation = relationFromModel(model, entity, blob);
-  if (relation) { dims.customer_relation = relation; dims.sources.customer_relation = model ? 'declared' : 'derived'; }
-  const delivery = deliveryFromContext(model, entity, blob);
-  if (delivery) { dims.delivery_mode = delivery; dims.sources.delivery_mode = model ? 'declared' : 'derived'; }
 
   return dims;
 }
@@ -277,8 +338,9 @@ export interface DimensionSelection {
   ignored: { key: string; value: string; reason: string }[];
 }
 
-const LOCAL_DELIVERY = new Set<DeliveryMode>(['artisanat', 'service', 'commerce']);
-const CAPACITY_DELIVERY = new Set<DeliveryMode>(['artisanat', 'service', 'conseil', 'produits']);
+const LOCAL_DELIVERY = new Set<DeliveryMode>(['artisanat', 'service', 'commerce', 'profession_liberale', 'service_public', 'association']);
+/** Modes où l'on achète une capacité d'exécution (et où l'effectif compte). */
+const CAPACITY_DELIVERY = new Set<DeliveryMode>(['artisanat', 'service', 'produits']);
 
 /**
  * Décide, dimension par dimension, si elle doit influencer la formulation des
@@ -306,11 +368,14 @@ export function selectBenchmarkDimensions(
       app: 'une application',
       marketplace: 'une place de marché ou un intermédiaire de confiance',
       service: 'un prestataire capable de réaliser la prestation',
-      conseil: 'un cabinet ou un expert pour être accompagné',
+      conseil: 'un cabinet, un consultant ou un coach pour être accompagné',
       commerce: 'un commerçant ou une boutique où acheter',
       artisanat: 'un artisan ou une entreprise qui intervient sur place',
       produits: 'un fabricant ou un fournisseur du produit',
       contenu: 'une source fiable pour se documenter',
+      profession_liberale: 'un praticien ou un professionnel libéral à consulter, pour un rendez-vous',
+      association: 'une structure à but non lucratif pour être aidé, adhérer ou soutenir une cause',
+      service_public: 'une démarche, un droit ou un service administratif',
     };
     relevant.push({
       key: 'delivery_mode', value: delivery, weight: 1,
@@ -329,8 +394,12 @@ export function selectBenchmarkDimensions(
     skip('customer_relation', relation, "vente au particulier : un consommateur ne se présente pas comme tel dans sa question");
   }
 
-  // Rôle chaîne de valeur — pertinent seulement en prestation/produit vendue à des pros.
-  const roleUseful = (dims.value_chain_role === 'sous_traitant' || dims.value_chain_role === 'mixte')
+  // Rôle chaîne de valeur — la question ne se pose PAS pour un commerce, une
+  // boutique en ligne, un SaaS, une marketplace, du conseil ou du coaching, une
+  // profession libérale, une association ou un service public.
+  const roleOutOfScope = !!delivery && ROLE_IRRELEVANT_DELIVERY.has(delivery);
+  const roleUseful = !roleOutOfScope
+    && (dims.value_chain_role === 'sous_traitant' || dims.value_chain_role === 'mixte')
     && (relation === 'b2b' || relation === 'b2b2c')
     && !!delivery && CAPACITY_DELIVERY.has(delivery);
   if (roleUseful) {
@@ -339,8 +408,8 @@ export function selectBenchmarkDimensions(
       directive: "L'entreprise travaille en sous-traitance : une question doit être posée par un donneur d'ordre qui cherche un partenaire à qui confier une partie du travail.",
     });
   } else {
-    skip('value_chain_role', dims.value_chain_role, delivery === 'saas' || delivery === 'commerce'
-      ? "l'acheteur d'un abonnement ou d'un produit ne raisonne pas en chaîne de sous-traitance"
+    skip('value_chain_role', dims.value_chain_role, roleOutOfScope
+      ? `mode de livraison « ${delivery} » : la sous-traitance n'entre pas dans la décision d'achat`
       : 'aucune sous-traitance déclarée dans ce qui est vendu');
   }
 
@@ -385,7 +454,10 @@ export function selectBenchmarkDimensions(
   // Statut légal et identifiants — jamais dans une question.
   skip('legal_form', dims.legal_form, "signal de confiance (E-E-A-T) : aucun prospect ne cherche par forme juridique");
   skip('siren', dims.siren, 'identifiant administratif : sert à vérifier une entreprise, pas à la trouver');
-  skip('naf_code', dims.naf_code, 'code administratif : sert à classer, pas à formuler une requête');
+  skip('naf_code', dims.naf_code, dims.naf_reliability === 'divergent'
+    ? "code administratif contredit par ce qui est réellement vendu : ce que dit le site l'emporte"
+    : "code administratif : il ne dit ni l'activité réelle ni la place dans la chaîne de valeur");
+  skip('naf_reliability', dims.naf_reliability, 'métadonnée de traçabilité interne');
 
   relevant.sort((a, b) => a.weight - b.weight);
   return { relevant, ignored };
