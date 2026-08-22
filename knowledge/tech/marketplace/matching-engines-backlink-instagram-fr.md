@@ -610,7 +610,7 @@ une story reçue ne comble pas un déficit d'autorité.
 
 - Un événement de balance est écrit **par jambe**, au passage au statut `delivered` (lien détecté
   live par le vérificateur, ou story/post constaté par le connecteur) — jamais à la commande.
-- Une jambe annulée, remboursée, ou dont le lien disparaît au contrôle de vie (`link_health_queue`)
+- Une jambe annulée, remboursée, ou dont le lien disparaît au contrôle de vie (`marketplace_verifications`)
   génère un événement **inverse** de même valeur : la balance revient à son état antérieur.
 - Le poids `w(j)` étant fonction du temps, les balances sont recalculées quotidiennement (cron) à
   partir du journal ; le journal reste la source de vérité, les balances sont un cache.
@@ -771,7 +771,7 @@ schéma dévalué.
 | Mémoire long terme | Non | Non | Non | Balance d'autorité par site amortie 24 mois + file de priorité |
 | Production du contenu | IA générique, non validée | À la charge de l'acheteur ou option payante | Manuelle | Studio 3 versions (éditoriale / citable / action), veto vendeur, arbitrage acheteur |
 | Ancrage GEO | Marginal | Revendiqué (citations IA) sans mesure | Non | Passage citable mesuré, Score GEO et rapports Marina |
-| Vérification de la livraison | Interne opaque | Contrôle plateforme | Aucune | `link_health_queue`, événements inverses si retrait |
+| Vérification de la livraison | Interne opaque | Contrôle plateforme | Aucune | `marketplace_verifications`, événements inverses si retrait |
 
 **Positionnement retenu.** Ni un réseau de liens en abonnement (empreinte), ni une régie
 d'articles sponsorisés (cash uniquement) : une place d'échange instrumentée, où chaque
