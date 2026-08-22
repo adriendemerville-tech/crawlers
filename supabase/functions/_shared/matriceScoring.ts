@@ -85,7 +85,7 @@ export async function fetchPsi(url: string): Promise<PsiData> {
       seo: cats.seo?.score != null ? Math.round(cats.seo.score * 100) : null,
       lcp: perf.lcpMs,
       fcp: audits['first-contentful-paint']?.numericValue || null,
-      cls: perf.field?.cls ?? audits['cumulative-layout-shift']?.numericValue || null,
+      cls: perf.field?.cls ?? (audits['cumulative-layout-shift']?.numericValue || null),
       tbt: audits['total-blocking-time']?.numericValue || null,
       lcpSource: perf.source,
       lcpNote: perf.methodNote,
