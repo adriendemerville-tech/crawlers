@@ -373,7 +373,7 @@ référencée par `marketplace_orders.approved_revision_id`.
 
 ## 3. Moteur d'appariement Collab Instagram (v1.5)
 
-Deuxième type d'offre dans la même marketplace, même wallet, même commission, logique
+Deuxième type d'offre dans la même place d’échange, même wallet, même commission, logique
 d'évaluation distincte.
 
 | Backlink | Collab Instagram |
@@ -432,7 +432,7 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 
 ## 5. Modifications front — Console
 
-1. **Nouveau module « Marketplace »** dans `ConsoleSidebar.tsx` (réordonnable et masquable
+1. **Nouveau module « Place d’échange »** dans `ConsoleSidebar.tsx` (réordonnable et masquable
    comme les autres, persistance `user_console_preferences`).
 2. Quatre onglets :
    - **Opportunités** — appariements entrants, filtrés par `compat_score`, avec « pourquoi ce match ».
