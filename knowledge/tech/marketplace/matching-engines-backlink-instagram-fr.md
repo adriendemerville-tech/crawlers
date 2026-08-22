@@ -698,7 +698,7 @@ Ajouts obligatoires :
 |---|---|
 | L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € + inventaire opt-in + onglet « Je vends » |
 | L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » |
-| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet |
+| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 %, **quota `link_for_link` + détection de cycles** |
 | L4 | Vérification récurrente des liens + reporting |
 | L5 | Landing page, home, tarifs, audits, Marina, CGVU |
 | L6 | Plan Jeune entreprise (quota, flags, crons dégradés, routage LLM) |
