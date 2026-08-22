@@ -81,7 +81,8 @@ import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
 import { provenanceLegendHTML, metricBadge, provenanceBadge } from '../_shared/provenance.ts';
 import { resolveScanMode, scanModeSentence, type ScanModeResolution } from '../_shared/marinaScanMode.ts';
 import { applyRoiWeighting, summarizeRoi, type RoiSummary } from '../_shared/roiWeighting.ts';
-import { buildPageVerdictHTML, buildCocoonPageFocusHTML, pageKey } from '../_shared/marinaPageVerdict.ts';
+import { buildPageVerdictHTML, buildCocoonPageFocusHTML, pageKey, extractCocoonPageFacts } from '../_shared/marinaPageVerdict.ts';
+import { derivePageActions, splitActionsByScope } from '../_shared/marinaPageActions.ts';
 
 import {
   fetchOwnerPerformanceData,
