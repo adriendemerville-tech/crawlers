@@ -51,7 +51,7 @@ export const auditGmbFromUrl = createServerFn({ method: 'POST' })
         kgmid: place.kgmid,
         score: audit.percent,
         grade: audit.grade,
-        result: audit as unknown as Record<string, unknown>,
+        result: JSON.parse(JSON.stringify(audit)),
       })
       .select('id, created_at')
       .maybeSingle();
