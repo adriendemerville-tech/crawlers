@@ -4684,8 +4684,37 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             ? Boolean(tlSignals.founder_profile_url) ||
               ['strong', 'high', 'confirmed', 'corroborated'].includes(String(tlSignals.founder_authority || '').toLowerCase())
             : null,
+          // Plafonds de cohérence GEO : faits d'extraction réellement mesurés sur
+          // le HTML servi. Sans eux, la citabilité restait optimiste sur une
+          // coquille JS (balisage noté, texte absent pour les robots).
+          extractedWords: expertData?.scores?.semantic?.wordCount ?? null,
+          textRatioPct:
+            expertData?.insights?.contentDensity && expertData.insights.contentDensity.verdict !== 'unknown'
+              ? (expertData.insights.contentDensity.ratio ?? null)
+              : null,
         });
-        const geoSubSignalsHtml = geoSubSignalsBlockHTML(geoSubSignalsReport, detectedLang);
+
+        // Plafonds unifiés (techniques + GEO) : ordre d'entrée du workbench et du
+        // plan, chaque entrée portant sa preuve chiffrée (mesuré → cible).
+        const unifiedGates: AuditGate[] = mergeGates(
+          normalizeGates(expertData?.scores?.gates, 'technical'),
+          geoSubSignalsReport?.gates ?? [],
+        );
+        try {
+          await writeGatesToWorkbench(sb, unifiedGates, {
+            domain,
+            url,
+            userId: parentJob.user_id,
+            trackedSiteId: trackedSiteId || null,
+          });
+        } catch (gateErr) {
+          console.warn('[Marina] Gate workbench write failed (non-fatal):', gateErr);
+        }
+
+        const geoSubSignalsHtml =
+          geoSubSignalsBlockHTML(geoSubSignalsReport, detectedLang) +
+          gatesPriorityBlockHTML(unifiedGates, detectedLang, 'page');
+
 
         const strategicHTML = generateStrategicSectionHTML(
           strategicData, detectedLang, domain, llmVisibilityData,
