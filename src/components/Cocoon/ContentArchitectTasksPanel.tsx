@@ -96,6 +96,15 @@ export function ContentArchitectTasksPanel({ domain, trackedSiteId, onApplyTask 
                   <span className="text-[8px] text-white/20 font-mono">{task.category}</span>
                 </div>
               </div>
+              {NETLINKING_CATEGORIES.has(task.category.toLowerCase()) && (
+                <a
+                  href="/app/console?tab=marketplace"
+                  className="mt-0.5 shrink-0 rounded-lg border border-white/20 px-2 py-0.5 text-[9px] text-white/70 transition-colors hover:border-white/40"
+                  title="Chercher un emplacement de lien dans la Place d'échange"
+                >
+                  Trouver un lien
+                </a>
+              )}
               {onApplyTask && (
                 <button
                   onClick={() => onApplyTask(task)}
