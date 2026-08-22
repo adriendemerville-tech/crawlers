@@ -4744,17 +4744,59 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           ? Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 220) || 220)) * 100)
           : null;
         const pageGeo100 = strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null;
-        const urlKey = pageKey(url);
-        const pageScopedActions = (consolidatedPlan || []).filter((i: any) => {
-          const target = i?.target_url ? String(i.target_url) : '';
-          return target ? pageKey(target) === urlKey : false;
-        });
+        // ─── Lot 1 & 2 — la fiche ne porte QUE des faits mesurés sur cette URL ───
+        // Avant : à défaut d'actions ciblées, les 3 premières actions du plan de
+        // domaine étaient recopiées, ce qui rendait 14 fiches sur 15 identiques et
+        // y importait des actions d'autres URLs (pollution du Workbench).
+        const { page: pageScopedActions, domain: domainScopedActions } =
+          splitActionsByScope(consolidatedPlan || [], url);
+
+        const cocoonPageFacts = cocoonResult ? extractCocoonPageFacts(cocoonResult, url) : null;
+        const derivedActions = derivePageActions(
+          {
+            title: expertData?.rawData?.htmlAnalysis?.title ?? null,
+            metaDescription: expertData?.scores?.semantic?.hasMetaDesc === false ? '' : null,
+            h1Count: expertData?.scores?.semantic?.h1Count ?? null,
+            words: expertData?.scores?.semantic?.wordCount ?? null,
+            lcpMs: expertData?.scores?.performance?.lcp ?? null,
+            schemaTypes: expertData?.scores?.aiReady?.schemaTypes ?? null,
+            codeTextRatio: expertData?.insights?.contentDensity?.verdict === 'unknown'
+              ? null
+              : (expertData?.insights?.contentDensity?.ratio ?? null),
+            citablePassages: crawlSnapshot?.answerFormatting?.directAnswerBlocks ?? null,
+            linksIn: cocoonPageFacts?.linksIn ?? null,
+            linksOut: cocoonPageFacts?.linksOut ?? null,
+            cannibalWith: cocoonPageFacts?.cannibalWith ?? null,
+            isThin: cocoonPageFacts?.isThin ?? false,
+            isOrphan: cocoonPageFacts?.isOrphan ?? false,
+          },
+          detectedLang,
+        );
+
+        // Les actions ciblées du plan (target_url = cette URL) restent prioritaires,
+        // complétées par les actions dérivées des faits de la page.
+        const seenTitles = new Set<string>();
+        const pageActionsForVerdict: Array<{ severity?: string; title: string; evidence?: string }> = [];
+        for (const i of pageScopedActions) {
+          const title = splitLongTitle(String((i as any).title || ''), '').title;
+          if (!title || seenTitles.has(title.toLowerCase())) continue;
+          seenTitles.add(title.toLowerCase());
+          pageActionsForVerdict.push({ severity: (i as any).severity, title });
+        }
+        for (const a of derivedActions) {
+          if (seenTitles.has(a.title.toLowerCase())) continue;
+          seenTitles.add(a.title.toLowerCase());
+          pageActionsForVerdict.push({ severity: a.severity, title: a.title, evidence: a.evidence });
+        }
+
         const pageVerdict = buildPageVerdictHTML(detectedLang, domain, url, {
           techScore: pageTech100,
           geoScore: pageGeo100,
           criticalCount: (consolidatedPlan || []).filter((i: any) => i.severity === 'critical').length,
-          pageActions: (pageScopedActions.length ? pageScopedActions : (consolidatedPlan || []))
-            .map((i: any) => ({ severity: i.severity, title: splitLongTitle(String(i.title || ''), '').title })),
+          pageActions: pageActionsForVerdict,
+          inheritedActions: domainScopedActions
+            .slice(0, 2)
+            .map((i: any) => ({ title: splitLongTitle(String(i.title || ''), '').title })),
           cocoonData: cocoonResult,
           words: expertData?.scores?.semantic?.wordCount ?? null,
           lcpMs: expertData?.scores?.performance?.lcp ?? null,
