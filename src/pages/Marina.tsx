@@ -619,8 +619,59 @@ export default function Marina() {
   const [freeRemaining, setFreeRemaining] = useState<number | null>(null);
   // Quota gratuit épuisé : déblocage payant du rapport suivant (15 €, sans compte)
   const [showPaidUnlock, setShowPaidUnlock] = useState(false);
+  // Purge de cache : réservée aux admins (Marina mutualise crawl 12h, LLM/cocon 24h, identité 30j)
+  const { isAdmin } = useAdmin();
+  const [purging, setPurging] = useState(false);
 
   const freeT = FREE_TRIAL_TEXTS[language as keyof typeof FREE_TRIAL_TEXTS] || FREE_TRIAL_TEXTS.fr;
+
+  const purgeLabels = {
+    fr: {
+      btn: 'Forcer la suppression du cache',
+      busy: 'Purge en cours…',
+      needUrl: 'Renseignez une URL avant de purger le cache.',
+      hint: 'Admin — supprime crawl 12h, visibilité LLM / cocon 24h, carte d’identité 30j pour ce domaine. La carte verrouillée manuellement est conservée.',
+      done: (d: string) => `Cache purgé pour ${d} : le prochain rapport sera intégralement recalculé.`,
+      error: 'Purge du cache impossible.',
+    },
+    en: {
+      btn: 'Force cache purge',
+      busy: 'Purging…',
+      needUrl: 'Enter a URL before purging the cache.',
+      hint: 'Admin — clears the 12h crawl, 24h LLM/cocoon reuse and 30d identity card for this domain. Manually locked identity is kept.',
+      done: (d: string) => `Cache purged for ${d}: the next report will be fully recomputed.`,
+      error: 'Cache purge failed.',
+    },
+    es: {
+      btn: 'Forzar el borrado de la caché',
+      busy: 'Purgando…',
+      needUrl: 'Introduzca una URL antes de purgar la caché.',
+      hint: 'Admin — borra el rastreo 12h, la visibilidad LLM / cocoon 24h y la ficha de identidad 30d de este dominio. La ficha bloqueada manualmente se conserva.',
+      done: (d: string) => `Caché purgada para ${d}: el próximo informe se recalculará por completo.`,
+      error: 'No se pudo purgar la caché.',
+    },
+  } as const;
+  const purgeT = purgeLabels[language as keyof typeof purgeLabels] || purgeLabels.fr;
+
+  const handlePurgeCache = useCallback(async () => {
+    const target = url.trim();
+    if (!target) { toast.error(purgeT.needUrl); return; }
+    setPurging(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('marina', {
+        body: { action: 'purge_cache', url: target },
+      });
+      if (fnError) throw fnError;
+      if (!data?.success) throw new Error(data?.error || 'purge failed');
+      toast.success(purgeT.done(data.domain || target));
+    } catch (e) {
+      console.error('[Marina] purge_cache', e);
+      toast.error(purgeT.error);
+    } finally {
+      setPurging(false);
+    }
+  }, [url, purgeT]);
+
 
   useEffect(() => {
     if (user) { setFreeRemaining(null); return; }
