@@ -9,7 +9,9 @@ import {
   acceptMarketplaceOrder,
   cancelMarketplaceOrder,
   declareMarketplacePublication,
+  getMarketplaceVerifications,
 } from '@/lib/marketplace/marketplace.functions';
+import { VerificationTimeline } from './VerificationTimeline';
 import { DEAL_TYPE_LABEL, ORDER_STATUS_LABEL, type OrderRow } from '@/lib/marketplace/orderTypes';
 
 const eur = (cents: number) => `${(cents / 100).toFixed(0)} €`;
@@ -155,6 +157,10 @@ export function OrdersTab() {
                 </Button>
               )}
             </div>
+
+            {['published', 'verified', 'maintained', 'broken', 'refunded'].includes(o.status) && (
+              <VerificationTimeline orderId={o.id} />
+            )}
           </CardContent>
         </Card>
       ))}

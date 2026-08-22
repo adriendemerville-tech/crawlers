@@ -357,3 +357,25 @@ export const getMarketplaceDisputes = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     return listDisputes(context.supabase as never, data.orderId);
   });
+
+export const getMarketplaceVerifications = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ orderId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { listVerifications } = await import('./verification.server');
+    return listVerifications(context.supabase as never, { userId: context.userId, orderId: data.orderId });
+  });
+
+export const getMarketplaceBuyQueue = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { listBuyQueue } = await import('./balance.server');
+    return listBuyQueue(context.supabase as never, context.userId);
+  });
+
+export const refreshMarketplaceBuyQueue = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { refreshBuyQueue } = await import('./balance.server');
+    return refreshBuyQueue(context.userId);
+  });

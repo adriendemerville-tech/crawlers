@@ -9096,6 +9096,7 @@ export type Database = {
           order_id: string | null
           order_source: string
           reciprocal_discount: number
+          reversal_of: string | null
           site_domain: string
           trade_type: string | null
           user_id: string | null
@@ -9113,6 +9114,7 @@ export type Database = {
           order_id?: string | null
           order_source?: string
           reciprocal_discount?: number
+          reversal_of?: string | null
           site_domain: string
           trade_type?: string | null
           user_id?: string | null
@@ -9130,12 +9132,21 @@ export type Database = {
           order_id?: string | null
           order_source?: string
           reciprocal_discount?: number
+          reversal_of?: string | null
           site_domain?: string
           trade_type?: string | null
           user_id?: string | null
           value_cents?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_balance_events_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "marketplace_balance_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marketplace_buyer_limits: {
         Row: {
@@ -9712,6 +9723,57 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_link_queue: {
+        Row: {
+          computed_at: string
+          created_at: string
+          deficit_cede_cents: number
+          id: string
+          need_id: string | null
+          need_score: number
+          priority_score: number
+          reserved_asset_id: string | null
+          reserved_until: string | null
+          site_domain: string
+          status: string
+          unserved_since: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          computed_at?: string
+          created_at?: string
+          deficit_cede_cents?: number
+          id?: string
+          need_id?: string | null
+          need_score?: number
+          priority_score?: number
+          reserved_asset_id?: string | null
+          reserved_until?: string | null
+          site_domain: string
+          status?: string
+          unserved_since?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          computed_at?: string
+          created_at?: string
+          deficit_cede_cents?: number
+          id?: string
+          need_id?: string | null
+          need_score?: number
+          priority_score?: number
+          reserved_asset_id?: string | null
+          reserved_until?: string | null
+          site_domain?: string
+          status?: string
+          unserved_since?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       marketplace_link_revisions: {
         Row: {
           created_at: string
@@ -10012,6 +10074,7 @@ export type Database = {
           asset_id: string
           asset_kind: Database["public"]["Enums"]["marketplace_asset_kind"]
           attribute_basis: Json
+          broken_since: string | null
           buyer_domain: string
           buyer_id: string
           buyer_payment_support: string
@@ -10021,6 +10084,7 @@ export type Database = {
           commission_support: Database["public"]["Enums"]["marketplace_settlement_support"]
           commitment_ends_at: string | null
           commitment_months: number
+          consecutive_check_failures: number
           constants_version: number | null
           created_at: string
           credit_eur_rate_at_freeze: number | null
@@ -10029,6 +10093,7 @@ export type Database = {
           escrow_cents: number
           frozen_at: string | null
           id: string
+          last_checked_at: string | null
           link_attribute: Database["public"]["Enums"]["marketplace_link_attribute"]
           match_id: string | null
           need_attribute: Database["public"]["Enums"]["marketplace_link_attribute"]
@@ -10040,9 +10105,13 @@ export type Database = {
           need_objective_source:
             | Database["public"]["Enums"]["marketplace_need_objective_source"]
             | null
+          next_check_at: string | null
           permit_attribute: Database["public"]["Enums"]["marketplace_link_attribute"]
           price_cents: number
           published_at: string | null
+          refund_cents: number
+          refund_support: string | null
+          remediation_due_at: string | null
           revision_rounds_used: number
           risk_flags: string[]
           seller_domain: string
@@ -10064,6 +10133,7 @@ export type Database = {
           asset_id: string
           asset_kind?: Database["public"]["Enums"]["marketplace_asset_kind"]
           attribute_basis?: Json
+          broken_since?: string | null
           buyer_domain: string
           buyer_id: string
           buyer_payment_support?: string
@@ -10073,6 +10143,7 @@ export type Database = {
           commission_support?: Database["public"]["Enums"]["marketplace_settlement_support"]
           commitment_ends_at?: string | null
           commitment_months?: number
+          consecutive_check_failures?: number
           constants_version?: number | null
           created_at?: string
           credit_eur_rate_at_freeze?: number | null
@@ -10081,6 +10152,7 @@ export type Database = {
           escrow_cents?: number
           frozen_at?: string | null
           id?: string
+          last_checked_at?: string | null
           link_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
           match_id?: string | null
           need_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
@@ -10092,9 +10164,13 @@ export type Database = {
           need_objective_source?:
             | Database["public"]["Enums"]["marketplace_need_objective_source"]
             | null
+          next_check_at?: string | null
           permit_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
           price_cents?: number
           published_at?: string | null
+          refund_cents?: number
+          refund_support?: string | null
+          remediation_due_at?: string | null
           revision_rounds_used?: number
           risk_flags?: string[]
           seller_domain: string
@@ -10116,6 +10192,7 @@ export type Database = {
           asset_id?: string
           asset_kind?: Database["public"]["Enums"]["marketplace_asset_kind"]
           attribute_basis?: Json
+          broken_since?: string | null
           buyer_domain?: string
           buyer_id?: string
           buyer_payment_support?: string
@@ -10125,6 +10202,7 @@ export type Database = {
           commission_support?: Database["public"]["Enums"]["marketplace_settlement_support"]
           commitment_ends_at?: string | null
           commitment_months?: number
+          consecutive_check_failures?: number
           constants_version?: number | null
           created_at?: string
           credit_eur_rate_at_freeze?: number | null
@@ -10133,6 +10211,7 @@ export type Database = {
           escrow_cents?: number
           frozen_at?: string | null
           id?: string
+          last_checked_at?: string | null
           link_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
           match_id?: string | null
           need_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
@@ -10144,9 +10223,13 @@ export type Database = {
           need_objective_source?:
             | Database["public"]["Enums"]["marketplace_need_objective_source"]
             | null
+          next_check_at?: string | null
           permit_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
           price_cents?: number
           published_at?: string | null
+          refund_cents?: number
+          refund_support?: string | null
+          remediation_due_at?: string | null
           revision_rounds_used?: number
           risk_flags?: string[]
           seller_domain?: string
@@ -10481,6 +10564,77 @@ export type Database = {
           vat_number_valid?: boolean | null
         }
         Relationships: []
+      }
+      marketplace_verifications: {
+        Row: {
+          capture_path: string | null
+          checked_at: string
+          consecutive_failures: number
+          created_at: string
+          http_status: number | null
+          id: string
+          leg_id: string | null
+          leg_state: string
+          link_present: boolean | null
+          method: string
+          next_check_at: string | null
+          observed_anchor: string | null
+          observed_attribute: string | null
+          order_id: string
+          proof: Json
+          render_escalated: boolean
+          shell_detected: boolean
+          verdict: string
+        }
+        Insert: {
+          capture_path?: string | null
+          checked_at?: string
+          consecutive_failures?: number
+          created_at?: string
+          http_status?: number | null
+          id?: string
+          leg_id?: string | null
+          leg_state: string
+          link_present?: boolean | null
+          method: string
+          next_check_at?: string | null
+          observed_anchor?: string | null
+          observed_attribute?: string | null
+          order_id: string
+          proof?: Json
+          render_escalated?: boolean
+          shell_detected?: boolean
+          verdict: string
+        }
+        Update: {
+          capture_path?: string | null
+          checked_at?: string
+          consecutive_failures?: number
+          created_at?: string
+          http_status?: number | null
+          id?: string
+          leg_id?: string | null
+          leg_state?: string
+          link_present?: boolean | null
+          method?: string
+          next_check_at?: string | null
+          observed_anchor?: string | null
+          observed_attribute?: string | null
+          order_id?: string
+          proof?: Json
+          render_escalated?: boolean
+          shell_detected?: boolean
+          verdict?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_verifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       matomo_connections: {
         Row: {
