@@ -153,10 +153,21 @@ compat = 0.35 × proximité_sémantique
 
 Exclusions dures (compat = 0) :
 - lien déjà existant entre les deux domaines ;
-- réciprocité détectée (A→B et B→A, même différée) ;
+- **cycle** détecté dans le graphe des liens échangés jusqu'à 4 sauts (A→B→A, A→B→C→A) ;
+- réciprocité directe hors quota : quota `link_for_link` du trimestre déjà consommé, ou même
+  partenaire déjà servi sur 12 mois glissants ;
 - même propriétaire / grappe de comptes liés (même IP, même CMS connecté, même Kbis) ;
 - plafond de liens sortants atteint (page : 1 lien dofollow vendu ; domaine : 20/an) ;
 - thématiques exclues (jeux d'argent, crypto, adulte).
+
+La réciprocité **dans le quota** n'est pas une exclusion : elle est autorisée en mode
+`link_for_link` (§2.7), flaggée aux deux parties, décorrélée de 21 jours et valorisée avec le
+facteur de décote d'équité 0,70. Elle n'annule pas `compat`, elle le pénalise :
+
+```
+compat_link_for_link = compat × 0.70
+```
+
 
 Notification des deux faces au-delà d'un seuil (`compat ≥ 0.6`).
 
