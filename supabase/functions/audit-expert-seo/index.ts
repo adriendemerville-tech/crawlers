@@ -2239,10 +2239,48 @@ Deno.serve(handleRequest(async (req) => {
     // When PSI is unavailable, give a neutral score (50% of max) instead of 0 to avoid unfair penalization
     const psiPerformance = psiAvailable ? (categories.performance?.score || 0) : null;
     const psiSeo = psiAvailable ? (categories.seo?.score || 0) : null;
-    
-    const performanceScore = psiPerformance !== null ? Math.round(psiPerformance * 40) : 20; // 50% fallback
-    const technicalScore = (psiSeo !== null ? Math.round(psiSeo * 30) : 15) + 20; // 50% of PSI SEO part as fallback
-    
+
+    // LCP mesuré (lab PSI). C'est un fait, pas une estimation : il plafonne le
+    // score de performance même quand la catégorie PSI est absente ou flatteuse.
+    const lcpMsMeasured = Number(audits['largest-contentful-paint']?.numericValue) || null;
+
+    let performanceScore = psiPerformance !== null ? Math.round(psiPerformance * 40) : 20; // 50% fallback
+    let technicalScore = (psiSeo !== null ? Math.round(psiSeo * 30) : 15) + 20; // 50% of PSI SEO part as fallback
+
+    // ─── Plafonds de cohérence (gates) ───
+    // Un audit ne peut pas afficher « SEO technique excellent » quand un fait
+    // mesuré le contredit : LCP catastrophique, contenu non extractible, page
+    // vide de texte. Chaque plafond est journalisé et exposé dans le rapport.
+    const scoreGates: Array<{ axis: string; reason: string; evidence: string }> = [];
+
+    if (lcpMsMeasured !== null && lcpMsMeasured > 4000) {
+      // Seuil Core Web Vitals : > 4 s = « poor ». Au-delà de 8 s, la page est
+      // hors jeu pour l'utilisateur mobile.
+      const cap = lcpMsMeasured > 8000 ? 6 : 12;
+      if (performanceScore > cap) {
+        scoreGates.push({
+          axis: 'performance',
+          reason: 'LCP mobile mesuré au-delà du seuil Core Web Vitals',
+          evidence: `${(lcpMsMeasured / 1000).toFixed(2)}s mesuré → cible 2,50s (score plafonné à ${cap}/40)`,
+        });
+        performanceScore = cap;
+      }
+    }
+
+    // Contenu non extractible : le HTML est servi mais le texte visible est
+    // quasi absent (coquille JS). Le score technique ne peut pas rester haut :
+    // les robots ne lisent rien.
+    const densityKnown = contentDensity.verdict !== 'unknown';
+    const textStarved = densityKnown && contentDensity.ratio < 5 && htmlAnalysis.wordCount < 200;
+    if (textStarved && technicalScore > 25) {
+      scoreGates.push({
+        axis: 'technical',
+        reason: 'Texte visible quasi absent du HTML servi (rendu probablement dépendant du JS)',
+        evidence: `${contentDensity.ratio}% de texte et ${htmlAnalysis.wordCount} mots → cible > 15% (score plafonné à 25/50)`,
+      });
+      technicalScore = 25;
+    }
+
     if (!psiAvailable) {
       console.warn('[Audit-Expert-SEO] ⚠️ PSI indisponible — scores Performance et Technique estimés (fallback 50%)');
     }
