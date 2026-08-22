@@ -1105,7 +1105,6 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   Engagement et cycle de vie : `commitment_months` (12 lien · 1 post LinkedIn ou Reel · 0 story,
   base du prorata de §2.13), `escrow_cents` (montant séquestré au figeage, §2.5.1),
   `published_at`, `commitment_ends_at` (= `published_at` + `commitment_months`, ou +24 h si 0),
-
   `status`, `approved_revision_id`, `risk_flags[]`, `frozen_at` (figeage), `created_at`.
   Contraintes : `price_cents + soulte_cents ≤ 35000`, multiples de 1000 (paliers de 10 €).
   Aucune valeur de jambe stockée ici (§4.1).
