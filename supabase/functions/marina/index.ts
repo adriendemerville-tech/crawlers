@@ -1511,6 +1511,11 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
     indexable: htmlAnalysis?.isIndexable !== false,
     performanceScore: scores?.performance?.psiPerformance || null,
     lcp: scores?.performance?.lcp || null,
+    // Provenance de la mesure (terrain CrUX ou médiane de runs PSI) : un run
+    // isolé ne doit jamais être présenté comme un fait.
+    perfNote: scores?.performance?.measurement?.note || null,
+    lcpField: scores?.performance?.lcpField ?? null,
+    lcpLab: scores?.performance?.lcpLab ?? null,
     tbt: scores?.performance?.tbt || null,
     cls: scores?.performance?.cls || null,
     fcp: scores?.performance?.fcp || null,
