@@ -148,12 +148,28 @@ aussi les jambes en troc et les crédits. Tables : `marketplace_tax_profiles`,
 ## Attribut du lien (décidé 2026-08-22)
 `rel="sponsored"` est le **défaut imposé par le serveur** sur toute transaction (`cash`, `credits`,
 `barter`) — pas de « choix vendeur » libre. Cohérent avec la qualification fiscale onéreuse.
-`dofollow` seulement si **toutes** ces conditions : page `sell_risk` Sûr (≤ 0.20), palier P3
-minimum, flag de risque accepté par les deux parties, imputation sur le plafond existant
-(1 dofollow / page, 20 / an / domaine). Aucune dérogation admin.
 Plafond propre au `sponsored` : **3 insertions vendues / page / an**. `saturation_sortante` dans
 `sell_risk` compte tous les liens vendus, `sponsored` inclus. L'UI ne suggère jamais
 `dofollow > sponsored`.
+
+**Gouvernance** : Crawlers **décide** (calcul serveur au figeage, sans dérogation admin) ; le vendeur
+n'a qu'un **droit de veto** (il peut redescendre en `sponsored`, jamais forcer un `dofollow`) ;
+l'acheteur **constate** l'attribut avant paiement (ni demande ni surcoût — le prix ne dépend pas de
+l'attribut).
+
+**Décision à deux axes** (§2.4.1) :
+`attribute_final = dofollow` ⟺ `need_attribute = dofollow` **ET** `permit_attribute = dofollow`,
+sinon `sponsored`. Aucun axe ne suffit seul, aucun contournement par la soulte.
+- **Besoin acheteur** (`need_attribute`, déterministe, sans LLM, objectif déclaré à la recherche) :
+  déficit d'autorité diagnostiqué → `dofollow` ; visibilité GEO/citabilité → `sponsored` ;
+  trafic/notoriété → `sponsored` ; mixte → tranché par le **déficit net d'autorité**
+  (besoin §2.11 − autorité déjà apportée par backlinks réels + maillage interne) : > 0 → `dofollow`,
+  ≤ 0 → `sponsored`.
+- **Capacité vendeur** (`permit_attribute`) : page `sell_risk` Sûr (≤ 0.20), palier P3 minimum, flag
+  de risque accepté par les deux parties, plafonds 1 dofollow / page et 20 / an / domaine.
+
+Les deux valeurs sont journalisées sur la commande (`attribute_basis`) pour l'arbitrage.
+
 
 ## Reversement vendeur (décidé 2026-08-22)
 **Stripe Connect dès la v1** : euros par défaut, KYC bloquant avant la première mise en vente cash.
