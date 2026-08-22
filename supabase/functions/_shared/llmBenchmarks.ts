@@ -31,6 +31,13 @@ import {
 } from './naturalPrompts.ts';
 import { isActorTopic, isToolLikeSite, type TopicSelection } from './questionTopics.ts';
 import { resolveGeoScope, geoPhrase, describeGeoScope, type GeoScope } from './geoScope.ts';
+import {
+  deriveEnterpriseDimensions,
+  selectBenchmarkDimensions,
+  describeDimensionSelection,
+  type EnterpriseDimensions,
+  type DimensionInput,
+} from './enterpriseDimensions.ts';
 
 export interface BenchmarkPrompt {
   intent: string;
