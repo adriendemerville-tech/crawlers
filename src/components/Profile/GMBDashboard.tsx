@@ -1193,6 +1193,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
               </div>
             </CardContent>
           </Card>
+          <GmbUrlAuditTab />
         </div>
       );
     }
