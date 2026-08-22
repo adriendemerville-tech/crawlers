@@ -340,27 +340,36 @@ v1 : crédit du **wallet Crawlers** du vendeur (non convertible en euros), réut
 plateforme — un lien vendu par mois rembourse l'abonnement. v2 : virement réel via
 Stripe Connect (KYC, comptes connectés, reversement à J+30 après vérification du lien).
 
-**Commission toujours payée en crédits Crawlers (règle v1, invariante).** Quelle que soit la
-nature de la transaction — cash, troc `link_chain`, `link_for_link`, contenu social — la
-commission de 15 % est prélevée en **crédits**, jamais par un flux cash séparé.
+**Mode de règlement de la commission (règle v1).** Le taux est de 15 % dans tous les cas ; seul le
+**support de paiement** varie selon la présence ou non d'un flux d'argent.
 
+| Type de transaction | Support de la commission | Mécanique |
+|---|---|---|
+| Commande **cash** (carte) | **Cash, prélevé sur le flux** (défaut) | La commission est retenue sur le paiement de l'acheteur ; le vendeur est crédité du net (`price_cents − commission_cents`). Aucun solde de crédits requis. |
+| Commande cash, option vendeur | Crédits | Le vendeur peut choisir de régler la commission en crédits et d'être crédité du brut. Option, jamais imposée. |
+| **Troc** (`link_chain`, `link_for_link`, cross-média) | **Crédits, obligatoire** | Aucun flux d'argent à prélever : chaque partie paie sa commission en crédits sur la valeur de sa propre jambe. |
+| Soulte en crédits | Crédits | Suit le régime du troc. |
+
+Règles communes :
+
+- **Qui paie.** La commission porte sur chaque **jambe vendue**, à la charge du vendeur de cette
+  jambe. Sur un troc, les deux parties vendent une jambe : **chacune paie la sienne**.
 - **Origine des crédits indifférente.** Crédits achetés, offerts (bienvenue, parrainage, plan
   Jeune entreprise), gagnés ou versés en dédommagement : tous paient la commission, sans poche
   distincte ni ordre de consommation particulier. L'exposition maximale d'une dotation offerte
   est de quelques dizaines de crédits, très inférieure au coût d'implémentation et de support
   d'un solde à deux poches.
-- **Qui paie.** La commission porte sur chaque **jambe vendue**. Sur une commande cash, elle est
-  au vendeur. Sur un troc, les deux parties vendent une jambe : **chacune paie la commission sur
-  la valeur de sa propre jambe**, en crédits.
-- **Vérification avant figeage.** Les soldes de crédits de toutes les parties sont contrôlés
-  **avant** le figeage de la commande. Solde insuffisant chez une partie → la commande n'est pas
+- **Vérification avant figeage (troc uniquement).** Les soldes de crédits de toutes les parties
+  sont contrôlés **avant** le figeage. Solde insuffisant chez une partie → la commande n'est pas
   figée (message explicite, proposition de recharge). Aucun figeage à crédit, aucun solde négatif.
-- **Taux figé.** Le taux crédits→euros utilisé pour la conversion est **écrit sur la commande au
-  figeage** (`credit_eur_rate_at_freeze`) et sur la facture de commission. Il n'est jamais
+  Sur une commande cash au régime par défaut, aucun solde n'est requis : un vendeur ne peut jamais
+  être bloqué faute de crédits.
+- **Taux figé.** Dès qu'une commission est réglée en crédits, le taux crédits→euros est **écrit sur
+  la commande au figeage** (`credit_eur_rate_at_freeze`) et repris sur la facture. Il n'est jamais
   recalculé après coup, même si la grille de crédits évolue.
-- **TVA en euros.** La commission est une prestation Crawlers taxable : la facture porte la
-  contre-valeur en euros figée et la TVA de 20 % (§2.5.2), due en euros. Le règlement en crédits
-  ne change ni la base d'imposition ni le montant de TVA.
+- **TVA en euros, toujours.** La commission est une prestation Crawlers taxable : la facture porte
+  la contre-valeur en euros figée et la TVA de 20 % (§2.5.2), due en euros à l'État. Le règlement
+  en crédits ne change ni la base d'imposition ni le montant de TVA.
 
 
 #### 2.5.1 Séquestre, acquisition progressive et récupération (clawback)
