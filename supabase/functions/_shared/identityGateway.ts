@@ -36,6 +36,10 @@ const MINOR_FIELDS = new Set([
   'short_term_goal', 'mid_term_goal', 'main_serp_competitor', 'confusion_risk',
   'target_segment', 'primary_use_case', 'location_detail', 'brand_site_url',
   'is_local_business', 'local_schema_status', 'local_schema_audit',
+  // Dimensions structurelles (économie, statut, taille, structuration, rôle
+  // chaîne de valeur, relation client, mode de livraison) — voir
+  // _shared/enterpriseDimensions.ts. Champ mineur : dérivé, jamais critique.
+  'enterprise_dimensions',
 ])
 
 const ALL_ALLOWED_FIELDS = new Set([...CRITICAL_FIELDS, ...MINOR_FIELDS])
