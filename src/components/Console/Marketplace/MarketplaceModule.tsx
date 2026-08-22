@@ -56,6 +56,10 @@ export function MarketplaceModule() {
         <TabsContent value="buy" className="pt-6">
           <BuyTab />
         </TabsContent>
+
+        <TabsContent value="orders" className="pt-6">
+          <OrdersTab />
+        </TabsContent>
       </Tabs>
     </div>
   );
