@@ -932,9 +932,13 @@ page de l'inventaire (les commandes en cours sont honorées).
 ### 2.13 Vérification de publication et de maintien de publication
 
 Une jambe n'est réputée livrée que **prouvée**, et elle doit le rester pendant la durée engagée,
-portée par `marketplace_orders.commitment_months` (défaut **12** pour un lien, **1** — 30 jours —
-pour un contenu social) et matérialisée par `commitment_ends_at`. C'est cette colonne, et elle
-seule, qui sert de base au calcul de prorata en cas de retrait anticipé.
+portée par `marketplace_orders.commitment_months` : **12** pour un lien, **1** (30 jours) pour un
+post LinkedIn ou un Reel permanent, **0** pour une story Instagram — un format qui expire en 24 h
+ne peut porter aucun engagement de maintien, donc ni prorata ni contrôle mensuel : la preuve
+d'affichage sur la fenêtre de 24 h vaut livraison définitive (§2.5.1, tranche unique à J+2).
+`commitment_ends_at` matérialise la durée (égal à `published_at + 24 h` pour une story). C'est cette
+colonne, et elle seule, qui sert de base au calcul de prorata en cas de retrait anticipé.
+
 
 | Actif | Preuve de publication | Maintien |
 |---|---|---|
