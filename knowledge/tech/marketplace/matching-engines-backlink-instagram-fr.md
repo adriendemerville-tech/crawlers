@@ -51,8 +51,8 @@ La Place d'échange ferme la boucle : au lieu de s'arrêter au diagnostic « il 
 liens ou de la visibilité », Crawlers permet de **satisfaire ce besoin en interne**.
 
 Bénéfices pour Crawlers :
-- **Monétisation sur l'existant** : commission unique de 15 % sur chaque transaction, toujours prélevée en crédits Crawlers (cash comme
-  troc), sans coût d'acquisition supplémentaire (l'acheteur est déjà un utilisateur diagnostiqué).
+- **Monétisation sur l'existant** : commission unique de 15 % sur chaque transaction — prélevée en cash sur le flux quand il y a
+  paiement, en crédits Crawlers sur le troc —, sans coût d'acquisition supplémentaire (l'acheteur est déjà un utilisateur diagnostiqué).
 - **Données de pricing uniques** : aucun acteur ne tarifie des liens à partir de signaux
   GSC + visibilité IA ; c'est un avantage concurrentiel difficile à copier.
 - **Effet de réseau** : chaque vendeur est aussi un acheteur potentiel (et inversement) ;
@@ -340,27 +340,36 @@ v1 : crédit du **wallet Crawlers** du vendeur (non convertible en euros), réut
 plateforme — un lien vendu par mois rembourse l'abonnement. v2 : virement réel via
 Stripe Connect (KYC, comptes connectés, reversement à J+30 après vérification du lien).
 
-**Commission toujours payée en crédits Crawlers (règle v1, invariante).** Quelle que soit la
-nature de la transaction — cash, troc `link_chain`, `link_for_link`, contenu social — la
-commission de 15 % est prélevée en **crédits**, jamais par un flux cash séparé.
+**Mode de règlement de la commission (règle v1).** Le taux est de 15 % dans tous les cas ; seul le
+**support de paiement** varie selon la présence ou non d'un flux d'argent.
 
+| Type de transaction | Support de la commission | Mécanique |
+|---|---|---|
+| Commande **cash** (carte) | **Cash, prélevé sur le flux** (défaut) | La commission est retenue sur le paiement de l'acheteur ; le vendeur est crédité du net (`price_cents − commission_cents`). Aucun solde de crédits requis. |
+| Commande cash, option vendeur | Crédits | Le vendeur peut choisir de régler la commission en crédits et d'être crédité du brut. Option, jamais imposée. |
+| **Troc** (`link_chain`, `link_for_link`, cross-média) | **Crédits, obligatoire** | Aucun flux d'argent à prélever : chaque partie paie sa commission en crédits sur la valeur de sa propre jambe. |
+| Soulte en crédits | Crédits | Suit le régime du troc. |
+
+Règles communes :
+
+- **Qui paie.** La commission porte sur chaque **jambe vendue**, à la charge du vendeur de cette
+  jambe. Sur un troc, les deux parties vendent une jambe : **chacune paie la sienne**.
 - **Origine des crédits indifférente.** Crédits achetés, offerts (bienvenue, parrainage, plan
   Jeune entreprise), gagnés ou versés en dédommagement : tous paient la commission, sans poche
   distincte ni ordre de consommation particulier. L'exposition maximale d'une dotation offerte
   est de quelques dizaines de crédits, très inférieure au coût d'implémentation et de support
   d'un solde à deux poches.
-- **Qui paie.** La commission porte sur chaque **jambe vendue**. Sur une commande cash, elle est
-  au vendeur. Sur un troc, les deux parties vendent une jambe : **chacune paie la commission sur
-  la valeur de sa propre jambe**, en crédits.
-- **Vérification avant figeage.** Les soldes de crédits de toutes les parties sont contrôlés
-  **avant** le figeage de la commande. Solde insuffisant chez une partie → la commande n'est pas
+- **Vérification avant figeage (troc uniquement).** Les soldes de crédits de toutes les parties
+  sont contrôlés **avant** le figeage. Solde insuffisant chez une partie → la commande n'est pas
   figée (message explicite, proposition de recharge). Aucun figeage à crédit, aucun solde négatif.
-- **Taux figé.** Le taux crédits→euros utilisé pour la conversion est **écrit sur la commande au
-  figeage** (`credit_eur_rate_at_freeze`) et sur la facture de commission. Il n'est jamais
+  Sur une commande cash au régime par défaut, aucun solde n'est requis : un vendeur ne peut jamais
+  être bloqué faute de crédits.
+- **Taux figé.** Dès qu'une commission est réglée en crédits, le taux crédits→euros est **écrit sur
+  la commande au figeage** (`credit_eur_rate_at_freeze`) et repris sur la facture. Il n'est jamais
   recalculé après coup, même si la grille de crédits évolue.
-- **TVA en euros.** La commission est une prestation Crawlers taxable : la facture porte la
-  contre-valeur en euros figée et la TVA de 20 % (§2.5.2), due en euros. Le règlement en crédits
-  ne change ni la base d'imposition ni le montant de TVA.
+- **TVA en euros, toujours.** La commission est une prestation Crawlers taxable : la facture porte
+  la contre-valeur en euros figée et la TVA de 20 % (§2.5.2), due en euros à l'État. Le règlement
+  en crédits ne change ni la base d'imposition ni le montant de TVA.
 
 
 #### 2.5.1 Séquestre, acquisition progressive et récupération (clawback)
@@ -490,7 +499,7 @@ Cette clause figure aux CGVU (section 7.5).
 
 Le frein principal n'est pas le prix mais l'absence de raison de vendre : un site sans excédent
 d'autorité n'a pas d'intérêt monétaire à céder un lien. L'incentive retenu est donc l'**échange**,
-avec la même commission Crawlers prélevée en crédits, et non un flux d'argent.
+avec la même commission Crawlers de 15 %, prélevée en crédits faute de flux d'argent à retenir.
 
 Six `trade_type` sont proposés. Ils ne sont **pas à égalité** : le moteur applique la hiérarchie
 de §2.2 (chaîne > cross-média > réciprocité directe) et choisit, à l'intérieur de ce cadre, celui
@@ -1046,9 +1055,11 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `anchor` (ancre validée), `anchor_kind` (`brand` | `exact` | `semi` | `url` | `natural`),
   `link_attribute` (`dofollow` | `nofollow` | `sponsored`).
   Économie : `deal_type` (`cash` | `credits` | `barter`), `price_cents` (prix figé),
-  `commission_cents` (15 %, contre-valeur euros figée), `commission_credits` (montant réellement
-  débité, **toujours en crédits**, §2.5), `credit_eur_rate_at_freeze` (taux figé au figeage, base
-  de la facture et de la TVA), `soulte_cents`, `soulte_currency` (`eur` | `credits`),
+  `commission_cents` (15 %, contre-valeur euros figée), `commission_settlement`
+  (`cash` | `credits` — cash par défaut sur commande payée, `credits` obligatoire sur troc, §2.5),
+  `commission_credits` (montant débité, NULL si règlement cash), `credit_eur_rate_at_freeze` (taux
+  figé au figeage quand le règlement est en crédits, base de la facture et de la TVA),
+  `soulte_cents`, `soulte_currency` (`eur` | `credits`),
   `soulte_payer_id`, `soulte_payee_id`.
   Sur un troc, la commission est portée **par jambe** (`marketplace_exchanges`) : `commission_credits` de la
   commande est la somme des commissions de jambe.
@@ -1067,10 +1078,11 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `cycle_check_verdict` (les cycles déclarés portant un `exchange_id` accepté sont exemptés, cf.
   §2.2), `delivered_at`.
   Commission : `commission_payer_id` (le vendeur de la jambe), `commission_cents` (15 % de
-  `value_cents`, contre-valeur euros figée) et `commission_credits` (débit effectif en crédits,
-  §2.5). Le débit est écrit au figeage, après contrôle du solde de chaque payeur.
-- `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers (toujours en crédits),
-  référence `order_id` et `leg_id`.
+  `value_cents`, contre-valeur euros figée) et `commission_credits` (débit en crédits — sur une
+  jambe de troc le règlement en crédits est obligatoire, §2.5). Le débit est écrit au figeage,
+  après contrôle du solde de chaque payeur.
+- `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers (support `cash` ou
+  `credits` selon `commission_settlement`), référence `order_id` et `leg_id`.
 
 ### 4.4 Balance d'autorité et file d'achat
 
@@ -1242,7 +1254,7 @@ Ajouts obligatoires :
 |---|---|
 | L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € (**P1 40 € · P2 90 € · P3 150 € · P4 250 € · P5 350 €**) + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
 | L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » + **calcul de la valeur d'appariement page et domaine (§2.11)** |
-| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 % prélevée en crédits (contrôle des soldes avant figeage, taux figé), **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
+| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 % (cash retenue sur le flux, crédits obligatoires sur le troc avec contrôle des soldes avant figeage et taux figé), **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
 | L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
 | L5 | Landing page, home, tarifs, **valeur d'appariement dans l'Audit stratégique et Marina (page + domaine)**, bloc « Ma balance » comme produit de rétention (§2.14), CGVU |
 
