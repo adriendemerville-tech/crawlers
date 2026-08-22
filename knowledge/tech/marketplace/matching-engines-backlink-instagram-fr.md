@@ -779,13 +779,22 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - Le bloc Marché & Autorité passe d'un constat à une **proposition concrète** :
   page cible identifiée, ancre recommandée, fourchette de prix, nombre d'actifs correspondants
   disponibles, lien vers l’onglet Place d’échange.
+- Nouveau bloc **« Valeur d'appariement »** (§2.11) : face vendeur / face acheteur pour la page
+  auditée, et pour un audit de domaine les trois chiffres globaux (potentiel de vente, besoin
+  d'achat, solde d'appariement) plus le rappel de la balance d'autorité (§2.14).
+- Les pages proposées à la vente sont filtrées par `sell_risk` (§2.12) : jamais un pilier, jamais
+  une page de conversion, jamais une page en momentum.
 
 ### 8.3 Rapports Marina
 - Section « Autorité » : quand le déficit est externe, afficher 2 à 3 **propositions de liens
   concrètes** (thématique, autorité, trafic de la page, prix indicatif) au lieu d'une
   recommandation générique.
+- Rapport page : valeur d'appariement de la page. Rapport multipages : **valeur globale
+  d'appariement** du domaine et liste des pages les moins risquées à vendre (§2.11, §2.12).
 - Idem pour le déficit de notoriété sociale : proposition de collab.
-- Contraintes de rendu PDF respectées (espaces normaux, badges centrés, pas d'emoji).
+- Contraintes de rendu PDF respectées (espaces normaux, badges centrés, pas d'emoji), badges
+  « mesuré » / « estimé » sur chaque chiffre d'appariement.
+
 
 ### 8.4 Home
 - Nouvelle section « Place d’échange d’autorité » : les deux faces (vendre / acheter), le pricing
