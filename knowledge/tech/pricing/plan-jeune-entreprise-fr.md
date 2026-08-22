@@ -59,7 +59,7 @@ proposées, toutes **déterministes, mesurables et journalisées** (`startup_off
 | Règle | Seuil proposé | Effet au dépassement |
 |---|---|---|
 | **F1 — Crédits** | 50 / mois calendaire, non cumulables | Blocage dur des actions payantes jusqu'au reset |
-| **F2 — Domaines suivis** | 3 domaines actifs max par compte | Refus d'ajout, invitation à passer en plan payant |
+| **F2 — Domaines suivis** | Sans limite (aucun plafond de domaines actifs par compte) | — |
 | **F3 — Volume de crawl** | 5 000 URLs crawlées / mois, 1 500 URLs / crawl | Crawl tronqué avec message explicite, pas d'échec silencieux |
 | **F4 — Actions chères** | Marina prospection 1/mois ; audit stratégique complet 4/mois | Action refusée avant débit, coût affiché |
 | **F5 — Concurrence de jobs** | 1 job lourd en parallèle | Mise en file, pas de rejet |
@@ -69,8 +69,8 @@ proposées, toutes **déterministes, mesurables et journalisées** (`startup_off
 | **F9 — Inactivité** | 60 jours sans connexion | Crons du compte mis en pause, réactivation à la reconnexion |
 | **F10 — Abus** | Multi-comptes, revente d'accès, usage agence pour compte de tiers | Retrait de l'offre après notification, bascule en plan gratuit standard |
 
-Trois arbitrages ouverts : (a) F6 en dégradation d'un jour ou en blocage sec, (b) F2 à 3 ou 1 seul
-domaine, (c) F8 avec ou sans purge automatique des exports.
+Deux arbitrages ouverts : (a) F6 en dégradation d'un jour ou en blocage sec, (b) F8 avec ou sans purge
+automatique des exports. F2 est tranché : **aucune limite de domaines suivis**.
 
 ## 4. Implémentation technique
 
