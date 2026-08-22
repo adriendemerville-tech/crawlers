@@ -11,6 +11,7 @@
 
 import { loadConstants, num } from './constants.server';
 import { issueRefundCredit } from './invoices.server';
+import type { OrderStatus } from './orderTypes';
 
 type Sb = { from: (table: string) => any };
 
