@@ -145,7 +145,10 @@ export function DemoModeProvider({ children }: { children: React.ReactNode }) {
   }, [isDemoMode]);
 
   return (
-    <DemoModeContext.Provider value={{ isDemoMode, loading }}>
+    <DemoModeContext.Provider
+      value={{ isDemoMode, loading, setDemoMode: setIsDemoMode, refreshDemoMode: fetchDemoMode }}
+    >
+
       {children}
     </DemoModeContext.Provider>
   );
