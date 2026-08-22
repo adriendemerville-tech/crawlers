@@ -26,6 +26,8 @@
  * llmBenchmarks + benchmarkQuestionWriter (croisement dimensions × offre).
  */
 
+import type { StructuralSignals } from './siteEvidence.ts';
+
 export type EconomyTier = 'primaire' | 'secondaire' | 'tertiaire' | 'quaternaire';
 export type Structuration = 'independant' | 'franchise' | 'reseau' | 'filiale' | 'groupe' | 'cotee';
 export type ValueChainRole = 'sous_traitant' | 'donneur_ordre' | 'mixte' | 'direct';
