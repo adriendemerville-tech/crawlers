@@ -25,6 +25,8 @@
  */
 
 import { provenanceBadge, type ProvenanceLevel } from './provenance.ts';
+import { normalizeGates, type AuditGate } from './auditGates.ts';
+
 
 export type GeoFamily = 'comprehension' | 'authority';
 
@@ -178,6 +180,12 @@ export interface GeoSubSignalReport {
   verdict_explanation: string;
   /** Deux à trois leviers déduits des sous-signaux les plus bas. */
   priority_levers: { key: string; label: string; value: number; lever: string }[];
+  /**
+   * Plafonds de cohérence appliqués au GEO. Une coquille JS ou une page sans
+   * corps de texte ne peut pas conserver une citabilité confortable : le
+   * balisage seul n'est pas citable. Chaque plafond porte sa preuve chiffrée.
+   */
+  gates: AuditGate[];
 }
 
 export interface GeoSignalInputs {
@@ -198,7 +206,16 @@ export interface GeoSignalInputs {
   /** Voix experte résolue et corroborée hors site (personAuthority / E-E-A-T). */
   founderResolved?: boolean | null;
   founderCorroborated?: boolean | null;
+  /**
+   * Faits d'extraction mesurés sur le HTML servi (audit-expert-seo) : nombre de
+   * mots réellement extraits et part de texte utile. Ils déclenchent les
+   * plafonds de cohérence du GEO. `null` = non mesuré : aucun plafond appliqué,
+   * un HTML tronqué ne doit pas fabriquer un défaut.
+   */
+  extractedWords?: number | null;
+  textRatioPct?: number | null;
 }
+
 
 function clamp100(n: number): number {
   return Math.max(0, Math.min(100, Math.round(n)));
@@ -334,10 +351,77 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
     person_authority: scorePersonAuthority(inputs),
   };
 
+  // ─── Plafonds de cohérence GEO ───────────────────────────────────────────
+  // Le balisage n'est pas citable : sans corps de texte extrait du HTML servi,
+  // un moteur de réponse n'a rien à reprendre. Une coquille JS ne peut donc pas
+  // conserver une citabilité, une mise en forme de réponses ni des données
+  // structurées confortables. Les plafonds ne s'appliquent que sur des faits
+  // mesurés — un HTML tronqué (extraction inconnue) ne fabrique aucun défaut.
+  const rawGates: Array<{ axis: string; reason: string; evidence: string; measured?: string; target?: string }> = [];
+  const words = typeof inputs.extractedWords === 'number' && Number.isFinite(inputs.extractedWords)
+    ? Math.max(0, Math.round(inputs.extractedWords)) : null;
+  const ratio = typeof inputs.textRatioPct === 'number' && Number.isFinite(inputs.textRatioPct)
+    ? Math.max(0, Math.round(inputs.textRatioPct * 10) / 10) : null;
+
+  const shellMeasured = inputs.isBotShell === true;
+  const starvedByText = words !== null && words < 200 && (ratio === null || ratio < 5);
+  const textStarved = shellMeasured || starvedByText;
+
+  if (textStarved) {
+    const evidenceBase = shellMeasured
+      ? 'HTML servi identifié comme coquille JS (contenu injecté après exécution du JavaScript)'
+      : `${words} mots extraits${ratio !== null ? ` et ${ratio} % de texte utile` : ''}`;
+
+    const capSignal = (key: string, cap: number, axis: string, reason: string, target: string) => {
+      const current = resolved[key];
+      if (current === null || current === undefined) return;
+      if (current <= cap) return;
+      resolved[key] = cap;
+      rawGates.push({
+        axis,
+        reason,
+        evidence: `${evidenceBase} → cible ${target} (sous-signal ramené de ${current}/100 à ${cap}/100)`,
+        measured: shellMeasured ? 'coquille JS' : `${words} mots`,
+        target,
+      });
+    };
+
+    capSignal(
+      'content_quotability', 15, 'geo_quotability',
+      'Aucun passage citable ne peut être extrait du HTML servi : la citabilité mesurée porte sur du texte absent pour les robots.',
+      '≥ 200 mots extraits',
+    );
+    capSignal(
+      'answer_formatting', 25, 'geo_formatting',
+      'Les titres, listes et blocs de questions ne balisent aucune réponse tant que le corps de texte n’est pas rendu côté serveur.',
+      '≥ 5 % de texte utile',
+    );
+    capSignal(
+      'structured_data_quality', 40, 'geo_structured_data',
+      'Les données structurées déclarent un contenu que le HTML servi ne contient pas : elles ne peuvent pas être corroborées.',
+      'balisage adossé à un contenu rendu',
+    );
+  }
+
   const signals: GeoSubSignalValue[] = GEO_SUB_SIGNALS.map((s) => ({ ...s, value: resolved[s.key] ?? null }));
   const comprehension = familyScore('comprehension', signals);
   const authority = familyScore('authority', signals);
+
+  // Plafond de famille : même après plafonnement des sous-signaux, une page sans
+  // texte extractible ne peut pas afficher une compréhension machine moyenne.
+  if (textStarved && comprehension.score !== null && comprehension.score > 30) {
+    rawGates.push({
+      axis: 'geo_comprehension',
+      reason: 'Compréhension machine bridée : sans contenu rendu côté serveur, aucun autre signal de compréhension ne peut produire son effet.',
+      evidence: `${shellMeasured ? 'coquille JS mesurée' : `${words} mots extraits`} → cible contenu rendu au serveur (famille ramenée de ${comprehension.score}/100 à 30/100)`,
+      measured: shellMeasured ? 'coquille JS' : `${words} mots`,
+      target: 'contenu rendu au serveur',
+    });
+    comprehension.score = 30;
+  }
+
   const v = verdictFor(comprehension.score, authority.score);
+
 
   const both = [comprehension.score, authority.score].filter((x): x is number => x !== null);
   const geo = both.length > 0 ? clamp100(both.reduce((a, c) => a + c, 0) / both.length) : null;
@@ -358,6 +442,8 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
     verdict_label: v.label,
     verdict_explanation: v.explanation,
     priority_levers: priority,
+    gates: normalizeGates(rawGates, 'geo'),
+
   };
 }
 

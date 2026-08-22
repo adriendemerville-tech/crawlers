@@ -14,6 +14,8 @@
  * 100 % déterministe : 0 token LLM.
  */
 
+import { gatesPriorityBlockHTML, mergeGates, normalizeGates, type AuditGate } from './auditGates.ts';
+
 export interface PageVerdictMeta {
   url: string;
   path: string;
@@ -257,6 +259,13 @@ export function buildPageVerdictHTML(
      */
     scoreGates?: Array<{ axis: string; reason: string; evidence: string }>;
     /**
+     * Plafonds de cohérence GEO (citabilité, mise en forme, données structurées,
+     * compréhension) issus de geoSubSignals pour cette URL. Fusionnés avec les
+     * plafonds techniques dans le bloc « Pourquoi c'est prioritaire ».
+     */
+    geoGates?: AuditGate[] | null;
+
+    /**
      * Lot 4B — pondérations réellement appliquées au score GEO de cette URL.
      * On affiche pour chaque sous-signal : son poids annoncé, la valeur mesurée
      * et les points obtenus (poids × valeur / 100). Un sous-signal non mesuré
@@ -403,6 +412,15 @@ export function buildPageVerdictHTML(
     )}</p>` : ''}`
     : '';
 
+  // Bloc « Pourquoi c'est prioritaire » : plafonds techniques et GEO fusionnés,
+  // ordonnés par cause racine, avec la preuve chiffrée (mesuré → cible).
+  const gatesHTML = gatesPriorityBlockHTML(
+    mergeGates(normalizeGates(ctx.scoreGates, 'technical'), ctx.geoGates || []),
+    lang,
+    'page',
+  );
+
+
   const html = `
   <div class="section" data-marina-scope="page" data-marina-block="page-verdict" data-pdf-section
        data-marina-page-meta="${encodeURIComponent(JSON.stringify(meta))}"
@@ -433,11 +451,8 @@ export function buildPageVerdictHTML(
     <ul style="padding-left:20px;font-size:12.5px;color:#6b7280;line-height:1.65;margin:0;">
       ${inherited.map((a) => `<li style="margin:0 0 4px 0;">${esc(a)}</li>`).join('')}
     </ul>` : ''}
-    ${(ctx.scoreGates || []).length ? `
-    <p style="font-size:12.5px;font-weight:600;color:#111827;margin:14px 0 4px 0;">${t('Pourquoi le score est plafonné', 'Why the score is capped')}</p>
-    <ul style="padding-left:20px;font-size:12px;color:#4b5563;line-height:1.65;margin:0;">
-      ${(ctx.scoreGates || []).map((g) => `<li style="margin:0 0 4px 0;">${esc(g.reason)} — <span style="color:#6b7280;">${esc(g.evidence)}</span></li>`).join('')}
-    </ul>` : ''}
+    ${gatesHTML}
+
     ${weightsHTML}
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
       ${t(

@@ -30,6 +30,15 @@ import {
   type AbsenceVerificationReport,
 } from '../_shared/absenceVerification.ts';
 import { buildGeoSubSignals, geoSubSignalsBlockHTML } from '../_shared/geoSubSignals.ts';
+import {
+  gatesPriorityBlockHTML,
+  mergeGates,
+  normalizeGates,
+  writeGatesToWorkbench,
+  sortWorkbenchByGatePriority,
+  type AuditGate,
+} from '../_shared/auditGates.ts';
+
 import { verdictsFromCocoonRisks, pillarSatelliteBlockHTML, pageAuthority } from '../_shared/pillarSatelliteVerdict.ts';
 
 
@@ -4560,7 +4569,50 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const topEeat   = extractTopPriorities('eeat', eeatFindings);
         const topCocoon = extractTopPriorities('cocoon', cocoonFindings);
 
+        // ─── Lot B : le GEO décomposé en 10 sous-signaux (compréhension / autorité) ───
+        // Un score GEO global masque deux causes opposées. La décomposition est
+        // déterministe (0 token) : elle réagrège des signaux déjà mesurés ailleurs
+        // et produit un verdict d'écart entre les deux familles. Calculée AVANT
+        // l'écriture du workbench : ses plafonds doivent entrer dans le plan de
+        // CE run, pas du suivant.
+        const tlSignals = strategicData?.social_signals?.thought_leadership || null;
+        const geoSubSignalsReport = buildGeoSubSignals({
+          // Le breakdown est imbriqué sous llm_visibility dans l'objet d'audit
+          // stratégique ; l'accès direct renvoyait undefined et laissait les
+          // 8 sous-signaux correspondants en « non mesuré ».
+          breakdown:
+            strategicData?.llm_visibility?.citation_breakdown ||
+            strategicData?.llm_visibility_raw?.citation_breakdown ||
+            strategicData?.citation_breakdown ||
+            llmVisibilityData?.citation_breakdown ||
+            null,
+          isBotShell: botRendering ? Boolean(botRendering.blocked) : null,
+          botOnlyAbsences: absenceReport ? (absenceReport.bot_only_signals?.length ?? 0) : null,
+          crawlFormatting: crawlSnapshot?.answerFormatting || null,
+          founderResolved: tlSignals ? Boolean(tlSignals.founder_name) : null,
+          founderCorroborated: tlSignals
+            ? Boolean(tlSignals.founder_profile_url) ||
+              ['strong', 'high', 'confirmed', 'corroborated'].includes(String(tlSignals.founder_authority || '').toLowerCase())
+            : null,
+          // Plafonds de cohérence GEO : faits d'extraction réellement mesurés sur
+          // le HTML servi. Sans eux, la citabilité restait optimiste sur une
+          // coquille JS (balisage noté, texte absent pour les robots).
+          extractedWords: expertData?.scores?.semantic?.wordCount ?? null,
+          textRatioPct:
+            expertData?.insights?.contentDensity && expertData.insights.contentDensity.verdict !== 'unknown'
+              ? (expertData.insights.contentDensity.ratio ?? null)
+              : null,
+        });
+
+        // Plafonds unifiés (techniques + GEO) : ordre d'entrée du workbench et du
+        // plan, chaque entrée portant sa preuve chiffrée (mesuré → cible).
+        const unifiedGates: AuditGate[] = mergeGates(
+          normalizeGates(expertData?.scores?.gates, 'technical'),
+          geoSubSignalsReport?.gates ?? [],
+        );
+
         // ─── Step A: PUSH findings to architect_workbench BEFORE building the plan ───
+
         // The consolidated plan reads from the workbench; if Marina did not write
         // first, fresh reports would render an empty conclusion. Non-fatal on error.
         try {
@@ -4584,12 +4636,27 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           console.warn('[Marina] Workbench write failed (non-fatal):', wbWriteErr);
         }
 
+        // Les plafonds de cohérence sont des causes racines : on les pousse aussi
+        // dans le workbench en sévérité critique, avec leur preuve chiffrée.
+        try {
+          await writeGatesToWorkbench(sb, unifiedGates, {
+            domain,
+            url,
+            userId: parentJob.user_id,
+            trackedSiteId: trackedSiteId || null,
+          });
+        } catch (gateErr) {
+          console.warn('[Marina] Gate workbench write failed (non-fatal):', gateErr);
+        }
+
+
+
         // ─── Step B: now read the workbench (Marina findings included) ───
         let workbenchTasks: WorkbenchTask[] = [];
         try {
           const { data: wb } = await sb
             .from('architect_workbench')
-            .select('id, title, description, severity, finding_category, status, source_type, target_url')
+            .select('id, title, description, severity, finding_category, status, source_type, source_function, payload, target_url')
             .eq('domain', domain)
             .eq('user_id', parentJob.user_id)
             .neq('status', 'done')
@@ -4600,10 +4667,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           // faisait apparaître Marseille, Créteil ou Pau dans la fiche de
           // Saint-Rémy. Les tâches sans cible restent (périmètre domaine).
           const urlKeyForWb = pageKey(url);
-          workbenchTasks = ((wb as WorkbenchTask[]) || []).filter((task: any) => {
-            const target = task?.target_url ? String(task.target_url) : '';
-            return target ? pageKey(target) === urlKeyForWb : true;
-          });
+          // Les plafonds de cohérence (cause racine) entrent en tête de file :
+          // corriger un balisage avant de rendre le contenu ne produit rien.
+          workbenchTasks = sortWorkbenchByGatePriority(
+            ((wb as WorkbenchTask[]) || []).filter((task: any) => {
+              const target = task?.target_url ? String(task.target_url) : '';
+              return target ? pageKey(target) === urlKeyForWb : true;
+            }) as any,
+          ) as WorkbenchTask[];
+
         } catch (wbErr) {
           console.warn('[Marina] Workbench fetch failed (non-fatal):', wbErr);
         }
@@ -4661,31 +4733,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         );
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
 
-        // ─── Lot B : le GEO décomposé en 10 sous-signaux (compréhension / autorité) ───
-        // Un score GEO global masque deux causes opposées. La décomposition est
-        // déterministe (0 token) : elle réagrège des signaux déjà mesurés ailleurs
-        // et produit un verdict d'écart entre les deux familles.
-        const tlSignals = strategicData?.social_signals?.thought_leadership || null;
-        const geoSubSignalsReport = buildGeoSubSignals({
-          // Le breakdown est imbriqué sous llm_visibility dans l'objet d'audit
-          // stratégique ; l'accès direct renvoyait undefined et laissait les
-          // 8 sous-signaux correspondants en « non mesuré ».
-          breakdown:
-            strategicData?.llm_visibility?.citation_breakdown ||
-            strategicData?.llm_visibility_raw?.citation_breakdown ||
-            strategicData?.citation_breakdown ||
-            llmVisibilityData?.citation_breakdown ||
-            null,
-          isBotShell: botRendering ? Boolean(botRendering.blocked) : null,
-          botOnlyAbsences: absenceReport ? (absenceReport.bot_only_signals?.length ?? 0) : null,
-          crawlFormatting: crawlSnapshot?.answerFormatting || null,
-          founderResolved: tlSignals ? Boolean(tlSignals.founder_name) : null,
-          founderCorroborated: tlSignals
-            ? Boolean(tlSignals.founder_profile_url) ||
-              ['strong', 'high', 'confirmed', 'corroborated'].includes(String(tlSignals.founder_authority || '').toLowerCase())
-            : null,
-        });
-        const geoSubSignalsHtml = geoSubSignalsBlockHTML(geoSubSignalsReport, detectedLang);
+
+        const geoSubSignalsHtml =
+          geoSubSignalsBlockHTML(geoSubSignalsReport, detectedLang) +
+          gatesPriorityBlockHTML(unifiedGates, detectedLang, 'page');
+
 
         const strategicHTML = generateStrategicSectionHTML(
           strategicData, detectedLang, domain, llmVisibilityData,
@@ -4814,6 +4866,8 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           lcpMs: expertData?.scores?.performance?.lcp ?? null,
           integrity: crawlSnapshot?.contentIntegrity ?? null,
           scoreGates: expertData?.scores?.gates ?? null,
+          geoGates: geoSubSignalsReport?.gates ?? null,
+
           // Lot 4B : les pondérations annoncées sont rendues dans la fiche de
           // l'URL, avec la valeur mesurée et les points obtenus par axe.
           geoSignals: geoSubSignalsReport?.signals ?? null,
