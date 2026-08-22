@@ -193,40 +193,95 @@ function relationFromModel(model: string, entity: string, blob: string): Custome
 }
 
 /**
+ * Catégorie officielle d'une fiche Google Business → mode de livraison. C'est le
+ * signal le plus fiable qui existe pour une activité de proximité : il est
+ * choisi par l'entreprise dans une liste fermée, pas rédigé en langage marketing.
+ */
+function deliveryFromGmbCategory(category: string | null | undefined): DeliveryMode | null {
+  const c = String(category || '').toLowerCase();
+  if (!c) return null;
+  if (/mairie|administration|service public|pr[eé]fecture|[eé]cole publique|h[oô]pital public/.test(c)) return 'service_public';
+  if (/association|organisation (?:caritative|non gouvernementale)|fondation/.test(c)) return 'association';
+  if (/avocat|notaire|huissier|m[eé]decin|dentiste|kin[eé]|ost[eé]o|psycholog|orthophon|v[eé]t[eé]rinaire|sage-?femme|infirmi|expert-?comptable|architecte/.test(c)) return 'profession_liberale';
+  if (/plombier|[eé]lectricien|couvreur|ma[çc]on|menuisier|peintre|serrurier|chauffagiste|entrepreneur|artisan|r[eé]novation|constructeur|paysagiste|garage|carrossier/.test(c)) return 'artisanat';
+  if (/restaurant|boulangerie|p[aâ]tisserie|fleuriste|magasin|boutique|[eé]picerie|supermarch|caviste|librairie|pharmacie|opticien|coiffeur|salon de/.test(c)) return 'commerce';
+  if (/agence (?:de |web|marketing|immobili)|conseil|consultant|cabinet de conseil|formation/.test(c)) return 'conseil';
+  if (/[eé]diteur de logiciels?|soci[eé]t[eé] informatique|service informatique/.test(c)) return 'saas';
+  return null;
+}
+
+/**
+ * Faits structurels → mode de livraison. Un tunnel de commande, un abonnement
+ * récurrent, un formulaire de devis ou une prise de rendez-vous sont des
+ * comportements observables : ils tranchent là où le vocabulaire ne prouve rien
+ * (« nous accompagnons nos clients » n'est pas du conseil).
+ */
+function deliveryFromStructural(s: StructuralSignals | null | undefined): DeliveryMode | null {
+  if (!s) return null;
+  const t = new Set(s.schemaTypes || []);
+  if (t.has('governmentorganization') || t.has('governmentoffice')) return 'service_public';
+  if (t.has('ngo')) return 'association';
+  if (s.hasMembershipOrDonation && !s.hasCart) return 'association';
+  // Abonnement + espace client = logiciel en ligne, même sans le mot « SaaS ».
+  if (s.hasSubscription && s.hasAppLogin) return 'saas';
+  if (t.has('softwareapplication') || t.has('webapplication')) return 'saas';
+  if (s.hasMobileApp && s.hasAppLogin) return 'app';
+  // Un panier réel l'emporte sur toute prose : c'est du commerce.
+  if (s.hasCart) return 'commerce';
+  if (s.hasBooking && !s.hasQuoteForm) return 'profession_liberale';
+  // Devis sur mesure sans panier = prestation, jamais du commerce.
+  if (s.hasQuoteForm) return 'service';
+  return null;
+}
+
+/**
  * Résolution ORDONNÉE du mode de livraison. L'ordre n'est pas cosmétique : il
  * fixe quelles autres dimensions deviennent hors sujet ensuite (voir
- * `ROLE_IRRELEVANT_DELIVERY`). Les statuts qui déterminent à eux seuls la
- * posture du prospect (service public, association, profession libérale,
- * plateforme, boutique en ligne) sont donc tranchés AVANT les régularités
- * lexicales plus faibles (« service », « prestation »).
+ * `ROLE_IRRELEVANT_DELIVERY`). Les faits vérifiables (catégorie GMB officielle,
+ * signaux structurels du HTML) passent AVANT les régularités lexicales, et le
+ * repli générique « service » reste le tout dernier recours.
  */
 function deliveryFromContext(
   model: string, entity: string, blob: string, legalForm: string | null,
-): DeliveryMode | null {
+  structural?: StructuralSignals | null, gmbCategory?: string | null,
+): { mode: DeliveryMode | null; origin: 'gmb' | 'structural' | 'declared' | 'lexical' | null } {
   const form = String(legalForm || '').toUpperCase();
 
-  // 1. Statuts qui l'emportent sur tout le reste.
-  if (RE_SERVICE_PUBLIC.test(blob) || /^(SEM|EPIC|EPA)$/.test(form)) return 'service_public';
-  if (RE_ASSOCIATION.test(blob) || /ASSOCIATION|FONDATION|SCIC/.test(form)) return 'association';
-  if (RE_LIBERALE.test(blob) || /^SEL(ARL|AS)$/.test(form)) return 'profession_liberale';
+  // 1. Statuts qui l'emportent sur tout le reste (juridiquement déterminants).
+  if (RE_SERVICE_PUBLIC.test(blob) || /^(SEM|EPIC|EPA)$/.test(form)) return { mode: 'service_public', origin: 'declared' };
+  if (RE_ASSOCIATION.test(blob) || /ASSOCIATION|FONDATION|SCIC/.test(form)) return { mode: 'association', origin: 'declared' };
+  if (RE_LIBERALE.test(blob) || /^SEL(ARL|AS)$/.test(form)) return { mode: 'profession_liberale', origin: 'declared' };
 
-  // 2. Modes portés par le modèle économique déclaré.
-  if (/^saas/.test(model) || entity === 'saas') return 'saas';
-  if (/^marketplace/.test(model) || entity === 'marketplace') return 'marketplace';
-  if (/^ecommerce/.test(model) || entity === 'ecommerce' || RE_BOUTIQUE_ENLIGNE.test(blob)) return 'commerce';
+  // 2. Catégorie officielle de la fiche Google Business : liste fermée, choisie
+  //    par l'entreprise elle-même.
+  const fromGmb = deliveryFromGmbCategory(gmbCategory);
+  if (fromGmb) return { mode: fromGmb, origin: 'gmb' };
 
-  // 3. Métiers reconnaissables à ce qui est vendu.
-  if (RE_ARTISANAT.test(blob)) return 'artisanat';
-  if (RE_COACHING.test(blob) || RE_CONSEIL.test(blob)) return 'conseil';
-  if (RE_PRODUITS.test(blob)) return 'produits';
-  if (RE_COMMERCE.test(blob)) return 'commerce';
-  if (RE_CONTENU.test(blob) || entity === 'media' || model === 'media_publisher') return 'contenu';
-  if (/application mobile|app store|application/i.test(blob)) return 'app';
+  // 3. Faits structurels observés dans le HTML (panier, abonnement, devis…).
+  const fromStructural = deliveryFromStructural(structural);
+  if (fromStructural) return { mode: fromStructural, origin: 'structural' };
 
-  // 4. Repli le plus faible : prestation générique.
-  if (model === 'service_agency' || model === 'service_local' || /service|prestation|intervention/i.test(blob)) return 'service';
-  return null;
+  // 4. Modes portés par le modèle économique déclaré.
+  if (/^saas/.test(model) || entity === 'saas') return { mode: 'saas', origin: 'declared' };
+  if (/^marketplace/.test(model) || entity === 'marketplace') return { mode: 'marketplace', origin: 'declared' };
+  if (/^ecommerce/.test(model) || entity === 'ecommerce') return { mode: 'commerce', origin: 'declared' };
+
+  // 5. Métiers reconnaissables au vocabulaire de l'offre (signal le plus faible).
+  if (RE_BOUTIQUE_ENLIGNE.test(blob)) return { mode: 'commerce', origin: 'lexical' };
+  if (RE_ARTISANAT.test(blob)) return { mode: 'artisanat', origin: 'lexical' };
+  if (RE_COACHING.test(blob) || RE_CONSEIL.test(blob)) return { mode: 'conseil', origin: 'lexical' };
+  if (RE_PRODUITS.test(blob)) return { mode: 'produits', origin: 'lexical' };
+  if (RE_COMMERCE.test(blob)) return { mode: 'commerce', origin: 'lexical' };
+  if (RE_CONTENU.test(blob) || entity === 'media' || model === 'media_publisher') return { mode: 'contenu', origin: 'lexical' };
+  if (/application mobile|app store|application/i.test(blob)) return { mode: 'app', origin: 'lexical' };
+
+  // 6. Repli le plus faible : prestation générique.
+  if (model === 'service_agency' || model === 'service_local' || /service|prestation|intervention/i.test(blob)) {
+    return { mode: 'service', origin: model ? 'declared' : 'lexical' };
+  }
+  return { mode: null, origin: null };
 }
+
 
 /** Contexte minimal accepté (compatible SiteContext + carte d'identité). */
 export interface DimensionInput {
