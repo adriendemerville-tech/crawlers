@@ -221,7 +221,7 @@ Règles :
   premier vérifié conserve l'actif et le second est refusé (même logique que
   `ownershipCheck.ts` côté injection).
 
-Cette clause figure aux CGVU (section 8.5).
+Cette clause figure aux CGVU (section 7.5).
 
 ### 2.7 Incentive : troc (barter)
 
@@ -644,12 +644,6 @@ promesse de gain SEO liée au solde, et un déficit ne bloque jamais l'achat —
 prioriser. La balance est une comptabilité lisible, pas un score de fidélité.
 
 
-
-
-
-
-
-
 ## 3. Moteur d'appariement Collab Instagram (v1.5)
 
 Deuxième type d'offre dans la même place d’échange, même wallet, même commission, logique
@@ -757,33 +751,14 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 
 ---
 
-## 7. Plan gratuit « Jeune entreprise »
+## 7. Textes à modifier
 
-- Éligibilité : entreprise de **moins de 12 mois** (Kbis à l'appui), sur candidature,
-  **30 comptes maximum**.
-- Accès **complet à toute la plateforme** pendant 12 mois, avec **plafond dur de 60 crédits/mois**,
-  non cumulables, reset au 1er du mois, blocage strict au dépassement.
-- Actions chères bornées : Marina prospection (30 crédits) limitée à 1/mois.
-- Crons dégradés (surveillance hebdomadaire au lieu de quotidienne).
-- Routage LLM économique (Gemini Flash / Groq) sur les tâches non critiques de ces comptes.
-- Support communautaire uniquement, mentionné explicitement dans les conditions.
-- Technique : flag `startup_offer` + `startup_offer_expires_at` sur le profil, quota dédié dans
-  le moteur de crédits, séquence de conversion automatique à M10.
-- Économie : ~1,75 €/compte/mois, soit ~780 €/an pour 30 comptes ; largement couvert par les
-  packs de crédits en dépassement et la commission marketplace.
-
----
-
-## 8. Textes à modifier
-
-### 8.1 Tarifs (`/tarifs`)
-- Nouveau bloc « Jeune entreprise — 12 mois offerts » (60 crédits/mois, sur candidature,
-  30 places), positionné avant Pro Agency.
+### 7.1 Tarifs (`/tarifs`)
 - Mention marketplace sur chaque plan payant : « revendez des liens depuis vos pages,
   15 % de commission Crawlers — un lien vendu par mois peut rembourser votre abonnement ».
 - Précision crédits : les crédits gagnés en vendant sont utilisables sur toute la plateforme.
 
-### 8.2 Audit stratégique
+### 7.2 Audit stratégique
 - Le bloc Marché & Autorité passe d'un constat à une **proposition concrète** :
   page cible identifiée, ancre recommandée, fourchette de prix, nombre d'actifs correspondants
   disponibles, lien vers l’onglet Place d’échange.
@@ -793,7 +768,7 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - Les pages proposées à la vente sont filtrées par `sell_risk` (§2.12) : jamais un pilier, jamais
   une page de conversion, jamais une page en momentum.
 
-### 8.3 Rapports Marina
+### 7.3 Rapports Marina
 - Section « Autorité » : quand le déficit est externe, afficher 2 à 3 **propositions de liens
   concrètes** (thématique, autorité, trafic de la page, prix indicatif) au lieu d'une
   recommandation générique.
@@ -804,12 +779,12 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
   « mesuré » / « estimé » sur chaque chiffre d'appariement.
 
 
-### 8.4 Home
+### 7.4 Home
 - Nouvelle section « Place d’échange d’autorité » : les deux faces (vendre / acheter), le pricing
   algorithmique, l'appariement automatique, la prévisualisation du paragraphe.
 - Un seul CTA vers la landing marketplace ; respect strict du design system.
 
-### 8.5 CGVU
+### 7.5 CGVU
 Ajouts obligatoires :
 - Statut de Crawlers : **intermédiaire technique**, pas éditeur du contenu vendu.
 - Commission **15 %**, taux unique cash et troc, base de calcul, moment de prélèvement.
@@ -828,12 +803,10 @@ Ajouts obligatoires :
   dévaluation par les moteurs est porté à la connaissance des deux parties et assumé par elles.
 - Interdictions fermes : fermes de liens, réseaux de sites détenus par un même bénéficiaire,
   achat d'engagement, revente d'un actif dont la propriété n'est pas vérifiée.
-- Plan Jeune entreprise : conditions d'éligibilité, plafond de crédits, support communautaire,
-  fin automatique à 12 mois.
 
 ---
 
-## 9. Séquencement
+## 8. Séquencement
 
 | Lot | Contenu |
 |---|---|
@@ -843,10 +816,9 @@ Ajouts obligatoires :
 | L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
 | L5 | Landing page, home, tarifs, **valeur d'appariement dans l'Audit stratégique et Marina (page + domaine)**, bloc « Ma balance » comme produit de rétention (§2.14), CGVU |
 
-| L6 | Plan Jeune entreprise (quota, flags, crons dégradés, routage LLM) |
-| L7 | Collab Instagram (OAuth Meta, métriques, brief, vérification) |
+| L6 | Collab Instagram (OAuth Meta, métriques, brief, vérification) |
 
-## 10. Risques
+## 9. Risques
 
 - **Reversement en euros** : Stripe Connect + KYC, hors v1.
 - **Conformité Google** : zone grise du lien payé ; position assumée et jamais présentée
@@ -854,4 +826,6 @@ Ajouts obligatoires :
 - **Dilution de l'E-E-A-T de crawlers.fr** : plafonds stricts, jamais depuis les 4 piliers.
 - **Liquidité** : le maillon rare est la demande, pas l'offre — amorcer par les besoins
   déjà détectés dans les workbenches existants.
-- **Support** : les comptes gratuits génèrent plus de sollicitations que les payants.
+- **Litiges de publication** : une rupture de maintien mal diagnostiquée (blocage de crawl, coquille
+  JS) déclencherait un remboursement injustifié — d'où l'escalade de rendu avant tout verdict (§2.13).
+
