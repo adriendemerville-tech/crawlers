@@ -4752,7 +4752,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const pageTech100 = Number(expertData?.totalScore || 0) > 0
           ? Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 220) || 220)) * 100)
           : null;
-        const pageGeo100 = strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null;
+        let pageGeo100 = strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null;
         // ─── Lot 1 & 2 — la fiche ne porte QUE des faits mesurés sur cette URL ───
         // Avant : à défaut d'actions ciblées, les 3 premières actions du plan de
         // domaine étaient recopiées, ce qui rendait 14 fiches sur 15 identiques et
