@@ -1187,7 +1187,14 @@ function analyzeContentDensity(html: string, visibleText: string): ContentDensit
   const htmlSize = html.length;
   const textSize = visibleText.length;
   const ratio = htmlSize > 0 ? Math.round((textSize / htmlSize) * 100) : 0;
-  
+
+  // Garde-fou : une extraction de texte visible vide ou un HTML tronqué ne
+  // signifie pas « 0 % de texte ». Sans mesure fiable, le verdict reste
+  // « unknown » et aucune recommandation « ratio code/texte » n'est émise.
+  if (htmlSize < 2000 || textSize === 0) {
+    return { ratio: 0, verdict: 'unknown', htmlSize, textSize };
+  }
+
   let verdict: string;
   if (ratio < 10) {
     verdict = 'critical';
