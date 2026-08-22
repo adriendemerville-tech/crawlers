@@ -81,7 +81,8 @@ import { renderScopeLimitsHTML } from '../_shared/scopeAndLimits.ts';
 import { provenanceLegendHTML, metricBadge, provenanceBadge } from '../_shared/provenance.ts';
 import { resolveScanMode, scanModeSentence, type ScanModeResolution } from '../_shared/marinaScanMode.ts';
 import { applyRoiWeighting, summarizeRoi, type RoiSummary } from '../_shared/roiWeighting.ts';
-import { buildPageVerdictHTML, buildCocoonPageFocusHTML, pageKey } from '../_shared/marinaPageVerdict.ts';
+import { buildPageVerdictHTML, buildCocoonPageFocusHTML, pageKey, extractCocoonPageFacts } from '../_shared/marinaPageVerdict.ts';
+import { derivePageActions, splitActionsByScope } from '../_shared/marinaPageActions.ts';
 
 import {
   fetchOwnerPerformanceData,
@@ -4594,7 +4595,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             .neq('status', 'done')
             .order('created_at', { ascending: false })
             .limit(50);
-          workbenchTasks = (wb as WorkbenchTask[]) || [];
+          // Lot 1 — le rapport d'une URL ne doit jamais importer les actions
+          // ciblées sur une AUTRE URL (même domaine compris) : c'est ce qui
+          // faisait apparaître Marseille, Créteil ou Pau dans la fiche de
+          // Saint-Rémy. Les tâches sans cible restent (périmètre domaine).
+          const urlKeyForWb = pageKey(url);
+          workbenchTasks = ((wb as WorkbenchTask[]) || []).filter((task: any) => {
+            const target = task?.target_url ? String(task.target_url) : '';
+            return target ? pageKey(target) === urlKeyForWb : true;
+          });
         } catch (wbErr) {
           console.warn('[Marina] Workbench fetch failed (non-fatal):', wbErr);
         }
@@ -4743,18 +4752,63 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const pageTech100 = Number(expertData?.totalScore || 0) > 0
           ? Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 220) || 220)) * 100)
           : null;
-        const pageGeo100 = strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null;
-        const urlKey = pageKey(url);
-        const pageScopedActions = (consolidatedPlan || []).filter((i: any) => {
-          const target = i?.target_url ? String(i.target_url) : '';
-          return target ? pageKey(target) === urlKey : false;
-        });
+        let pageGeo100 = strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null;
+        // ─── Lot 1 & 2 — la fiche ne porte QUE des faits mesurés sur cette URL ───
+        // Avant : à défaut d'actions ciblées, les 3 premières actions du plan de
+        // domaine étaient recopiées, ce qui rendait 14 fiches sur 15 identiques et
+        // y importait des actions d'autres URLs (pollution du Workbench).
+        const { page: pageScopedActions, domain: domainScopedActions } =
+          splitActionsByScope(consolidatedPlan || [], url);
+
+        const cocoonPageFacts = cocoonResult ? extractCocoonPageFacts(cocoonResult, url) : null;
+        // Lot 3 — le score GEO du nœud de cette URL prime sur le score global :
+        // sans lui, les 15 fiches affichaient toutes la même valeur.
+        if (cocoonPageFacts?.geoScore != null) pageGeo100 = cocoonPageFacts.geoScore;
+        const derivedActions = derivePageActions(
+          {
+            title: expertData?.rawData?.htmlAnalysis?.title ?? null,
+            metaDescription: expertData?.scores?.semantic?.hasMetaDesc === false ? '' : null,
+            h1Count: expertData?.scores?.semantic?.h1Count ?? null,
+            words: expertData?.scores?.semantic?.wordCount ?? null,
+            lcpMs: expertData?.scores?.performance?.lcp ?? null,
+            schemaTypes: expertData?.scores?.aiReady?.schemaTypes ?? null,
+            codeTextRatio: expertData?.insights?.contentDensity?.verdict === 'unknown'
+              ? null
+              : (expertData?.insights?.contentDensity?.ratio ?? null),
+            citablePassages: crawlSnapshot?.answerFormatting?.directAnswerBlocks ?? null,
+            linksIn: cocoonPageFacts?.linksIn ?? null,
+            linksOut: cocoonPageFacts?.linksOut ?? null,
+            cannibalWith: cocoonPageFacts?.cannibalWith ?? null,
+            isThin: cocoonPageFacts?.isThin ?? false,
+            isOrphan: cocoonPageFacts?.isOrphan ?? false,
+          },
+          detectedLang,
+        );
+
+        // Les actions ciblées du plan (target_url = cette URL) restent prioritaires,
+        // complétées par les actions dérivées des faits de la page.
+        const seenTitles = new Set<string>();
+        const pageActionsForVerdict: Array<{ severity?: string; title: string; evidence?: string }> = [];
+        for (const i of pageScopedActions) {
+          const title = splitLongTitle(String((i as any).title || ''), '').title;
+          if (!title || seenTitles.has(title.toLowerCase())) continue;
+          seenTitles.add(title.toLowerCase());
+          pageActionsForVerdict.push({ severity: (i as any).severity, title });
+        }
+        for (const a of derivedActions) {
+          if (seenTitles.has(a.title.toLowerCase())) continue;
+          seenTitles.add(a.title.toLowerCase());
+          pageActionsForVerdict.push({ severity: a.severity, title: a.title, evidence: a.evidence });
+        }
+
         const pageVerdict = buildPageVerdictHTML(detectedLang, domain, url, {
           techScore: pageTech100,
           geoScore: pageGeo100,
           criticalCount: (consolidatedPlan || []).filter((i: any) => i.severity === 'critical').length,
-          pageActions: (pageScopedActions.length ? pageScopedActions : (consolidatedPlan || []))
-            .map((i: any) => ({ severity: i.severity, title: splitLongTitle(String(i.title || ''), '').title })),
+          pageActions: pageActionsForVerdict,
+          inheritedActions: domainScopedActions
+            .slice(0, 2)
+            .map((i: any) => ({ title: splitLongTitle(String(i.title || ''), '').title })),
           cocoonData: cocoonResult,
           words: expertData?.scores?.semantic?.wordCount ?? null,
           lcpMs: expertData?.scores?.performance?.lcp ?? null,

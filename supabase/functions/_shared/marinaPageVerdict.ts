@@ -233,7 +233,17 @@ export function buildPageVerdictHTML(
     techScore: number | null;
     geoScore: number | null;
     criticalCount?: number;
-    pageActions?: Array<{ severity?: string; title: string }>;
+    /**
+     * Actions PROPRES à cette URL : chacune porte sa preuve chiffrée mesurée
+     * sur la page (valeur relevée → cible). Aucune action de domaine ici.
+     */
+    pageActions?: Array<{ severity?: string; title: string; evidence?: string }>;
+    /**
+     * Actions de périmètre domaine que cette page hérite, étiquetées comme
+     * telles et limitées à 2 lignes pour ne pas se faire passer pour des
+     * correctifs de page.
+     */
+    inheritedActions?: Array<{ title: string }>;
     cocoonData?: any;
     /** Faits mesurés sur cette URL, propagés à la synthèse réseau multipages. */
     words?: number | null;
@@ -276,10 +286,19 @@ export function buildPageVerdictHTML(
       : t(`${label.fr} (${global}/100) : aucun défaut bloquant propre à cette URL, les gains restants sont d'optimisation.`,
           `Score ${global}/100 for this URL: no blocking defect of its own, remaining gains are optimisation.`);
 
-  const actions = (ctx.pageActions || [])
-    .slice(0, 3)
-    .map((a) => String(a.title || '').trim())
-    .filter(Boolean);
+  // Actions de la page : titre complet (jamais tronqué) + preuve chiffrée.
+  const pageActionRows = (ctx.pageActions || [])
+    .map((a) => ({
+      title: String(a.title || '').replace(/\s*[…]+\s*$/, '').replace(/\s+/g, ' ').trim(),
+      evidence: String(a.evidence || '').replace(/\s+/g, ' ').trim(),
+    }))
+    .filter((a) => a.title.length > 0)
+    .slice(0, 5);
+  const actions = pageActionRows.map((a) => a.title);
+  const inherited = (ctx.inheritedActions || [])
+    .map((a) => String(a.title || '').replace(/\s*[…]+\s*$/, '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .slice(0, 2);
 
   // Quasi-doublons MESURÉS concernant cette URL (0 token LLM).
   const nearDup: Array<{ url: string; similarity: number; verdict: string }> = [];
@@ -340,11 +359,20 @@ export function buildPageVerdictHTML(
       ${cell(t('GEO / citabilité IA', 'GEO / AI citability'), geo === null ? 'n/d' : `${geo}/100`)}
       ${f && f.linksIn !== null ? cell(t('Liens internes entrants', 'Inbound links'), String(f.linksIn)) : ''}
     </div>
-    ${actions.length ? `
+    ${pageActionRows.length ? `
     <p style="font-size:13px;font-weight:600;color:#111827;margin:14px 0 6px 0;">${t('À corriger sur cette page', 'To fix on this page')}</p>
     <ol style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0;">
-      ${actions.map((a) => `<li style="margin:0 0 6px 0;">${esc(a)}</li>`).join('')}
-    </ol>` : ''}
+      ${pageActionRows.map((a) => `<li style="margin:0 0 6px 0;">${esc(a.title)}${a.evidence ? `<br><span style="font-size:12px;color:#6b7280;">${esc(a.evidence)}</span>` : ''}</li>`).join('')}
+    </ol>` : `
+    <p style="font-size:12.5px;color:#6b7280;margin:14px 0 0 0;">${t(
+      'Aucun défaut mesuré propre à cette URL : les correctifs restants relèvent du domaine.',
+      'No measured defect specific to this URL: remaining fixes belong to the domain.',
+    )}</p>`}
+    ${inherited.length ? `
+    <p style="font-size:12.5px;font-weight:600;color:#6b7280;margin:14px 0 4px 0;">${t('Hérité du domaine — non spécifique à cette page', 'Inherited from the domain — not specific to this page')}</p>
+    <ul style="padding-left:20px;font-size:12.5px;color:#6b7280;line-height:1.65;margin:0;">
+      ${inherited.map((a) => `<li style="margin:0 0 4px 0;">${esc(a)}</li>`).join('')}
+    </ul>` : ''}
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
       ${t(
         `Ces scores sont propres à cette URL et ne sont jamais moyennés avec les autres pages auditées. Les analyses de périmètre site (crawl, cocon global, indexation, visibilité IA) sont présentées une seule fois pour le domaine.`,
