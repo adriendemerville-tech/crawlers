@@ -165,11 +165,11 @@ export default function MarinaIdentityPanel({ url, isAuthenticated }: Props) {
   const set = (k: keyof Fields, v: string) => setFields((f) => ({ ...f, [k]: v }));
 
   return (
-    <div className="mt-3 flex h-full flex-col text-left">
+    <div className="mt-3 flex h-full flex-col rounded-lg border border-border bg-card/50 px-4 py-3 text-left">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-2 rounded-lg border border-border bg-card/50 px-4 py-3 text-sm text-foreground hover:bg-card transition-colors"
+        className="w-full flex items-center justify-between gap-2 text-sm text-foreground"
       >
         <span className="flex items-center gap-2">
           <IdCard className="w-4 h-4 text-primary" />
