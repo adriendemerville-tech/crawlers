@@ -4814,6 +4814,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           lcpMs: expertData?.scores?.performance?.lcp ?? null,
           integrity: crawlSnapshot?.contentIntegrity ?? null,
           scoreGates: expertData?.scores?.gates ?? null,
+          // Lot 4B : les pondérations annoncées sont rendues dans la fiche de
+          // l'URL, avec la valeur mesurée et les points obtenus par axe.
+          geoSignals: geoSubSignalsReport?.signals ?? null,
         });
         const cocoonPageHTML = buildCocoonPageFocusHTML(cocoonResult, url, detectedLang);
 
