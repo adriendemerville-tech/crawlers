@@ -2291,6 +2291,17 @@ Deno.serve(handleRequest(async (req) => {
     if (htmlAnalysis.hasMetaDesc) semanticScore += 10;
     if (htmlAnalysis.h1Count === 1) semanticScore += 20;
     if (htmlAnalysis.wordCount >= 500) semanticScore += 20;
+
+    // Une page sans corps de texte lisible ne mérite pas les points de
+    // sémantique : les balises seules ne font pas un contenu.
+    if (textStarved && semanticScore > 20) {
+      scoreGates.push({
+        axis: 'semantic',
+        reason: 'Balises présentes mais aucun corps de texte lisible dans le HTML servi',
+        evidence: `${htmlAnalysis.wordCount} mots extraits → cible ≥ 500 (score plafonné à 20/60)`,
+      });
+      semanticScore = 20;
+    }
     
     let aiReadyScore = 0;
     if (htmlAnalysis.hasSchemaOrg) {
