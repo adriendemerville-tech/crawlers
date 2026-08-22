@@ -362,6 +362,8 @@ export function mergeMarinaReports(
   // diffère d'une URL à l'autre, on les redescend au périmètre page pour ne pas
   // jeter des mesures déjà payées. Contenus identiques → mutualisation normale.
   const DEMOTABLE_WHEN_DIFFERENT = new Set(['llm']);
+  /** Blocs effectivement redescendus au périmètre page pour ce lot. */
+  const demotedToPage = new Set<string>();
   for (const id of DEMOTABLE_WHEN_DIFFERENT) {
     const variants = new Set<string>();
     for (const s of splits) {
@@ -369,6 +371,7 @@ export function mergeMarinaReports(
       if (html) variants.add(html.replace(/\s+/g, ' ').trim());
     }
     if (variants.size < 2) continue;
+    demotedToPage.add(id);
     for (const s of splits) {
       const html = s.siteBlocks.get(id);
       if (!html) continue;
@@ -377,6 +380,7 @@ export function mergeMarinaReports(
       s.pageBlocks.splice(at >= 0 ? at + 1 : 0, 0, { id, html });
     }
   }
+
 
   // Blocs site : on garde la première occurrence trouvée dans le batch.
   const siteBlocks = new Map<string, string>();
@@ -398,7 +402,10 @@ export function mergeMarinaReports(
   // ils gonflaient le PDF de plusieurs centaines de pages. On les remonte une
   // seule fois quand leur contenu est strictement identique sur au moins deux
   // URLs — jamais quand il diffère (aucune information perdue).
-  const NEVER_MUTUALISED = new Set(['page-verdict', 'summary', 'conclusion', 'degraded']);
+  // Un bloc redescendu au périmètre page (mesure propre à l'URL) ne doit jamais
+  // être re-mutualisé par la comparaison de contenu ci-dessous.
+  const NEVER_MUTUALISED = new Set(['page-verdict', 'summary', 'conclusion', 'degraded', ...demotedToPage]);
+
   const occurrences = new Map<string, number>();
   for (const s of splits) {
     const seen = new Set<string>();
@@ -543,7 +550,7 @@ export function mergeMarinaReports(
 
       <p style="margin-top:18px;font-size:12px;opacity:.7;max-width:46em;break-inside:avoid;page-break-inside:avoid;">
         ${mutualised
-          ? `Les analyses de périmètre site (crawl, cocon sémantique, indexation, visibilité IA) sont
+          ? `Les analyses de périmètre site (crawl, cocon sémantique, indexation${demotedToPage.has('llm') ? '' : ', visibilité IA'}) sont
              calculées une seule fois pour ${escapeHtml(domain)} et présentées en début de document.
              Chaque fiche de page ne contient ensuite que ce qui lui est propre. Les scores ne sont pas
              moyennés entre les pages : ils sont à lire page par page.`
@@ -605,8 +612,11 @@ export function mergeMarinaReports(
       const condensed = split.tagged && hasVerdict && detail.level.get(path) === 'condensed';
       const dupOwner = conclusionSkip[i];
       const kept = (condensed
-        ? ordered.filter(b => b.id === 'page-verdict' || b.id === 'cocoon_page')
+        // Une fiche condensée conserve tout de même les mesures propres à l'URL
+        // (benchmark IA redescendu au périmètre page) : elles sont déjà payées.
+        ? ordered.filter(b => b.id === 'page-verdict' || b.id === 'cocoon_page' || demotedToPage.has(b.id))
         : ordered
+
       ).filter(b => !(b.id === 'conclusion' && dupOwner !== null));
       const dupConclusionNote = dupOwner !== null
         ? `<p style="margin:10px 32px 0 32px;font-size:12px;color:#6b7280;line-height:1.6;max-width:52em;">
@@ -614,7 +624,13 @@ export function mergeMarinaReports(
              <strong>${dupOwner + 1}</strong> (${escapeHtml(pathOf(parts[dupOwner].url))}) : elle n'est pas répétée ici.
            </p>`
         : '';
-      const content = split.tagged ? kept.map(b => b.html).join('\n') : extractBody(p.html);
+      const rawContent = split.tagged ? kept.map(b => b.html).join('\n') : extractBody(p.html);
+      // Cohérence de périmètre : dès que la visibilité IA est mesurée par URL,
+      // la mention « présentée une seule fois pour le domaine » serait fausse.
+      const content = demotedToPage.has('llm')
+        ? rawContent.replace(/,\s*visibilité IA\)/gi, ')')
+        : rawContent;
+
 
       const condensedNote = condensed
         ? `<p style="margin:10px 32px 0 32px;font-size:12px;color:#6b7280;line-height:1.6;max-width:52em;">
