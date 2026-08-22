@@ -550,7 +550,7 @@ export function mergeMarinaReports(
 
       <p style="margin-top:18px;font-size:12px;opacity:.7;max-width:46em;break-inside:avoid;page-break-inside:avoid;">
         ${mutualised
-          ? `Les analyses de périmètre site (crawl, cocon sémantique, indexation, visibilité IA) sont
+          ? `Les analyses de périmètre site (crawl, cocon sémantique, indexation${demotedToPage.has('llm') ? '' : ', visibilité IA'}) sont
              calculées une seule fois pour ${escapeHtml(domain)} et présentées en début de document.
              Chaque fiche de page ne contient ensuite que ce qui lui est propre. Les scores ne sont pas
              moyennés entre les pages : ils sont à lire page par page.`
