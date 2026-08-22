@@ -388,15 +388,11 @@ priority_score = deficit × ancienneté_en_file^0.5              (anti-famine)
 5. **Aucune dette Crawlers** : la priorité est un droit de passage dans la file, jamais un crédit
    offert. Le site prioritaire paie toujours son lien (euros, crédits ou troc).
 
-**Ajouts DB**
+**Ajouts DB** : `marketplace_balance_events`, `marketplace_site_balances` et
+`marketplace_link_queue` — définition unique en §4 (aucun schéma n'est décrit ailleurs dans ce
+document). Point clé : un événement de balance ne stocke pas de montant propre, il pointe la jambe
+(`leg_id`) et n'en porte que le signe.
 
-- `marketplace_balance_events` — journal auditable, une ligne par jambe : `site_domain`, `order_id`,
-  `leg` (`incoming` | `outgoing`), `currency_kind` (`link` | `story` | `linkedin`), `sign`,
-  `value_cents`, `delivered_at`, `reversal_of` (jambe annulée), `risk_flags[]`.
-- `marketplace_site_balances` — cache par site : `site_domain`, `authority_balance_cents`,
-  `visibility_balance_cents`, `deficit_cents`, `can_sell_links` (bool), `recomputed_at`.
-- `marketplace_link_queue` — file d'achat : `site_domain`, `need`, `budget_cents`, `priority_score`,
-  `enqueued_at`, `reserved_offer_id`, `reserved_until`, `status`.
 
 
 ### 2.8 Autres contreparties pour équilibrer un lien
