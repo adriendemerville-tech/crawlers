@@ -11,6 +11,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { resolveSocialProof, fetchPlacesSocialProof, formatSocialProofForPrompt, type SocialProofResult } from '../_shared/socialProof.ts';
 import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
 import { classifyLink, isFalsePositiveDomain, type LinkVerdict } from '../_shared/linkVerdictShared.ts';
+import { measurePerformance } from '../_shared/perfMeasurement.ts';
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
