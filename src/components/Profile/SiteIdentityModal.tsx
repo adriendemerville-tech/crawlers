@@ -727,6 +727,9 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
             {/* Business Model — manual override (priority over LLM detection) */}
             <BusinessModelSelector site={site} onUpdate={onUpdate} />
 
+            {/* Dimensions d'entreprise dérivées — lecture seule */}
+            <EnterpriseDimensionsPanel site={site} />
+
             {/* Enrichir button */}
             <div className="flex justify-end mt-3">
               <Button variant="outline" size="sm" onClick={scrapeSociete} disabled={isScraping} className="text-xs gap-1.5">
