@@ -2348,6 +2348,9 @@ Deno.serve(handleRequest(async (req) => {
     }
     
     const scores = {
+      // Plafonds appliqués : rendus dans le rapport pour que l'écart entre le
+      // score brut et le score affiché soit toujours justifié par un fait.
+      gates: scoreGates,
       performance: {
         score: performanceScore,
         maxScore: 40,
