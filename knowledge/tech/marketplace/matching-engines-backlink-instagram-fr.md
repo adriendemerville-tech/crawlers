@@ -1016,10 +1016,14 @@ Ajouts obligatoires :
 - Données : partage limité et consenti des signaux de page entre les parties (RGPD). L'acheteur
   reçoit uniquement des **fourchettes** et des scores normalisés ; les valeurs GSC exactes, les
   requêtes, les courbes temporelles et les agrégats de domaine ne sont jamais exposés (§2.1.1).
-- **Échanges réciproques (`link_for_link`) : autorisés mais encadrés** — délai de 21 jours entre
-  les deux publications, une seule réciprocité par trimestre et par site, jamais deux fois avec
-  le même partenaire sur 12 mois, refus automatique en cas de boucle de liens. Le risque de
-  dévaluation par les moteurs est porté à la connaissance des deux parties et assumé par elles.
+- **Échanges en boucle (`link_chain`, A→B→C→A) : mode d'échange sans cash privilégié** — jambes
+  publiées à 7 jours d'écart minimum, boucle déclarée et traçable, aucune décote.
+- **Échanges réciproques directs (`link_for_link`) : autorisés en dernier recours et encadrés** —
+  proposés seulement si aucune boucle n'est constructible, délai de 21 jours entre les deux
+  publications, une seule réciprocité par trimestre et par site, jamais deux fois avec le même
+  partenaire sur 12 mois, refus automatique en cas de boucle de liens **non déclarée** (la 2ᵉ jambe
+  d'un troc accepté n'est jamais bloquée à ce titre). Le risque de dévaluation par les moteurs est
+  porté à la connaissance des deux parties et assumé par elles.
 - Interdictions fermes : fermes de liens, réseaux de sites détenus par un même bénéficiaire,
   achat d'engagement, revente d'un actif dont la propriété n'est pas vérifiée.
 
