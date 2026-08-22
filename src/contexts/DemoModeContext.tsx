@@ -5,9 +5,19 @@ import { toast } from 'sonner';
 interface DemoModeContextType {
   isDemoMode: boolean;
   loading: boolean;
+  /** Applique immédiatement l'état localement (le temps que le realtime suive). */
+  setDemoMode: (active: boolean) => void;
+  /** Relit l'état en base (source de vérité). */
+  refreshDemoMode: () => Promise<void>;
 }
 
-const DemoModeContext = createContext<DemoModeContextType>({ isDemoMode: false, loading: true });
+const DemoModeContext = createContext<DemoModeContextType>({
+  isDemoMode: false,
+  loading: true,
+  setDemoMode: () => {},
+  refreshDemoMode: async () => {},
+});
+
 
 export function useDemoMode() {
   return useContext(DemoModeContext);
@@ -135,7 +145,10 @@ export function DemoModeProvider({ children }: { children: React.ReactNode }) {
   }, [isDemoMode]);
 
   return (
-    <DemoModeContext.Provider value={{ isDemoMode, loading }}>
+    <DemoModeContext.Provider
+      value={{ isDemoMode, loading, setDemoMode: setIsDemoMode, refreshDemoMode: fetchDemoMode }}
+    >
+
       {children}
     </DemoModeContext.Provider>
   );
