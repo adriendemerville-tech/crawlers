@@ -160,15 +160,31 @@ l'attribut).
 **Décision à deux axes** (§2.4.1) :
 `attribute_final = dofollow` ⟺ `need_attribute = dofollow` **ET** `permit_attribute = dofollow`,
 sinon `sponsored`. Aucun axe ne suffit seul, aucun contournement par la soulte.
-- **Besoin acheteur** (`need_attribute`, déterministe, sans LLM, objectif déclaré à la recherche) :
-  déficit d'autorité diagnostiqué → `dofollow` ; visibilité GEO/citabilité → `sponsored` ;
-  trafic/notoriété → `sponsored` ; mixte → tranché par le **déficit net d'autorité**
-  (besoin §2.11 − autorité déjà apportée par backlinks réels + maillage interne) : > 0 → `dofollow`,
-  ≤ 0 → `sponsored`.
+- **Besoin acheteur** (`need_attribute`, déterministe, sans LLM) : l'objectif est **pré-rempli depuis
+  `marketplace_needs.need_primary`** puis **confirmé ou corrigé explicitement par l'acheteur** dans
+  une étape bloquante « Mon objectif » de l'onglet « J'achète » (pas d'ajout au panier sans
+  confirmation ; jamais validé en silence). Déficit d'autorité diagnostiqué → `dofollow` ;
+  visibilité GEO/citabilité → `sponsored` ; trafic/notoriété → `sponsored` ; mixte → tranché par le
+  **déficit net d'autorité** (besoin §2.11 − autorité déjà apportée par backlinks réels + maillage
+  interne) : > 0 → `dofollow`, ≤ 0 → `sponsored`.
 - **Capacité vendeur** (`permit_attribute`) : page `sell_risk` Sûr (≤ 0.20), palier P3 minimum, flag
-  de risque accepté par les deux parties, plafonds 1 dofollow / page et 20 / an / domaine.
+  de risque accepté par les deux parties, plafonds ci-dessous.
 
-Les deux valeurs sont journalisées sur la commande (`attribute_basis`) pour l'arbitrage.
+**Plafonds de vente par page — compteurs liés, unités de temps fixées** : **1 `dofollow` vendu par
+page à vie** (jamais renouvelé), **20 `dofollow` par domaine sur 12 mois glissants**, **3 insertions
+vendues par page sur 12 mois glissants tous attributs confondus** — un `dofollow` **compte** dans ces
+3 insertions, donc jamais 4 insertions sur une même page. Plafonds imposés par le serveur au figeage,
+pas déduits de l'effet indirect de `saturation_sortante`.
+
+Champs canoniques sur `marketplace_orders` (§4.3) : `need_attribute`, `permit_attribute`,
+`need_objective`, `need_objective_source` (`derived` | `user_confirmed` | `user_overridden`),
+`need_objective_confirmed_at` et `attribute_basis` (jsonb auditable) pour l'arbitrage.
+
+**Séquencement** : L1 est scindé — **L1a** (schéma, constantes, moteur d'attribut, pricing,
+`sell_risk`, propriété) sur le chemin critique, **L1b** (Stripe Connect + KYC, wallet avec transfert
+crédit-à-crédit derrière un flag fermé) en parallèle. Les deux validations externes bloquantes
+(juriste monnaie électronique, expert-comptable troc) sont lancées dès le jour 1, hors chemin de
+vélocité interne.
 
 
 ## Reversement vendeur (décidé 2026-08-22)

@@ -241,8 +241,8 @@ Exclusions dures (compat = 0) :
 - réciprocité directe hors quota : quota `link_for_link` du trimestre déjà consommé, ou même
   partenaire déjà servi sur 12 mois glissants ;
 - même propriétaire réel : **même Kbis / même SIREN**, ou même compte CMS connecté ;
-- plafond de liens sortants atteint — **deux plafonds distincts, cf. §2.4** : page : 1 lien
-  `dofollow` vendu **et** 3 insertions `sponsored` vendues ; domaine : 20 liens `dofollow` / an ;
+- plafond de liens sortants atteint — **compteurs liés, cf. §2.4** : page : 3 insertions vendues sur
+  12 mois glissants, dont au plus 1 `dofollow` à vie ; domaine : 20 liens `dofollow` / 12 mois ;
 - thématiques exclues (jeux d'argent, crypto, adulte).
 
 **IP partagée ≠ même propriétaire (profil agence).** Crawlers cible explicitement les agences en
@@ -389,8 +389,8 @@ Toutes requises, **aucune dérogation admin** :
 2. actif au **palier P3 minimum** ;
 3. **flag de risque explicite** affiché et accepté par les deux parties avant validation
    (même mécanique que le flag `link_for_link`, §2.2) ;
-4. imputation stricte sur le plafond existant **1 lien `dofollow` vendu / page, 20 / an / domaine**
-   (plafond inchangé).
+4. imputation stricte sur le plafond existant **1 lien `dofollow` vendu / page (à vie), 20 / an /
+   domaine**.
 
 #### Plafond dédié aux insertions `sponsored`
 
@@ -398,11 +398,19 @@ La dilution d'équité au niveau page existe aussi pour un lien `nofollow`/`spon
 n'est pas redistribuée aux liens `dofollow` restants, elle est perdue (fin du PageRank sculpting).
 Un plafond propre est donc appliqué, sinon le `sponsored` devient un angle mort illimité :
 
-| Plafond | Borne v1 |
-|---|---|
-| Liens `dofollow` vendus / page | 1 |
-| Liens `dofollow` vendus / domaine / an | 20 |
-| Insertions `sponsored` vendues / page / an | **3** |
+| Plafond | Borne v1 | Unité de temps |
+|---|---|---|
+| Liens `dofollow` vendus / page | 1 | **à vie** — jamais renouvelé, un `dofollow` vendu ferme définitivement la page au `dofollow` |
+| Liens `dofollow` vendus / domaine | 20 | **par année civile glissante** (12 mois glissants) |
+| Insertions vendues / page (tous attributs) | 3 | **par année civile glissante** |
+
+**Interaction explicite entre les deux plafonds — compteurs non indépendants.** Un `dofollow`
+vendu **compte** comme une des 3 insertions annuelles de la page : le total d'insertions payantes
+vendues sur une page ne dépasse jamais **3 par 12 mois glissants**, dont **au plus 1 `dofollow`
+sur toute la vie de la page**. Il n'existe donc pas de scénario à 4 insertions. La règle est portée
+par le serveur au figeage, pas déduite de l'effet indirect de `saturation_sortante` dans `sell_risk`
+(qui reste un second frein, cumulatif et non substituable).
+
 
 #### Narratif UI
 
@@ -426,8 +434,13 @@ Aucun axe ne suffit seul : un `dofollow` « permis » mais non nécessaire est r
 `sponsored` ; un `dofollow` « nécessaire » mais non permis reste `sponsored` (l'acheteur peut alors
 chercher une autre page ou renoncer — jamais contourner par la soulte).
 
-**Axe besoin acheteur — `need_attribute`** (déterministe, sans LLM). L'objectif est capté au moment
-de la recherche (ouverture de l'onglet « J'achète »), jamais présumé :
+**Axe besoin acheteur — `need_attribute`** (déterministe, sans LLM). **L'objectif est pré-rempli
+par le serveur depuis `marketplace_needs.need_primary`** (déjà dérivé du workbench, §4.3), puis
+**confirmé ou corrigé explicitement par l'acheteur** dans une étape dédiée du parcours « J'achète »
+(§5) avant tout ajout au panier. Aucune commande ne peut être figée sans confirmation d'objectif :
+la valeur par défaut est proposée, jamais validée en silence. La valeur retenue est écrite dans
+`marketplace_orders.attribute_basis` avec sa provenance (`derived` | `user_confirmed` |
+`user_overridden`) :
 
 | Objectif déclaré de l'acheteur | `need_attribute` | Lecture |
 |---|---|---|
@@ -448,13 +461,14 @@ déficit_net = besoin d'autorité (pages en retard, §2.11) − autorité déjà
   transfert d'autorité pour un besoin que le maillage interne résout déjà.
 
 **Axe capacité vendeur — `permit_attribute`.** Les conditions cumulatives du §2.4 (classe
-`sell_risk` Sûr ≤ 0.20, palier P3 minimum, flag de risque accepté, plafonds 1/page et 20/domaine/an).
+`sell_risk` Sûr ≤ 0.20, palier P3 minimum, flag de risque accepté, plafonds 1 `dofollow` / page à vie,
+20 / domaine / 12 mois, 3 insertions / page / 12 mois tous attributs confondus).
 Non négociable, aucune dérogation admin.
 
 Résultat net lisible par les deux parties : **`dofollow` n'est écrit que si le besoin le justifie
 ET que la page vendeur peut l'absorber sans risque ; dans tout autre cas `sponsored`.** C'est le
-serveur qui fige `need_attribute` et `permit_attribute`, les deux valeurs sont journalisées sur la
-commande (`attribute_basis`) pour l'arbitrage (§2.16).
+serveur qui fige `need_attribute` et `permit_attribute` sur la commande, avec leur base de calcul
+dans `attribute_basis` (§4.3), pour l'arbitrage (§2.16).
 
 ### 2.5 Rémunération
 
@@ -1320,6 +1334,13 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `link_attribute` (`dofollow` | `nofollow` | `sponsored`), **défaut `sponsored`** imposé par le
   serveur au figeage ; `dofollow` écrit uniquement si les conditions cumulatives du §2.4 sont
   réunies et le flag de risque accepté par les deux parties (`dofollow_risk_ack_at`).
+  Décision d'attribut à deux axes (§2.4.1), figée par le serveur et immuable après figeage :
+  `need_attribute` (`dofollow` | `sponsored`), `permit_attribute` (`dofollow` | `sponsored`),
+  `need_objective` (`autorite` | `geo` | `trafic` | `mixte`, valeur confirmée par l'acheteur),
+  `need_objective_source` (`derived` | `user_confirmed` | `user_overridden`),
+  `need_objective_confirmed_at` (NOT NULL avant figeage) et `attribute_basis` (jsonb : déficit net
+  d'autorité calculé, classe `sell_risk` et palier au figeage, compteurs de plafonds page/domaine
+  consommés, `constants_version`) — base auditable de l'arbitrage (§2.16.2).
   Économie : `deal_type` (`cash` | `credits` | `barter`), `price_cents` (prix figé),
   `commission_cents` (15 %, contre-valeur euros figée), `commission_settlement`
   (`cash` | `credits` — cash par défaut sur commande payée, `credits` obligatoire sur troc, §2.5),
@@ -1429,8 +1450,16 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
    - **Opportunités** — appariements entrants, filtrés par `compat_score`, avec « pourquoi ce match ».
    - **Je vends** — inventaire de mes pages avec prix estimé, opt-in par page, plafonds,
      revenus cumulés, message « 1 lien vendu ce mois = abonnement remboursé ».
-   - **J'achète** — besoins détectés automatiquement (page cible + ancre suggérée),
-     actifs proposés, panier, paiement.
+   - **J'achète** — parcours en quatre temps :
+     1. besoins détectés automatiquement (page cible + ancre suggérée) ;
+     2. **étape « Mon objectif » (bloquante, §2.4.1)** — carte unique présentant l'objectif
+        pré-rempli depuis `marketplace_needs.need_primary` (autorité / GEO / trafic / mixte) avec
+        sa justification lisible, à **confirmer ou corriger** ; sans confirmation, aucun ajout au
+        panier n'est possible. Le choix est écrit dans `need_objective` +
+        `need_objective_source` et détermine `need_attribute` ; l'UI annonce l'attribut applicable
+        (`sponsored` par défaut) avant tout paiement, sans hiérarchie implicite ;
+     3. actifs proposés, filtrés par compatibilité et par attribut réellement obtenable ;
+     4. panier, paiement.
    - **Commandes** — suivi de cycle de vie, prévisualisation, feedback, validations, vérifications.
 3. **Composant `LinkInsertionPreview`** — diff visuel avant/après, surbrillance du paragraphe
    inséré, bascule mobile/desktop, panneau de feedback latéral, historique des révisions.
@@ -1509,7 +1538,9 @@ Ajouts obligatoires :
 - **Attribut du lien (§2.4)** : `rel="sponsored"` par défaut sur **toute** transaction
   (cash, crédits, troc) ; `dofollow` disponible uniquement en exception gatée (page `sell_risk`
   Sûr, palier P3 minimum, plafonds page/domaine inchangés), risque assumé et documenté par les
-  deux parties ; plafond propre de 3 insertions `sponsored` vendues par page et par an ;
+  deux parties ; plafonds liés : **3 insertions vendues par page sur 12 mois glissants, tous
+  attributs confondus, dont au plus 1 `dofollow` sur toute la vie de la page**, et 20 `dofollow`
+  par domaine sur 12 mois glissants ;
   aucune garantie de classement.
 - Prévisualisation, feedback, 3 tours de révision, arbitrage et annulation sans frais.
 - Retrait ou disparition du lien : suspension du paiement, remboursement au prorata.
@@ -1547,12 +1578,20 @@ Ajouts obligatoires :
 
 | Lot | Contenu |
 |---|---|
-| L1 | Schéma + **table de constantes versionnée (§2.15)** + **attribut `sponsored` par défaut et gating `dofollow` (§2.4)** + **onboarding Stripe Connect / KYC vendeur (§2.5)** + **règle Kbis > IP sur les grappes de comptes (§2.2)** + **validation juridique des crédits transférables (§2.16.1)** + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € (**P1 40 € · P2 90 € · P3 150 € · P4 250 € · P5 350 €**) + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
-| L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » + **calcul de la valeur d'appariement page et domaine (§2.11)** |
+| **L1a** (chemin critique) | Schéma canonique (§4) + **table de constantes versionnée (§2.15)** + **moteur d'attribut à deux axes, `sponsored` par défaut et gating `dofollow` (§2.4, §2.4.1)** + **règle Kbis > IP sur les grappes de comptes (§2.2)** + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € (**P1 40 € · P2 90 € · P3 150 € · P4 250 € · P5 350 €**) + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
+| **L1b** (sous-lot **parallèle**, hors chemin critique) | **Onboarding Stripe Connect + KYC vendeur (§2.5)** : aucune dépendance technique au moteur de pricing ni au schéma d'attribut — se développe en parallèle de L1a. Wallet codé dès L1b avec le **transfert crédit-à-crédit derrière un feature flag désactivé** (§2.16.1) ; le repli « soulte cash uniquement » est le comportement par défaut tant que le flag est fermé. Condition de sortie : KYC bloquant opérationnel avant la première mise en vente cash |
+| **L0 — validations externes, lancées immédiatement, en parallèle du développement** | 1) **juriste paiement / monnaie électronique** sur les crédits transférables (§2.16.1) ; 2) **expert-comptable** sur le régime fiscal du troc et le mandat de facturation (§2.5.2). Aucune ne dépend de la vélocité interne : elles sont ouvertes dès le jour 1 pour ne pas devenir le goulot d'étranglement en fin de L1. Le flag de L1b reste fermé jusqu'à validation écrite |
+| L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » (dont **l'étape bloquante « Mon objectif », §5**) + **calcul de la valeur d'appariement page et domaine (§2.11)** |
 | L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 % (cash retenue sur le flux, crédits obligatoires sur le troc avec contrôle des soldes avant figeage et taux figé), **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** + **arbitrage des litiges (§2.16.2)** + **test d'homogénéité stylistique du Studio avant ouverture au volume (§2.9)** |
 | L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
 | L5 | Landing page, home, tarifs, **valeur d'appariement dans l'Audit stratégique et Marina (page + domaine)**, bloc « Ma balance » comme produit de rétention (§2.14), CGVU |
 | L6 | Collab Instagram (OAuth Meta, métriques, brief, vérification) |
+
+**Points à surveiller post-lancement** (arbitrages produit assumés, pas des trous de cadrage) :
+plafond de prix à 350 € face à un marché constaté à 500 €+ sur P5 ; exclusion des
+`non_assujetti` qui referme une part de la liquidité ; appétit utilisateur non testé pour la
+balance d'autorité face à son coût d'implémentation. À réévaluer sur données réelles après les
+30 premières transactions, jamais avant.
 
 
 ## 9. Risques
