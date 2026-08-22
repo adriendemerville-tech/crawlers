@@ -1060,6 +1060,11 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `dns_txt` | `file` | `oauth_linkedin` | `oauth_meta`), `token`, `verified_at`, `last_checked_at`,
   `status` (`verified` | `unverified` | `revoked`). Unicité : un domaine vérifié par un seul compte.
 - `marketplace_ownership_claims` — déclaration de responsabilité vendeur : horodatage, IP, texte accepté.
+- `marketplace_gsc_access_log` — journal append-only des accès admin aux valeurs GSC exactes
+  (§2.1.1) : `admin_user_id`, `asset_id`, `owner_user_id`, `fields_read[]`, `reason`, `ticket_ref`,
+  `ip`, `created_at`, `expires_at`. Écrit uniquement par la server function d'accès support ;
+  aucune policy `UPDATE`/`DELETE` ; visible du propriétaire de l'actif (date + motif) et des admins.
+  Rétention 24 mois.
 - `marketplace_content_variants` — variantes générées par le Studio (§2.9) : `order_id`, `variant`
   (`editoriale` | `utilitaire` | `action`), brief figé, sortie, modèle utilisé, coût, `selected`.
 - `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
