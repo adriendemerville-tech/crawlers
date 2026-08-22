@@ -72,15 +72,19 @@ export function derivePageActions(facts: PageActionFacts, lang = 'fr'): DerivedP
   const t = (fr: string, en: string) => (isEn ? en : fr);
   const out: DerivedPageAction[] = [];
 
-  const title = String(facts.title || '').trim();
-  if (title.length === 0) {
+  // Distinction stricte « non mesuré » (undefined/null) vs « mesuré absent » ('').
+  // Sans cette distinction, une page dont le title n'a pas pu être relevé était
+  // déclarée « title absent » — une affirmation fausse (hallucination factuelle).
+  const titleMeasured = facts.title !== undefined && facts.title !== null;
+  const title = String(facts.title ?? '').trim();
+  if (titleMeasured && title.length === 0) {
     out.push({
       title: t('Écrire un title pour cette page', 'Write a title for this page'),
       evidence: t('title absent → 45 à 60 caractères', 'title missing → 45 to 60 characters'),
       severity: 'critical',
       fingerprint: 'title-missing',
     });
-  } else if (title.length > 65 || title.length < 30) {
+  } else if (titleMeasured && (title.length > 65 || title.length < 30)) {
     out.push({
       title: t('Recalibrer le title de cette page', 'Recalibrate this page title'),
       evidence: t(
@@ -92,8 +96,9 @@ export function derivePageActions(facts: PageActionFacts, lang = 'fr'): DerivedP
     });
   }
 
-  const meta = String(facts.metaDescription || '').trim();
-  if (meta.length === 0) {
+  const metaMeasured = facts.metaDescription !== undefined && facts.metaDescription !== null;
+  const meta = String(facts.metaDescription ?? '').trim();
+  if (metaMeasured && meta.length === 0) {
     out.push({
       title: t('Rédiger la meta description de cette page', 'Write this page meta description'),
       evidence: t('meta description absente → 140 à 160 caractères', 'meta description missing → 140 to 160 characters'),
@@ -101,6 +106,7 @@ export function derivePageActions(facts: PageActionFacts, lang = 'fr'): DerivedP
       fingerprint: 'meta-missing',
     });
   }
+
 
   const h1 = n(facts.h1Count);
   if (h1 !== null && h1 !== 1) {

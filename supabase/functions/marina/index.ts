@@ -4843,8 +4843,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         if (geoSubSignalsReport?.geo_score == null && cocoonPageFacts?.geoScore != null) pageGeo100 = cocoonPageFacts.geoScore;
         const derivedActions = derivePageActions(
           {
-            title: expertData?.rawData?.htmlAnalysis?.title ?? null,
-            metaDescription: expertData?.scores?.semantic?.hasMetaDesc === false ? '' : null,
+            title: expertData?.rawData?.htmlAnalysis?.title ?? undefined,
+            metaDescription: expertData?.scores?.semantic?.hasMetaDesc === false
+              ? ''
+              : (expertData?.scores?.semantic?.hasMetaDesc === true ? 'ok' : undefined),
+
             h1Count: expertData?.scores?.semantic?.h1Count ?? null,
             words: expertData?.scores?.semantic?.wordCount ?? null,
             lcpMs: expertData?.scores?.performance?.lcp ?? null,

@@ -4,9 +4,15 @@
  * plutôt que sur le seul périmètre crawlé.
  */
 
-const MAX_URLS = 5000;
-const MAX_CHILD_SITEMAPS = 8;
+const MAX_URLS = 20000;
+/**
+ * Un index de sitemaps segmenté par type de contenu (avis, témoignages, guides,
+ * produits…) dépasse largement 8 enfants. Plafonner à 8 tronquait le sitemap et
+ * faisait conclure à tort « aucune page de ce type détectée ».
+ */
+const MAX_CHILD_SITEMAPS = 50;
 const TIMEOUT_MS = 8000;
+
 
 async function fetchText(url: string): Promise<string | null> {
   try {
@@ -79,13 +85,15 @@ export async function fetchSitemapUrls(domain: string): Promise<string[]> {
 
     const children = locs.filter((u) => /\.xml(\.gz)?($|\?)/i.test(u)).slice(0, MAX_CHILD_SITEMAPS);
     const all: string[] = [];
-    for (const child of children) {
-      if (all.length >= MAX_URLS) break;
-      const childXml = await fetchText(child);
-      if (!childXml) continue;
-      all.push(...extractLocs(childXml));
+    // Lecture par vagues de 8 : 50 enfants en séquentiel dépasseraient le budget temps.
+    for (let i = 0; i < children.length && all.length < MAX_URLS; i += 8) {
+      const batch = await Promise.all(children.slice(i, i + 8).map((c) => fetchText(c)));
+      for (const childXml of batch) {
+        if (childXml) all.push(...extractLocs(childXml));
+      }
     }
     if (all.length) return all.slice(0, MAX_URLS);
+
   }
   return [];
 }
