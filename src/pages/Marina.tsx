@@ -898,7 +898,13 @@ export default function Marina() {
                   </Button>
                 </div>
 
-                {/* Essai gratuit sans compte : email obligatoire, quota par IP */}
+                {/* Modes de scan + carte d'identité : remontés juste sous la barre d'URL */}
+                <div className="grid gap-3 md:grid-cols-2 [&>*]:mt-0 mt-3">
+                  <MarinaScanModePanel language={language} active={activeScanMode} pagesCrawled={scanPagesCrawled} />
+                  <MarinaIdentityPanel url={url} isAuthenticated={!!user} />
+                </div>
+
+                {/* Essai gratuit sans compte : email obligatoire, quota par IP — masqué si connecté */}
                 {!user && freeRemaining !== 0 && (
                   <div className="mt-3 text-left">
                     <p className="text-sm font-medium text-foreground mb-2">{freeT.title}</p>
@@ -917,8 +923,7 @@ export default function Marina() {
                   </div>
                 )}
 
-
-                {/* Progression de l'audit — juste sous le champ URL */}
+                {/* Progression de l'audit */}
                 {loading && (
                   <MarinaProgressTimeline
                     phase={phase}
@@ -929,11 +934,6 @@ export default function Marina() {
                   />
                 )}
 
-                {/* Modes de scan + carte d'identité : deux colonnes pour limiter la hauteur */}
-                <div className="grid gap-3 md:grid-cols-2 [&>*]:mt-0 mt-3">
-                  <MarinaScanModePanel language={language} active={activeScanMode} pagesCrawled={scanPagesCrawled} />
-                  <MarinaIdentityPanel url={url} isAuthenticated={!!user} />
-                </div>
 
                 {/* Audit multipages (max 15 URLs, PDF unique) */}
                 <MarinaMultipagePanel
