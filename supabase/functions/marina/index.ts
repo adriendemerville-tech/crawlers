@@ -4656,7 +4656,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         try {
           const { data: wb } = await sb
             .from('architect_workbench')
-            .select('id, title, description, severity, finding_category, status, source_type, target_url')
+            .select('id, title, description, severity, finding_category, status, source_type, source_function, payload, target_url')
             .eq('domain', domain)
             .eq('user_id', parentJob.user_id)
             .neq('status', 'done')
