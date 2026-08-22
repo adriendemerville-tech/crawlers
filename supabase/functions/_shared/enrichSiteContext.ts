@@ -418,10 +418,39 @@ export async function ensureSiteContext(
   }
 
 
+  /**
+   * Dimensions structurelles de l'entreprise (économie, statut légal, taille,
+   * structuration, rôle dans la chaîne de valeur, relation client, mode de
+   * livraison). Déterministe, sauf le croisement SIRENE (API publique gratuite,
+   * jamais bloquant). Ces dimensions ne servent PAS toutes aux questions de
+   * benchmark : le tri de pertinence est fait plus tard, croisé avec l'offre.
+   */
+  const legalBlob = [evidence?.text, evidence?.description, ...(evidence?.headings || [])].filter(Boolean).join(' ')
+  const declaredSiren = (currentContext as Record<string, any>).siren_siret || extractSirenSiret(legalBlob)
+  const sirene = declaredSiren ? await lookupSirene(String(declaredSiren)) : null
+  const dimensions = deriveEnterpriseDimensions({
+    products_services: merged.products_services,
+    value_proposition: merged.value_proposition,
+    market_sector: merged.market_sector,
+    target_audience: merged.target_audience,
+    business_model: (currentContext as Record<string, any>).business_model,
+    entity_type: merged.entity_type,
+    company_size: merged.company_size,
+    legal_structure: (currentContext as Record<string, any>).legal_structure,
+    siren_siret: declaredSiren ? String(declaredSiren) : null,
+    legal_html: legalBlob,
+    sirene,
+  })
+  ;(merged as Record<string, any>).enterprise_dimensions = dimensions
+  console.log(`[enrich-site] dimensions ${domain}: ${dimensions.delivery_mode || '?'} / ${dimensions.customer_relation || '?'} / ${dimensions.economy_tier || '?'}${sirene ? ' (SIRENE croisé)' : ''}`)
+
   // Persist enriched data via Identity Gateway (single write point)
   if (siteId) {
     try {
       const fields: Record<string, unknown> = {}
+      fields.enterprise_dimensions = dimensions
+      if (dimensions.siren) fields.siren_siret = dimensions.siren
+      if (dimensions.legal_form) fields.legal_structure = dimensions.legal_form
       if (merged.market_sector) fields.market_sector = merged.market_sector
       if (merged.products_services) fields.products_services = merged.products_services
       if (merged.value_proposition) fields.value_proposition = merged.value_proposition

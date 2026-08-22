@@ -31,6 +31,13 @@ import {
 } from './naturalPrompts.ts';
 import { isActorTopic, isToolLikeSite, type TopicSelection } from './questionTopics.ts';
 import { resolveGeoScope, geoPhrase, describeGeoScope, type GeoScope } from './geoScope.ts';
+import {
+  deriveEnterpriseDimensions,
+  selectBenchmarkDimensions,
+  describeDimensionSelection,
+  type EnterpriseDimensions,
+  type DimensionInput,
+} from './enterpriseDimensions.ts';
 
 export interface BenchmarkPrompt {
   intent: string;
@@ -576,9 +583,37 @@ export function buildLlmBenchmarks(
     else first.prompts[first.prompts.length - 1] = prompt;
   }
 
+  /**
+   * Dimensions structurelles × offre (voir enterpriseDimensions.ts).
+   * Seules les dimensions jugées PERTINENTES pour la requête d'un prospect
+   * modifient une question. Ici, deux effets déterministes :
+   *  - sous-traitance vendue à des professionnels → une question est posée par
+   *    un donneur d'ordre qui cherche un partenaire d'exécution ;
+   *  - achat professionnel (B2B / B2G) sans cible exploitable → la question de
+   *    contexte prend le rôle de l'acheteur au lieu de rester générique.
+   * Les dimensions écartées (forme juridique, SIREN, effectif d'un SaaS…)
+   * n'entrent jamais dans une question.
+   */
+  const dims = (site as Record<string, any>).enterprise_dimensions as EnterpriseDimensions | undefined
+    ?? deriveEnterpriseDimensions(ctx as DimensionInput);
+  const dimSelection = selectBenchmarkDimensions(dims, ctx as DimensionInput);
+  const subcontracting = dimSelection.relevant.find((r) => r.key === 'value_chain_role');
+  if (subcontracting && result.length) {
+    const block = result[Math.min(1, result.length - 1)];
+    const need = framedNeed(needs[Math.min(1, needs.length - 1)]).need;
+    const text = lang === 'en'
+      ? `We take on the projects ourselves and need a reliable partner for ${need} — who would you trust?`
+      : lang === 'es'
+        ? `Gestionamos los proyectos y necesitamos un socio fiable para ${need}: ¿en quién confiarías?`
+        : `Je gère des chantiers et je cherche un partenaire fiable à qui confier ${deOf(need)} : à qui faire confiance ?`;
+    const prompt: BenchmarkPrompt = { intent: 'subcontracting', text };
+    const slot = block.prompts.findIndex((p) => p.intent === 'audience' || p.intent === 'usecase');
+    if (slot >= 0) block.prompts[slot] = prompt;
+  }
 
   const coverage = keywordCoverage(result, anchorKeywords);
-  console.log(`[llmBenchmarks] ancrage carte d'identité : ${coverage.covered}/${coverage.total} questions (${Math.round(coverage.ratio * 100)} %)${competitorOk ? ' · 1 question concurrent' : ''}${reputationOk ? ' · 1 question réputation (page avis)' : ''}`);
+  console.log(`[llmBenchmarks] ancrage carte d'identité : ${coverage.covered}/${coverage.total} questions (${Math.round(coverage.ratio * 100)} %)${competitorOk ? ' · 1 question concurrent' : ''}${reputationOk ? ' · 1 question réputation (page avis)' : ''}${subcontracting ? ' · 1 question donneur d\'ordre' : ''}`);
+  console.log(`[llmBenchmarks] dimensions × offre — ${describeDimensionSelection(dimSelection)}`);
 
   return result;
 }

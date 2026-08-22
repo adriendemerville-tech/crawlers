@@ -21,6 +21,14 @@
 import { callRoutedAI } from './aiRouter.ts';
 import { buildBrandScrubTerms, scrubBrandFromText, type SiteContext, type PromptLang } from './naturalPrompts.ts';
 import { identityKeywords, questionHasKeyword, keywordCoverage, type LlmBenchmark } from './llmBenchmarks.ts';
+import {
+  deriveEnterpriseDimensions,
+  selectBenchmarkDimensions,
+  dimensionsPromptBlock,
+  describeDimensionSelection,
+  type EnterpriseDimensions,
+  type DimensionInput,
+} from './enterpriseDimensions.ts';
 
 /** Part minimale des questions devant contenir un mot-clé de la carte d'identité. */
 const MIN_KEYWORD_COVERAGE = 0.75;
@@ -162,6 +170,19 @@ export async function naturalizeBenchmarkQuestions(
     s.business_model ? `Modèle d'affaires : ${s.business_model}` : '',
   ].filter(Boolean).join('\n');
 
+  /**
+   * Croisement dimensions × offre : les dimensions structurelles fournies (ou
+   * dérivées à la volée, 0 token) sont filtrées selon leur pertinence RÉELLE
+   * pour un prospect, puis traduites en consignes de formulation. Les dimensions
+   * écartées (forme juridique, SIREN, effectif d'un SaaS…) sont explicitement
+   * interdites au modèle.
+   */
+  const dims: EnterpriseDimensions = (s.enterprise_dimensions as EnterpriseDimensions | undefined)
+    ?? deriveEnterpriseDimensions(s as DimensionInput);
+  const dimensionSelection = selectBenchmarkDimensions(dims, s as DimensionInput);
+  const dimensionsBlock = dimensionsPromptBlock(dimensionSelection);
+  console.log(`[benchmarkQuestions] dimensions croisées avec l'offre — ${describeDimensionSelection(dimensionSelection)}`);
+
   const blocks = benchmarks.map((b, i) => ({
     index: i,
     axe: AXIS_ROLE[b.id.replace(/_\d+$/, '')] || AXIS_ROLE.identity,
@@ -193,6 +214,7 @@ export async function naturalizeBenchmarkQuestions(
       : '',
     "Une question dont l'intention est « competitor » doit conserver TEL QUEL le nom du concurrent présent dans la version déterministe.",
     `Type d'entreprise auditée : ${ARCHETYPE_DIRECTIVE[archetype]}`,
+    dimensionsBlock,
     "INTERDIT : désigner ce que cherche le client par « site », « site web » ou « site internet ». Un client cherche une entreprise, un artisan, une agence, une boutique ou un outil — jamais un site.",
     "N'invente jamais une activité absente de la carte d'identité : si l'entreprise réalise des travaux, ne suggère pas d'acheter des matériaux ou des produits en ligne.",
     "Quand un bloc porte sur la proposition de valeur centrale, la question doit interroger cette offre de front, sans détour ni généralité.",
