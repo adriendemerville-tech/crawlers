@@ -362,6 +362,8 @@ export function mergeMarinaReports(
   // diffère d'une URL à l'autre, on les redescend au périmètre page pour ne pas
   // jeter des mesures déjà payées. Contenus identiques → mutualisation normale.
   const DEMOTABLE_WHEN_DIFFERENT = new Set(['llm']);
+  /** Blocs effectivement redescendus au périmètre page pour ce lot. */
+  const demotedToPage = new Set<string>();
   for (const id of DEMOTABLE_WHEN_DIFFERENT) {
     const variants = new Set<string>();
     for (const s of splits) {
@@ -369,6 +371,7 @@ export function mergeMarinaReports(
       if (html) variants.add(html.replace(/\s+/g, ' ').trim());
     }
     if (variants.size < 2) continue;
+    demotedToPage.add(id);
     for (const s of splits) {
       const html = s.siteBlocks.get(id);
       if (!html) continue;
@@ -377,6 +380,7 @@ export function mergeMarinaReports(
       s.pageBlocks.splice(at >= 0 ? at + 1 : 0, 0, { id, html });
     }
   }
+
 
   // Blocs site : on garde la première occurrence trouvée dans le batch.
   const siteBlocks = new Map<string, string>();
