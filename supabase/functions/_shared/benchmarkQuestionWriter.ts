@@ -162,6 +162,19 @@ export async function naturalizeBenchmarkQuestions(
     s.business_model ? `Modèle d'affaires : ${s.business_model}` : '',
   ].filter(Boolean).join('\n');
 
+  /**
+   * Croisement dimensions × offre : les dimensions structurelles fournies (ou
+   * dérivées à la volée, 0 token) sont filtrées selon leur pertinence RÉELLE
+   * pour un prospect, puis traduites en consignes de formulation. Les dimensions
+   * écartées (forme juridique, SIREN, effectif d'un SaaS…) sont explicitement
+   * interdites au modèle.
+   */
+  const dims: EnterpriseDimensions = (s.enterprise_dimensions as EnterpriseDimensions | undefined)
+    ?? deriveEnterpriseDimensions(s as DimensionInput);
+  const dimensionSelection = selectBenchmarkDimensions(dims, s as DimensionInput);
+  const dimensionsBlock = dimensionsPromptBlock(dimensionSelection);
+  console.log(`[benchmarkQuestions] dimensions croisées avec l'offre — ${describeDimensionSelection(dimensionSelection)}`);
+
   const blocks = benchmarks.map((b, i) => ({
     index: i,
     axe: AXIS_ROLE[b.id.replace(/_\d+$/, '')] || AXIS_ROLE.identity,
