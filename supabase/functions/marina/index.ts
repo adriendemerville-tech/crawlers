@@ -4609,10 +4609,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           // faisait apparaître Marseille, Créteil ou Pau dans la fiche de
           // Saint-Rémy. Les tâches sans cible restent (périmètre domaine).
           const urlKeyForWb = pageKey(url);
-          workbenchTasks = ((wb as WorkbenchTask[]) || []).filter((task: any) => {
-            const target = task?.target_url ? String(task.target_url) : '';
-            return target ? pageKey(target) === urlKeyForWb : true;
-          });
+          // Les plafonds de cohérence (cause racine) entrent en tête de file :
+          // corriger un balisage avant de rendre le contenu ne produit rien.
+          workbenchTasks = sortWorkbenchByGatePriority(
+            ((wb as WorkbenchTask[]) || []).filter((task: any) => {
+              const target = task?.target_url ? String(task.target_url) : '';
+              return target ? pageKey(target) === urlKeyForWb : true;
+            }) as any,
+          ) as WorkbenchTask[];
+
         } catch (wbErr) {
           console.warn('[Marina] Workbench fetch failed (non-fatal):', wbErr);
         }
