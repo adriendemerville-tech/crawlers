@@ -594,9 +594,10 @@ export function buildLlmBenchmarks(
    * Les dimensions écartées (forme juridique, SIREN, effectif d'un SaaS…)
    * n'entrent jamais dans une question.
    */
-  const dims = (site as Record<string, any>).enterprise_dimensions as EnterpriseDimensions | undefined
-    ?? deriveEnterpriseDimensions(ctx as DimensionInput);
-  const dimSelection = selectBenchmarkDimensions(dims, ctx as DimensionInput);
+  const dimInput = ctx as unknown as DimensionInput;
+  const dims = ((site as Record<string, any>).enterprise_dimensions as EnterpriseDimensions | undefined)
+    ?? deriveEnterpriseDimensions(dimInput);
+  const dimSelection = selectBenchmarkDimensions(dims, dimInput);
   const subcontracting = dimSelection.relevant.find((r) => r.key === 'value_chain_role');
   if (subcontracting && result.length) {
     const block = result[Math.min(1, result.length - 1)];
