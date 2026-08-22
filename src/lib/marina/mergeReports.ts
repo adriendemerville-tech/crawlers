@@ -357,6 +357,27 @@ export function mergeMarinaReports(
   const splits = parts.map(p => splitBody(extractBody(p.html)));
   const mutualised = splits.some(s => s.tagged);
 
+  // Rétro-compatibilité de portée : certains blocs ont été balisés « site » à la
+  // source alors qu'ils sont mesurés par URL (benchmark LLM). Si leur contenu
+  // diffère d'une URL à l'autre, on les redescend au périmètre page pour ne pas
+  // jeter des mesures déjà payées. Contenus identiques → mutualisation normale.
+  const DEMOTABLE_WHEN_DIFFERENT = new Set(['llm']);
+  for (const id of DEMOTABLE_WHEN_DIFFERENT) {
+    const variants = new Set<string>();
+    for (const s of splits) {
+      const html = s.siteBlocks.get(id);
+      if (html) variants.add(html.replace(/\s+/g, ' ').trim());
+    }
+    if (variants.size < 2) continue;
+    for (const s of splits) {
+      const html = s.siteBlocks.get(id);
+      if (!html) continue;
+      s.siteBlocks.delete(id);
+      const at = s.pageBlocks.findIndex(b => b.id === 'page-verdict');
+      s.pageBlocks.splice(at >= 0 ? at + 1 : 0, 0, { id, html });
+    }
+  }
+
   // Blocs site : on garde la première occurrence trouvée dans le batch.
   const siteBlocks = new Map<string, string>();
   for (const s of splits) {
@@ -364,6 +385,7 @@ export function mergeMarinaReports(
       if (!siteBlocks.has(id)) siteBlocks.set(id, htmlBlock);
     }
   }
+
   const disclosure = siteBlocks.get('disclosure') || '';
   siteBlocks.delete('disclosure');
   // « Portée et limites » : toujours présent, toujours en dernière position.
