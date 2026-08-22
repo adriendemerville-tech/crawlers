@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2, Link2, ExternalLink, Search, X, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { InternalInventorySection } from "@/components/Console/Marketplace/InternalInventorySection";
 
 const PROVIDERS = [
   { slug: "accesslink", label: "Accesslink.ai" },
@@ -473,6 +474,8 @@ export default function Netlinking() {
               </div>
             </Card>
           )}
+
+          <InternalInventorySection />
 
           {offers.length === 0 && !loading && hasActiveFilters && (
             <Card className="p-10 text-center">

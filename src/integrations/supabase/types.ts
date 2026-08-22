@@ -9137,6 +9137,54 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_buyer_limits: {
+        Row: {
+          buy_risk: number
+          computed_at: string
+          constants_version: number
+          exact_anchor_ratio: number
+          id: string
+          links_30d: number
+          links_7d: number
+          next_allowed_at: string | null
+          per_seller_12m: Json
+          target_url_counts: Json
+          throttle_reason: string | null
+          topical_coherence: number
+          user_id: string
+        }
+        Insert: {
+          buy_risk?: number
+          computed_at?: string
+          constants_version?: number
+          exact_anchor_ratio?: number
+          id?: string
+          links_30d?: number
+          links_7d?: number
+          next_allowed_at?: string | null
+          per_seller_12m?: Json
+          target_url_counts?: Json
+          throttle_reason?: string | null
+          topical_coherence?: number
+          user_id: string
+        }
+        Update: {
+          buy_risk?: number
+          computed_at?: string
+          constants_version?: number
+          exact_anchor_ratio?: number
+          id?: string
+          links_30d?: number
+          links_7d?: number
+          next_allowed_at?: string | null
+          per_seller_12m?: Json
+          target_url_counts?: Json
+          throttle_reason?: string | null
+          topical_coherence?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       marketplace_gsc_access_log: {
         Row: {
           admin_user_id: string
@@ -9329,6 +9377,232 @@ export type Database = {
           updated_at?: string
           url?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_match_values: {
+        Row: {
+          balance_cents: number
+          buy_need_score: number
+          buyer_face: number
+          computed_at: string
+          constants_version: number
+          domain: string
+          expires_at: string
+          factors: Json
+          id: string
+          scope: string
+          sell_potential_cents: number
+          seller_face: number
+          url: string
+          user_id: string
+        }
+        Insert: {
+          balance_cents?: number
+          buy_need_score?: number
+          buyer_face?: number
+          computed_at?: string
+          constants_version?: number
+          domain: string
+          expires_at?: string
+          factors?: Json
+          id?: string
+          scope: string
+          sell_potential_cents?: number
+          seller_face?: number
+          url?: string
+          user_id: string
+        }
+        Update: {
+          balance_cents?: number
+          buy_need_score?: number
+          buyer_face?: number
+          computed_at?: string
+          constants_version?: number
+          domain?: string
+          expires_at?: string
+          factors?: Json
+          id?: string
+          scope?: string
+          sell_potential_cents?: number
+          seller_face?: number
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_matches: {
+        Row: {
+          asset_id: string
+          attribute_basis: Json
+          buyer_domain: string
+          buyer_user_id: string
+          compat_score: number
+          computed_at: string
+          constants_version: number
+          expires_at: string
+          factors: Json
+          id: string
+          need_id: string
+          price_cents: number
+          price_tier:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          projected_attribute: Database["public"]["Enums"]["marketplace_link_attribute"]
+          seller_domain: string
+          seller_user_id: string
+          status: string
+        }
+        Insert: {
+          asset_id: string
+          attribute_basis?: Json
+          buyer_domain: string
+          buyer_user_id: string
+          compat_score?: number
+          computed_at?: string
+          constants_version?: number
+          expires_at?: string
+          factors?: Json
+          id?: string
+          need_id: string
+          price_cents?: number
+          price_tier?:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          projected_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
+          seller_domain: string
+          seller_user_id: string
+          status?: string
+        }
+        Update: {
+          asset_id?: string
+          attribute_basis?: Json
+          buyer_domain?: string
+          buyer_user_id?: string
+          compat_score?: number
+          computed_at?: string
+          constants_version?: number
+          expires_at?: string
+          factors?: Json
+          id?: string
+          need_id?: string
+          price_cents?: number
+          price_tier?:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          projected_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
+          seller_domain?: string
+          seller_user_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_matches_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_asset_public_signals"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "marketplace_matches_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_link_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_matches_need_id_fkey"
+            columns: ["need_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_needs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_needs: {
+        Row: {
+          authority_deficit: number
+          constants_version: number
+          created_at: string
+          domain: string
+          evidence: Json
+          id: string
+          need_objective:
+            | Database["public"]["Enums"]["marketplace_need_objective"]
+            | null
+          need_objective_confirmed_at: string | null
+          need_objective_source:
+            | Database["public"]["Enums"]["marketplace_need_objective_source"]
+            | null
+          need_primary: Database["public"]["Enums"]["marketplace_need_objective"]
+          need_score: number
+          need_secondary:
+            | Database["public"]["Enums"]["marketplace_need_objective"]
+            | null
+          need_type: Database["public"]["Enums"]["marketplace_need_type"]
+          severity: string
+          status: string
+          target_url: string
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+          workbench_item_id: string | null
+        }
+        Insert: {
+          authority_deficit?: number
+          constants_version?: number
+          created_at?: string
+          domain: string
+          evidence?: Json
+          id?: string
+          need_objective?:
+            | Database["public"]["Enums"]["marketplace_need_objective"]
+            | null
+          need_objective_confirmed_at?: string | null
+          need_objective_source?:
+            | Database["public"]["Enums"]["marketplace_need_objective_source"]
+            | null
+          need_primary: Database["public"]["Enums"]["marketplace_need_objective"]
+          need_score?: number
+          need_secondary?:
+            | Database["public"]["Enums"]["marketplace_need_objective"]
+            | null
+          need_type: Database["public"]["Enums"]["marketplace_need_type"]
+          severity?: string
+          status?: string
+          target_url: string
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+          workbench_item_id?: string | null
+        }
+        Update: {
+          authority_deficit?: number
+          constants_version?: number
+          created_at?: string
+          domain?: string
+          evidence?: Json
+          id?: string
+          need_objective?:
+            | Database["public"]["Enums"]["marketplace_need_objective"]
+            | null
+          need_objective_confirmed_at?: string | null
+          need_objective_source?:
+            | Database["public"]["Enums"]["marketplace_need_objective_source"]
+            | null
+          need_primary?: Database["public"]["Enums"]["marketplace_need_objective"]
+          need_score?: number
+          need_secondary?:
+            | Database["public"]["Enums"]["marketplace_need_objective"]
+            | null
+          need_type?: Database["public"]["Enums"]["marketplace_need_type"]
+          severity?: string
+          status?: string
+          target_url?: string
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+          workbench_item_id?: string | null
         }
         Relationships: []
       }
