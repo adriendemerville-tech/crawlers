@@ -499,7 +499,7 @@ Cette clause figure aux CGVU (section 7.5).
 
 Le frein principal n'est pas le prix mais l'absence de raison de vendre : un site sans excédent
 d'autorité n'a pas d'intérêt monétaire à céder un lien. L'incentive retenu est donc l'**échange**,
-avec la même commission Crawlers prélevée en crédits, et non un flux d'argent.
+avec la même commission Crawlers de 15 %, prélevée en crédits faute de flux d'argent à retenir.
 
 Six `trade_type` sont proposés. Ils ne sont **pas à égalité** : le moteur applique la hiérarchie
 de §2.2 (chaîne > cross-média > réciprocité directe) et choisit, à l'intérieur de ce cadre, celui
