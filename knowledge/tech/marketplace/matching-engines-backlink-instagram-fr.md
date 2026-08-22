@@ -204,22 +204,38 @@ compat = 0.35 × proximité_sémantique
 ```
 
 Exclusions dures (compat = 0) :
-- lien déjà existant entre les deux domaines ;
-- **cycle** détecté dans le graphe des liens échangés jusqu'à 4 sauts (A→B→A, A→B→C→A) ;
+- lien déjà existant entre les deux domaines — **sauf** s'il s'agit de la 2ᵉ jambe d'un troc
+  `link_for_link` déjà accepté (`marketplace_exchanges.status = accepted`, même `exchange_id`) :
+  cette jambe est attendue par construction et n'est donc jamais bloquée par cette règle ;
+- **cycle** détecté dans le graphe des liens échangés jusqu'à 4 sauts, **hors** boucle d'échange
+  explicitement enregistrée : une chaîne `A→B→C→A` portée par un `exchange_id` de type
+  `link_chain` est légitime (c'est le mode privilégié, cf. ci-dessous) ; seuls les cycles
+  **non déclarés** (liens qui se ferment de fait, sans troc enregistré) restent exclus ;
 - réciprocité directe hors quota : quota `link_for_link` du trimestre déjà consommé, ou même
   partenaire déjà servi sur 12 mois glissants ;
 - même propriétaire / grappe de comptes liés (même IP, même CMS connecté, même Kbis) ;
 - plafond de liens sortants atteint (page : 1 lien dofollow vendu ; domaine : 20/an) ;
 - thématiques exclues (jeux d'argent, crypto, adulte).
 
-La réciprocité **dans le quota** n'est pas une exclusion : elle est autorisée en mode
-`link_for_link` (§2.7), flaggée aux deux parties, décorrélée de 21 jours et valorisée avec le
-facteur de décote d'équité 0,70. Elle n'annule pas `compat`, elle le pénalise :
+**Hiérarchie des modes d'échange sans cash.** La réciprocité directe reste possible, mais elle
+n'est jamais le premier choix du moteur. Ordre de préférence, appliqué à l'appariement :
+
+1. **Chaîne à 3 sauts ou plus (`link_chain`, A→B→C→A)** — mode privilégié : aucun lien réciproque
+   direct, empreinte beaucoup plus naturelle, autorité équilibrée à l'échelle du réseau. Pas de
+   décote (`compat` inchangé), publication des jambes échelonnée (7 j minimum entre deux jambes
+   de la même boucle), boucle enregistrée sous un `exchange_id` unique.
+2. **Troc cross-média** (`link_for_linkedin`, `link_for_insta`) — pas de réciprocité de liens du
+   tout, donc pas de décote.
+3. **`link_for_link` direct** — solution de dernier recours, uniquement si aucune chaîne ni troc
+   cross-média n'est constructible pour ce besoin. Flaggé aux deux parties, décorrélé de 21 jours,
+   quota 1 / trimestre / site, et pénalisé :
 
 ```
 compat_link_for_link = compat × 0.70
 ```
 
+Conséquence pratique : le moteur tente d'abord de fermer une boucle à 3 (ou 4) participants avant
+de proposer un `link_for_link`. Ce dernier n'est présenté que si la recherche de chaîne échoue.
 
 Notification des deux faces au-delà d'un seuil (`compat ≥ 0.6`).
 
