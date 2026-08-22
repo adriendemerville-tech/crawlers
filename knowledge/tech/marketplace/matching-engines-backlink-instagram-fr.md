@@ -230,24 +230,23 @@ tiers. Crawlers ne prélève que sa commission.
 
 ### 2.8 Autres contreparties pour équilibrer un lien
 
-Toutes suivent la même règle : la contrepartie ne doit **jamais** être un lien retour vers le site
-acheteur. Elles sont évaluées par le même moteur d'équivalence et réglées en crédits pour l'écart.
+Deux règles : la contrepartie ne doit **jamais** être un lien retour vers le site acheteur, et elle
+doit toujours être fournie par l'un des deux users — jamais par Crawlers.
 
 | Contrepartie | Valeur pour l'acheteur | Vérifiable par Crawlers |
 |---|---|---|
-| Crédits Crawlers | le vendeur est payé en usage plateforme (coût réel ~0,05 €/crédit) — marge Crawlers maximale | oui, natif |
-| Remise / mois d'abonnement offerts | rend le coût net d'abonnement du vendeur proche de zéro : incentive le plus fort pour un petit site | oui, natif |
+| Euros (hausse du prix de la commande) | règlement direct de l'écart, paliers P1–P4 | oui, natif |
+| Crédits Crawlers transférés d'un wallet à l'autre | le vendeur est payé en usage plateforme, sans sortie de cash côté acheteur | oui, natif |
 | Post LinkedIn ou story Instagram | cf. 2.7 | oui, via connecteurs |
 | Newsletter : mention dans un envoi | audience qualifiée, non indexable, aucun signal SEO | partiellement (capture d'écran + nombre d'abonnés déclaré) |
 | Citation dans un contenu tiers (podcast, interview, étude co-signée) | E-E-A-T réel, mention de marque exploitée par les LLM | manuel |
-| Donnée / étude exclusive fournie au vendeur | le vendeur reçoit un contenu à publier, l'acheteur obtient la citation de source | oui (contenu généré côté Crawlers) |
-| Audit Marina offert au vendeur | contrepartie à coût marginal quasi nul, forte valeur perçue | oui, natif |
-| Mise en avant dans l'annuaire/observatoire Crawlers | visibilité interne, pas de lien sortant vers l'acheteur | oui, natif |
+| Donnée / étude exclusive fournie par l'acheteur au vendeur | le vendeur reçoit un contenu à publier, l'acheteur obtient la citation de source | manuel |
 
-Les trois contreparties à prioriser en v1 parce qu'elles sont natives, à coût marginal faible et
-sans risque Google : **crédits**, **mois d'abonnement offerts**, **audit Marina offert**. Les
-contreparties sociales (jambes LinkedIn et Instagram, cf. 2.7) arrivent avec les connecteurs. Les
-contreparties non vérifiables automatiquement (newsletter, podcast) restent hors v1 et hors garantie.
+Les deux seules devises de soulte en v1 sont donc **les euros** et **les crédits Crawlers transférés
+entre users**. Les mois d'abonnement offerts, remises et audits offerts sont exclus : ils feraient
+supporter par Crawlers l'écart de valeur entre deux tiers. Les contreparties sociales (jambes
+LinkedIn et Instagram, cf. 2.7) arrivent avec les connecteurs. Les contreparties non vérifiables
+automatiquement (newsletter, podcast, étude) restent hors v1 et hors garantie.
 
 
 ---
