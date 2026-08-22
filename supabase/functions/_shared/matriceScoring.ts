@@ -3,6 +3,7 @@
 /* ================================================================== */
 
 import type { HtmlData } from './matriceHtmlAnalysis.ts'
+import { measurePerformance } from './perfMeasurement.ts'
 
 export interface RobotsData {
   exists: boolean; permissive: boolean; content: string
