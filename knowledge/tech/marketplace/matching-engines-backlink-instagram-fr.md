@@ -137,21 +137,87 @@ Le frein principal n'est pas le prix mais l'absence de raison de vendre : un sit
 d'autorité n'a pas d'intérêt monétaire à céder un lien. L'incentive retenu est donc l'**échange**,
 avec la même commission Crawlers prélevée en crédits, et non un flux d'argent.
 
-Modes d'échange retenus, par ordre de priorité produit :
+Cinq `trade_type` sont proposés **à égalité**, sans mode par défaut. Le moteur choisit celui qui
+sert le mieux les besoins des deux parties (voir 2.7.1), pas celui qui plaît au produit.
 
-| Mode | Contenu | Contrainte anti-pattern |
-|---|---|---|
-| `link_for_linkedin` | lien A→B contre post LinkedIn de B citant A (avec lien) | mode **de premier plan** : le post est durable, indexable, à forte E-E-A-T professionnelle, et porte un lien nofollow natif — aucun signal d'échange de liens SEO |
-| `link_for_story` | lien A→B contre story/post Instagram de B mentionnant A | second choix : reach réel mais éphémère (24 h), non indexable |
-| `story_for_story` | mention croisée Instagram | libre, hors périmètre SEO |
+| `trade_type` | Jambe A (acheteur reçoit) | Jambe B (vendeur reçoit) | Nature |
+|---|---|---|---|
+| `link_for_link` | lien A→B | lien B→A | même devise, réciproque direct |
+| `link_for_linkedin` | lien A→B | post LinkedIn de B citant A | cross-média |
+| `link_for_insta` | lien A→B | post/story Instagram de B mentionnant A | cross-média |
+| `linkedin_for_linkedin` | post LinkedIn croisé | post LinkedIn croisé | même devise sociale |
+| `insta_for_insta` | mention Instagram croisée | mention Instagram croisée | même devise sociale |
+
+#### 2.7.1 Matrice besoin ↔ devise
+
+Trois besoins possibles par site : **SEO** (autorité, classement organique), **GEO** (citabilité
+par les moteurs génératifs), **conversion** (trafic qualifié immédiat). La matrice se lit pour
+chaque partie séparément — un `trade_type` est pertinent quand la jambe reçue couvre le besoin
+dominant de la partie qui la reçoit.
+
+| Jambe reçue | SEO | GEO | Conversion | Commentaire |
+|---|---|---|---|---|
+| Lien dofollow éditorial | fort | moyen | faible à moyen | seul actif qui transmet de l'autorité ; décoté si réciproque direct |
+| Post LinkedIn citant la marque | faible (nofollow) | fort | moyen | page publique indexée, texte servi en SSR, forte reprise dans les corpus et les réponses génératives B2B |
+| Post / reel Instagram | quasi nul | faible | fort | peu crawlé, peu cité par les LLM ; valeur réelle = audience et clic bio |
+| Story Instagram (24 h) | nul | nul | fort mais éphémère | pic de trafic, aucune trace indexable |
+
+Lecture par `trade_type`, besoin dominant servi de chaque côté :
+
+| `trade_type` | Acheteur sert | Vendeur sert | Cas d'usage type |
+|---|---|---|---|
+| `link_for_link` | SEO | SEO | deux sites à besoin SEO symétrique et thématiques non concurrentes |
+| `link_for_linkedin` | SEO | GEO | acheteur veut de l'autorité, vendeur veut être cité par les IA |
+| `link_for_insta` | SEO | Conversion | vendeur B2C cherche du trafic et des ventes, pas du PageRank |
+| `linkedin_for_linkedin` | GEO | GEO | deux marques B2B qui veulent exister dans les réponses génératives |
+| `insta_for_insta` | Conversion | Conversion | échange d'audience pur, aucun gain SEO/GEO promis |
 
 Règles :
-- `link_for_linkedin` est le mode **mis en avant par défaut** : valeur quantifiée par les impressions et l'engagement du post vendeur (moyenne de ses 10 derniers posts), publication vérifiée via l'URN/URL stable du post et le connecteur LinkedIn. À défaut d'impressions organiques exposées par l'API, la valeur est estimée sur followers × taux d'engagement observé sur les réactions et commentaires publics.
-- Le **lien réciproque direct** (A→B contre B→A) est **exclu du périmètre** : Google dévalue ce pattern depuis 2005 (link scheme), les deux liens sont décotés au lieu de gagner, et la triangulation n'est qu'un masquage grey-hat détectable. Le seul échange « gagnant-gagnant » passe par des médias différents (lien à sens unique contre publication sociale), jamais par un lien contre un lien.
-- Équivalence de valeur calculée par le moteur : palier de prix du lien (P1–P4) confronté à la valeur estimée de la publication. L'écart résiduel est réglé en crédits par la partie la moins « chère ».
-- Commission Crawlers sur un troc : 10 % de la valeur estimée de chaque côté, prélevée en crédits (moins que les 25 % d'une vente cash, l'échange n'impliquant aucun encaissement).
+- L'UI n'affiche **jamais** un gain SEO ou GEO pour une jambe Instagram : la valeur annoncée est
+  strictement l'audience et le clic.
+- `link_for_link` est autorisé mais **signalé comme à risque** dans l'UI (pattern de lien
+  réciproque dévalué par Google) : les deux publications sont **décorrélées dans le temps**
+  (délai minimum de 21 jours entre les deux jambes, jamais de publication simultanée), et une
+  pondération de décote est appliquée à la valeur de chaque jambe dans le calcul d'équité.
+- La valeur d'une jambe LinkedIn est estimée sur les impressions et l'engagement des 10 derniers
+  posts du vendeur, publication vérifiée via l'URN/URL stable du post. À défaut d'impressions
+  exposées par l'API : followers × taux d'engagement observé sur les réactions publiques.
+- Commission Crawlers sur un troc : 10 % de la valeur estimée de chaque côté, prélevée en crédits
+  (moins que les 25 % d'une vente cash, l'échange n'impliquant aucun encaissement).
 - Le troc suit le même workflow de prévisualisation (2.3) et de double feedback que la vente.
 - Plafonds : maximum 2 échanges actifs par site sortant et par mois.
+
+#### 2.7.2 Sélection du `trade_type` et de la soulte
+
+Le moteur ne demande pas aux parties de choisir : il propose. Séquence déterministe, sans LLM.
+
+```
+1. Besoins   : need(A), need(B) ∈ {seo, geo, conversion} (dominant + secondaire),
+               dérivés de architect_workbench, du profil E-E-A-T et des actifs connectés.
+2. Candidats : trade_types dont la jambe reçue par A couvre need(A)
+               ET la jambe reçue par B couvre need(B)   → "besoins concordants"
+3. Si candidats ≠ ∅ :
+      juste échange → on retient le trade_type au meilleur couple
+      (couverture_besoin × faisabilité des actifs connectés)
+4. Si candidats = ∅ (besoins non concordants) :
+      on retient le trade_type que le vendeur peut honorer,
+      puis on équilibre par l'équité :
+         value(jambe_A) et value(jambe_B) estimées dans la même unité (€)
+         écart = value(jambe_A) − value(jambe_B)
+         |écart| ≤ 15 %  → échange pur
+         |écart| >  15 %  → soulte réglée par la partie avantagée,
+                            en crédits, mois d'abonnement offerts, audit Marina
+                            ou cash (paliers P1–P4) selon 2.8
+5. Décote  : si trade_type = link_for_link, value de chaque jambe × facteur de décote
+             réciproque avant calcul de l'écart.
+6. Sortie  : { trade_type, jambe_A, jambe_B, soulte, devise_soulte, risk_flags[] }
+             présenté aux deux parties, acceptation explicite des deux côtés requise.
+```
+
+Autrement dit : **quand les besoins matchent, on optimise le juste échange (troc pur) ; quand ils
+ne matchent pas, on choisit le `trade_type` réalisable et on rétablit l'équité par le prix.**
+
+
 
 ### 2.8 Autres contreparties pour équilibrer un lien
 
