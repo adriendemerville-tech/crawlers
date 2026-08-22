@@ -3,6 +3,7 @@ import { OwnershipCard } from './OwnershipCard';
 import { TaxProfileCard } from './TaxProfileCard';
 import { BuyTab } from './BuyTab';
 import { OpportunitiesTab } from './OpportunitiesTab';
+import { OrdersTab } from './OrdersTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTeamPermissions } from '@/hooks/useTeamPermissions';
 
@@ -37,6 +38,7 @@ export function MarketplaceModule() {
           <TabsTrigger value="sell">Vendre</TabsTrigger>
           <TabsTrigger value="opportunities">Demandes reçues</TabsTrigger>
           <TabsTrigger value="buy">Acheter</TabsTrigger>
+          <TabsTrigger value="orders">Commandes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sell" className="space-y-6 pt-6">
@@ -53,6 +55,10 @@ export function MarketplaceModule() {
 
         <TabsContent value="buy" className="pt-6">
           <BuyTab />
+        </TabsContent>
+
+        <TabsContent value="orders" className="pt-6">
+          <OrdersTab />
         </TabsContent>
       </Tabs>
     </div>
