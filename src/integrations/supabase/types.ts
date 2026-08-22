@@ -9185,6 +9185,266 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_content_variants: {
+        Row: {
+          anchor: string | null
+          brief: Json
+          buyer_selected_at: string | null
+          cost_cents: number
+          created_at: string
+          id: string
+          model: string | null
+          order_id: string
+          output: string
+          round_index: number
+          seller_approved_at: string | null
+          variant: Database["public"]["Enums"]["marketplace_variant_kind"]
+        }
+        Insert: {
+          anchor?: string | null
+          brief?: Json
+          buyer_selected_at?: string | null
+          cost_cents?: number
+          created_at?: string
+          id?: string
+          model?: string | null
+          order_id: string
+          output: string
+          round_index?: number
+          seller_approved_at?: string | null
+          variant: Database["public"]["Enums"]["marketplace_variant_kind"]
+        }
+        Update: {
+          anchor?: string | null
+          brief?: Json
+          buyer_selected_at?: string | null
+          cost_cents?: number
+          created_at?: string
+          id?: string
+          model?: string | null
+          order_id?: string
+          output?: string
+          round_index?: number
+          seller_approved_at?: string | null
+          variant?: Database["public"]["Enums"]["marketplace_variant_kind"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_content_variants_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_disputes: {
+        Row: {
+          acknowledged_at: string | null
+          appeal_of: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision:
+            | Database["public"]["Enums"]["marketplace_dispute_decision"]
+            | null
+          decision_notes: string | null
+          decision_outcome: string | null
+          detail: string | null
+          due_at: string | null
+          id: string
+          opened_by: string
+          order_id: string
+          reason: Database["public"]["Enums"]["marketplace_dispute_reason"]
+          status: Database["public"]["Enums"]["marketplace_dispute_status"]
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          appeal_of?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?:
+            | Database["public"]["Enums"]["marketplace_dispute_decision"]
+            | null
+          decision_notes?: string | null
+          decision_outcome?: string | null
+          detail?: string | null
+          due_at?: string | null
+          id?: string
+          opened_by: string
+          order_id: string
+          reason: Database["public"]["Enums"]["marketplace_dispute_reason"]
+          status?: Database["public"]["Enums"]["marketplace_dispute_status"]
+        }
+        Update: {
+          acknowledged_at?: string | null
+          appeal_of?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?:
+            | Database["public"]["Enums"]["marketplace_dispute_decision"]
+            | null
+          decision_notes?: string | null
+          decision_outcome?: string | null
+          detail?: string | null
+          due_at?: string | null
+          id?: string
+          opened_by?: string
+          order_id?: string
+          reason?: Database["public"]["Enums"]["marketplace_dispute_reason"]
+          status?: Database["public"]["Enums"]["marketplace_dispute_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_disputes_appeal_of_fkey"
+            columns: ["appeal_of"]
+            isOneToOne: false
+            referencedRelation: "marketplace_disputes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_exchanges: {
+        Row: {
+          commission_cents: number
+          commission_credits: number | null
+          commission_payer_id: string
+          created_at: string
+          currency_kind: Database["public"]["Enums"]["marketplace_currency_kind"]
+          cycle_check_verdict: string | null
+          delivered_at: string | null
+          exchange_id: string
+          giver_domain: string
+          giver_id: string
+          id: string
+          leg_index: number
+          order_id: string
+          publish_after: string | null
+          receiver_domain: string
+          receiver_id: string
+          reciprocity_quarter: string | null
+          trade_type: Database["public"]["Enums"]["marketplace_trade_type"]
+          value_cents: number
+        }
+        Insert: {
+          commission_cents?: number
+          commission_credits?: number | null
+          commission_payer_id: string
+          created_at?: string
+          currency_kind: Database["public"]["Enums"]["marketplace_currency_kind"]
+          cycle_check_verdict?: string | null
+          delivered_at?: string | null
+          exchange_id: string
+          giver_domain: string
+          giver_id: string
+          id?: string
+          leg_index: number
+          order_id: string
+          publish_after?: string | null
+          receiver_domain: string
+          receiver_id: string
+          reciprocity_quarter?: string | null
+          trade_type: Database["public"]["Enums"]["marketplace_trade_type"]
+          value_cents: number
+        }
+        Update: {
+          commission_cents?: number
+          commission_credits?: number | null
+          commission_payer_id?: string
+          created_at?: string
+          currency_kind?: Database["public"]["Enums"]["marketplace_currency_kind"]
+          cycle_check_verdict?: string | null
+          delivered_at?: string | null
+          exchange_id?: string
+          giver_domain?: string
+          giver_id?: string
+          id?: string
+          leg_index?: number
+          order_id?: string
+          publish_after?: string | null
+          receiver_domain?: string
+          receiver_id?: string
+          reciprocity_quarter?: string | null
+          trade_type?: Database["public"]["Enums"]["marketplace_trade_type"]
+          value_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_exchanges_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_feedback: {
+        Row: {
+          author_id: string
+          author_role: string
+          comment: string | null
+          created_at: string
+          id: string
+          order_id: string
+          revision_id: string | null
+          variant_id: string | null
+          verdict: string
+        }
+        Insert: {
+          author_id: string
+          author_role: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          revision_id?: string | null
+          variant_id?: string | null
+          verdict: string
+        }
+        Update: {
+          author_id?: string
+          author_role?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          revision_id?: string | null
+          variant_id?: string | null
+          verdict?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_feedback_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_feedback_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_link_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_feedback_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_content_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_gsc_access_log: {
         Row: {
           admin_user_id: string
@@ -9235,6 +9495,75 @@ export type Database = {
             columns: ["asset_id"]
             isOneToOne: false
             referencedRelation: "marketplace_link_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_invoices: {
+        Row: {
+          amount_cents: number
+          credit_eur_rate: number | null
+          dac7_reportable: boolean
+          id: string
+          issued_at: string
+          issuer_id: string | null
+          kind: Database["public"]["Enums"]["marketplace_invoice_kind"]
+          leg_id: string | null
+          number: number
+          order_id: string
+          recipient_id: string | null
+          series: string
+          snapshot: Json
+          vat_cents: number
+          vat_rule: string | null
+        }
+        Insert: {
+          amount_cents: number
+          credit_eur_rate?: number | null
+          dac7_reportable?: boolean
+          id?: string
+          issued_at?: string
+          issuer_id?: string | null
+          kind: Database["public"]["Enums"]["marketplace_invoice_kind"]
+          leg_id?: string | null
+          number: number
+          order_id: string
+          recipient_id?: string | null
+          series: string
+          snapshot?: Json
+          vat_cents?: number
+          vat_rule?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          credit_eur_rate?: number | null
+          dac7_reportable?: boolean
+          id?: string
+          issued_at?: string
+          issuer_id?: string | null
+          kind?: Database["public"]["Enums"]["marketplace_invoice_kind"]
+          leg_id?: string | null
+          number?: number
+          order_id?: string
+          recipient_id?: string | null
+          series?: string
+          snapshot?: Json
+          vat_cents?: number
+          vat_rule?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_invoices_leg_id_fkey"
+            columns: ["leg_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_exchanges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -9379,6 +9708,60 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      marketplace_link_revisions: {
+        Row: {
+          created_at: string
+          html_after: string | null
+          html_before: string | null
+          id: string
+          order_id: string
+          paragraph_excerpt: string | null
+          proposed_by: string | null
+          round_index: number
+          status: string
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          html_after?: string | null
+          html_before?: string | null
+          id?: string
+          order_id: string
+          paragraph_excerpt?: string | null
+          proposed_by?: string | null
+          round_index: number
+          status?: string
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          html_after?: string | null
+          html_before?: string | null
+          id?: string
+          order_id?: string
+          paragraph_excerpt?: string | null
+          proposed_by?: string | null
+          round_index?: number
+          status?: string
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_link_revisions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_link_revisions_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_content_variants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marketplace_match_values: {
         Row: {
@@ -9606,6 +9989,165 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_orders: {
+        Row: {
+          anchor: string | null
+          anchor_kind:
+            | Database["public"]["Enums"]["marketplace_anchor_kind"]
+            | null
+          approved_revision_id: string | null
+          asset_id: string
+          asset_kind: Database["public"]["Enums"]["marketplace_asset_kind"]
+          attribute_basis: Json
+          buyer_domain: string
+          buyer_id: string
+          buyer_payment_support: string
+          commission_cents: number
+          commission_credits: number | null
+          commission_settlement: Database["public"]["Enums"]["marketplace_settlement_support"]
+          commission_support: Database["public"]["Enums"]["marketplace_settlement_support"]
+          commitment_ends_at: string | null
+          commitment_months: number
+          constants_version: number | null
+          created_at: string
+          credit_eur_rate_at_freeze: number | null
+          deal_type: Database["public"]["Enums"]["marketplace_deal_type"]
+          dofollow_risk_ack_at: string | null
+          escrow_cents: number
+          frozen_at: string | null
+          id: string
+          link_attribute: Database["public"]["Enums"]["marketplace_link_attribute"]
+          match_id: string | null
+          need_attribute: Database["public"]["Enums"]["marketplace_link_attribute"]
+          need_id: string | null
+          need_objective:
+            | Database["public"]["Enums"]["marketplace_need_objective"]
+            | null
+          need_objective_confirmed_at: string | null
+          need_objective_source:
+            | Database["public"]["Enums"]["marketplace_need_objective_source"]
+            | null
+          permit_attribute: Database["public"]["Enums"]["marketplace_link_attribute"]
+          price_cents: number
+          published_at: string | null
+          revision_rounds_used: number
+          risk_flags: string[]
+          seller_domain: string
+          seller_id: string
+          soulte_cents: number
+          soulte_currency: string
+          soulte_payee_id: string | null
+          soulte_payer_id: string | null
+          status: Database["public"]["Enums"]["marketplace_order_status"]
+          target_url: string
+          updated_at: string
+        }
+        Insert: {
+          anchor?: string | null
+          anchor_kind?:
+            | Database["public"]["Enums"]["marketplace_anchor_kind"]
+            | null
+          approved_revision_id?: string | null
+          asset_id: string
+          asset_kind?: Database["public"]["Enums"]["marketplace_asset_kind"]
+          attribute_basis?: Json
+          buyer_domain: string
+          buyer_id: string
+          buyer_payment_support?: string
+          commission_cents?: number
+          commission_credits?: number | null
+          commission_settlement?: Database["public"]["Enums"]["marketplace_settlement_support"]
+          commission_support?: Database["public"]["Enums"]["marketplace_settlement_support"]
+          commitment_ends_at?: string | null
+          commitment_months?: number
+          constants_version?: number | null
+          created_at?: string
+          credit_eur_rate_at_freeze?: number | null
+          deal_type: Database["public"]["Enums"]["marketplace_deal_type"]
+          dofollow_risk_ack_at?: string | null
+          escrow_cents?: number
+          frozen_at?: string | null
+          id?: string
+          link_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
+          match_id?: string | null
+          need_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
+          need_id?: string | null
+          need_objective?:
+            | Database["public"]["Enums"]["marketplace_need_objective"]
+            | null
+          need_objective_confirmed_at?: string | null
+          need_objective_source?:
+            | Database["public"]["Enums"]["marketplace_need_objective_source"]
+            | null
+          permit_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
+          price_cents?: number
+          published_at?: string | null
+          revision_rounds_used?: number
+          risk_flags?: string[]
+          seller_domain: string
+          seller_id: string
+          soulte_cents?: number
+          soulte_currency?: string
+          soulte_payee_id?: string | null
+          soulte_payer_id?: string | null
+          status?: Database["public"]["Enums"]["marketplace_order_status"]
+          target_url: string
+          updated_at?: string
+        }
+        Update: {
+          anchor?: string | null
+          anchor_kind?:
+            | Database["public"]["Enums"]["marketplace_anchor_kind"]
+            | null
+          approved_revision_id?: string | null
+          asset_id?: string
+          asset_kind?: Database["public"]["Enums"]["marketplace_asset_kind"]
+          attribute_basis?: Json
+          buyer_domain?: string
+          buyer_id?: string
+          buyer_payment_support?: string
+          commission_cents?: number
+          commission_credits?: number | null
+          commission_settlement?: Database["public"]["Enums"]["marketplace_settlement_support"]
+          commission_support?: Database["public"]["Enums"]["marketplace_settlement_support"]
+          commitment_ends_at?: string | null
+          commitment_months?: number
+          constants_version?: number | null
+          created_at?: string
+          credit_eur_rate_at_freeze?: number | null
+          deal_type?: Database["public"]["Enums"]["marketplace_deal_type"]
+          dofollow_risk_ack_at?: string | null
+          escrow_cents?: number
+          frozen_at?: string | null
+          id?: string
+          link_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
+          match_id?: string | null
+          need_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
+          need_id?: string | null
+          need_objective?:
+            | Database["public"]["Enums"]["marketplace_need_objective"]
+            | null
+          need_objective_confirmed_at?: string | null
+          need_objective_source?:
+            | Database["public"]["Enums"]["marketplace_need_objective_source"]
+            | null
+          permit_attribute?: Database["public"]["Enums"]["marketplace_link_attribute"]
+          price_cents?: number
+          published_at?: string | null
+          revision_rounds_used?: number
+          risk_flags?: string[]
+          seller_domain?: string
+          seller_id?: string
+          soulte_cents?: number
+          soulte_currency?: string
+          soulte_payee_id?: string | null
+          soulte_payer_id?: string | null
+          status?: Database["public"]["Enums"]["marketplace_order_status"]
+          target_url?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketplace_ownership_claims: {
         Row: {
           accepted_at: string
@@ -9740,6 +10282,63 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      marketplace_payouts: {
+        Row: {
+          amount_cents: number
+          amount_credits: number | null
+          beneficiary_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          leg_id: string | null
+          occurred_at: string
+          order_id: string
+          status: string
+          support: Database["public"]["Enums"]["marketplace_settlement_support"]
+        }
+        Insert: {
+          amount_cents: number
+          amount_credits?: number | null
+          beneficiary_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          leg_id?: string | null
+          occurred_at?: string
+          order_id: string
+          status?: string
+          support: Database["public"]["Enums"]["marketplace_settlement_support"]
+        }
+        Update: {
+          amount_cents?: number
+          amount_credits?: number | null
+          beneficiary_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          leg_id?: string | null
+          occurred_at?: string
+          order_id?: string
+          status?: string
+          support?: Database["public"]["Enums"]["marketplace_settlement_support"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_payouts_leg_id_fkey"
+            columns: ["leg_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_exchanges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_payouts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marketplace_pricing_constants: {
         Row: {
@@ -16776,6 +17375,11 @@ export type Database = {
         | "content_refused"
         | "payment"
         | "other"
+      marketplace_dispute_status:
+        | "open"
+        | "acknowledged"
+        | "resolved"
+        | "appealed"
       marketplace_invoice_kind:
         | "commission"
         | "self_billing"
@@ -16816,6 +17420,7 @@ export type Database = {
         | "link_for_insta"
         | "linkedin_for_linkedin"
         | "insta_for_insta"
+      marketplace_variant_kind: "editorial" | "utility_geo" | "action"
       marketplace_verification_method:
         | "gsc"
         | "dns_txt"
@@ -17067,6 +17672,12 @@ export const Constants = {
         "payment",
         "other",
       ],
+      marketplace_dispute_status: [
+        "open",
+        "acknowledged",
+        "resolved",
+        "appealed",
+      ],
       marketplace_invoice_kind: [
         "commission",
         "self_billing",
@@ -17112,6 +17723,7 @@ export const Constants = {
         "linkedin_for_linkedin",
         "insta_for_insta",
       ],
+      marketplace_variant_kind: ["editorial", "utility_geo", "action"],
       marketplace_verification_method: [
         "gsc",
         "dns_txt",
