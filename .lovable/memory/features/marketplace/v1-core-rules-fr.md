@@ -41,3 +41,21 @@ sont des multiples de **10 €**, y compris les soultes et les valorisations d'a
 (LinkedIn, Instagram), qui utilisent la même échelle que les liens.
 Paliers v1 : P1 40 € · P2 90 € · P3 150 € · P4 250 €.
 Une soulte ne peut porter le total au-delà du plafond. 1 crédit = 1 € pour le calcul d'équité.
+
+## Exposition des signaux GSC (confidentialité)
+Aucune valeur GSC exacte n'est jamais exposée à un acheteur ou en public : uniquement des
+**fourchettes** et des scores normalisés 0-100, produits serveur par la vue
+`marketplace_asset_public_signals`. Les colonnes brutes ont un `SELECT` réservé au propriétaire
+(`auth.uid()`) et à `service_role`.
+- Fourchettes : clics 90j `0 | 1-10 | 11-50 | 51-200 | 201-1000 | 1001-5000 | 5000+` ;
+  impressions `0-100 | 101-1000 | 1001-10000 | 10001-50000 | 50001-250000 | 250000+` ;
+  position `1-3 | 4-10 | 11-20 | 21+`.
+- Jamais exposés : requêtes/mots-clés, courbes temporelles, trafic du domaine entier, part de
+  trafic par pays/device. Tendance réduite à `hausse` / `stable` / `baisse`, thématiques en
+  clusters (1 à 3).
+- Si clics 90j ≤ 10 → mention « trafic faible / non significatif », pas de fourchette basse.
+- Pas de dé-anonymisation par différence (fenêtre 90j figée, rafraîchie au plus 1×/7j, pas
+  d'historique de fourchettes) ; max 5 pages d'un même vendeur avec fourchettes par réponse.
+- Une commande ne donne aucun accès supplémentaire : le suivi post-publication porte sur la
+  présence du lien, pas sur son trafic.
+- L'opt-in de mise en vente énumère explicitement ce qui sera visible et ce qui ne le sera jamais.
