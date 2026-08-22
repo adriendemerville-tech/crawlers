@@ -9083,6 +9083,102 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_balance_events: {
+        Row: {
+          amortization_months: number
+          created_at: string
+          currency_kind: string
+          direction: string
+          id: string
+          leg: string | null
+          metadata: Json
+          occurred_at: string
+          order_id: string | null
+          order_source: string
+          reciprocal_discount: number
+          site_domain: string
+          trade_type: string | null
+          user_id: string | null
+          value_cents: number
+        }
+        Insert: {
+          amortization_months?: number
+          created_at?: string
+          currency_kind: string
+          direction: string
+          id?: string
+          leg?: string | null
+          metadata?: Json
+          occurred_at?: string
+          order_id?: string | null
+          order_source?: string
+          reciprocal_discount?: number
+          site_domain: string
+          trade_type?: string | null
+          user_id?: string | null
+          value_cents?: number
+        }
+        Update: {
+          amortization_months?: number
+          created_at?: string
+          currency_kind?: string
+          direction?: string
+          id?: string
+          leg?: string | null
+          metadata?: Json
+          occurred_at?: string
+          order_id?: string | null
+          order_source?: string
+          reciprocal_discount?: number
+          site_domain?: string
+          trade_type?: string | null
+          user_id?: string | null
+          value_cents?: number
+        }
+        Relationships: []
+      }
+      marketplace_site_balances: {
+        Row: {
+          authority_balance_cents: number
+          authority_given_cents: number
+          authority_received_cents: number
+          buyer_priority_score: number
+          can_sell_link: boolean
+          computed_at: string
+          legs_count: number
+          site_domain: string
+          updated_at: string
+          user_id: string | null
+          visibility_balance_cents: number
+        }
+        Insert: {
+          authority_balance_cents?: number
+          authority_given_cents?: number
+          authority_received_cents?: number
+          buyer_priority_score?: number
+          can_sell_link?: boolean
+          computed_at?: string
+          legs_count?: number
+          site_domain: string
+          updated_at?: string
+          user_id?: string | null
+          visibility_balance_cents?: number
+        }
+        Update: {
+          authority_balance_cents?: number
+          authority_given_cents?: number
+          authority_received_cents?: number
+          buyer_priority_score?: number
+          can_sell_link?: boolean
+          computed_at?: string
+          legs_count?: number
+          site_domain?: string
+          updated_at?: string
+          user_id?: string | null
+          visibility_balance_cents?: number
+        }
+        Relationships: []
+      }
       matomo_connections: {
         Row: {
           auth_token: string | null
@@ -15672,9 +15768,30 @@ export type Database = {
       }
       reap_zombie_async_jobs: { Args: never; Returns: number }
       recalculate_reliability: { Args: never; Returns: undefined }
+      recompute_all_marketplace_balances: { Args: never; Returns: number }
+      recompute_marketplace_site_balance: {
+        Args: { p_site_domain: string }
+        Returns: Json
+      }
       reconcile_stale_parmenion_decisions: {
         Args: { p_hours?: number }
         Returns: number
+      }
+      record_marketplace_balance_event: {
+        Args: {
+          p_currency_kind: string
+          p_direction: string
+          p_leg?: string
+          p_metadata?: Json
+          p_occurred_at?: string
+          p_order_id?: string
+          p_order_source?: string
+          p_site_domain: string
+          p_trade_type?: string
+          p_user_id?: string
+          p_value_cents: number
+        }
+        Returns: Json
       }
       refresh_archetype_mix_benchmarks: { Args: never; Returns: number }
       release_browserless_slot: {
