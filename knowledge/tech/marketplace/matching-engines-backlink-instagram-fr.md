@@ -970,7 +970,9 @@ Ajouts obligatoires :
 - Prévisualisation, feedback, 3 tours de révision, arbitrage et annulation sans frais.
 - Retrait ou disparition du lien : suspension du paiement, remboursement au prorata.
 - Wallet : crédits non convertibles en euros en v1, non remboursables, durée de validité.
-- Données : partage limité et consenti des signaux de page entre les parties (RGPD).
+- Données : partage limité et consenti des signaux de page entre les parties (RGPD). L'acheteur
+  reçoit uniquement des **fourchettes** et des scores normalisés ; les valeurs GSC exactes, les
+  requêtes, les courbes temporelles et les agrégats de domaine ne sont jamais exposés (§2.1.1).
 - **Échanges réciproques (`link_for_link`) : autorisés mais encadrés** — délai de 21 jours entre
   les deux publications, une seule réciprocité par trimestre et par site, jamais deux fois avec
   le même partenaire sur 12 mois, refus automatique en cas de boucle de liens. Le risque de
