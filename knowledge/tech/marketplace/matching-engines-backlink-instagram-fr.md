@@ -1102,8 +1102,10 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `soulte_payer_id`, `soulte_payee_id`.
   Sur un troc, la commission est portée **par jambe** (`marketplace_exchanges`) : `commission_credits` de la
   commande est la somme des commissions de jambe.
-  Engagement et cycle de vie : `commitment_months` (défaut **12**, base du prorata de §2.13),
-  `published_at`, `commitment_ends_at` (= `published_at` + `commitment_months`),
+  Engagement et cycle de vie : `commitment_months` (12 lien · 1 post LinkedIn ou Reel · 0 story,
+  base du prorata de §2.13), `escrow_cents` (montant séquestré au figeage, §2.5.1),
+  `published_at`, `commitment_ends_at` (= `published_at` + `commitment_months`, ou +24 h si 0),
+
   `status`, `approved_revision_id`, `risk_flags[]`, `frozen_at` (figeage), `created_at`.
   Contraintes : `price_cents + soulte_cents ≤ 35000`, multiples de 1000 (paliers de 10 €).
   Aucune valeur de jambe stockée ici (§4.1).
