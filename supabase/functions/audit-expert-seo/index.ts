@@ -2284,6 +2284,13 @@ Deno.serve(handleRequest(async (req) => {
 
     if (!psiAvailable) {
       console.warn('[Audit-Expert-SEO] ⚠️ PSI indisponible — scores Performance et Technique estimés (fallback 50%)');
+      // Un fallback neutre ne doit jamais se lire comme une mesure : il est
+      // déclaré, et il interdit la zone « excellent » sur le score global.
+      scoreGates.push({
+        axis: 'estimated',
+        reason: 'PageSpeed indisponible : performance et SEO technique sont estimés, non mesurés',
+        evidence: 'fallback 50 % appliqué (20/40 et 35/50)',
+      });
     }
     
     let semanticScore = 0;
