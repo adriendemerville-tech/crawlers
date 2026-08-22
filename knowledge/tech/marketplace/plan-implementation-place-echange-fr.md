@@ -52,9 +52,11 @@ Règles transverses non négociables pour toutes les tâches ci-dessous :
 | L1a.10 | `sellRisk.server.ts` | `sell_risk` + composantes + classe + motif d'exclusion dure (pilier, page de conversion, page en momentum). Alimente `marketplace_page_sell_risk` |
 | L1a.11 | `attribute.server.ts` | moteur à deux axes (§2.4.1) : `need_attribute` × `permit_attribute` → attribut figé. `sponsored` par défaut ; `dofollow` seulement si déficit net > 0 **et** `sell_risk` ≤ 0.20 **et** palier ≥ P3 **et** plafonds libres. Produit `attribute_basis` (jsonb auditable) |
 | L1a.12 | `caps.server.ts` | compteurs de plafonds liés : 1 `dofollow`/page à vie, 20/domaine/12 mois glissants, 3 insertions/page/12 mois tous attributs (un `dofollow` consomme un des 3) |
-| L1a.13 | `ownership.functions.ts` | vérification bloquante GSC / DNS TXT / fichier ; règle **Kbis > IP** sur les grappes de comptes (§2.2) : deux SIREN vérifiés distincts lèvent le blocage IP |
+| L1a.13 | `ownership.functions.ts` | vérification bloquante GSC / DNS TXT / fichier ; enregistrement de la **déclaration de responsabilité vendeur** (`marketplace_ownership_claims` : horodatage, IP, texte accepté) ; règle **Kbis > IP** sur les grappes de comptes (§2.2) : deux SIREN vérifiés distincts lèvent le blocage IP |
 | L1a.14 | `assets.functions.ts` | opt-in/opt-out par page, lecture de mon inventaire (prix estimé, palier, classe de risque, plafonds consommés, revenus cumulés) |
-| L1a.15 | Cron | recalcul `sell_risk` post-crawl (branché sur la fin de `crawl-site`), recalcul des prix estimés hebdomadaire |
+| L1a.15 | `gscSupportAccess.server.ts` (§2.1.1) | **seul** chemin d'accès admin aux valeurs GSC exactes : motif + `ticket_ref` obligatoires, écriture append-only dans `marketplace_gsc_access_log`, visible du propriétaire (date + motif), purge cron à 24 mois |
+| L1a.16 | Cron | recalcul `sell_risk` post-crawl (branché sur la fin de `crawl-site`), recalcul des prix estimés hebdomadaire, purge du journal d'accès GSC |
+
 
 ### Front end L1a
 
