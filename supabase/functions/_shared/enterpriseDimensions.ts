@@ -338,8 +338,9 @@ export interface DimensionSelection {
   ignored: { key: string; value: string; reason: string }[];
 }
 
-const LOCAL_DELIVERY = new Set<DeliveryMode>(['artisanat', 'service', 'commerce']);
-const CAPACITY_DELIVERY = new Set<DeliveryMode>(['artisanat', 'service', 'conseil', 'produits']);
+const LOCAL_DELIVERY = new Set<DeliveryMode>(['artisanat', 'service', 'commerce', 'profession_liberale', 'service_public', 'association']);
+/** Modes où l'on achète une capacité d'exécution (et où l'effectif compte). */
+const CAPACITY_DELIVERY = new Set<DeliveryMode>(['artisanat', 'service', 'produits']);
 
 /**
  * Décide, dimension par dimension, si elle doit influencer la formulation des
