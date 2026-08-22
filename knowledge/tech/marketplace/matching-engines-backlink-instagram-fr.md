@@ -674,37 +674,79 @@ conformité, capture visuelle archivée, insights à J+7 pour le reporting achet
 
 ---
 
-## 4. Modèle de données (esquisse)
+## 4. Modèle de données (source unique)
 
-Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `service_role`) :
+Cette section est la **seule** définition de schéma du document : toute table citée ailleurs (§2.7,
+§2.11, §2.12, §2.13, §3) y renvoie et n'y ajoute aucun champ.
+
+Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `service_role`).
+Écritures de prix, de commission, de valeur de jambe et de statut : **server functions uniquement**
+(`src/lib/marketplace/*.functions.ts`), jamais depuis le client.
+
+### 4.1 Règle d'unicité de la valeur
+
+Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
+
+| Chiffre | Table propriétaire | Ailleurs |
+|---|---|---|
+| Valeur d'une jambe (lien, story, post) | `marketplace_exchanges.value_cents` | référencée par `leg_id`, jamais recopiée |
+| Prix figé de la commande et commission 15 % | `marketplace_orders` | dérivé des jambes au moment du figeage, jamais recalculé après |
+| Soulte (écart entre les deux jambes) | `marketplace_orders.soulte_cents` | colonne générée / calculée à partir des jambes de la commande |
+| Impact sur la balance d'autorité | `marketplace_balance_events` | ne stocke **aucun** montant : `leg_id` + `sign` ; la valeur est lue par jointure |
+| Soldes agrégés | `marketplace_site_balances` | cache recalculable, jamais autoritaire |
+| Valeur d'appariement (estimation, pas transaction) | `marketplace_match_values` | cache TTL 24 h, sans lien avec les montants réels |
+
+### 4.2 Actifs, besoins, appariement
 
 - `marketplace_link_assets` — page vendeur, opt-in, signaux, prix calculé, plafonds.
-- `marketplace_social_assets` — compte Instagram, formats, métriques, prix calculé.
-- `marketplace_needs` — besoin acheteur dérivé de `architect_workbench` / E-E-A-T.
+- `marketplace_social_assets` — compte Instagram / LinkedIn, formats, métriques, prix calculé.
+- `marketplace_needs` — besoin acheteur dérivé de `architect_workbench` / E-E-A-T, avec
+  `need_primary` / `need_secondary` (`seo` | `geo` | `conversion`) : entrée de la matrice §2.7.1.
 - `marketplace_matches` — couples besoin↔actif, `compat_score`, statut de notification.
-- `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`, `deal_type` (`cash` | `credits` | `barter`), et si `barter` : `trade_type` (`link_for_link` | `link_for_linkedin` | `link_for_insta` | `linkedin_for_linkedin` | `insta_for_insta`), `soulte_cents`, `soulte_currency` (`eur` | `credits` uniquement), `soulte_payer_id`, `soulte_payee_id`, `risk_flags[]`.
-- `marketplace_needs` porte `need_primary` / `need_secondary` (`seo` | `geo` | `conversion`) : entrée de la matrice 2.7.1 pour les deux parties.
-
-- `marketplace_exchanges` — jambes d'un troc (2 jambes : le lien + la contrepartie), nature de la contrepartie, valeur estimée par jambe (arrondie au palier de 10 €, bornée 40–350 €), solde en crédits, commission 15 %, `reciprocity_quarter` (clé de quota `link_for_link`), `cycle_check_verdict`.
-- `marketplace_ownership_verifications` — preuve de propriété par actif : `method` (`gsc` | `dns_txt` | `file` | `oauth_linkedin` | `oauth_meta`), `token`, `verified_at`, `last_checked_at`, `status` (`verified` | `unverified` | `revoked`). Unicité : un domaine vérifié par un seul compte.
-
-- `marketplace_ownership_claims` — déclaration de responsabilité vendeur : horodatage, IP, texte accepté.
-- `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
-- `marketplace_feedback` — commentaires et motifs par révision.
-- `marketplace_verifications` — contrôles de publication et de maintien (§2.13) : `leg_id`, `method`
-  (`crawl` | `linkedin_api` | `meta_api`), `verdict`, preuve, capture, `checked_at`, `next_check_at`,
-  état de la jambe (`published` | `verified` | `maintained` | `broken` | `resolved` | `refunded`).
-- `marketplace_page_sell_risk` — cache par page (§2.12) : `sell_risk`, composantes, classe
-  (`safe` | `moderate` | `discouraged`), motif d'exclusion dure, `recomputed_at` (à chaque crawl).
 - `marketplace_match_values` — cache par page et par domaine (§2.11) : `valeur_vendeur_cents`,
   `valeur_acheteur_cents`, `global_match_value_cents`, `matches_count`, `computed_at` (TTL 24 h,
   site-scoped comme Marina).
+- `marketplace_page_sell_risk` — cache par page (§2.12) : `sell_risk`, composantes, classe
+  (`safe` | `moderate` | `discouraged`), motif d'exclusion dure, `recomputed_at` (à chaque crawl).
 
-- `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers.
+### 4.3 Transaction
 
+- `marketplace_orders` — commande : `deal_type` (`cash` | `credits` | `barter`), prix figé,
+  commission 15 %, statut, `approved_revision_id`, `soulte_cents`, `soulte_currency`
+  (`eur` | `credits`), `soulte_payer_id`, `soulte_payee_id`, `risk_flags[]`. Aucune valeur de jambe
+  stockée ici.
+- `marketplace_exchanges` — **jambes** de la commande (2 pour un troc, 1 pour un achat cash) :
+  `order_id`, `leg_index`, `currency_kind` (`link` | `story` | `linkedin`), `value_cents` (palier de
+  10 €, borné 40–350 €), `trade_type` (`link_for_link` | `link_for_linkedin` | `link_for_insta` |
+  `linkedin_for_linkedin` | `insta_for_insta`), `reciprocity_quarter` (quota `link_for_link`),
+  `cycle_check_verdict`, `delivered_at`.
+- `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers, référence `order_id`.
 
-Écritures de prix, de commission et de statut : **server functions uniquement**
-(`src/lib/marketplace/*.functions.ts`), jamais depuis le client.
+### 4.4 Balance d'autorité et file d'achat
+
+- `marketplace_balance_events` — journal auditable, une ligne par jambe livrée : `site_domain`,
+  `leg_id` (FK `marketplace_exchanges`), `direction` (`incoming` | `outgoing`), `sign`,
+  `occurred_at`, `reversal_of` (jambe annulée), `risk_flags[]`. Pas de `value_cents`.
+- `marketplace_site_balances` — cache par site : `site_domain`, `authority_balance_cents`,
+  `visibility_balance_cents`, `deficit_cents`, `can_sell_links` (bool), `recomputed_at`
+  (amortissement 24 mois, recalculable à 100 % depuis `marketplace_balance_events`).
+- `marketplace_link_queue` — file d'achat : `site_domain`, `need`, `budget_cents`, `priority_score`,
+  `enqueued_at`, `reserved_offer_id`, `reserved_until`, `status`.
+
+### 4.5 Propriété, contenu, vérification
+
+- `marketplace_ownership_verifications` — preuve de propriété par actif : `method` (`gsc` |
+  `dns_txt` | `file` | `oauth_linkedin` | `oauth_meta`), `token`, `verified_at`, `last_checked_at`,
+  `status` (`verified` | `unverified` | `revoked`). Unicité : un domaine vérifié par un seul compte.
+- `marketplace_ownership_claims` — déclaration de responsabilité vendeur : horodatage, IP, texte accepté.
+- `marketplace_content_variants` — variantes générées par le Studio (§2.9) : `order_id`, `variant`
+  (`editoriale` | `utilitaire` | `action`), brief figé, sortie, modèle utilisé, coût, `selected`.
+- `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
+- `marketplace_feedback` — commentaires et motifs par révision ou par variante refusée.
+- `marketplace_verifications` — contrôles de publication et de maintien (§2.13) : `leg_id`, `method`
+  (`crawl` | `linkedin_api` | `meta_api`), `verdict`, preuve, capture, `checked_at`, `next_check_at`,
+  état de la jambe (`published` | `verified` | `maintained` | `broken` | `resolved` | `refunded`).
+
 
 ---
 
