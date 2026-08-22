@@ -256,7 +256,7 @@ explicite, jamais un blocage silencieux) :
 | Garde-fou | Borne v1 | Portée |
 |---|---|---|
 | **Vitesse d'acquisition** | ≤ 4 liens entrants achetés par **30 jours glissants** / domaine acheteur, et ≤ 2 sur 7 jours glissants (fenêtres glissantes, jamais mois calendaire — cf. `marketplace_buyer_limits`, §4.2) | anti-pic de vélocité |
-| **Rampe nouvel entrant** | 1er mois : max 2 liens ; 2e mois : 3 ; à partir du 3e : 4 | un domaine jeune ne construit pas 12 liens en 30 jours |
+| **Rampe nouvel entrant** | jours 1-30 depuis la 1ʳᵉ commande : max 2 liens ; jours 31-60 : 3 ; à partir de J+61 : 4 (tranches glissantes depuis la 1ʳᵉ commande, pas des mois calendaires) | un domaine jeune ne construit pas 12 liens en 30 jours |
 | **Concentration par vendeur** | ≤ 2 liens du même domaine vendeur sur 12 mois glissants, et ≤ 20 % des liens achetés sur la période | diversité des sources |
 | **Diversité minimale** | à partir du 5e lien acheté, au moins 4 domaines vendeurs distincts | pas de profil mono-source |
 | **Concentration par page cible** | ≤ 3 liens achetés vers la même URL cible sur 12 mois | anti-suroptimisation d'une page |
