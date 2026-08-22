@@ -10,6 +10,7 @@
  * Uses Lovable AI Gateway (preferred) or OpenRouter as fallback.
  */
 
+import { createClient } from 'npm:@supabase/supabase-js@2'
 import { writeIdentity } from './identityGateway.ts'
 import {
   extractStructuredIdentity,
