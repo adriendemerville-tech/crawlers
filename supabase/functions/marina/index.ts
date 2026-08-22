@@ -4761,6 +4761,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           splitActionsByScope(consolidatedPlan || [], url);
 
         const cocoonPageFacts = cocoonResult ? extractCocoonPageFacts(cocoonResult, url) : null;
+        // Lot 3 — le score GEO du nœud de cette URL prime sur le score global :
+        // sans lui, les 15 fiches affichaient toutes la même valeur.
+        if (cocoonPageFacts?.geoScore != null) pageGeo100 = cocoonPageFacts.geoScore;
         const derivedActions = derivePageActions(
           {
             title: expertData?.rawData?.htmlAnalysis?.title ?? null,
