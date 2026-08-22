@@ -64,7 +64,7 @@ export function ScannedUrlsRegistry() {
   const fetchUrls = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [urlsRes, trackedRes, eventsRes, crawlsRes, cocoonRes, lastEventsRes] = await Promise.all([
+      const [urlsRes, trackedRes, eventsRes, crawlsRes, cocoonRes, lastEventsRes, rawRes, crawlOwnersRes] = await Promise.all([
         supabase.from('analyzed_urls').select('*').order('last_analyzed_at', { ascending: false }).limit(500),
         supabase.from('tracked_sites').select('id, domain, user_id, created_at'),
         supabase.from('analytics_events').select('event_type, target_url, user_id')
@@ -82,12 +82,23 @@ export function ScannedUrlsRegistry() {
           .not('target_url', 'is', null)
           .order('created_at', { ascending: false })
           .limit(1000),
+        // Attribution par domaine : `analyzed_urls` ne porte pas d'utilisateur,
+        // et `analytics_events.target_url` est rarement renseigné. Les audits
+        // enregistrés portent le couple domaine + utilisateur.
+        supabase.from('audit_raw_data').select('domain, user_id, created_at')
+          .not('user_id', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(2000),
+        supabase.from('site_crawls').select('domain, user_id, created_at')
+          .not('user_id', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(2000),
       ]);
 
       // Collect all user_ids we need to resolve
       const trackedSites = trackedRes.data || [];
       const trackedUserIds = new Set(trackedSites.map(s => s.user_id).filter(Boolean));
-      
+
       // Also find user_ids from analytics_events for analyzed_urls
       const eventsByUrl: Record<string, string> = {};
       for (const evt of (eventsRes.data || [])) {
@@ -96,11 +107,22 @@ export function ScannedUrlsRegistry() {
         }
       }
       const analyzedUserIds = new Set(Object.values(eventsByUrl));
-      
+
+      // Attribution par domaine (le plus récent gagne), issue des audits et des crawls
+      const ownerByDomain: Record<string, string> = {};
+      const addOwner = (domain: string | null | undefined, userId: string | null | undefined) => {
+        const d = String(domain || '').toLowerCase().replace(/^www\./, '');
+        if (!d || !userId || ownerByDomain[d]) return;
+        ownerByDomain[d] = userId;
+      };
+      for (const r of (rawRes.data || [])) addOwner(r.domain, r.user_id);
+      for (const c of (crawlOwnersRes.data || [])) addOwner(c.domain, c.user_id);
+      const domainUserIds = new Set(Object.values(ownerByDomain));
+
       // Fetch all relevant profiles
-      const allUserIds = [...new Set([...trackedUserIds, ...analyzedUserIds])];
+      const allUserIds = [...new Set([...trackedUserIds, ...analyzedUserIds, ...domainUserIds])];
       const profileMap: Record<string, { name: string; email: string }> = {};
-      
+
       if (allUserIds.length > 0) {
         // Batch fetch profiles (max 100 at a time)
         for (let i = 0; i < allUserIds.length; i += 100) {
@@ -132,7 +154,7 @@ export function ScannedUrlsRegistry() {
       for (const u of (urlsRes.data || [])) {
         const d = u.domain?.toLowerCase();
         if (d && trackedDomainsMap[d]) continue; // skip — will be added from tracked_sites below
-        const userId = eventsByUrl[u.url];
+        const userId = eventsByUrl[u.url] || ownerByDomain[(d || '').replace(/^www\./, '')];
         const profile = userId ? profileMap[userId] : undefined;
 
         mergedMap[d || u.url] = {
@@ -147,6 +169,7 @@ export function ScannedUrlsRegistry() {
           userEmail: profile?.email,
         };
       }
+
 
       // Add tracked_sites domains (always shown as 'tracked', never mixed with scan counts)
       for (const ts of trackedSites) {
@@ -336,12 +359,15 @@ export function ScannedUrlsRegistry() {
                             </div>
                             <div className="flex items-center gap-2 mt-0.5">
                               <p className="text-xs text-muted-foreground">Domaine : {item.domain}</p>
-                              {item.userName && (
+                              {item.userName ? (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70 cursor-default">
+                                    <span className="inline-flex items-center gap-1 text-xs text-foreground/80 cursor-default">
                                       <User className="h-3 w-3" />
                                       {item.userName}
+                                      {item.userEmail && (
+                                        <span className="text-muted-foreground/70">· {item.userEmail}</span>
+                                      )}
                                     </span>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="text-xs">
@@ -349,7 +375,20 @@ export function ScannedUrlsRegistry() {
                                     {item.userEmail && <p className="text-muted-foreground">{item.userEmail}</p>}
                                   </TooltipContent>
                                 </Tooltip>
+                              ) : (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/60 cursor-default">
+                                      <User className="h-3 w-3" />
+                                      Anonyme
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="text-xs max-w-[260px]">
+                                    Scan lancé sans compte (analyse gratuite depuis la page d'accueil) : aucun utilisateur n'est rattaché à cette URL.
+                                  </TooltipContent>
+                                </Tooltip>
                               )}
+
                             </div>
                           </div>
                         </div>
