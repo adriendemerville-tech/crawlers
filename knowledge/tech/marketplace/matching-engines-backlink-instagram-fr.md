@@ -174,6 +174,17 @@ Garde-fous complémentaires :
 - **Consentement** : l'opt-in de mise en vente précise explicitement *ce qui sera visible*
   (fourchettes + thématiques + scores) et *ce qui ne le sera jamais* (requêtes, courbes, valeurs
   exactes, trafic domaine). Retrait de l'opt-in → retrait immédiat de l'annonce.
+- **Accès admin tracé** : un admin n'a **aucun accès implicite** aux valeurs exactes. La lecture
+  passe par une server function dédiée qui exige (a) un motif de support saisi, (b) un ticket ou un
+  identifiant de conversation, (c) une durée d'accès limitée à 60 minutes. Chaque appel écrit une
+  ligne dans `marketplace_gsc_access_log` (`id`, `admin_user_id`, `asset_id`, `owner_user_id`,
+  `fields_read[]`, `reason`, `ticket_ref`, `ip`, `created_at`, `expires_at`) — insertion faite par
+  la fonction, jamais par le client, table en `SELECT` admin + `service_role` uniquement et
+  **non modifiable ni supprimable** (append-only, pas de policy `UPDATE`/`DELETE`). Le propriétaire
+  de l'actif voit dans sa console l'historique des accès admin à ses données exactes (date, motif),
+  et une alerte est envoyée au-delà de 3 accès sur 30 j pour un même actif. Rétention du journal :
+  24 mois.
+
 
 
 **Grille de prix (détail retenu).** Le prix algorithmique choisit un **palier fixe**, il ne
