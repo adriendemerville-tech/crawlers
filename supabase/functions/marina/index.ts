@@ -2683,7 +2683,7 @@ function compileMarinaReport(
     ${llmVisibilityBlock ? `
     <!-- Visibilité / citabilité IA : périmètre site, mais rattachée à la section GEO
          (elle en est l'objet). Placée juste après l'audit stratégique, plus en fin de rapport. -->
-    <div data-marina-scope="site" data-marina-block="llm">${llmVisibilityBlock}</div>
+    <div data-marina-scope="${llmScopeIsPage ? 'page' : 'site'}" data-marina-block="llm">${llmVisibilityBlock}</div>
     ` : ''}
 
     ${sectionHTMLs.ownerPerformance ? `
