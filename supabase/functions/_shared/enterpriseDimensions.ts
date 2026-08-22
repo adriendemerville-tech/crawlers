@@ -41,6 +41,13 @@ export interface EnterpriseDimensions {
   legal_form: string | null;
   siren: string | null;
   naf_code: string | null;
+  /**
+   * Fiabilité du NAF face à ce qu'on observe réellement sur le site :
+   * `confirme` (concordant), `divergent` (le site contredit le code — le site
+   * gagne), `seul_signal` (aucune observation exploitable). Jamais utilisé pour
+   * décider seul de l'activité.
+   */
+  naf_reliability: 'confirme' | 'divergent' | 'seul_signal' | null;
   /** Tranche d'effectifs lisible (« 10 à 19 salariés »). */
   employees_range: string | null;
   structuration: Structuration | null;
@@ -51,9 +58,21 @@ export interface EnterpriseDimensions {
   sources: Record<string, 'declared' | 'sirene' | 'derived'>;
 }
 
+/**
+ * Modes de livraison pour lesquels la question « sous-traitant ou donneur
+ * d'ordre » n'a aucun sens : personne n'achète un abonnement logiciel, un
+ * produit en boutique, une consultation libérale, une adhésion associative ou
+ * une prestation de conseil en raisonnant en chaîne de sous-traitance.
+ */
+export const ROLE_IRRELEVANT_DELIVERY = new Set<DeliveryMode>([
+  'saas', 'app', 'marketplace', 'commerce', 'conseil', 'contenu',
+  'profession_liberale', 'association', 'service_public',
+]);
+
 export function emptyDimensions(): EnterpriseDimensions {
   return {
     economy_tier: null, legal_form: null, siren: null, naf_code: null,
+    naf_reliability: null,
     employees_range: null, structuration: null, value_chain_role: null,
     customer_relation: null, delivery_mode: null, sources: {},
   };
