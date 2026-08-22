@@ -1346,10 +1346,13 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-8 h-9">
+            <TabsList className="w-full grid grid-cols-9 h-9">
               <TabsTrigger value="audit" className="text-xs gap-1">
                 <ClipboardCheck className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Audit</span>
+              </TabsTrigger>
+              <TabsTrigger value="urlaudit" className="text-xs gap-1">
+                <span className="hidden sm:inline">Audit URL</span>
               </TabsTrigger>
               <TabsTrigger value="stats" className="text-xs gap-1">
                 <span className="hidden sm:inline">Stats</span>
