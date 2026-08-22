@@ -24,6 +24,7 @@ const MyReportsTab = lazy(() => import('@/components/Profile/MyReportsTab').then
 const BundleOptionTab = lazy(() => import('@/components/Profile/BundleOptionTab').then(m => ({ default: m.BundleOptionTab })));
 const MyContent = lazy(() => import('@/components/Profile/MyContent').then(m => ({ default: m.MyContent })));
 const MarinaConsoleTab = lazy(() => import('@/components/Profile/MarinaConsoleTab').then(m => ({ default: m.MarinaConsoleTab })));
+const MarketplaceModule = lazy(() => import('@/components/Console/Marketplace/MarketplaceModule').then(m => ({ default: m.MarketplaceModule })));
 const SeaSeoBridgeTab = lazy(() => import('@/components/Profile/SeaSeoBridgeTab').then(m => ({ default: m.SeaSeoBridgeTab })));
 const IndexationMonitor = lazy(() => import('@/components/Console/IndexationMonitor').then(m => ({ default: m.IndexationMonitor })));
 const GscBigQueryPanel = lazy(() => import('@/components/Console/GscBigQueryPanel').then(m => ({ default: m.GscBigQueryPanel })));
