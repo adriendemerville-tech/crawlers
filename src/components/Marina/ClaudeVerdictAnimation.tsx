@@ -139,12 +139,12 @@ export function ClaudeVerdictAnimation() {
                   : ''}
               {phase !== 'answer' && showVerdict && <span className="animate-pulse">|</span>}
             </blockquote>
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+              Verdict obtenu en soumettant un rapport Marina réel à Claude (Sonnet), août 2026.
+            </p>
           </div>
         </div>
       </div>
-      <p className="mt-3 text-center text-xs text-muted-foreground">
-        Verdict obtenu en soumettant un rapport Marina réel à Claude (Sonnet), août 2026.
-      </p>
     </div>
   );
 }
