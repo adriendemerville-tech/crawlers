@@ -696,7 +696,7 @@ Ajouts obligatoires :
 
 | Lot | Contenu |
 |---|---|
-| L1 | Schéma + pricing serveur + inventaire opt-in + onglet « Je vends » |
+| L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € + inventaire opt-in + onglet « Je vends » |
 | L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » |
 | L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet |
 | L4 | Vérification récurrente des liens + reporting |
