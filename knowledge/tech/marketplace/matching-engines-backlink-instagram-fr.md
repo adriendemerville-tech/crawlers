@@ -1090,6 +1090,74 @@ promesse de gain SEO liée au solde, et un déficit ne bloque jamais l'achat —
 prioriser. La balance est une comptabilité lisible, pas un score de fidélité.
 
 
+### 2.15 Constantes de pricing et de seuils — table versionnée
+
+Toutes les formules du document laissent des paramètres à calibrer : `base` du prix indicatif
+(§2.1), seuils de mapping score → palier, seuil de déficit d'éligibilité vendeur (§2.7.3, point 7),
+seuil d'autorité au-delà duquel la version C du Studio disparaît (§2.9), `base_format` et les
+fonctions `f`, `g`, `h`, `k` du pricing Collab (§3), seuils de similarité du contrôle
+d'homogénéité (§2.9).
+
+**Règle d'architecture : aucun de ces paramètres n'est un magic number dans une server function.**
+Ils vivent dans une table de constantes versionnée, lue par les server functions au calcul, et
+recalibrable sans migration de schéma ni déploiement :
+
+```sql
+create table public.marketplace_pricing_constants (
+  id uuid primary key default gen_random_uuid(),
+  version int not null,                  -- version active = max(version) where active
+  key text not null,                     -- 'price_base_cents', 'tier_thresholds',
+                                         -- 'seller_deficit_min', 'studio_version_c_max_authority',
+                                         -- 'insta_base_format', 'insta_curve_f', ...
+  value jsonb not null,                  -- scalaire ou courbe (points d'interpolation)
+  active boolean not null default false,
+  note text,
+  created_by uuid,
+  created_at timestamptz not null default now(),
+  unique (version, key)
+);
+```
+
+- Lecture serveur uniquement (`GRANT SELECT ON public.marketplace_pricing_constants TO
+  authenticated` seulement si une valeur doit être affichée ; sinon aucun accès client),
+  `GRANT ALL ... TO service_role`, RLS activée, écriture réservée aux admins.
+- Chaque commande figée stocke `constants_version` : un prix est toujours rejouable à l'identique.
+- Les seuils sont **testables séparément du code** (jeu de cas de référence : entrée → palier
+  attendu), condition d'un recalibrage sûr après les premières semaines de données réelles.
+
+### 2.16 Validations externes bloquantes et arbitrage des litiges
+
+#### 2.16.1 Validation juridique paiement — crédits transférables entre utilisateurs
+
+La soulte réglée par **transfert de crédits de wallet à wallet** (§2.7.2, §2.8) sort de la boucle
+fermée émetteur ↔ utilisateur : un crédit circulant de A vers B se rapproche d'un instrument de
+paiement entre tiers, cas qui a déjà entraîné des requalifications de systèmes de points en
+monnaie électronique (agrément ACPR, DSP2).
+
+Décision : la fonctionnalité est **conservée mais gelée en implémentation** jusqu'à validation
+écrite d'un juriste spécialisé paiement — même niveau d'exigence que la validation du cadrage
+fiscal par l'expert-comptable (§2.5.2), et **avant L1** puisqu'elle touche le modèle de données du
+wallet. Repli sans risque si la validation est négative : soulte en cash uniquement, ou soulte
+absorbée par un ajustement de palier des deux jambes.
+
+#### 2.16.2 Arbitrage Crawlers — processus minimal
+
+« Arbitrage Crawlers » est l'issue finale après 3 tours de révision infructueux (§2.3, §2.9) ou
+sur litige de maintien (§2.13). Processus v1, à livrer **avec L3** :
+
+| Élément | Règle v1 |
+|---|---|
+| Nature | **humain** (support Crawlers), assisté par un dossier automatique : brief figé, versions générées, motifs de refus, journaux de crawl et captures (§2.13) |
+| Déclencheurs | 3 tours de révision épuisés · désaccord sur la conformité d'une insertion · verdict de rupture contesté |
+| Critères de décision, dans cet ordre | 1. preuve technique (verdict `_shared/linkVerdictShared.ts`, capture, statut HTTP) · 2. conformité au brief figé et aux règles éditoriales · 3. respect des délais contractuels par chaque partie |
+| Issues possibles | maintien de la commande · annulation sans frais (aucune commission) · remboursement au prorata (§2.13) · exécution forcée de la jambe restante dans un délai imparti |
+| SLA | accusé de réception 24 h ouvrées · décision motivée sous **5 jours ouvrés** · une seule contestation possible, tranchée sous 5 jours ouvrés supplémentaires |
+| Traçabilité | table `marketplace_disputes` (commande, ouvrant, motif, pièces, décision, motivation, décideur, horodatage) ; décision et motivation visibles des deux parties |
+
+Aucune décision d'arbitrage ne peut créer une commission supplémentaire ni modifier le prix figé.
+
+---
+
 ## 3. Moteur d'appariement Collab Instagram (v1.5)
 
 Deuxième type d'offre dans la même place d’échange, même wallet, même commission, logique
@@ -1109,6 +1177,7 @@ followers, reach, impressions, engagement, démographie d'audience, insights par
 deviennent disponibles et servent au pricing.
 
 ```
+-- base_format, f, g, h, k : constantes versionnées, cf. §2.15 (jamais en dur dans le code)
 prix_collab = base_format × f(reach_moyen) × g(engagement_réel)
             × h(affinité_thématique_audience ↔ acheteur) × k(qualité_créative)
 prix_final  = palier(clamp(prix_collab, 40 €, 350 €))     -- mêmes bornes et mêmes paliers
@@ -1368,10 +1437,17 @@ Ajouts obligatoires :
   mise en vente** (GSC/DNS/fichier, OAuth pour le social), maintien du lien (durée minimale
   12 mois), conformité éditoriale, mention de publicité pour le social.
 - Obligations de l'acheteur : légalité de la page cible, absence de contenu prohibé.
-- Attribut du lien : information de l'acheteur, absence de garantie de classement.
+- **Attribut du lien (§2.4)** : `rel="sponsored"` par défaut sur **toute** transaction
+  (cash, crédits, troc) ; `dofollow` disponible uniquement en exception gatée (page `sell_risk`
+  Sûr, palier P3 minimum, plafonds page/domaine inchangés), risque assumé et documenté par les
+  deux parties ; plafond propre de 3 insertions `sponsored` vendues par page et par an ;
+  aucune garantie de classement.
 - Prévisualisation, feedback, 3 tours de révision, arbitrage et annulation sans frais.
 - Retrait ou disparition du lien : suspension du paiement, remboursement au prorata.
-- Wallet : crédits non convertibles en euros en v1, non remboursables, durée de validité ;
+- **Reversement (§2.5)** : euros via Stripe Connect par défaut (compte connecté au nom du vendeur,
+  KYC bloquant avant la première mise en vente cash) ; crédits Crawlers en option du vendeur, seul
+  support possible sur une jambe de troc.
+- Wallet : crédits non convertibles en euros, non remboursables, durée de validité ;
   séquestre et acquisition par tranches, cascade de récupération et dette de wallet (§2.5.1).
 - **Fiscalité du troc (§2.5.2)** : chaque jambe est une prestation imposable valorisée à sa propre
   valeur, TVA 20 % pour les assujettis FR, autoliquidation UE sur numéro VIES valide, franchise en
@@ -1382,7 +1458,11 @@ Ajouts obligatoires :
   reçoit uniquement des **fourchettes** et des scores normalisés ; les valeurs GSC exactes, les
   requêtes, les courbes temporelles et les agrégats de domaine ne sont jamais exposés (§2.1.1).
 - **Échanges en boucle (`link_chain`, A→B→C→A) : mode d'échange sans cash privilégié** — jambes
-  publiées à 7 jours d'écart minimum, boucle déclarée et traçable, aucune décote.
+  publiées à 7 jours d'écart minimum, boucle déclarée et traçable, aucune décote ; **consentement
+  spécifique** au risque de requalification en cas de boucle rompue, plafonné au prix convenu de la
+  jambe reçue, réglé en crédits en priorité (§2.7).
+- **Arbitrage Crawlers (§2.16.2)** : arbitrage humain, critères de décision, SLA 5 jours ouvrés,
+  une seule contestation, décision motivée communiquée aux deux parties.
 - **Échanges réciproques directs (`link_for_link`) : autorisés en dernier recours et encadrés** —
   proposés seulement si aucune boucle n'est constructible, délai de 21 jours entre les deux
   publications, une seule réciprocité par trimestre et par site, jamais deux fois avec le même
@@ -1398,9 +1478,9 @@ Ajouts obligatoires :
 
 | Lot | Contenu |
 |---|---|
-| L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € (**P1 40 € · P2 90 € · P3 150 € · P4 250 € · P5 350 €**) + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
+| L1 | Schéma + **table de constantes versionnée (§2.15)** + **attribut `sponsored` par défaut et gating `dofollow` (§2.4)** + **onboarding Stripe Connect / KYC vendeur (§2.5)** + **règle Kbis > IP sur les grappes de comptes (§2.2)** + **validation juridique des crédits transférables (§2.16.1)** + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € (**P1 40 € · P2 90 € · P3 150 € · P4 250 € · P5 350 €**) + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
 | L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » + **calcul de la valeur d'appariement page et domaine (§2.11)** |
-| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 % (cash retenue sur le flux, crédits obligatoires sur le troc avec contrôle des soldes avant figeage et taux figé), **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
+| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 % (cash retenue sur le flux, crédits obligatoires sur le troc avec contrôle des soldes avant figeage et taux figé), **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** + **arbitrage des litiges (§2.16.2)** + **test d'homogénéité stylistique du Studio avant ouverture au volume (§2.9)** |
 | L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
 | L5 | Landing page, home, tarifs, **valeur d'appariement dans l'Audit stratégique et Marina (page + domaine)**, bloc « Ma balance » comme produit de rétention (§2.14), CGVU |
 | L6 | Collab Instagram (OAuth Meta, métriques, brief, vérification) |
@@ -1408,9 +1488,17 @@ Ajouts obligatoires :
 
 ## 9. Risques
 
-- **Reversement en euros** : Stripe Connect + KYC, hors v1.
-- **Conformité Google** : zone grise du lien payé ; position assumée et jamais présentée
-  comme une garantie.
+- **Reversement en euros** : Stripe Connect + KYC **dès la v1** — le coût est l'onboarding
+  (vérification d'identité, délais Stripe) ; sans lui, l'offre se limite aux comptes abonnés.
+- **Requalification en monnaie électronique** : les crédits transférables entre utilisateurs
+  doivent être validés juridiquement avant tout code (§2.16.1) ; repli = soulte cash uniquement.
+- **Faux positif « grappe de comptes »** : une IP partagée d'agence ne bloque plus une
+  transaction dès lors que deux SIREN distincts sont vérifiés (§2.2).
+- **Conformité Google** : position assumée et documentée, plus une zone grise — `sponsored` par
+  défaut sur toute transaction onéreuse, `dofollow` en exception gatée et plafonnée (§2.4),
+  jamais présenté comme une garantie de classement.
+- **Empreinte éditoriale du Studio** : pipeline unique à volume ; audit de similarité
+  inter-livrables avant L3 (§2.9).
 - **Dilution de l'E-E-A-T de crawlers.fr** : plafonds stricts, jamais depuis les 4 piliers.
 - **Liquidité** : le maillon rare est la demande, pas l'offre — amorcer par les besoins
   déjà détectés dans les workbenches existants.
