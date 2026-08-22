@@ -54,8 +54,14 @@ export interface EnterpriseDimensions {
   value_chain_role: ValueChainRole | null;
   customer_relation: CustomerRelation | null;
   delivery_mode: DeliveryMode | null;
-  /** Provenance par dimension : `declared` (mentions légales / SIRENE) ou `derived`. */
-  sources: Record<string, 'declared' | 'sirene' | 'derived'>;
+  /**
+   * Provenance du mode de livraison, par ordre de fiabilité décroissante :
+   * `gmb` (catégorie officielle), `structural` (fait observé dans le HTML),
+   * `declared` (statut / modèle déclaré), `lexical` (vocabulaire de l'offre).
+   */
+  delivery_origin: 'gmb' | 'structural' | 'declared' | 'lexical' | null;
+  /** Provenance par dimension. */
+  sources: Record<string, 'declared' | 'sirene' | 'derived' | 'gmb' | 'structural'>;
 }
 
 /**
