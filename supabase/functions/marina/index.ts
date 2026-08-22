@@ -3556,15 +3556,41 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             await updateProgress(67, 'multi_crawl');
             console.log(`[Marina] Scan mode = ${scanMode.mode} (${scanMode.maxPages} pages max) — ${scanMode.reason}`);
 
+            // Le lancement du crawl est borné à 25 s : `crawl-site` peut tenir
+            // la connexion plusieurs minutes sur un gros site, ce qui faisait
+            // tuer le run Marina par le wall-time AVANT le relais de phase →
+            // job muet, bloqué à 67 %. Passé le délai, le crawl est déjà créé
+            // côté crawl-site : on rend la main et le tour suivant s'y
+            // raccroche via la détection `inFlightCrawl`.
+            let launchTimedOut = false;
             try {
-              crawlLaunchRes = await callFunction('crawl-site', {
-                url: url,
-                maxPages: scanMode.maxPages,
-                userId: parentJob.user_id,
-                forceRefresh: true,
-              });
+              crawlLaunchRes = await Promise.race([
+                callFunction('crawl-site', {
+                  url: url,
+                  maxPages: scanMode.maxPages,
+                  userId: parentJob.user_id,
+                  forceRefresh: true,
+                }),
+                new Promise((resolve) =>
+                  setTimeout(() => {
+                    launchTimedOut = true;
+                    resolve(null);
+                  }, 25_000),
+                ),
+              ]);
             } catch (crawlErr) {
               console.warn(`[Marina] Crawl launch failed (non-fatal):`, crawlErr);
+            }
+
+            if (launchTimedOut) {
+              console.log(`[Marina] Lancement du crawl non confirmé sous 25 s — relais au tour suivant (raccrochage au crawl en vol)`);
+              await selfInvokePhase(jobId, url, detectedLang, 'phase2', {
+                domain,
+                crawlWaitRound: crawlWaitRound + 1,
+                scanMode: scanModeInfo,
+                pagesCrawled: pagesCrawledInfo,
+              });
+              return;
             }
 
             // Le run de lancement a déjà consommé la détection d'URLs + le
@@ -3581,6 +3607,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               });
               return;
             }
+
           }
 
           try {
