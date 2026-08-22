@@ -286,10 +286,19 @@ export function buildPageVerdictHTML(
       : t(`${label.fr} (${global}/100) : aucun défaut bloquant propre à cette URL, les gains restants sont d'optimisation.`,
           `Score ${global}/100 for this URL: no blocking defect of its own, remaining gains are optimisation.`);
 
-  const actions = (ctx.pageActions || [])
-    .slice(0, 3)
-    .map((a) => String(a.title || '').trim())
-    .filter(Boolean);
+  // Actions de la page : titre complet (jamais tronqué) + preuve chiffrée.
+  const pageActionRows = (ctx.pageActions || [])
+    .map((a) => ({
+      title: String(a.title || '').replace(/\s*[…]+\s*$/, '').replace(/\s+/g, ' ').trim(),
+      evidence: String(a.evidence || '').replace(/\s+/g, ' ').trim(),
+    }))
+    .filter((a) => a.title.length > 0)
+    .slice(0, 5);
+  const actions = pageActionRows.map((a) => a.title);
+  const inherited = (ctx.inheritedActions || [])
+    .map((a) => String(a.title || '').replace(/\s*[…]+\s*$/, '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .slice(0, 2);
 
   // Quasi-doublons MESURÉS concernant cette URL (0 token LLM).
   const nearDup: Array<{ url: string; similarity: number; verdict: string }> = [];
