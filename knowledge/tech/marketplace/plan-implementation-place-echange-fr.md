@@ -92,11 +92,12 @@ Condition de sortie : KYC bloquant opérationnel avant la première mise en vent
 | L2.1 | Migrations | `marketplace_needs` (dérivé de `architect_workbench` / E-E-A-T, `need_primary`/`need_secondary`), `marketplace_matches`, `marketplace_match_values`, `marketplace_buyer_limits` |
 | L2.2 | `needs.server.ts` | dérivation déterministe des besoins depuis le workbench ; aucun LLM |
 | L2.3 | `matching.server.ts` | `compat_score` + « pourquoi ce match » explicable (facteurs listés, pas de score opaque) |
-| L2.4 | `buyerLimits.server.ts` | fenêtres **glissantes** : 4 liens / 30 j, 2 / 7 j, 2 par vendeur / 12 mois, ratio d'ancres exactes, cohérence thématique, `buy_risk`, `next_allowed_at` |
+| L2.4 | `buyerLimits.server.ts` | fenêtres **glissantes** : 4 liens / 30 j, 2 / 7 j, 2 par vendeur / 12 mois, `target_url_counts`, ratio d'ancres exactes, cohérence thématique, `buy_risk`, `next_allowed_at`, `throttle_reason`. Dérivé des **jambes livrées**, jamais des commandes créées |
 | L2.5 | `matchValue.server.ts` | valeur d'appariement page (face vendeur / face acheteur) et domaine (potentiel de vente, besoin d'achat, solde) ; cache TTL 24 h site-scoped |
 | L2.6 | Front `OpportunitiesTab.tsx` | appariements entrants triés par `compat_score`, explication du match |
 | L2.7 | Front `BuyTab.tsx` | parcours 4 temps : besoins détectés → **étape bloquante « Mon objectif »** → actifs filtrés par attribut réellement obtenable → panier |
 | L2.8 | Front `ObjectiveConfirmCard.tsx` | objectif pré-rempli depuis `need_primary` + justification, à confirmer ou corriger ; écrit `need_objective`, `need_objective_source`, `need_objective_confirmed_at`. Sans confirmation : ajout au panier impossible. Annonce l'attribut applicable avant paiement, sans hiérarchie implicite |
+| L2.9 | Intégrations dans l'existant (§5.5) | onglet **Netlinking** : remplacement des offres externes vides par l'inventaire interne ; `architect_workbench` : bouton « Trouver un lien » sur les tâches `remediation_channel='netlinking'` |
 
 ---
 
