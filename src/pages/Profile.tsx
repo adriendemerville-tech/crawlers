@@ -194,6 +194,7 @@ function ProfileContent() {
       case 'reports-tab': return isProUser ? <MyReportsTab /> : null;
       case 'bundle': return isAdmin ? <BundleOptionTab /> : null;
       case 'netlinking': return <Netlinking />;
+      case 'marketplace': return <MarketplaceModule />;
       case 'admin': return hasAdminAccess ? (
         <AdminDashboard
           readOnly={isReadOnly}
