@@ -2295,6 +2295,9 @@ function buildExecutiveSummaryHTML(
       ${ctx.roi ? cell(t('Gains rapides', 'Quick wins', 'Ganancias rápidas'), `${ctx.roi.quickWins}${ctx.roi.quickWinDays ? ` · ~${ctx.roi.quickWinDays} j` : ''}`, 'quick_win_days') : ''}
     </div>
     ${ctx.roi ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;">${ctx.roi.sentence}${ctx.roi.topQuickWins.length ? ` ${t('À traiter en premier', 'Start with', 'Empezar por')} : ${ctx.roi.topQuickWins.join(' ; ')}.` : ''}</p>` : ''}
+    ${penaltyHTML}
+
+
 
     ${ctx.verdictHtml
       ? ctx.verdictHtml
