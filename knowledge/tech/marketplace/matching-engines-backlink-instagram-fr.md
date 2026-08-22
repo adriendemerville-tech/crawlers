@@ -51,8 +51,8 @@ La Place d'échange ferme la boucle : au lieu de s'arrêter au diagnostic « il 
 liens ou de la visibilité », Crawlers permet de **satisfaire ce besoin en interne**.
 
 Bénéfices pour Crawlers :
-- **Monétisation sur l'existant** : commission unique de 15 % sur chaque transaction, toujours prélevée en crédits Crawlers (cash comme
-  troc), sans coût d'acquisition supplémentaire (l'acheteur est déjà un utilisateur diagnostiqué).
+- **Monétisation sur l'existant** : commission unique de 15 % sur chaque transaction — prélevée en cash sur le flux quand il y a
+  paiement, en crédits Crawlers sur le troc —, sans coût d'acquisition supplémentaire (l'acheteur est déjà un utilisateur diagnostiqué).
 - **Données de pricing uniques** : aucun acteur ne tarifie des liens à partir de signaux
   GSC + visibilité IA ; c'est un avantage concurrentiel difficile à copier.
 - **Effet de réseau** : chaque vendeur est aussi un acheteur potentiel (et inversement) ;
