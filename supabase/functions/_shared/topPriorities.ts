@@ -530,16 +530,17 @@ export function renderConsolidatedPlanHTML(
          <div style="font-size:10.5px;color:#6b7280;margin-top:4px;">${escapeHtml(it.roi.effort_label)}</div>`
       : '<span style="font-size:11px;color:#9ca3af;">n/d</span>';
     const acc = it.accountability;
+    // Lot 5 — une ligne « Gain non estimable » ne décide de rien : elle est
+    // simplement absente quand aucune donnée de performance n'est mesurée.
     const accCell = acc
       ? `<div style="font-size:11.5px;color:#111827;font-weight:600;">${escapeHtml(acc.owner)}</div>
-         <div style="font-size:10.5px;color:#6b7280;margin-top:3px;">KPI : ${escapeHtml(acc.kpi)}</div>
-         <div style="font-size:10.5px;color:${acc.traffic_gain !== null ? '#4b5563' : '#9ca3af'};margin-top:3px;">${
+         <div style="font-size:10.5px;color:#6b7280;margin-top:3px;">KPI : ${escapeHtml(acc.kpi)}</div>${
            acc.traffic_gain !== null
-             ? `+${acc.traffic_gain} visites/mois — gain direct attribuable${
+             ? `<div style="font-size:10.5px;color:#4b5563;margin-top:3px;">+${acc.traffic_gain} visites/mois — gain direct attribuable${
                  it.severity === 'critical' ? ', hors effet de déblocage' : ''
-               }`
-             : 'Gain non estimable'
-         }</div>`
+               }</div>`
+             : ''
+         }`
       : '<span style="font-size:11px;color:#9ca3af;">n/d</span>';
     const scope = (it.templates && it.templates.length > 1)
       ? `<div style="font-size:10.5px;color:#6b7280;margin-top:4px;">Gabarits concernés : ${escapeHtml(it.templates.slice(0, 8).join(', '))}</div>`
@@ -551,7 +552,7 @@ export function renderConsolidatedPlanHTML(
         ${description ? `<div style="font-size:12px;color:#4b5563;line-height:1.45;">${escapeHtml(description)}</div>` : ''}
         ${scope}
         ${it.roi ? `<div style="font-size:11px;color:#6b7280;margin-top:5px;">${escapeHtml(it.roi.roi_note)}</div>` : ''}
-        ${acc ? `<div style="font-size:10.5px;color:#9ca3af;margin-top:4px;">Base de l'estimation : ${escapeHtml(acc.traffic_basis)}</div>` : ''}
+        ${acc && acc.traffic_gain !== null ? `<div style="font-size:10.5px;color:#9ca3af;margin-top:4px;">Base de l'estimation : ${escapeHtml(acc.traffic_basis)}</div>` : ''}
       </td>
       <td style="padding:10px 12px;white-space:nowrap;vertical-align:top;">
         <span style="background:${badge.bg};color:${badge.fg};padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600;">${badge.label}</span>
