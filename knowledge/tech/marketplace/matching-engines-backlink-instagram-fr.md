@@ -644,12 +644,6 @@ promesse de gain SEO liée au solde, et un déficit ne bloque jamais l'achat —
 prioriser. La balance est une comptabilité lisible, pas un score de fidélité.
 
 
-
-
-
-
-
-
 ## 3. Moteur d'appariement Collab Instagram (v1.5)
 
 Deuxième type d'offre dans la même place d’échange, même wallet, même commission, logique
@@ -754,23 +748,6 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
   `blockquote.citable-passage` pour la visibilité IA, CTA double (vendre / acheter).
 - Contenu SSR complet, pas d'accordéon Radix pour les FAQ (`<details>` natif).
 - Rattachement au silo netlinking/autorité, pas de nouveau pilier.
-
----
-
-## 7. Plan gratuit « Jeune entreprise »
-
-- Éligibilité : entreprise de **moins de 12 mois** (Kbis à l'appui), sur candidature,
-  **30 comptes maximum**.
-- Accès **complet à toute la plateforme** pendant 12 mois, avec **plafond dur de 60 crédits/mois**,
-  non cumulables, reset au 1er du mois, blocage strict au dépassement.
-- Actions chères bornées : Marina prospection (30 crédits) limitée à 1/mois.
-- Crons dégradés (surveillance hebdomadaire au lieu de quotidienne).
-- Routage LLM économique (Gemini Flash / Groq) sur les tâches non critiques de ces comptes.
-- Support communautaire uniquement, mentionné explicitement dans les conditions.
-- Technique : flag `startup_offer` + `startup_offer_expires_at` sur le profil, quota dédié dans
-  le moteur de crédits, séquence de conversion automatique à M10.
-- Économie : ~1,75 €/compte/mois, soit ~780 €/an pour 30 comptes ; largement couvert par les
-  packs de crédits en dépassement et la commission marketplace.
 
 ---
 
