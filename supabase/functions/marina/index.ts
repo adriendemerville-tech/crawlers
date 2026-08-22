@@ -3366,8 +3366,22 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       let strategicData: any;
       if (reusedStrategic) {
         // Mutualisation multipages : aucun sous-job à attendre.
+        // Garde d'isolation : la synthèse réutilisée a été rédigée SUR UNE AUTRE
+        // URL. Ses blocs narratifs propres à la page (synthèse exécutive,
+        // introduction, citabilité, extraits, intention, zéro-clic, contenus
+        // prioritaires) ne doivent JAMAIS être recopiés dans la fiche d'une autre
+        // URL — c'est ce qui répétait le verdict de la page « /avis » 7 fois.
+        // Seules les lectures réellement de niveau domaine sont conservées.
+        const PAGE_SCOPED_STRATEGIC_FIELDS = [
+          'executive_summary', 'introduction', 'geo_citability', 'quotability',
+          'summary_resilience', 'conversational_intent', 'zero_click_risk',
+          'priority_content', 'geo_readiness', 'geo_score', 'red_team',
+          'expertise_sentiment', 'lexical_footprint',
+        ];
         strategicData = { ...reusedStrategic, _mutualized_from_domain: domain };
+        for (const f of PAGE_SCOPED_STRATEGIC_FIELDS) delete (strategicData as any)[f];
       } else {
+
         strategicData = await waitForTrackedJob(sb, strategicJobId, {
           timeoutMs: 420_000,
           pollMs: 4_000,
