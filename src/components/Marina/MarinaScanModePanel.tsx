@@ -31,8 +31,7 @@ const COPY: Record<Lang, {
   },
   en: {
     title: 'Three scan modes, automatic switching',
-    subtitle:
-      "Marina first measures the site's real size (sitemap, map, CMS), then picks the mode itself. The selected mode and achieved coverage are stated in the report introduction.",
+    subtitle: '',
     cols: ['Mode', 'Trigger', 'Pages analysed'],
     rows: [
       ['Deep', 'Site ≤ 120 discovered URLs', 'Up to 120 — near-exhaustive coverage'],
