@@ -837,11 +837,12 @@ Ajouts obligatoires :
 
 | Lot | Contenu |
 |---|---|
-| L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € + inventaire opt-in + onglet « Je vends » |
-| L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » |
+| L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + onglet « Je vends » |
+| L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » + **calcul de la valeur d'appariement page et domaine (§2.11)** |
 | L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 %, **quota `link_for_link` + détection de cycles** |
-| L4 | Vérification récurrente des liens + reporting |
-| L5 | Landing page, home, tarifs, audits, Marina, CGVU |
+| L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
+| L5 | Landing page, home, tarifs, **valeur d'appariement dans l'Audit stratégique et Marina (page + domaine)**, bloc « Ma balance » comme produit de rétention (§2.14), CGVU |
+
 | L6 | Plan Jeune entreprise (quota, flags, crons dégradés, routage LLM) |
 | L7 | Collab Instagram (OAuth Meta, métriques, brief, vérification) |
 
