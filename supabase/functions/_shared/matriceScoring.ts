@@ -65,25 +65,31 @@ export async function checkLlmsTxt(url: string): Promise<{ exists: boolean; cont
   } catch { return { exists: false, content: '' } }
 }
 
+/**
+ * LCP fiable pour la matrice SEO/GEO : terrain CrUX si disponible, sinon
+ * médiane de runs PageSpeed. Un run isolé ne suffit pas à pénaliser un score.
+ */
 export async function fetchPsi(url: string): Promise<PsiData> {
   const apiKey = Deno.env.get('GOOGLE_PAGESPEED_API_KEY')
-  if (!apiKey) return { performance: null, seo: null, lcp: null, fcp: null, cls: null, tbt: null }
+  const empty: PsiData = { performance: null, seo: null, lcp: null, fcp: null, cls: null, tbt: null }
+  if (!apiKey) return empty
   try {
-    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=PERFORMANCE&category=SEO&key=${apiKey}`
-    const resp = await fetch(apiUrl, { signal: AbortSignal.timeout(30000) })
-    if (!resp.ok) { await resp.text(); return { performance: null, seo: null, lcp: null, fcp: null, cls: null, tbt: null } }
-    const data = await resp.json()
+    const perf = await measurePerformance(url, apiKey)
+    const data = perf.psiData
+    if (!data) return empty
     const cats = data?.lighthouseResult?.categories || {}
     const audits = data?.lighthouseResult?.audits || {}
     return {
       performance: cats.performance?.score != null ? Math.round(cats.performance.score * 100) : null,
       seo: cats.seo?.score != null ? Math.round(cats.seo.score * 100) : null,
-      lcp: audits['largest-contentful-paint']?.numericValue || null,
+      lcp: perf.lcpMs,
       fcp: audits['first-contentful-paint']?.numericValue || null,
-      cls: audits['cumulative-layout-shift']?.numericValue || null,
+      cls: perf.field?.cls ?? audits['cumulative-layout-shift']?.numericValue || null,
       tbt: audits['total-blocking-time']?.numericValue || null,
+      lcpSource: perf.source,
+      lcpNote: perf.methodNote,
     }
-  } catch { return { performance: null, seo: null, lcp: null, fcp: null, cls: null, tbt: null } }
+  } catch { return empty }
 }
 
 export function computeBaliseScore(prompt: string, html: HtmlData): { score: number; raw: Record<string, any> } {
