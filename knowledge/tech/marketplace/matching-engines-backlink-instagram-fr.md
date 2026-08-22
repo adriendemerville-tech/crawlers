@@ -309,11 +309,17 @@ Le moteur ne demande pas aux parties de choisir : il propose. Séquence détermi
          |écart| >  15 %  → soulte réglée par la partie avantagée,
                             uniquement sous deux formes :
                               a) cash : le prix en euros de la commande augmente
-                                 du montant de l'écart (paliers P1–P4)
+                                 du montant de l'écart, arrondi au palier de 10 €
+                                 et borné de sorte que le total reste dans 40–350 €
                               b) crédits : transfert de crédits Crawlers
                                  de wallet à wallet entre les deux users
-5. Décote  : si trade_type = link_for_link, value de chaque jambe × facteur de décote
-             réciproque avant calcul de l'écart.
+                                 (même arrondi 10 €, 1 crédit = 1 € pour l'équité)
+0. Garde   : les deux actifs doivent être en statut `verified` (§2.6),
+             sinon la proposition n'est pas générée.
+5. Décote  : si trade_type = link_for_link, value de chaque jambe × 0,70
+             (facteur de décote réciproque v1) avant calcul de l'écart,
+             puis contrôle du quota trimestriel et de l'absence de cycle :
+             échec → proposition bloquée, pas de repli sur un autre trade_type.
 6. Sortie  : { trade_type, jambe_A, jambe_B, soulte, devise_soulte, risk_flags[] }
              présenté aux deux parties, acceptation explicite des deux côtés requise.
 ```
