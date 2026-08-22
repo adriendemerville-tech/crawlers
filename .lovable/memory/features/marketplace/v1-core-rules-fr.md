@@ -12,19 +12,24 @@ documentation est une incohérence à corriger.
 **15 %**, taux unique. Aucune distinction entre `deal_type` (`cash`, `credits`, `barter`) ni
 entre verticales.
 
-**Toujours payée en crédits Crawlers**, quel que soit le type de transaction. Jamais de flux cash
-séparé pour la commission.
+**Support de paiement de la commission** : cash quand il y a un flux d'argent, crédits sinon.
+- **Commande cash (carte)** : commission **retenue sur le flux**, le vendeur est crédité du net.
+  Aucun solde de crédits requis — un vendeur n'est jamais bloqué faute de crédits. Le vendeur peut
+  **optionnellement** choisir de payer en crédits et recevoir le brut.
+- **Troc** (`link_chain`, `link_for_link`, cross-média) et soulte en crédits : commission
+  **obligatoirement en crédits**, faute de flux à retenir.
 - **Origine des crédits indifférente** : crédits achetés, offerts (bienvenue, parrainage, plan
   Jeune entreprise) ou versés en dédommagement paient tous la commission. Pas de solde à deux
   poches — décision explicite de l'utilisateur : l'exposition d'une dotation offerte est
   négligeable face au coût d'implémentation et de support.
 - **Payeur** : le vendeur de chaque jambe. Sur un troc, les deux parties vendent une jambe, donc
   **chacune paie sa commission** sur la valeur de sa propre jambe.
-- **Contrôle avant figeage** : soldes de crédits de toutes les parties vérifiés avant le figeage.
-  Solde insuffisant → commande non figée. Jamais de figeage à crédit ni de solde négatif.
-- **Taux figé** : `credit_eur_rate_at_freeze` écrit sur la commande au figeage, jamais recalculé.
-- **TVA 20 % en euros** sur la contre-valeur figée : le règlement en crédits ne change ni la base
-  d'imposition ni le montant dû.
+- **Contrôle avant figeage** : sur un troc, soldes de crédits de toutes les parties vérifiés avant
+  le figeage. Solde insuffisant → commande non figée. Jamais de figeage à crédit ni de solde négatif.
+- **Taux figé** : quand la commission est réglée en crédits, `credit_eur_rate_at_freeze` est écrit
+  sur la commande au figeage et sur la facture, jamais recalculé.
+- **TVA 20 % en euros, toujours**, sur la contre-valeur figée : le règlement en crédits ne change
+  ni la base d'imposition ni le montant dû à l'État.
 
 
 ## Hiérarchie des échanges sans cash
