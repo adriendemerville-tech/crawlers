@@ -87,13 +87,14 @@ générosité ouverte : elle est plafonnée en nombre de comptes, en durée et e
 ### `/tarifs`
 - Bloc « Jeune entreprise — 12 mois offerts » (60 crédits/mois, sur candidature, 30 places),
   positionné avant Pro Agency.
-- Conditions lisibles : ancienneté < 12 mois, Kbis, plafond de crédits, support communautaire,
+- Conditions lisibles : entreprise créée depuis moins de 12 mois, vérification SIRET + Kbis (< 3 mois),
+  plafond de crédits, support communautaire,
   crons hebdomadaires, expiration à 12 mois.
 
 ### CGVU
 - Conditions d'éligibilité, plafond de crédits et blocage au dépassement, support communautaire,
   durée de 12 mois non reconductible, conditions de retrait de l'offre en cas d'abus (comptes
-  multiples, fausse déclaration d'ancienneté).
+  multiples, fausse déclaration d'ancienneté, SIRET ou Kbis non conforme).
 
 ## 8. Séquencement
 
@@ -101,14 +102,20 @@ générosité ouverte : elle est plafonnée en nombre de comptes, en durée et e
 |---|---|
 | J1 | Flags profil + quota dédié dans le moteur de crédits + blocage strict au dépassement |
 | J2 | Crons dégradés + routage LLM économique + priorité de file `registered` |
-| J3 | Formulaire de candidature, back-office de validation admin, traçabilité des dossiers |
+| J3 | Formulaire de candidature (SIRET + dépôt Kbis), vérification SIRET serveur, back-office de validation admin, traçabilité des dossiers |
 | J4 | Textes `/tarifs` et CGVU |
 | J5 | Séquence de conversion M10-M12 + expiration automatique + tableau de suivi admin |
 
 ## 9. Risques
 
-- **Abus d'ancienneté** : sociétés créées pour l'occasion → contrôle Kbis manuel, un compte par
-  dirigeant, refus si le domaine a déjà bénéficié de l'offre.
+- **Abus d'ancienneté** : sociétés créées pour l'occasion → ancienneté lue sur la date de création
+  INSEE, contrôle Kbis manuel, un compte par SIREN et par dirigeant, refus si le domaine a déjà
+  bénéficié de l'offre.
+- **Faux SIRET / Kbis retouché** : le SIRET est vérifié en direct auprès de la source publique et le
+  Kbis doit concorder (SIREN, dénomination, dirigeant) ; toute divergence entraîne un refus et une
+  interdiction de nouvelle candidature pour ce SIREN.
+- **Indisponibilité de l'API entreprises** : candidature mise en attente, jamais acceptée sur la
+  seule pièce jointe.
 - **Charge de support** : bornée par le support communautaire, à surveiller mensuellement.
 - **Cannibalisation** : une petite agence pourrait préférer l'offre gratuite à Pro Agency → limite
   d'ancienneté stricte et plafond de crédits bas pour éviter la substitution.
