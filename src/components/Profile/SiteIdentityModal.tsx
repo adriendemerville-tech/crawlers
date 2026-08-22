@@ -57,6 +57,100 @@ const TAXONOMY_FIELDS = [
 
 const MAX_EMPTY_SHOWN = 3;
 
+/** Libellés des 9 dimensions d'entreprise dérivées (lecture seule). */
+const ENTERPRISE_DIMENSIONS: { key: string; label: string }[] = [
+  { key: 'economy_tier', label: 'Économie' },
+  { key: 'legal_form', label: 'Forme juridique' },
+  { key: 'siren', label: 'SIREN' },
+  { key: 'naf_code', label: 'Code NAF' },
+  { key: 'employees_range', label: 'Effectif' },
+  { key: 'structuration', label: 'Structuration' },
+  { key: 'value_chain_role', label: 'Rôle chaîne de valeur' },
+  { key: 'customer_relation', label: 'Relation client' },
+  { key: 'delivery_mode', label: 'Mode de livraison' },
+];
+
+const DIMENSION_VALUE_LABELS: Record<string, string> = {
+  primaire: 'Primaire', secondaire: 'Secondaire', tertiaire: 'Tertiaire', quaternaire: 'Quaternaire',
+  independant: 'Indépendant', franchise: 'Franchise', reseau: 'Réseau', filiale: 'Filiale', groupe: 'Groupe', cotee: 'Cotée',
+  sous_traitant: 'Sous-traitant', donneur_ordre: "Donneur d'ordre", mixte: 'Mixte', direct: 'Direct',
+  b2b: 'B2B', b2c: 'B2C', b2b2c: 'B2B2C', b2g: 'B2G',
+  saas: 'SaaS', app: 'Application', marketplace: 'Marketplace', service: 'Service',
+  conseil: 'Conseil', commerce: 'Commerce', artisanat: 'Artisanat', produits: 'Produits', contenu: 'Contenu',
+};
+
+const DIMENSION_SOURCE_LABELS: Record<string, string> = {
+  declared: 'déclaré', sirene: 'SIRENE', derived: 'déduit', gmb: 'GMB', structural: 'structurel', lexical: 'lexical',
+};
+
+const NAF_RELIABILITY_LABELS: Record<string, string> = {
+  confirme: 'NAF confirmé par le contenu du site',
+  divergent: 'NAF divergent du contenu observé — le site prime',
+  seul_signal: 'NAF seul signal disponible',
+};
+
+/**
+ * Dimensions d'entreprise dérivées par le moteur d'audit. Affichage strictement
+ * en lecture : aucune écriture, donc aucun risque d'écraser une saisie manuelle.
+ */
+function EnterpriseDimensionsPanel({ site }: { site: Record<string, any> }) {
+  const dims = site.enterprise_dimensions as Record<string, any> | null | undefined;
+  const filled = ENTERPRISE_DIMENSIONS.filter((d) => {
+    const v = dims?.[d.key];
+    return v !== null && v !== undefined && v !== '';
+  });
+
+  return (
+    <div className="pt-3 mt-2 border-t border-border/30 space-y-2">
+      <div className="flex items-center gap-2">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Dimensions d'entreprise
+        </p>
+        <Badge variant="outline" className="text-[10px]">Lecture seule</Badge>
+      </div>
+
+      {filled.length === 0 ? (
+        <p className="text-xs text-muted-foreground/70">
+          Pas encore dérivées — lancez un audit expert ou Marina pour les calculer.
+        </p>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-1.5">
+            {filled.map((d) => {
+              const raw = String(dims?.[d.key]);
+              const source = d.key === 'delivery_mode'
+                ? (dims?.delivery_origin as string) || (dims?.sources?.[d.key] as string)
+                : (dims?.sources?.[d.key] as string);
+              return (
+                <div key={d.key} className="min-w-0">
+                  <p className="text-[10px] text-muted-foreground/70">{d.label}</p>
+                  <p className="text-xs text-foreground break-words">
+                    {DIMENSION_VALUE_LABELS[raw] || raw}
+                    {source && (
+                      <span className="ml-1.5 text-[10px] text-muted-foreground/60">
+                        ({DIMENSION_SOURCE_LABELS[source] || source})
+                      </span>
+                    )}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+          {dims?.naf_reliability && (
+            <p className="text-[10px] text-muted-foreground/60">
+              {NAF_RELIABILITY_LABELS[dims.naf_reliability as string] || dims.naf_reliability}
+            </p>
+          )}
+          <p className="text-[10px] text-muted-foreground/50">
+            Dérivées des preuves observées sur le site (offre, faits structurels, fiche Google) ;
+            le code NAF ne sert qu'à corroborer. Vos saisies manuelles restent prioritaires.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 function formatTargetSummary(target: any): string {
   const parts: string[] = [];
   if (target.market) parts.push(target.market);
@@ -632,6 +726,9 @@ export function SiteIdentityModal({ open, onOpenChange, site, onUpdate }: SiteId
 
             {/* Business Model — manual override (priority over LLM detection) */}
             <BusinessModelSelector site={site} onUpdate={onUpdate} />
+
+            {/* Dimensions d'entreprise dérivées — lecture seule */}
+            <EnterpriseDimensionsPanel site={site} />
 
             {/* Enrichir button */}
             <div className="flex justify-end mt-3">
