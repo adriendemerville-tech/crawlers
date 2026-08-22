@@ -29,10 +29,16 @@ export interface AuditGate {
   source: GateSource;
   /** Rang d'entrée : 1 = cause racine, à traiter avant tout le reste. */
   rank: number;
+  /**
+   * Nombre de points retirés au score par ce plafond. Rendu explicite dans la
+   * synthèse : un plafond annoncé sans son coût chiffré n'est pas vérifiable.
+   */
+  pointsLost?: number | null;
   /** Valeur mesurée et cible isolées quand elles sont exploitables en base. */
   measured?: string | null;
   target?: string | null;
 }
+
 
 /**
  * Ordre d'entrée. Le rendu du contenu passe avant tout : un HTML sans texte
