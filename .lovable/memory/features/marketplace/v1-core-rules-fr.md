@@ -13,16 +13,27 @@ documentation est une incohérence à corriger.
 entre verticales. Prélevée en euros sur une vente cash, en crédits sur un troc (15 % de la
 valeur estimée de chaque jambe).
 
+## Hiérarchie des échanges sans cash
+Ordre de préférence imposé au moteur d'appariement :
+1. **`link_chain` (A→B→C→A)** — mode privilégié : boucle de 3 ou 4 participants, déclarée sous un
+   `exchange_id` unique, 7 jours minimum entre deux jambes, **aucune décote**.
+2. Troc cross-média (`link_for_linkedin`, `link_for_insta`) — pas de réciprocité de liens.
+3. `link_for_link` — **dernier recours**, proposé uniquement si aucune boucle n'est constructible.
+
 ## link_for_link (réciprocité directe)
-Autorisé, mais **flaggé et bridé**, quatre garde-fous cumulés appliqués serveur :
+Autorisé, mais **en dernier recours, flaggé et bridé**, quatre garde-fous cumulés appliqués
+serveur :
 1. flag de risque affiché aux deux parties avant acceptation ;
 2. délai minimum de 21 jours entre les deux publications, ordre tiré au sort ;
 3. quota : 1 réciprocité par trimestre et par site, jamais deux fois avec le même partenaire
    sur 12 mois glissants ;
-4. détection de cycle dans le graphe des liens échangés jusqu'à 4 sauts (A→B→A, A→B→C→A) :
-   toute boucle bloque la proposition en 409, sans forçage possible.
-Décote d'équité réciproque : facteur **0,70** appliqué à la valeur de chaque jambe avant calcul
-de l'écart et de la soulte.
+4. détection de cycle dans le graphe des liens échangés jusqu'à 4 sauts : seules les boucles
+   **non déclarées** bloquent en 409.
+**Exemption explicite** : la 2ᵉ jambe d'un troc déjà accepté (même `exchange_id`), et les arêtes
+d'une boucle `link_chain` déclarée, ne sont jamais bloquées par la règle « lien déjà existant
+entre les deux domaines » ni par la détection de cycle — sinon le mode serait inapplicable.
+Décote d'équité réciproque : facteur **0,70** appliqué à la valeur de chaque jambe de
+`link_for_link` avant calcul de l'écart et de la soulte. `link_chain` n'est jamais décoté.
 
 ## Vérification de propriété
 **Obligatoire avant toute mise en vente** — prérequis technique bloquant, pas une déclaration.

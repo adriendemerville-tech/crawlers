@@ -86,7 +86,8 @@ alimenté par des diagnostics déjà produits par la plateforme.
 | Règle | Valeur v1 |
 |---|---|
 | Commission Crawlers | **15 %**, taux unique sur les deux verticales et sur tous les `deal_type` (`cash`, `credits`, `barter`) |
-| `link_for_link` | **autorisé, flaggé et bridé** : délai 21 j, décote d'équité, quota 1 réciprocité / trimestre / site, blocage si cycle détecté |
+| `link_chain` (A→B→C→A) | **mode d'échange sans cash privilégié** : boucle déclarée de 3-4 participants, 7 j entre jambes, aucune décote |
+| `link_for_link` | **dernier recours, flaggé et bridé** : proposé seulement si aucune boucle constructible ; délai 21 j, décote d'équité 0,70, quota 1 réciprocité / trimestre / site, blocage des cycles non déclarés |
 | Propriété du vendeur | **vérification obligatoire avant mise en vente** (GSC/DNS pour un domaine, OAuth pour LinkedIn/Instagram) |
 | Bornes de prix | **40 € plancher, 350 € plafond, dures**, paliers multiples de **10 €**, toutes devises et tous actifs |
 
@@ -204,22 +205,38 @@ compat = 0.35 × proximité_sémantique
 ```
 
 Exclusions dures (compat = 0) :
-- lien déjà existant entre les deux domaines ;
-- **cycle** détecté dans le graphe des liens échangés jusqu'à 4 sauts (A→B→A, A→B→C→A) ;
+- lien déjà existant entre les deux domaines — **sauf** s'il s'agit de la 2ᵉ jambe d'un troc
+  `link_for_link` déjà accepté (`marketplace_exchanges.status = accepted`, même `exchange_id`) :
+  cette jambe est attendue par construction et n'est donc jamais bloquée par cette règle ;
+- **cycle** détecté dans le graphe des liens échangés jusqu'à 4 sauts, **hors** boucle d'échange
+  explicitement enregistrée : une chaîne `A→B→C→A` portée par un `exchange_id` de type
+  `link_chain` est légitime (c'est le mode privilégié, cf. ci-dessous) ; seuls les cycles
+  **non déclarés** (liens qui se ferment de fait, sans troc enregistré) restent exclus ;
 - réciprocité directe hors quota : quota `link_for_link` du trimestre déjà consommé, ou même
   partenaire déjà servi sur 12 mois glissants ;
 - même propriétaire / grappe de comptes liés (même IP, même CMS connecté, même Kbis) ;
 - plafond de liens sortants atteint (page : 1 lien dofollow vendu ; domaine : 20/an) ;
 - thématiques exclues (jeux d'argent, crypto, adulte).
 
-La réciprocité **dans le quota** n'est pas une exclusion : elle est autorisée en mode
-`link_for_link` (§2.7), flaggée aux deux parties, décorrélée de 21 jours et valorisée avec le
-facteur de décote d'équité 0,70. Elle n'annule pas `compat`, elle le pénalise :
+**Hiérarchie des modes d'échange sans cash.** La réciprocité directe reste possible, mais elle
+n'est jamais le premier choix du moteur. Ordre de préférence, appliqué à l'appariement :
+
+1. **Chaîne à 3 sauts ou plus (`link_chain`, A→B→C→A)** — mode privilégié : aucun lien réciproque
+   direct, empreinte beaucoup plus naturelle, autorité équilibrée à l'échelle du réseau. Pas de
+   décote (`compat` inchangé), publication des jambes échelonnée (7 j minimum entre deux jambes
+   de la même boucle), boucle enregistrée sous un `exchange_id` unique.
+2. **Troc cross-média** (`link_for_linkedin`, `link_for_insta`) — pas de réciprocité de liens du
+   tout, donc pas de décote.
+3. **`link_for_link` direct** — solution de dernier recours, uniquement si aucune chaîne ni troc
+   cross-média n'est constructible pour ce besoin. Flaggé aux deux parties, décorrélé de 21 jours,
+   quota 1 / trimestre / site, et pénalisé :
 
 ```
 compat_link_for_link = compat × 0.70
 ```
 
+Conséquence pratique : le moteur tente d'abord de fermer une boucle à 3 (ou 4) participants avant
+de proposer un `link_for_link`. Ce dernier n'est présenté que si la recherche de chaîne échoue.
 
 Notification des deux faces au-delà d'un seuil (`compat ≥ 0.6`).
 
@@ -332,12 +349,14 @@ Le frein principal n'est pas le prix mais l'absence de raison de vendre : un sit
 d'autorité n'a pas d'intérêt monétaire à céder un lien. L'incentive retenu est donc l'**échange**,
 avec la même commission Crawlers prélevée en crédits, et non un flux d'argent.
 
-Cinq `trade_type` sont proposés **à égalité**, sans mode par défaut. Le moteur choisit celui qui
-sert le mieux les besoins des deux parties (voir 2.7.1), pas celui qui plaît au produit.
+Six `trade_type` sont proposés. Ils ne sont **pas à égalité** : le moteur applique la hiérarchie
+de §2.2 (chaîne > cross-média > réciprocité directe) et choisit, à l'intérieur de ce cadre, celui
+qui sert le mieux les besoins des deux parties (voir 2.7.1).
 
 | `trade_type` | Jambe A (acheteur reçoit) | Jambe B (vendeur reçoit) | Nature |
 |---|---|---|---|
-| `link_for_link` | lien A→B | lien B→A | même devise, réciproque direct |
+| `link_chain` | lien A→B | lien B→C, puis C→A | **mode privilégié** : boucle 3+ participants, aucune réciprocité directe |
+| `link_for_link` | lien A→B | lien B→A | même devise, réciproque direct — **dernier recours** |
 | `link_for_linkedin` | lien A→B | post LinkedIn de B citant A | cross-média |
 | `link_for_insta` | lien A→B | post/story Instagram de B mentionnant A | cross-média |
 | `linkedin_for_linkedin` | post LinkedIn croisé | post LinkedIn croisé | même devise sociale |
@@ -361,7 +380,8 @@ Lecture par `trade_type`, besoin dominant servi de chaque côté :
 
 | `trade_type` | Acheteur sert | Vendeur sert | Cas d'usage type |
 |---|---|---|---|
-| `link_for_link` | SEO | SEO | deux sites à besoin SEO symétrique et thématiques non concurrentes |
+| `link_chain` | SEO | SEO | besoin SEO des deux côtés — **retenu en premier** dès qu'un tiers C ferme la boucle |
+| `link_for_link` | SEO | SEO | deux sites à besoin SEO symétrique, seulement si aucune chaîne n'est constructible |
 | `link_for_linkedin` | SEO | GEO | acheteur veut de l'autorité, vendeur veut être cité par les IA |
 | `link_for_insta` | SEO | Conversion | vendeur B2C cherche du trafic et des ventes, pas du PageRank |
 | `linkedin_for_linkedin` | GEO | GEO | deux marques B2B qui veulent exister dans les réponses génératives |
@@ -370,17 +390,28 @@ Lecture par `trade_type`, besoin dominant servi de chaque côté :
 Règles :
 - L'UI n'affiche **jamais** un gain SEO ou GEO pour une jambe Instagram : la valeur annoncée est
   strictement l'audience et le clic.
-- `link_for_link` est **autorisé, signalé comme à risque et bridé**. Quatre garde-fous cumulés,
-  tous appliqués serveur, aucun contournable depuis l'UI :
+- `link_chain` est le **mode par défaut pour un besoin SEO symétrique**. Cadre :
+  1. Boucle de 3 ou 4 participants (`A→B→C→A`), enregistrée sous un `exchange_id` unique avec une
+     jambe par arête et un ordre de publication fixé ;
+  2. **7 jours minimum** entre deux jambes de la même boucle, aucune publication simultanée ;
+  3. Aucune décote : la valeur de chaque jambe reste la valeur pleine (pas de facteur 0,70) ;
+  4. Un site ne participe pas à deux boucles actives contenant le même partenaire direct ;
+  5. Si une jambe n'est pas publiée dans le délai, la boucle est annulée : les jambes déjà
+     publiées sont requalifiées en vente cash au prix de l'actif, à la charge du bénéficiaire.
+- `link_for_link` est **autorisé mais en dernier recours**, signalé comme à risque et bridé. Le
+  moteur ne le propose que si la recherche de `link_chain` n'a trouvé aucun tiers compatible.
+  Quatre garde-fous cumulés, tous appliqués serveur, aucun contournable depuis l'UI :
   1. **Flag de risque** visible des deux côtés avant acceptation (pattern de lien réciproque
      dévalué par Google), avec formulation explicite du risque encouru ;
   2. **Décorrélation temporelle** : délai minimum de 21 jours entre les deux jambes, jamais de
-     publication simultanée, ordre de publication tiré au sort ;
+     publication simultanée, ordre de publication tiré au sort. La 2ᵉ jambe d'un troc accepté
+     n'est **jamais** bloquée par la règle « lien déjà existant » ni par la détection de cycle
+     (exemption explicite de §2.2, portée par le `exchange_id`) ;
   3. **Quota** : maximum **1 réciprocité directe par trimestre et par site**, dans les deux sens
      confondus, et jamais deux fois avec le même partenaire sur 12 mois glissants ;
   4. **Détection de cycle** : le graphe des liens échangés est parcouru avant validation ; toute
-     boucle détectée (A→B→A, A→B→C→A, jusqu'à 4 sauts) **bloque** la proposition en 409, sans
-     possibilité de forçage.
+     boucle **non déclarée** (fermée de fait, sans `exchange_id` de type `link_chain` ou
+     `link_for_link` accepté) **bloque** la proposition en 409, sans possibilité de forçage.
 - La valeur d'une jambe LinkedIn est estimée sur les impressions et l'engagement des 10 derniers
   posts du vendeur, publication vérifiée via l'URN/URL stable du post. À défaut d'impressions
   exposées par l'API : followers × taux d'engagement observé sur les réactions publiques. La
@@ -389,7 +420,8 @@ Règles :
   crédits — **même taux que la vente cash**, aucune exception de devise ni de `deal_type`.
 - Le troc suit le même workflow de prévisualisation (2.3) et de double feedback que la vente.
 - Plafonds : maximum 2 échanges actifs par site sortant et par mois, dont **au plus 1
-  `link_for_link` par trimestre** (règle 3 ci-dessus, la plus contraignante l'emporte).
+  `link_for_link` par trimestre** (règle 3 ci-dessus, la plus contraignante l'emporte). Les
+  boucles `link_chain` comptent dans les 2 échanges actifs mais pas dans le quota trimestriel.
 
 #### 2.7.2 Sélection du `trade_type` et de la soulte
 
@@ -400,9 +432,16 @@ Le moteur ne demande pas aux parties de choisir : il propose. Séquence détermi
                dérivés de architect_workbench, du profil E-E-A-T et des actifs connectés.
 2. Candidats : trade_types dont la jambe reçue par A couvre need(A)
                ET la jambe reçue par B couvre need(B)   → "besoins concordants"
+2b. Priorité : si need(A) = need(B) = seo, on cherche d'abord un tiers C
+               (voire D) fermant une boucle A→B→C→A : compat(B,C) ≥ 0.6
+               et compat(C,A) ≥ 0.6, aucun lien préexistant sur les arêtes.
+               Trouvé → trade_type = link_chain, on saute l'étape 5.
+               Non trouvé → link_for_link reste candidat, en dernier rang.
 3. Si candidats ≠ ∅ :
       juste échange → on retient le trade_type au meilleur couple
-      (couverture_besoin × faisabilité des actifs connectés)
+      (couverture_besoin × faisabilité des actifs connectés), l'ordre de
+      préférence de §2.2 départageant les ex æquo
+      (link_chain > cross-média > link_for_link)
 4. Si candidats = ∅ (besoins non concordants) :
       on retient le trade_type que le vendeur peut honorer,
       puis on équilibre par l'équité :
@@ -421,8 +460,9 @@ Le moteur ne demande pas aux parties de choisir : il propose. Séquence détermi
              sinon la proposition n'est pas générée.
 5. Décote  : si trade_type = link_for_link, value de chaque jambe × 0,70
              (facteur de décote réciproque v1) avant calcul de l'écart,
-             puis contrôle du quota trimestriel et de l'absence de cycle :
-             échec → proposition bloquée, pas de repli sur un autre trade_type.
+             puis contrôle du quota trimestriel et de l'absence de cycle non
+             déclaré : échec → proposition bloquée, pas de repli sur un autre
+             trade_type. link_chain n'est jamais décoté.
 6. Sortie  : { trade_type, jambe_A, jambe_B, soulte, devise_soulte, risk_flags[] }
              présenté aux deux parties, acceptation explicite des deux côtés requise.
 ```
@@ -622,7 +662,7 @@ schéma dévalué.
 | Modèle | Abonnement, liens distribués automatiquement | Achat à l'unité, commission | Gré à gré | Achat cash **et** troc, commission unique 15 % |
 | Devises d'échange | Aucune (bundle) | Euros | Lien contre lien | Lien, LinkedIn, Instagram, crédits, euros |
 | Contrôle du voisinage | Faible (base non filtrée) | Éditorial (curation Getfluence) | Aucun | Filtrage thématique + standing vendeur |
-| Empreinte / risque de pattern | Élevé (attribution uniforme) | Moyen (articles sponsorisés massifs) | Élevé (réciprocité directe) | `link_for_link` flaggé, décorrélation 21 j, décote d'équité |
+| Empreinte / risque de pattern | Élevé (attribution uniforme) | Moyen (articles sponsorisés massifs) | Élevé (réciprocité directe) | boucles `link_chain` privilégiées, `link_for_link` en dernier recours, flaggé, décorrélation 21 j, décote d'équité |
 | Appariement au besoin réel | Non | Filtres manuels (DR, trafic, thème) | Non | Matrice besoin ↔ devise (SEO / GEO / conversion) des deux parties |
 | Équité de l'échange | Non calculée | Prix éditeur | Négociée à l'œil | Score d'équité, soulte en euros ou crédits (jamais financée par Crawlers) |
 | Mémoire long terme | Non | Non | Non | Balance d'autorité par site amortie 24 mois + file de priorité |
@@ -849,11 +889,15 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   commission 15 %, statut, `approved_revision_id`, `soulte_cents`, `soulte_currency`
   (`eur` | `credits`), `soulte_payer_id`, `soulte_payee_id`, `risk_flags[]`. Aucune valeur de jambe
   stockée ici.
-- `marketplace_exchanges` — **jambes** de la commande (2 pour un troc, 1 pour un achat cash) :
-  `order_id`, `leg_index`, `currency_kind` (`link` | `story` | `linkedin`), `value_cents` (palier de
-  10 €, borné 40–350 €), `trade_type` (`link_for_link` | `link_for_linkedin` | `link_for_insta` |
-  `linkedin_for_linkedin` | `insta_for_insta`), `reciprocity_quarter` (quota `link_for_link`),
-  `cycle_check_verdict`, `delivered_at`.
+- `marketplace_exchanges` — **jambes** de la commande (2 pour un troc, 3 ou 4 pour une boucle
+  `link_chain`, 1 pour un achat cash) : `order_id`, `exchange_id` (identifiant du troc ou de la
+  boucle, partagé par toutes ses jambes), `leg_index`, `publish_after` (décorrélation : +21 j pour
+  `link_for_link`, +7 j entre jambes d'une boucle), `currency_kind` (`link` | `story` |
+  `linkedin`), `value_cents` (palier de 10 €, borné 40–350 €), `trade_type` (`link_chain` |
+  `link_for_link` | `link_for_linkedin` | `link_for_insta` | `linkedin_for_linkedin` |
+  `insta_for_insta`), `reciprocity_quarter` (quota `link_for_link` uniquement),
+  `cycle_check_verdict` (les cycles déclarés portant un `exchange_id` accepté sont exemptés, cf.
+  §2.2), `delivered_at`.
 - `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers, référence `order_id`.
 
 ### 4.4 Balance d'autorité et file d'achat
@@ -973,10 +1017,14 @@ Ajouts obligatoires :
 - Données : partage limité et consenti des signaux de page entre les parties (RGPD). L'acheteur
   reçoit uniquement des **fourchettes** et des scores normalisés ; les valeurs GSC exactes, les
   requêtes, les courbes temporelles et les agrégats de domaine ne sont jamais exposés (§2.1.1).
-- **Échanges réciproques (`link_for_link`) : autorisés mais encadrés** — délai de 21 jours entre
-  les deux publications, une seule réciprocité par trimestre et par site, jamais deux fois avec
-  le même partenaire sur 12 mois, refus automatique en cas de boucle de liens. Le risque de
-  dévaluation par les moteurs est porté à la connaissance des deux parties et assumé par elles.
+- **Échanges en boucle (`link_chain`, A→B→C→A) : mode d'échange sans cash privilégié** — jambes
+  publiées à 7 jours d'écart minimum, boucle déclarée et traçable, aucune décote.
+- **Échanges réciproques directs (`link_for_link`) : autorisés en dernier recours et encadrés** —
+  proposés seulement si aucune boucle n'est constructible, délai de 21 jours entre les deux
+  publications, une seule réciprocité par trimestre et par site, jamais deux fois avec le même
+  partenaire sur 12 mois, refus automatique en cas de boucle de liens **non déclarée** (la 2ᵉ jambe
+  d'un troc accepté n'est jamais bloquée à ce titre). Le risque de dévaluation par les moteurs est
+  porté à la connaissance des deux parties et assumé par elles.
 - Interdictions fermes : fermes de liens, réseaux de sites détenus par un même bénéficiaire,
   achat d'engagement, revente d'un actif dont la propriété n'est pas vérifiée.
 
@@ -988,7 +1036,7 @@ Ajouts obligatoires :
 |---|---|
 | L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
 | L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » + **calcul de la valeur d'appariement page et domaine (§2.11)** |
-| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 %, **quota `link_for_link` + détection de cycles** |
+| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 %, **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
 | L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
 | L5 | Landing page, home, tarifs, **valeur d'appariement dans l'Audit stratégique et Marina (page + domaine)**, bloc « Ma balance » comme produit de rétention (§2.14), CGVU |
 
