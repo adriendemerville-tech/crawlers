@@ -18,6 +18,7 @@
 - **Audit:** Ne jamais conclure « contenu pauvre » sur le seul HTML servi — détecter la coquille JS (non-SSR) et remonter la cause racine.
 - **Liens:** Tout contrôle de liens passe par `_shared/linkVerdictShared.ts` (hard_broken/soft_broken/blocked/ok) — jamais de seuil HTTP local.
 - **Benchmarks GEO:** Le mot « site » est interdit dans les questions ; une activité mixte (prestation + e-boutique) reste un prestataire — voir [Formulation des questions de benchmark](mem://tech/geo/benchmark-question-wording-fr).
+- **Carte d'identité:** Une dimension d'entreprise n'influence une question de benchmark que si elle est pertinente au croisement avec l'offre vendue — voir [Dimensions d'entreprise croisées avec l'offre](mem://tech/identity/enterprise-dimensions-cross-offer-fr).
 - **Éditorial:** Une tactique SEO (balise title, maillage, schema) n'est JAMAIS un sujet d'article, sauf sur crawlers.fr — voir [Garde stratégie ≠ sujet](mem://tech/autopilot/strategy-vs-subject-guard-fr).
 
 ## Memories
@@ -25,3 +26,4 @@
 - [Plan Jeune Entreprise v1](mem://features/pricing/plan-jeune-entreprise-v1-fr) — Gratuité 12 mois FR, vérif SIRET+Kbis, quotas F1-F10, F6 = dégradation 1j, F8 purge non tranché
 - [Garde stratégie ≠ sujet](mem://tech/autopilot/strategy-vs-subject-guard-fr) — editorialSubjectGuard : requalification en mot-clé métier ou blocage de la publication
 - [Formulation des questions de benchmark](mem://tech/geo/benchmark-question-wording-fr) — Interdiction du mot « site », règle de dominance service vs e-commerce, archétype piloté par la page auditée
+- [Dimensions d'entreprise croisées avec l'offre](mem://tech/identity/enterprise-dimensions-cross-offer-fr) — 9 dimensions + croisement SIRENE, tri de pertinence par offre, dimensions interdites dans les questions

@@ -178,8 +178,8 @@ export async function naturalizeBenchmarkQuestions(
    * interdites au modèle.
    */
   const dims: EnterpriseDimensions = (s.enterprise_dimensions as EnterpriseDimensions | undefined)
-    ?? deriveEnterpriseDimensions(s as DimensionInput);
-  const dimensionSelection = selectBenchmarkDimensions(dims, s as DimensionInput);
+    ?? deriveEnterpriseDimensions(s as unknown as DimensionInput);
+  const dimensionSelection = selectBenchmarkDimensions(dims, s as unknown as DimensionInput);
   const dimensionsBlock = dimensionsPromptBlock(dimensionSelection);
   console.log(`[benchmarkQuestions] dimensions croisées avec l'offre — ${describeDimensionSelection(dimensionSelection)}`);
 

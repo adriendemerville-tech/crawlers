@@ -16,6 +16,11 @@ import {
   renderStructuredEvidenceBlock,
   type StructuredIdentitySignals,
 } from './structuredIdentity.ts'
+import {
+  deriveEnterpriseDimensions,
+  extractSirenSiret,
+  lookupSirene,
+} from './enterpriseDimensions.ts'
 
 const LOVABLE_AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'

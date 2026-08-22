@@ -15674,6 +15674,7 @@ export type Database = {
           eeat_details: Json | null
           eeat_last_audit_at: string | null
           eeat_score: number | null
+          enterprise_dimensions: Json | null
           entity_type: string | null
           founding_year: number | null
           gmb_city: string | null
@@ -15748,6 +15749,7 @@ export type Database = {
           eeat_details?: Json | null
           eeat_last_audit_at?: string | null
           eeat_score?: number | null
+          enterprise_dimensions?: Json | null
           entity_type?: string | null
           founding_year?: number | null
           gmb_city?: string | null
@@ -15822,6 +15824,7 @@ export type Database = {
           eeat_details?: Json | null
           eeat_last_audit_at?: string | null
           eeat_score?: number | null
+          enterprise_dimensions?: Json | null
           entity_type?: string | null
           founding_year?: number | null
           gmb_city?: string | null
