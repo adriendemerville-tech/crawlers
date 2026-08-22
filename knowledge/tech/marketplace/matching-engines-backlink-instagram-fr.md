@@ -1078,10 +1078,11 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `cycle_check_verdict` (les cycles déclarés portant un `exchange_id` accepté sont exemptés, cf.
   §2.2), `delivered_at`.
   Commission : `commission_payer_id` (le vendeur de la jambe), `commission_cents` (15 % de
-  `value_cents`, contre-valeur euros figée) et `commission_credits` (débit effectif en crédits,
-  §2.5). Le débit est écrit au figeage, après contrôle du solde de chaque payeur.
-- `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers (toujours en crédits),
-  référence `order_id` et `leg_id`.
+  `value_cents`, contre-valeur euros figée) et `commission_credits` (débit en crédits — sur une
+  jambe de troc le règlement en crédits est obligatoire, §2.5). Le débit est écrit au figeage,
+  après contrôle du solde de chaque payeur.
+- `marketplace_payouts` — mouvements wallet vendeur, commission Crawlers (support `cash` ou
+  `credits` selon `commission_settlement`), référence `order_id` et `leg_id`.
 
 ### 4.4 Balance d'autorité et file d'achat
 
