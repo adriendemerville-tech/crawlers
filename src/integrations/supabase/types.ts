@@ -6705,6 +6705,51 @@ export type Database = {
           },
         ]
       }
+      gmb_url_audits: {
+        Row: {
+          created_at: string
+          grade: string | null
+          id: string
+          kgmid: string | null
+          place_address: string | null
+          place_id: string
+          place_name: string | null
+          resolved_url: string | null
+          result: Json
+          score: number | null
+          source_url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          grade?: string | null
+          id?: string
+          kgmid?: string | null
+          place_address?: string | null
+          place_id: string
+          place_name?: string | null
+          resolved_url?: string | null
+          result?: Json
+          score?: number | null
+          source_url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          grade?: string | null
+          id?: string
+          kgmid?: string | null
+          place_address?: string | null
+          place_id?: string
+          place_name?: string | null
+          resolved_url?: string | null
+          result?: Json
+          score?: number | null
+          source_url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       google_ads_connections_deprecated_20260427: {
         Row: {
           access_token: string | null
