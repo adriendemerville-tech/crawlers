@@ -3538,17 +3538,25 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               discoveredUrls = knownTotal;
             } else {
               try {
-                const detectRes: any = await callFunction('crawl-site', {
-                  url: url,
-                  mode: 'detect',
-                  userId: parentJob.user_id,
-                });
+                // Détection bornée à 60 s : au-delà, on retombe sur le mode
+                // standard plutôt que de consommer tout le wall-time du run.
+                const detectRes: any = await Promise.race([
+                  callFunction('crawl-site', {
+                    url: url,
+                    mode: 'detect',
+                    userId: parentJob.user_id,
+                  }),
+                  new Promise((resolve) => setTimeout(() => resolve(null), 60_000)),
+                ]);
                 if (detectRes?.success && typeof detectRes.totalDiscovered === 'number') {
                   discoveredUrls = detectRes.totalDiscovered;
+                } else if (!detectRes) {
+                  console.warn('[Marina] Détection d\'URLs non aboutie sous 60 s — mode standard appliqué');
                 }
               } catch (detectErr) {
                 console.warn(`[Marina] URL detection failed (non-fatal), falling back to standard mode:`, detectErr);
               }
+
             }
 
             const scanMode = resolveScanMode(discoveredUrls);
