@@ -2270,13 +2270,14 @@ Deno.serve(handleRequest(async (req) => {
     // Contenu non extractible : le HTML est servi mais le texte visible est
     // quasi absent (coquille JS). Le score technique ne peut pas rester haut :
     // les robots ne lisent rien.
-    const densityKnown = contentDensity.verdict !== 'unknown';
-    const textStarved = densityKnown && contentDensity.ratio < 5 && htmlAnalysis.wordCount < 200;
+    const density = htmlAnalysis.insights?.contentDensity;
+    const densityKnown = Boolean(density) && density.verdict !== 'unknown';
+    const textStarved = densityKnown && density.ratio < 5 && htmlAnalysis.wordCount < 200;
     if (textStarved && technicalScore > 25) {
       scoreGates.push({
         axis: 'technical',
         reason: 'Texte visible quasi absent du HTML servi (rendu probablement dépendant du JS)',
-        evidence: `${contentDensity.ratio}% de texte et ${htmlAnalysis.wordCount} mots → cible > 15% (score plafonné à 25/50)`,
+        evidence: `${density.ratio}% de texte et ${htmlAnalysis.wordCount} mots → cible > 15% (score plafonné à 25/50)`,
       });
       technicalScore = 25;
     }
