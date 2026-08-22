@@ -2347,10 +2347,12 @@ Deno.serve(handleRequest(async (req) => {
     if (totalCap !== null && totalScore > totalCap) {
       scoreGates.push({
         axis: 'total',
-        reason: 'Défaut bloquant mesuré : le score global est plafonné hors de la zone « excellent »',
-        evidence: `${totalScore}/200 avant plafond → 130/200`,
+        reason: blockingGate
+          ? 'Défaut bloquant mesuré : le score global est plafonné hors de la zone « excellent »'
+          : 'Mesures de performance indisponibles : le score global reste hors de la zone « excellent »',
+        evidence: `${totalScore}/200 avant plafond → ${totalCap}/200`,
       });
-      totalScore = 130;
+      totalScore = totalCap;
     }
     if (scoreGates.length) {
       console.log(`[Audit-Expert-SEO] 🚧 ${scoreGates.length} plafond(s) de cohérence appliqué(s): ${scoreGates.map((g) => g.axis).join(', ')}`);
