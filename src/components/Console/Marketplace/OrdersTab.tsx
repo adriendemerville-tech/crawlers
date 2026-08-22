@@ -156,6 +156,10 @@ export function OrdersTab() {
                 </Button>
               )}
             </div>
+
+            {['published', 'verified', 'maintained', 'broken', 'refunded'].includes(o.status) && (
+              <VerificationTimeline orderId={o.id} />
+            )}
           </CardContent>
         </Card>
       ))}
