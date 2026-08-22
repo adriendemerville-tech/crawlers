@@ -15,7 +15,7 @@ import { Link } from '@/lib/router-compat';
 import { MarinaReportPreviewModal } from '@/components/Admin/MarinaReportPreviewModal';
 import { MarinaMultipagePanel } from '@/components/Marina/MarinaMultipagePanel';
 import { MarinaPaidUnlockModal, MARINA_ONESHOT_PRICE_EUR } from '@/components/Marina/MarinaPaidUnlockModal';
-import { MarinaScanModePanel, type ActiveScanMode } from '@/components/Marina/MarinaScanModePanel';
+import { MarinaScanModePanel, MarinaScanModeDetail, type ActiveScanMode } from '@/components/Marina/MarinaScanModePanel';
 import MarinaIdentityPanel from '@/components/Marina/MarinaIdentityPanel';
 import MarinaProgressTimeline from '@/components/Marina/MarinaProgressTimeline';
 
@@ -611,6 +611,7 @@ export default function Marina() {
   const [demoHtml, setDemoHtml] = useState<string | null>(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [activeTab, setActiveTab] = useState('features');
+  const [scanModeOpen, setScanModeOpen] = useState(false);
   // Essai gratuit sans compte : 2 rapports complets par adresse IP, email requis
   const [freeEmail, setFreeEmail] = useState('');
   const [freeRemaining, setFreeRemaining] = useState<number | null>(null);
@@ -900,9 +901,22 @@ export default function Marina() {
 
                 {/* Modes de scan + carte d'identité : remontés juste sous la barre d'URL */}
                 <div className="grid gap-3 md:grid-cols-2 [&>*]:mt-0 mt-3">
-                  <MarinaScanModePanel language={language} active={activeScanMode} pagesCrawled={scanPagesCrawled} />
+                  <MarinaScanModePanel
+                    language={language}
+                    active={activeScanMode}
+                    pagesCrawled={scanPagesCrawled}
+                    open={scanModeOpen}
+                    onOpenChange={setScanModeOpen}
+                  />
                   <MarinaIdentityPanel url={url} isAuthenticated={!!user} />
                 </div>
+
+                {/* Détail des modes de scan : pleine largeur sous les deux cartes */}
+                {scanModeOpen && (
+                  <div className="mt-3">
+                    <MarinaScanModeDetail language={language} active={activeScanMode} pagesCrawled={scanPagesCrawled} />
+                  </div>
+                )}
 
                 {/* Essai gratuit sans compte : email obligatoire, quota par IP — masqué si connecté */}
                 {!user && freeRemaining !== 0 && (
