@@ -25,6 +25,8 @@
  */
 
 import { provenanceBadge, type ProvenanceLevel } from './provenance.ts';
+import { normalizeGates, type AuditGate } from './auditGates.ts';
+
 
 export type GeoFamily = 'comprehension' | 'authority';
 
