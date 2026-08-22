@@ -4,9 +4,15 @@
  * plutôt que sur le seul périmètre crawlé.
  */
 
-const MAX_URLS = 5000;
-const MAX_CHILD_SITEMAPS = 8;
+const MAX_URLS = 20000;
+/**
+ * Un index de sitemaps segmenté par type de contenu (avis, témoignages, guides,
+ * produits…) dépasse largement 8 enfants. Plafonner à 8 tronquait le sitemap et
+ * faisait conclure à tort « aucune page de ce type détectée ».
+ */
+const MAX_CHILD_SITEMAPS = 50;
 const TIMEOUT_MS = 8000;
+
 
 async function fetchText(url: string): Promise<string | null> {
   try {
