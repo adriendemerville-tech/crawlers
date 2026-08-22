@@ -112,10 +112,62 @@ Signaux collectés par page :
 | Qualité de contenu | `computeSeoScoreV2` + E-E-A-T v3 + fraîcheur | 15 % |
 | Visibilité IA (citations, benchmark GEO) | benchmark SERP multi-providers + scoring GEO | 10 % |
 
+Ces signaux servent **au calcul serveur**. Ce qui est *affiché* est régi par §2.1.1.
+
 Prix indicatif = `base × Σ(poids × score normalisé)`, borné par un **plancher dur de 40 €** et un
 **plafond dur de 350 €**. Aucun actif ne sort de ces bornes en v1, quelle que soit son autorité :
 pas de dérogation, pas de file de validation admin. Le prix est recalculé à chaque rafraîchissement
 des signaux et **figé au moment de la commande**.
+
+### 2.1.1 Confidentialité des signaux GSC — ce qui est exposé
+
+Les données GSC d'un vendeur sont des **données commerciales personnelles**. Montrer les clics,
+impressions ou positions exacts d'une page à un acheteur (même prospect) est une fuite : cela
+révèle le chiffre d'affaires potentiel, la saisonnalité et les requêtes rentables du vendeur.
+
+**Règle d'exposition (invariante).** À un acheteur, l'API et l'UI ne renvoient **jamais** de valeur
+GSC exacte : uniquement des **fourchettes** (buckets) et des scores normalisés 0–100. Les valeurs
+exactes restent visibles **du seul propriétaire de l'actif** (et de l'admin, pour le support).
+
+| Donnée | Vendeur (propriétaire) | Acheteur / prospect | Public (page d'annonce) |
+|---|---|---|---|
+| Clics 90 j | valeur exacte | fourchette | fourchette |
+| Impressions 90 j | valeur exacte | fourchette | fourchette |
+| Position moyenne | valeur exacte | fourchette (`1-3`, `4-10`, `11-20`, `21+`) | fourchette |
+| Requêtes / mots-clés déclencheurs | liste complète | **jamais** — seulement 1 à 3 **thématiques** (clusters) | thématiques |
+| Pays / device | détail | top pays uniquement, sans part de trafic | top pays |
+| Courbe temporelle (par jour/semaine) | oui | **jamais** — seulement une tendance `hausse` / `stable` / `baisse` | tendance |
+| Trafic du domaine entier | oui | **jamais** (agrégat de niveau site non exposé) | non |
+| Score de trafic normalisé (0–100) | oui | oui | oui |
+
+**Fourchettes retenues (échelle unique, bornes fermées, jamais recalculées côté client).**
+
+```
+clics_90j        : 0 | 1-10 | 11-50 | 51-200 | 201-1 000 | 1 001-5 000 | 5 000+
+impressions_90j  : 0-100 | 101-1 000 | 1 001-10 000 | 10 001-50 000 | 50 001-250 000 | 250 000+
+position_moyenne : 1-3 | 4-10 | 11-20 | 21+
+```
+
+Garde-fous complémentaires :
+
+- **Seuil de k-anonymat inversé** : si `clics_90j ≤ 10`, on n'affiche pas la fourchette basse mais
+  la mention neutre « trafic faible / non significatif » — une fourchette `1-10` sur une page
+  unique est presque une valeur exacte.
+- **Pas de dé-anonymisation par différence** : les fourchettes sont calculées sur la fenêtre 90 j
+  figée du dernier rafraîchissement (au plus une fois par 7 j) ; on ne sert pas d'historique de
+  fourchettes permettant de reconstituer les deltas.
+- **Pas d'agrégat inférable** : aucune API acheteur ne renvoie plusieurs pages d'un même vendeur
+  avec leurs fourchettes dans la même réponse au-delà de 5 pages, ni de total domaine.
+- **Après commande** : l'acheteur ne gagne aucun accès supplémentaire aux données GSC du vendeur ;
+  le suivi post-publication (§2.13) porte sur la **présence du lien**, pas sur son trafic.
+- **Implémentation** : la conversion valeur → bucket se fait **serveur**, dans une vue/fonction
+  dédiée (`marketplace_asset_public_signals`) ; les tables portant les valeurs brutes ont un
+  `SELECT` réservé au propriétaire (RLS `auth.uid()`) et à `service_role`. Aucune valeur exacte ne
+  transite dans un payload destiné à un non-propriétaire, même « non affichée ».
+- **Consentement** : l'opt-in de mise en vente précise explicitement *ce qui sera visible*
+  (fourchettes + thématiques + scores) et *ce qui ne le sera jamais* (requêtes, courbes, valeurs
+  exactes, trafic domaine). Retrait de l'opt-in → retrait immédiat de l'annonce.
+
 
 **Grille de prix (détail retenu).** Le prix algorithmique choisit un **palier fixe**, il ne
 l'invente pas : pas de prix continu, lisibilité acheteur/vendeur, pas de négociation au cas
