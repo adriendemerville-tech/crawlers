@@ -206,8 +206,11 @@ Le moteur ne demande pas aux parties de choisir : il propose. Séquence détermi
          écart = value(jambe_A) − value(jambe_B)
          |écart| ≤ 15 %  → échange pur
          |écart| >  15 %  → soulte réglée par la partie avantagée,
-                            en crédits, mois d'abonnement offerts, audit Marina
-                            ou cash (paliers P1–P4) selon 2.8
+                            uniquement sous deux formes :
+                              a) cash : le prix en euros de la commande augmente
+                                 du montant de l'écart (paliers P1–P4)
+                              b) crédits : transfert de crédits Crawlers
+                                 de wallet à wallet entre les deux users
 5. Décote  : si trade_type = link_for_link, value de chaque jambe × facteur de décote
              réciproque avant calcul de l'écart.
 6. Sortie  : { trade_type, jambe_A, jambe_B, soulte, devise_soulte, risk_flags[] }
@@ -217,28 +220,33 @@ Le moteur ne demande pas aux parties de choisir : il propose. Séquence détermi
 Autrement dit : **quand les besoins matchent, on optimise le juste échange (troc pur) ; quand ils
 ne matchent pas, on choisit le `trade_type` réalisable et on rétablit l'équité par le prix.**
 
+**Règle non négociable : Crawlers ne finance jamais la soulte.** La soulte est toujours payée par
+l'un des deux users à l'autre — en euros (hausse du prix de la commande) ou en crédits Crawlers
+transférés de wallet à wallet. Aucun mois d'abonnement offert, aucun audit offert, aucune remise
+plateforme n'entre dans le calcul d'équité : ce serait Crawlers qui paierait l'écart entre deux
+tiers. Crawlers ne prélève que sa commission.
+
 
 
 ### 2.8 Autres contreparties pour équilibrer un lien
 
-Toutes suivent la même règle : la contrepartie ne doit **jamais** être un lien retour vers le site
-acheteur. Elles sont évaluées par le même moteur d'équivalence et réglées en crédits pour l'écart.
+Deux règles : la contrepartie ne doit **jamais** être un lien retour vers le site acheteur, et elle
+doit toujours être fournie par l'un des deux users — jamais par Crawlers.
 
 | Contrepartie | Valeur pour l'acheteur | Vérifiable par Crawlers |
 |---|---|---|
-| Crédits Crawlers | le vendeur est payé en usage plateforme (coût réel ~0,05 €/crédit) — marge Crawlers maximale | oui, natif |
-| Remise / mois d'abonnement offerts | rend le coût net d'abonnement du vendeur proche de zéro : incentive le plus fort pour un petit site | oui, natif |
+| Euros (hausse du prix de la commande) | règlement direct de l'écart, paliers P1–P4 | oui, natif |
+| Crédits Crawlers transférés d'un wallet à l'autre | le vendeur est payé en usage plateforme, sans sortie de cash côté acheteur | oui, natif |
 | Post LinkedIn ou story Instagram | cf. 2.7 | oui, via connecteurs |
 | Newsletter : mention dans un envoi | audience qualifiée, non indexable, aucun signal SEO | partiellement (capture d'écran + nombre d'abonnés déclaré) |
 | Citation dans un contenu tiers (podcast, interview, étude co-signée) | E-E-A-T réel, mention de marque exploitée par les LLM | manuel |
-| Donnée / étude exclusive fournie au vendeur | le vendeur reçoit un contenu à publier, l'acheteur obtient la citation de source | oui (contenu généré côté Crawlers) |
-| Audit Marina offert au vendeur | contrepartie à coût marginal quasi nul, forte valeur perçue | oui, natif |
-| Mise en avant dans l'annuaire/observatoire Crawlers | visibilité interne, pas de lien sortant vers l'acheteur | oui, natif |
+| Donnée / étude exclusive fournie par l'acheteur au vendeur | le vendeur reçoit un contenu à publier, l'acheteur obtient la citation de source | manuel |
 
-Les trois contreparties à prioriser en v1 parce qu'elles sont natives, à coût marginal faible et
-sans risque Google : **crédits**, **mois d'abonnement offerts**, **audit Marina offert**. Les
-contreparties sociales (jambes LinkedIn et Instagram, cf. 2.7) arrivent avec les connecteurs. Les
-contreparties non vérifiables automatiquement (newsletter, podcast) restent hors v1 et hors garantie.
+Les deux seules devises de soulte en v1 sont donc **les euros** et **les crédits Crawlers transférés
+entre users**. Les mois d'abonnement offerts, remises et audits offerts sont exclus : ils feraient
+supporter par Crawlers l'écart de valeur entre deux tiers. Les contreparties sociales (jambes
+LinkedIn et Instagram, cf. 2.7) arrivent avec les connecteurs. Les contreparties non vérifiables
+automatiquement (newsletter, podcast, étude) restent hors v1 et hors garantie.
 
 
 ---
@@ -286,7 +294,7 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 - `marketplace_social_assets` — compte Instagram, formats, métriques, prix calculé.
 - `marketplace_needs` — besoin acheteur dérivé de `architect_workbench` / E-E-A-T.
 - `marketplace_matches` — couples besoin↔actif, `compat_score`, statut de notification.
-- `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`, `deal_type` (`cash` | `credits` | `subscription_months` | `marina_audit` | `barter`), et si `barter` : `trade_type` (`link_for_link` | `link_for_linkedin` | `link_for_insta` | `linkedin_for_linkedin` | `insta_for_insta`), `soulte_cents`, `soulte_currency`, `risk_flags[]`.
+- `marketplace_orders` — commande, prix figé, commission, statut, `approved_revision_id`, `deal_type` (`cash` | `credits` | `barter`), et si `barter` : `trade_type` (`link_for_link` | `link_for_linkedin` | `link_for_insta` | `linkedin_for_linkedin` | `insta_for_insta`), `soulte_cents`, `soulte_currency` (`eur` | `credits` uniquement), `soulte_payer_id`, `soulte_payee_id`, `risk_flags[]`.
 - `marketplace_needs` porte `need_primary` / `need_secondary` (`seo` | `geo` | `conversion`) : entrée de la matrice 2.7.1 pour les deux parties.
 
 - `marketplace_exchanges` — jambes d'un troc (2 jambes : le lien + la contrepartie), nature de la contrepartie, valeur estimée par jambe, solde en crédits, commission 10 %.
