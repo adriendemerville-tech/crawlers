@@ -91,3 +91,13 @@ calendrier. Remboursement au prorata prélevé dans cet ordre : `held` de la com
 reliquat devient une dette (`marketplace_wallet_debts`) qui gèle vente et achat et absorbe 100 %
 des crédits entrants. Récupération plafonnée au net perçu sur la commande, prescrite après
 `commitment_ends_at + 30 j`. Tables : `marketplace_wallet_entries`, `marketplace_wallet_debts`.
+
+## Fiscalité du troc (TVA 20 %)
+Un troc lien/story est un double échange de services imposable : chaque jambe est facturée à sa
+propre valeur (`marketplace_exchanges.value_cents`), **TVA 20 %** pour un assujetti FR, soulte au
+même régime, commission 15 % facturée avec TVA 20 %. Autoliquidation UE si numéro VIES valide,
+mention art. 293 B pour la franchise en base, **vente interdite aux non-assujettis (particuliers)**.
+Crawlers facture au nom et pour le compte du vendeur (mandat de self-billing accepté à
+l'onboarding) ; exigibilité = 1ʳᵉ preuve de publication ; avoir en cas de prorata ; DAC7 déclare
+aussi les jambes en troc et les crédits. Tables : `marketplace_tax_profiles`,
+`marketplace_invoices` (montants et TVA figés à l'émission).
