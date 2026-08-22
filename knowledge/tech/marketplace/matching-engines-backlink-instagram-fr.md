@@ -257,8 +257,7 @@ explicite, jamais un blocage silencieux) :
 |---|---|---|
 | **Vitesse d'acquisition** | ≤ 4 liens entrants achetés par **30 jours glissants** / domaine acheteur, et ≤ 2 sur 7 jours glissants (fenêtres glissantes, jamais mois calendaire — cf. `marketplace_buyer_limits`, §4.2) | anti-pic de vélocité |
 | **Rampe nouvel entrant** | jours 1-30 depuis la 1ʳᵉ commande : max 2 liens ; jours 31-60 : 3 ; à partir de J+61 : 4 (tranches glissantes depuis la 1ʳᵉ commande, pas des mois calendaires) | un domaine jeune ne construit pas 12 liens en 30 jours |
-| **Concentration par vendeur** | ≤ 2 liens du même domaine vendeur sur 12 mois glissants, et ≤ 20 % des liens achetés sur la période | diversité des sources |
-| **Diversité minimale** | à partir du 5e lien acheté, au moins 4 domaines vendeurs distincts | pas de profil mono-source |
+| **Concentration par vendeur** | ≤ 2 liens du même domaine vendeur sur 12 mois glissants | diversité des sources — cette seule borne implique déjà la part maximale du vendeur dominant et un minimum de vendeurs distincts, aucune règle de pourcentage ni de seuil au 5ᵉ lien n'est ajoutée |
 | **Concentration par page cible** | ≤ 3 liens achetés vers la même URL cible sur 12 mois | anti-suroptimisation d'une page |
 | **Diversité d'ancre** | ≤ 1 ancre exacte (mot-clé cible strict) par tranche de 4 liens achetés vers le même domaine ; le reste en ancre de marque, URL nue ou semi-générique | anti-pattern d'ancres |
 | **Cohérence thématique** | au moins 60 % des liens achetés sur 12 mois dans le champ sémantique du domaine acheteur | anti-profil incohérent |
