@@ -9,6 +9,7 @@ import {
   acceptMarketplaceOrder,
   cancelMarketplaceOrder,
   declareMarketplacePublication,
+  getMarketplaceVerifications,
 } from '@/lib/marketplace/marketplace.functions';
 import { DEAL_TYPE_LABEL, ORDER_STATUS_LABEL, type OrderRow } from '@/lib/marketplace/orderTypes';
 
