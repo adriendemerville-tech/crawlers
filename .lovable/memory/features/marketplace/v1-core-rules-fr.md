@@ -144,3 +144,37 @@ aussi les jambes en troc et les crédits. Tables : `marketplace_tax_profiles`,
   pilier ni un silo « netlinking ».
 - `buy_risk` est calculé sur **six** dimensions (vitesse, rampe nouvel entrant, concentration
   vendeur, concentration page cible, diversité d'ancre, cohérence thématique).
+
+## Attribut du lien (décidé 2026-08-22)
+`rel="sponsored"` est le **défaut imposé par le serveur** sur toute transaction (`cash`, `credits`,
+`barter`) — pas de « choix vendeur » libre. Cohérent avec la qualification fiscale onéreuse.
+`dofollow` seulement si **toutes** ces conditions : page `sell_risk` Sûr (≤ 0.20), palier P3
+minimum, flag de risque accepté par les deux parties, imputation sur le plafond existant
+(1 dofollow / page, 20 / an / domaine). Aucune dérogation admin.
+Plafond propre au `sponsored` : **3 insertions vendues / page / an**. `saturation_sortante` dans
+`sell_risk` compte tous les liens vendus, `sponsored` inclus. L'UI ne suggère jamais
+`dofollow > sponsored`.
+
+## Reversement vendeur (décidé 2026-08-22)
+**Stripe Connect dès la v1** : euros par défaut, KYC bloquant avant la première mise en vente cash.
+Crédits Crawlers = option du vendeur, et seul support possible sur une jambe de troc. Sans KYC,
+le vendeur reste limité au troc et aux ventes en crédits.
+
+## Grappes de comptes — Kbis prime sur l'IP
+Deux SIREN distincts vérifiés + IP commune → `risk_flag` et contrôle manuel, **jamais** exclusion
+(profil agence multi-comptes). Exclusion dure seulement si Kbis distincts non vérifiés, ou même
+SIREN / même CMS connecté.
+
+## Boucle `link_chain` rompue
+Requalification de la jambe reçue sous trois garde-fous : consentement explicite à l'acceptation de
+la boucle, plafond au prix convenu de cette jambe, règlement en crédits d'abord (carte seulement
+sur accord explicite, sinon dette de wallet).
+
+## Paramètres et arbitrage
+Aucun magic number : `base`, seuils score→palier, seuil de déficit vendeur, seuil version C du
+Studio, `base_format`/f/g/h/k du pricing Instagram vivent dans `marketplace_pricing_constants`
+(versionnée, `constants_version` figée sur la commande).
+Crédits transférables de wallet à wallet : **gelés jusqu'à validation d'un juriste paiement**
+(risque monnaie électronique / ACPR) ; repli = soulte cash.
+Arbitrage Crawlers = humain, critères (preuve technique > brief figé > délais), SLA 5 jours ouvrés,
+une contestation, tracé dans `marketplace_disputes`.
