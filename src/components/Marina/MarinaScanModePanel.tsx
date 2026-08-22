@@ -30,7 +30,7 @@ const COPY: Record<Lang, {
       "Au-delà de 1 000 URLs, un crawl intégral ne tient pas dans un seul run : l'échantillon par gabarit (accueil, catégorie, service, conversion, avis, éditorial) donne le même diagnostic sans exploser le temps d'exécution ni le coût.",
   },
   en: {
-    title: 'Three scan modes, automatic switching',
+    title: 'Three scan modes',
     subtitle: '',
     cols: ['Mode', 'Trigger', 'Pages analysed'],
     rows: [
