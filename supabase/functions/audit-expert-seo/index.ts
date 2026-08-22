@@ -2251,17 +2251,24 @@ Deno.serve(handleRequest(async (req) => {
     // Un audit ne peut pas afficher « SEO technique excellent » quand un fait
     // mesuré le contredit : LCP catastrophique, contenu non extractible, page
     // vide de texte. Chaque plafond est journalisé et exposé dans le rapport.
-    const scoreGates: Array<{ axis: string; reason: string; evidence: string }> = [];
+    // `pointsLost` chiffre l'effet du plafond : c'est ce qui permet au rapport de
+    // dire explicitement « la performance mobile grève le score de N points »
+    // plutôt que d'annoncer un plafond sans en montrer le coût.
+    const scoreGates: Array<{ axis: string; reason: string; evidence: string; pointsLost?: number; measured?: string | null; target?: string | null }> = [];
 
     if (lcpMsMeasured !== null && lcpMsMeasured > 4000) {
       // Seuil Core Web Vitals : > 4 s = « poor ». Au-delà de 8 s, la page est
       // hors jeu pour l'utilisateur mobile.
       const cap = lcpMsMeasured > 8000 ? 6 : 12;
       if (performanceScore > cap) {
+        const lost = performanceScore - cap;
         scoreGates.push({
           axis: 'performance',
           reason: 'LCP mobile mesuré au-delà du seuil Core Web Vitals',
-          evidence: `${(lcpMsMeasured / 1000).toFixed(2)}s mesuré → cible 2,50s (score plafonné à ${cap}/40)`,
+          evidence: `${(lcpMsMeasured / 1000).toFixed(2)}s mesuré → cible 2,50s (score plafonné à ${cap}/40, soit −${lost} points)`,
+          pointsLost: lost,
+          measured: `${(lcpMsMeasured / 1000).toFixed(2)}s`,
+          target: '2,50s',
         });
         performanceScore = cap;
       }
@@ -2277,7 +2284,10 @@ Deno.serve(handleRequest(async (req) => {
       scoreGates.push({
         axis: 'technical',
         reason: 'Texte visible quasi absent du HTML servi (rendu probablement dépendant du JS)',
-        evidence: `${density.ratio}% de texte et ${htmlAnalysis.wordCount} mots → cible > 15% (score plafonné à 25/50)`,
+        evidence: `${density.ratio}% de texte et ${htmlAnalysis.wordCount} mots → cible > 15% (score plafonné à 25/50, soit −${technicalScore - 25} points)`,
+        pointsLost: technicalScore - 25,
+        measured: `${density.ratio}%`,
+        target: '> 15%',
       });
       technicalScore = 25;
     }
@@ -2305,10 +2315,14 @@ Deno.serve(handleRequest(async (req) => {
       scoreGates.push({
         axis: 'semantic',
         reason: 'Balises présentes mais aucun corps de texte lisible dans le HTML servi',
-        evidence: `${htmlAnalysis.wordCount} mots extraits → cible ≥ 500 (score plafonné à 20/60)`,
+        evidence: `${htmlAnalysis.wordCount} mots extraits → cible ≥ 500 (score plafonné à 20/60, soit −${semanticScore - 20} points)`,
+        pointsLost: semanticScore - 20,
+        measured: `${htmlAnalysis.wordCount} mots`,
+        target: '≥ 500 mots',
       });
       semanticScore = 20;
     }
+
     
     let aiReadyScore = 0;
     if (htmlAnalysis.hasSchemaOrg) {
