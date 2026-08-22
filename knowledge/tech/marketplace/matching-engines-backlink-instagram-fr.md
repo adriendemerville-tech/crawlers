@@ -240,9 +240,22 @@ Exclusions dures (compat = 0) :
   **non déclarés** (liens qui se ferment de fait, sans troc enregistré) restent exclus ;
 - réciprocité directe hors quota : quota `link_for_link` du trimestre déjà consommé, ou même
   partenaire déjà servi sur 12 mois glissants ;
-- même propriétaire / grappe de comptes liés (même IP, même CMS connecté, même Kbis) ;
-- plafond de liens sortants atteint (page : 1 lien dofollow vendu ; domaine : 20/an) ;
+- même propriétaire réel : **même Kbis / même SIREN**, ou même compte CMS connecté ;
+- plafond de liens sortants atteint — **deux plafonds distincts, cf. §2.4** : page : 1 lien
+  `dofollow` vendu **et** 3 insertions `sponsored` vendues ; domaine : 20 liens `dofollow` / an ;
 - thématiques exclues (jeux d'argent, crypto, adulte).
+
+**IP partagée ≠ même propriétaire (profil agence).** Crawlers cible explicitement les agences en
+marque blanche pilotant plusieurs comptes clients depuis un même réseau (§0.1) : une IP sortante
+commune est donc le cas normal, pas un signal de fraude. Règle retenue :
+
+| Situation | Traitement |
+|---|---|
+| Deux **Kbis / SIREN distincts vérifiés** des deux côtés, IP commune | **pas d'exclusion** — simple `risk_flag` « IP partagée », contrôle manuel asynchrone, transaction autorisée |
+| Kbis distincts non vérifiés (un côté ou les deux) + IP commune | **exclusion dure** (compat = 0) jusqu'à vérification |
+| Même Kbis / SIREN, ou même compte CMS connecté | **exclusion dure**, sans dérogation |
+
+Le signal de propriété réelle (SIREN vérifié, §2.6) prime toujours sur le signal réseau (IP).
 
 **Hiérarchie des modes d'échange sans cash.** La réciprocité directe reste possible, mais elle
 n'est jamais le premier choix du moteur. Ordre de préférence, appliqué à l'appariement :
@@ -334,17 +347,73 @@ Workflow :
    attendu, statut HTTP via `_shared/linkVerdictShared.ts`. Contrôle récurrent mensuel ;
    disparition du lien → suspension du paiement / remboursement au prorata.
 
-### 2.4 Attribut du lien
+### 2.4 Attribut du lien — `sponsored` par défaut, `dofollow` en exception gatée
 
-Trois modes techniquement supportés : `dofollow`, `rel="sponsored"`, choix vendeur.
-Le mode retenu est stocké par annonce et affiché à l'acheteur avant paiement.
-L'UI ne présente **jamais** de garantie de classement.
+**Décision v1 : `rel="sponsored"` est l'attribut par défaut de toute transaction, quel que soit le
+`deal_type` (`cash`, `credits`, `barter`).** Il n'existe pas de « choix vendeur » libre : l'attribut
+est imposé par le serveur au figeage de la commande, et `dofollow` n'est accessible que si toutes
+les conditions de gating ci-dessous sont réunies.
+
+Justification :
+- **Cohérence juridique** : la place d'échange qualifie déjà chaque jambe de prestation à titre
+  onéreux soumise à TVA (§2.5.2). Une prestation onéreuse déclarée à l'administration et déclarée
+  `dofollow` à Google est une contradiction indéfendable.
+- **Le prix ne dépend pas de l'attribut** (§2.1) : sans gating, l'acheteur demande systématiquement
+  `dofollow` et le vendeur n'a aucune raison économique de refuser. Le « choix vendeur »
+  convergerait donc vers `dofollow` par défaut de fait.
+- **Valeur réelle peu corrélée à l'attribut côté GEO** : les corrélations observées entre
+  visibilité en recherche générative et liens `nofollow` / `dofollow` sont quasi identiques.
+  La valeur d'une jambe vient du trafic qualifié, de la citabilité et de la marque.
+- **Empreinte** : `dofollow` généralisé sur une place centralisée reproduit exactement l'empreinte
+  homogène reprochée aux réseaux d'échange automatisés (§2.10).
+
+#### Conditions cumulatives pour autoriser `dofollow`
+
+Toutes requises, **aucune dérogation admin** :
+
+1. page en classe `sell_risk` **Sûr** (≤ 0.20) — jamais « Modéré » ;
+2. actif au **palier P3 minimum** ;
+3. **flag de risque explicite** affiché et accepté par les deux parties avant validation
+   (même mécanique que le flag `link_for_link`, §2.2) ;
+4. imputation stricte sur le plafond existant **1 lien `dofollow` vendu / page, 20 / an / domaine**
+   (plafond inchangé).
+
+#### Plafond dédié aux insertions `sponsored`
+
+La dilution d'équité au niveau page existe aussi pour un lien `nofollow`/`sponsored` : sa part
+n'est pas redistribuée aux liens `dofollow` restants, elle est perdue (fin du PageRank sculpting).
+Un plafond propre est donc appliqué, sinon le `sponsored` devient un angle mort illimité :
+
+| Plafond | Borne v1 |
+|---|---|
+| Liens `dofollow` vendus / page | 1 |
+| Liens `dofollow` vendus / domaine / an | 20 |
+| Insertions `sponsored` vendues / page / an | **3** |
+
+#### Narratif UI
+
+L'onglet « J'achète » ne laisse **jamais** deviner de hiérarchie implicite `dofollow > sponsored` :
+`sponsored` est présenté comme la norme saine (valeur = trafic qualifié + citabilité IA),
+`dofollow` comme une option à part, plus risquée, disponible rarement — même logique que celle
+déjà appliquée à LinkedIn (§2.7.1). L'UI ne présente **jamais** de garantie de classement.
 
 ### 2.5 Rémunération
 
-v1 : crédit du **wallet Crawlers** du vendeur (non convertible en euros), réutilisable sur la
-plateforme — un lien vendu par mois rembourse l'abonnement. v2 : virement réel via
-Stripe Connect (KYC, comptes connectés, reversement à J+30 après vérification du lien).
+**Décision v1 : reversement réel en euros via Stripe Connect, dès le lancement.** Le paiement en
+crédits Crawlers reste disponible, mais comme **option choisie par le vendeur**, jamais comme seul
+support. Motif : payer un vendeur exclusivement en monnaie interne non convertible réserve de fait
+la vente aux comptes déjà abonnés et contredit la promesse d'ouverture du §1 (« toute page d'un
+compte ayant connecté GSC est valorisable »), au moment précis où l'amorçage de l'offre est le
+point faible (§9).
+
+| Support de reversement | Régime v1 |
+|---|---|
+| **Euros (défaut)** | Stripe Connect, compte connecté au nom du vendeur, **KYC bloquant avant la première mise en vente** (au même titre que la vérification de propriété, §2.6). Séquestre puis déblocage par tranches (§2.5.1). |
+| **Crédits Crawlers (option)** | Choix explicite du vendeur par actif ou par commande ; crédits non convertibles, mêmes tranches de déblocage. Seul support possible pour une jambe de troc, qui ne porte aucun flux d'argent. |
+
+Conséquence : un vendeur sans compte Stripe Connect vérifié ne peut vendre que **contre crédits ou
+en troc** ; l'inventaire cash lui reste fermé jusqu'au KYC. Cette règle est affichée dans l'onglet
+« Je vends », pas découverte au moment du paiement.
 
 **Mode de règlement de la commission (règle v1).** Le taux est de 15 % dans tous les cas ; seul le
 **support de paiement** varie selon la présence ou non d'un flux d'argent.
@@ -572,7 +641,16 @@ Règles :
   3. Aucune décote : la valeur de chaque jambe reste la valeur pleine (pas de facteur 0,70) ;
   4. Un site ne participe pas à deux boucles actives contenant le même partenaire direct ;
   5. Si une jambe n'est pas publiée dans le délai, la boucle est annulée : les jambes déjà
-     publiées sont requalifiées en vente cash au prix de l'actif, à la charge du bénéficiaire.
+     publiées sont requalifiées en vente au prix de l'actif, à la charge du bénéficiaire, sous
+     **trois garde-fous** — le bénéficiaire n'est pas responsable de la défaillance d'un tiers :
+     a) **consentement explicite** à ce risque au moment de l'acceptation de la boucle (case
+        dédiée, texte spécifique, journalisée sur l'`exchange_id`) — jamais un simple renvoi aux
+        CGVU génériques ;
+     b) **plafond dur** : la requalification ne peut jamais dépasser le prix initialement convenu
+        pour la jambe reçue ;
+     c) **ordre des supports** : débit des crédits disponibles en priorité, proposition de
+        recharge ensuite, débit carte seulement sur accord explicite — aucun prélèvement carte
+        surprise. À défaut d'accord, la valeur passe en dette de wallet (§2.5.1).
 - `link_for_link` est **autorisé mais en dernier recours**, signalé comme à risque et bridé. Le
   moteur ne le propose que si la recherche de `link_chain` n'a trouvé aucun tiers compatible.
   Quatre garde-fous cumulés, tous appliqués serveur, aucun contournable depuis l'UI :
@@ -630,6 +708,8 @@ Le moteur ne demande pas aux parties de choisir : il propose. Séquence détermi
                                  et borné de sorte que le total reste dans 40–350 €
                               b) crédits : transfert de crédits Crawlers
                                  de wallet à wallet entre les deux users
+                                 (⚠ validation juridique paiement obligatoire
+                                  avant implémentation, cf. §2.16)
                                  (même arrondi 10 €, 1 crédit = 1 € pour l'équité)
 0. Garde   : les deux actifs doivent être en statut `verified` (§2.6),
              sinon la proposition n'est pas générée.
@@ -809,6 +889,20 @@ est retirée (elle abîme la page hôte et fait tomber la jambe dans le publicit
 5. Les tours de révision restent plafonnés à **3** (cf. 2.3) et sont partagés avec le studio :
    les révisions ne sont pas un canal de rédaction gratuit.
 
+#### Contrôle d'homogénéité stylistique (avant volume)
+
+Un pipeline éditorial unique appliqué à des milliers d'insertions peut développer une empreinte
+statistique détectable (longueur de phrase, structure, tournures récurrentes) — exactement le
+reproche adressé aux réseaux automatisés en §2.10. La diversité perçue par les deux parties d'une
+même commande ne prouve rien à l'échelle du corpus. Test obligatoire **avant L3**, peu coûteux :
+
+- échantillon de **quelques centaines de générations simulées** couvrant plusieurs Voice DNA,
+  paliers et secteurs ;
+- mesures : recouvrement de n-grammes (3-5), distribution des longueurs de phrase, similarité
+  syntaxique inter-livrables, fréquence des amorces de paragraphe ;
+- seuil de rejet à fixer avec les premières mesures, versionné comme constante (§2.15) ;
+- au-delà du seuil : diversification des gabarits de brief avant ouverture au volume.
+
 Traçabilité : chaque version est une ligne `marketplace_content_variants` (variante A/B/C, brief
 figé, sortie, modèle utilisé, coût), les refus dans `marketplace_feedback`, la version retenue
 référencée par `marketplace_orders.approved_revision_id`.
@@ -911,7 +1005,10 @@ cession est **la moins pénalisante pour le site vendeur**, avec un score de ris
 sell_risk(page) = 0.30 × poids_stratégique      (pilier, page de conversion, page money)
                 + 0.25 × dépendance_interne     (part du PageRank interne transitant par la page)
                 + 0.20 × momentum_GSC           (progression récente de positions / impressions)
-                + 0.15 × saturation_sortante    (liens externes déjà présents sur la page)
+                + 0.15 × saturation_sortante    (tous les liens externes déjà présents sur la page,
+                                                 y compris les insertions vendues via la place
+                                                 d'échange en `sponsored` / `nofollow` — pas
+                                                 seulement l'historique `dofollow`)
                 + 0.10 × fragilité_technique    (page récente, thin, non indexée, instable)
 ```
 
