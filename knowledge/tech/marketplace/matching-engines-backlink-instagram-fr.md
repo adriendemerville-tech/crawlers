@@ -826,4 +826,6 @@ Ajouts obligatoires :
 - **Dilution de l'E-E-A-T de crawlers.fr** : plafonds stricts, jamais depuis les 4 piliers.
 - **Liquidité** : le maillon rare est la demande, pas l'offre — amorcer par les besoins
   déjà détectés dans les workbenches existants.
-- **Support** : les comptes gratuits génèrent plus de sollicitations que les payants.
+- **Litiges de publication** : une rupture de maintien mal diagnostiquée (blocage de crawl, coquille
+  JS) déclencherait un remboursement injustifié — d'où l'escalade de rendu avant tout verdict (§2.13).
+
