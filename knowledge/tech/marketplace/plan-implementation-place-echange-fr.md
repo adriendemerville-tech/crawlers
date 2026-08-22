@@ -109,12 +109,13 @@ Condition de sortie : KYC bloquant opérationnel avant la première mise en vent
 | L3.2 | `orders.functions.ts` | figeage serveur : prix, commission 15 %, attribut, `attribute_basis`, `constants_version`, `escrow_cents`, `commitment_months` (12 lien · 1 post/Reel · 0 story). Immuable après `frozen_at` |
 | L3.3 | `barter.server.ts` | recherche de boucle `link_chain` **prioritaire**, `link_for_link` en dernier recours (décote 0.70, `publish_after` +21 j, quota trimestriel), détection de cycles non déclarés |
 | L3.4 | `commission.server.ts` | cash retenu sur le flux ; **crédits obligatoires sur le troc**, par jambe, avec contrôle des soldes avant figeage et taux crédit-euro figé |
-| L3.5 | `invoices.server.ts` | pièces figées à l'émission (jambe, soulte, commission, avoir), série continue par mandant, exigibilité = 1ʳᵉ preuve de publication |
-| L3.6 | `studio.functions.ts` | 3 variantes (éditoriale / utilitaire GEO / action) via le Gateway, brief figé, coût tracé. **Prompt unique, une seule passe par variante** pour borner le coût. Test d'homogénéité stylistique inter-livrables avant ouverture au volume |
-| L3.7 | `disputes.functions.ts` | arbitrage humain, SLA 5 j (`acknowledged_at`, `due_at`), décisions `upheld` / `cancelled_no_fee` / `prorata_refund` / `forced_execution` ; aucune décision ne crée de commission ni ne modifie un prix figé |
-| L3.8 | Front `OrdersTab.tsx` | cycle de vie, révisions, feedback bilatéral, validations |
-| L3.9 | Front `LinkInsertionPreview.tsx` | diff avant/après, surbrillance du paragraphe, bascule mobile/desktop, panneau de feedback, historique |
-| L3.10 | Front `StudioVariantPicker.tsx` | le vendeur valide, l'acheteur choisit la version finale |
+| L3.5 | `invoices.server.ts` | pièces figées à l'émission (jambe, soulte, commission, avoir), série continue par mandant, exigibilité = 1ʳᵉ preuve de publication ; **export DAC7** (jambes en troc et crédits inclus, §2.5.2) |
+| L3.6 | `studio.functions.ts` | 3 variantes (éditoriale / utilitaire GEO / action) via le Gateway, brief figé, coût tracé. **Prompt unique, une seule passe par variante** pour borner le coût. La **version C disparaît au-delà de `studio_version_c_max_authority`** (§2.9). Test d'homogénéité stylistique inter-livrables avant ouverture au volume |
+| L3.7 | `revisions.server.ts` | plafond **3 tours de révision** (`revision_rounds_max`), compteur **partagé** entre prévisualisation et Studio (§2.3, §2.9) ; épuisement → ouverture d'un litige |
+| L3.8 | `disputes.functions.ts` | arbitrage humain, accusé de réception 24 h ouvrées, SLA 5 j (`acknowledged_at`, `due_at`), une seule contestation (`appeal_of`), décisions `upheld` / `cancelled_no_fee` / `prorata_refund` / `forced_execution` ; aucune décision ne crée de commission ni ne modifie un prix figé |
+| L3.9 | Front `OrdersTab.tsx` | cycle de vie, révisions restantes, feedback bilatéral, validations |
+| L3.10 | Front `LinkInsertionPreview.tsx` | diff avant/après, surbrillance du paragraphe, bascule mobile/desktop, panneau de feedback, historique |
+| L3.11 | Front `StudioVariantPicker.tsx` | le vendeur valide, l'acheteur choisit la version finale |
 
 ---
 
