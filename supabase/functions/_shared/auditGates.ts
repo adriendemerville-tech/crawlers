@@ -1,0 +1,257 @@
+/**
+ * _shared/auditGates.ts — Plafonds de cohérence unifiés (« gates »)
+ *
+ * Un audit ne doit jamais afficher un score confortable qu'un fait mesuré du
+ * même rapport contredit. Deux moteurs produisent aujourd'hui des plafonds :
+ *
+ *   - audit-expert-seo : LCP « poor », texte visible quasi absent, mesures
+ *     PageSpeed indisponibles, bridage global du /200.
+ *   - geoSubSignals    : citabilité et mise en forme des réponses plafonnées
+ *     quand le texte réellement extrait est quasi nul (coquille JS).
+ *
+ * Ce module normalise les deux familles dans une seule liste ordonnée, la rend
+ * en HTML (« Pourquoi c'est prioritaire ») et la pousse en tête du workbench
+ * pour que Parménion et le Stratège traitent la cause racine avant les
+ * symptômes de balisage.
+ *
+ * Aucun appel LLM, aucune dépendance : agrégation déterministe.
+ */
+
+export type GateSource = 'technical' | 'geo';
+
+export interface AuditGate {
+  /** Axe plafonné : performance | technical | semantic | estimated | total | geo_* */
+  axis: string;
+  /** Cause, en une phrase lisible par un non-technicien. */
+  reason: string;
+  /** Preuve chiffrée : « valeur mesurée → cible (effet du plafond) ». */
+  evidence: string;
+  source: GateSource;
+  /** Rang d'entrée : 1 = cause racine, à traiter avant tout le reste. */
+  rank: number;
+  /** Valeur mesurée et cible isolées quand elles sont exploitables en base. */
+  measured?: string | null;
+  target?: string | null;
+}
+
+/**
+ * Ordre d'entrée. Le rendu du contenu passe avant tout : un HTML sans texte
+ * rend inutile toute correction de balisage ou de performance. Les axes
+ * « estimé » et « total » ferment la liste : ils décrivent la fiabilité de la
+ * mesure, pas un défaut du site.
+ */
+const AXIS_RANK: Array<[RegExp, number]> = [
+  [/^technical$/, 1],
+  [/^geo_/, 2],
+  [/^semantic$/, 3],
+  [/^performance$/, 4],
+  [/^total$/, 8],
+  [/^estimated$/, 9],
+];
+
+function rankFor(axis: string): number {
+  for (const [re, r] of AXIS_RANK) if (re.test(axis)) return r;
+  return 5;
+}
+
+const AXIS_LABEL: Record<string, { fr: string; en: string }> = {
+  technical: { fr: 'Contenu servi aux robots', en: 'Content served to bots' },
+  semantic: { fr: 'Corps de texte lisible', en: 'Readable body text' },
+  performance: { fr: 'Performance mobile mesurée', en: 'Measured mobile performance' },
+  estimated: { fr: 'Fiabilité des mesures', en: 'Measurement reliability' },
+  total: { fr: 'Score global bridé', en: 'Global score capped' },
+  geo_quotability: { fr: 'Citabilité IA plafonnée', en: 'AI citability capped' },
+  geo_formatting: { fr: 'Mise en forme des réponses plafonnée', en: 'Answer formatting capped' },
+  geo_structured_data: { fr: 'Données structurées plafonnées', en: 'Structured data capped' },
+  geo_comprehension: { fr: 'Compréhension machine bridée', en: 'Machine comprehension capped' },
+};
+
+export function gateAxisLabel(axis: string, lang?: string): string {
+  const l = AXIS_LABEL[axis];
+  if (!l) return axis;
+  return lang === 'en' ? l.en : l.fr;
+}
+
+/** Normalise les plafonds bruts d'un moteur en gates ordonnés et dédoublonnés. */
+export function normalizeGates(
+  raw: Array<{ axis?: string; reason?: string; evidence?: string; measured?: string | null; target?: string | null }> | null | undefined,
+  source: GateSource,
+): AuditGate[] {
+  if (!Array.isArray(raw)) return [];
+  const out: AuditGate[] = [];
+  const seen = new Set<string>();
+  for (const g of raw) {
+    const axis = String(g?.axis || '').trim();
+    const reason = String(g?.reason || '').trim();
+    if (!axis || !reason) continue;
+    const key = `${source}|${axis}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      axis,
+      reason,
+      evidence: String(g?.evidence || '').trim(),
+      source,
+      rank: rankFor(axis),
+      measured: g?.measured ?? null,
+      target: g?.target ?? null,
+    });
+  }
+  return out;
+}
+
+/** Fusionne plusieurs listes et les trie par rang d'entrée. */
+export function mergeGates(...lists: Array<AuditGate[] | null | undefined>): AuditGate[] {
+  const all: AuditGate[] = [];
+  const seen = new Set<string>();
+  for (const l of lists) {
+    for (const g of l || []) {
+      const key = `${g.source}|${g.axis}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      all.push(g);
+    }
+  }
+  return all.sort((a, b) => a.rank - b.rank);
+}
+
+// ═══════════════════════════════════════════════
+// Rendu HTML (charte Crawlers : violet, or, noir, blanc — aucun fond plein)
+// ═══════════════════════════════════════════════
+
+const VIOLET = '#6d28d9';
+
+function esc(s: string): string {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/**
+ * Bloc « Pourquoi c'est prioritaire » : chaque gate activé avec son rang
+ * d'entrée et sa preuve chiffrée (valeur mesurée vs cible).
+ */
+export function gatesPriorityBlockHTML(gates: AuditGate[], lang?: string, scope?: 'page' | 'site'): string {
+  if (!Array.isArray(gates) || gates.length === 0) return '';
+  const isEn = lang === 'en';
+  const t = (fr: string, en: string) => (isEn ? en : fr);
+
+  const rows = gates
+    .map((g, i) => `<li style="margin:0 0 8px 0;">
+      <span style="font-size:11px;font-weight:700;color:${VIOLET};">${t('Entrée', 'Entry')} ${i + 1}</span>
+      <span style="font-size:12.5px;font-weight:600;color:#111827;"> — ${esc(gateAxisLabel(g.axis, lang))}</span>
+      <br><span style="font-size:12px;color:#374151;line-height:1.6;">${esc(g.reason)}</span>
+      ${g.evidence ? `<br><span style="font-size:11.5px;color:#6b7280;">${esc(g.evidence)}</span>` : ''}
+    </li>`)
+    .join('');
+
+  return `<div style="margin-top:14px;padding:12px 14px;border:1px solid #e5e7eb;border-left:3px solid ${VIOLET};border-radius:8px;background:#ffffff;page-break-inside:avoid;text-align:left;">
+    <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;margin:0 0 6px 0;">${t('Pourquoi c’est prioritaire', 'Why this comes first')}</p>
+    <p style="font-size:12px;color:#374151;line-height:1.6;margin:0 0 8px 0;">${t(
+      scope === 'site'
+        ? 'Ces plafonds sont mesurés sur le domaine : ils bornent le score et fixent l’ordre de traitement du plan.'
+        : 'Ces plafonds sont mesurés sur cette URL : ils bornent son score et fixent l’ordre des correctifs. Tant que l’entrée 1 n’est pas levée, les entrées suivantes ne peuvent pas produire leur effet.',
+      scope === 'site'
+        ? 'These caps are measured on the domain: they bound the score and set the order of the plan.'
+        : 'These caps are measured on this URL: they bound its score and set the order of fixes. Until entry 1 is lifted, the following entries cannot deliver their effect.',
+    )}</p>
+    <ol style="padding-left:20px;margin:0;list-style:decimal;">${rows}</ol>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// Workbench : les gates entrent en tête de file
+// ═══════════════════════════════════════════════
+
+const AXIS_CATEGORY: Record<string, string> = {
+  technical: 'thin_content',
+  semantic: 'thin_content',
+  performance: 'performance',
+  estimated: 'geo_visibility',
+  total: 'geo_visibility',
+  geo_quotability: 'geo_visibility',
+  geo_formatting: 'geo_visibility',
+  geo_structured_data: 'structured_data',
+  geo_comprehension: 'geo_visibility',
+};
+
+/**
+ * Upsert des gates dans architect_workbench en severity `critical`, avec le
+ * rang d'entrée et la preuve chiffrée dans le payload. Non fatal : un audit ne
+ * doit jamais échouer parce que l'écriture du workbench a échoué.
+ */
+export async function writeGatesToWorkbench(
+  sb: any,
+  gates: AuditGate[],
+  opts: { domain: string; url?: string | null; userId: string; trackedSiteId?: string | null },
+): Promise<{ attempted: number; written: number }> {
+  try {
+    if (!sb || !opts?.userId || !opts?.domain || !Array.isArray(gates) || gates.length === 0) {
+      return { attempted: 0, written: 0 };
+    }
+    // Les axes « estimated » et « total » décrivent la fiabilité de la mesure,
+    // pas un défaut corrigible : ils restent dans le rapport, hors workbench.
+    const actionable = gates.filter((g) => g.axis !== 'estimated' && g.axis !== 'total');
+    if (actionable.length === 0) return { attempted: 0, written: 0 };
+
+    const scopeKey = opts.url ? new URL(opts.url).pathname.replace(/\/+$/, '') || '/' : '*';
+    let written = 0;
+    for (const g of actionable) {
+      const row = {
+        domain: opts.domain,
+        tracked_site_id: opts.trackedSiteId || null,
+        user_id: opts.userId,
+        source_type: 'audit_strategic',
+        source_function: 'audit-gates',
+        source_record_id: `gate_${opts.domain}_${scopeKey}_${g.source}_${g.axis}`,
+        finding_category: AXIS_CATEGORY[g.axis] || 'geo_visibility',
+        severity: 'critical',
+        title: `Cause racine — ${gateAxisLabel(g.axis)}`.slice(0, 280),
+        description: `${g.reason}${g.evidence ? ` — ${g.evidence}` : ''}`.slice(0, 2000),
+        target_url: opts.url || null,
+        payload: {
+          gate_axis: g.axis,
+          gate_source: g.source,
+          gate_rank: g.rank,
+          evidence: g.evidence || null,
+          measured: g.measured ?? null,
+          target: g.target ?? null,
+        },
+      };
+      try {
+        const { error } = await sb
+          .from('architect_workbench')
+          .upsert(row, { onConflict: 'source_type,source_record_id' });
+        if (!error) written++;
+        else console.warn(`[auditGates] upsert failed (${row.source_record_id}): ${error.message}`);
+      } catch (e) {
+        console.warn('[auditGates] upsert exception:', e);
+      }
+    }
+    console.log(`[auditGates] ${written}/${actionable.length} gate(s) poussés en tête de workbench (${opts.domain})`);
+    return { attempted: actionable.length, written };
+  } catch (e) {
+    console.warn('[auditGates] fatal guard:', e);
+    return { attempted: 0, written: 0 };
+  }
+}
+
+/**
+ * Tri d'entrée du workbench : les gates (cause racine) passent devant, puis la
+ * sévérité, puis l'ordre d'origine. Utilisé au moment de lire le workbench pour
+ * construire le plan consolidé.
+ */
+export function sortWorkbenchByGatePriority<T extends { source_function?: string | null; severity?: string | null; payload?: any }>(
+  tasks: T[],
+): T[] {
+  const sevRank: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+  return [...(tasks || [])].sort((a, b) => {
+    const ga = a?.source_function === 'audit-gates' ? 0 : 1;
+    const gb = b?.source_function === 'audit-gates' ? 0 : 1;
+    if (ga !== gb) return ga - gb;
+    if (ga === 0) {
+      const ra = Number(a?.payload?.gate_rank ?? 99);
+      const rb = Number(b?.payload?.gate_rank ?? 99);
+      if (ra !== rb) return ra - rb;
+    }
+    return (sevRank[String(a?.severity)] ?? 9) - (sevRank[String(b?.severity)] ?? 9);
+  });
+}
