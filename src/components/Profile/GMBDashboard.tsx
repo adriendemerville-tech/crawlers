@@ -1381,6 +1381,7 @@ export function GMBDashboard({ isGated = false, simulatedDataEnabled = false }: 
             </TabsList>
 
             <TabsContent value="audit"><AuditTab language={language} /></TabsContent>
+            <TabsContent value="urlaudit"><GmbUrlAuditTab /></TabsContent>
             <TabsContent value="stats">
               <div className="space-y-4">
                 <GmbPowerScoreCard trackedSiteId={null} />
