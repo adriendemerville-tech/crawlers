@@ -348,12 +348,14 @@ Le frein principal n'est pas le prix mais l'absence de raison de vendre : un sit
 d'autorité n'a pas d'intérêt monétaire à céder un lien. L'incentive retenu est donc l'**échange**,
 avec la même commission Crawlers prélevée en crédits, et non un flux d'argent.
 
-Cinq `trade_type` sont proposés **à égalité**, sans mode par défaut. Le moteur choisit celui qui
-sert le mieux les besoins des deux parties (voir 2.7.1), pas celui qui plaît au produit.
+Six `trade_type` sont proposés. Ils ne sont **pas à égalité** : le moteur applique la hiérarchie
+de §2.2 (chaîne > cross-média > réciprocité directe) et choisit, à l'intérieur de ce cadre, celui
+qui sert le mieux les besoins des deux parties (voir 2.7.1).
 
 | `trade_type` | Jambe A (acheteur reçoit) | Jambe B (vendeur reçoit) | Nature |
 |---|---|---|---|
-| `link_for_link` | lien A→B | lien B→A | même devise, réciproque direct |
+| `link_chain` | lien A→B | lien B→C, puis C→A | **mode privilégié** : boucle 3+ participants, aucune réciprocité directe |
+| `link_for_link` | lien A→B | lien B→A | même devise, réciproque direct — **dernier recours** |
 | `link_for_linkedin` | lien A→B | post LinkedIn de B citant A | cross-média |
 | `link_for_insta` | lien A→B | post/story Instagram de B mentionnant A | cross-média |
 | `linkedin_for_linkedin` | post LinkedIn croisé | post LinkedIn croisé | même devise sociale |
