@@ -2239,12 +2239,58 @@ Deno.serve(handleRequest(async (req) => {
     // When PSI is unavailable, give a neutral score (50% of max) instead of 0 to avoid unfair penalization
     const psiPerformance = psiAvailable ? (categories.performance?.score || 0) : null;
     const psiSeo = psiAvailable ? (categories.seo?.score || 0) : null;
-    
-    const performanceScore = psiPerformance !== null ? Math.round(psiPerformance * 40) : 20; // 50% fallback
-    const technicalScore = (psiSeo !== null ? Math.round(psiSeo * 30) : 15) + 20; // 50% of PSI SEO part as fallback
-    
+
+    // LCP mesuré (lab PSI). C'est un fait, pas une estimation : il plafonne le
+    // score de performance même quand la catégorie PSI est absente ou flatteuse.
+    const lcpMsMeasured = Number(audits['largest-contentful-paint']?.numericValue) || null;
+
+    let performanceScore = psiPerformance !== null ? Math.round(psiPerformance * 40) : 20; // 50% fallback
+    let technicalScore = (psiSeo !== null ? Math.round(psiSeo * 30) : 15) + 20; // 50% of PSI SEO part as fallback
+
+    // ─── Plafonds de cohérence (gates) ───
+    // Un audit ne peut pas afficher « SEO technique excellent » quand un fait
+    // mesuré le contredit : LCP catastrophique, contenu non extractible, page
+    // vide de texte. Chaque plafond est journalisé et exposé dans le rapport.
+    const scoreGates: Array<{ axis: string; reason: string; evidence: string }> = [];
+
+    if (lcpMsMeasured !== null && lcpMsMeasured > 4000) {
+      // Seuil Core Web Vitals : > 4 s = « poor ». Au-delà de 8 s, la page est
+      // hors jeu pour l'utilisateur mobile.
+      const cap = lcpMsMeasured > 8000 ? 6 : 12;
+      if (performanceScore > cap) {
+        scoreGates.push({
+          axis: 'performance',
+          reason: 'LCP mobile mesuré au-delà du seuil Core Web Vitals',
+          evidence: `${(lcpMsMeasured / 1000).toFixed(2)}s mesuré → cible 2,50s (score plafonné à ${cap}/40)`,
+        });
+        performanceScore = cap;
+      }
+    }
+
+    // Contenu non extractible : le HTML est servi mais le texte visible est
+    // quasi absent (coquille JS). Le score technique ne peut pas rester haut :
+    // les robots ne lisent rien.
+    const density = htmlAnalysis.insights?.contentDensity;
+    const densityKnown = Boolean(density) && density.verdict !== 'unknown';
+    const textStarved = densityKnown && density.ratio < 5 && htmlAnalysis.wordCount < 200;
+    if (textStarved && technicalScore > 25) {
+      scoreGates.push({
+        axis: 'technical',
+        reason: 'Texte visible quasi absent du HTML servi (rendu probablement dépendant du JS)',
+        evidence: `${density.ratio}% de texte et ${htmlAnalysis.wordCount} mots → cible > 15% (score plafonné à 25/50)`,
+      });
+      technicalScore = 25;
+    }
+
     if (!psiAvailable) {
       console.warn('[Audit-Expert-SEO] ⚠️ PSI indisponible — scores Performance et Technique estimés (fallback 50%)');
+      // Un fallback neutre ne doit jamais se lire comme une mesure : il est
+      // déclaré, et il interdit la zone « excellent » sur le score global.
+      scoreGates.push({
+        axis: 'estimated',
+        reason: 'PageSpeed indisponible : performance et SEO technique sont estimés, non mesurés',
+        evidence: 'fallback 50 % appliqué (20/40 et 35/50)',
+      });
     }
     
     let semanticScore = 0;
@@ -2252,6 +2298,17 @@ Deno.serve(handleRequest(async (req) => {
     if (htmlAnalysis.hasMetaDesc) semanticScore += 10;
     if (htmlAnalysis.h1Count === 1) semanticScore += 20;
     if (htmlAnalysis.wordCount >= 500) semanticScore += 20;
+
+    // Une page sans corps de texte lisible ne mérite pas les points de
+    // sémantique : les balises seules ne font pas un contenu.
+    if (textStarved && semanticScore > 20) {
+      scoreGates.push({
+        axis: 'semantic',
+        reason: 'Balises présentes mais aucun corps de texte lisible dans le HTML servi',
+        evidence: `${htmlAnalysis.wordCount} mots extraits → cible ≥ 500 (score plafonné à 20/60)`,
+      });
+      semanticScore = 20;
+    }
     
     let aiReadyScore = 0;
     if (htmlAnalysis.hasSchemaOrg) {
@@ -2279,9 +2336,32 @@ Deno.serve(handleRequest(async (req) => {
     
     // Apply reliability factor to total score (with broken links adjustment)
     const rawTotalScore = performanceScore + technicalScore + semanticScore + aiReadyScore + securityScore + brokenLinksBonus;
-    const totalScore = Math.round(Math.max(0, rawTotalScore) * smartFetchResult.selfAudit.reliabilityScore);
+    let totalScore = Math.round(Math.max(0, rawTotalScore) * smartFetchResult.selfAudit.reliabilityScore);
+
+    // Plafond global : tant qu'un défaut bloquant mesuré subsiste (LCP « poor »
+    // ou contenu non extractible), le score total ne peut pas franchir la zone
+    // « excellent ». Un audit qui se contredit ne sert à personne.
+    const blockingGate = scoreGates.some((g) => g.axis === 'performance' || g.axis === 'technical');
+    const estimatedGate = scoreGates.some((g) => g.axis === 'estimated');
+    const totalCap = blockingGate ? 130 : (estimatedGate ? 150 : null);
+    if (totalCap !== null && totalScore > totalCap) {
+      scoreGates.push({
+        axis: 'total',
+        reason: blockingGate
+          ? 'Défaut bloquant mesuré : le score global est plafonné hors de la zone « excellent »'
+          : 'Mesures de performance indisponibles : le score global reste hors de la zone « excellent »',
+        evidence: `${totalScore}/200 avant plafond → ${totalCap}/200`,
+      });
+      totalScore = totalCap;
+    }
+    if (scoreGates.length) {
+      console.log(`[Audit-Expert-SEO] 🚧 ${scoreGates.length} plafond(s) de cohérence appliqué(s): ${scoreGates.map((g) => g.axis).join(', ')}`);
+    }
     
     const scores = {
+      // Plafonds appliqués : rendus dans le rapport pour que l'écart entre le
+      // score brut et le score affiché soit toujours justifié par un fait.
+      gates: scoreGates,
       performance: {
         score: performanceScore,
         maxScore: 40,

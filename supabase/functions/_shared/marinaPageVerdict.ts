@@ -250,6 +250,12 @@ export function buildPageVerdictHTML(
     lcpMs?: number | null;
     /** Résumé d'intégrité du contenu (quasi-doublons et pages pauvres mesurés). */
     integrity?: any;
+    /**
+     * Plafonds de cohérence appliqués au score (LCP « poor », contenu non
+     * extractible, mesures indisponibles). Rendus tels quels pour que le score
+     * affiché ne contredise jamais les faits du rapport.
+     */
+    scoreGates?: Array<{ axis: string; reason: string; evidence: string }>;
   },
 ): { html: string; meta: PageVerdictMeta } {
   const isEn = lang === 'en';
@@ -372,6 +378,11 @@ export function buildPageVerdictHTML(
     <p style="font-size:12.5px;font-weight:600;color:#6b7280;margin:14px 0 4px 0;">${t('Hérité du domaine — non spécifique à cette page', 'Inherited from the domain — not specific to this page')}</p>
     <ul style="padding-left:20px;font-size:12.5px;color:#6b7280;line-height:1.65;margin:0;">
       ${inherited.map((a) => `<li style="margin:0 0 4px 0;">${esc(a)}</li>`).join('')}
+    </ul>` : ''}
+    ${(ctx.scoreGates || []).length ? `
+    <p style="font-size:12.5px;font-weight:600;color:#111827;margin:14px 0 4px 0;">${t('Pourquoi le score est plafonné', 'Why the score is capped')}</p>
+    <ul style="padding-left:20px;font-size:12px;color:#4b5563;line-height:1.65;margin:0;">
+      ${(ctx.scoreGates || []).map((g) => `<li style="margin:0 0 4px 0;">${esc(g.reason)} — <span style="color:#6b7280;">${esc(g.evidence)}</span></li>`).join('')}
     </ul>` : ''}
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
       ${t(
