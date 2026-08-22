@@ -1258,7 +1258,9 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `asset_id` (→ `marketplace_link_assets` ou `marketplace_social_assets`, avec `asset_kind`),
   `need_id` (→ `marketplace_needs`), `target_url` (URL cible chez l'acheteur),
   `anchor` (ancre validée), `anchor_kind` (`brand` | `exact` | `semi` | `url` | `natural`),
-  `link_attribute` (`dofollow` | `nofollow` | `sponsored`).
+  `link_attribute` (`dofollow` | `nofollow` | `sponsored`), **défaut `sponsored`** imposé par le
+  serveur au figeage ; `dofollow` écrit uniquement si les conditions cumulatives du §2.4 sont
+  réunies et le flag de risque accepté par les deux parties (`dofollow_risk_ack_at`).
   Économie : `deal_type` (`cash` | `credits` | `barter`), `price_cents` (prix figé),
   `commission_cents` (15 %, contre-valeur euros figée), `commission_settlement`
   (`cash` | `credits` — cash par défaut sur commande payée, `credits` obligatoire sur troc, §2.5),
@@ -1346,6 +1348,14 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   par mandant), `issued_at`, `exigibility_date` (= 1ʳᵉ preuve de publication, §2.13), `pdf_path`,
   `credit_note_of` (auto-référence pour les avoirs). Montants et TVA **figés** à l'émission,
   jamais recalculés à l'affichage.
+- `marketplace_disputes` — arbitrage (§2.16.2) : `order_id`, `leg_id`, `opened_by`, `reason`
+  (`revisions_exhausted` | `compliance` | `maintenance_verdict`), `evidence` (jsonb : brief figé,
+  variantes, verdicts de crawl, captures), `decision` (`upheld` | `cancelled_no_fee` |
+  `prorata_refund` | `forced_execution`), `decision_note`, `decided_by`, `decided_at`,
+  `appeal_of`, SLA suivi par `acknowledged_at` et `due_at`. Décision et motivation lisibles par
+  les deux parties ; aucune décision ne crée de commission ni ne modifie un prix figé.
+- `marketplace_pricing_constants` — constantes de pricing et de seuils versionnées (§2.15) ;
+  lecture serveur, écriture admin, `constants_version` recopiée sur chaque commande figée.
 
 
 
