@@ -411,6 +411,51 @@ L'onglet « J'achète » ne laisse **jamais** deviner de hiérarchie implicite `
 `dofollow` comme une option à part, plus risquée, disponible rarement — même logique que celle
 déjà appliquée à LinkedIn (§2.7.1). L'UI ne présente **jamais** de garantie de classement.
 
+#### 2.4.1 Critère nécessaire / suffisant — décision à deux axes
+
+Les conditions cumulatives ci-dessus disent quand le serveur **permet** `dofollow` (axe capacité
+vendeur). Elles ne disent pas quand l'acheteur en a **besoin**. L'attribut final est le produit de
+deux axes, évalués au figeage :
+
+```
+attribute_final = dofollow  ⟺  need_attribute = dofollow  ET  permit_attribute = dofollow
+                = sponsored sinon (par défaut)
+```
+
+Aucun axe ne suffit seul : un `dofollow` « permis » mais non nécessaire est redescendu en
+`sponsored` ; un `dofollow` « nécessaire » mais non permis reste `sponsored` (l'acheteur peut alors
+chercher une autre page ou renoncer — jamais contourner par la soulte).
+
+**Axe besoin acheteur — `need_attribute`** (déterministe, sans LLM). L'objectif est capté au moment
+de la recherche (ouverture de l'onglet « J'achète »), jamais présumé :
+
+| Objectif déclaré de l'acheteur | `need_attribute` | Lecture |
+|---|---|---|
+| **Combler un déficit d'autorité** diagnostiqué par Marina / `valeur_acheteur` (§2.11) : page en retard de positions sur une requête transactionnelle concurrentielle | `dofollow` | le transfert d'équité est l'objectif même |
+| **Visibilité GEO / citabilité IA** (apparition dans les réponses génératives) | `sponsored` | §2.4 : corrélation dofollow/nofollow ≈ identique côté GEO |
+| **Trafic qualifié / notoriété / marque** | `sponsored` | la valeur vient du trafic et de la citation, pas de l'attribut |
+| **Mixte** (déficit + visibilité) | tranché par le déficit net d'autorité, ci-dessous | |
+
+Le sous-cas « mixte » est tranché par le **déficit net d'autorité** de la page cible de l'acheteur :
+
+```
+déficit_net = besoin d'autorité (pages en retard, §2.11) − autorité déjà apportée
+              par les liens entrants réels et le maillage interne vers cette page
+```
+
+- `déficit_net > 0` → `dofollow` : l'objectif exige un vrai transfert d'équité ;
+- `déficit_net ≤ 0` → `sponsored` : un lien sponsorisé suffit à la visibilité, on ne paie pas un
+  transfert d'autorité pour un besoin que le maillage interne résout déjà.
+
+**Axe capacité vendeur — `permit_attribute`.** Les conditions cumulatives du §2.4 (classe
+`sell_risk` Sûr ≤ 0.20, palier P3 minimum, flag de risque accepté, plafonds 1/page et 20/domaine/an).
+Non négociable, aucune dérogation admin.
+
+Résultat net lisible par les deux parties : **`dofollow` n'est écrit que si le besoin le justifie
+ET que la page vendeur peut l'absorber sans risque ; dans tout autre cas `sponsored`.** C'est le
+serveur qui fige `need_attribute` et `permit_attribute`, les deux valeurs sont journalisées sur la
+commande (`attribute_basis`) pour l'arbitrage (§2.16).
+
 ### 2.5 Rémunération
 
 **Décision v1 : reversement réel en euros via Stripe Connect, dès le lancement.** Le paiement en
