@@ -4675,55 +4675,6 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         );
         const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
 
-        // ─── Lot B : le GEO décomposé en 10 sous-signaux (compréhension / autorité) ───
-        // Un score GEO global masque deux causes opposées. La décomposition est
-        // déterministe (0 token) : elle réagrège des signaux déjà mesurés ailleurs
-        // et produit un verdict d'écart entre les deux familles.
-        const tlSignals = strategicData?.social_signals?.thought_leadership || null;
-        const geoSubSignalsReport = buildGeoSubSignals({
-          // Le breakdown est imbriqué sous llm_visibility dans l'objet d'audit
-          // stratégique ; l'accès direct renvoyait undefined et laissait les
-          // 8 sous-signaux correspondants en « non mesuré ».
-          breakdown:
-            strategicData?.llm_visibility?.citation_breakdown ||
-            strategicData?.llm_visibility_raw?.citation_breakdown ||
-            strategicData?.citation_breakdown ||
-            llmVisibilityData?.citation_breakdown ||
-            null,
-          isBotShell: botRendering ? Boolean(botRendering.blocked) : null,
-          botOnlyAbsences: absenceReport ? (absenceReport.bot_only_signals?.length ?? 0) : null,
-          crawlFormatting: crawlSnapshot?.answerFormatting || null,
-          founderResolved: tlSignals ? Boolean(tlSignals.founder_name) : null,
-          founderCorroborated: tlSignals
-            ? Boolean(tlSignals.founder_profile_url) ||
-              ['strong', 'high', 'confirmed', 'corroborated'].includes(String(tlSignals.founder_authority || '').toLowerCase())
-            : null,
-          // Plafonds de cohérence GEO : faits d'extraction réellement mesurés sur
-          // le HTML servi. Sans eux, la citabilité restait optimiste sur une
-          // coquille JS (balisage noté, texte absent pour les robots).
-          extractedWords: expertData?.scores?.semantic?.wordCount ?? null,
-          textRatioPct:
-            expertData?.insights?.contentDensity && expertData.insights.contentDensity.verdict !== 'unknown'
-              ? (expertData.insights.contentDensity.ratio ?? null)
-              : null,
-        });
-
-        // Plafonds unifiés (techniques + GEO) : ordre d'entrée du workbench et du
-        // plan, chaque entrée portant sa preuve chiffrée (mesuré → cible).
-        const unifiedGates: AuditGate[] = mergeGates(
-          normalizeGates(expertData?.scores?.gates, 'technical'),
-          geoSubSignalsReport?.gates ?? [],
-        );
-        try {
-          await writeGatesToWorkbench(sb, unifiedGates, {
-            domain,
-            url,
-            userId: parentJob.user_id,
-            trackedSiteId: trackedSiteId || null,
-          });
-        } catch (gateErr) {
-          console.warn('[Marina] Gate workbench write failed (non-fatal):', gateErr);
-        }
 
         const geoSubSignalsHtml =
           geoSubSignalsBlockHTML(geoSubSignalsReport, detectedLang) +
