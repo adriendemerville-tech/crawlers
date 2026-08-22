@@ -10,12 +10,19 @@
  * Uses Lovable AI Gateway (preferred) or OpenRouter as fallback.
  */
 
+import { createClient } from 'npm:@supabase/supabase-js@2'
 import { writeIdentity } from './identityGateway.ts'
 import {
   extractStructuredIdentity,
   renderStructuredEvidenceBlock,
   type StructuredIdentitySignals,
 } from './structuredIdentity.ts'
+import {
+  fetchSiteEvidence,
+  renderSecondaryPagesBlock,
+  renderStructuralBlock,
+  type SiteEvidence,
+} from './siteEvidence.ts'
 import {
   deriveEnterpriseDimensions,
   extractSirenSiret,
@@ -140,6 +147,33 @@ export interface OnsiteEvidence {
   structured?: StructuredIdentitySignals | null
 }
 
+/**
+ * Catégorie officielle de la fiche Google Business liée au domaine, quand elle
+ * existe en base. C'est le signal le plus fiable pour trancher le mode de
+ * livraison : l'entreprise l'a choisie dans une liste fermée de Google, elle
+ * n'est pas rédigée en langage marketing. Jamais bloquant.
+ */
+async function fetchGmbCategory(domain: string): Promise<string | null> {
+  const clean = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '')
+  if (!clean) return null
+  const sbUrl = Deno.env.get('SUPABASE_URL')
+  const sbKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (!sbUrl || !sbKey) return null
+  try {
+    const sb = createClient(sbUrl, sbKey)
+    const { data } = await sb
+      .from('gmb_locations')
+      .select('category')
+      .ilike('website', `%${clean}%`)
+      .not('category', 'is', null)
+      .limit(1)
+    return (data?.[0]?.category as string) || null
+  } catch (e) {
+    console.warn(`[enrich-site] GMB category lookup failed for ${clean}: ${(e as Error).message}`)
+    return null
+  }
+}
+
 export async function fetchHomepageEvidence(domain: string): Promise<OnsiteEvidence | null> {
   const clean = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '')
   const urls = [`https://${clean}`, `https://www.${clean}`]
@@ -195,7 +229,7 @@ async function inferContextFromDomain(
   domain: string,
   siteName: string,
   existingContext?: SiteContext,
-  evidence?: OnsiteEvidence | null,
+  evidence?: SiteEvidence | OnsiteEvidence | null,
 ): Promise<SiteContext | null> {
   const lovableKey = Deno.env.get('LOVABLE_API_KEY')
   const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
@@ -214,18 +248,21 @@ async function inferContextFromDomain(
 - Taille: ${existingContext.company_size || '?'}`
     : ''
 
+  const multi = (evidence as SiteEvidence | null | undefined)
   const evidenceBlock = evidence
     ? `\n\nCONTENU RÉEL DE LA PAGE D'ACCUEIL (source de vérité, prioritaire sur toute intuition liée au nom de domaine) :
 Title: ${evidence.title || '—'}
 Meta description: ${evidence.description || '—'}
 Titres (H1-H3): ${evidence.headings.slice(0, 20).join(' | ') || '—'}${renderStructuredEvidenceBlock(evidence.structured)}
-Texte visible: ${evidence.text}
+Texte visible: ${evidence.text}${renderSecondaryPagesBlock(multi?.pages ? multi : null)}${renderStructuralBlock(multi?.structural)}
 
 Règles impératives :
 - Déduis le secteur, les produits/services et la cible EXCLUSIVEMENT de ce contenu.
 - N'interprète JAMAIS le nom de domaine pour inventer une activité (ex: un domaine contenant "dicta" ne signifie pas que le site vend de la transcription).
+- Les faits structurels et les pages secondaires (offre, tarifs, mentions légales) l'emportent sur les formules marketing de l'accueil.
 - Si le contexte existant contredit ce contenu, corrige-le.`
     : `\n\nAucun contenu de page n'a pu être récupéré : reste très générique, ne devine pas une activité précise à partir du nom de domaine.`
+
 
   const prompt = `Analyse le site "${domain}" (nom du site : "${siteName || domain}").${evidenceBlock}${existingHint}
 
@@ -371,12 +408,18 @@ export async function ensureSiteContext(
   const siteName = (site.site_name as string) || ''
   const siteId = site.id as string
 
-  console.log(`[enrich-site] 🔍 ${domain} needs ${enrichmentType} enrichment, fetching homepage evidence...`)
+  console.log(`[enrich-site] 🔍 ${domain} needs ${enrichmentType} enrichment, collecting multi-page evidence...`)
 
-  const evidence = await fetchHomepageEvidence(domain)
+  const evidence = await fetchSiteEvidence(domain)
   if (!evidence) {
     console.warn(`[enrich-site] ⚠️ No onsite evidence for ${domain} — degraded inference`)
+  } else {
+    console.log(
+      `[enrich-site] 📄 ${domain}: ${evidence.pages.length} page(s) lue(s) [${evidence.pages.map((p) => p.kind).join(', ')}], ` +
+      `${evidence.textWords} mots, signaux structurels: ${evidence.structural.evidence.length || 'aucun'}`,
+    )
   }
+
 
   const inferred = await inferContextFromDomain(
     domain,
@@ -429,10 +472,19 @@ export async function ensureSiteContext(
    * livraison). Déterministe, sauf le croisement SIRENE (API publique gratuite,
    * jamais bloquant). Ces dimensions ne servent PAS toutes aux questions de
    * benchmark : le tri de pertinence est fait plus tard, croisé avec l'offre.
+   *
+   * Le mode de livraison est désormais tranché par des FAITS (catégorie GMB
+   * officielle, puis signaux structurels du HTML) avant tout recours au
+   * vocabulaire de l'offre.
    */
-  const legalBlob = [evidence?.text, evidence?.description, ...(evidence?.headings || [])].filter(Boolean).join(' ')
+  const legalBlob = [
+    evidence?.description,
+    ...(evidence?.pages || []).map((p) => `${p.headings.join(' ')} ${p.text}`),
+    evidence?.text,
+  ].filter(Boolean).join(' ')
   const declaredSiren = (currentContext as Record<string, any>).siren_siret || extractSirenSiret(legalBlob)
   const sirene = declaredSiren ? await lookupSirene(String(declaredSiren)) : null
+  const gmbCategory = await fetchGmbCategory(domain)
   const dimensions = deriveEnterpriseDimensions({
     products_services: merged.products_services,
     value_proposition: merged.value_proposition,
@@ -445,9 +497,16 @@ export async function ensureSiteContext(
     siren_siret: declaredSiren ? String(declaredSiren) : null,
     legal_html: legalBlob,
     sirene,
+    structural: evidence?.structural || null,
+    gmb_category: gmbCategory,
   })
   ;(merged as Record<string, any>).enterprise_dimensions = dimensions
-  console.log(`[enrich-site] dimensions ${domain}: ${dimensions.delivery_mode || '?'} / ${dimensions.customer_relation || '?'} / ${dimensions.economy_tier || '?'}${sirene ? ' (SIRENE croisé)' : ''}`)
+  console.log(
+    `[enrich-site] dimensions ${domain}: ${dimensions.delivery_mode || '?'} (via ${dimensions.delivery_origin || '?'})` +
+    ` / ${dimensions.customer_relation || '?'} / ${dimensions.economy_tier || '?'}` +
+    `${sirene ? ' (SIRENE croisé)' : ''}${gmbCategory ? ` (GMB: ${gmbCategory})` : ''}`,
+  )
+
 
   // Persist enriched data via Identity Gateway (single write point)
   if (siteId) {
