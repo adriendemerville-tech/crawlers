@@ -297,6 +297,13 @@ export interface DimensionInput {
   /** HTML des mentions légales / page à propos, quand disponible. */
   legal_html?: string | null;
   sirene?: SireneFacts | null;
+  /**
+   * Faits structurels observés sur les pages lues (panier, abonnement, devis,
+   * espace client, JSON-LD). Prioritaires sur le vocabulaire de l'offre.
+   */
+  structural?: StructuralSignals | null;
+  /** Catégorie officielle de la fiche Google Business, quand elle est connue. */
+  gmb_category?: string | null;
 }
 
 export function deriveEnterpriseDimensions(input: DimensionInput): EnterpriseDimensions {
@@ -328,8 +335,20 @@ export function deriveEnterpriseDimensions(input: DimensionInput): EnterpriseDim
   // la lecture de toutes les autres dimensions.
   const relation = relationFromModel(model, entity, blob);
   if (relation) { dims.customer_relation = relation; dims.sources.customer_relation = model ? 'declared' : 'derived'; }
-  const delivery = deliveryFromContext(model, entity, blob, dims.legal_form);
-  if (delivery) { dims.delivery_mode = delivery; dims.sources.delivery_mode = model ? 'declared' : 'derived'; }
+  const resolved = deliveryFromContext(
+    model, entity, blob, dims.legal_form, input.structural, input.gmb_category,
+  );
+  const delivery = resolved.mode;
+  if (delivery) {
+    dims.delivery_mode = delivery;
+    dims.delivery_origin = resolved.origin;
+    dims.sources.delivery_mode =
+      resolved.origin === 'gmb' ? 'gmb'
+      : resolved.origin === 'structural' ? 'structural'
+      : resolved.origin === 'declared' ? 'declared'
+      : 'derived';
+  }
+
 
   // Économie : ce qui est réellement vendu PRIME sur le code NAF. Le NAF est un
   // code administratif déclaré une fois à l'immatriculation : il ne dit ni
