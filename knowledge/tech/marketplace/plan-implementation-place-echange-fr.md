@@ -127,7 +127,7 @@ Condition de sortie : KYC bloquant opérationnel avant la première mise en vent
 | L4.2 | `verification.server.ts` | contrôle par crawl, `linkedin_api`, `meta_api`. **Escalade de rendu obligatoire avant tout verdict négatif** (coquille JS / blocage de crawl ne valent pas rupture) ; passage par `_shared/linkVerdictShared.ts` pour tout verdict de lien |
 | L4.3 | Cron | contrôle J+1, J+7 puis mensuel jusqu'à `commitment_ends_at` |
 | L4.4 | Remboursement | prorata sur le reliquat d'engagement, support de remboursement = `buyer_payment_support` (jamais de cash remboursé en crédits) |
-| L4.5 | Balance | migration `marketplace_balance_events` / `marketplace_site_balances` / `marketplace_link_queue` ; événements inverses (`reversal_of`) sur jambe annulée ; amortissement 24 mois recalculable à 100 % |
+| L4.5 | Balance | migration `marketplace_balance_events` / `marketplace_site_balances` / `marketplace_link_queue` ; événements inverses (`reversal_of`) sur jambe annulée ; amortissement 24 mois recalculable à 100 % ; **cron de file d'achat** (`need_score`, `deficit_cede_cents`, `priority_score`, besoin non servi sur 90 j, expiration de `reserved_until`) ; `can_sell_links` branché sur l'éligibilité vendeur (`seller_deficit_min`) — inactif tant qu'aucun historique n'existe |
 | L4.6 | Front | statut de vérification par commande, preuve et capture, historique des contrôles |
 
 ---
