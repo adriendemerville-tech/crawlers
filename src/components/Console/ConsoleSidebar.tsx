@@ -249,6 +249,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
     { value: 'gmb', label: 'GMB', icon: Store },
     { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true, advancedOnly: true },
     { value: 'netlinking', label: 'Netlinking', icon: Link2, hideOnMobile: true, advancedOnly: true },
+    { value: 'marketplace', label: 'Place d\'échange', icon: Store, hideOnMobile: true, beta: true, advancedOnly: true },
     ...(!isProUser ? [
       { value: 'reports', label: t.reports, icon: FileText, hideOnMobile: true },
     ] : []),

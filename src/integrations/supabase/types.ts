@@ -9137,6 +9137,369 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_gsc_access_log: {
+        Row: {
+          admin_user_id: string
+          asset_id: string
+          created_at: string
+          expires_at: string
+          fields_read: string[]
+          id: string
+          ip: string | null
+          owner_user_id: string
+          reason: string
+          ticket_ref: string
+        }
+        Insert: {
+          admin_user_id: string
+          asset_id: string
+          created_at?: string
+          expires_at?: string
+          fields_read?: string[]
+          id?: string
+          ip?: string | null
+          owner_user_id: string
+          reason: string
+          ticket_ref: string
+        }
+        Update: {
+          admin_user_id?: string
+          asset_id?: string
+          created_at?: string
+          expires_at?: string
+          fields_read?: string[]
+          id?: string
+          ip?: string | null
+          owner_user_id?: string
+          reason?: string
+          ticket_ref?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_gsc_access_log_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_asset_public_signals"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "marketplace_gsc_access_log_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_link_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_link_assets: {
+        Row: {
+          ai_visibility_score: number | null
+          asset_kind: Database["public"]["Enums"]["marketplace_asset_kind"]
+          authority_score: number | null
+          clicks_bucket: string | null
+          constants_version: number | null
+          created_at: string
+          dofollow_sold_lifetime: number
+          domain: string
+          global_score: number | null
+          gsc_avg_position: number | null
+          gsc_clicks_90d: number | null
+          gsc_countries: Json | null
+          gsc_daily: Json | null
+          gsc_impressions_90d: number | null
+          gsc_queries: Json | null
+          gsc_window_end: string | null
+          gsc_window_start: string | null
+          id: string
+          impressions_bucket: string | null
+          insertions_12m: number
+          opt_in_terms_version: number | null
+          opted_in: boolean
+          opted_in_at: string | null
+          ownership_status: Database["public"]["Enums"]["marketplace_ownership_status"]
+          position_bucket: string | null
+          price_cents: number | null
+          price_tier:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          quality_score: number | null
+          revenue_cents: number
+          sell_risk_class:
+            | Database["public"]["Enums"]["marketplace_sell_risk_class"]
+            | null
+          semantic_score: number | null
+          signals_refreshed_at: string | null
+          top_countries: string[]
+          topic_clusters: string[]
+          tracked_site_id: string | null
+          traffic_score: number | null
+          traffic_trend: string | null
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          ai_visibility_score?: number | null
+          asset_kind?: Database["public"]["Enums"]["marketplace_asset_kind"]
+          authority_score?: number | null
+          clicks_bucket?: string | null
+          constants_version?: number | null
+          created_at?: string
+          dofollow_sold_lifetime?: number
+          domain: string
+          global_score?: number | null
+          gsc_avg_position?: number | null
+          gsc_clicks_90d?: number | null
+          gsc_countries?: Json | null
+          gsc_daily?: Json | null
+          gsc_impressions_90d?: number | null
+          gsc_queries?: Json | null
+          gsc_window_end?: string | null
+          gsc_window_start?: string | null
+          id?: string
+          impressions_bucket?: string | null
+          insertions_12m?: number
+          opt_in_terms_version?: number | null
+          opted_in?: boolean
+          opted_in_at?: string | null
+          ownership_status?: Database["public"]["Enums"]["marketplace_ownership_status"]
+          position_bucket?: string | null
+          price_cents?: number | null
+          price_tier?:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          quality_score?: number | null
+          revenue_cents?: number
+          sell_risk_class?:
+            | Database["public"]["Enums"]["marketplace_sell_risk_class"]
+            | null
+          semantic_score?: number | null
+          signals_refreshed_at?: string | null
+          top_countries?: string[]
+          topic_clusters?: string[]
+          tracked_site_id?: string | null
+          traffic_score?: number | null
+          traffic_trend?: string | null
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          ai_visibility_score?: number | null
+          asset_kind?: Database["public"]["Enums"]["marketplace_asset_kind"]
+          authority_score?: number | null
+          clicks_bucket?: string | null
+          constants_version?: number | null
+          created_at?: string
+          dofollow_sold_lifetime?: number
+          domain?: string
+          global_score?: number | null
+          gsc_avg_position?: number | null
+          gsc_clicks_90d?: number | null
+          gsc_countries?: Json | null
+          gsc_daily?: Json | null
+          gsc_impressions_90d?: number | null
+          gsc_queries?: Json | null
+          gsc_window_end?: string | null
+          gsc_window_start?: string | null
+          id?: string
+          impressions_bucket?: string | null
+          insertions_12m?: number
+          opt_in_terms_version?: number | null
+          opted_in?: boolean
+          opted_in_at?: string | null
+          ownership_status?: Database["public"]["Enums"]["marketplace_ownership_status"]
+          position_bucket?: string | null
+          price_cents?: number | null
+          price_tier?:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          quality_score?: number | null
+          revenue_cents?: number
+          sell_risk_class?:
+            | Database["public"]["Enums"]["marketplace_sell_risk_class"]
+            | null
+          semantic_score?: number | null
+          signals_refreshed_at?: string | null
+          top_countries?: string[]
+          topic_clusters?: string[]
+          tracked_site_id?: string | null
+          traffic_score?: number | null
+          traffic_trend?: string | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_ownership_claims: {
+        Row: {
+          accepted_at: string
+          claim_text: string
+          claim_version: number
+          domain: string
+          id: string
+          ip: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          claim_text: string
+          claim_version?: number
+          domain: string
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          claim_text?: string
+          claim_version?: number
+          domain?: string
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_ownership_verifications: {
+        Row: {
+          asset_id: string | null
+          created_at: string
+          domain: string
+          id: string
+          last_checked_at: string | null
+          last_error: string | null
+          method: Database["public"]["Enums"]["marketplace_verification_method"]
+          siren: string | null
+          status: Database["public"]["Enums"]["marketplace_ownership_status"]
+          token: string | null
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          asset_id?: string | null
+          created_at?: string
+          domain: string
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          method: Database["public"]["Enums"]["marketplace_verification_method"]
+          siren?: string | null
+          status?: Database["public"]["Enums"]["marketplace_ownership_status"]
+          token?: string | null
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          asset_id?: string | null
+          created_at?: string
+          domain?: string
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          method?: Database["public"]["Enums"]["marketplace_verification_method"]
+          siren?: string | null
+          status?: Database["public"]["Enums"]["marketplace_ownership_status"]
+          token?: string | null
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_ownership_verifications_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_asset_public_signals"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "marketplace_ownership_verifications_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_link_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_page_sell_risk: {
+        Row: {
+          components: Json
+          constants_version: number | null
+          domain: string
+          hard_exclusion_reason: string | null
+          id: string
+          recomputed_at: string
+          risk_class: Database["public"]["Enums"]["marketplace_sell_risk_class"]
+          sell_risk: number
+          url: string
+          user_id: string
+        }
+        Insert: {
+          components?: Json
+          constants_version?: number | null
+          domain: string
+          hard_exclusion_reason?: string | null
+          id?: string
+          recomputed_at?: string
+          risk_class: Database["public"]["Enums"]["marketplace_sell_risk_class"]
+          sell_risk: number
+          url: string
+          user_id: string
+        }
+        Update: {
+          components?: Json
+          constants_version?: number | null
+          domain?: string
+          hard_exclusion_reason?: string | null
+          id?: string
+          recomputed_at?: string
+          risk_class?: Database["public"]["Enums"]["marketplace_sell_risk_class"]
+          sell_risk?: number
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_pricing_constants: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          key: string
+          note: string | null
+          value: Json
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key: string
+          note?: string | null
+          value: Json
+          version: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key?: string
+          note?: string | null
+          value?: Json
+          version?: number
+        }
+        Relationships: []
+      }
       marketplace_site_balances: {
         Row: {
           authority_balance_cents: number
@@ -9176,6 +9539,60 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           visibility_balance_cents?: number
+        }
+        Relationships: []
+      }
+      marketplace_tax_profiles: {
+        Row: {
+          address: string | null
+          country_code: string
+          created_at: string
+          id: string
+          is_complete: boolean
+          legal_name: string
+          self_billing_mandate_accepted_at: string | null
+          self_billing_mandate_version: number | null
+          siren_siret: string | null
+          tax_status: Database["public"]["Enums"]["marketplace_tax_status"]
+          updated_at: string
+          user_id: string
+          vat_checked_at: string | null
+          vat_number: string | null
+          vat_number_valid: boolean | null
+        }
+        Insert: {
+          address?: string | null
+          country_code?: string
+          created_at?: string
+          id?: string
+          is_complete?: boolean
+          legal_name: string
+          self_billing_mandate_accepted_at?: string | null
+          self_billing_mandate_version?: number | null
+          siren_siret?: string | null
+          tax_status: Database["public"]["Enums"]["marketplace_tax_status"]
+          updated_at?: string
+          user_id: string
+          vat_checked_at?: string | null
+          vat_number?: string | null
+          vat_number_valid?: boolean | null
+        }
+        Update: {
+          address?: string | null
+          country_code?: string
+          created_at?: string
+          id?: string
+          is_complete?: boolean
+          legal_name?: string
+          self_billing_mandate_accepted_at?: string | null
+          self_billing_mandate_version?: number | null
+          siren_siret?: string | null
+          tax_status?: Database["public"]["Enums"]["marketplace_tax_status"]
+          updated_at?: string
+          user_id?: string
+          vat_checked_at?: string | null
+          vat_number?: string | null
+          vat_number_valid?: boolean | null
         }
         Relationships: []
       }
@@ -15162,6 +15579,90 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_asset_public_signals: {
+        Row: {
+          ai_visibility_score: number | null
+          asset_id: string | null
+          asset_kind:
+            | Database["public"]["Enums"]["marketplace_asset_kind"]
+            | null
+          authority_score: number | null
+          clicks_bucket: string | null
+          domain: string | null
+          impressions_bucket: string | null
+          position_bucket: string | null
+          price_cents: number | null
+          price_tier:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          quality_score: number | null
+          sell_risk_class:
+            | Database["public"]["Enums"]["marketplace_sell_risk_class"]
+            | null
+          semantic_score: number | null
+          signals_refreshed_at: string | null
+          top_countries: string[] | null
+          topic_clusters: string[] | null
+          traffic_score: number | null
+          traffic_trend: string | null
+          url: string | null
+        }
+        Insert: {
+          ai_visibility_score?: number | null
+          asset_id?: string | null
+          asset_kind?:
+            | Database["public"]["Enums"]["marketplace_asset_kind"]
+            | null
+          authority_score?: number | null
+          clicks_bucket?: string | null
+          domain?: string | null
+          impressions_bucket?: string | null
+          position_bucket?: string | null
+          price_cents?: number | null
+          price_tier?:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          quality_score?: number | null
+          sell_risk_class?:
+            | Database["public"]["Enums"]["marketplace_sell_risk_class"]
+            | null
+          semantic_score?: number | null
+          signals_refreshed_at?: string | null
+          top_countries?: string[] | null
+          topic_clusters?: string[] | null
+          traffic_score?: number | null
+          traffic_trend?: string | null
+          url?: string | null
+        }
+        Update: {
+          ai_visibility_score?: number | null
+          asset_id?: string | null
+          asset_kind?:
+            | Database["public"]["Enums"]["marketplace_asset_kind"]
+            | null
+          authority_score?: number | null
+          clicks_bucket?: string | null
+          domain?: string | null
+          impressions_bucket?: string | null
+          position_bucket?: string | null
+          price_cents?: number | null
+          price_tier?:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          quality_score?: number | null
+          sell_risk_class?:
+            | Database["public"]["Enums"]["marketplace_sell_risk_class"]
+            | null
+          semantic_score?: number | null
+          signals_refreshed_at?: string | null
+          top_countries?: string[] | null
+          topic_clusters?: string[] | null
+          traffic_score?: number | null
+          traffic_trend?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       profiles_safe: {
         Row: {
           affiliate_code_used: string | null
@@ -15988,6 +16489,65 @@ export type Database = {
         | "aws"
         | "vercel"
         | "wordpress_plugin"
+      marketplace_anchor_kind: "brand" | "exact" | "semi" | "url" | "natural"
+      marketplace_asset_kind: "link" | "instagram" | "linkedin"
+      marketplace_currency_kind: "link" | "story" | "linkedin"
+      marketplace_deal_type: "cash" | "credits" | "barter"
+      marketplace_dispute_decision: "buyer" | "seller" | "split" | "void"
+      marketplace_dispute_reason:
+        | "not_published"
+        | "attribute_mismatch"
+        | "anchor_mismatch"
+        | "removed_early"
+        | "content_refused"
+        | "payment"
+        | "other"
+      marketplace_invoice_kind:
+        | "commission"
+        | "self_billing"
+        | "soulte"
+        | "refund"
+      marketplace_link_attribute: "dofollow" | "nofollow" | "sponsored"
+      marketplace_need_objective: "autorite" | "geo" | "trafic" | "mixte"
+      marketplace_need_objective_source:
+        | "derived"
+        | "user_confirmed"
+        | "user_overridden"
+      marketplace_need_type: "seo" | "geo" | "conversion"
+      marketplace_order_status:
+        | "draft"
+        | "frozen"
+        | "pending"
+        | "published"
+        | "verified"
+        | "maintained"
+        | "broken"
+        | "resolved"
+        | "refunded"
+        | "cancelled"
+      marketplace_ownership_status: "verified" | "unverified" | "revoked"
+      marketplace_price_tier: "P1" | "P2" | "P3" | "P4" | "P5"
+      marketplace_sell_risk_class: "safe" | "moderate" | "discouraged"
+      marketplace_settlement_support: "cash" | "credits"
+      marketplace_tax_status:
+        | "company_vat"
+        | "company_no_vat"
+        | "micro"
+        | "individual"
+        | "association"
+      marketplace_trade_type:
+        | "link_chain"
+        | "link_for_link"
+        | "link_for_linkedin"
+        | "link_for_insta"
+        | "linkedin_for_linkedin"
+        | "insta_for_insta"
+      marketplace_verification_method:
+        | "gsc"
+        | "dns_txt"
+        | "file"
+        | "oauth_linkedin"
+        | "oauth_meta"
       parmenion_throttle_period: "day" | "week"
       report_type:
         | "seo_technical"
@@ -16218,6 +16778,72 @@ export const Constants = {
         "aws",
         "vercel",
         "wordpress_plugin",
+      ],
+      marketplace_anchor_kind: ["brand", "exact", "semi", "url", "natural"],
+      marketplace_asset_kind: ["link", "instagram", "linkedin"],
+      marketplace_currency_kind: ["link", "story", "linkedin"],
+      marketplace_deal_type: ["cash", "credits", "barter"],
+      marketplace_dispute_decision: ["buyer", "seller", "split", "void"],
+      marketplace_dispute_reason: [
+        "not_published",
+        "attribute_mismatch",
+        "anchor_mismatch",
+        "removed_early",
+        "content_refused",
+        "payment",
+        "other",
+      ],
+      marketplace_invoice_kind: [
+        "commission",
+        "self_billing",
+        "soulte",
+        "refund",
+      ],
+      marketplace_link_attribute: ["dofollow", "nofollow", "sponsored"],
+      marketplace_need_objective: ["autorite", "geo", "trafic", "mixte"],
+      marketplace_need_objective_source: [
+        "derived",
+        "user_confirmed",
+        "user_overridden",
+      ],
+      marketplace_need_type: ["seo", "geo", "conversion"],
+      marketplace_order_status: [
+        "draft",
+        "frozen",
+        "pending",
+        "published",
+        "verified",
+        "maintained",
+        "broken",
+        "resolved",
+        "refunded",
+        "cancelled",
+      ],
+      marketplace_ownership_status: ["verified", "unverified", "revoked"],
+      marketplace_price_tier: ["P1", "P2", "P3", "P4", "P5"],
+      marketplace_sell_risk_class: ["safe", "moderate", "discouraged"],
+      marketplace_settlement_support: ["cash", "credits"],
+      marketplace_tax_status: [
+        "company_vat",
+        "company_no_vat",
+        "micro",
+        "individual",
+        "association",
+      ],
+      marketplace_trade_type: [
+        "link_chain",
+        "link_for_link",
+        "link_for_linkedin",
+        "link_for_insta",
+        "linkedin_for_linkedin",
+        "insta_for_insta",
+      ],
+      marketplace_verification_method: [
+        "gsc",
+        "dns_txt",
+        "file",
+        "oauth_linkedin",
+        "oauth_meta",
       ],
       parmenion_throttle_period: ["day", "week"],
       report_type: [
