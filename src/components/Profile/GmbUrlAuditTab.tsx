@@ -56,7 +56,7 @@ export function GmbUrlAuditTab() {
   const reopen = async (id: string) => {
     try {
       const row = await getGmbUrlAudit({ data: { id } });
-      setAudit((row as { result: GmbListingAudit }).result);
+      setAudit((row as unknown as { result: GmbListingAudit }).result);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Audit introuvable');
     }
