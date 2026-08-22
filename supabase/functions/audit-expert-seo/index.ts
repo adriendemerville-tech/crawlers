@@ -2364,8 +2364,12 @@ Deno.serve(handleRequest(async (req) => {
         reason: blockingGate
           ? 'Défaut bloquant mesuré : le score global est plafonné hors de la zone « excellent »'
           : 'Mesures de performance indisponibles : le score global reste hors de la zone « excellent »',
-        evidence: `${totalScore}/200 avant plafond → ${totalCap}/200`,
+        evidence: `${totalScore}/200 avant plafond → ${totalCap}/200 (soit −${totalScore - totalCap} points)`,
+        pointsLost: totalScore - totalCap,
+        measured: `${totalScore}/200`,
+        target: `${totalCap}/200`,
       });
+
       totalScore = totalCap;
     }
     if (scoreGates.length) {
