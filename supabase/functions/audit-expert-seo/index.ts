@@ -11,6 +11,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { resolveSocialProof, fetchPlacesSocialProof, formatSocialProofForPrompt, type SocialProofResult } from '../_shared/socialProof.ts';
 import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
 import { classifyLink, isFalsePositiveDomain, type LinkVerdict } from '../_shared/linkVerdictShared.ts';
+import { measurePerformance } from '../_shared/perfMeasurement.ts';
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
@@ -1432,57 +1433,6 @@ async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
 
 // ==================== PAGESPEED & SAFE BROWSING ====================
 
-async function fetchPageSpeedData(url: string): Promise<any | null> {
-  const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=PERFORMANCE&category=SEO&category=BEST_PRACTICES&key=${GOOGLE_API_KEY}`;
-  
-  // Try up to 2 attempts (initial + 1 retry)
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    console.log(`[PSI] Tentative ${attempt}/2 — Récupération données PageSpeed...`);
-    
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-      
-      const response = await fetch(apiUrl, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        console.error(`[PSI] Erreur HTTP ${response.status} (tentative ${attempt}):`, error?.error?.message || response.status);
-        
-        // If rate limited (429), wait before retry
-        if (response.status === 429 && attempt < 2) {
-          console.log('[PSI] Rate limited, attente 3s avant retry...');
-          await new Promise(r => setTimeout(r, 3000));
-          continue;
-        }
-        if (attempt < 2) continue;
-        return null;
-      }
-      
-      const data = await response.json();
-      
-      // Validate that we actually got lighthouse data
-      if (!data?.lighthouseResult?.categories?.performance) {
-        console.warn('[PSI] Réponse reçue mais sans données Lighthouse valides');
-        if (attempt < 2) continue;
-        return null;
-      }
-      
-      console.log('[PSI] ✅ Données PageSpeed récupérées avec succès');
-      return data;
-    } catch (error) {
-      const isAbort = error instanceof DOMException && error.name === 'AbortError';
-      console.error(`[PSI] ${isAbort ? 'Timeout' : 'Erreur réseau'} (tentative ${attempt}):`, error);
-      if (attempt < 2) {
-        await new Promise(r => setTimeout(r, 2000));
-        continue;
-      }
-      return null;
-    }
-  }
-  return null;
-}
 
 async function checkSafeBrowsing(url: string): Promise<{ safe: boolean; threats: string[] }> {
   const apiUrl = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GOOGLE_API_KEY}`;
@@ -2206,12 +2156,17 @@ Deno.serve(handleRequest(async (req) => {
     // Step 2: Run all checks in parallel (including broken links)
     const doc = new DOMParser().parseFromString(smartFetchResult.html, 'text/html');
     
-    const [psiData, safeBrowsing, robotsAnalysis, brokenLinksAnalysis] = await Promise.all([
-      fetchPageSpeedData(normalizedUrl),
+    // Performance mobile : terrain CrUX d'abord, sinon médiane de runs PSI.
+    // Un plafond de score ne doit jamais reposer sur un run isolé (cf. cas
+    // avenir-renovations : 2,0 s puis 11,3 s sur la même page).
+    const [perf, safeBrowsing, robotsAnalysis, brokenLinksAnalysis] = await Promise.all([
+      measurePerformance(normalizedUrl, GOOGLE_API_KEY),
       checkSafeBrowsing(normalizedUrl),
       checkRobotsTxt(normalizedUrl),
       doc ? checkBrokenLinks(doc, normalizedUrl) : Promise.resolve({ total: 0, broken: [], checked: 0, corsBlocked: 0, verdict: 'optimal' as const })
     ]);
+    const psiData = perf.psiData;
+
     
     // Step 2b: Check sitemap/robots.txt coherence (depends on robotsAnalysis)
     const sitemapRobotsCoherence = await checkSitemapRobotsCoherence(normalizedUrl, robotsAnalysis.content, robotsAnalysis.exists);
@@ -2240,9 +2195,15 @@ Deno.serve(handleRequest(async (req) => {
     const psiPerformance = psiAvailable ? (categories.performance?.score || 0) : null;
     const psiSeo = psiAvailable ? (categories.seo?.score || 0) : null;
 
-    // LCP mesuré (lab PSI). C'est un fait, pas une estimation : il plafonne le
-    // score de performance même quand la catégorie PSI est absente ou flatteuse.
-    const lcpMsMeasured = Number(audits['largest-contentful-paint']?.numericValue) || null;
+    // LCP retenu : terrain CrUX (p75 utilisateurs réels) si disponible, sinon
+    // médiane des runs PSI. C'est un fait reproductible, pas un run isolé — il
+    // plafonne le score même quand la catégorie PSI est absente ou flatteuse.
+    const lcpMsMeasured = perf.lcpMs;
+    const perfSourceLabel = perf.source.startsWith('field_')
+      ? 'terrain CrUX p75 (utilisateurs réels, mobile)'
+      : perf.labLcpRuns.length > 1
+        ? `médiane de ${perf.labLcpRuns.length} runs PageSpeed mobile`
+        : 'run PageSpeed mobile unique';
 
     let performanceScore = psiPerformance !== null ? Math.round(psiPerformance * 40) : 20; // 50% fallback
     let technicalScore = (psiSeo !== null ? Math.round(psiSeo * 30) : 15) + 20; // 50% of PSI SEO part as fallback
@@ -2256,7 +2217,10 @@ Deno.serve(handleRequest(async (req) => {
     // plutôt que d'annoncer un plafond sans en montrer le coût.
     const scoreGates: Array<{ axis: string; reason: string; evidence: string; pointsLost?: number; measured?: string | null; target?: string | null }> = [];
 
-    if (lcpMsMeasured !== null && lcpMsMeasured > 4000) {
+    // Un seul run dégradé sans confirmation ne plafonne pas : c'est exactement
+    // le faux positif observé (11,3 s au run 1, 2,0 s en réalité).
+    const lcpIsConfirmed = perf.source.startsWith('field_') || perf.labLcpRuns.length > 1;
+    if (lcpMsMeasured !== null && lcpMsMeasured > 4000 && lcpIsConfirmed) {
       // Seuil Core Web Vitals : > 4 s = « poor ». Au-delà de 8 s, la page est
       // hors jeu pour l'utilisateur mobile.
       const cap = lcpMsMeasured > 8000 ? 6 : 12;
@@ -2264,7 +2228,7 @@ Deno.serve(handleRequest(async (req) => {
         const lost = performanceScore - cap;
         scoreGates.push({
           axis: 'performance',
-          reason: 'LCP mobile mesuré au-delà du seuil Core Web Vitals',
+          reason: `LCP mobile confirmé au-delà du seuil Core Web Vitals (${perfSourceLabel})`,
           evidence: `${(lcpMsMeasured / 1000).toFixed(2)}s mesuré → cible 2,50s (score plafonné à ${cap}/40, soit −${lost} points)`,
           pointsLost: lost,
           measured: `${(lcpMsMeasured / 1000).toFixed(2)}s`,
@@ -2272,7 +2236,10 @@ Deno.serve(handleRequest(async (req) => {
         });
         performanceScore = cap;
       }
+    } else if (lcpMsMeasured !== null && lcpMsMeasured > 4000) {
+      console.warn(`[PERF] LCP ${lcpMsMeasured}ms non confirmé (run unique) → aucun plafond appliqué`);
     }
+
 
     // Contenu non extractible : le HTML est servi mais le texte visible est
     // quasi absent (coquille JS). Le score technique ne peut pas rester haut :
@@ -2385,10 +2352,27 @@ Deno.serve(handleRequest(async (req) => {
         maxScore: 40,
         psiPerformance: psiPerformance !== null ? Math.round(psiPerformance * 100) : null,
         psiUnavailable: !psiAvailable,
-        lcp: audits['largest-contentful-paint']?.numericValue || null,
+        // `lcp` = valeur retenue (terrain si disponible). Les champs de mesure
+        // disent d'où vient le chiffre pour que le rapport ne l'affirme jamais
+        // sans provenance.
+        lcp: lcpMsMeasured,
+        lcpLab: perf.labLcpMs,
+        lcpField: perf.field?.lcpMs ?? null,
+        inpField: perf.field?.inpMs ?? null,
+        clsField: perf.field?.cls ?? null,
+        measurement: {
+          source: perf.source,
+          runs: perf.runs,
+          labRuns: perf.labLcpRuns,
+          spreadMs: perf.spreadMs,
+          outlierDiscarded: perf.outlierDiscarded,
+          confirmed: lcpIsConfirmed,
+          note: perf.methodNote,
+        },
         fcp: audits['first-contentful-paint']?.numericValue || null,
         cls: audits['cumulative-layout-shift']?.numericValue || null,
         tbt: audits['total-blocking-time']?.numericValue || null,
+
       },
       technical: {
         score: technicalScore + brokenLinksBonus,
