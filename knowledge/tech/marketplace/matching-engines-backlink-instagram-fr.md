@@ -81,10 +81,18 @@ alimenté par des diagnostics déjà produits par la plateforme.
   déclaration du vendeur (clics/impressions/position par page + autorité domaine +
   qualité de contenu + thématique + visibilité IA).
 
-Commission Crawlers : **25 %** du prix payé par l'acheteur, sur les deux verticales.
+**Décisions structurantes de la v1 (valables dans tout le document, aucune exception) :**
+
+| Règle | Valeur v1 |
+|---|---|
+| Commission Crawlers | **15 %**, taux unique sur les deux verticales et sur tous les `deal_type` (`cash`, `credits`, `barter`) |
+| `link_for_link` | **autorisé, flaggé et bridé** : délai 21 j, décote d'équité, quota 1 réciprocité / trimestre / site, blocage si cycle détecté |
+| Propriété du vendeur | **vérification obligatoire avant mise en vente** (GSC/DNS pour un domaine, OAuth pour LinkedIn/Instagram) |
+| Bornes de prix | **40 € plancher, 350 € plafond, dures**, paliers multiples de **10 €**, toutes devises et tous actifs |
 
 Invariant transversal : **le prix est toujours calculé serveur**, jamais transmis par le client.
-Aucune mise en vente sans **opt-in explicite** du vendeur (les données GSC sont personnelles).
+Aucune mise en vente sans **opt-in explicite** du vendeur (les données GSC sont personnelles) **et
+sans propriété vérifiée** (voir §2.6).
 
 ---
 
