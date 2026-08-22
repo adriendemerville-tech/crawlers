@@ -253,3 +253,77 @@ export function dropLotWideFingerprints(
   const lotWide = new Set([...counts.entries()].filter(([, c]) => c > threshold).map(([fp]) => fp));
   return perUrl.map((p) => ({ url: p.url, actions: p.actions.filter((a) => !lotWide.has(a.fingerprint)) }));
 }
+
+/** Normalisation d'URL identique à `pageKey` (hôte sans www, sans slash final). */
+function keyOf(url: string): string {
+  try {
+    const u = new URL(url.startsWith('http') ? url : `https://${url}`);
+    return `${u.hostname.replace(/^www\./, '')}${u.pathname.replace(/\/$/, '') || '/'}`.toLowerCase();
+  } catch {
+    return String(url).toLowerCase();
+  }
+}
+
+/** Jetons signifiants d'un chemin d'URL (villes, thématiques). */
+function pathTokens(url: string): string[] {
+  try {
+    const u = new URL(url.startsWith('http') ? url : `https://${url}`);
+    return u.pathname
+      .toLowerCase()
+      .split(/[/\-_.]+/)
+      .map((s) => s.replace(/[^a-z0-9àâäéèêëïîôöùûüç]/g, ''))
+      .filter((s) => s.length >= 4);
+  } catch {
+    return [];
+  }
+}
+
+export interface ScopedItem {
+  target_url?: string | null;
+  title?: string | null;
+  description?: string | null;
+}
+
+/**
+ * Sépare un plan d'actions en deux : ce qui appartient à l'URL lue, et ce qui
+ * relève du domaine. Toute action pointant vers une AUTRE URL est écartée, y
+ * compris quand elle ne porte pas de `target_url` mais mentionne les jetons de
+ * chemin d'une autre URL du même domaine (villes, marques, slugs).
+ */
+export function splitActionsByScope<T extends ScopedItem>(
+  items: T[] | null | undefined,
+  url: string,
+): { page: T[]; domain: T[] } {
+  const list = Array.isArray(items) ? items : [];
+  const key = keyOf(url);
+  const ownTokens = new Set(pathTokens(url));
+
+  // Jetons appartenant aux AUTRES URLs ciblées par le plan : ils signent une
+  // action hors périmètre lorsqu'ils apparaissent dans un texte non ciblé.
+  const foreignTokens = new Set<string>();
+  for (const it of list) {
+    const target = it?.target_url ? String(it.target_url) : '';
+    if (!target || keyOf(target) === key) continue;
+    for (const tok of pathTokens(target)) if (!ownTokens.has(tok)) foreignTokens.add(tok);
+  }
+
+  const page: T[] = [];
+  const domain: T[] = [];
+  for (const it of list) {
+    const target = it?.target_url ? String(it.target_url) : '';
+    if (target) {
+      if (keyOf(target) === key) page.push(it);
+      continue; // ciblée sur une autre URL : jamais dans cette fiche
+    }
+    const text = `${it?.title || ''} ${it?.description || ''}`
+      .toLowerCase()
+      .replace(/[^a-z0-9àâäéèêëïîôöùûüç]+/g, ' ');
+    const words = new Set(text.split(' ').filter((w) => w.length >= 4));
+    let foreign = false;
+    for (const tok of foreignTokens) {
+      if (words.has(tok)) { foreign = true; break; }
+    }
+    if (!foreign) domain.push(it);
+  }
+  return { page, domain };
+}
