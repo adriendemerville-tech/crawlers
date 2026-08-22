@@ -1600,6 +1600,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
           ${crawlMeta.cls !== null && crawlMeta.cls !== undefined ? `<div class="stat-card"><div class="value">${Number(crawlMeta.cls).toFixed(3)}</div><div class="label">CLS (score)</div></div>` : ''}
           ${crawlMeta.fcp ? `<div class="stat-card"><div class="value">${formatVitalSeconds(crawlMeta.fcp)}</div><div class="label">FCP</div></div>` : ''}
         </div>
+        ${crawlMeta.perfNote ? `<p style="font-size:11px;color:var(--muted-foreground,#666);margin:8px 0 0;line-height:1.5;"><strong>Provenance de la mesure :</strong> ${crawlMeta.perfNote}${crawlMeta.lcpField && crawlMeta.lcpLab && Math.abs(Number(crawlMeta.lcpField) - Number(crawlMeta.lcpLab)) > 1500 ? ' Le score de performance est calé sur les données de terrain, plus fiables qu\'un run de laboratoire isolé.' : ''}</p>` : ''}
       </div>` : ''}
       <div style="margin-top:16px;">
         <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Détail des scores</h3>
