@@ -2551,11 +2551,18 @@ function compileMarinaReport(
   const crawlContent = extractBodyContent(sectionHTMLs.crawl, { stripHeader: true, stripFooter: true });
   const techContent = extractBodyContent(sectionHTMLs.tech, { stripHeader: true, stripFooter: true });
   const strategicRaw = extractBodyContent(sectionHTMLs.strategic, { stripHeader: true, stripFooter: true });
-  // La visibilité IA est de périmètre site (identique pour toutes les URLs d'un
-  // domaine) : on la sort de la section stratégique pour pouvoir la mutualiser
-  // dans les rapports multipages.
+  // La visibilité IA est de périmètre site UNIQUEMENT sur la home : les questions
+  // sont alors génériques au domaine. Sur une page profonde, le benchmark est
+  // mesuré avec `pageUrl` (intention propre à la page : prestation, ville), donc
+  // son périmètre est « page » — sans quoi la fusion multipages n'en garderait
+  // qu'un seul et jetterait les N-1 mesures déjà payées.
   const llmMatch = strategicRaw.match(/<!--MARINA_LLM_START-->([\s\S]*?)<!--MARINA_LLM_END-->/);
   const llmVisibilityBlock = llmMatch ? llmMatch[1] : '';
+  const llmScopeIsPage = (() => {
+    try { const p = new URL(url).pathname.replace(/\/+$/, ''); return p !== '' && p !== '/'; }
+    catch { return false; }
+  })();
+
   const strategicContent = llmMatch
     ? strategicRaw.replace(llmMatch[0], '')
     : strategicRaw;
@@ -2674,9 +2681,10 @@ function compileMarinaReport(
     <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
 
     ${llmVisibilityBlock ? `
-    <!-- Visibilité / citabilité IA : périmètre site, mais rattachée à la section GEO
-         (elle en est l'objet). Placée juste après l'audit stratégique, plus en fin de rapport. -->
-    <div data-marina-scope="site" data-marina-block="llm">${llmVisibilityBlock}</div>
+    <!-- Visibilité / citabilité IA, rattachée à la section GEO (elle en est l'objet).
+         Périmètre site sur la home, périmètre page sur une URL profonde. -->
+
+    <div data-marina-scope="${llmScopeIsPage ? 'page' : 'site'}" data-marina-block="llm">${llmVisibilityBlock}</div>
     ` : ''}
 
     ${sectionHTMLs.ownerPerformance ? `
