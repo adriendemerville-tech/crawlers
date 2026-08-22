@@ -665,16 +665,22 @@ Tables `public.*`, RLS par `auth.uid()`, GRANT explicite (`authenticated`, `serv
 ### 8.5 CGVU
 Ajouts obligatoires :
 - Statut de Crawlers : **intermédiaire technique**, pas éditeur du contenu vendu.
-- Commission 25 %, base de calcul, moment de prélèvement.
-- Obligations du vendeur : propriété du domaine/compte vérifiée, maintien du lien
-  (durée minimale 12 mois), conformité éditoriale, mention de publicité pour le social.
+- Commission **15 %**, taux unique cash et troc, base de calcul, moment de prélèvement.
+- Obligations du vendeur : **propriété du domaine ou du compte vérifiée par Crawlers avant toute
+  mise en vente** (GSC/DNS/fichier, OAuth pour le social), maintien du lien (durée minimale
+  12 mois), conformité éditoriale, mention de publicité pour le social.
 - Obligations de l'acheteur : légalité de la page cible, absence de contenu prohibé.
 - Attribut du lien : information de l'acheteur, absence de garantie de classement.
 - Prévisualisation, feedback, 3 tours de révision, arbitrage et annulation sans frais.
 - Retrait ou disparition du lien : suspension du paiement, remboursement au prorata.
 - Wallet : crédits non convertibles en euros en v1, non remboursables, durée de validité.
 - Données : partage limité et consenti des signaux de page entre les parties (RGPD).
-- Interdictions : échanges réciproques, fermes de liens, achat d'engagement.
+- **Échanges réciproques (`link_for_link`) : autorisés mais encadrés** — délai de 21 jours entre
+  les deux publications, une seule réciprocité par trimestre et par site, jamais deux fois avec
+  le même partenaire sur 12 mois, refus automatique en cas de boucle de liens. Le risque de
+  dévaluation par les moteurs est porté à la connaissance des deux parties et assumé par elles.
+- Interdictions fermes : fermes de liens, réseaux de sites détenus par un même bénéficiaire,
+  achat d'engagement, revente d'un actif dont la propriété n'est pas vérifiée.
 - Plan Jeune entreprise : conditions d'éligibilité, plafond de crédits, support communautaire,
   fin automatique à 12 mois.
 
