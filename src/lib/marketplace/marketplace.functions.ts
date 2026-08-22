@@ -175,3 +175,68 @@ export const getMarketplaceMatchValues = createServerFn({ method: 'POST' })
       force: data.force,
     });
   });
+
+export const getMarketplaceOrders = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    return listOrders(context.supabase as never, context.userId);
+  });
+
+export const freezeMarketplaceOrder = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        matchId: z.string().uuid(),
+        anchor: z.string().min(2).max(120),
+        anchorKind: z.enum(['brand', 'exact', 'semi', 'url', 'natural']),
+        dealType: z.enum(['cash', 'credits', 'barter']),
+        commissionSupport: z.enum(['cash', 'credits']).optional(),
+        tradeType: z
+          .enum([
+            'link_chain',
+            'link_for_link',
+            'link_for_linkedin',
+            'link_for_insta',
+            'linkedin_for_linkedin',
+            'insta_for_insta',
+          ])
+          .optional(),
+        currencyKind: z.enum(['link', 'story', 'linkedin']).optional(),
+        counterValueCents: z.number().int().min(0).max(35000).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    return freezeOrder(context.supabase as never, { userId: context.userId, ...data });
+  });
+
+export const acceptMarketplaceOrder = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ orderId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    return acceptOrder(context.supabase as never, { userId: context.userId, orderId: data.orderId });
+  });
+
+export const cancelMarketplaceOrder = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z.object({ orderId: z.string().uuid(), reason: z.string().min(3).max(200) }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    return cancelOrder(context.supabase as never, {
+      userId: context.userId,
+      orderId: data.orderId,
+      reason: data.reason,
+    });
+  });
+
+export const declareMarketplacePublication = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ orderId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    return declarePublication(context.supabase as never, {
+      userId: context.userId,
+      orderId: data.orderId,
+    });
+  });
