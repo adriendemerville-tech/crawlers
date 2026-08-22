@@ -1747,7 +1747,7 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       ${stratIntro?.presentation ? `<div class="intro-text">${stratIntro.presentation}</div>` : ''}
       ${stratIntro?.strengths ? `<div class="intro-text"><strong>${tr.strengths}:</strong> ${stratIntro.strengths}</div>` : ''}
       ${stratIntro?.improvement ? `<div class="intro-text"><strong>${tr.improvements}:</strong> ${stratIntro.improvement}</div>` : ''}
-      ${stratSummary ? `<div style="margin-top:16px;padding:16px;background:#eff6ff;border-radius:8px;"><h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">📋 ${tr.executiveSummary}</h3><div class="intro-text">${stratSummary}</div></div>` : ''}
+      ${stratSummary ? `<div style="margin-top:16px;padding:16px;border:1px solid #ede9fe;border-left:4px solid #6d28d9;border-radius:8px;background:#faf9ff;"><h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">${tr.executiveSummary}</h3><div class="intro-text">${stratSummary}</div></div>` : ''}
       <!-- ── Bloc GEO / citabilité IA : remonté en tête de la section, c'est
            l'objet même de l'audit stratégique. ── -->
       ${buildModuleSection('Citabilité par les moteurs de réponse IA', '🌍', geoCitability)}
