@@ -359,12 +359,15 @@ export function ScannedUrlsRegistry() {
                             </div>
                             <div className="flex items-center gap-2 mt-0.5">
                               <p className="text-xs text-muted-foreground">Domaine : {item.domain}</p>
-                              {item.userName && (
+                              {item.userName ? (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/70 cursor-default">
+                                    <span className="inline-flex items-center gap-1 text-xs text-foreground/80 cursor-default">
                                       <User className="h-3 w-3" />
                                       {item.userName}
+                                      {item.userEmail && (
+                                        <span className="text-muted-foreground/70">· {item.userEmail}</span>
+                                      )}
                                     </span>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="text-xs">
@@ -372,7 +375,20 @@ export function ScannedUrlsRegistry() {
                                     {item.userEmail && <p className="text-muted-foreground">{item.userEmail}</p>}
                                   </TooltipContent>
                                 </Tooltip>
+                              ) : (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground/60 cursor-default">
+                                      <User className="h-3 w-3" />
+                                      Anonyme
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="text-xs max-w-[260px]">
+                                    Scan lancé sans compte (analyse gratuite depuis la page d'accueil) : aucun utilisateur n'est rattaché à cette URL.
+                                  </TooltipContent>
+                                </Tooltip>
                               )}
+
                             </div>
                           </div>
                         </div>
