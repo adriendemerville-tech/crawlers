@@ -86,7 +86,8 @@ alimenté par des diagnostics déjà produits par la plateforme.
 | Règle | Valeur v1 |
 |---|---|
 | Commission Crawlers | **15 %**, taux unique sur les deux verticales et sur tous les `deal_type` (`cash`, `credits`, `barter`) |
-| `link_for_link` | **autorisé, flaggé et bridé** : délai 21 j, décote d'équité, quota 1 réciprocité / trimestre / site, blocage si cycle détecté |
+| `link_chain` (A→B→C→A) | **mode d'échange sans cash privilégié** : boucle déclarée de 3-4 participants, 7 j entre jambes, aucune décote |
+| `link_for_link` | **dernier recours, flaggé et bridé** : proposé seulement si aucune boucle constructible ; délai 21 j, décote d'équité 0,70, quota 1 réciprocité / trimestre / site, blocage des cycles non déclarés |
 | Propriété du vendeur | **vérification obligatoire avant mise en vente** (GSC/DNS pour un domaine, OAuth pour LinkedIn/Instagram) |
 | Bornes de prix | **40 € plancher, 350 € plafond, dures**, paliers multiples de **10 €**, toutes devises et tous actifs |
 
@@ -661,7 +662,7 @@ schéma dévalué.
 | Modèle | Abonnement, liens distribués automatiquement | Achat à l'unité, commission | Gré à gré | Achat cash **et** troc, commission unique 15 % |
 | Devises d'échange | Aucune (bundle) | Euros | Lien contre lien | Lien, LinkedIn, Instagram, crédits, euros |
 | Contrôle du voisinage | Faible (base non filtrée) | Éditorial (curation Getfluence) | Aucun | Filtrage thématique + standing vendeur |
-| Empreinte / risque de pattern | Élevé (attribution uniforme) | Moyen (articles sponsorisés massifs) | Élevé (réciprocité directe) | `link_for_link` flaggé, décorrélation 21 j, décote d'équité |
+| Empreinte / risque de pattern | Élevé (attribution uniforme) | Moyen (articles sponsorisés massifs) | Élevé (réciprocité directe) | boucles `link_chain` privilégiées, `link_for_link` en dernier recours, flaggé, décorrélation 21 j, décote d'équité |
 | Appariement au besoin réel | Non | Filtres manuels (DR, trafic, thème) | Non | Matrice besoin ↔ devise (SEO / GEO / conversion) des deux parties |
 | Équité de l'échange | Non calculée | Prix éditeur | Négociée à l'œil | Score d'équité, soulte en euros ou crédits (jamais financée par Crawlers) |
 | Mémoire long terme | Non | Non | Non | Balance d'autorité par site amortie 24 mois + file de priorité |
@@ -1035,7 +1036,7 @@ Ajouts obligatoires :
 |---|---|
 | L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
 | L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » + **calcul de la valeur d'appariement page et domaine (§2.11)** |
-| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 %, **quota `link_for_link` + détection de cycles** |
+| L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 %, **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
 | L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
 | L5 | Landing page, home, tarifs, **valeur d'appariement dans l'Audit stratégique et Marina (page + domaine)**, bloc « Ma balance » comme produit de rétention (§2.14), CGVU |
 
