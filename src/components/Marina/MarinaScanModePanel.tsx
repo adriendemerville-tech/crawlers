@@ -102,7 +102,6 @@ export function MarinaScanModePanel({
             <Layers className="w-4 h-4 mt-0.5 text-primary shrink-0" />
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-foreground">{t.title}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">{t.subtitle}</p>
             </div>
           </div>
           <ChevronDown
