@@ -34,10 +34,11 @@ Règles transverses non négociables pour toutes les tâches ci-dessous :
 
 | # | Tâche | Détail |
 |---|---|---|
-| L1a.1 | Enums | `marketplace_asset_kind`, `marketplace_link_attribute`, `marketplace_deal_type`, `marketplace_order_status`, `marketplace_currency_kind`, `marketplace_trade_type`, `marketplace_sell_risk_class`, `marketplace_tax_status`, `marketplace_verification_method` |
-| L1a.2 | `marketplace_pricing_constants` (§2.15) | versionnée, lecture `authenticated`, écriture `service_role` + admin via `has_role`. Seed L1a : paliers P1 40 € · P2 90 € · P3 150 € · P4 250 € · P5 350 €, commission 15 %, décote `link_for_link` 0.70, plafond 350 €, `sell_risk` seuil 0.20, plafonds 1 dofollow/page à vie · 20/domaine/12 mois · 3 insertions/page/12 mois |
+| L1a.1 | Enums | `marketplace_asset_kind`, `marketplace_link_attribute`, `marketplace_deal_type`, `marketplace_order_status`, `marketplace_currency_kind`, `marketplace_trade_type`, `marketplace_sell_risk_class`, `marketplace_tax_status`, `marketplace_verification_method`, `marketplace_ownership_status`, `marketplace_anchor_kind`, `marketplace_need_type` (`seo`/`geo`/`conversion`), `marketplace_need_objective` (`autorite`/`geo`/`trafic`/`mixte`), `marketplace_need_objective_source`, `marketplace_settlement_support` (`cash`/`credits`), `marketplace_invoice_kind`, `marketplace_dispute_reason`, `marketplace_dispute_decision` |
+| L1a.2 | `marketplace_pricing_constants` (§2.15) | versionnée, lecture `authenticated`, écriture `service_role` + admin via `has_role`. Seed L1a : paliers P1 40 € · P2 90 € · P3 150 € · P4 250 € · P5 350 €, commission 15 %, décote `link_for_link` 0.70, plafond 350 €, `sell_risk` seuil 0.20, plafonds 1 dofollow/page à vie · 20/domaine/12 mois · 3 insertions/page/12 mois, `price_base_cents`, `tier_thresholds`, `seller_deficit_min` (§2.7.3), `studio_version_c_max_authority` (§2.9), `revision_rounds_max` = 3 (§2.3), seuils de similarité du contrôle d'homogénéité. Constantes Collab (`insta_base_format`, courbes `f`/`g`/`h`/`k`) seedées en L6 |
 | L1a.3 | `marketplace_link_assets` (§4.2) | `SELECT` des colonnes de signaux GSC brutes réservé au propriétaire et à `service_role` (colonnes révoquées + vue). |
-| L1a.4 | Vue `marketplace_asset_public_signals` (§2.1.1) | `security_invoker=off` assumé, projection scores 0–100 + fourchettes + clusters + tendance + top pays. **Seule** source lue par les écrans acheteur. `GRANT SELECT` à `authenticated` |
+| L1a.4 | Vue `marketplace_asset_public_signals` (§2.1.1) | projection scores 0–100 + fourchettes + clusters + tendance + top pays ; aucune valeur GSC exacte, aucune requête, aucun agrégat domaine. **Seule** source lue par les écrans et API acheteur. `GRANT SELECT` à `authenticated` ; la vue ne doit exposer que des colonnes déjà dérivées (pas de contournement de RLS sur les colonnes brutes) |
+
 | L1a.5 | `marketplace_page_sell_risk` (§2.12) | cache par page, recalcul à chaque crawl |
 | L1a.6 | `marketplace_ownership_verifications`, `marketplace_ownership_claims`, `marketplace_gsc_access_log` (§4.5) | unicité domaine↔compte ; log append-only, aucune policy `UPDATE`/`DELETE` |
 | L1a.7 | `marketplace_tax_profiles` (§2.5.2) | sans profil complet + mandat accepté, aucune mise en vente |
@@ -51,20 +52,22 @@ Règles transverses non négociables pour toutes les tâches ci-dessous :
 | L1a.10 | `sellRisk.server.ts` | `sell_risk` + composantes + classe + motif d'exclusion dure (pilier, page de conversion, page en momentum). Alimente `marketplace_page_sell_risk` |
 | L1a.11 | `attribute.server.ts` | moteur à deux axes (§2.4.1) : `need_attribute` × `permit_attribute` → attribut figé. `sponsored` par défaut ; `dofollow` seulement si déficit net > 0 **et** `sell_risk` ≤ 0.20 **et** palier ≥ P3 **et** plafonds libres. Produit `attribute_basis` (jsonb auditable) |
 | L1a.12 | `caps.server.ts` | compteurs de plafonds liés : 1 `dofollow`/page à vie, 20/domaine/12 mois glissants, 3 insertions/page/12 mois tous attributs (un `dofollow` consomme un des 3) |
-| L1a.13 | `ownership.functions.ts` | vérification bloquante GSC / DNS TXT / fichier ; règle **Kbis > IP** sur les grappes de comptes (§2.2) : deux SIREN vérifiés distincts lèvent le blocage IP |
+| L1a.13 | `ownership.functions.ts` | vérification bloquante GSC / DNS TXT / fichier ; enregistrement de la **déclaration de responsabilité vendeur** (`marketplace_ownership_claims` : horodatage, IP, texte accepté) ; règle **Kbis > IP** sur les grappes de comptes (§2.2) : deux SIREN vérifiés distincts lèvent le blocage IP |
 | L1a.14 | `assets.functions.ts` | opt-in/opt-out par page, lecture de mon inventaire (prix estimé, palier, classe de risque, plafonds consommés, revenus cumulés) |
-| L1a.15 | Cron | recalcul `sell_risk` post-crawl (branché sur la fin de `crawl-site`), recalcul des prix estimés hebdomadaire |
+| L1a.15 | `gscSupportAccess.server.ts` (§2.1.1) | **seul** chemin d'accès admin aux valeurs GSC exactes : motif + `ticket_ref` obligatoires, écriture append-only dans `marketplace_gsc_access_log`, visible du propriétaire (date + motif), purge cron à 24 mois |
+| L1a.16 | Cron | recalcul `sell_risk` post-crawl (branché sur la fin de `crawl-site`), recalcul des prix estimés hebdomadaire, purge du journal d'accès GSC |
+
 
 ### Front end L1a
 
 | # | Fichier | Contenu |
 |---|---|---|
-| L1a.16 | `src/components/Console/Marketplace/MarketplaceModule.tsx` | coquille du module + 4 onglets (les 3 autres inertes en L1a) |
-| L1a.17 | `ConsoleSidebar.tsx` | entrée « Place d'échange », réordonnable et masquable, persistance `user_console_preferences` |
-| L1a.18 | `SellTab.tsx` | inventaire de mes pages : prix estimé, palier, classe `sell_risk` avec motif lisible, plafonds restants, toggle opt-in, revenus cumulés, message « 1 lien vendu ce mois = abonnement remboursé » |
-| L1a.19 | `OwnershipVerificationCard.tsx` | parcours GSC / DNS / fichier, états `verified` / `unverified` / `revoked`, blocage explicite de la mise en vente |
-| L1a.20 | `TaxProfileForm.tsx` | statut fiscal, TVA (contrôle VIES), mandat d'auto-facturation à accepter |
-| L1a.21 | `useTeamPermissions` | ajout de `marketplace_manage` ; auditeur en lecture seule |
+| L1a.17 | `src/components/Console/Marketplace/MarketplaceModule.tsx` | coquille du module + 4 onglets (les 3 autres inertes en L1a) |
+| L1a.18 | `ConsoleSidebar.tsx` | entrée « Place d'échange », réordonnable et masquable, persistance `user_console_preferences` |
+| L1a.19 | `SellTab.tsx` | inventaire de mes pages : prix estimé, palier, classe `sell_risk` avec motif lisible, plafonds restants, toggle opt-in, revenus cumulés, message « 1 lien vendu ce mois = abonnement remboursé » |
+| L1a.20 | `OwnershipVerificationCard.tsx` | parcours GSC / DNS / fichier, états `verified` / `unverified` / `revoked`, acceptation de la déclaration de responsabilité, blocage explicite de la mise en vente |
+| L1a.21 | `TaxProfileForm.tsx` | statut fiscal, TVA (contrôle VIES), mandat d'auto-facturation à accepter |
+| L1a.22 | `useTeamPermissions` | ajout de `marketplace_manage` ; auditeur en lecture seule |
 
 ---
 
@@ -89,11 +92,12 @@ Condition de sortie : KYC bloquant opérationnel avant la première mise en vent
 | L2.1 | Migrations | `marketplace_needs` (dérivé de `architect_workbench` / E-E-A-T, `need_primary`/`need_secondary`), `marketplace_matches`, `marketplace_match_values`, `marketplace_buyer_limits` |
 | L2.2 | `needs.server.ts` | dérivation déterministe des besoins depuis le workbench ; aucun LLM |
 | L2.3 | `matching.server.ts` | `compat_score` + « pourquoi ce match » explicable (facteurs listés, pas de score opaque) |
-| L2.4 | `buyerLimits.server.ts` | fenêtres **glissantes** : 4 liens / 30 j, 2 / 7 j, 2 par vendeur / 12 mois, ratio d'ancres exactes, cohérence thématique, `buy_risk`, `next_allowed_at` |
+| L2.4 | `buyerLimits.server.ts` | fenêtres **glissantes** : 4 liens / 30 j, 2 / 7 j, 2 par vendeur / 12 mois, `target_url_counts`, ratio d'ancres exactes, cohérence thématique, `buy_risk`, `next_allowed_at`, `throttle_reason`. Dérivé des **jambes livrées**, jamais des commandes créées |
 | L2.5 | `matchValue.server.ts` | valeur d'appariement page (face vendeur / face acheteur) et domaine (potentiel de vente, besoin d'achat, solde) ; cache TTL 24 h site-scoped |
 | L2.6 | Front `OpportunitiesTab.tsx` | appariements entrants triés par `compat_score`, explication du match |
 | L2.7 | Front `BuyTab.tsx` | parcours 4 temps : besoins détectés → **étape bloquante « Mon objectif »** → actifs filtrés par attribut réellement obtenable → panier |
 | L2.8 | Front `ObjectiveConfirmCard.tsx` | objectif pré-rempli depuis `need_primary` + justification, à confirmer ou corriger ; écrit `need_objective`, `need_objective_source`, `need_objective_confirmed_at`. Sans confirmation : ajout au panier impossible. Annonce l'attribut applicable avant paiement, sans hiérarchie implicite |
+| L2.9 | Intégrations dans l'existant (§5.5) | onglet **Netlinking** : remplacement des offres externes vides par l'inventaire interne ; `architect_workbench` : bouton « Trouver un lien » sur les tâches `remediation_channel='netlinking'` |
 
 ---
 
@@ -105,12 +109,13 @@ Condition de sortie : KYC bloquant opérationnel avant la première mise en vent
 | L3.2 | `orders.functions.ts` | figeage serveur : prix, commission 15 %, attribut, `attribute_basis`, `constants_version`, `escrow_cents`, `commitment_months` (12 lien · 1 post/Reel · 0 story). Immuable après `frozen_at` |
 | L3.3 | `barter.server.ts` | recherche de boucle `link_chain` **prioritaire**, `link_for_link` en dernier recours (décote 0.70, `publish_after` +21 j, quota trimestriel), détection de cycles non déclarés |
 | L3.4 | `commission.server.ts` | cash retenu sur le flux ; **crédits obligatoires sur le troc**, par jambe, avec contrôle des soldes avant figeage et taux crédit-euro figé |
-| L3.5 | `invoices.server.ts` | pièces figées à l'émission (jambe, soulte, commission, avoir), série continue par mandant, exigibilité = 1ʳᵉ preuve de publication |
-| L3.6 | `studio.functions.ts` | 3 variantes (éditoriale / utilitaire GEO / action) via le Gateway, brief figé, coût tracé. **Prompt unique, une seule passe par variante** pour borner le coût. Test d'homogénéité stylistique inter-livrables avant ouverture au volume |
-| L3.7 | `disputes.functions.ts` | arbitrage humain, SLA 5 j (`acknowledged_at`, `due_at`), décisions `upheld` / `cancelled_no_fee` / `prorata_refund` / `forced_execution` ; aucune décision ne crée de commission ni ne modifie un prix figé |
-| L3.8 | Front `OrdersTab.tsx` | cycle de vie, révisions, feedback bilatéral, validations |
-| L3.9 | Front `LinkInsertionPreview.tsx` | diff avant/après, surbrillance du paragraphe, bascule mobile/desktop, panneau de feedback, historique |
-| L3.10 | Front `StudioVariantPicker.tsx` | le vendeur valide, l'acheteur choisit la version finale |
+| L3.5 | `invoices.server.ts` | pièces figées à l'émission (jambe, soulte, commission, avoir), série continue par mandant, exigibilité = 1ʳᵉ preuve de publication ; **export DAC7** (jambes en troc et crédits inclus, §2.5.2) |
+| L3.6 | `studio.functions.ts` | 3 variantes (éditoriale / utilitaire GEO / action) via le Gateway, brief figé, coût tracé. **Prompt unique, une seule passe par variante** pour borner le coût. La **version C disparaît au-delà de `studio_version_c_max_authority`** (§2.9). Test d'homogénéité stylistique inter-livrables avant ouverture au volume |
+| L3.7 | `revisions.server.ts` | plafond **3 tours de révision** (`revision_rounds_max`), compteur **partagé** entre prévisualisation et Studio (§2.3, §2.9) ; épuisement → ouverture d'un litige |
+| L3.8 | `disputes.functions.ts` | arbitrage humain, accusé de réception 24 h ouvrées, SLA 5 j (`acknowledged_at`, `due_at`), une seule contestation (`appeal_of`), décisions `upheld` / `cancelled_no_fee` / `prorata_refund` / `forced_execution` ; aucune décision ne crée de commission ni ne modifie un prix figé |
+| L3.9 | Front `OrdersTab.tsx` | cycle de vie, révisions restantes, feedback bilatéral, validations |
+| L3.10 | Front `LinkInsertionPreview.tsx` | diff avant/après, surbrillance du paragraphe, bascule mobile/desktop, panneau de feedback, historique |
+| L3.11 | Front `StudioVariantPicker.tsx` | le vendeur valide, l'acheteur choisit la version finale |
 
 ---
 
@@ -122,7 +127,7 @@ Condition de sortie : KYC bloquant opérationnel avant la première mise en vent
 | L4.2 | `verification.server.ts` | contrôle par crawl, `linkedin_api`, `meta_api`. **Escalade de rendu obligatoire avant tout verdict négatif** (coquille JS / blocage de crawl ne valent pas rupture) ; passage par `_shared/linkVerdictShared.ts` pour tout verdict de lien |
 | L4.3 | Cron | contrôle J+1, J+7 puis mensuel jusqu'à `commitment_ends_at` |
 | L4.4 | Remboursement | prorata sur le reliquat d'engagement, support de remboursement = `buyer_payment_support` (jamais de cash remboursé en crédits) |
-| L4.5 | Balance | migration `marketplace_balance_events` / `marketplace_site_balances` / `marketplace_link_queue` ; événements inverses (`reversal_of`) sur jambe annulée ; amortissement 24 mois recalculable à 100 % |
+| L4.5 | Balance | migration `marketplace_balance_events` / `marketplace_site_balances` / `marketplace_link_queue` ; événements inverses (`reversal_of`) sur jambe annulée ; amortissement 24 mois recalculable à 100 % ; **cron de file d'achat** (`need_score`, `deficit_cede_cents`, `priority_score`, besoin non servi sur 90 j, expiration de `reserved_until`) ; `can_sell_links` branché sur l'éligibilité vendeur (`seller_deficit_min`) — inactif tant qu'aucun historique n'existe |
 | L4.6 | Front | statut de vérification par commande, preuve et capture, historique des contrôles |
 
 ---
