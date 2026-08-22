@@ -69,8 +69,9 @@ proposées, toutes **déterministes, mesurables et journalisées** (`startup_off
 | **F9 — Inactivité** | 60 jours sans connexion | Crons du compte mis en pause, réactivation à la reconnexion |
 | **F10 — Abus** | Multi-comptes, revente d'accès, usage agence pour compte de tiers | Retrait de l'offre après notification, bascule en plan gratuit standard |
 
-Deux arbitrages ouverts : (a) F6 en dégradation d'un jour ou en blocage sec, (b) F8 avec ou sans purge
-automatique des exports. F2 est tranché : **aucune limite de domaines suivis**.
+Arbitrages : F6 est tranché — **dégradation d'une journée** (bascule sur le palier éco pour la
+journée, retour à la normale le lendemain, jamais de blocage sec). F2 est tranché : **aucune limite
+de domaines suivis**. Reste ouvert : F8 avec ou sans purge automatique des exports.
 
 ## 4. Implémentation technique
 
