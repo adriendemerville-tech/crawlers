@@ -2403,10 +2403,27 @@ Deno.serve(handleRequest(async (req) => {
         maxScore: 40,
         psiPerformance: psiPerformance !== null ? Math.round(psiPerformance * 100) : null,
         psiUnavailable: !psiAvailable,
-        lcp: audits['largest-contentful-paint']?.numericValue || null,
+        // `lcp` = valeur retenue (terrain si disponible). Les champs de mesure
+        // disent d'où vient le chiffre pour que le rapport ne l'affirme jamais
+        // sans provenance.
+        lcp: lcpMsMeasured,
+        lcpLab: perf.labLcpMs,
+        lcpField: perf.field?.lcpMs ?? null,
+        inpField: perf.field?.inpMs ?? null,
+        clsField: perf.field?.cls ?? null,
+        measurement: {
+          source: perf.source,
+          runs: perf.runs,
+          labRuns: perf.labLcpRuns,
+          spreadMs: perf.spreadMs,
+          outlierDiscarded: perf.outlierDiscarded,
+          confirmed: lcpIsConfirmed,
+          note: perf.methodNote,
+        },
         fcp: audits['first-contentful-paint']?.numericValue || null,
         cls: audits['cumulative-layout-shift']?.numericValue || null,
         tbt: audits['total-blocking-time']?.numericValue || null,
+
       },
       technical: {
         score: technicalScore + brokenLinksBonus,
