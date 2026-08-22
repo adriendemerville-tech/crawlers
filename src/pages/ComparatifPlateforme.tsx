@@ -50,8 +50,7 @@ const breadcrumbSD = {
   "@type": "BreadcrumbList",
   "itemListElement": [
     { "@type": "ListItem", "position": 1, "name": "Accueil", "item": SITE_URL },
-    { "@type": "ListItem", "position": 2, "name": "Comparatifs" },
-    { "@type": "ListItem", "position": 3, "name": "Plateforme vs Agents IA", "item": `${SITE_URL}/comparatif-plateforme-seo-ia` },
+    { "@type": "ListItem", "position": 2, "name": "Plateforme vs Agents IA", "item": `${SITE_URL}/comparatif-plateforme-seo-ia` },
   ],
 };
 
