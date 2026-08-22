@@ -440,6 +440,8 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
     verdict_label: v.label,
     verdict_explanation: v.explanation,
     priority_levers: priority,
+    gates: normalizeGates(rawGates, 'geo'),
+
   };
 }
 
