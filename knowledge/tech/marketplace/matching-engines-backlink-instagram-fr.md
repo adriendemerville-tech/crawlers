@@ -991,6 +991,18 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
 - `marketplace_verifications` — contrôles de publication et de maintien (§2.13) : `leg_id`, `method`
   (`crawl` | `linkedin_api` | `meta_api`), `verdict`, preuve, capture, `checked_at`, `next_check_at`,
   état de la jambe (`published` | `verified` | `maintained` | `broken` | `resolved` | `refunded`).
+- `marketplace_wallet_entries` — séquestre et acquisition progressive du net vendeur (§2.5.1) :
+  `order_id`, `leg_id`, `seller_id`, `amount_cents` (tranche), `tranche_index`, `vest_at`,
+  `state` (`held` | `available` | `cancelled` | `clawed_back`), `state_changed_at`, `reason`.
+  Une ligne par tranche ; le net vendeur d'une commande est la somme des tranches, aucune valeur
+  de jambe n'est recopiée (§4.1). Le solde dépensable d'un vendeur = somme des tranches
+  `available` moins la dette ouverte.
+- `marketplace_wallet_debts` — dette de wallet quand la récupération excède le séquestre et le
+  solde (§2.5.1) : `seller_id`, `order_id` (origine), `amount_cents`, `recovered_cents`,
+  `status` (`open` | `settled` | `written_off`), `opened_at`, `settled_at`.
+  Une dette `open` gèle la mise en vente et l'achat, et absorbe 100 % des crédits entrants avant
+  tout passage en `available`. Le solde du wallet ne peut jamais être négatif.
+
 
 
 ---
