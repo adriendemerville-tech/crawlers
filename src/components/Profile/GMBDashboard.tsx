@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { GmbLocalCompetitorsTab } from './GmbLocalCompetitorsTab';
 import { GmbKeywordsTab } from './GmbKeywordsTab';
 import { GmbPowerScoreCard } from './GmbPowerScoreCard';
+import { GmbUrlAuditTab } from './GmbUrlAuditTab';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
