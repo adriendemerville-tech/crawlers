@@ -173,7 +173,7 @@ Garde-fous complémentaires :
 **Grille de prix (détail retenu).** Le prix algorithmique choisit un **palier fixe**, il ne
 l'invente pas : pas de prix continu, lisibilité acheteur/vendeur, pas de négociation au cas
 par cas. Tous les paliers sont des **multiples de 10 €** (règle d'arrondi unique dans toute la
-place d'échange, y compris pour les soultes et les valorisations d'actifs sociaux). Quatre
+place d'échange, y compris pour les soultes et les valorisations d'actifs sociaux). Cinq
 paliers calés **légèrement sous le marché** constaté (lien contextuel France, SEO/GEO) sans
 casser la perception qualité :
 
@@ -183,10 +183,16 @@ casser la perception qualité :
 | P2 | **90 €** | Site SaaS / média spécialisé correct (DR 40-60, trafic qualifié) — marché 80-180 € |
 | P3 | **150 €** | Site fort / média reconnu (DR 60+, trafic significatif) — marché 180-350 € |
 | P4 | **250 €** | Premium / très forte autorité — marché 350 €+ |
+| P5 | **350 €** | Exceptionnel : autorité de référence sur la thématique, trafic GSC élevé et visibilité IA constatée — marché 500 €+ |
 
 Sélection du palier : le score normalisé global (`Σ(poids × score normalisé)`) mappe vers le
-palier le plus proche. P1 vaut exactement le plancher, P4 reste sous le plafond : les bornes
-40 € / 350 € encadrent aussi les prix ajustés par une soulte.
+palier le plus proche. P1 vaut exactement le plancher **et P5 exactement le plafond** : les bornes
+40 € / 350 € sont donc atteignables par le pricing lui-même, et encadrent aussi les prix ajustés
+par une soulte. P5 n'est attribué que si l'actif est `verified`, dispose d'au moins 90 jours de
+signaux GSC opt-in et d'un `sell_risk` faible (§2.12) ; sinon le moteur redescend à P4.
+Conséquence sur la soulte : lorsque la jambe est déjà à P5, aucune soulte cash ne peut être
+ajoutée (le total serait hors plafond) — l'écart est alors réglé en crédits ou l'échange est
+rééquilibré sur un autre actif.
 **Différenciation data** : seul acteur du marché à pricer la page à l'unité sur des faits
 mesurés (autorité + sémantique + trafic GSC réel + qualité + visibilité IA), là où
 Rocketlinks / Getfluence s'appuient sur du déclaratif.
