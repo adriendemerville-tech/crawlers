@@ -1,0 +1,2 @@
+ALTER TABLE public.tracked_sites ADD COLUMN IF NOT EXISTS enterprise_dimensions jsonb;
+COMMENT ON COLUMN public.tracked_sites.enterprise_dimensions IS 'Dimensions structurelles de l''entreprise (economie, forme juridique, SIREN, NAF, effectif, structuration, role chaine de valeur, relation client, mode de livraison). Alimente le croisement dimensions x offre pour les questions de benchmark LLM.';
