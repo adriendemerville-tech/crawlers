@@ -206,8 +206,11 @@ Le moteur ne demande pas aux parties de choisir : il propose. Séquence détermi
          écart = value(jambe_A) − value(jambe_B)
          |écart| ≤ 15 %  → échange pur
          |écart| >  15 %  → soulte réglée par la partie avantagée,
-                            en crédits, mois d'abonnement offerts, audit Marina
-                            ou cash (paliers P1–P4) selon 2.8
+                            uniquement sous deux formes :
+                              a) cash : le prix en euros de la commande augmente
+                                 du montant de l'écart (paliers P1–P4)
+                              b) crédits : transfert de crédits Crawlers
+                                 de wallet à wallet entre les deux users
 5. Décote  : si trade_type = link_for_link, value de chaque jambe × facteur de décote
              réciproque avant calcul de l'écart.
 6. Sortie  : { trade_type, jambe_A, jambe_B, soulte, devise_soulte, risk_flags[] }
@@ -216,6 +219,12 @@ Le moteur ne demande pas aux parties de choisir : il propose. Séquence détermi
 
 Autrement dit : **quand les besoins matchent, on optimise le juste échange (troc pur) ; quand ils
 ne matchent pas, on choisit le `trade_type` réalisable et on rétablit l'équité par le prix.**
+
+**Règle non négociable : Crawlers ne finance jamais la soulte.** La soulte est toujours payée par
+l'un des deux users à l'autre — en euros (hausse du prix de la commande) ou en crédits Crawlers
+transférés de wallet à wallet. Aucun mois d'abonnement offert, aucun audit offert, aucune remise
+plateforme n'entre dans le calcul d'équité : ce serait Crawlers qui paierait l'écart entre deux
+tiers. Crawlers ne prélève que sa commission.
 
 
 
