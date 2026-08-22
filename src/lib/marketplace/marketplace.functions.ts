@@ -16,7 +16,8 @@ import { readTaxProfile, saveTaxProfile } from './taxProfile.server';
 
 export const getMarketplaceConstants = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .handler(async ({ context }) => {
+    void context;
     const c = await loadConstants();
     return { version: c.version, values: c.values };
   });
