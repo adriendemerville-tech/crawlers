@@ -128,7 +128,8 @@ révèle le chiffre d'affaires potentiel, la saisonnalité et les requêtes rent
 
 **Règle d'exposition (invariante).** À un acheteur, l'API et l'UI ne renvoient **jamais** de valeur
 GSC exacte : uniquement des **fourchettes** (buckets) et des scores normalisés 0–100. Les valeurs
-exactes restent visibles **du seul propriétaire de l'actif** (et de l'admin, pour le support).
+exactes restent visibles **du seul propriétaire de l'actif**. Un admin peut y accéder pour le
+support, mais uniquement via un accès journalisé (voir « Accès admin tracé » ci-dessous).
 
 | Donnée | Vendeur (propriétaire) | Acheteur / prospect | Public (page d'annonce) |
 |---|---|---|---|
@@ -144,16 +145,21 @@ exactes restent visibles **du seul propriétaire de l'actif** (et de l'admin, po
 **Fourchettes retenues (échelle unique, bornes fermées, jamais recalculées côté client).**
 
 ```
-clics_90j        : 0 | 1-10 | 11-50 | 51-200 | 201-1 000 | 1 001-5 000 | 5 000+
+clics_90j        : trafic faible / non significatif (0–10) | 11-50 | 51-200 | 201-1 000 | 1 001-5 000 | 5 000+
 impressions_90j  : 0-100 | 101-1 000 | 1 001-10 000 | 10 001-50 000 | 50 001-250 000 | 250 000+
 position_moyenne : 1-3 | 4-10 | 11-20 | 21+
 ```
 
+La première classe de `clics_90j` **n'est jamais rendue sous forme numérique** : elle agrège
+`0` et `1-10` sous le libellé neutre « trafic faible / non significatif ». Aucun bucket `0` ni
+`1-10` n'existe donc côté acheteur ou public : une fourchette `1-10` sur une page unique serait
+presque une valeur exacte.
+
 Garde-fous complémentaires :
 
-- **Seuil de k-anonymat inversé** : si `clics_90j ≤ 10`, on n'affiche pas la fourchette basse mais
-  la mention neutre « trafic faible / non significatif » — une fourchette `1-10` sur une page
-  unique est presque une valeur exacte.
+- **Seuil de k-anonymat inversé** : appliqué par construction dans l'échelle ci-dessus (première
+  classe fusionnée et non numérique) ; aucune exception.
+
 - **Pas de dé-anonymisation par différence** : les fourchettes sont calculées sur la fenêtre 90 j
   figée du dernier rafraîchissement (au plus une fois par 7 j) ; on ne sert pas d'historique de
   fourchettes permettant de reconstituer les deltas.
@@ -168,6 +174,17 @@ Garde-fous complémentaires :
 - **Consentement** : l'opt-in de mise en vente précise explicitement *ce qui sera visible*
   (fourchettes + thématiques + scores) et *ce qui ne le sera jamais* (requêtes, courbes, valeurs
   exactes, trafic domaine). Retrait de l'opt-in → retrait immédiat de l'annonce.
+- **Accès admin tracé** : un admin n'a **aucun accès implicite** aux valeurs exactes. La lecture
+  passe par une server function dédiée qui exige (a) un motif de support saisi, (b) un ticket ou un
+  identifiant de conversation, (c) une durée d'accès limitée à 60 minutes. Chaque appel écrit une
+  ligne dans `marketplace_gsc_access_log` (`id`, `admin_user_id`, `asset_id`, `owner_user_id`,
+  `fields_read[]`, `reason`, `ticket_ref`, `ip`, `created_at`, `expires_at`) — insertion faite par
+  la fonction, jamais par le client, table en `SELECT` admin + `service_role` uniquement et
+  **non modifiable ni supprimable** (append-only, pas de policy `UPDATE`/`DELETE`). Le propriétaire
+  de l'actif voit dans sa console l'historique des accès admin à ses données exactes (date, motif),
+  et une alerte est envoyée au-delà de 3 accès sur 30 j pour un même actif. Rétention du journal :
+  24 mois.
+
 
 
 **Grille de prix (détail retenu).** Le prix algorithmique choisit un **palier fixe**, il ne
@@ -1043,6 +1060,11 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `dns_txt` | `file` | `oauth_linkedin` | `oauth_meta`), `token`, `verified_at`, `last_checked_at`,
   `status` (`verified` | `unverified` | `revoked`). Unicité : un domaine vérifié par un seul compte.
 - `marketplace_ownership_claims` — déclaration de responsabilité vendeur : horodatage, IP, texte accepté.
+- `marketplace_gsc_access_log` — journal append-only des accès admin aux valeurs GSC exactes
+  (§2.1.1) : `admin_user_id`, `asset_id`, `owner_user_id`, `fields_read[]`, `reason`, `ticket_ref`,
+  `ip`, `created_at`, `expires_at`. Écrit uniquement par la server function d'accès support ;
+  aucune policy `UPDATE`/`DELETE` ; visible du propriétaire de l'actif (date + motif) et des admins.
+  Rétention 24 mois.
 - `marketplace_content_variants` — variantes générées par le Studio (§2.9) : `order_id`, `variant`
   (`editoriale` | `utilitaire` | `action`), brief figé, sortie, modèle utilisé, coût, `selected`.
 - `marketplace_link_revisions` — versions du paragraphe/brief, auteur, diff, verdicts des deux parties.
