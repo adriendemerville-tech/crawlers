@@ -11,6 +11,7 @@
 
 import { loadConstants, num } from './constants.server';
 import { issueRefundCredit } from './invoices.server';
+import type { OrderStatus } from './orderTypes';
 
 type Sb = { from: (table: string) => any };
 
@@ -180,7 +181,7 @@ export async function decideDispute(params: {
   if (!order) throw new Error('Commande introuvable');
 
   let refund = 0;
-  let orderStatus = order.status as string;
+  let orderStatus = order.status as OrderStatus;
 
   if (params.outcome === 'prorata_refund') {
     refund = prorataRefundCents({
