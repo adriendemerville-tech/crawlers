@@ -178,6 +178,12 @@ export interface GeoSubSignalReport {
   verdict_explanation: string;
   /** Deux à trois leviers déduits des sous-signaux les plus bas. */
   priority_levers: { key: string; label: string; value: number; lever: string }[];
+  /**
+   * Plafonds de cohérence appliqués au GEO. Une coquille JS ou une page sans
+   * corps de texte ne peut pas conserver une citabilité confortable : le
+   * balisage seul n'est pas citable. Chaque plafond porte sa preuve chiffrée.
+   */
+  gates: AuditGate[];
 }
 
 export interface GeoSignalInputs {
@@ -198,7 +204,16 @@ export interface GeoSignalInputs {
   /** Voix experte résolue et corroborée hors site (personAuthority / E-E-A-T). */
   founderResolved?: boolean | null;
   founderCorroborated?: boolean | null;
+  /**
+   * Faits d'extraction mesurés sur le HTML servi (audit-expert-seo) : nombre de
+   * mots réellement extraits et part de texte utile. Ils déclenchent les
+   * plafonds de cohérence du GEO. `null` = non mesuré : aucun plafond appliqué,
+   * un HTML tronqué ne doit pas fabriquer un défaut.
+   */
+  extractedWords?: number | null;
+  textRatioPct?: number | null;
 }
+
 
 function clamp100(n: number): number {
   return Math.max(0, Math.min(100, Math.round(n)));
