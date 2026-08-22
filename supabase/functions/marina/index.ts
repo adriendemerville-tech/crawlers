@@ -4801,10 +4801,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         // Le crawl et le graphe de cocon sont mutualisés au niveau du domaine,
         // mais le score technique, le score GEO et les correctifs de maillage
         // rendus ici ne concernent que l'URL auditée (0 token LLM).
+        // Le score ramené sur 100 ne peut jamais dépasser 100 : des bonus non
+        // bornés côté audit-expert-seo produisaient des « 101/100 » indéfendables.
         const pageTech100 = Number(expertData?.totalScore || 0) > 0
-          ? Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 220) || 220)) * 100)
+          ? Math.max(0, Math.min(100, Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 220) || 220)) * 100)))
           : null;
-        let pageGeo100 = strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null;
+        // Le score GEO affiché sur la fiche doit être MESURÉ SUR CETTE URL :
+        // `strategicData.overallScore` est mutualisé au domaine en lot multipages,
+        // il affichait donc la même valeur sur les 15 fiches. Ordre de priorité :
+        // sous-signaux GEO de la page > nœud de cocon > score de domaine.
+        let pageGeo100 = geoSubSignalsReport?.geo_score != null
+          ? Math.round(Number(geoSubSignalsReport.geo_score))
+          : (strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null);
+
         // ─── Lot 1 & 2 — la fiche ne porte QUE des faits mesurés sur cette URL ───
         // Avant : à défaut d'actions ciblées, les 3 premières actions du plan de
         // domaine étaient recopiées, ce qui rendait 14 fiches sur 15 identiques et
