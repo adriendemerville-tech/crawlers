@@ -17,6 +17,12 @@ import {
   type StructuredIdentitySignals,
 } from './structuredIdentity.ts'
 import {
+  fetchSiteEvidence,
+  renderSecondaryPagesBlock,
+  renderStructuralBlock,
+  type SiteEvidence,
+} from './siteEvidence.ts'
+import {
   deriveEnterpriseDimensions,
   extractSirenSiret,
   lookupSirene,
