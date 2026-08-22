@@ -233,7 +233,17 @@ export function buildPageVerdictHTML(
     techScore: number | null;
     geoScore: number | null;
     criticalCount?: number;
-    pageActions?: Array<{ severity?: string; title: string }>;
+    /**
+     * Actions PROPRES à cette URL : chacune porte sa preuve chiffrée mesurée
+     * sur la page (valeur relevée → cible). Aucune action de domaine ici.
+     */
+    pageActions?: Array<{ severity?: string; title: string; evidence?: string }>;
+    /**
+     * Actions de périmètre domaine que cette page hérite, étiquetées comme
+     * telles et limitées à 2 lignes pour ne pas se faire passer pour des
+     * correctifs de page.
+     */
+    inheritedActions?: Array<{ title: string }>;
     cocoonData?: any;
     /** Faits mesurés sur cette URL, propagés à la synthèse réseau multipages. */
     words?: number | null;
