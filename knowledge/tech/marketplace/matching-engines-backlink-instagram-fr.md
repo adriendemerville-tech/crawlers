@@ -272,8 +272,9 @@ Règles d'application :
 3. Un dépassement n'est pas un refus définitif : l'appariement passe en `throttled`, l'offre reste
    réservée et la commande devient possible à la date affichée (« disponible le JJ/MM »).
 4. La console affiche en permanence, côté « J'achète », un bandeau **Empreinte entrante** :
-   liens ce mois / plafond, nombre de vendeurs distincts, part du vendeur dominant, répartition
-   des ancres, avec le motif du prochain déblocage.
+   liens sur 30 jours glissants / plafond, liens déjà achetés au vendeur pressenti (0, 1 ou 2 sur
+   12 mois), répartition des ancres, avec le motif du prochain déblocage — aucun indicateur de part
+   en pourcentage, qui n'ajouterait rien à la borne de 2 liens par vendeur.
 5. Ces bornes sont **cumulatives** avec les garde-fous vendeur et avec le quota `link_for_link` :
    la contrainte la plus stricte l'emporte, aucune dérogation admin en v1.
 6. `sell_risk` (§2.12) protège les pages du vendeur ; le symétrique côté acheteur est un
