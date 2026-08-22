@@ -24,8 +24,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Anchor, Search, Loader2, FileText, ExternalLink, Copy, Check,
   Zap, Globe, Brain, Code2, Shield, ArrowRight, Terminal, Key,
-  BookOpen, CheckCircle2, CreditCard, Coins, Eye, Download, Printer, Palette
+  BookOpen, CheckCircle2, CreditCard, Coins, Eye, Download, Printer, Palette, Trash2
 } from 'lucide-react';
+import { useAdmin } from '@/hooks/useAdmin';
+
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 import { getMarinaShowcaseReport } from '@/lib/marina/showcase.functions';
 import { getMarinaFreeQuota, startMarinaFreeAudit } from '@/lib/marinaFree.functions';
