@@ -132,6 +132,7 @@ import { Route as TemporarylinkShareIdRouteImport } from './routes/temporarylink
 import { Route as TemporaryreportShareIdRouteImport } from './routes/temporaryreport/$shareId'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable/oauth/consent'
 import { Route as ApiPublicMarinaReportRouteImport } from './routes/api/public/marina-report'
+import { Route as ApiPublicMarketplaceVerifyRouteImport } from './routes/api/public/marketplace-verify'
 import { Route as AppRapportReportIdRouteImport } from './routes/app/rapport/$reportId'
 import { Route as AppRapportAuditRouteImport } from './routes/app/rapport/audit'
 import { Route as AppRapportCocoonRouteImport } from './routes/app/rapport/cocoon'
@@ -769,6 +770,12 @@ const ApiPublicMarinaReportRoute = ApiPublicMarinaReportRouteImport.update({
   path: '/api/public/marina-report',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMarketplaceVerifyRoute =
+  ApiPublicMarketplaceVerifyRouteImport.update({
+    id: '/api/public/marketplace-verify',
+    path: '/api/public/marketplace-verify',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppRapportReportIdRoute = AppRapportReportIdRouteImport.update({
   id: '/app/rapport/$reportId',
   path: '/app/rapport/$reportId',
@@ -941,6 +948,7 @@ export interface FileRoutesByFullPath {
   '/matrice/': typeof MatriceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/marina-report': typeof ApiPublicMarinaReportRoute
+  '/api/public/marketplace-verify': typeof ApiPublicMarketplaceVerifyRoute
   '/app/rapport/$reportId': typeof AppRapportReportIdRoute
   '/app/rapport/audit': typeof AppRapportAuditRoute
   '/app/rapport/cocoon': typeof AppRapportCocoonRoute
@@ -1075,6 +1083,7 @@ export interface FileRoutesByTo {
   '/matrice': typeof MatriceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/marina-report': typeof ApiPublicMarinaReportRoute
+  '/api/public/marketplace-verify': typeof ApiPublicMarketplaceVerifyRoute
   '/app/rapport/$reportId': typeof AppRapportReportIdRoute
   '/app/rapport/audit': typeof AppRapportAuditRoute
   '/app/rapport/cocoon': typeof AppRapportCocoonRoute
@@ -1210,6 +1219,7 @@ export interface FileRoutesById {
   '/matrice/': typeof MatriceIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/marina-report': typeof ApiPublicMarinaReportRoute
+  '/api/public/marketplace-verify': typeof ApiPublicMarketplaceVerifyRoute
   '/app/rapport/$reportId': typeof AppRapportReportIdRoute
   '/app/rapport/audit': typeof AppRapportAuditRoute
   '/app/rapport/cocoon': typeof AppRapportCocoonRoute
@@ -1346,6 +1356,7 @@ export interface FileRouteTypes {
     | '/matrice/'
     | '/.lovable/oauth/consent'
     | '/api/public/marina-report'
+    | '/api/public/marketplace-verify'
     | '/app/rapport/$reportId'
     | '/app/rapport/audit'
     | '/app/rapport/cocoon'
@@ -1480,6 +1491,7 @@ export interface FileRouteTypes {
     | '/matrice'
     | '/.lovable/oauth/consent'
     | '/api/public/marina-report'
+    | '/api/public/marketplace-verify'
     | '/app/rapport/$reportId'
     | '/app/rapport/audit'
     | '/app/rapport/cocoon'
@@ -1614,6 +1626,7 @@ export interface FileRouteTypes {
     | '/matrice/'
     | '/.lovable/oauth/consent'
     | '/api/public/marina-report'
+    | '/api/public/marketplace-verify'
     | '/app/rapport/$reportId'
     | '/app/rapport/audit'
     | '/app/rapport/cocoon'
@@ -1749,6 +1762,7 @@ export interface RootRouteChildren {
   MatriceIndexRoute: typeof MatriceIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicMarinaReportRoute: typeof ApiPublicMarinaReportRoute
+  ApiPublicMarketplaceVerifyRoute: typeof ApiPublicMarketplaceVerifyRoute
   AppRapportReportIdRoute: typeof AppRapportReportIdRoute
   AppRapportAuditRoute: typeof AppRapportAuditRoute
   AppRapportCocoonRoute: typeof AppRapportCocoonRoute
@@ -2623,6 +2637,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMarinaReportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/marketplace-verify': {
+      id: '/api/public/marketplace-verify'
+      path: '/api/public/marketplace-verify'
+      fullPath: '/api/public/marketplace-verify'
+      preLoaderRoute: typeof ApiPublicMarketplaceVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/rapport/$reportId': {
       id: '/app/rapport/$reportId'
       path: '/app/rapport/$reportId'
@@ -2815,6 +2836,7 @@ const rootRouteChildren: RootRouteChildren = {
   MatriceIndexRoute: MatriceIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicMarinaReportRoute: ApiPublicMarinaReportRoute,
+  ApiPublicMarketplaceVerifyRoute: ApiPublicMarketplaceVerifyRoute,
   AppRapportReportIdRoute: AppRapportReportIdRoute,
   AppRapportAuditRoute: AppRapportAuditRoute,
   AppRapportCocoonRoute: AppRapportCocoonRoute,
