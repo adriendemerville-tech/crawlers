@@ -19,7 +19,8 @@ export const getMarketplaceConstants = createServerFn({ method: 'GET' })
   .handler(async ({ context }) => {
     void context;
     const c = await loadConstants();
-    return { version: c.version, values: c.values };
+    const values = c.values as Record<string, number | string | Record<string, number>>;
+    return { version: c.version, values };
   });
 
 export const getMarketplaceInventory = createServerFn({ method: 'GET' })
