@@ -29,10 +29,16 @@ export interface AuditGate {
   source: GateSource;
   /** Rang d'entrée : 1 = cause racine, à traiter avant tout le reste. */
   rank: number;
+  /**
+   * Nombre de points retirés au score par ce plafond. Rendu explicite dans la
+   * synthèse : un plafond annoncé sans son coût chiffré n'est pas vérifiable.
+   */
+  pointsLost?: number | null;
   /** Valeur mesurée et cible isolées quand elles sont exploitables en base. */
   measured?: string | null;
   target?: string | null;
 }
+
 
 /**
  * Ordre d'entrée. Le rendu du contenu passe avant tout : un HTML sans texte
@@ -74,7 +80,7 @@ export function gateAxisLabel(axis: string, lang?: string): string {
 
 /** Normalise les plafonds bruts d'un moteur en gates ordonnés et dédoublonnés. */
 export function normalizeGates(
-  raw: Array<{ axis?: string; reason?: string; evidence?: string; measured?: string | null; target?: string | null }> | null | undefined,
+  raw: Array<{ axis?: string; reason?: string; evidence?: string; pointsLost?: number | null; measured?: string | null; target?: string | null }> | null | undefined,
   source: GateSource,
 ): AuditGate[] {
   if (!Array.isArray(raw)) return [];
@@ -87,18 +93,21 @@ export function normalizeGates(
     const key = `${source}|${axis}`;
     if (seen.has(key)) continue;
     seen.add(key);
+    const lost = Number(g?.pointsLost);
     out.push({
       axis,
       reason,
       evidence: String(g?.evidence || '').trim(),
       source,
       rank: rankFor(axis),
+      pointsLost: Number.isFinite(lost) && lost > 0 ? Math.round(lost) : null,
       measured: g?.measured ?? null,
       target: g?.target ?? null,
     });
   }
   return out;
 }
+
 
 /** Fusionne plusieurs listes et les trie par rang d'entrée. */
 export function mergeGates(...lists: Array<AuditGate[] | null | undefined>): AuditGate[] {
@@ -156,6 +165,98 @@ export function gatesPriorityBlockHTML(gates: AuditGate[], lang?: string, scope?
     <ol style="padding-left:20px;margin:0;list-style:decimal;">${rows}</ol>
   </div>`;
 }
+
+/**
+ * Bloc de la synthèse exécutive : dit explicitement que le score SEO est grevé
+ * par la performance mobile et le LCP, et de combien de points exactement.
+ *
+ * En France, l'essentiel des sessions est mobile : un LCP « poor » n'est pas un
+ * détail de confort, il conditionne le score et le classement. Le lecteur doit
+ * donc voir le montant du prélèvement, pas seulement l'existence d'un plafond.
+ */
+export function scorePenaltyBlockHTML(
+  gates: AuditGate[],
+  lang?: string,
+  opts?: { lcpMs?: number | null; techMax?: number | null },
+): string {
+  if (!Array.isArray(gates) || gates.length === 0) return '';
+  const isEn = lang === 'en';
+  const isEs = lang === 'es';
+  const t = (fr: string, en: string, es: string) => (isEn ? en : isEs ? es : fr);
+
+  const perf = gates.find((g) => g.axis === 'performance' && (g.pointsLost || 0) > 0);
+  const total = gates.find((g) => g.axis === 'total' && (g.pointsLost || 0) > 0);
+  const others = gates.filter(
+    (g) => g.axis !== 'performance' && g.axis !== 'total' && (g.pointsLost || 0) > 0,
+  );
+  // Sans coût chiffré, ce bloc n'aurait rien à affirmer : on ne l'affiche pas.
+  if (!perf && !total) return '';
+
+  const lcpS = opts?.lcpMs && Number.isFinite(opts.lcpMs)
+    ? `${(Number(opts.lcpMs) / 1000).toFixed(2)} s`
+    : perf?.measured || null;
+  const techMax = Number(opts?.techMax) > 0 ? Math.round(Number(opts.techMax)) : 200;
+
+  const lines: string[] = [];
+
+  if (perf) {
+    lines.push(
+      t(
+        `La performance mobile grève le score SEO de <strong>${perf.pointsLost} points</strong> sur ${techMax}. ${
+          lcpS ? `Le LCP mobile mesuré est de ${lcpS}` : 'Le LCP mobile mesuré dépasse le seuil Core Web Vitals'
+        } pour une cible de 2,50 s : l’axe performance est ramené au plafond (${perf.evidence || 'plafond de cohérence appliqué'}).`,
+
+        `Mobile performance costs the SEO score <strong>${perf.pointsLost} points</strong> out of ${techMax}. ${
+          lcpS ? `Measured LCP is ${lcpS}` : 'Measured LCP exceeds the Core Web Vitals threshold'
+        } against a 2.50 s target: ${perf.evidence || ''}`.replace(/\s+$/, ''),
+        `El rendimiento móvil resta <strong>${perf.pointsLost} puntos</strong> de ${techMax}. ${perf.evidence || ''}`,
+      ),
+    );
+  }
+
+  if (total) {
+    lines.push(
+      t(
+        `Le plafond de cohérence retire <strong>${total.pointsLost} points</strong> supplémentaires au total affiché (${total.measured} avant plafond → ${total.target}) : un défaut bloquant mesuré interdit la zone « excellent ».`,
+        `The coherence cap removes <strong>${total.pointsLost} further points</strong> from the displayed total (${total.measured} before cap → ${total.target}): a measured blocking defect rules out the "excellent" band.`,
+        `El techo de coherencia resta <strong>${total.pointsLost} puntos</strong> más (${total.measured} → ${total.target}).`,
+      ),
+    );
+  }
+
+  if (others.length) {
+    lines.push(
+      t(
+        `Autres prélèvements mesurés : ${others.map((g) => `${gateAxisLabel(g.axis, lang)} −${g.pointsLost}`).join(' ; ')}.`,
+        `Other measured deductions: ${others.map((g) => `${gateAxisLabel(g.axis, lang)} −${g.pointsLost}`).join('; ')}.`,
+        `Otras deducciones: ${others.map((g) => `${gateAxisLabel(g.axis, lang)} −${g.pointsLost}`).join('; ')}.`,
+      ),
+    );
+  }
+
+  const grand = (perf?.pointsLost || 0) + (total?.pointsLost || 0)
+    + others.reduce((s, g) => s + (g.pointsLost || 0), 0);
+
+  return `<div style="margin-top:14px;padding:12px 14px;border:1px solid #e5e7eb;border-left:3px solid ${VIOLET};border-radius:8px;background:#ffffff;page-break-inside:avoid;text-align:left;">
+    <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;margin:0 0 6px 0;">${t(
+      'Ce que la performance mobile coûte au score',
+      'What mobile performance costs the score',
+      'Lo que el rendimiento móvil cuesta al score',
+    )}</p>
+    ${lines.map((l) => `<p style="font-size:12.5px;color:#374151;line-height:1.7;margin:0 0 6px 0;">${l}</p>`).join('')}
+    <p style="font-size:12.5px;color:#111827;line-height:1.7;margin:0 0 6px 0;font-weight:600;">${t(
+      `Total prélevé par ces plafonds : −${grand} points.`,
+      `Total deducted by these caps: −${grand} points.`,
+      `Total deducido: −${grand} puntos.`,
+    )}</p>
+    <p style="font-size:11.5px;color:#6b7280;line-height:1.6;margin:0;">${t(
+      'La navigation mobile représente l’essentiel des sessions en France : le LCP mobile n’est pas un critère de confort, c’est le premier facteur de perte de score et de position.',
+      'Mobile browsing accounts for most sessions in France: mobile LCP is not a comfort criterion, it is the first driver of score and ranking loss.',
+      'La navegación móvil concentra la mayoría de las sesiones en Francia.',
+    )}</p>
+  </div>`;
+}
+
 
 // ═══════════════════════════════════════════════
 // Workbench : les gates entrent en tête de file
