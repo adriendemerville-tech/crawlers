@@ -181,7 +181,7 @@ export async function decideDispute(params: {
   if (!order) throw new Error('Commande introuvable');
 
   let refund = 0;
-  let orderStatus = order.status as string;
+  let orderStatus = order.status as OrderStatus;
 
   if (params.outcome === 'prorata_refund') {
     refund = prorataRefundCents({

@@ -150,7 +150,7 @@ export async function generateVariants(
     ? ['editorial', 'utility_geo', 'action']
     : ['editorial', 'utility_geo'];
 
-  const rows: Record<string, unknown>[] = [];
+  const rows: Array<Record<string, unknown>> = [];
   for (const kind of kinds) {
     const { output, cost_cents } = await generateOne(kind, brief, num(constants, 'studio_max_output_chars'));
     rows.push({
