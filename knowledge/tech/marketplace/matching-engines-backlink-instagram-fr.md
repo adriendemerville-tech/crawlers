@@ -255,7 +255,7 @@ explicite, jamais un blocage silencieux) :
 
 | Garde-fou | Borne v1 | Portée |
 |---|---|---|
-| **Vitesse d'acquisition** | ≤ 4 liens entrants achetés / mois / domaine acheteur, et ≤ 2 sur une fenêtre de 7 jours glissants | anti-pic de vélocité |
+| **Vitesse d'acquisition** | ≤ 4 liens entrants achetés par **30 jours glissants** / domaine acheteur, et ≤ 2 sur 7 jours glissants (fenêtres glissantes, jamais mois calendaire — cf. `marketplace_buyer_limits`, §4.2) | anti-pic de vélocité |
 | **Rampe nouvel entrant** | 1er mois : max 2 liens ; 2e mois : 3 ; à partir du 3e : 4 | un domaine jeune ne construit pas 12 liens en 30 jours |
 | **Concentration par vendeur** | ≤ 2 liens du même domaine vendeur sur 12 mois glissants, et ≤ 20 % des liens achetés sur la période | diversité des sources |
 | **Diversité minimale** | à partir du 5e lien acheté, au moins 4 domaines vendeurs distincts | pas de profil mono-source |
@@ -496,7 +496,7 @@ Pour chaque jambe j livrée et vérifiée :
    sign(j)  = +1 si le site REÇOIT de l'autorité (achat / jambe entrante)
               −1 si le site CÈDE de l'autorité   (vente / jambe sortante)
    value(j) = valeur € estimée de la jambe au moment du deal (prix figé,
-              ou valeur du palier P1–P4 pour une jambe troquée),
+              ou valeur du palier P1–P5 pour une jambe troquée),
               × facteur de décote réciproque si trade_type = link_for_link
    age_m(j) = mois écoulés depuis delivered_at
    w(j)     = max(0, 1 − age_m(j) / 24)          -- 0 au-delà de 24 mois
@@ -572,7 +572,7 @@ doit toujours être fournie par l'un des deux users — jamais par Crawlers.
 
 | Contrepartie | Valeur pour l'acheteur | Vérifiable par Crawlers |
 |---|---|---|
-| Euros (hausse du prix de la commande) | règlement direct de l'écart, paliers P1–P4 | oui, natif |
+| Euros (hausse du prix de la commande) | règlement direct de l'écart, paliers P1–P5 | oui, natif |
 | Crédits Crawlers transférés d'un wallet à l'autre | le vendeur est payé en usage plateforme, sans sortie de cash côté acheteur | oui, natif |
 | Post LinkedIn ou story Instagram | cf. 2.7 | oui, via connecteurs |
 | Newsletter : mention dans un envoi | audience qualifiée, non indexable, aucun signal SEO | partiellement (capture d'écran + nombre d'abonnés déclaré) |
@@ -1054,7 +1054,7 @@ Ajouts obligatoires :
 
 | Lot | Contenu |
 |---|---|
-| L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
+| L1 | Schéma + **vérification de propriété bloquante** (GSC/DNS/fichier, OAuth social) + pricing serveur borné 40–350 € par paliers de 10 € (**P1 40 € · P2 90 € · P3 150 € · P4 250 € · P5 350 €**) + **`sell_risk` et éligibilité à la vente (§2.12)** + inventaire opt-in + **vue `marketplace_asset_public_signals` (fourchettes, §2.1.1)** + onglet « Je vends » |
 | L2 | Appariement + besoins issus du workbench + onglet « Opportunités » / « J'achète » + **calcul de la valeur d'appariement page et domaine (§2.11)** |
 | L3 | Commande, génération du paragraphe, prévisualisation, feedback bilatéral, wallet, commission unique 15 %, **recherche de boucle `link_chain` prioritaire, quota `link_for_link` en dernier recours + détection de cycles non déclarés** |
 | L4 | **Vérification de publication et de maintien (§2.13)** : crawl + API LinkedIn + API Meta, machine à états des jambes, remboursement au prorata, événements de balance inverses, reporting |
