@@ -5563,6 +5563,78 @@ Deno.serve(handleRequest(async (req) => {
       return json({ error: 'Unauthorized. Use x-marina-key header or authenticate.' }, 401);
     }
 
+    // ── Purge de cache forcée (ADMIN uniquement) ──
+    // Marina mutualise volontairement plusieurs blocs par domaine (crawl 12h,
+    // visibilité LLM / cocon 24h, carte d'identité 30j). Cette action supprime
+    // ces réutilisations pour un domaine donné afin de forcer un run 100% frais.
+    // La carte d'identité verrouillée manuellement n'est jamais touchée.
+    if (body.action === 'purge_cache') {
+      let isAdminCaller = false;
+      try {
+        const { data: adminCheck } = await sb.rpc('has_role', { _user_id: userId, _role: 'admin' });
+        isAdminCaller = adminCheck === true;
+      } catch (e) {
+        console.warn('[Marina] purge_cache: has_role failed', e);
+      }
+      if (!isAdminCaller) return json({ error: 'Forbidden' }, 403);
+
+      let purgeDomain = '';
+      try {
+        const raw = String(body.url || body.domain || '').trim();
+        if (!raw) return json({ error: 'url ou domain requis' }, 400);
+        purgeDomain = new URL(raw.startsWith('http') ? raw : `https://${raw}`).hostname
+          .toLowerCase()
+          .replace(/^www\./, '');
+      } catch {
+        return json({ error: 'URL invalide' }, 400);
+      }
+      if (!purgeDomain) return json({ error: 'URL invalide' }, 400);
+
+      const purged: Record<string, number | string> = {};
+      const safeDelete = async (label: string, run: () => Promise<{ data: unknown; error: unknown }>) => {
+        try {
+          const { data, error } = await run();
+          if (error) throw error;
+          purged[label] = Array.isArray(data) ? data.length : 0;
+        } catch (e) {
+          purged[label] = `erreur: ${String((e as Error)?.message || e)}`;
+        }
+      };
+
+      // Cache mutualisé site-scope + checkpoints de phase liés au domaine
+      await safeDelete('audit_cache', () =>
+        sb.from('audit_cache').delete().like('cache_key', `%${purgeDomain}%`).select('cache_key') as any
+      );
+      // Crawl technique réutilisé 12h
+      await safeDelete('site_crawls', () =>
+        sb.from('site_crawls').delete().eq('domain', purgeDomain).select('id') as any
+      );
+      // Synthèses réseau multipages
+      await safeDelete('marina_network_syntheses', () =>
+        sb.from('marina_network_syntheses').delete().eq('domain', purgeDomain).select('id') as any
+      );
+      // Caches domaine génériques + rendu externe
+      await safeDelete('domain_data_cache', () =>
+        sb.from('domain_data_cache').delete().eq('domain', purgeDomain).select('id') as any
+      );
+      await safeDelete('external_render_cache', () =>
+        sb.from('external_render_cache').delete().ilike('url', `%${purgeDomain}%`).select('id') as any
+      );
+      // Carte d'identité : on invalide la fraîcheur sans effacer une saisie manuelle
+      await safeDelete('identity_freshness', () =>
+        sb
+          .from('tracked_sites')
+          .update({ identity_enriched_at: null })
+          .eq('domain', purgeDomain)
+          .neq('identity_source', 'user_manual')
+          .select('id') as any
+      );
+
+      console.log(`[Marina] 🧹 purge_cache ${purgeDomain} par ${userId}`, purged);
+      return json({ success: true, domain: purgeDomain, purged });
+    }
+
+
     // ── Carte d'identité : édition / verrouillage AVANT le crawl ──
     // identity_resolve   : résolution (réutilise la base, sinon inférence légère)
     // identity_recompute : recalcul déterministe des axes depuis les champs édités (0 token, 0 écriture)
