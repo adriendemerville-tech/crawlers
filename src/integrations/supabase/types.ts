@@ -9604,6 +9604,7 @@ export type Database = {
           sell_risk_class:
             | Database["public"]["Enums"]["marketplace_sell_risk_class"]
             | null
+          seller_veto_dofollow: boolean
           semantic_score: number | null
           signals_refreshed_at: string | null
           top_countries: string[]
@@ -9650,6 +9651,7 @@ export type Database = {
           sell_risk_class?:
             | Database["public"]["Enums"]["marketplace_sell_risk_class"]
             | null
+          seller_veto_dofollow?: boolean
           semantic_score?: number | null
           signals_refreshed_at?: string | null
           top_countries?: string[]
@@ -9696,6 +9698,7 @@ export type Database = {
           sell_risk_class?:
             | Database["public"]["Enums"]["marketplace_sell_risk_class"]
             | null
+          seller_veto_dofollow?: boolean
           semantic_score?: number | null
           signals_refreshed_at?: string | null
           top_countries?: string[]
@@ -9827,6 +9830,7 @@ export type Database = {
           factors: Json
           id: string
           need_id: string
+          order_id: string | null
           price_cents: number
           price_tier:
             | Database["public"]["Enums"]["marketplace_price_tier"]
@@ -9848,6 +9852,7 @@ export type Database = {
           factors?: Json
           id?: string
           need_id: string
+          order_id?: string | null
           price_cents?: number
           price_tier?:
             | Database["public"]["Enums"]["marketplace_price_tier"]
@@ -9869,6 +9874,7 @@ export type Database = {
           factors?: Json
           id?: string
           need_id?: string
+          order_id?: string | null
           price_cents?: number
           price_tier?:
             | Database["public"]["Enums"]["marketplace_price_tier"]
@@ -9898,6 +9904,13 @@ export type Database = {
             columns: ["need_id"]
             isOneToOne: false
             referencedRelation: "marketplace_needs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_matches_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_orders"
             referencedColumns: ["id"]
           },
         ]
