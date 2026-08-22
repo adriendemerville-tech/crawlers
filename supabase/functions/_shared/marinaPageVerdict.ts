@@ -440,11 +440,8 @@ export function buildPageVerdictHTML(
     <ul style="padding-left:20px;font-size:12.5px;color:#6b7280;line-height:1.65;margin:0;">
       ${inherited.map((a) => `<li style="margin:0 0 4px 0;">${esc(a)}</li>`).join('')}
     </ul>` : ''}
-    ${(ctx.scoreGates || []).length ? `
-    <p style="font-size:12.5px;font-weight:600;color:#111827;margin:14px 0 4px 0;">${t('Pourquoi le score est plafonné', 'Why the score is capped')}</p>
-    <ul style="padding-left:20px;font-size:12px;color:#4b5563;line-height:1.65;margin:0;">
-      ${(ctx.scoreGates || []).map((g) => `<li style="margin:0 0 4px 0;">${esc(g.reason)} — <span style="color:#6b7280;">${esc(g.evidence)}</span></li>`).join('')}
-    </ul>` : ''}
+    ${gatesHTML}
+
     ${weightsHTML}
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
       ${t(
