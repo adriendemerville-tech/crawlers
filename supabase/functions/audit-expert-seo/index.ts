@@ -2329,7 +2329,23 @@ Deno.serve(handleRequest(async (req) => {
     
     // Apply reliability factor to total score (with broken links adjustment)
     const rawTotalScore = performanceScore + technicalScore + semanticScore + aiReadyScore + securityScore + brokenLinksBonus;
-    const totalScore = Math.round(Math.max(0, rawTotalScore) * smartFetchResult.selfAudit.reliabilityScore);
+    let totalScore = Math.round(Math.max(0, rawTotalScore) * smartFetchResult.selfAudit.reliabilityScore);
+
+    // Plafond global : tant qu'un défaut bloquant mesuré subsiste (LCP « poor »
+    // ou contenu non extractible), le score total ne peut pas franchir la zone
+    // « excellent ». Un audit qui se contredit ne sert à personne.
+    const blockingGate = scoreGates.some((g) => g.axis === 'performance' || g.axis === 'technical');
+    if (blockingGate && totalScore > 130) {
+      scoreGates.push({
+        axis: 'total',
+        reason: 'Défaut bloquant mesuré : le score global est plafonné hors de la zone « excellent »',
+        evidence: `${totalScore}/200 avant plafond → 130/200`,
+      });
+      totalScore = 130;
+    }
+    if (scoreGates.length) {
+      console.log(`[Audit-Expert-SEO] 🚧 ${scoreGates.length} plafond(s) de cohérence appliqué(s): ${scoreGates.map((g) => g.axis).join(', ')}`);
+    }
     
     const scores = {
       performance: {
