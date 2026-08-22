@@ -250,16 +250,33 @@ export function deriveEnterpriseDimensions(input: DimensionInput): EnterpriseDim
     dims.employees_range = String(input.company_size); dims.sources.employees_range = 'declared';
   }
 
-  // Économie : NAF si connu, sinon vocabulaire de l'offre.
-  const tier = nafToEconomyTier(dims.naf_code);
-  if (tier) { dims.economy_tier = tier; dims.sources.economy_tier = 'sirene'; }
-  else {
-    const derived: EconomyTier | null =
-      /agricole|agriculture|[eé]levage|p[eê]che|forestier|viticole/i.test(blob) ? 'primaire'
-      : RE_ARTISANAT.test(blob) || RE_PRODUITS.test(blob) ? 'secondaire'
-      : /^saas/.test(model) || entity === 'saas' || /logiciel|donn[eé]es|intelligence artificielle|plateforme/i.test(blob) ? 'quaternaire'
-      : blob ? 'tertiaire' : null;
-    if (derived) { dims.economy_tier = derived; dims.sources.economy_tier = 'derived'; }
+  // Relation client & mode de livraison — calculés d'abord : ils conditionnent
+  // la lecture de toutes les autres dimensions.
+  const relation = relationFromModel(model, entity, blob);
+  if (relation) { dims.customer_relation = relation; dims.sources.customer_relation = model ? 'declared' : 'derived'; }
+  const delivery = deliveryFromContext(model, entity, blob, dims.legal_form);
+  if (delivery) { dims.delivery_mode = delivery; dims.sources.delivery_mode = model ? 'declared' : 'derived'; }
+
+  // Économie : ce qui est réellement vendu PRIME sur le code NAF. Le NAF est un
+  // code administratif déclaré une fois à l'immatriculation : il ne dit ni
+  // l'activité réelle, ni la place dans la chaîne de valeur. Il ne sert donc
+  // qu'à corroborer l'observation du site, ou à combler son absence.
+  const nafTier = nafToEconomyTier(dims.naf_code);
+  const observedTier: EconomyTier | null =
+    /agricole|agriculture|[eé]levage|p[eê]che|forestier|viticole/i.test(blob) ? 'primaire'
+    : RE_ARTISANAT.test(blob) || RE_PRODUITS.test(blob) || delivery === 'artisanat' || delivery === 'produits' ? 'secondaire'
+    : /^saas/.test(model) || entity === 'saas' || delivery === 'saas' || delivery === 'app'
+      || /logiciel|donn[eé]es|intelligence artificielle|plateforme/i.test(blob) ? 'quaternaire'
+    : blob || delivery ? 'tertiaire' : null;
+
+  if (observedTier) {
+    dims.economy_tier = observedTier;
+    dims.sources.economy_tier = 'derived';
+    dims.naf_reliability = !nafTier ? null : nafTier === observedTier ? 'confirme' : 'divergent';
+  } else if (nafTier) {
+    dims.economy_tier = nafTier;
+    dims.sources.economy_tier = 'sirene';
+    dims.naf_reliability = 'seul_signal';
   }
 
   // Structuration
@@ -272,17 +289,14 @@ export function deriveEnterpriseDimensions(input: DimensionInput): EnterpriseDim
     : dims.siren ? 'independant' : null;
   if (structuration) { dims.structuration = structuration; dims.sources.structuration = RE_FRANCHISE.test(blob) ? 'declared' : 'derived'; }
 
-  // Rôle dans la chaîne de valeur
-  const sub = RE_SUBCONTRACT.test(blob);
-  const prime = RE_PRIME.test(blob);
+  // Rôle dans la chaîne de valeur — la question ne se pose même pas pour un
+  // commerce, un SaaS, une association, une profession libérale, un service
+  // public, une marketplace ou un cabinet de conseil : la valeur reste `direct`.
+  const roleApplies = !delivery || !ROLE_IRRELEVANT_DELIVERY.has(delivery);
+  const sub = roleApplies && RE_SUBCONTRACT.test(blob);
+  const prime = roleApplies && RE_PRIME.test(blob);
   const role: ValueChainRole | null = sub && prime ? 'mixte' : sub ? 'sous_traitant' : prime ? 'donneur_ordre' : blob ? 'direct' : null;
   if (role) { dims.value_chain_role = role; dims.sources.value_chain_role = sub || prime ? 'declared' : 'derived'; }
-
-  // Relation client & mode de livraison
-  const relation = relationFromModel(model, entity, blob);
-  if (relation) { dims.customer_relation = relation; dims.sources.customer_relation = model ? 'declared' : 'derived'; }
-  const delivery = deliveryFromContext(model, entity, blob);
-  if (delivery) { dims.delivery_mode = delivery; dims.sources.delivery_mode = model ? 'declared' : 'derived'; }
 
   return dims;
 }
