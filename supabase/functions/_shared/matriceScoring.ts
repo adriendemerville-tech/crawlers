@@ -16,6 +16,9 @@ export interface SitemapData {
 export interface PsiData {
   performance: number | null; seo: number | null
   lcp: number | null; fcp: number | null; cls: number | null; tbt: number | null
+  /** Provenance du LCP : terrain CrUX ou médiane de runs labo. */
+  lcpSource?: string
+  lcpNote?: string
 }
 
 export async function checkRobots(url: string): Promise<RobotsData> {
