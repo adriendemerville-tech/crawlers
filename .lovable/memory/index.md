@@ -26,3 +26,4 @@
 - [Plan Jeune Entreprise v1](mem://features/pricing/plan-jeune-entreprise-v1-fr) — Gratuité 12 mois FR, vérif SIRET+Kbis, quotas F1-F10, F6 = dégradation 1j, F8 purge non tranché
 - [Garde stratégie ≠ sujet](mem://tech/autopilot/strategy-vs-subject-guard-fr) — editorialSubjectGuard : requalification en mot-clé métier ou blocage de la publication
 - [Formulation des questions de benchmark](mem://tech/geo/benchmark-question-wording-fr) — Interdiction du mot « site », règle de dominance service vs e-commerce, archétype piloté par la page auditée
+- [Dimensions d'entreprise croisées avec l'offre](mem://tech/identity/enterprise-dimensions-cross-offer-fr) — 9 dimensions + croisement SIRENE, tri de pertinence par offre, dimensions interdites dans les questions
