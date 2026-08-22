@@ -32,7 +32,8 @@ export type ValueChainRole = 'sous_traitant' | 'donneur_ordre' | 'mixte' | 'dire
 export type CustomerRelation = 'b2b' | 'b2c' | 'b2b2c' | 'b2g' | 'mixte';
 export type DeliveryMode =
   | 'saas' | 'app' | 'marketplace' | 'service' | 'conseil'
-  | 'commerce' | 'artisanat' | 'produits' | 'contenu';
+  | 'commerce' | 'artisanat' | 'produits' | 'contenu'
+  | 'profession_liberale' | 'association' | 'service_public';
 
 export interface EnterpriseDimensions {
   economy_tier: EconomyTier | null;
