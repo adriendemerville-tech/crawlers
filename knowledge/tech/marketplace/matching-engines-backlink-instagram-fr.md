@@ -757,8 +757,10 @@ page de l'inventaire (les commandes en cours sont honorées).
 
 ### 2.13 Vérification de publication et de maintien de publication
 
-Une jambe n'est réputée livrée que **prouvée**, et elle doit le rester pendant la durée engagée
-(par défaut 12 mois pour un lien, 30 jours pour un contenu social).
+Une jambe n'est réputée livrée que **prouvée**, et elle doit le rester pendant la durée engagée,
+portée par `marketplace_orders.commitment_months` (défaut **12** pour un lien, **1** — 30 jours —
+pour un contenu social) et matérialisée par `commitment_ends_at`. C'est cette colonne, et elle
+seule, qui sert de base au calcul de prorata en cas de retrait anticipé.
 
 | Actif | Preuve de publication | Maintien |
 |---|---|---|
