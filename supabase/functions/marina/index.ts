@@ -1741,11 +1741,13 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       ${topHtmlKw}
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
         <div class="score-badge" style="background:${scoreColor(stratScore, 100)}">${stratScore} / 100</div>
+        ${strategicData?._mutualized_from_domain ? `<div style="font-size:12px;color:#6b7280;line-height:1.5;">Score de niveau <strong>domaine</strong> (analyse stratégique mutualisée sur ${domain}). Le score GEO propre à cette URL est celui des dix sous-signaux ci-dessous.</div>` : ''}
       </div>
+
       ${stratIntro?.presentation ? `<div class="intro-text">${stratIntro.presentation}</div>` : ''}
       ${stratIntro?.strengths ? `<div class="intro-text"><strong>${tr.strengths}:</strong> ${stratIntro.strengths}</div>` : ''}
       ${stratIntro?.improvement ? `<div class="intro-text"><strong>${tr.improvements}:</strong> ${stratIntro.improvement}</div>` : ''}
-      ${stratSummary ? `<div style="margin-top:16px;padding:16px;background:#eff6ff;border-radius:8px;"><h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">📋 ${tr.executiveSummary}</h3><div class="intro-text">${stratSummary}</div></div>` : ''}
+      ${stratSummary ? `<div style="margin-top:16px;padding:16px;border:1px solid #ede9fe;border-left:4px solid #6d28d9;border-radius:8px;background:#faf9ff;"><h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">${tr.executiveSummary}</h3><div class="intro-text">${stratSummary}</div></div>` : ''}
       <!-- ── Bloc GEO / citabilité IA : remonté en tête de la section, c'est
            l'objet même de l'audit stratégique. ── -->
       ${buildModuleSection('Citabilité par les moteurs de réponse IA', '🌍', geoCitability)}
@@ -3366,8 +3368,22 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       let strategicData: any;
       if (reusedStrategic) {
         // Mutualisation multipages : aucun sous-job à attendre.
+        // Garde d'isolation : la synthèse réutilisée a été rédigée SUR UNE AUTRE
+        // URL. Ses blocs narratifs propres à la page (synthèse exécutive,
+        // introduction, citabilité, extraits, intention, zéro-clic, contenus
+        // prioritaires) ne doivent JAMAIS être recopiés dans la fiche d'une autre
+        // URL — c'est ce qui répétait le verdict de la page « /avis » 7 fois.
+        // Seules les lectures réellement de niveau domaine sont conservées.
+        const PAGE_SCOPED_STRATEGIC_FIELDS = [
+          'executive_summary', 'introduction', 'geo_citability', 'quotability',
+          'summary_resilience', 'conversational_intent', 'zero_click_risk',
+          'priority_content', 'geo_readiness', 'geo_score', 'red_team',
+          'expertise_sentiment', 'lexical_footprint',
+        ];
         strategicData = { ...reusedStrategic, _mutualized_from_domain: domain };
+        for (const f of PAGE_SCOPED_STRATEGIC_FIELDS) delete (strategicData as any)[f];
       } else {
+
         strategicData = await waitForTrackedJob(sb, strategicJobId, {
           timeoutMs: 420_000,
           pollMs: 4_000,
@@ -4801,10 +4817,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         // Le crawl et le graphe de cocon sont mutualisés au niveau du domaine,
         // mais le score technique, le score GEO et les correctifs de maillage
         // rendus ici ne concernent que l'URL auditée (0 token LLM).
+        // Le score ramené sur 100 ne peut jamais dépasser 100 : des bonus non
+        // bornés côté audit-expert-seo produisaient des « 101/100 » indéfendables.
         const pageTech100 = Number(expertData?.totalScore || 0) > 0
-          ? Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 220) || 220)) * 100)
+          ? Math.max(0, Math.min(100, Math.round((Number(expertData.totalScore) / (Number(expertData?.maxScore || 220) || 220)) * 100)))
           : null;
-        let pageGeo100 = strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null;
+        // Le score GEO affiché sur la fiche doit être MESURÉ SUR CETTE URL :
+        // `strategicData.overallScore` est mutualisé au domaine en lot multipages,
+        // il affichait donc la même valeur sur les 15 fiches. Ordre de priorité :
+        // sous-signaux GEO de la page > nœud de cocon > score de domaine.
+        let pageGeo100 = geoSubSignalsReport?.geo_score != null
+          ? Math.round(Number(geoSubSignalsReport.geo_score))
+          : (strategicData?.overallScore ? Math.round(Number(strategicData.overallScore)) : null);
+
         // ─── Lot 1 & 2 — la fiche ne porte QUE des faits mesurés sur cette URL ───
         // Avant : à défaut d'actions ciblées, les 3 premières actions du plan de
         // domaine étaient recopiées, ce qui rendait 14 fiches sur 15 identiques et
@@ -4815,7 +4840,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         const cocoonPageFacts = cocoonResult ? extractCocoonPageFacts(cocoonResult, url) : null;
         // Lot 3 — le score GEO du nœud de cette URL prime sur le score global :
         // sans lui, les 15 fiches affichaient toutes la même valeur.
-        if (cocoonPageFacts?.geoScore != null) pageGeo100 = cocoonPageFacts.geoScore;
+        if (geoSubSignalsReport?.geo_score == null && cocoonPageFacts?.geoScore != null) pageGeo100 = cocoonPageFacts.geoScore;
         const derivedActions = derivePageActions(
           {
             title: expertData?.rawData?.htmlAnalysis?.title ?? null,
