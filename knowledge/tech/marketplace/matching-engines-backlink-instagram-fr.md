@@ -197,14 +197,31 @@ v1 : crédit du **wallet Crawlers** du vendeur (non convertible en euros), réut
 plateforme — un lien vendu par mois rembourse l'abonnement. v2 : virement réel via
 Stripe Connect (KYC, comptes connectés, reversement à J+30 après vérification du lien).
 
-### 2.6 Responsabilité du vendeur
+### 2.6 Vérification de propriété et responsabilité du vendeur
 
-Crawlers ne vérifie pas la propriété juridique des sites mis en vente et n'exige aucune preuve
-de mandat. Chacun est responsable des sites qu'il déclare : au moment de la mise en vente, le
-vendeur coche une déclaration ferme (« je suis autorisé à publier un lien sur ce site »), tracée
-avec horodatage et IP. Toute contestation d'un tiers entraîne le retrait immédiat de l'annonce
-et le remboursement de l'acheteur ; la responsabilité reste au vendeur. Cette clause figure aux
-CGVU (section 8.5).
+**Aucune mise en vente n'est possible sans propriété vérifiée.** La vérification est un
+prérequis technique bloquant, pas une déclaration : un actif reste en statut `unverified` et
+n'entre ni dans l'inventaire, ni dans l'appariement, ni dans un troc.
+
+| Type d'actif | Preuve acceptée | Contrôle |
+|---|---|---|
+| Domaine / page | propriété GSC confirmée sur le compte connecté, ou enregistrement DNS `TXT crawlers-verify=<token>`, ou fichier `/.well-known/crawlers-verify.txt` | automatique, revérifié tous les 30 j |
+| Compte LinkedIn | OAuth LinkedIn du compte qui publiera (URN de l'auteur) | automatique |
+| Compte Instagram | OAuth Meta du compte professionnel | automatique |
+
+Règles :
+- Perte de la preuve (GSC déconnecté, TXT supprimé, OAuth révoqué) → actif repassé
+  `unverified`, retiré de l'inventaire ; les commandes en cours sont honorées ou remboursées.
+- La vérification s'ajoute à la déclaration de responsabilité (« je suis autorisé à publier un
+  lien sur ce site »), tracée avec horodatage et IP dans `marketplace_ownership_claims` : la
+  preuve technique établit le contrôle du site, pas le mandat juridique.
+- Toute contestation d'un tiers entraîne le retrait immédiat de l'annonce et le remboursement
+  de l'acheteur ; la responsabilité juridique reste au vendeur.
+- Un domaine ne peut être vérifié que par **un seul compte** à la fois ; en cas de conflit, le
+  premier vérifié conserve l'actif et le second est refusé (même logique que
+  `ownershipCheck.ts` côté injection).
+
+Cette clause figure aux CGVU (section 8.5).
 
 ### 2.7 Incentive : troc (barter)
 
