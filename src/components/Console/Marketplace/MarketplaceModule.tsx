@@ -3,6 +3,7 @@ import { OwnershipCard } from './OwnershipCard';
 import { TaxProfileCard } from './TaxProfileCard';
 import { BuyTab } from './BuyTab';
 import { OpportunitiesTab } from './OpportunitiesTab';
+import { OrdersTab } from './OrdersTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTeamPermissions } from '@/hooks/useTeamPermissions';
 
