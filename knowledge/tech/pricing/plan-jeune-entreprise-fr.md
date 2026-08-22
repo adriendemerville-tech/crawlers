@@ -55,7 +55,16 @@ générosité ouverte : elle est plafonnée en nombre de comptes, en durée et e
   tâche n'est pas critique.
 - Expiration : à `startup_offer_expires_at`, bascule automatique en plan gratuit standard, données
   conservées, modules payants verrouillés — aucune suppression de compte.
-- Candidatures tracées (dossier, Kbis, décision, admin décideur, horodatage) pour l'audit.
+- **Vérification SIRET côté serveur uniquement** (server function) : appel à l'API Recherche
+  d'entreprises, calcul de l'ancienneté à partir de `date_creation`, statut `eligible` /
+  `refuse_anciennete` / `refuse_inactif` / `introuvable`. Le verdict n'est jamais calculé côté client.
+- Stockage de la candidature : `siret`, `siren`, `denomination`, `date_creation`, `insee_payload`
+  (brut, horodaté), `kbis_file_path` (bucket privé, RLS propriétaire + admin), `verdict_auto`,
+  `verdict_admin`, `admin_id`, `decided_at`.
+- **Unicité sur le SIREN** : un SIREN ne peut bénéficier de l'offre qu'une fois (contrainte unique
+  sur les candidatures acceptées), en complément de l'unicité par domaine.
+- `startup_offer_expires_at` = date d'acceptation + 12 mois (jamais date de création + 12 mois).
+- Candidatures tracées (dossier, SIRET vérifié, Kbis, décision, admin décideur, horodatage) pour l'audit.
 
 ## 5. Économie
 
