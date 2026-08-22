@@ -85,13 +85,15 @@ export async function fetchSitemapUrls(domain: string): Promise<string[]> {
 
     const children = locs.filter((u) => /\.xml(\.gz)?($|\?)/i.test(u)).slice(0, MAX_CHILD_SITEMAPS);
     const all: string[] = [];
-    for (const child of children) {
-      if (all.length >= MAX_URLS) break;
-      const childXml = await fetchText(child);
-      if (!childXml) continue;
-      all.push(...extractLocs(childXml));
+    // Lecture par vagues de 8 : 50 enfants en séquentiel dépasseraient le budget temps.
+    for (let i = 0; i < children.length && all.length < MAX_URLS; i += 8) {
+      const batch = await Promise.all(children.slice(i, i + 8).map((c) => fetchText(c)));
+      for (const childXml of batch) {
+        if (childXml) all.push(...extractLocs(childXml));
+      }
     }
     if (all.length) return all.slice(0, MAX_URLS);
+
   }
   return [];
 }
