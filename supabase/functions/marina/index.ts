@@ -30,6 +30,15 @@ import {
   type AbsenceVerificationReport,
 } from '../_shared/absenceVerification.ts';
 import { buildGeoSubSignals, geoSubSignalsBlockHTML } from '../_shared/geoSubSignals.ts';
+import {
+  gatesPriorityBlockHTML,
+  mergeGates,
+  normalizeGates,
+  writeGatesToWorkbench,
+  sortWorkbenchByGatePriority,
+  type AuditGate,
+} from '../_shared/auditGates.ts';
+
 import { verdictsFromCocoonRisks, pillarSatelliteBlockHTML, pageAuthority } from '../_shared/pillarSatelliteVerdict.ts';
 
 
