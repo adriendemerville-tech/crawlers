@@ -165,7 +165,7 @@ export default function MarinaIdentityPanel({ url, isAuthenticated }: Props) {
   const set = (k: keyof Fields, v: string) => setFields((f) => ({ ...f, [k]: v }));
 
   return (
-    <div className="mt-3 text-left">
+    <div className="mt-3 flex h-full flex-col text-left">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
