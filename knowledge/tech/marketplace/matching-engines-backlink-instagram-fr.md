@@ -257,8 +257,7 @@ explicite, jamais un blocage silencieux) :
 |---|---|---|
 | **Vitesse d'acquisition** | ≤ 4 liens entrants achetés par **30 jours glissants** / domaine acheteur, et ≤ 2 sur 7 jours glissants (fenêtres glissantes, jamais mois calendaire — cf. `marketplace_buyer_limits`, §4.2) | anti-pic de vélocité |
 | **Rampe nouvel entrant** | jours 1-30 depuis la 1ʳᵉ commande : max 2 liens ; jours 31-60 : 3 ; à partir de J+61 : 4 (tranches glissantes depuis la 1ʳᵉ commande, pas des mois calendaires) | un domaine jeune ne construit pas 12 liens en 30 jours |
-| **Concentration par vendeur** | ≤ 2 liens du même domaine vendeur sur 12 mois glissants, et ≤ 20 % des liens achetés sur la période | diversité des sources |
-| **Diversité minimale** | à partir du 5e lien acheté, au moins 4 domaines vendeurs distincts | pas de profil mono-source |
+| **Concentration par vendeur** | ≤ 2 liens du même domaine vendeur sur 12 mois glissants | diversité des sources — cette seule borne implique déjà la part maximale du vendeur dominant et un minimum de vendeurs distincts, aucune règle de pourcentage ni de seuil au 5ᵉ lien n'est ajoutée |
 | **Concentration par page cible** | ≤ 3 liens achetés vers la même URL cible sur 12 mois | anti-suroptimisation d'une page |
 | **Diversité d'ancre** | ≤ 1 ancre exacte (mot-clé cible strict) par tranche de 4 liens achetés vers le même domaine ; le reste en ancre de marque, URL nue ou semi-générique | anti-pattern d'ancres |
 | **Cohérence thématique** | au moins 60 % des liens achetés sur 12 mois dans le champ sémantique du domaine acheteur | anti-profil incohérent |
@@ -273,8 +272,9 @@ Règles d'application :
 3. Un dépassement n'est pas un refus définitif : l'appariement passe en `throttled`, l'offre reste
    réservée et la commande devient possible à la date affichée (« disponible le JJ/MM »).
 4. La console affiche en permanence, côté « J'achète », un bandeau **Empreinte entrante** :
-   liens ce mois / plafond, nombre de vendeurs distincts, part du vendeur dominant, répartition
-   des ancres, avec le motif du prochain déblocage.
+   liens sur 30 jours glissants / plafond, liens déjà achetés au vendeur pressenti (0, 1 ou 2 sur
+   12 mois), répartition des ancres, avec le motif du prochain déblocage — aucun indicateur de part
+   en pourcentage, qui n'ajouterait rien à la borne de 2 liens par vendeur.
 5. Ces bornes sont **cumulatives** avec les garde-fous vendeur et avec le quota `link_for_link` :
    la contrainte la plus stricte l'emporte, aucune dérogation admin en v1.
 6. `sell_risk` (§2.12) protège les pages du vendeur ; le symétrique côté acheteur est un
@@ -987,9 +987,11 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
 - `marketplace_page_sell_risk` — cache par page (§2.12) : `sell_risk`, composantes, classe
   (`safe` | `moderate` | `discouraged`), motif d'exclusion dure, `recomputed_at` (à chaque crawl).
 - `marketplace_buyer_limits` — cache par domaine acheteur (§2.2.1) : `links_bought_30d`,
-  `links_bought_7d`, `distinct_sellers_12m`, `top_seller_share`, `exact_anchor_ratio`,
-  `target_url_counts` (jsonb), `topical_coherence_ratio`, `buy_risk`, `next_allowed_at`,
-  `throttle_reason`, `recomputed_at`. Dérivé des jambes livrées, jamais des commandes créées.
+  `links_bought_7d`, `seller_counts_12m` (jsonb : liens par domaine vendeur, borne 2),
+  `exact_anchor_ratio`, `target_url_counts` (jsonb), `topical_coherence_ratio`, `buy_risk`,
+  `next_allowed_at`, `throttle_reason`, `recomputed_at`. Dérivé des jambes livrées, jamais des
+  commandes créées. Pas de `top_seller_share` ni de `distinct_sellers_12m` : ces indicateurs sont
+  redondants avec la borne de 2 liens par vendeur sur 12 mois.
   **Fenêtres glissantes, pas de mois calendaire** : `links_bought_30d` compte les jambes livrées
   sur les 30 derniers jours et `links_bought_7d` sur les 7 derniers (bornes : 4 et 2). La
   formulation « 4 par mois » de §2.2.1 se lit donc « 4 sur 30 jours glissants » — un acheteur ne
