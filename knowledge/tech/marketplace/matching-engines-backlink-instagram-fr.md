@@ -1059,6 +1059,17 @@ Une seule table porte un montant de jambe : `marketplace_exchanges.value_cents`.
   `status` (`open` | `settled` | `written_off`), `opened_at`, `settled_at`.
   Une dette `open` gèle la mise en vente et l'achat, et absorbe 100 % des crédits entrants avant
   tout passage en `available`. Le solde du wallet ne peut jamais être négatif.
+- `marketplace_tax_profiles` — statut fiscal du vendeur (§2.5.2) : `user_id`, `tax_status`
+  (`assujetti_fr` | `assujetti_ue` | `assujetti_hors_ue` | `franchise` | `non_assujetti`),
+  `vat_number`, `vies_valid_at`, `country`, `legal_name`, `siren`,
+  `self_billing_mandate_accepted_at`. Sans profil complet et mandat accepté, aucune mise en vente.
+- `marketplace_invoices` — pièces comptables (§2.5.2), une ligne par pièce : `order_id`, `leg_id`,
+  `kind` (`leg` | `soulte` | `commission` | `credit_note`), `issuer_id`, `recipient_id`,
+  `base_cents` (HT), `vat_rate` (2000 = 20 %), `vat_cents`, `total_cents`, `number` (série continue
+  par mandant), `issued_at`, `exigibility_date` (= 1ʳᵉ preuve de publication, §2.13), `pdf_path`,
+  `credit_note_of` (auto-référence pour les avoirs). Montants et TVA **figés** à l'émission,
+  jamais recalculés à l'affichage.
+
 
 
 
