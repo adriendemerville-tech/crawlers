@@ -952,6 +952,24 @@ export default function Marina() {
                   </Button>
                 </div>
 
+                {/* Purge de cache : visible uniquement pour les admins */}
+                {isAdmin && (
+                  <div className="mt-3 text-left">
+                    <Button
+                      variant="outline"
+                      onClick={handlePurgeCache}
+                      disabled={purging || loading}
+                      className="h-10 bg-transparent border border-foreground text-foreground hover:bg-foreground/10"
+                    >
+                      {purging ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      <span className="ml-2">{purging ? purgeT.busy : purgeT.btn}</span>
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">{purgeT.hint}</p>
+                  </div>
+                )}
+
+
+
                 {/* Modes de scan + carte d'identité : remontés juste sous la barre d'URL */}
                 <div className="grid gap-3 md:grid-cols-2 [&>*]:mt-0 mt-3">
                   <MarinaScanModePanel
