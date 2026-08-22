@@ -80,7 +80,7 @@ export function emptyDimensions(): EnterpriseDimensions {
     economy_tier: null, legal_form: null, siren: null, naf_code: null,
     naf_reliability: null,
     employees_range: null, structuration: null, value_chain_role: null,
-    customer_relation: null, delivery_mode: null, sources: {},
+    customer_relation: null, delivery_mode: null, delivery_origin: null, sources: {},
   };
 }
 
