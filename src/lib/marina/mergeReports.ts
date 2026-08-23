@@ -433,9 +433,11 @@ export function mergeMarinaReports(
 
 
 
-  // 'llm' (citabilité IA) remonte avant le cocon : c'est un bloc GEO, il doit
-  // suivre l'analyse stratégique et non finir en fin de document.
-  const siteOrder = ['intro', 'crawl', 'archetypes', 'strategic', 'llm', 'cocoon', 'indexation', 'plan'];
+  // L'audit stratégique ouvre le rapport : c'est le cadre de lecture (position du
+  // domaine sur son marché). 'llm' (citabilité IA) le suit immédiatement, il en est
+  // l'objet. Le crawl et l'audit technique viennent ensuite.
+  const siteOrder = ['intro', 'strategic', 'llm', 'owner-performance', 'crawl', 'archetypes', 'cocoon', 'indexation', 'plan'];
+
 
   const orderedSiteEntries = [
     ...siteOrder.filter(id => siteBlocks.has(id)).map(id => [id, siteBlocks.get(id)!] as const),
