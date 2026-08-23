@@ -48,10 +48,12 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
 
   if (t.dominant_anchor_ratio >= 0.3) {
     const full = Math.min(35, Math.round((t.dominant_anchor_ratio - 0.3) * 100) + 15);
+  if (t.dominant_anchor_ratio >= 0.3) {
+    const full = Math.min(35, Math.round((t.dominant_anchor_ratio - 0.3) * 100) + 15);
     const downgraded = t.anchor_attribution === 'all_referrers_downgraded';
     rows.push({
       label: 'Ancre dominante',
-      measure: `« ${t.dominant_anchor ?? 'n/d'} » sur ${pct(t.dominant_anchor_ratio)} de l'échantillon`,
+      measure: `« ${clip(String(t.dominant_anchor ?? 'n/d'), 30)} » — ${pct(t.dominant_anchor_ratio)}`,
       rule: downgraded
         ? `au-delà de 30 % : 15 pts + 1 pt par point excédentaire (max 35), soit ${full} pts — divisé par 2 car ${pct(t.own_network_backlink_share || 0)} des liens viennent du réseau propre et la source ne rattache pas les ancres à leur domaine`
         : 'au-delà de 30 % : 15 pts + 1 pt par point de pourcentage excédentaire (max 35)',
@@ -61,7 +63,7 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
   if (t.unnatural_anchor_ratio >= 0.25) {
     rows.push({
       label: 'Ancres non naturelles',
-      measure: `${pct(t.unnatural_anchor_ratio)} d'ancres URL nue / mot générique / emoji`,
+      measure: `${pct(t.unnatural_anchor_ratio)} (URL nue, générique)`,
       rule: 'au-delà de 25 % : 10 pts + 0,6 pt par point excédentaire (max 25)',
       points: Math.min(25, Math.round((t.unnatural_anchor_ratio - 0.25) * 60) + 10),
     });
@@ -69,7 +71,7 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
   if (t.avg_referrer_rank > 0 && t.avg_referrer_rank < 15) {
     rows.push({
       label: 'Autorité des référents tiers',
-      measure: `rank moyen ${t.avg_referrer_rank}/100 sur l'échantillon hors réseau propre`,
+      measure: `rank moyen ${t.avg_referrer_rank}/100`,
       rule: 'rank moyen < 15/100 : 20 pts',
       points: 20,
     });
@@ -77,7 +79,7 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
   if (t.links_per_domain >= 25) {
     rows.push({
       label: 'Liens par domaine tiers',
-      measure: `${t.links_per_domain} liens par domaine référent hors réseau propre${typeof t.links_per_domain_all === 'number' ? ` (${t.links_per_domain_all} tous référents confondus)` : ''}`,
+      measure: `${t.links_per_domain} liens/domaine`,
       rule: 'à partir de 25 liens/domaine : liens ÷ 5 (max 20) — empreinte de type annuaire',
       points: Math.min(20, Math.round(t.links_per_domain / 5)),
     });
@@ -85,7 +87,7 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
   if (t.broken_ratio >= 0.1) {
     rows.push({
       label: 'Liens entrants cassés',
-      measure: `${pct(t.broken_ratio)} des backlinks pointent une page morte`,
+      measure: `${pct(t.broken_ratio)} vers page morte`,
       rule: 'à partir de 10 % : 10 pts',
       points: 10,
     });
@@ -94,18 +96,20 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
   if (dc && dc.points > 0) {
     rows.push({
       label: 'Dofollow — facteur contextuel',
-      measure: `${Math.round(dc.ratio)} % de liens dofollow, avec ${dc.corroborating.length} anomalie${dc.corroborating.length > 1 ? 's' : ''} structurelle${dc.corroborating.length > 1 ? 's' : ''} corroborante${dc.corroborating.length > 1 ? 's' : ''}`,
+      measure: `${Math.round(dc.ratio)} % dofollow + ${dc.corroborating.length} anomalie${dc.corroborating.length > 1 ? 's' : ''}`,
       rule: `un lien dofollow n'est pas toxique en soi : 0 pt sans corroboration, 3 pts avec 1 anomalie mesurée, 8 pts à partir de 2 (faisceau d'indices)`,
       points: dc.points,
     });
   } else if (!dc && dofollowRatio >= 98 && refDomains > 50) {
     rows.push({
       label: 'Ratio dofollow (calibrage antérieur)',
-      measure: `${Math.round(dofollowRatio)} % de liens dofollow`,
+      measure: `${Math.round(dofollowRatio)} % dofollow`,
       rule: 'mesure issue d’un calibrage antérieur : ≥ 98 % avec plus de 50 domaines référents, 5 pts',
       points: 5,
     });
   }
+
+
 
 
   const suspicious = t.signals.find((s) => /hors-sujet/i.test(s));
