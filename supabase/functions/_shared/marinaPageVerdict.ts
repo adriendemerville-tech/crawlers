@@ -273,7 +273,23 @@ export function buildPageVerdictHTML(
      * le lecteur ne peut pas savoir si un axe est mauvais ou simplement absent.
      */
     geoSignals?: Array<{ key?: string; label: string; family?: string; weight: number; value: number | null }>;
+
+    /**
+     * Les trois piliers du GEO à la date de l'audit : autorité domaine
+     * (mutualisée), accessibilité machine, exploitabilité contenu. Chaque
+     * pilier porte son score 0-100, ses points courants et sa tendance —
+     * rendus sous le score GEO de la fiche pour restaurer la variance entre
+     * URLs (seule l'autorité domaine est commune au domaine).
+     */
+    geoPillars?: Array<{
+      key: 'authority' | 'accessibility' | 'content';
+      label: string;
+      score: number | null;
+      points: number;
+      trend: string;
+    }>;
   },
+
 ): { html: string; meta: PageVerdictMeta } {
   const isEn = lang === 'en';
   const t = (fr: string, en: string) => (isEn ? en : fr);
