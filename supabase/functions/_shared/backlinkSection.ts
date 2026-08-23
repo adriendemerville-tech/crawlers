@@ -183,11 +183,65 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
             </tbody>
           </table>`
         : `<p style="font-size:12.5px;color:#374151;margin:0;">Aucun seuil de manipulation n’est franchi sur l’échantillon mesuré : le score reste à ${t.toxicity_score}/100. Les critères testés sont l’ancre dominante (&gt; 30 %), les ancres non naturelles (&gt; 25 %), l’autorité moyenne des référents (&lt; 15/100), les liens par domaine (≥ 25), les liens cassés (≥ 10 %), un ratio dofollow ≥ 98 % et la présence de référents hors-sujet.</p>`}
-      ${t.own_network_domains?.length
-        ? `<div style="font-size:12.5px;color:#374151;margin-top:10px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;"><strong>Réseau propre exclu du calcul :</strong> ${t.own_network_domains.slice(0, 8).map((d) => esc(d)).join(', ')}. Ces domaines portent la même racine de marque sur une autre extension (déclinaisons pays) : le maillage inter-pays n’est pas un signal de manipulation et ces domaines ne doivent jamais figurer dans un fichier de désaveu.</div>`
-        : ''}
+      <div style="font-size:12px;color:#6b7280;margin-top:8px;">Périmètre du score : ${t.scope === 'third_party_only' ? 'liens tiers uniquement. Le réseau propre est mesuré séparément ci-dessous — le désaveu n’a de sens que sur des domaines que vous ne contrôlez pas.' : 'tous les référents de l’échantillon (aucun réseau propre détecté).'}</div>
       <div style="font-size:12.5px;color:#374151;margin-top:10px;"><strong>Lecture :</strong> ${esc(t.recommendation)}</div>`
     : '<p style="font-size:12.5px;color:#6b7280;margin:0;">Échantillon insuffisant pour calculer un score de toxicité : aucun verdict n’est émis.</p>';
+
+  // Trois compartiments mesurés séparément : le lecteur voit d'où vient son
+  // profil au lieu de découvrir qu'une partie a été retirée du calcul.
+  const seg = a.segmentation;
+  const COMPARTMENT_LABEL: Record<string, string> = {
+    own_network: 'Réseau propre (vos domaines)',
+    directory_platform: 'Annuaires et plateformes',
+    third_party_editorial: 'Éditorial tiers',
+  };
+  const segRow = (c: { compartment: string; domains: number; backlinks: number; share_domains: number; avg_rank: number; top_domains: string[] }) =>
+    `<tr style="border-bottom:1px solid #e5e7eb;">
+      <td style="padding:6px 10px;font-weight:600;color:#111827;">${COMPARTMENT_LABEL[c.compartment] || esc(c.compartment)}</td>
+      <td style="padding:6px 10px;text-align:right;">${nf(c.domains)}</td>
+      <td style="padding:6px 10px;text-align:right;">${pct(c.share_domains)}</td>
+      <td style="padding:6px 10px;text-align:right;">${nf(c.backlinks)}</td>
+      <td style="padding:6px 10px;text-align:right;">${c.avg_rank}/100</td>
+      <td style="padding:6px 10px;color:#6b7280;">${c.top_domains.slice(0, 4).map((d) => esc(d)).join(', ') || '—'}</td>
+    </tr>`;
+  const segHtml = seg && seg.sampled > 0
+    ? `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:#f3f4f6;">
+          <th style="padding:6px 10px;text-align:left;color:#6b7280;">Compartiment</th>
+          <th style="padding:6px 10px;text-align:right;color:#6b7280;">Domaines</th>
+          <th style="padding:6px 10px;text-align:right;color:#6b7280;">Part</th>
+          <th style="padding:6px 10px;text-align:right;color:#6b7280;">Liens</th>
+          <th style="padding:6px 10px;text-align:right;color:#6b7280;">Rank moyen</th>
+          <th style="padding:6px 10px;text-align:left;color:#6b7280;">Exemples</th>
+        </tr></thead>
+        <tbody>
+          ${segRow(seg.own_network)}
+          ${segRow(seg.directory_platform)}
+          ${segRow(seg.third_party_editorial)}
+        </tbody>
+      </table>
+      <div style="font-size:12px;color:#6b7280;margin-top:8px;">
+        Classification « vos domaines » : ${seg.own_network_source === 'verified'
+          ? 'propriété prouvée (accès Search Console, fiche établissement ou site suivi).'
+          : seg.own_network_source === 'brand_token_suspected'
+            ? 'rattachement par racine de marque commune — <strong>suggestion à confirmer</strong>, pas une preuve de propriété.'
+            : seg.own_network_source === 'mixed'
+              ? 'en partie prouvée, en partie déduite de la racine de marque (à confirmer).'
+              : 'aucun domaine de votre réseau détecté dans l’échantillon.'}
+        Le score de toxicité ne porte que sur les liens tiers ; les deux volumétries (avec et hors réseau propre) restent affichées pour que le calcul soit vérifiable.
+      </div>`
+    : '';
+
+  const h = a.own_network_hygiene;
+  const hygieneHtml = h && h.verdict !== 'non_mesure'
+    ? `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:700;color:${h.verdict === 'a_corriger_a_la_source' ? '#b45309' : '#15803d'};">${h.verdict === 'a_corriger_a_la_source' ? 'À corriger à la source' : 'Sain'}</div>
+        <div style="font-size:12px;color:#6b7280;">${nf(h.domains)} domaines · ${nf(h.backlinks)} liens · ${h.links_per_domain} liens par domaine</div>
+      </div>
+      <ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.7;">${h.signals.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>
+      <div style="font-size:12.5px;color:#374151;margin-top:8px;"><strong>Lecture :</strong> ${esc(h.recommendation)}</div>`
+    : '';
+
 
   const dist = a.distribution;
   const bucketList = (b: { key: string; share: number }[]) =>
