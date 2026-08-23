@@ -855,6 +855,10 @@ export async function fetchDomainAuthority(
       ? 'anchors_endpoint'
       : summaryAnchors.length ? 'summary_sample' : 'unavailable';
 
+    // Segmentation en trois compartiments, calculée une seule fois puis partagée
+    // avec le score de toxicité et l'indicateur d'hygiène du réseau propre.
+    const segmentation = segmentReferringDomains(domain, refSample, opts?.verifiedOwnDomains || []);
+
     const toxicity = computeBacklinkToxicity({
       anchors,
       topReferringDomains: topRef,
@@ -864,7 +868,15 @@ export async function fetchDomainAuthority(
       brokenBacklinks: s.broken_backlinks || 0,
       dofollowRatio: dofollow,
       auditedDomain: domain,
+      verifiedOwnDomains: opts?.verifiedOwnDomains || [],
+      segmentation,
     });
+    const ownNetworkHygiene = computeOwnNetworkHygiene(
+      segmentation,
+      toxicity.dominant_anchor,
+      toxicity.dominant_anchor_ratio,
+    );
+
 
 
     // Lot 2 : répartitions TLD / pays / plateformes (déjà dans le résumé, 0 appel
