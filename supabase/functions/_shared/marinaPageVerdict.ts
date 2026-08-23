@@ -273,7 +273,23 @@ export function buildPageVerdictHTML(
      * le lecteur ne peut pas savoir si un axe est mauvais ou simplement absent.
      */
     geoSignals?: Array<{ key?: string; label: string; family?: string; weight: number; value: number | null }>;
+
+    /**
+     * Les trois piliers du GEO à la date de l'audit : autorité domaine
+     * (mutualisée), accessibilité machine, exploitabilité contenu. Chaque
+     * pilier porte son score 0-100, ses points courants et sa tendance —
+     * rendus sous le score GEO de la fiche pour restaurer la variance entre
+     * URLs (seule l'autorité domaine est commune au domaine).
+     */
+    geoPillars?: Array<{
+      key: 'authority' | 'accessibility' | 'content';
+      label: string;
+      score: number | null;
+      points: number;
+      trend: string;
+    }>;
   },
+
 ): { html: string; meta: PageVerdictMeta } {
   const isEn = lang === 'en';
   const t = (fr: string, en: string) => (isEn ? en : fr);
@@ -412,7 +428,24 @@ export function buildPageVerdictHTML(
     )}</p>` : ''}`
     : '';
 
+  // ── GEO en 3 piliers (autorité domaine / accessibilité / contenu) ──
+  // Rendu sous le score GEO de la fiche pour restaurer la variance entre URLs :
+  // seule l'autorité domaine est mutualisée au domaine ; l'accessibilité et le
+  // contenu varient réellement par page.
+  const pillarsHTML = (ctx.geoPillars || []).length
+    ? `
+    <p style="font-size:12.5px;font-weight:600;color:#111827;margin:14px 0 4px 0;">${t('GEO — les 3 piliers de cette page', 'GEO — the 3 pillars of this page')}</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      ${(ctx.geoPillars || []).map((p) => `
+      <div style="flex:1 1 160px;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;background:#ffffff;">
+        <div style="font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:2px;">${esc(p.label)}</div>
+        <div style="font-size:16px;font-weight:700;color:#111827;">${p.score === null ? 'n/m' : `${Math.round(p.score)}/100`}<span style="font-size:11px;font-weight:500;color:#6b7280;"> · ${p.points} pts · ${esc(p.trend)}</span></div>
+      </div>`).join('')}
+    </div>`
+    : '';
+
   // Bloc « Pourquoi c'est prioritaire » : plafonds techniques et GEO fusionnés,
+
   // ordonnés par cause racine, avec la preuve chiffrée (mesuré → cible).
   const gatesHTML = gatesPriorityBlockHTML(
     mergeGates(normalizeGates(ctx.scoreGates, 'technical'), ctx.geoGates || []),
@@ -437,6 +470,7 @@ export function buildPageVerdictHTML(
       ${cell(t('GEO / citabilité IA', 'GEO / AI citability'), geo === null ? 'n/d' : `${geo}/100`)}
       ${f && f.linksIn !== null ? cell(t('Liens internes entrants', 'Inbound links'), String(f.linksIn)) : ''}
     </div>
+    ${pillarsHTML}
     ${pageActionRows.length ? `
     <p style="font-size:13px;font-weight:600;color:#111827;margin:14px 0 6px 0;">${t('À corriger sur cette page', 'To fix on this page')}</p>
     <ol style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0;">
