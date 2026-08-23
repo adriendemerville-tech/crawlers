@@ -5004,7 +5004,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               label: detectedLang === 'en' ? 'Machine accessibility' : detectedLang === 'es' ? 'Accesibilidad de máquina' : 'Accessibilité machine',
               score: geoSubSignalsReport?.accessibility?.score ?? null,
               points: Number(geoSubSignalsReport?.pillar_points?.accessibility ?? 22),
-              trend: detectedLang === 'en' ? 'fixed 22 pts' : 'poids fixe 22 pts',
+              trend: detectedLang === 'en' ? '−1 pt / 18 months, floor 17 pts' : '−1 pt / 18 mois, plancher 17 pts',
             },
             {
               key: 'content',
