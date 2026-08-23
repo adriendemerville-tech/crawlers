@@ -360,11 +360,20 @@ export function computeBacklinkToxicity(input: {
   const suspiciousNote = suspicious.length > 0
     ? ` Domaines à examiner en priorité : ${suspicious.slice(0, 6).join(', ')}.`
     : '';
-  const recommendation = verdict === 'pollue'
+  // Garde anti-désaveu : dès qu'un réseau propre est détecté, le rapport le dit
+  // et interdit d'inclure ces domaines dans un fichier de désaveu.
+  const ownNote = ownNetwork.length > 0
+    ? ` ${ownNetwork.length} domaine${ownNetwork.length > 1 ? 's' : ''} référent${ownNetwork.length > 1 ? 's' : ''} appartien${ownNetwork.length > 1 ? 'nent' : 't'} au même réseau de marque (${ownNetwork.slice(0, 6).join(', ')}) : maillage inter-pays, exclu du calcul de toxicité et à ne jamais désavouer.`
+    : '';
+  if (ownNetwork.length > 0) {
+    signals.push(`réseau propre exclu du calcul : ${ownNetwork.slice(0, 6).join(', ')}`);
+  }
+  const recommendation = (verdict === 'pollue'
     ? `Priorité au nettoyage : constituez un fichier de désaveu sur les domaines d'annuaire et MFA, et diversifiez les ancres avant tout nouvel achat de liens.${suspiciousNote}`
     : verdict === 'a_surveiller'
       ? `Surveillez la répétition d'ancres et la qualité des nouveaux référents ; un désaveu ciblé peut être utile sur les domaines les plus faibles.${suspiciousNote}`
-      : "Aucun signal de manipulation sur l'échantillon reçu : pas de désaveu justifié à ce stade, l'échantillon reste toutefois limité aux principaux référents.";
+      : "Aucun signal de manipulation sur l'échantillon reçu : pas de désaveu justifié à ce stade, l'échantillon reste toutefois limité aux principaux référents.")
+    + ownNote;
 
   return {
     toxicity_score: toxicity,
@@ -377,8 +386,10 @@ export function computeBacklinkToxicity(input: {
     broken_ratio: brokenRatio,
     signals,
     recommendation,
+    own_network_domains: ownNetwork,
   };
 }
+
 
 function unavailable(domain: string, reason: string): AuthorityData {
   return {
