@@ -275,6 +275,7 @@ const AXIS_CATEGORY: Record<string, string> = {
   geo_structured_data: 'structured_data',
   geo_comprehension: 'geo_visibility',
   geo_authority: 'geo_visibility',
+  geo_citation: 'geo_visibility',
 };
 
 /**
