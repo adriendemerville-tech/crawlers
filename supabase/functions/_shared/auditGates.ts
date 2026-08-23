@@ -71,6 +71,7 @@ const AXIS_LABEL: Record<string, { fr: string; en: string }> = {
   geo_structured_data: { fr: 'Données structurées plafonnées', en: 'Structured data capped' },
   geo_comprehension: { fr: 'Compréhension machine bridée', en: 'Machine comprehension capped' },
   geo_authority: { fr: 'Autorité domaine non mesurée', en: 'Domain authority not measured' },
+  geo_citation: { fr: 'Citation réelle inférieure au potentiel', en: 'Observed citation below potential' },
 };
 
 export function gateAxisLabel(axis: string, lang?: string): string {
