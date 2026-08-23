@@ -287,7 +287,13 @@ const PolitiqueConfidentialite = () => {
               </p>
               <div className="bg-muted/50 rounded-lg p-6 mt-4 space-y-2">
                 <p className="text-muted-foreground">
-                  <strong className="text-foreground">{t3(language, 'Responsable du traitement :', 'Data Controller:', 'Responsable del tratamiento:')}</strong> Adrien de Volontat
+                  <strong className="text-foreground">{t3(language, 'Société éditrice :', 'Publishing company:', 'Empresa editora:')}</strong> Voluntas Novare — SASU
+                </p>
+                <p className="text-muted-foreground">
+                  <strong className="text-foreground">{t3(language, 'Adresse postale :', 'Postal address:', 'Dirección postal:')}</strong> {t3(language, 'Adresse de la société éditrice', 'Address of the publishing company', 'Dirección de la empresa editora')}
+                </p>
+                <p className="text-muted-foreground">
+                  <strong className="text-foreground">{t3(language, 'Responsable du traitement :', 'Data Controller:', 'Responsable del tratamiento:')}</strong> Voluntas Novare — SASU, représentée par Adrien de Volontat (directeur de la publication)
                 </p>
                 <p className="text-muted-foreground">
                   <strong className="text-foreground">Email :</strong>{' '}

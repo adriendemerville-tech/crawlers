@@ -40,9 +40,9 @@ const RGPD = () => {
 
             <p className="text-muted-foreground leading-relaxed mb-8">
               {t3(language,
-                'Crawlers (Adrien de Volontat, entrepreneur individuel — SIRET 992 399 667 00011) s\'engage à respecter le Règlement Général sur la Protection des Données (RGPD) et à garantir la protection de vos données personnelles, y compris dans le cadre des transactions commerciales, de l\'injection de code correctif sur vos sites et des connexions CMS directes.',
-                'Crawlers (Adrien de Volontat, sole proprietor — SIRET 992 399 667 00011) is committed to complying with the General Data Protection Regulation (GDPR) and ensuring the protection of your personal data, including in the context of commercial transactions, corrective code injection on your sites and direct CMS connections.',
-                'Crawlers (Adrien de Volontat, empresario individual — SIRET 992 399 667 00011) se compromete a cumplir con el Reglamento General de Protección de Datos (RGPD) y a garantizar la protección de sus datos personales, incluso en el marco de las transacciones comerciales, la inyección de código correctivo en sus sitios y las conexiones CMS directas.'
+                'Crawlers.fr, sa marque, son domaine et ses technologies sont la propriété exclusive de la société éditrice Voluntas Novare (SASU), qui s\'engage à respecter le Règlement Général sur la Protection des Données (RGPD) et à garantir la protection de vos données personnelles, y compris dans le cadre des transactions commerciales, de l\'injection de code correctif sur vos sites et des connexions CMS directes.',
+                'Crawlers.fr, its brand, its domain and its technologies are the exclusive property of the publishing company Voluntas Novare (SASU), which is committed to complying with the General Data Protection Regulation (GDPR) and ensuring the protection of your personal data, including in the context of commercial transactions, corrective code injection on your sites and direct CMS connections.',
+                'Crawlers.fr, su marca, su dominio y sus tecnologías son propiedad exclusiva de la empresa editora Voluntas Novare (SASU), que se compromete a cumplir con el Reglamento General de Protección de Datos (RGPD) y a garantizar la protección de sus datos personales, incluso en el marco de las transacciones comerciales, la inyección de código correctivo en sus sitios y las conexiones CMS directas.'
               )}
             </p>
 
