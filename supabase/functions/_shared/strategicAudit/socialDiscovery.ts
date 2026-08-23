@@ -110,9 +110,10 @@ function buildGmbFromListings(listings: RawListing[], brandName: string, hqHint?
     if (quickWins.length < 2) quickWins.push(`Publiez des Google Posts hebdomadaires (offres, actualités, événements) pour maintenir votre fiche active et améliorer votre positionnement local.`);
   }
 
+  const r1 = (v?: number) => (v != null ? Math.round(v * 10) / 10 : undefined);
   return {
     title: primary.title || brandName,
-    rating: typeof primary.rating === 'number' ? primary.rating : (weightedRating != null ? Math.round(weightedRating * 10) / 10 : undefined),
+    rating: typeof primary.rating === 'number' ? primary.rating : r1(weightedRating),
     reviews_count: typeof primary.reviews === 'number' ? primary.reviews : undefined,
     category: primary.category,
     address: primary.address,
@@ -121,9 +122,19 @@ function buildGmbFromListings(listings: RawListing[], brandName: string, hqHint?
     totalReviews: networkReviews > 0 ? networkReviews : (typeof primary.reviews === 'number' ? primary.reviews : undefined),
     locations_count: valid.length,
     ...(networkReviews > 0 ? { network_total_reviews: networkReviews } : {}),
-    ...(weightedRating != null ? { network_avg_rating: Math.round(weightedRating * 10) / 10 } : {}),
+    ...(weightedRating != null ? { network_avg_rating: r1(weightedRating) } : {}),
+    ...(isNetwork && meanRating != null ? { network_mean_rating: r1(meanRating) } : {}),
+    ...(isNetwork && medRating != null ? { network_median_rating: r1(medRating) } : {}),
+    ...(isNetwork && medReviews != null ? { network_median_reviews: Math.round(medReviews) } : {}),
+    ...(isNetwork && withReviews.length ? { network_avg_reviews_per_location: Math.round(networkReviews / valid.length) } : {}),
     is_multi_location: isNetwork,
     measurement_scope: isNetwork ? 'network' : 'single',
+    reference_listing: primarySelection === 'hq'
+      ? 'siège (adresse déclarée)'
+      : primarySelection === 'domain'
+        ? 'fiche rattachée au domaine audité'
+        : 'échantillon : fiche la plus notée (siège non identifié)',
+    ...(isNetwork ? { network_measurement_note: `Agrégats calculés sur ${valid.length} fiche(s) identifiée(s) — échantillon, pas nécessairement l'ensemble du réseau.` } : {}),
   };
 }
 
