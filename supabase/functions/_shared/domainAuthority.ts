@@ -628,9 +628,10 @@ export function computeBacklinkToxicity(input: {
     corroborating.push(`ancre « ${dominant?.anchor} » sur ${Math.round(dominantRatio * 100)} % de l'échantillon`);
   }
 
-  if (unnaturalRatio >= 0.25) {
+  if (unnaturalRatio >= 0.25 && anchorEvidenceSufficient) {
     corroborating.push(`${Math.round(unnaturalRatio * 100)} % d'ancres non naturelles`);
   }
+
   if (ranks.length >= 3 && avgReferrerRank < 15) {
     corroborating.push(`autorité moyenne des domaines tiers très faible (${avgReferrerRank}/100)`);
   }
