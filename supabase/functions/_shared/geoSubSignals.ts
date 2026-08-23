@@ -1,5 +1,5 @@
 /**
- * _shared/geoSubSignals.ts — GEO en 3 piliers à pondération décroissante
+ * _shared/geoSubSignals.ts — GEO en 3 piliers (barème fixe 25 / 22 / 53)
  *
  * Le score GEO global (0-100) mélange ce que la machine comprend du site, la
  * valeur du contenu à citer, et ce que le web dit du site. Deux pages peuvent
@@ -8,21 +8,20 @@
  *
  * Ce module décompose le GEO en 10 sous-signaux répartis en 3 piliers :
  *
- *   AUTORITÉ DOMAINE (25 pts, constant, mutualisé au domaine)
+ *   AUTORITÉ DOMAINE (25 pts, mutualisé au domaine)
  *     — crédibilité de la marque et présence mesurées hors de la page.
  *
- *   ACCESSIBILITÉ MACHINE (25 → 10 pts, décroissant)
+ *   ACCESSIBILITÉ MACHINE (22 pts, page)
  *     — ce qu'une machine peut lire et extraire du site tel qu'il est servi.
- *       Son poids est ÉLEVÉ aujourd'hui (le parc de sites concurrents est
- *       encore mal crawlable ou trop lent) et DÉCROÎT à mesure que ce parc se
- *       rénove : c'est un différenciateur transitoire qui se commoditise.
  *
- *   EXPLOITABILITÉ CONTENU (50 → 65 pts, croissant)
+ *   EXPLOITABILITÉ CONTENU (53 pts, page)
  *     — la valeur du contenu à citer (passages autoportants, données
- *       propriétaires, voix experte). Levier durable : son poids MONTE.
+ *       propriétaires, voix experte). C'est le levier durable, donc le pilier
+ *       le plus lourd.
  *
- * La somme des trois piliers vaut toujours 100 : seul le partage glisse avec
- * le temps (demi-vie 18 mois, ancrée au 2026-08-01).
+ * La somme des trois piliers vaut 100 et ne varie pas dans le temps : deux
+ * audits, quelle que soit leur date, se comparent directement.
+
  *
  * Aucun appel LLM : agrégation déterministe de signaux déjà mesurés ou testés
  * ailleurs. Chaque sous-signal porte sa provenance (voir provenance.ts).
