@@ -38,6 +38,8 @@ chaque pilier totalise son poids courant. 75 des 100 pts dépendent de la page a
 ## Rendu Marina
 - Tableau de décomposition (`pillarTableHTML`) : par pilier, ses sous-signaux avec leur
   poids en points, le poids du pilier, son score /100, les points acquis ; ligne de total
-  à 100 pts. Colonne « Barème » = poids fixe.
+  à 100 pts. Colonne « Barème » = tendance (constant 25 pts / −1 pt par 18 mois,
+  plancher 17 pts / monte vers 58 pts). La note de bas de bloc date le barème.
+
 - Cartes de piliers + mini-cells `geoPillars` par fiche URL pour la variance.
 - Charte : violet #6d28d9, or #8a6d1f, noir, gris ; bordures sans fond plein, aucun emoji.
