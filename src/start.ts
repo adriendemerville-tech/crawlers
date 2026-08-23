@@ -3,6 +3,7 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 import { applyLangVariantSeo, isNonFrLangVariant } from "@/lib/seo/langVariantSeo";
+import { applyNotFoundSeo, isNonIndexableStatus } from "@/lib/seo/notFoundSeo";
 
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
@@ -77,8 +78,41 @@ const langVariantSeoMiddleware = createMiddleware().server(async ({ next, reques
   });
 });
 
+// GEO / accessibilité machine : une réponse non-200 doit être cohérente pour un
+// robot — statut 404 réel + `noindex` dès le HTML initial + header X-Robots-Tag.
+// Sans cela, le head sitewide annonce `index, follow` sur une page d'erreur et
+// les agents IA la traitent comme du contenu indexable (soft-404 déguisé).
+const notFoundSeoMiddleware = createMiddleware().server(async ({ next, handlerType }) => {
+  const result = await next();
+  if (handlerType !== "router") return result;
+
+  const response = result.response;
+  if (!isNonIndexableStatus(response.status)) return result;
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const headers = new Headers(response.headers);
+  headers.set("x-robots-tag", "noindex, follow");
+
+  if (!contentType.includes("text/html")) {
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
+
+  const html = applyNotFoundSeo(await response.text());
+  headers.delete("content-length");
+
+  return new Response(html, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+});
+
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
-  requestMiddleware: [errorMiddleware, csrfMiddleware, langVariantSeoMiddleware],
+  requestMiddleware: [errorMiddleware, csrfMiddleware, langVariantSeoMiddleware, notFoundSeoMiddleware],
 }));
 
