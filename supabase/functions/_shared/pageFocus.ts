@@ -193,7 +193,7 @@ function termsOf(phrase: string): string[] {
  */
 export function derivePageFocus(
   rawUrl: string,
-  meta: { title?: string | null; h1?: string | null; knownLocalities?: string[] } = {},
+  meta: { title?: string | null; h1?: string | null; knownLocalities?: string[]; brandName?: string | null } = {},
 ): PageFocus {
   let path = '';
   try {
