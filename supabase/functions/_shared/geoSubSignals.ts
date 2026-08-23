@@ -1,5 +1,5 @@
 /**
- * _shared/geoSubSignals.ts — GEO en 3 piliers à pondération décroissante
+ * _shared/geoSubSignals.ts — GEO en 3 piliers (barème fixe 25 / 22 / 53)
  *
  * Le score GEO global (0-100) mélange ce que la machine comprend du site, la
  * valeur du contenu à citer, et ce que le web dit du site. Deux pages peuvent
@@ -8,21 +8,20 @@
  *
  * Ce module décompose le GEO en 10 sous-signaux répartis en 3 piliers :
  *
- *   AUTORITÉ DOMAINE (25 pts, constant, mutualisé au domaine)
+ *   AUTORITÉ DOMAINE (25 pts, mutualisé au domaine)
  *     — crédibilité de la marque et présence mesurées hors de la page.
  *
- *   ACCESSIBILITÉ MACHINE (25 → 10 pts, décroissant)
+ *   ACCESSIBILITÉ MACHINE (22 pts, page)
  *     — ce qu'une machine peut lire et extraire du site tel qu'il est servi.
- *       Son poids est ÉLEVÉ aujourd'hui (le parc de sites concurrents est
- *       encore mal crawlable ou trop lent) et DÉCROÎT à mesure que ce parc se
- *       rénove : c'est un différenciateur transitoire qui se commoditise.
  *
- *   EXPLOITABILITÉ CONTENU (50 → 65 pts, croissant)
+ *   EXPLOITABILITÉ CONTENU (53 pts, page)
  *     — la valeur du contenu à citer (passages autoportants, données
- *       propriétaires, voix experte). Levier durable : son poids MONTE.
+ *       propriétaires, voix experte). C'est le levier durable, donc le pilier
+ *       le plus lourd.
  *
- * La somme des trois piliers vaut toujours 100 : seul le partage glisse avec
- * le temps (demi-vie 18 mois, ancrée au 2026-08-01).
+ * La somme des trois piliers vaut 100 et ne varie pas dans le temps : deux
+ * audits, quelle que soit leur date, se comparent directement.
+
  *
  * Aucun appel LLM : agrégation déterministe de signaux déjà mesurés ou testés
  * ailleurs. Chaque sous-signal porte sa provenance (voir provenance.ts).
@@ -38,33 +37,41 @@ export type GeoPillar = 'authority' | 'accessibility' | 'content';
 /** Le « GeoFamily » historique (compréhension/autorité) devient ces 3 piliers. */
 export type GeoFamily = GeoPillar;
 
-/** Mois écoulés depuis l'ancre de pondération (2026-08-01). */
+/**
+ * Conservé pour compatibilité : le barème est désormais FIXE, cette valeur n'est
+ * plus utilisée dans le calcul des poids.
+ */
 export function geoElapsedMonths(now: Date = new Date()): number {
   const anchor = Date.UTC(2026, 7, 1); // 2026-08-01 00:00 UTC
   return Math.max(0, (now.getTime() - anchor) / (1000 * 60 * 60 * 24 * (365.25 / 12)));
 }
 
+/** Barème GEO fixe (somme = 100) : 25 / 22 / 53. */
+export const GEO_PILLAR_POINTS: Record<GeoPillar, number> = {
+  authority: 25,
+  accessibility: 22,
+  content: 53,
+};
+
 /**
- * Poids des trois piliers à une date donnée (toujours sur 100).
- *  - autorité domaine  : constant 25
- *  - accessibilité     : 10 + 15 × 0,5^(t/18)  (décroît de 25 → 10)
- *  - contenu           : 100 − 25 − accessibilité  (monte de 50 → 65)
+ * Poids des trois piliers (toujours sur 100, identiques à toute date) :
+ *  - autorité domaine    : 25 (mutualisé)
+ *  - accessibilité machine : 22 (page)
+ *  - exploitabilité contenu : 53 (page)
+ * Le paramètre `now` est conservé pour la compatibilité des appelants.
  */
-export function geoPillarTotals(now: Date = new Date()): Record<GeoPillar, number> {
-  const t = geoElapsedMonths(now);
-  const authority = 25;
-  const accessibility = 10 + 15 * Math.pow(0.5, t / 18);
-  const content = 100 - authority - accessibility;
-  return { authority, accessibility, content };
+export function geoPillarTotals(_now: Date = new Date()): Record<GeoPillar, number> {
+  return { ...GEO_PILLAR_POINTS };
 }
 
-/** Tendance de chaque pilier : constant / décroît / monte. */
+/** Tendance de chaque pilier : le barème est fixe, donc constant partout. */
 export type GeoPillarTrend = 'constant' | 'decays' | 'grows';
 export const GEO_PILLAR_TREND: Record<GeoPillar, GeoPillarTrend> = {
   authority: 'constant',
-  accessibility: 'decays',
-  content: 'grows',
+  accessibility: 'constant',
+  content: 'constant',
 };
+
 
 /** Poids relatifs (fixes) des sous-signaux à l'intérieur de chaque pilier. */
 export const GEO_PILLAR_REL: Record<GeoPillar, Record<string, number>> = {
@@ -129,7 +136,7 @@ export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
     lever: 'Consolider les pages proches du top 10 avant d’en créer de nouvelles.',
   },
 
-  // ── Pilier accessibilité machine (25 → 10, décroissant) ──────────────────
+  // ── Pilier accessibilité machine (22 pts) ────────────────────────────────
   {
     key: 'bot_accessibility',
     family: 'accessibility',
@@ -158,7 +165,7 @@ export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
     lever: 'Afficher une date de mise à jour réelle et rafraîchir les pages stratégiques.',
   },
 
-  // ── Pilier exploitabilité contenu (50 → 65, croissant) ───────────────────
+  // ── Pilier exploitabilité contenu (53 pts) ───────────────────────────────
   {
     key: 'content_quotability',
     family: 'content',
@@ -604,19 +611,10 @@ const PILLAR_ACCENT: Record<GeoPillar, string> = {
   content: '#111827',
 };
 
+/** Barème fixe : chaque pilier porte un poids constant, indiqué en clair. */
 function trendText(p: GeoPillar, lang?: string): string {
-  const fr = {
-    authority: 'constant',
-    accessibility: 'décroît vers 10 pts',
-    content: 'monte vers 65 pts',
-  };
-  const en = {
-    authority: 'constant',
-    accessibility: 'decays toward 10 pts',
-    content: 'rises toward 65 pts',
-  };
-  const map = lang === 'en' ? en : fr;
-  return map[p];
+  const pts = GEO_PILLAR_POINTS[p];
+  return lang === 'en' ? `fixed ${pts} pts` : `poids fixe ${pts} pts`;
 }
 
 function barRow(s: GeoSubSignalValue, lang?: string): string {
@@ -734,8 +732,8 @@ export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string
     : '';
 
   const note = lang === 'en'
-    ? `Weighting as of ${report.weight_date}. Machine accessibility (${report.pillar_points.accessibility} pts today) carries weight while many competing sites remain hard to crawl or too slow — it decays toward 10 pts as the site park renovates. Content exploitability (${report.pillar_points.content} pts today) is the durable lever and rises toward 65 pts.`
-    : `Pondération au ${report.weight_date}. L’accessibilité machine (${report.pillar_points.accessibility} pts aujourd’hui) pèse fort tant que beaucoup de sites concurrents restent difficilement crawlables ou trop lents : elle décroît vers 10 pts à mesure que le parc de sites se rénove. L’exploitabilité du contenu (${report.pillar_points.content} pts aujourd’hui) est le levier durable : elle monte vers 65 pts.`;
+    ? `Fixed GEO scale: domain authority 25 pts (mutualized), machine accessibility 22 pts, content exploitability 53 pts. 75 of the 100 pts therefore depend on the audited page itself, and weights are identical across audits — two reports compare directly.`
+    : `Barème GEO fixe : autorité domaine 25 pts (mutualisée), accessibilité machine 22 pts, exploitabilité contenu 53 pts. 75 des 100 pts dépendent donc de la page auditée elle-même, et les poids sont identiques d’un audit à l’autre : deux rapports se comparent directement.`;
 
   return `<div style="margin-top:16px;padding:14px;border:1px solid #e5e7eb;border-radius:8px;background:#ffffff;page-break-inside:avoid;text-align:left;">
     <h4 style="font-size:14px;font-weight:600;color:#111827;margin:0 0 6px;">${lang === 'en' ? 'GEO in 10 sub-signals across 3 pillars' : 'Le GEO en 10 sous-signaux, 3 piliers'}</h4>
