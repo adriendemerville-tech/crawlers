@@ -1529,8 +1529,11 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
   const brokenLinksInsight = htmlAnalysis?.insights?.brokenLinks || {};
 
   const crawlMeta = crawlSnapshot || {
+    primaryUrl: url || null,
+    primaryIsHome: (() => { try { return (new URL(url).pathname.replace(/\/+$/, '') || '/') === '/'; } catch { return true; } })(),
     pagesFound: rawData?.internalLinks?.length || linkProfile?.internal || 1,
     avgSeoScore: null,
+
     avgResponseTime: rawData?.responseTimeMs || null,
     wordCount: htmlAnalysis?.wordCount || 0,
     imagesTotal: htmlAnalysis?.imagesTotal || 0,
