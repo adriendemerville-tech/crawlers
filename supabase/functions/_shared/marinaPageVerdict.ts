@@ -386,8 +386,12 @@ export function buildPageVerdictHTML(
   const gs = (ctx.geoSignals || []).filter((s) => s && s.label && Number(s.weight) > 0);
   const gsMeasured = gs.filter((s) => s.value !== null);
   const gsMissing = gs.filter((s) => s.value === null);
-  const gsWeight = gsMeasured.reduce((a, s) => a + Number(s.weight), 0);
-  const gsPoints = gsMeasured.reduce((a, s) => a + (Number(s.weight) * Number(s.value)) / 100, 0);
+  // Somme de flottants : sans arrondi explicite, le total s'affichait
+  // « 99.99999999999999 » dans le rapport exporté.
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+  const gsWeight = round1(gsMeasured.reduce((a, s) => a + Number(s.weight), 0));
+  const gsPoints = round1(gsMeasured.reduce((a, s) => a + (Number(s.weight) * Number(s.value)) / 100, 0));
+
   const weightsHTML = gsMeasured.length
     ? `
     <p style="font-size:12.5px;font-weight:600;color:#111827;margin:14px 0 4px 0;">${t('Pondérations appliquées au score GEO de cette page', 'Weights applied to this page GEO score')}</p>
