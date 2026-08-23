@@ -971,14 +971,30 @@ export function buildAuthorityPromptSection(a: AuthorityData | null): string {
     `- Échantillon analysé : ${a.referring_domains_sampled} domaines référents sur ${a.referring_domains}, ${a.anchors_sampled} ancres (${a.anchors_source === 'anchors_endpoint' ? 'ancres mesurées via endpoint dédié' : a.anchors_source === 'summary_sample' ? 'ancres issues du résumé, échantillon tronqué' : 'ancres indisponibles'})`,
     a.top_anchors.length ? `- Ancres principales : ${a.top_anchors.join(', ')}` : `- Ancres principales : non exploitables`,
   ];
+  if (a.segmentation && a.segmentation.sampled > 0) {
+    const g = a.segmentation;
+    const fmt = (c: CompartmentStats) => `${c.domains} domaines (${Math.round(c.share_domains * 100)} %), ${c.backlinks} liens, rank moyen ${c.avg_rank}/100`;
+    lines.push(
+      `- SEGMENTATION DU PROFIL (échantillon de ${g.sampled} référents) : réseau propre → ${fmt(g.own_network)} ; annuaires/plateformes → ${fmt(g.directory_platform)} ; éditorial tiers → ${fmt(g.third_party_editorial)}`,
+      `- Classification du réseau propre : ${g.own_network_source === 'verified' ? 'propriété prouvée' : g.own_network_source === 'brand_token_suspected' ? 'rattachement par racine de marque, À CONFIRMER (ne pas affirmer que ces domaines appartiennent au client)' : g.own_network_source === 'mixed' ? 'partiellement prouvée, partiellement supposée' : 'aucun réseau propre détecté'}`,
+    );
+  }
   if (a.toxicity) {
     const t = a.toxicity;
     lines.push(
-      `- TOXICITE DU PROFIL = ${t.toxicity_score}/100, verdict "${t.verdict}" (ancre dominante ${Math.round(t.dominant_anchor_ratio * 100)} %, ancres non naturelles ${Math.round(t.unnatural_anchor_ratio * 100)} %, rank moyen des référents ${t.avg_referrer_rank}/100, ${t.links_per_domain} liens/domaine)`,
+      `- TOXICITE DU PROFIL = ${t.toxicity_score}/100 (périmètre : ${t.scope === 'third_party_only' ? 'liens tiers uniquement, réseau propre exclu' : 'tous les référents'}), verdict "${t.verdict}" (ancre dominante ${Math.round(t.dominant_anchor_ratio * 100)} %, ancres non naturelles ${Math.round(t.unnatural_anchor_ratio * 100)} %, rank moyen des référents tiers ${t.avg_referrer_rank}/100, ${t.links_per_domain} liens/domaine hors réseau propre${typeof t.links_per_domain_all === 'number' ? ` contre ${t.links_per_domain_all} tous référents` : ''})`,
       t.signals.length ? `- Signaux de toxicité : ${t.signals.join(' ; ')}` : `- Signaux de toxicité : aucun`,
       `- Action liens : ${t.recommendation}`,
     );
   }
+  if (a.own_network_hygiene && a.own_network_hygiene.verdict !== 'non_mesure') {
+    const h = a.own_network_hygiene;
+    lines.push(
+      `- HYGIENE DU RESEAU PROPRE (indicateur distinct, JAMAIS additionné à la toxicité) = verdict "${h.verdict}" : ${h.domains} domaines, ${h.backlinks} liens, ${h.links_per_domain} liens/domaine${h.sitewide_suspected ? ', empreinte sitewide probable' : ''}`,
+      `- Action réseau propre : ${h.recommendation} Ne jamais proposer de désaveu sur ces domaines.`,
+    );
+  }
+
   const d = a.distribution;
   if (d && d.source !== 'unavailable') {
     const pct = (b: DistributionBucket) => `${b.key} ${Math.round(b.share * 100)} %`;
