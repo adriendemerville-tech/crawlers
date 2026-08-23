@@ -2326,19 +2326,26 @@ Deno.serve(handleRequest(async (req) => {
     if (htmlAnalysis.h1Count === 1) semanticScore += 20;
     if (htmlAnalysis.wordCount >= 500) semanticScore += 20;
 
-    // Une page sans corps de texte lisible ne mérite pas les points de
-    // sémantique : les balises seules ne font pas un contenu.
-    if (textStarved && semanticScore > 20) {
-      scoreGates.push({
-        axis: 'semantic',
-        reason: 'Balises présentes mais aucun corps de texte lisible dans le HTML servi',
-        evidence: `${htmlAnalysis.wordCount} mots extraits → cible ≥ 500 (score plafonné à 20/60, soit −${semanticScore - 20} points)`,
-        pointsLost: semanticScore - 20,
-        measured: `${htmlAnalysis.wordCount} mots`,
-        target: '≥ 500 mots',
-      });
-      semanticScore = 20;
+    // Même logique sur la sémantique : abattement proportionnel à la sévérité
+    // (jusqu'à −65 %), plancher 20/60. Les balises seules ne font pas un
+    // contenu, mais elles ne valent pas zéro non plus.
+    if (textStarved) {
+      const cut = 0.65 * ((starvationSeverity - 0.45) / 0.55);
+      const penalised = Math.max(20, Math.round(semanticScore * (1 - cut)));
+      if (penalised < semanticScore) {
+        const lost = semanticScore - penalised;
+        scoreGates.push({
+          axis: 'semantic',
+          reason: 'Balisage présent mais corps de texte lisible très insuffisant dans le HTML servi',
+          evidence: `${htmlAnalysis.wordCount} mots extraits → cible ≥ 500 (abattement de ${Math.round(cut * 100)} % de l'axe sémantique, soit −${lost} points sur 60)`,
+          pointsLost: lost,
+          measured: `${htmlAnalysis.wordCount} mots`,
+          target: '≥ 500 mots',
+        });
+        semanticScore = penalised;
+      }
     }
+
 
     
     let aiReadyScore = 0;
