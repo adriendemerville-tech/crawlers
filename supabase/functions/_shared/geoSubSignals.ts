@@ -779,6 +779,7 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
     verdict_explanation: v.explanation,
     priority_levers: priority,
     gates: normalizeGates(rawGates, 'geo'),
+    citation_calibration: calibration,
   };
 }
 
