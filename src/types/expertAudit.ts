@@ -402,6 +402,23 @@ export interface BacklinkToxicity {
   broken_ratio: number;
   signals: string[];
   recommendation: string;
+  /** `third_party_only` = le réseau propre est exclu du score (mesuré à part). */
+  scope?: 'third_party_only' | 'all_referrers';
+  own_network_domains?: string[];
+  own_network_backlink_share?: number;
+  links_per_domain_all?: number;
+  anchor_attribution?: 'all_referrers' | 'all_referrers_downgraded';
+}
+
+/** Hygiène du réseau propre — jamais additionnée à la toxicité. */
+export interface OwnNetworkHygiene {
+  domains: number;
+  backlinks: number;
+  links_per_domain: number;
+  sitewide_suspected: boolean;
+  verdict: 'non_mesure' | 'sain' | 'a_corriger_a_la_source';
+  signals: string[];
+  recommendation: string;
 }
 
 export interface OrganicVisibility {
