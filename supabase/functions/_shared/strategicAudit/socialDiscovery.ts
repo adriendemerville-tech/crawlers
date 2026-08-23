@@ -23,6 +23,31 @@ interface RawListing {
   category?: string;
   address?: string;
   is_claimed?: boolean;
+  /** La fiche pointe explicitement vers le domaine audité (signal de siège / fiche mère). */
+  domain_match?: boolean;
+}
+
+/** Médiane d'une série numérique (retourne undefined si série vide). */
+function median(values: number[]): number | undefined {
+  const arr = values.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+  if (arr.length === 0) return undefined;
+  const mid = Math.floor(arr.length / 2);
+  return arr.length % 2 === 1 ? arr[mid]! : ((arr[mid - 1]! + arr[mid]!) / 2);
+}
+
+/**
+ * Extrait les tokens de localité exploitables d'une adresse déclarée (siège).
+ * « 12 rue des Lilas, 77090 Collégien » → ['collegien', '77090'].
+ */
+function localityTokens(hint: string): string[] {
+  const norm = (hint || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const zips = norm.match(/\b\d{5}\b/g) || [];
+  const words = norm
+    .replace(/\b\d+\b/g, ' ')
+    .replace(/[^a-z\- ]+/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length > 3 && !['rue', 'avenue', 'boulevard', 'chemin', 'route', 'place', 'impasse', 'cedex', 'france', 'zone', 'parc'].includes(w));
+  return [...zips, ...words];
 }
 
 /** Normalise un nom de marque pour comparaison (accents, casse, ponctuation). */
