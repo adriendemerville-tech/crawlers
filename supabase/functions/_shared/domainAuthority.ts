@@ -923,6 +923,9 @@ export async function fetchDomainAuthority(
       toxicity,
       distribution,
       top_linked_pages: linkedPages.slice(0, 10),
+      segmentation,
+      own_network_hygiene: ownNetworkHygiene,
+
       organic_visibility: opts?.organicVisibility ?? null,
       referring_domains_sampled: refSample.length,
       anchors_sampled: anchors.length,
