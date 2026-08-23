@@ -219,8 +219,10 @@ export function derivePageFocus(
   }
 
   const { locality, rest } = extractLocality(slug.replace(/\.(html?|php|aspx?)$/i, ''), meta.knownLocalities || []);
-  const service = humanize(rest) || null;
+  const cleanedRest = sanitizeServicePhrase(rest, meta.brandName);
+  const service = humanize(cleanedRest) || null;
   const slugPhrase = humanize(slug);
+
 
   const focusTerms: string[] = [];
   const seen = new Set<string>();
