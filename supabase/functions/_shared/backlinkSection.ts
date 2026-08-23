@@ -282,12 +282,12 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
     : '';
 
   const reliability = `<p style="font-size:11.5px;color:#6b7280;margin:0;line-height:1.6;">
-      Échantillon : ${nf(a.referring_domains_sampled)}/${nf(a.referring_domains)} domaines, ${nf(a.anchors_sampled)} ancres. Fiabilité ${CONFIDENCE_LABEL[a.confidence] || a.confidence}. Source DataForSEO ${esc(a.fetched_at?.slice(0, 10) || 'n/d')}, calibration v${a.calibration_version}. Estimation Crawlers, pas un score Google ni Semrush : signal d'investigation, pas preuve de pénalité. Vérifier qu'un domaine est bien tiers avant tout désaveu.
+      Échantillon ${nf(a.referring_domains_sampled)}/${nf(a.referring_domains)} domaines · ${nf(a.anchors_sampled)} ancres · fiabilité ${CONFIDENCE_LABEL[a.confidence] || a.confidence} · DataForSEO ${esc(a.fetched_at?.slice(0, 10) || 'n/d')}, calibration v${a.calibration_version}. Estimation Crawlers : signal d'investigation, pas preuve de pénalité.
     </p>`;
 
   return `<div data-marina-block="backlinks" style="margin-top:20px;padding:16px;background:#ffffff;border-radius:8px;border:1px solid #e5e7eb;">
     <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">Profil de backlinks — volumétrie, autorité et toxicité</h3>
-    <p style="font-size:12px;color:#6b7280;margin:0 0 10px 0;">Liens externes vers ${esc(a.domain)} ; maillage interne exclu.</p>
+    <p style="font-size:12px;color:#6b7280;margin:0 0 10px 0;">Liens externes vers ${esc(a.domain)}.</p>
     ${volumetry}
     ${sub('Score de toxicité — détail du calcul', toxTable)}
     ${sub('Segmentation du profil', segHtml)}
