@@ -604,6 +604,9 @@ export default function Marina() {
   const [phase, setPhase] = useState('');
   const [activeScanMode, setActiveScanMode] = useState<ActiveScanMode | null>(null);
   const [scanPagesCrawled, setScanPagesCrawled] = useState<number | null>(null);
+  // Position dans la file d'attente (non nul ⇒ le job n'a pas encore démarré)
+  const [queuePosition, setQueuePosition] = useState<number | null>(null);
+
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const [reportHtml, setReportHtml] = useState<string | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
