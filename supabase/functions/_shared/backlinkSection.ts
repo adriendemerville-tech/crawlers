@@ -301,8 +301,11 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
     <p style="font-size:12px;color:#6b7280;margin:0 0 12px 0;">Ce que d’autres sites disent de ${esc(a.domain)}. Tous les liens comptés ici sont <strong>externes</strong> : le maillage interne est exclu de la mesure. Le détail du calcul est donné pour que chaque chiffre soit vérifiable.</p>
     ${volumetry}
     ${sub('Comment l’Authority Score est calculé', 'Un score maison, reconstitué à partir du rank mesuré et de la diversité des référents.', scoreExplain)}
-    ${sub('Score de toxicité — détail du calcul', 'Chaque signal mesuré ajoute des points. Le total borné à 100 donne le verdict.', toxTable)}
+    ${sub('Segmentation du profil — trois compartiments', 'Vos propres domaines, les annuaires et l’éditorial tiers sont mesurés séparément : ils n’exposent pas aux mêmes risques et ne se corrigent pas de la même façon.', segHtml)}
+    ${sub('Score de toxicité — détail du calcul', 'Risque de dévaluation sur les liens tiers. Chaque signal mesuré ajoute des points ; le total borné à 100 donne le verdict.', toxTable)}
+    ${sub('Hygiène du réseau propre', 'Indicateur distinct, jamais additionné à la toxicité : sur des domaines que vous contrôlez, un défaut se corrige à la source et jamais par un désaveu.', hygieneHtml)}
     ${sub('Répartition du profil de liens', 'D’où viennent les liens : extensions, pays et types de plateformes mesurés sur l’échantillon.', distHtml)}
+
     ${sub('Principaux domaines référents', 'Les dix sources les plus actives de l’échantillon, avec leur autorité mesurée.', refs)}
     ${sub('Ancres les plus fréquentes', 'Le texte cliquable des liens entrants : une ancre trop répétée est le premier marqueur d’achat de liens.', anchors)}
     ${sub('Pages les plus liées', 'Les pages du domaine qui concentrent les liens externes.', pages)}
