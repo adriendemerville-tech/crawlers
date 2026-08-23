@@ -693,6 +693,63 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
     });
   }
 
+  // ─── Calibration par la citation réellement observée (±10 %) ───
+  // Les sous-signaux mesurent un potentiel ; le benchmark mesure le résultat.
+  // On corrige l'écart sans toucher au barème : un site parfaitement structuré
+  // que personne ne cite perd 10 %, un site cité malgré des signaux moyens en
+  // gagne 10 %. Le plafond d'autorité reste opposable après calibration.
+  const obsRate = num(inputs.observedCitation?.ratePct);
+  const obsCount = typeof inputs.observedCitation?.observations === 'number' && Number.isFinite(inputs.observedCitation.observations)
+    ? Math.max(0, Math.round(inputs.observedCitation.observations))
+    : null;
+  let calibration: GeoCitationCalibration = {
+    applied: false,
+    rate_pct: obsRate,
+    observations: obsCount,
+    factor_pct: 0,
+    pre_score: geo,
+    post_score: geo,
+    note: obsRate === null
+      ? 'Citation réelle non mesurée sur ce run : le score GEO exprime un potentiel de citation, pas un résultat observé.'
+      : `Échantillon de benchmark trop court (${obsCount ?? 0} observation${(obsCount ?? 0) > 1 ? 's' : ''}, minimum ${GEO_CALIBRATION_MIN_OBSERVATIONS}) : aucune calibration appliquée.`,
+  };
+
+  if (geo !== null && obsRate !== null && (obsCount ?? 0) >= GEO_CALIBRATION_MIN_OBSERVATIONS) {
+    const factor =
+      obsRate >= GEO_CALIBRATION_NEUTRAL_PCT
+        ? GEO_CALIBRATION_MAX_PCT *
+          Math.min(1, (obsRate - GEO_CALIBRATION_NEUTRAL_PCT) / (GEO_CALIBRATION_HIGH_PCT - GEO_CALIBRATION_NEUTRAL_PCT))
+        : -GEO_CALIBRATION_MAX_PCT * ((GEO_CALIBRATION_NEUTRAL_PCT - obsRate) / GEO_CALIBRATION_NEUTRAL_PCT);
+    const factorPct = Math.round(factor * 10) / 10;
+    const pre = geo;
+    let post = clamp100(pre * (1 + factorPct / 100));
+    if (authority.score === null && post > GEO_NO_AUTHORITY_CAP) post = GEO_NO_AUTHORITY_CAP;
+    geo = post;
+    calibration = {
+      applied: true,
+      rate_pct: obsRate,
+      observations: obsCount,
+      factor_pct: factorPct,
+      pre_score: pre,
+      post_score: post,
+      note:
+        factorPct === 0
+          ? `Citation réelle observée à ${obsRate} % sur ${obsCount} observations : conforme au potentiel mesuré, aucun ajustement.`
+          : factorPct > 0
+          ? `Citation réelle observée à ${obsRate} % sur ${obsCount} observations : la marque est citée plus souvent que ses signaux ne le laissaient prévoir (+${factorPct} %, ${pre}/100 → ${post}/100).`
+          : `Citation réelle observée à ${obsRate} % sur ${obsCount} observations : la marque est citée moins souvent que ses signaux ne le laissaient prévoir (${factorPct} %, ${pre}/100 → ${post}/100).`,
+    };
+    if (factorPct <= -5) {
+      rawGates.push({
+        axis: 'geo_citation',
+        reason: 'Écart entre potentiel et résultat : les signaux de citabilité sont meilleurs que la citation réellement observée dans les moteurs de réponse. Le score est calibré à la baisse.',
+        evidence: `citation observée ${obsRate} % sur ${obsCount} observations → cible ${GEO_CALIBRATION_NEUTRAL_PCT} % (score ${calibration.pre_score}/100 ramené à ${post}/100)`,
+        measured: `${obsRate} % de citation`,
+        target: `${GEO_CALIBRATION_NEUTRAL_PCT} % de citation observée`,
+      });
+    }
+  }
+
 
   const priority = signals
     .filter((s) => s.value !== null && (s.value as number) < 60)
