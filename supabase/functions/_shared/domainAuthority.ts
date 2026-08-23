@@ -628,7 +628,9 @@ export async function fetchDomainAuthority(
       referringDomains,
       brokenBacklinks: s.broken_backlinks || 0,
       dofollowRatio: dofollow,
+      auditedDomain: domain,
     });
+
 
     // Lot 2 : répartitions TLD / pays / plateformes (déjà dans le résumé, 0 appel
     // supplémentaire) + pages cibles mesurées via `domain_pages`.
