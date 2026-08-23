@@ -268,7 +268,9 @@ Deno.serve(handleRequest(async (req) => {
         !isContentMode && context.locationCode ? withDeadline(findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext, context.languageCode, context.seDomain, siteIdentityCtx, { locality: auditedPageFocus.locality, service: auditedPageFocus.service }), 20_000, 'local_competitor') : Promise.resolve(null),
 
         !isContentMode ? withDeadline(searchFounderProfile(domain, context.location, { brandName: context.brandName, siteText: pageContentContext }), 20_000, 'founder') : Promise.resolve(null),
-        !isContentMode && context.locationCode ? withDeadline(detectGoogleMyBusiness(domain, context.brandName, context.locationCode, context.languageCode), 12_000, 'gmb') : Promise.resolve(null),
+        // hqHint : l'adresse (ou la ville GMB) de la carte d'identité désigne le siège.
+        // Sans elle, un franchisé très noté remonterait comme fiche officielle du réseau.
+        !isContentMode && context.locationCode ? withDeadline(detectGoogleMyBusiness(domain, context.brandName, context.locationCode, context.languageCode, (siteIdentityCtx as any)?.address || (siteIdentityCtx as any)?.gmb_city || null), 12_000, 'gmb') : Promise.resolve(null),
         !isContentMode && context.locationCode ? withDeadline(searchFacebookPage(context.brandName, context.sector, context.locationCode, context.languageCode), 10_000, 'facebook_page') : Promise.resolve(null),
         withDeadline(fetchDomainAuthority(domainWithoutWww), 30_000, 'domain_authority'),
       ]);
