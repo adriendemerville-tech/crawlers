@@ -5164,6 +5164,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               roi: roiSummary,
               verdictSignals,
               verdictHtml: narratedVerdict.html,
+              // Juge unique du GEO : les 10 sous-signaux, calibrés par la
+              // citation réellement observée. La note LLM reste narrative.
+              geoDeterministic: pageGeo100,
+              geoCalibration: geoSubSignalsReport?.citation_calibration ?? null,
             }),
 
 
