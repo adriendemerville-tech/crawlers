@@ -1605,7 +1605,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
 
   const content = `
     <div class="section">
-      <div class="section-title"><span class="section-number">1</span> ${tr.crawlReport}</div>
+      <div class="section-title"><span class="section-number">2</span> ${tr.crawlReport}</div>
       ${sectionLead('crawl', lang)}
       ${topHtml}
       ${hostDupHtml}
@@ -1742,7 +1742,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 
   const content = `
     <div class="section">
-      <div class="section-title"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
+      <div class="section-title"><span class="section-number">3</span> 🔍 ${tr.techAudit}</div>
       ${sectionLead('tech', lang)}
       ${topHtml}
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
@@ -1844,12 +1844,12 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
 
   const content = `
     <div class="section">
-      <div class="section-title"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
+      <div class="section-title"><span class="section-number">1</span> 🎯 ${tr.strategicAudit}</div>
       ${sectionLead('strategic', lang)}
       ${topHtmlGeo}
       ${topHtmlEeat}
       ${topHtmlKw}
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
         <div class="score-badge" style="background:${scoreColor(stratScore, 100)}">${stratScore} / 100</div>
         <div style="font-size:12px;color:#6b7280;line-height:1.5;">
           <strong style="color:#111827;">Score stratégique global${strategicData?._mutualized_from_domain ? ` — niveau domaine (${domain})` : ''}</strong> :
@@ -1857,6 +1857,30 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
           <strong style="color:#111827;">Ce n'est pas le score GEO</strong> : le GEO propre à cette URL est celui des sous-signaux ci-dessous, calibré par la citation réellement observée. Les deux notes diffèrent normalement.
         </div>
       </div>
+
+      <div data-marina-block="strategic-score-definition" style="margin-bottom:20px;padding:16px;border:1px solid #ede9fe;border-left:4px solid #6d28d9;border-radius:8px;background:#faf9ff;">
+        <h3 style="font-size:14px;font-weight:600;margin:0 0 8px;">Ce que mesure le score stratégique global</h3>
+        <p class="intro-text" style="margin:0 0 10px;">
+          Le score stratégique global note la <strong>position du domaine sur son marché</strong> : sa capacité à être trouvé,
+          reconnu comme légitime et cité, indépendamment de la qualité technique d'une page donnée. Il est calculé
+          <strong>au niveau du domaine${domain ? ` (${domain})` : ''}</strong> et reste donc identique pour toutes les URLs d'un même lot.
+        </p>
+        <ul style="margin:0 0 10px 18px;padding:0;font-size:12.5px;color:#374151;line-height:1.7;">
+          <li><strong>Marché et concurrence</strong> — demande mesurée sur le secteur, concurrents identifiés et pression concurrentielle.</li>
+          <li><strong>Autorité de domaine</strong> — profil de liens : domaines référents, dofollow contextuels, toxicité, tendance.</li>
+          <li><strong>Mots-clés et positions</strong> — trafic organique estimé, positions réelles, top 3 / top 10, quick wins.</li>
+          <li><strong>E-E-A-T</strong> — preuves d'expérience, d'expertise, d'autorité et de fiabilité publiées sur le domaine.</li>
+          <li><strong>Citabilité par les moteurs de réponse</strong> — aptitude du contenu à être reprise telle quelle par une IA.</li>
+        </ul>
+        <p class="intro-text" style="margin:0;font-size:12px;color:#6b7280;">
+          À ne pas confondre avec les deux autres notes du rapport : le <strong>score SEO technique</strong> (section 3) porte
+          sur les signaux mesurés d'<em>une</em> page, et le <strong>score GEO</strong> porte sur les sous-signaux de cette même
+          page, calibrés par le taux de citation réellement observé auprès des moteurs de réponse. Trois périmètres,
+          trois granularités : un écart entre ces notes est attendu, il n'indique pas une incohérence.
+        </p>
+      </div>
+
+
 
 
       ${stratIntro?.presentation ? `<div class="intro-text">${stratIntro.presentation}</div>` : ''}
@@ -2837,18 +2861,37 @@ function compileMarinaReport(
 
     <!-- Table of Contents -->
     <div class="toc" data-pdf-section>
-      <div class="toc-item"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
-      ${sectionHTMLs.archetypes ? `<div class="toc-item"><span class="section-number">1b</span> ${lang === 'fr' ? 'Audit par type de page' : lang === 'es' ? 'Auditoría por tipo de página' : 'Audit by page type'}</div>` : ''}
-      <div class="toc-item"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
-      <div class="toc-item"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
-      ${sectionHTMLs.ownerPerformance ? `<div class="toc-item"><span class="section-number">3b</span> ${lang === 'fr' ? 'Données propriétaires du domaine' : lang === 'es' ? 'Datos propietarios del dominio' : 'First-party domain data'}</div>` : ''}
+      <div class="toc-item"><span class="section-number">1</span> 🎯 ${tr.strategicAudit}</div>
+      ${sectionHTMLs.ownerPerformance ? `<div class="toc-item"><span class="section-number">1b</span> ${lang === 'fr' ? 'Données propriétaires du domaine' : lang === 'es' ? 'Datos propietarios del dominio' : 'First-party domain data'}</div>` : ''}
+      <div class="toc-item"><span class="section-number">2</span> 🕷️ ${tr.crawlReport}</div>
+      ${sectionHTMLs.archetypes ? `<div class="toc-item"><span class="section-number">2b</span> ${lang === 'fr' ? 'Audit par type de page' : lang === 'es' ? 'Auditoría por tipo de página' : 'Audit by page type'}</div>` : ''}
+      <div class="toc-item"><span class="section-number">3</span> 🔍 ${tr.techAudit}</div>
       <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
       ${sectionHTMLs.indexation ? `<div class="toc-item"><span class="section-number">5</span> 📊 ${lang === 'fr' ? 'Santé d\'indexation' : lang === 'es' ? 'Salud de indexación' : 'Indexation Health'}</div>` : ''}
       ${sectionHTMLs.consolidatedPlan ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '6' : '5'}</span> ${lang === 'fr' ? "Plan d'action consolidé" : lang === 'es' ? 'Plan de acción consolidado' : 'Consolidated Action Plan'}</div>` : ''}
       ${sectionHTMLs.conclusion ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '7' : '6'}</span> ${lang === 'fr' ? 'Conclusion et priorités' : lang === 'es' ? 'Conclusión y prioridades' : 'Conclusion and priorities'}</div>` : ''}
     </div>
 
-    <!-- Section 1: Crawl (périmètre site) -->
+    <!-- Section 1 : Audit stratégique — le score de tête du rapport, périmètre domaine.
+         Placé en premier : c'est le cadre de lecture de tout ce qui suit. -->
+    <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
+
+    ${llmVisibilityBlock ? `
+    <!-- Visibilité / citabilité IA, rattachée à la section stratégique (elle en est l'objet).
+         Périmètre site sur la home, périmètre page sur une URL profonde. -->
+
+    <div data-marina-scope="${llmScopeIsPage ? 'page' : 'site'}" data-marina-block="llm">${llmVisibilityBlock}</div>
+    ` : ''}
+
+    ${sectionHTMLs.ownerPerformance ? `
+    <div class="marina-separator"></div>
+    <!-- Section 1b : données propriétaires GSC/GA4 (périmètre site, mutualisable) -->
+    ${sectionHTMLs.ownerPerformance}
+    ` : ''}
+
+    <div class="marina-separator"></div>
+
+    <!-- Section 2: Crawl (périmètre site) -->
     <div data-marina-scope="site" data-marina-block="crawl">${crawlContent}</div>
 
     ${sectionHTMLs.archetypes ? `
@@ -2860,31 +2903,14 @@ function compileMarinaReport(
     <div class="marina-separator"></div>
 
     ${sectionHTMLs.pageVerdict ? `
-    <!-- Conclusion intermédiaire propre à cette URL (périmètre page, en tête de la partie URL) -->
+    <!-- Conclusion intermédiaire propre à cette URL (périmètre page) -->
     ${sectionHTMLs.pageVerdict}
     <div class="marina-separator"></div>
     ` : ''}
 
-    <!-- Section 2: Technical SEO (périmètre page) -->
+    <!-- Section 3: Technical SEO (périmètre page) -->
     <div data-marina-scope="page" data-marina-block="tech">${techContent}</div>
 
-    <div class="marina-separator"></div>
-
-    <!-- Section 3: Strategic GEO (périmètre page) -->
-    <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
-
-    ${llmVisibilityBlock ? `
-    <!-- Visibilité / citabilité IA, rattachée à la section GEO (elle en est l'objet).
-         Périmètre site sur la home, périmètre page sur une URL profonde. -->
-
-    <div data-marina-scope="${llmScopeIsPage ? 'page' : 'site'}" data-marina-block="llm">${llmVisibilityBlock}</div>
-    ` : ''}
-
-    ${sectionHTMLs.ownerPerformance ? `
-    <div class="marina-separator"></div>
-    <!-- Section 3b : données propriétaires GSC/GA4 (périmètre site, mutualisable) -->
-    ${sectionHTMLs.ownerPerformance}
-    ` : ''}
 
     <div class="marina-separator"></div>
 
