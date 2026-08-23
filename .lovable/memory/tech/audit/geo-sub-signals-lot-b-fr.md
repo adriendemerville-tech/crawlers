@@ -14,8 +14,13 @@ mesure que le parc de sites se rénove.
 
 - **Pilier A — Autorité domaine (25 pts, constant, mutualisé)** : `brand_authority`
   (rel 14), `serp_presence` (11).
-- **Pilier B — Accessibilité machine (22 → 17 pts, page)** : `bot_accessibility` (14),
-  `structured_data_quality` (12), `content_freshness` (6).
+- **Pilier B — Accessibilité machine (22 → 17 pts, page)** : `bot_accessibility`,
+  `structured_data_quality`, `ai_bot_policy`, `content_freshness`. `ai_bot_policy`
+  note l'autorisation nommée des robots IA et détecte le throttling (429/403) ;
+  `structured_data_quality` intègre la complétude du nœud d'identité `Organization`
+  (adresse, contact, sameAs) pour 35 % du signal, et une décote sur les réponses
+  non-200 sans corps utile. Le gate `geo_bot_policy` remonte en tête du workbench.
+
 - **Pilier C — Exploitabilité contenu (53 → 58 pts, page)** : `content_quotability` (10),
   `answer_formatting` (8), `knowledge_graph_signals` (10), `self_citation_signals` (8),
   `person_authority` (6).
