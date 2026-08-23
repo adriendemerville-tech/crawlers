@@ -4761,6 +4761,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           // Livraison serveur mesurée (PSI server-response-time) : décote locale
           // de l'accessibilité robots. Le LCP reste hors du GEO (double pénalité).
           ttfbMs: typeof expertData?.performance?.ttfb === 'number' ? expertData.performance.ttfb : null,
+          // Citation réellement observée dans les moteurs de réponse : sert de
+          // facteur de calibration ±10 % du score GEO (jamais de sous-signal, la
+          // mesure étant mutualisée au domaine).
+          observedCitation: extractObservedCitation(llmVisibilityData),
         });
 
         // Plafonds unifiés (techniques + GEO) : ordre d'entrée du workbench et du
