@@ -470,6 +470,7 @@ export function buildPageVerdictHTML(
       ${cell(t('GEO / citabilité IA', 'GEO / AI citability'), geo === null ? 'n/d' : `${geo}/100`)}
       ${f && f.linksIn !== null ? cell(t('Liens internes entrants', 'Inbound links'), String(f.linksIn)) : ''}
     </div>
+    ${pillarsHTML}
     ${pageActionRows.length ? `
     <p style="font-size:13px;font-weight:600;color:#111827;margin:14px 0 6px 0;">${t('À corriger sur cette page', 'To fix on this page')}</p>
     <ol style="padding-left:20px;font-size:13px;color:#374151;line-height:1.7;margin:0;">
@@ -484,7 +485,7 @@ export function buildPageVerdictHTML(
     <ul style="padding-left:20px;font-size:12.5px;color:#6b7280;line-height:1.65;margin:0;">
       ${inherited.map((a) => `<li style="margin:0 0 4px 0;">${esc(a)}</li>`).join('')}
     </ul>` : ''}
-    ${pillarsHTML}
+    ${gatesHTML}
 
     ${weightsHTML}
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
