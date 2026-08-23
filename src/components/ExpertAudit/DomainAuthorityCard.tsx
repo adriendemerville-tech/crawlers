@@ -75,7 +75,7 @@ export function DomainAuthorityCard({ authority }: Props) {
             {authority.toxicity && (
               <div className="space-y-2 rounded-lg border border-border p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Toxicité du profil de liens</span>
+                  <span className="text-sm font-medium">Toxicité des liens tiers</span>
                   <Badge variant="outline" className="text-xs">
                     {toxicityLabel(authority.toxicity.verdict)} · {authority.toxicity.toxicity_score}/100
                   </Badge>
@@ -84,7 +84,12 @@ export function DomainAuthorityCard({ authority }: Props) {
                   <div>Ancre dominante : {Math.round(authority.toxicity.dominant_anchor_ratio * 100)} %</div>
                   <div>Ancres non naturelles : {Math.round(authority.toxicity.unnatural_anchor_ratio * 100)} %</div>
                   <div>Rank moyen des référents : {authority.toxicity.avg_referrer_rank}/100</div>
-                  <div>Liens par domaine : {authority.toxicity.links_per_domain}</div>
+                  <div>
+                    Liens par domaine : {authority.toxicity.links_per_domain_all ?? authority.toxicity.links_per_domain}
+                    {typeof authority.toxicity.links_per_domain_all === 'number' &&
+                      authority.toxicity.links_per_domain_all !== authority.toxicity.links_per_domain &&
+                      ` (${authority.toxicity.links_per_domain} hors réseau propre)`}
+                  </div>
                 </div>
                 {authority.toxicity.signals.length > 0 && (
                   <ul className="list-inside list-disc space-y-1 text-xs text-muted-foreground">
@@ -94,8 +99,41 @@ export function DomainAuthorityCard({ authority }: Props) {
                   </ul>
                 )}
                 <p className="text-xs">{authority.toxicity.recommendation}</p>
+                {authority.toxicity.scope === 'third_party_only' && (
+                  <p className="text-xs text-muted-foreground">
+                    Score calculé hors réseau propre : le désaveu n’a de sens que sur des domaines que vous ne
+                    contrôlez pas.
+                  </p>
+                )}
               </div>
             )}
+
+            {authority.own_network_hygiene && authority.own_network_hygiene.verdict !== 'non_mesure' && (
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Hygiène du réseau propre</span>
+                  <Badge variant="outline" className="text-xs">
+                    {authority.own_network_hygiene.verdict === 'a_corriger_a_la_source'
+                      ? 'À corriger à la source'
+                      : 'Sain'}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+                  <div>Domaines : {authority.own_network_hygiene.domains}</div>
+                  <div>Liens : {authority.own_network_hygiene.backlinks}</div>
+                  <div>Liens par domaine : {authority.own_network_hygiene.links_per_domain}</div>
+                </div>
+                {authority.own_network_hygiene.signals.length > 0 && (
+                  <ul className="list-inside list-disc space-y-1 text-xs text-muted-foreground">
+                    {authority.own_network_hygiene.signals.map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-xs">{authority.own_network_hygiene.recommendation}</p>
+              </div>
+            )}
+
 
             {authority.organic_visibility?.source === 'dataforseo_labs' && (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
