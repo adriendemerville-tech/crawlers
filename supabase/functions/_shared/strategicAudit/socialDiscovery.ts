@@ -330,14 +330,31 @@ export async function searchFacebookPage(brandName: string, sector: string, loca
 
 // ==================== LOCAL COMPETITOR DISCOVERY ====================
 
+/**
+ * Concurrents réellement en face du prospect.
+ *
+ * Sur une page localisée (« /renovation-maison-marseille »), le concurrent
+ * pertinent n'est pas le concurrent national de la marque mais celui qui sort
+ * en première page sur « rénovation maison Marseille ». La localité de la page
+ * auditée l'emporte donc sur la ville de la fiche Google Business, sur la zone
+ * déclarée et sur la liste de concurrents de la carte d'identité — laquelle
+ * décrit le domaine, pas la commune. Sans localité prouvée dans l'URL, le
+ * comportement précédent est conservé à l'identique.
+ */
 export async function findLocalCompetitor(
   domain: string, sector: string, locationCode: number, pageContentContext: string, languageCode: string = 'fr', seDomain: string = 'google.fr',
   siteContext?: Record<string, unknown> | null,
+  /** Focus de la page auditée : localité et prestation déduites du slug. */
+  pageScope?: { locality?: string | null; service?: string | null } | null,
 ): Promise<{ name: string; url: string; rank: number; score?: number }[] | null> {
   if (!hasDataForSeoCredentials()) return null;
 
-  // 1. IDENTITY CARD FIRST
-  if (siteContext?.competitors && Array.isArray(siteContext.competitors) && (siteContext.competitors as string[]).length > 0) {
+  const pageLocality = String(pageScope?.locality || '').trim();
+  const pageService = String(pageScope?.service || '').trim();
+
+  // 1. IDENTITY CARD FIRST — sauf page localisée : la carte d'identité liste des
+  // concurrents de niveau domaine, muets sur la SERP de la commune testée.
+  if (!pageLocality && siteContext?.competitors && Array.isArray(siteContext.competitors) && (siteContext.competitors as string[]).length > 0) {
     console.log(`🎯 Concurrents connus (carte d'identité): ${(siteContext.competitors as string[]).join(', ')}`);
     return (siteContext.competitors as string[]).slice(0, 3).map((c: string, i: number) => ({ name: c, url: '', rank: 0, score: 100 - i }));
   }
@@ -350,7 +367,8 @@ export async function findLocalCompetitor(
   const gmbCity = (siteContext?.gmb_city as string) || '';
   const productsServices = (siteContext?.products_services as string) || '';
 
-  let city = gmbCity || commercialArea || '';
+  let city = pageLocality || gmbCity || commercialArea || '';
+
   if (!city && pageContentContext) {
     const cityPatterns = [/(?:à|a|en|sur)\s+([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)/g, /([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)\s*(?:\d{5})/g];
     for (const pattern of cityPatterns) {
@@ -362,30 +380,43 @@ export async function findLocalCompetitor(
   const sectorWords = sector.split(' ').filter(w => w.length > 2).slice(0, 3).join(' ');
   const productWords = productsServices ? productsServices.split(/[,;]/).map(s => s.trim()).filter(s => s.length > 2)[0] || '' : '';
   const queries: string[] = [];
-  switch (businessType.toLowerCase()) {
-    case 'local': case 'artisan':
-      queries.push(city ? `${productWords || sectorWords} ${city}` : sectorWords);
-      if (gmb && gmbCity) queries.push(`${sectorWords} ${gmbCity} avis`);
-      break;
-    case 'e-commerce': case 'ecommerce':
-      queries.push(`${productWords || sectorWords} acheter en ligne`);
-      if (brandName) queries.push(`${brandName} alternative`);
-      break;
-    case 'saas':
-      queries.push(brandName ? `${brandName} alternative` : `${sectorWords} logiciel`);
-      queries.push(`meilleur ${sectorWords} outil`);
-      break;
-    case 'media': case 'blog':
-      queries.push(`${sectorWords} blog référence`);
-      break;
-    default:
-      queries.push(city ? `${sectorWords} ${city}` : sectorWords);
-      if (brandName) queries.push(`${brandName} vs`);
-      break;
+  if (pageLocality) {
+    // Page localisée : on interroge la SERP telle que le prospect la tape,
+    // « prestation + ville », en partant de la prestation du slug puis du
+    // secteur. Aucune requête nationale n'est ajoutée : elle ramènerait des
+    // acteurs qui ne sont pas en concurrence sur cette commune.
+    const service = pageService || productWords || sectorWords;
+    if (service) queries.push(`${service} ${pageLocality}`);
+    if (sectorWords && sectorWords.toLowerCase() !== service.toLowerCase()) {
+      queries.push(`${sectorWords} ${pageLocality}`);
+    }
+  } else {
+    switch (businessType.toLowerCase()) {
+      case 'local': case 'artisan':
+        queries.push(city ? `${productWords || sectorWords} ${city}` : sectorWords);
+        if (gmb && gmbCity) queries.push(`${sectorWords} ${gmbCity} avis`);
+        break;
+      case 'e-commerce': case 'ecommerce':
+        queries.push(`${productWords || sectorWords} acheter en ligne`);
+        if (brandName) queries.push(`${brandName} alternative`);
+        break;
+      case 'saas':
+        queries.push(brandName ? `${brandName} alternative` : `${sectorWords} logiciel`);
+        queries.push(`meilleur ${sectorWords} outil`);
+        break;
+      case 'media': case 'blog':
+        queries.push(`${sectorWords} blog référence`);
+        break;
+      default:
+        queries.push(city ? `${sectorWords} ${city}` : sectorWords);
+        if (brandName) queries.push(`${brandName} vs`);
+        break;
+    }
   }
 
+
   const uniqueQueries = [...new Set(queries.filter(q => q.trim().length > 3))].slice(0, 2);
-  console.log(`🏙️ Recherche concurrents (${businessType || 'auto'}): ${uniqueQueries.map(q => `"${q}"`).join(', ')}`);
+  console.log(`🏙️ Recherche concurrents (${pageLocality ? `page localisée: ${pageLocality}` : businessType || 'auto'}): ${uniqueQueries.map(q => `"${q}"`).join(', ')}`);
 
   // 3. MULTI-QUERY SERP FETCH
   const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
