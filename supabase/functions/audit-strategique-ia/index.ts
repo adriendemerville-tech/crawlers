@@ -257,11 +257,16 @@ Deno.serve(handleRequest(async (req) => {
       // ── WAVE 2: Market + LLM + Competitor + Founder + GMB + Facebook ──
       console.log(`\n📊 WAVE 2: Market data + LLM check${isContentMode ? '' : ' + Competitor + Founder'} (parallel)...`);
       const needsLlmCheck = !toolsData?.llm || toolsData.llm.note;
+      // Localité de la page auditée (slug) : sur « /renovation-maison-marseille »
+      // les concurrents doivent être ceux de la SERP « rénovation maison Marseille ».
+      const auditedPageFocus = derivePageFocus(url, { title: pageMetadata?.title ?? null, h1: pageMetadata?.h1 ?? null });
+      if (auditedPageFocus.locality) console.log(`📍 Page localisée détectée: ${auditedPageFocus.locality}${auditedPageFocus.service ? ` (${auditedPageFocus.service})` : ''}`);
       const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult, authorityResult] = await Promise.allSettled([
         withDeadline(fetchMarketData(domain, context, pageContentContext, url, existingKeywords), 120_000, 'market_data'),
         needsLlmCheck && supabaseUrl && supabaseAnonKey
           ? withDeadline((async () => { const r = await fetch(`${supabaseUrl}/functions/v1/check-llm`, { method: 'POST', headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ url, lang: 'fr' }), signal: AbortSignal.timeout(40000) }); if (!r.ok) { await r.text(); return null; } const d = await r.json(); return d.success && d.data ? d.data : null; })(), 45_000, 'check_llm') : Promise.resolve(null),
-        !isContentMode && context.locationCode ? withDeadline(findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext, context.languageCode, context.seDomain, siteIdentityCtx), 20_000, 'local_competitor') : Promise.resolve(null),
+        !isContentMode && context.locationCode ? withDeadline(findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext, context.languageCode, context.seDomain, siteIdentityCtx, { locality: auditedPageFocus.locality, service: auditedPageFocus.service }), 20_000, 'local_competitor') : Promise.resolve(null),
+
         !isContentMode ? withDeadline(searchFounderProfile(domain, context.location, { brandName: context.brandName, siteText: pageContentContext }), 20_000, 'founder') : Promise.resolve(null),
         !isContentMode && context.locationCode ? withDeadline(detectGoogleMyBusiness(domain, context.brandName, context.locationCode, context.languageCode), 12_000, 'gmb') : Promise.resolve(null),
         !isContentMode && context.locationCode ? withDeadline(searchFacebookPage(context.brandName, context.sector, context.locationCode, context.languageCode), 10_000, 'facebook_page') : Promise.resolve(null),
