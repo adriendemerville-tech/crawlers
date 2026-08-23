@@ -820,7 +820,7 @@ function normalizeUrl(value: string | null | undefined, base?: string): string |
   }
 }
 
-function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoData: any, domain: string) {
+function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoData: any, domain: string, auditedUrl?: string) {
   const scores = expertSeoData?.scores || {};
   const rawData = expertSeoData?.rawData || {};
   const htmlAnalysis = rawData?.htmlAnalysis || {};
@@ -853,9 +853,28 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     .sort((a, b) => (pathOf(String(a?.url || ''))?.split('/').length || 99)
       - (pathOf(String(b?.url || ''))?.split('/').length || 99))[0]
     || crawlPages[0] || null;
-  const primaryPage = homeCandidates[0] || fallbackPage;
-  const primaryUrl = String(primaryPage?.url || '') || null;
-  const primaryIsHome = homeCandidates.length > 0;
+  // Une seule page décrite par le bloc de balises : priorité à l'URL réellement
+  // auditée (celle dont on possède H2/H3 et schema via l'analyse expert), puis
+  // la home, puis la page la moins profonde. Mélanger deux pages dans un bloc
+  // « mesuré » est un défaut de fiabilité, pas un détail de présentation.
+  const auditedPath = auditedUrl ? pathOf(auditedUrl) : null;
+  const auditedPage = auditedPath
+    ? crawlPages.find((p) => sameHost(String(p?.url || '')) && pathOf(String(p?.url || '')) === auditedPath) || null
+    : null;
+  const primaryPage = auditedPage || homeCandidates[0] || fallbackPage;
+  const primaryUrl = String(primaryPage?.url || '') || auditedUrl || null;
+  const primaryIsHome = primaryPage ? pathOf(String(primaryPage.url || '')) === '/' : homeCandidates.length > 0;
+  /**
+   * Les champs issus de l'analyse expert (H2/H3, schema, indexabilité) ne
+   * décrivent que l'URL auditée : ils ne servent de repli que si la page
+   * décrite est bien celle-là.
+   */
+  const expertDescribesPrimary = Boolean(
+    primaryPage
+      ? auditedPath && pathOf(String(primaryPage.url || '')) === auditedPath
+      : true,
+  );
+
 
 
   const totalWordCount = crawlPages.reduce((sum, page) => sum + Number(page?.word_count || 0), 0);
@@ -878,9 +897,9 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
     : (rawData?.responseTimeMs || null);
 
-  const title = primaryPage?.title || htmlAnalysis?.titleContent || '';
-  const metaDesc = primaryPage?.meta_description || htmlAnalysis?.metaDescContent || '';
-  const h1 = primaryPage?.h1 || htmlAnalysis?.h1Contents?.[0] || '';
+  const title = primaryPage?.title || (expertDescribesPrimary ? htmlAnalysis?.titleContent : '') || '';
+  const metaDesc = primaryPage?.meta_description || (expertDescribesPrimary ? htmlAnalysis?.metaDescContent : '') || '';
+  const h1 = primaryPage?.h1 || (expertDescribesPrimary ? htmlAnalysis?.h1Contents?.[0] : '') || '';
 
   return {
     // URL réellement décrite par les balises ci-dessous : le rapport doit la
@@ -902,7 +921,7 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     imagesTotal: totalImages || htmlAnalysis?.imagesTotal || 0,
     imagesWithoutAlt: totalImagesWithoutAlt,
     h1,
-    h2Count: primaryPage?.h2_count ?? htmlAnalysis?.h2Count ?? 0,
+    h2Count: primaryPage?.h2_count ?? (expertDescribesPrimary ? (htmlAnalysis?.h2Count ?? 0) : 0),
     hasSchema: primaryPage?.has_schema_org ?? htmlAnalysis?.hasSchemaOrg ?? false,
     // Priorité au crawl réel : l'analyse expert ne voyait pas les balises
     // injectées côté serveur et déclarait canonical/OG absents à tort.
@@ -928,10 +947,16 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     titleLength: title.length,
     metaDesc,
     metaDescLength: metaDesc.length,
-    h1Contents: h1 ? [h1] : (htmlAnalysis?.h1Contents || []),
-    h2Contents: primaryPage?.h2_contents || htmlAnalysis?.h2Contents || [],
-    h3Count: primaryPage?.h3_count ?? htmlAnalysis?.h3Count ?? 0,
-    schemaTypes: scores?.aiReady?.schemaTypes || [],
+    h1Contents: h1 ? [h1] : (expertDescribesPrimary ? (htmlAnalysis?.h1Contents || []) : []),
+    // H2/H3 et schema : uniquement s'ils décrivent bien la page nommée ci-dessus.
+    h2Contents: primaryPage?.h2_contents
+      || (expertDescribesPrimary ? (htmlAnalysis?.h2Contents || []) : []),
+    h3Count: primaryPage?.h3_count
+      ?? (expertDescribesPrimary ? (htmlAnalysis?.h3Count ?? 0) : 0),
+    schemaTypes: (Array.isArray(primaryPage?.schema_org_types) && primaryPage.schema_org_types.length
+      ? primaryPage.schema_org_types
+      : (expertDescribesPrimary ? (scores?.aiReady?.schemaTypes || []) : [])),
+
     hasRobotsTxt: scores?.aiReady?.hasRobotsTxt || false,
     robotsPermissive: scores?.aiReady?.robotsPermissive || false,
     isHttps: scores?.technical?.isHttps || false,
@@ -1681,14 +1706,24 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
               steps.push(`plafond de cohérence ${rec.beforeCap}/${declaredMax} → ${rec.cap}/${declaredMax}`);
             }
           }
+          const axesSum = rec ? Number(rec.axesSum) : sum;
+          // Aucun écart muet : si la réconciliation détaillée n'est pas
+          // disponible, on nomme quand même la différence entre la somme des
+          // axes et le total publié plutôt que d'afficher deux chiffres
+          // contradictoires sans un mot.
+          const delta = Math.round((total - axesSum) * 10) / 10;
+          const fallbackDelta = !steps.length && delta !== 0
+            ? ` L'écart de ${delta > 0 ? '+' : ''}${delta} point${Math.abs(delta) > 1 ? 's' : ''} avec le total publié provient des ajustements de fin de calcul (arrondi des axes, ajustement liens cassés, plafond de cohérence) : le total publié fait foi.`
+            : '';
           return `<div class="stat-grid-4">${cards}</div>
         <p style="font-size:12px;color:#6b7280;margin:10px 0 0;">
-          Somme des cinq axes : <strong>${rec ? rec.axesSum : sum}/${sumMax}</strong>.
+          Somme des cinq axes : <strong>${axesSum}/${sumMax}</strong>.
           ${steps.length
             ? `Le total affiché (<strong>${total}/${declaredMax}</strong>) s'en déduit ainsi : ${steps.join(' ; puis ')}.`
-            : `Soit le score global d'audit technique (<strong>${total}/${declaredMax}</strong>).`}
+            : `Soit le score global d'audit technique (<strong>${total}/${declaredMax}</strong>).${fallbackDelta}`}
           Le score sur 100 de la synthèse exécutive est cette même valeur ramenée en pourcentage : ${Math.round((total / (declaredMax || 1)) * 100)}/100.
         </p>`;
+
 
         })()}
       </div>
@@ -4322,7 +4357,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           if (crawlPagesError) {
             console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
           } else if (crawlPages?.length) {
-            crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain);
+            crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain, url);
 
             // Doublon d'hôte (www vs apex) : preuve directe dans les pages
             // crawlées + sonde HTTP de 2 requêtes pour savoir si une 301 existe.

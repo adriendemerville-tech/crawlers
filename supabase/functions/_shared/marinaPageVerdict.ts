@@ -386,8 +386,12 @@ export function buildPageVerdictHTML(
   const gs = (ctx.geoSignals || []).filter((s) => s && s.label && Number(s.weight) > 0);
   const gsMeasured = gs.filter((s) => s.value !== null);
   const gsMissing = gs.filter((s) => s.value === null);
-  const gsWeight = gsMeasured.reduce((a, s) => a + Number(s.weight), 0);
-  const gsPoints = gsMeasured.reduce((a, s) => a + (Number(s.weight) * Number(s.value)) / 100, 0);
+  // Somme de flottants : sans arrondi explicite, le total s'affichait
+  // « 99.99999999999999 » dans le rapport exporté.
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+  const gsWeight = round1(gsMeasured.reduce((a, s) => a + Number(s.weight), 0));
+  const gsPoints = round1(gsMeasured.reduce((a, s) => a + (Number(s.weight) * Number(s.value)) / 100, 0));
+
   const weightsHTML = gsMeasured.length
     ? `
     <p style="font-size:12.5px;font-weight:600;color:#111827;margin:14px 0 4px 0;">${t('Pondérations appliquées au score GEO de cette page', 'Weights applied to this page GEO score')}</p>
@@ -408,7 +412,7 @@ export function buildPageVerdictHTML(
             const pts = (Number(s.weight) * Number(s.value)) / 100;
             return `<tr style="border-top:1px solid #f3f4f6;">
           <td style="padding:3px 6px 3px 0;">${esc(s.label)}</td>
-          <td style="padding:3px 6px;text-align:right;color:#6b7280;">${Number(s.weight)}</td>
+          <td style="padding:3px 6px;text-align:right;color:#6b7280;">${round1(Number(s.weight))}</td>
           <td style="padding:3px 6px;text-align:right;">${Math.round(Number(s.value))}/100</td>
           <td style="padding:3px 0 3px 6px;text-align:right;font-weight:600;">${pts.toFixed(1)}</td>
         </tr>`;
