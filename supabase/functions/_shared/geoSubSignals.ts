@@ -249,17 +249,17 @@ export type GeoGapVerdict =
 
 export interface GeoSubSignalReport {
   signals: GeoSubSignalValue[];
-  /** Pilier A — autorité domaine (25, constant, mutualisé). */
+  /** Pilier A — autorité domaine (25 pts, mutualisé). */
   authority: GeoFamilyScore;
-  /** Pilier B — accessibilité machine (25 → 10, décroissant). */
+  /** Pilier B — accessibilité machine (22 pts, page). */
   accessibility: GeoFamilyScore;
-  /** Pilier C — exploitabilité contenu (50 → 65, croissant). */
+  /** Pilier C — exploitabilité contenu (53 pts, page). */
   content: GeoFamilyScore;
   /** 0-100 : moyenne pondérée des piliers mesurés — reconstitue le GEO lisible. */
   geo_score: number | null;
-  /** Poids en points des trois piliers à la date de l'audit (somme = 100). */
+  /** Poids en points des trois piliers (barème fixe, somme = 100). */
   pillar_points: Record<GeoPillar, number>;
-  /** Tendance de chaque pilier (constant / décroît / monte). */
+  /** Conservé pour compatibilité : tous les piliers sont à poids constant. */
   pillar_trend: Record<GeoPillar, GeoPillarTrend>;
   /** Date de référence de la pondération (ISO). */
   weight_date: string;
@@ -640,10 +640,9 @@ function pillarBlock(
   lang?: string,
 ): string {
   const pts = report.pillar_points[key];
-  const trend = trendText(key, lang);
   const introText = lang === 'en'
-    ? `${intro} ${f.measured}/${f.total} sub-signals measured (${f.coverage} % of weight). Weight ${pts} pts today — ${trend}.`
-    : `${intro} ${f.measured}/${f.total} sous-signaux mesurés (${f.coverage} % du poids). Poids ${pts} pts aujourd’hui — ${trend}.`;
+    ? `${intro} ${f.measured}/${f.total} sub-signals measured (${f.coverage} % of weight). Weight ${pts} pts out of 100.`
+    : `${intro} ${f.measured}/${f.total} sous-signaux mesurés (${f.coverage} % du poids). Poids ${pts} pts sur 100.`;
   return `<div style="flex:1 1 280px;border:1px solid #e5e7eb;border-left:3px solid ${PILLAR_ACCENT[key]};border-radius:8px;padding:12px 14px;background:#ffffff;">
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
       <h4 style="font-size:13px;font-weight:600;color:#111827;margin:0;">${esc(f.label)}</h4>
@@ -702,7 +701,7 @@ function pillarTableHTML(report: GeoSubSignalReport, lang?: string): string {
         <th style="padding:8px 10px;text-align:right;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Weight' : 'Poids'}</th>
         <th style="padding:8px 10px;text-align:right;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Score' : 'Score'}</th>
         <th style="padding:8px 10px;text-align:right;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Earned' : 'Acquis'}</th>
-        <th style="padding:8px 10px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Trend' : 'Tendance'}</th>
+        <th style="padding:8px 10px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Scale' : 'Barème'}</th>
       </tr>
     </thead>
     <tbody>
