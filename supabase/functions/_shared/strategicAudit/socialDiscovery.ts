@@ -380,27 +380,40 @@ export async function findLocalCompetitor(
   const sectorWords = sector.split(' ').filter(w => w.length > 2).slice(0, 3).join(' ');
   const productWords = productsServices ? productsServices.split(/[,;]/).map(s => s.trim()).filter(s => s.length > 2)[0] || '' : '';
   const queries: string[] = [];
-  switch (businessType.toLowerCase()) {
-    case 'local': case 'artisan':
-      queries.push(city ? `${productWords || sectorWords} ${city}` : sectorWords);
-      if (gmb && gmbCity) queries.push(`${sectorWords} ${gmbCity} avis`);
-      break;
-    case 'e-commerce': case 'ecommerce':
-      queries.push(`${productWords || sectorWords} acheter en ligne`);
-      if (brandName) queries.push(`${brandName} alternative`);
-      break;
-    case 'saas':
-      queries.push(brandName ? `${brandName} alternative` : `${sectorWords} logiciel`);
-      queries.push(`meilleur ${sectorWords} outil`);
-      break;
-    case 'media': case 'blog':
-      queries.push(`${sectorWords} blog référence`);
-      break;
-    default:
-      queries.push(city ? `${sectorWords} ${city}` : sectorWords);
-      if (brandName) queries.push(`${brandName} vs`);
-      break;
+  if (pageLocality) {
+    // Page localisée : on interroge la SERP telle que le prospect la tape,
+    // « prestation + ville », en partant de la prestation du slug puis du
+    // secteur. Aucune requête nationale n'est ajoutée : elle ramènerait des
+    // acteurs qui ne sont pas en concurrence sur cette commune.
+    const service = pageService || productWords || sectorWords;
+    if (service) queries.push(`${service} ${pageLocality}`);
+    if (sectorWords && sectorWords.toLowerCase() !== service.toLowerCase()) {
+      queries.push(`${sectorWords} ${pageLocality}`);
+    }
+  } else {
+    switch (businessType.toLowerCase()) {
+      case 'local': case 'artisan':
+        queries.push(city ? `${productWords || sectorWords} ${city}` : sectorWords);
+        if (gmb && gmbCity) queries.push(`${sectorWords} ${gmbCity} avis`);
+        break;
+      case 'e-commerce': case 'ecommerce':
+        queries.push(`${productWords || sectorWords} acheter en ligne`);
+        if (brandName) queries.push(`${brandName} alternative`);
+        break;
+      case 'saas':
+        queries.push(brandName ? `${brandName} alternative` : `${sectorWords} logiciel`);
+        queries.push(`meilleur ${sectorWords} outil`);
+        break;
+      case 'media': case 'blog':
+        queries.push(`${sectorWords} blog référence`);
+        break;
+      default:
+        queries.push(city ? `${sectorWords} ${city}` : sectorWords);
+        if (brandName) queries.push(`${brandName} vs`);
+        break;
+    }
   }
+
 
   const uniqueQueries = [...new Set(queries.filter(q => q.trim().length > 3))].slice(0, 2);
   console.log(`🏙️ Recherche concurrents (${businessType || 'auto'}): ${uniqueQueries.map(q => `"${q}"`).join(', ')}`);
