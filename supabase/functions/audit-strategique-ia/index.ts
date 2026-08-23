@@ -881,7 +881,7 @@ Réponds en JSON STRICT:
               const t = a.toxicity;
               wbItems.push({
                 tracked_site_id: trackedId, user_id: wbUser.id, domain: cleanDomain,
-                title: `Profil de liens ${t.verdict === 'pollue' ? 'pollué' : 'à surveiller'} (toxicité ${t.toxicity_score}/100)`,
+                title: `Profil de liens — ${t.verdict === 'pollue' ? 'risque élevé, à investiguer' : 'à surveiller'} (toxicité ${t.toxicity_score}/100)`,
                 description: `${t.signals.length ? t.signals.join(' ; ') + '. ' : ''}${t.recommendation}`,
                 finding_category: 'backlink_toxicity', source_type: 'audit_strategic' as const,
                 source_function: 'audit-strategique-ia', source_record_id: `backlink_toxicity_${cleanDomain}`,

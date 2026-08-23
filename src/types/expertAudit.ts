@@ -408,7 +408,27 @@ export interface BacklinkToxicity {
   own_network_backlink_share?: number;
   links_per_domain_all?: number;
   anchor_attribution?: 'all_referrers' | 'all_referrers_downgraded';
+  /** Dofollow lu comme facteur contextuel (faisceau d'indices), jamais preuve autonome. */
+  dofollow_context?: {
+    ratio: number;
+    level: 'faible' | 'a_surveiller' | 'aggravant';
+    points: number;
+    corroborating: string[];
+    sitewide_suspected: boolean;
+    note: string;
+  } | null;
+  /** Autorité apparente vs autorité indépendante estimée (simulation indicative). */
+  independence?: {
+    apparent_backlinks: number;
+    own_network_backlinks: number;
+    repeated_third_party_backlinks: number;
+    estimated_independent_backlinks: number;
+    estimated_independent_domains: number;
+    dependency_share: number;
+    method: string;
+  } | null;
 }
+
 
 /** Hygiène du réseau propre — jamais additionnée à la toxicité. */
 export interface OwnNetworkHygiene {

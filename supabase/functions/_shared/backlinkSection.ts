@@ -16,9 +16,16 @@ const pct = (r: number) => `${Math.round((r || 0) * 100)} %`;
 
 const VERDICT_LABEL: Record<BacklinkToxicity['verdict'], string> = {
   sain: 'Sain',
-  a_surveiller: 'À surveiller',
-  pollue: 'Pollué',
+  a_surveiller: 'À surveiller — profil à documenter',
+  pollue: 'Risque élevé — profil à investiguer',
 };
+
+const DOFOLLOW_LEVEL_LABEL: Record<string, string> = {
+  faible: 'Faible',
+  a_surveiller: 'À surveiller',
+  aggravant: 'Aggravant',
+};
+
 
 const CONFIDENCE_LABEL: Record<string, string> = {
   high: 'élevée',
@@ -81,14 +88,23 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
       points: 10,
     });
   }
-  if (dofollowRatio >= 98 && refDomains > 50) {
+  const dc = t.dofollow_context;
+  if (dc && dc.points > 0) {
     rows.push({
-      label: 'Ratio dofollow',
+      label: 'Dofollow — facteur contextuel',
+      measure: `${Math.round(dc.ratio)} % de liens dofollow, avec ${dc.corroborating.length} anomalie${dc.corroborating.length > 1 ? 's' : ''} structurelle${dc.corroborating.length > 1 ? 's' : ''} corroborante${dc.corroborating.length > 1 ? 's' : ''}`,
+      rule: `un lien dofollow n'est pas toxique en soi : 0 pt sans corroboration, 3 pts avec 1 anomalie mesurée, 8 pts à partir de 2 (faisceau d'indices)`,
+      points: dc.points,
+    });
+  } else if (!dc && dofollowRatio >= 98 && refDomains > 50) {
+    rows.push({
+      label: 'Ratio dofollow (calibrage antérieur)',
       measure: `${Math.round(dofollowRatio)} % de liens dofollow`,
-      rule: '≥ 98 % avec plus de 50 domaines référents : 5 pts',
+      rule: 'mesure issue d’un calibrage antérieur : ≥ 98 % avec plus de 50 domaines référents, 5 pts',
       points: 5,
     });
   }
+
 
   const suspicious = t.signals.find((s) => /hors-sujet/i.test(s));
   if (suspicious) {
@@ -239,7 +255,55 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
       </div>`
     : '';
 
+  // ── Dofollow lu en contexte, autorité indépendante, scénarios Google ───────
+  const dctx = t?.dofollow_context ?? null;
+  const dofollowHtml = dctx
+    ? `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:700;color:${dctx.level === 'aggravant' ? '#b91c1c' : dctx.level === 'a_surveiller' ? '#b45309' : '#15803d'};">${DOFOLLOW_LEVEL_LABEL[dctx.level]}</div>
+        <div style="font-size:12px;color:#6b7280;">${Math.round(dctx.ratio)} % de liens dofollow · ${dctx.points} pt${dctx.points > 1 ? 's' : ''} ajoutés au score de toxicité</div>
+      </div>
+      <p style="font-size:12.5px;color:#374151;margin:0 0 8px 0;line-height:1.7;">Un lien dofollow n’est pas intrinsèquement toxique : c’est le comportement normal d’un lien éditorial, et un profil naturel peut contenir une très forte proportion de liens dofollow. Le signal n’apparaît que lorsque ce caractère se combine à d’autres anomalies structurelles.</p>
+      ${dctx.corroborating.length
+        ? `<div style="font-size:12px;color:#111827;font-weight:600;margin-bottom:4px;">Anomalies mesurées qui corroborent la lecture</div>
+           <ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.7;">${dctx.corroborating.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
+           <p style="font-size:12.5px;color:#374151;margin:8px 0 0 0;line-height:1.7;">Dans ce contexte, les liens ne ressemblent plus nécessairement à autant de recommandations indépendantes : une partie de la volumétrie peut correspondre à quelques relations entre domaines, répétées sur un grand nombre de pages. Le caractère dofollow devient alors un facteur aggravant, car ces liens sont susceptibles de transmettre des signaux SEO, contrairement à des liens qualifiés <em>nofollow</em>, <em>ugc</em> ou <em>sponsored</em>. Cela ne permet pas de conclure qu’une pénalité Google existe : seul Google connaît le traitement réellement appliqué.</p>`
+        : `<p style="font-size:12px;color:#6b7280;margin:0;">Aucune anomalie structurelle corroborante mesurée : le ratio dofollow n’ajoute aucun point.</p>`}`
+    : '';
+
+  const sitewideHtml = `<p style="font-size:12.5px;color:#374151;margin:0 0 8px 0;line-height:1.7;">
+      La volumétrie brute doit être interprétée avec prudence. Si un site place un lien dans son pied de page et que ce pied de page est présent sur 1 300 pages, l’outil comptabilise environ 1 300 backlinks — mais il ne s’agit pas de 1 300 recommandations éditoriales indépendantes : c’est une seule relation entre deux sites, répétée techniquement.
+    </p>
+    <ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.7;">
+      <li>liens réellement éditoriaux et contextuels ;</li>
+      <li>liens sitewide (pied de page, en-tête, sidebar) ;</li>
+      <li>liens de navigation et liens issus de templates ;</li>
+      <li>liens de domaines indépendants ;</li>
+      <li>liens d’un réseau contrôlé ou fortement apparenté.</li>
+    </ul>`;
+
+  const ind = t?.independence ?? null;
+  const independenceHtml = ind
+    ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px;">
+        ${card(nf(ind.apparent_backlinks), 'Autorité apparente', 'backlinks externes bruts')}
+        ${card(nf(ind.own_network_backlinks), 'Liens du réseau propre')}
+        ${card(nf(ind.repeated_third_party_backlinks), 'Liens tiers répétés', 'au-delà de 3 liens par domaine')}
+        ${card(nf(ind.estimated_independent_backlinks), 'Autorité indépendante estimée', `sur ${nf(ind.estimated_independent_domains)} domaines tiers`)}
+        ${card(pct(ind.dependency_share), 'Part dépendante', 'réseau propre + répétition')}
+      </div>
+      <p style="font-size:12px;color:#6b7280;margin:0;line-height:1.7;">${esc(ind.method)}</p>`
+    : '';
+
+  const googleHtml = `<p style="font-size:12.5px;color:#374151;margin:0;line-height:1.7;">
+      Si les systèmes de Google relèvent les mêmes caractéristiques, plusieurs traitements sont possibles. Le premier scénario est la <strong>neutralisation</strong> de tout ou partie des liens : Google ne leur attribue simplement pas le poids attendu, et un volume important de backlinks disparaît de fait du calcul d’autorité sans qu’une pénalité du domaine soit nécessaire. Le deuxième est une <strong>dévaluation plus large</strong> des signaux issus du réseau, lorsque les liens ne sont pas considérés comme des recommandations éditoriales indépendantes. Dans les situations les plus problématiques, lorsqu’un schéma de liens destiné à manipuler les classements est établi, une <strong>action plus sévère</strong> reste envisageable. Ce rapport n’affirme jamais qu’une pénalité existe sur la seule base de l’analyse des backlinks.
+    </p>`;
+
+  const methodNoteHtml = `<p style="font-size:12px;color:#374151;margin:0;line-height:1.7;">
+      <strong>Important :</strong> ce score est une estimation propriétaire du risque de profil de liens. Il ne correspond pas à une note Google et ne permet pas de conclure à l’existence d’une pénalité algorithmique ou manuelle.${t && t.toxicity_score >= 60 ? ' Un score élevé signifie que plusieurs caractéristiques du profil sont compatibles avec un schéma de liens artificiel ou sur-optimisé : c’est un signal d’investigation, pas une preuve de sanction.' : ''}
+      Avant tout désaveu, vérifier que le domaine est réellement tiers, que les liens sont manifestement construits, et qu’il ne s’agit pas d’un annuaire ou d’une plateforme légitime. Sur les domaines du réseau propre : ne pas désavouer, corriger à la source. Un domaine n’est jamais déclaré rattaché au réseau propre sur la seule base d’une racine de marque commune — il est alors marqué « à confirmer ».
+    </p>`;
+
   const h = a.own_network_hygiene;
+
   const hygieneHtml = h && h.verdict !== 'non_mesure'
     ? `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px;">
         <div style="font-size:13px;font-weight:700;color:${h.verdict === 'a_corriger_a_la_source' ? '#b45309' : '#15803d'};">${h.verdict === 'a_corriger_a_la_source' ? 'À corriger à la source' : 'Sain'}</div>
@@ -309,8 +373,14 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
     ${volumetry}
     ${sub('Comment l’Authority Score est calculé', 'Un score maison, reconstitué à partir du rank mesuré et de la diversité des référents.', scoreExplain)}
     ${sub('Segmentation du profil — trois compartiments', 'Vos propres domaines, les annuaires et l’éditorial tiers sont mesurés séparément : ils n’exposent pas aux mêmes risques et ne se corrigent pas de la même façon.', segHtml)}
-    ${sub('Score de toxicité — détail du calcul', 'Risque de dévaluation sur les liens tiers. Chaque signal mesuré ajoute des points ; le total borné à 100 donne le verdict.', toxTable)}
+    ${sub('Score de toxicité — détail du calcul', 'Risque de dévaluation sur les liens tiers. Le score est la conséquence du faisceau d’indices mesuré, pas son point de départ : chaque signal ajoute des points, le total borné à 100 donne le niveau de risque.', toxTable)}
+    ${sub('Lecture méthodologique et règle de désaveu', 'Ce que ce score dit — et ce qu’il ne dit pas.', methodNoteHtml)}
+    ${sub(dctx ? `Pourquoi ${Math.round(dctx.ratio)} % dofollow devient un signal dans ce contexte ?` : 'Dofollow — facteur contextuel', 'Le caractère dofollow est un facteur contextuel, jamais une preuve autonome de toxicité.', dofollowHtml)}
+    ${sub('1 lien ne vaut pas nécessairement 1 recommandation', 'Pourquoi la volumétrie brute doit être segmentée avant d’être interprétée.', sitewideHtml)}
+    ${sub('Autorité apparente vs autorité indépendante estimée', 'Simulation indicative — non équivalente au calcul de Google.', independenceHtml)}
+    ${sub('Que se passerait-il si Google faisait le même constat ?', 'Scénarios possibles, du plus probable au plus sévère.', googleHtml)}
     ${sub('Hygiène du réseau propre', 'Indicateur distinct, jamais additionné à la toxicité : sur des domaines que vous contrôlez, un défaut se corrige à la source et jamais par un désaveu.', hygieneHtml)}
+
     ${sub('Répartition du profil de liens', 'D’où viennent les liens : extensions, pays et types de plateformes mesurés sur l’échantillon.', distHtml)}
 
     ${sub('Principaux domaines référents', 'Les dix sources les plus actives de l’échantillon, avec leur autorité mesurée.', refs)}

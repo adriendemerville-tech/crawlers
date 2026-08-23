@@ -19,7 +19,7 @@ const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
 
 /** Version de calibrage : invalide les entrées de cache produites avant le recalibrage. */
-export const AUTHORITY_CALIBRATION_VERSION = 4;
+export const AUTHORITY_CALIBRATION_VERSION = 5;
 
 /** Taille de l'échantillon de domaines référents analysé (affichage limité au top 10). */
 export const REFERRING_DOMAINS_SAMPLE_LIMIT = 200;
@@ -62,6 +62,38 @@ export interface BacklinkToxicity {
    * pèse lourd, la pénalité d'ancre est minorée au lieu d'être affirmée.
    */
   anchor_attribution: 'all_referrers' | 'all_referrers_downgraded';
+  /** Dofollow lu comme facteur contextuel, jamais comme preuve autonome. */
+  dofollow_context?: DofollowContext | null;
+  /** Autorité apparente vs autorité indépendante estimée (simulation indicative). */
+  independence?: IndependenceEstimate | null;
+}
+
+/**
+ * Le caractère dofollow d'un lien est normal en SEO. Il n'est retenu comme
+ * facteur aggravant que lorsqu'il est corroboré par d'autres anomalies
+ * structurelles mesurées sur le profil (faisceau d'indices).
+ */
+export interface DofollowContext {
+  ratio: number;
+  level: 'faible' | 'a_surveiller' | 'aggravant';
+  /** Points effectivement ajoutés au score de toxicité (0, 3 ou 8). */
+  points: number;
+  /** Anomalies mesurées qui corroborent la lecture — jamais des suppositions. */
+  corroborating: string[];
+  sitewide_suspected: boolean;
+  note: string;
+}
+
+/** Volumétrie apparente ramenée à une volumétrie de recommandations plausibles. */
+export interface IndependenceEstimate {
+  apparent_backlinks: number;
+  own_network_backlinks: number;
+  repeated_third_party_backlinks: number;
+  estimated_independent_backlinks: number;
+  estimated_independent_domains: number;
+  /** Part de la volumétrie dépendante du réseau propre ou de la répétition (0-1). */
+  dependency_share: number;
+  method: string;
 }
 
 /** Nature d'un domaine référent — trois compartiments mesurés séparément. */
@@ -555,11 +587,6 @@ export function computeBacklinkToxicity(input: {
     score += 10;
     signals.push(`${Math.round(brokenRatio * 100)} % de liens entrants cassés`);
   }
-  if (input.dofollowRatio >= 98 && input.referringDomains > 50) {
-    score += 5;
-    signals.push('quasi 100 % de liens dofollow — profil peu naturel');
-  }
-
   // Référents hors-sujet (paris, adulte, miroirs, fermes de contenu) : un seul
   // suffit à interdire le verdict « sain ».
   const suspicious = detectSuspiciousReferringDomains(refSample);
@@ -569,6 +596,90 @@ export function computeBacklinkToxicity(input: {
       `${suspicious.length} domaine${suspicious.length > 1 ? 's' : ''} référent${suspicious.length > 1 ? 's' : ''} hors-sujet dans l'échantillon (${suspicious.slice(0, 4).join(', ')})`,
     );
   }
+
+  // ── Dofollow : facteur contextuel, jamais une preuve autonome ──────────────
+  // Un lien dofollow est le comportement normal d'un lien éditorial. Il ne pèse
+  // que s'il est corroboré par d'autres anomalies structurelles mesurées
+  // (répétition, empreinte sitewide, concentration, ancres, faible autorité).
+  const ownLinksPerDomain = ownDomains > 0 ? Math.round((ownBacklinks / ownDomains) * 10) / 10 : 0;
+  // La concentration n'a de sens qu'à partir d'une volumétrie mesurable : sinon
+  // 2 liens sur 6 suffiraient à fabriquer une « anomalie ».
+  const topReferrerShare = input.backlinksTotal >= 50
+
+    ? Math.max(0, ...rawSample.map((d) => (d.backlinks || 0) / input.backlinksTotal))
+    : 0;
+  const sitewideSuspected = ownLinksPerDomain >= 10 || linksPerDomainAll >= 25;
+
+  const corroborating: string[] = [];
+  if (sitewideSuspected) {
+    corroborating.push(
+      ownLinksPerDomain >= 10
+        ? `empreinte sitewide probable : ${ownLinksPerDomain} liens par domaine du réseau propre`
+        : `${linksPerDomainAll} liens par domaine référent en moyenne — répétition probable des liens`,
+    );
+  }
+  if (ownBacklinkShare >= 0.2) {
+    corroborating.push(`${Math.round(ownBacklinkShare * 100)} % des liens proviennent de ${ownDomains} domaine${ownDomains > 1 ? 's' : ''} rattaché${ownDomains > 1 ? 's' : ''} au réseau propre`);
+  }
+  if (dominantRatio >= 0.3) {
+    corroborating.push(`ancre « ${dominant?.anchor} » sur ${Math.round(dominantRatio * 100)} % de l'échantillon`);
+  }
+  if (unnaturalRatio >= 0.25) {
+    corroborating.push(`${Math.round(unnaturalRatio * 100)} % d'ancres non naturelles`);
+  }
+  if (ranks.length >= 3 && avgReferrerRank < 15) {
+    corroborating.push(`autorité moyenne des domaines tiers très faible (${avgReferrerRank}/100)`);
+  }
+  if (topReferrerShare >= 0.15) {
+    corroborating.push(`un seul domaine référent concentre ${Math.round(topReferrerShare * 100)} % des liens mesurés`);
+  }
+  if (suspicious.length > 0) {
+    corroborating.push(`${suspicious.length} référent${suspicious.length > 1 ? 's' : ''} hors-sujet`);
+  }
+
+  const dofollowHigh = input.dofollowRatio >= 95 && input.referringDomains > 50;
+  const dofollowLevel: DofollowContext['level'] = !dofollowHigh
+    ? 'faible'
+    : corroborating.length >= 2
+      ? 'aggravant'
+      : corroborating.length === 1
+        ? 'a_surveiller'
+        : 'faible';
+  const dofollowPoints = dofollowLevel === 'aggravant' ? 8 : dofollowLevel === 'a_surveiller' ? 3 : 0;
+  if (dofollowPoints > 0) {
+    score += dofollowPoints;
+    signals.push(
+      `${Math.round(input.dofollowRatio)} % de liens dofollow — facteur ${dofollowLevel === 'aggravant' ? 'aggravant' : 'à surveiller'} dans ce contexte (${corroborating.length} anomalie${corroborating.length > 1 ? 's' : ''} structurelle${corroborating.length > 1 ? 's' : ''} corroborante${corroborating.length > 1 ? 's' : ''}), et non un défaut en soi`,
+    );
+  }
+  const dofollow_context: DofollowContext = {
+    ratio: Math.round(input.dofollowRatio * 10) / 10,
+    level: dofollowLevel,
+    points: dofollowPoints,
+    corroborating,
+    sitewide_suspected: sitewideSuspected,
+    note: dofollowHigh
+      ? 'Un lien dofollow est un lien normal : un profil naturel peut en contenir une très forte proportion. Il n\'est retenu comme facteur aggravant que corroboré par d\'autres anomalies mesurées.'
+      : 'Proportion de liens dofollow dans la norme observée, ou échantillon de domaines trop réduit pour en tirer un signal.',
+  };
+
+  // ── Autorité apparente vs autorité indépendante estimée ───────────────────
+  // Simulation indicative : on neutralise conceptuellement les liens du réseau
+  // propre puis la répétition au-delà de 3 liens par domaine tiers (footer,
+  // en-tête, template). Ce n'est pas une reproduction du calcul de Google.
+  const independentLinks = Math.min(thirdBacklinks, thirdDomains * 3);
+  const independence: IndependenceEstimate = {
+    apparent_backlinks: input.backlinksTotal,
+    own_network_backlinks: ownBacklinks,
+    repeated_third_party_backlinks: Math.max(0, thirdBacklinks - independentLinks),
+    estimated_independent_backlinks: independentLinks,
+    estimated_independent_domains: thirdDomains,
+    dependency_share: input.backlinksTotal > 0
+      ? Math.round((1 - independentLinks / input.backlinksTotal) * 1000) / 1000
+      : 0,
+    method: 'Réseau propre retiré, puis répétition au-delà de 3 liens par domaine tiers neutralisée. Simulation indicative — non équivalente au calcul de Google.',
+  };
+
 
   const toxicity = Math.max(0, Math.min(100, score));
   let verdict: BacklinkToxicity['verdict'] = toxicity >= 60 ? 'pollue' : toxicity >= 35 ? 'a_surveiller' : 'sain';
@@ -590,10 +701,11 @@ export function computeBacklinkToxicity(input: {
     signals.push(`réseau propre sorti du périmètre de toxicité (mesuré à part) : ${ownNetwork.slice(0, 6).join(', ')}`);
   }
   const recommendation = (verdict === 'pollue'
-    ? `Priorité au nettoyage sur les liens tiers : constituez un fichier de désaveu sur les domaines d'annuaire et MFA, et diversifiez les ancres avant tout nouvel achat de liens.${suspiciousNote}`
+    ? `Ordre d'investigation avant toute action : 1) identifier les liens sitewide (footer, en-tête, sidebar, template) et le nombre de pages sources ; 2) vérifier les relations réelles entre domaines (propriété, marque, hébergement) — une racine de marque commune ne suffit pas à conclure ; 3) analyser la typologie des ancres ; 4) qualifier le contexte des liens (éditorial, navigationnel, annuaire). Le désaveu ne se justifie qu'après cette vérification, sur des domaines tiers réellement artificiels ; sur le réseau propre, on corrige à la source.${suspiciousNote}`
     : verdict === 'a_surveiller'
-      ? `Surveillez la répétition d'ancres et la qualité des nouveaux référents tiers ; un désaveu ciblé peut être utile sur les domaines tiers les plus faibles.${suspiciousNote}`
+      ? `Surveillez la répétition d'ancres, l'empreinte sitewide et la qualité des nouveaux référents tiers. Un désaveu ne se justifie qu'après avoir vérifié que les liens visés sont réellement tiers et manifestement construits — ni la faible autorité ni le volume ne suffisent.${suspiciousNote}`
       : "Aucun signal de manipulation sur les liens tiers de l'échantillon : pas de désaveu justifié à ce stade, l'échantillon reste toutefois limité aux principaux référents.")
+
     + ownNote;
 
   return {
@@ -612,6 +724,9 @@ export function computeBacklinkToxicity(input: {
     own_network_backlink_share: ownBacklinkShare,
     links_per_domain_all: linksPerDomainAll,
     anchor_attribution: anchorDowngraded ? 'all_referrers_downgraded' : 'all_referrers',
+    dofollow_context,
+    independence,
+
   };
 }
 
