@@ -2228,26 +2228,42 @@ Deno.serve(handleRequest(async (req) => {
 
     // Un seul run dégradé sans confirmation ne plafonne pas : c'est exactement
     // le faux positif observé (11,3 s au run 1, 2,0 s en réalité).
+    //
+    // Pénalité continue, pas score par défaut. État de l'art : la performance est
+    // un signal de classement réel mais secondaire (tie-breaker) chez Google, et
+    // les seuils Core Web Vitals sont graduels (2,50 s « good », 4,00 s « poor »).
+    // Un score-plancher unique (12/40) écrasait toute variance entre une page à
+    // 4,2 s et une page à 11 s. On applique donc un abattement progressif de
+    // l'axe performance, borné à un plancher de 8/40 (la page reste notée sur ses
+    // autres qualités mesurées).
     const lcpIsConfirmed = perf.source.startsWith('field_') || perf.labLcpRuns.length > 1;
-    if (lcpMsMeasured !== null && lcpMsMeasured > 4000 && lcpIsConfirmed) {
-      // Seuil Core Web Vitals : > 4 s = « poor ». Au-delà de 8 s, la page est
-      // hors jeu pour l'utilisateur mobile.
-      const cap = lcpMsMeasured > 8000 ? 6 : 12;
-      if (performanceScore > cap) {
-        const lost = performanceScore - cap;
+    if (lcpMsMeasured !== null && lcpMsMeasured > 2500 && lcpIsConfirmed) {
+      // Abattement de l'axe : 0 % à 2,50 s → 25 % à 4,00 s → 55 % à 8,00 s →
+      // +5 points de % par seconde au-delà, plafonné à 80 %.
+      const s = lcpMsMeasured / 1000;
+      let cut: number;
+      if (s <= 4) cut = ((s - 2.5) / 1.5) * 0.25;
+      else if (s <= 8) cut = 0.25 + ((s - 4) / 4) * 0.30;
+      else cut = Math.min(0.80, 0.55 + (s - 8) * 0.05);
+
+      const floorScore = 8;
+      const penalised = Math.max(floorScore, Math.round(performanceScore * (1 - cut)));
+      if (penalised < performanceScore) {
+        const lost = performanceScore - penalised;
         scoreGates.push({
           axis: 'performance',
-          reason: `LCP mobile confirmé au-delà du seuil Core Web Vitals (${perfSourceLabel})`,
-          evidence: `${(lcpMsMeasured / 1000).toFixed(2)}s mesuré → cible 2,50s (score plafonné à ${cap}/40, soit −${lost} points)`,
+          reason: `LCP mobile confirmé au-delà de la cible Core Web Vitals (${perfSourceLabel})`,
+          evidence: `${s.toFixed(2)}s mesuré → cible 2,50s (abattement de ${Math.round(cut * 100)} % de l'axe performance, soit −${lost} points sur 40)`,
           pointsLost: lost,
-          measured: `${(lcpMsMeasured / 1000).toFixed(2)}s`,
+          measured: `${s.toFixed(2)}s`,
           target: '2,50s',
         });
-        performanceScore = cap;
+        performanceScore = penalised;
       }
     } else if (lcpMsMeasured !== null && lcpMsMeasured > 4000) {
-      console.warn(`[PERF] LCP ${lcpMsMeasured}ms non confirmé (run unique) → aucun plafond appliqué`);
+      console.warn(`[PERF] LCP ${lcpMsMeasured}ms non confirmé (run unique) → aucune pénalité appliquée`);
     }
+
 
 
     // Contenu non extractible : le HTML est servi mais le texte visible est
@@ -2328,18 +2344,29 @@ Deno.serve(handleRequest(async (req) => {
     const rawTotalScore = performanceScore + technicalScore + semanticScore + aiReadyScore + securityScore + brokenLinksBonus;
     let totalScore = Math.round(Math.max(0, rawTotalScore) * smartFetchResult.selfAudit.reliabilityScore);
 
-    // Plafond global : tant qu'un défaut bloquant mesuré subsiste (LCP « poor »
-    // ou contenu non extractible), le score total ne peut pas franchir la zone
-    // « excellent ». Un audit qui se contredit ne sert à personne.
-    const blockingGate = scoreGates.some((g) => g.axis === 'performance' || g.axis === 'technical');
+    // Plafond global — désormais réservé aux défauts réellement bloquants.
+    //
+    // Un LCP dégradé est déjà payé sur son axe (abattement progressif ci-dessus) :
+    // le rejouer en plafond global revenait à sanctionner deux fois le même fait
+    // et à écraser toutes les pages lentes sur la même note (130/200 = 65).
+    // Ne subsistent donc que :
+    //   - contenu non extractible (`technical`) : les robots ne lisent rien → 130 ;
+    //   - mesures indisponibles (`estimated`) : la note n'est pas vérifiée → 150 ;
+    //   - LCP « poor » confirmé (> 4 s) : simple interdiction de la zone
+    //     « excellent » (170/200), sans écrasement de la variance.
+    const contentGate = scoreGates.some((g) => g.axis === 'technical');
     const estimatedGate = scoreGates.some((g) => g.axis === 'estimated');
-    const totalCap = blockingGate ? 130 : (estimatedGate ? 150 : null);
+    const poorLcp = lcpMsMeasured !== null && lcpMsMeasured > 4000
+      && scoreGates.some((g) => g.axis === 'performance');
+    const totalCap = contentGate ? 130 : (estimatedGate ? 150 : (poorLcp ? 170 : null));
     if (totalCap !== null && totalScore > totalCap) {
       scoreGates.push({
         axis: 'total',
-        reason: blockingGate
-          ? 'Défaut bloquant mesuré : le score global est plafonné hors de la zone « excellent »'
-          : 'Mesures de performance indisponibles : le score global reste hors de la zone « excellent »',
+        reason: contentGate
+          ? 'Contenu non extractible : le score global est plafonné hors de la zone « excellent »'
+          : estimatedGate
+            ? 'Mesures de performance indisponibles : le score global reste hors de la zone « excellent »'
+            : 'LCP mobile « poor » confirmé : la zone « excellent » reste fermée tant que la cible n’est pas atteinte',
         evidence: `${totalScore}/200 avant plafond → ${totalCap}/200 (soit −${totalScore - totalCap} points)`,
         pointsLost: totalScore - totalCap,
         measured: `${totalScore}/200`,
@@ -2348,6 +2375,7 @@ Deno.serve(handleRequest(async (req) => {
 
       totalScore = totalCap;
     }
+
     if (scoreGates.length) {
       console.log(`[Audit-Expert-SEO] 🚧 ${scoreGates.length} plafond(s) de cohérence appliqué(s): ${scoreGates.map((g) => g.axis).join(', ')}`);
     }
