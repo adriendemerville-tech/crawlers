@@ -1,21 +1,26 @@
 ---
 name: GEO en 3 piliers, barème 25 / 22→17 / 53→58
-description: GEO décomposé en 10 sous-signaux / 3 piliers — autorité domaine 25 constante, accessibilité machine 22 puis −1 pt par tranche de 18 mois jusqu'au plancher 17, contenu = le reste (53 → 58) ; ancre 2026-08-23, score toujours sur 100
+description: GEO décomposé en 11 sous-signaux / 3 piliers — autorité domaine 25 constante, accessibilité machine 22 puis −1 pt par tranche de 18 mois jusqu'au plancher 17, contenu = le reste (53 → 58) ; ancre 2026-08-23, score toujours sur 100
 type: feature
 ---
 
 # GEO en 3 piliers, barème 25 / 22→17 / 53→58
 
 ## `_shared/geoSubSignals.ts`
-Un score GEO global masque trois réalités. Il est décomposé en **10 sous-signaux
+Un score GEO global masque trois réalités. Il est décomposé en **11 sous-signaux
 répartis en 3 piliers**, avec une **décroissance en marches** de l'accessibilité
 machine : être crawlable est un différenciateur aujourd'hui, il se commoditise à
 mesure que le parc de sites se rénove.
 
 - **Pilier A — Autorité domaine (25 pts, constant, mutualisé)** : `brand_authority`
   (rel 14), `serp_presence` (11).
-- **Pilier B — Accessibilité machine (22 → 17 pts, page)** : `bot_accessibility` (14),
-  `structured_data_quality` (12), `content_freshness` (6).
+- **Pilier B — Accessibilité machine (22 → 17 pts, page)** : `bot_accessibility`,
+  `structured_data_quality`, `ai_bot_policy`, `content_freshness`. `ai_bot_policy`
+  note l'autorisation nommée des robots IA et détecte le throttling (429/403) ;
+  `structured_data_quality` intègre la complétude du nœud d'identité `Organization`
+  (adresse, contact, sameAs) pour 35 % du signal, et une décote sur les réponses
+  non-200 sans corps utile. Le gate `geo_bot_policy` remonte en tête du workbench.
+
 - **Pilier C — Exploitabilité contenu (53 → 58 pts, page)** : `content_quotability` (10),
   `answer_formatting` (8), `knowledge_graph_signals` (10), `self_citation_signals` (8),
   `person_authority` (6).
