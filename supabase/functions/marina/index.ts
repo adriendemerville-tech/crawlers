@@ -4706,6 +4706,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             expertData?.insights?.contentDensity && expertData.insights.contentDensity.verdict !== 'unknown'
               ? (expertData.insights.contentDensity.ratio ?? null)
               : null,
+          // Livraison serveur mesurée (PSI server-response-time) : décote locale
+          // de l'accessibilité robots. Le LCP reste hors du GEO (double pénalité).
+          ttfbMs: typeof expertData?.performance?.ttfb === 'number' ? expertData.performance.ttfb : null,
         });
 
         // Plafonds unifiés (techniques + GEO) : ordre d'entrée du workbench et du
