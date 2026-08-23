@@ -262,7 +262,7 @@ export function derivePageFocus(
   }
 
   const { locality, rest } = extractLocality(slug.replace(/\.(html?|php|aspx?)$/i, ''), meta.knownLocalities || []);
-  const cleanedRest = sanitizeServicePhrase(rest, meta.brandName);
+  const cleanedRest = sanitizeServicePhrase(rest, meta.brandName, hostname);
   const service = humanize(cleanedRest) || null;
   const slugPhrase = humanize(slug);
 
