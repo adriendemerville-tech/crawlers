@@ -2309,13 +2309,28 @@ function sanitizeMarinaHtml(html: string, opts?: { keepColors?: boolean }): stri
 }
 
 /**
+ * Citation réellement observée par le benchmark LLM (agrégat de
+ * calculate-llm-visibility). Renvoie le taux de couverture et le nombre
+ * d'observations, quelle que soit la forme du payload (brut ou enveloppé).
+ */
+function extractObservedCitation(raw: any): { ratePct: number | null; observations: number | null } | null {
+  const agg = raw?.aggregate || raw?.data?.aggregate || null;
+  const cov = agg?.coverage || null;
+  if (!cov) return null;
+  const rate = typeof cov.rate === 'number' && Number.isFinite(cov.rate) ? cov.rate : null;
+  const obs = typeof cov.observations === 'number' && Number.isFinite(cov.observations) ? cov.observations : null;
+  if (rate === null && obs === null) return null;
+  return { ratePct: rate, observations: obs };
+}
+
+/**
  * Synthèse exécutive : un score global et un verdict en une phrase, en tête de
  * rapport. 100 % déterministe (aucun appel LLM, donc aucun coût token).
  */
 function buildExecutiveSummaryHTML(
   lang: string,
   domain: string,
-  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number; roi?: RoiSummary | null; verdictSignals?: VerdictSignals | null; verdictHtml?: string | null },
+  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number; roi?: RoiSummary | null; verdictSignals?: VerdictSignals | null; verdictHtml?: string | null; geoDeterministic?: number | null; geoCalibration?: any },
 
 ): string {
   const isEn = lang === 'en';
@@ -2325,7 +2340,12 @@ function buildExecutiveSummaryHTML(
   const techRaw = Number(ctx.expertData?.totalScore || 0);
   const techMax = Number(ctx.expertData?.maxScore || 220) || 220;
   const tech100 = techRaw > 0 ? Math.round((techRaw / techMax) * 100) : null;
-  const geo100 = ctx.strategicData?.overallScore ? Math.round(Number(ctx.strategicData.overallScore)) : null;
+  // Juge unique du GEO : les 10 sous-signaux (geoSubSignals). La note du
+  // benchmark LLM est un commentaire narratif, jamais un score : elle ne sert
+  // plus qu'en dernier recours si les sous-signaux n'ont rien mesuré.
+  const geo100 = typeof ctx.geoDeterministic === 'number' && Number.isFinite(ctx.geoDeterministic)
+    ? Math.max(0, Math.min(100, Math.round(ctx.geoDeterministic)))
+    : (ctx.strategicData?.overallScore ? Math.round(Number(ctx.strategicData.overallScore)) : null);
   const pages = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pages?.length || null;
 
   // Coût chiffré des plafonds (performance mobile / LCP en tête) : le lecteur
@@ -2384,6 +2404,21 @@ function buildExecutiveSummaryHTML(
           `${domain} presenta un fallo crítico (${global}/100).`,
         );
 
+  // Calibration du GEO par la citation réellement observée : le lecteur doit
+  // savoir que le score n'est pas qu'un potentiel, et de combien il a bougé.
+  const cal = ctx.geoCalibration || null;
+  const calibrationHTML = cal && cal.applied
+    ? `<p style="font-size:12.5px;line-height:1.7;color:#374151;margin:12px 0 0 0;border-left:3px solid #6d28d9;padding-left:12px;">
+        <strong>${t('Calibration par la citation réelle.', 'Calibration on observed citation.', 'Calibración por citación real.')}</strong>
+        ${t(
+          `Les dix sous-signaux GEO mesurent un potentiel de citation. Le benchmark, lui, mesure le résultat : la marque est-elle citée quand un client potentiel interroge un moteur de réponse ? Citation observée ${Math.round(Number(cal.rate_pct))} % sur ${cal.observations} observations : le score GEO est modulé de ${cal.factor_pct > 0 ? '+' : ''}${cal.factor_pct} % (${cal.pre_score}/100 → ${cal.post_score}/100). Le barème n'est pas modifié : seul l'écart entre potentiel et résultat est corrigé, dans une limite de ±10 %.`,
+          `The ten GEO sub-signals measure citation potential. The benchmark measures the outcome: is the brand cited when a prospect queries an answer engine? Observed citation ${Math.round(Number(cal.rate_pct))}% over ${cal.observations} observations: the GEO score is modulated by ${cal.factor_pct > 0 ? '+' : ''}${cal.factor_pct}% (${cal.pre_score}/100 → ${cal.post_score}/100). The scale is unchanged; only the gap between potential and outcome is corrected, capped at ±10%.`,
+          `Los diez subseñales GEO miden un potencial. El benchmark mide el resultado: citación observada ${Math.round(Number(cal.rate_pct))} % sobre ${cal.observations} observaciones, el GEO se modula ${cal.factor_pct > 0 ? '+' : ''}${cal.factor_pct} % (${cal.pre_score}/100 → ${cal.post_score}/100), con un límite de ±10 %.`,
+        )}
+      </p>`
+    : '';
+
+
   const cell = (label: string, value: string, metric?: string) => `
     <div style="flex:1 1 140px;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;background:#ffffff;">
       <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">${label}</div>
@@ -2419,6 +2454,7 @@ function buildExecutiveSummaryHTML(
     </div>
     ${ctx.roi ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;">${ctx.roi.sentence}${ctx.roi.topQuickWins.length ? ` ${t('À traiter en premier', 'Start with', 'Empezar por')} : ${ctx.roi.topQuickWins.join(' ; ')}.` : ''}</p>` : ''}
     ${penaltyHTML}
+    ${calibrationHTML}
     ${backlinkVigilanceHTML}
 
 
@@ -4761,6 +4797,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           // Livraison serveur mesurée (PSI server-response-time) : décote locale
           // de l'accessibilité robots. Le LCP reste hors du GEO (double pénalité).
           ttfbMs: typeof expertData?.performance?.ttfb === 'number' ? expertData.performance.ttfb : null,
+          // Citation réellement observée dans les moteurs de réponse : sert de
+          // facteur de calibration ±10 % du score GEO (jamais de sous-signal, la
+          // mesure étant mutualisée au domaine).
+          observedCitation: extractObservedCitation(llmVisibilityData),
         });
 
         // Plafonds unifiés (techniques + GEO) : ordre d'entrée du workbench et du
@@ -5124,6 +5164,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               roi: roiSummary,
               verdictSignals,
               verdictHtml: narratedVerdict.html,
+              // Juge unique du GEO : les 10 sous-signaux, calibrés par la
+              // citation réellement observée. La note LLM reste narrative.
+              geoDeterministic: pageGeo100,
+              geoCalibration: geoSubSignalsReport?.citation_calibration ?? null,
             }),
 
 

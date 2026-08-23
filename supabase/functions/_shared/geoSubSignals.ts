@@ -65,6 +65,27 @@ export const GEO_ACCESSIBILITY_FLOOR = 17;
  */
 export const GEO_NO_AUTHORITY_CAP = 75;
 
+/**
+ * Calibration par la citation réellement observée (benchmark LLM).
+ *
+ * Les 10 sous-signaux mesurent un POTENTIEL de citation (autorité,
+ * accessibilité, exploitabilité). Le benchmark, lui, mesure le RÉSULTAT :
+ * la marque est-elle citée quand un client potentiel interroge un moteur de
+ * réponse ? Plutôt que d'ajouter un 11e sous-signal (qui écraserait la variance
+ * par page, la mesure étant mutualisée au domaine), on module le score final de
+ * ±GEO_CALIBRATION_MAX_PCT % : le barème reste inchangé, seul l'écart entre
+ * potentiel et réel est corrigé.
+ *
+ * Neutre à GEO_CALIBRATION_NEUTRAL_PCT de couverture ; borne haute atteinte à
+ * GEO_CALIBRATION_HIGH_PCT ; 0 % de citation applique la décote maximale.
+ * Aucune calibration sous GEO_CALIBRATION_MIN_OBSERVATIONS observations : un
+ * échantillon trop court n'est pas une mesure.
+ */
+export const GEO_CALIBRATION_MAX_PCT = 10;
+export const GEO_CALIBRATION_NEUTRAL_PCT = 20;
+export const GEO_CALIBRATION_HIGH_PCT = 60;
+export const GEO_CALIBRATION_MIN_OBSERVATIONS = 6;
+
 /** Points d'accessibilité machine à une date (22 → 17 par tranche de 1 pt / 18 mois). */
 export function geoAccessibilityPoints(now: Date = new Date()): number {
   const steps = Math.floor(geoElapsedMonths(now) / GEO_ACCESSIBILITY_STEP_MONTHS);
@@ -300,11 +321,38 @@ export interface GeoSubSignalReport {
    * balisage seul n'est pas citable. Chaque plafond porte sa preuve chiffrée.
    */
   gates: AuditGate[];
+  /**
+   * Calibration par la citation réellement observée (benchmark LLM). `applied:
+   * false` quand la mesure manque ou que l'échantillon est trop court : le score
+   * reste alors purement un potentiel.
+   */
+  citation_calibration: GeoCitationCalibration;
+}
+
+export interface GeoCitationCalibration {
+  applied: boolean;
+  /** Taux de citation observé (0-100) ou null si non mesuré. */
+  rate_pct: number | null;
+  /** Nombre d'observations du benchmark (modèles × questions). */
+  observations: number | null;
+  /** Modulation appliquée, en % du score (−10 → +10). */
+  factor_pct: number;
+  /** Score avant / après calibration. */
+  pre_score: number | null;
+  post_score: number | null;
+  /** Phrase d'explication prête à afficher. */
+  note: string;
 }
 
 export interface GeoSignalInputs {
   /** citation_breakdown de citationScorer (8 clés). */
   breakdown?: Record<string, number | null | undefined> | null;
+  /**
+   * Résultat réellement observé du benchmark LLM (agrégat de
+   * calculate-llm-visibility) : taux de couverture et nombre d'observations.
+   * Sert uniquement de facteur de calibration ±10 %, jamais de sous-signal.
+   */
+  observedCitation?: { ratePct?: number | null; observations?: number | null } | null;
   /** true si le HTML servi est une coquille JS (botRenderingShell). */
   isBotShell?: boolean | null;
   /** Nombre de pages où un tag attendu est absent uniquement pour les robots. */
@@ -645,6 +693,63 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
     });
   }
 
+  // ─── Calibration par la citation réellement observée (±10 %) ───
+  // Les sous-signaux mesurent un potentiel ; le benchmark mesure le résultat.
+  // On corrige l'écart sans toucher au barème : un site parfaitement structuré
+  // que personne ne cite perd 10 %, un site cité malgré des signaux moyens en
+  // gagne 10 %. Le plafond d'autorité reste opposable après calibration.
+  const obsRate = num(inputs.observedCitation?.ratePct);
+  const obsCount = typeof inputs.observedCitation?.observations === 'number' && Number.isFinite(inputs.observedCitation.observations)
+    ? Math.max(0, Math.round(inputs.observedCitation.observations))
+    : null;
+  let calibration: GeoCitationCalibration = {
+    applied: false,
+    rate_pct: obsRate,
+    observations: obsCount,
+    factor_pct: 0,
+    pre_score: geo,
+    post_score: geo,
+    note: obsRate === null
+      ? 'Citation réelle non mesurée sur ce run : le score GEO exprime un potentiel de citation, pas un résultat observé.'
+      : `Échantillon de benchmark trop court (${obsCount ?? 0} observation${(obsCount ?? 0) > 1 ? 's' : ''}, minimum ${GEO_CALIBRATION_MIN_OBSERVATIONS}) : aucune calibration appliquée.`,
+  };
+
+  if (geo !== null && obsRate !== null && (obsCount ?? 0) >= GEO_CALIBRATION_MIN_OBSERVATIONS) {
+    const factor =
+      obsRate >= GEO_CALIBRATION_NEUTRAL_PCT
+        ? GEO_CALIBRATION_MAX_PCT *
+          Math.min(1, (obsRate - GEO_CALIBRATION_NEUTRAL_PCT) / (GEO_CALIBRATION_HIGH_PCT - GEO_CALIBRATION_NEUTRAL_PCT))
+        : -GEO_CALIBRATION_MAX_PCT * ((GEO_CALIBRATION_NEUTRAL_PCT - obsRate) / GEO_CALIBRATION_NEUTRAL_PCT);
+    const factorPct = Math.round(factor * 10) / 10;
+    const pre = geo;
+    let post = clamp100(pre * (1 + factorPct / 100));
+    if (authority.score === null && post > GEO_NO_AUTHORITY_CAP) post = GEO_NO_AUTHORITY_CAP;
+    geo = post;
+    calibration = {
+      applied: true,
+      rate_pct: obsRate,
+      observations: obsCount,
+      factor_pct: factorPct,
+      pre_score: pre,
+      post_score: post,
+      note:
+        factorPct === 0
+          ? `Citation réelle observée à ${obsRate} % sur ${obsCount} observations : conforme au potentiel mesuré, aucun ajustement.`
+          : factorPct > 0
+          ? `Citation réelle observée à ${obsRate} % sur ${obsCount} observations : la marque est citée plus souvent que ses signaux ne le laissaient prévoir (+${factorPct} %, ${pre}/100 → ${post}/100).`
+          : `Citation réelle observée à ${obsRate} % sur ${obsCount} observations : la marque est citée moins souvent que ses signaux ne le laissaient prévoir (${factorPct} %, ${pre}/100 → ${post}/100).`,
+    };
+    if (factorPct <= -5) {
+      rawGates.push({
+        axis: 'geo_citation',
+        reason: 'Écart entre potentiel et résultat : les signaux de citabilité sont meilleurs que la citation réellement observée dans les moteurs de réponse. Le score est calibré à la baisse.',
+        evidence: `citation observée ${obsRate} % sur ${obsCount} observations → cible ${GEO_CALIBRATION_NEUTRAL_PCT} % (score ${calibration.pre_score}/100 ramené à ${post}/100)`,
+        measured: `${obsRate} % de citation`,
+        target: `${GEO_CALIBRATION_NEUTRAL_PCT} % de citation observée`,
+      });
+    }
+  }
+
 
   const priority = signals
     .filter((s) => s.value !== null && (s.value as number) < 60)
@@ -674,6 +779,7 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
     verdict_explanation: v.explanation,
     priority_levers: priority,
     gates: normalizeGates(rawGates, 'geo'),
+    citation_calibration: calibration,
   };
 }
 
@@ -844,5 +950,14 @@ export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string
       <p style="font-size:12px;color:#374151;line-height:1.6;margin:0;"><strong>${esc(report.verdict_label)}.</strong> ${esc(report.verdict_explanation)}</p>
       ${levers}
     </div>
+    <p style="font-size:11px;color:#6b7280;line-height:1.6;margin:10px 0 0 0;">
+      <strong>${lang === 'en' ? 'Potential vs observed' : 'Potentiel et résultat observé'} :</strong>
+      ${esc(report.citation_calibration.note)}
+      ${report.citation_calibration.applied
+        ? (lang === 'en'
+            ? ` Modulation limited to ±${GEO_CALIBRATION_MAX_PCT} % of the score; the scale itself is unchanged.`
+            : ` Modulation bornée à ±${GEO_CALIBRATION_MAX_PCT} % du score ; le barème lui-même reste inchangé.`)
+        : ''}
+    </p>
   </div>`;
 }
