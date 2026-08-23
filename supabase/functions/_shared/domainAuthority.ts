@@ -223,6 +223,46 @@ export function detectSuspiciousReferringDomains(
 }
 
 /**
+ * Réseau propre de la marque : déclinaisons du même nom sur d'autres extensions
+ * ou avec un suffixe traduit (avenir-renovations.fr → .be, .lu, .ch,
+ * avenir-reformas.es, avenir-obras.pt). Ces liens sont du maillage inter-pays,
+ * pas de l'achat de liens : les compter comme toxiques conduirait à recommander
+ * un désaveu contre-productif.
+ *
+ * Règle déterministe : on compare les jetons du label de second niveau. Un jeton
+ * commun de 5 caractères ou plus (hors mots très génériques) suffit à rattacher
+ * le référent au même réseau.
+ */
+const GENERIC_BRAND_TOKENS = new Set([
+  'group', 'groupe', 'france', 'europe', 'world', 'international', 'travaux',
+  'maison', 'batiment', 'service', 'services', 'online', 'contact', 'agence',
+]);
+
+function brandTokens(host: string): string[] {
+  const label = String(host || '').toLowerCase().replace(/^www\./, '').split('.')[0] || '';
+  return label
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length >= 5 && !GENERIC_BRAND_TOKENS.has(t));
+}
+
+export function detectOwnNetworkDomains(
+  auditedDomain: string,
+  domains: { domain: string }[],
+): string[] {
+  const own = brandTokens(auditedDomain);
+  if (own.length === 0) return [];
+  const audited = String(auditedDomain || '').toLowerCase().replace(/^www\./, '');
+  const out: string[] = [];
+  for (const d of domains || []) {
+    const host = String(d?.domain || '').toLowerCase().replace(/^www\./, '');
+    if (!host || host === audited) continue;
+    const tokens = brandTokens(host);
+    if (tokens.some((t) => own.includes(t))) out.push(host);
+  }
+  return Array.from(new Set(out));
+}
+
+/**
  * Toxicité du profil de liens — 100 % déterministe.
  *
  * `topReferringDomains` sert à l'affichage ; `sampleReferringDomains`, quand il
@@ -230,6 +270,7 @@ export function detectSuspiciousReferringDomains(
  * calculés le rank moyen des référents et la détection de domaines hors-sujet.
  * Sans lui, on retombe sur le top 10 (comportement historique).
  */
+
 export function computeBacklinkToxicity(input: {
   anchors: { anchor: string; count: number }[];
   topReferringDomains: { domain: string; rank: number; backlinks: number }[];
