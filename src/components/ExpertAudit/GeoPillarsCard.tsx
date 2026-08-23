@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Brain } from 'lucide-react';
 import {
   geoFactsFromExpertAudit,
-  type ExpertAuditFacts,
+  expertFactsFromAuditPayload,
   type StrategicAuditFacts,
   type GeoFactSource,
 } from '../../../supabase/functions/_shared/geoFactsFromExpertAudit';
@@ -57,9 +57,21 @@ function fmtPts(v: number): string {
 export function GeoPillarsCard({ technicalResult, strategicResult }: Props) {
   const computed = useMemo(() => {
     if (!technicalResult || typeof technicalResult !== 'object') return null;
+    // Sans volet stratégique, on affiche le score déjà calculé et persisté par
+    // l'edge function (`geo_pillars`) : même juge, mais une seule vérité,
+    // historisable et exportable. Le recalcul local ne sert qu'à intégrer les
+    // faits d'autorité apportés par l'audit stratégique.
+    const persisted = (technicalResult as Record<string, any>)['geo_pillars'];
+    if (!strategicResult && persisted && typeof persisted === 'object' && persisted.signals) {
+      return {
+        report: persisted as GeoSubSignalReport,
+        sources: (persisted.fact_sources ?? {}) as Record<string, GeoFactSource>,
+        notes: (persisted.fact_notes ?? []) as string[],
+      };
+    }
     try {
       const projection = geoFactsFromExpertAudit(
-        technicalResult as ExpertAuditFacts,
+        expertFactsFromAuditPayload(technicalResult),
         (strategicResult as StrategicAuditFacts | undefined) ?? null,
       );
       const report: GeoSubSignalReport = buildGeoSubSignals(projection.inputs);
@@ -68,6 +80,7 @@ export function GeoPillarsCard({ technicalResult, strategicResult }: Props) {
       return null;
     }
   }, [technicalResult, strategicResult]);
+
 
   if (!computed) return null;
   const { report, sources } = computed;

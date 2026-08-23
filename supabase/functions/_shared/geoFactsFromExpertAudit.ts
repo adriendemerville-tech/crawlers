@@ -99,7 +99,31 @@ export interface GeoFactsProjection {
   notes: string[];
 }
 
+/**
+ * Normalise le payload brut de `audit-expert-seo` vers `ExpertAuditFacts`.
+ *
+ * Le payload réel ne place pas les faits où l'adaptateur les attend :
+ * `htmlAnalysis` vit sous `rawData.htmlAnalysis` et le TTFB sous
+ * `scores.performance.ttfb`. Sans ce recalage, l'accessibilité machine et les
+ * plafonds de contenu étaient calculés sur des faits absents (donc « non
+ * mesurés »). Un seul point d'entrée pour l'écran comme pour l'edge function.
+ */
+export function expertFactsFromAuditPayload(payload: unknown): ExpertAuditFacts {
+  const p = (payload ?? {}) as Record<string, any>;
+  const data = (p['data'] && typeof p['data'] === 'object' && p['scores'] === undefined ? p['data'] : p) as Record<string, any>;
+  const html = data['htmlAnalysis'] ?? data['rawData']?.htmlAnalysis ?? null;
+  const ttfb = data['performance']?.ttfb ?? data['scores']?.performance?.ttfb ?? null;
+  return {
+    scores: data['scores'] ?? null,
+    htmlAnalysis: html,
+    insights: data['insights'] ?? data['rawData']?.htmlAnalysis?.insights ?? null,
+    performance: { ttfb: typeof ttfb === 'number' ? ttfb : null },
+    meta: data['meta'] ?? null,
+  };
+}
+
 /* ─── Utilitaires ─────────────────────────────────────────────────────────── */
+
 
 function n100(v: unknown): number | null {
   const x = typeof v === 'number' ? v : NaN;
