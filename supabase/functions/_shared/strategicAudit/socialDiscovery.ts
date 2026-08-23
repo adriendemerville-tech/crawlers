@@ -23,6 +23,31 @@ interface RawListing {
   category?: string;
   address?: string;
   is_claimed?: boolean;
+  /** La fiche pointe explicitement vers le domaine audité (signal de siège / fiche mère). */
+  domain_match?: boolean;
+}
+
+/** Médiane d'une série numérique (retourne undefined si série vide). */
+function median(values: number[]): number | undefined {
+  const arr = values.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+  if (arr.length === 0) return undefined;
+  const mid = Math.floor(arr.length / 2);
+  return arr.length % 2 === 1 ? arr[mid]! : ((arr[mid - 1]! + arr[mid]!) / 2);
+}
+
+/**
+ * Extrait les tokens de localité exploitables d'une adresse déclarée (siège).
+ * « 12 rue des Lilas, 77090 Collégien » → ['collegien', '77090'].
+ */
+function localityTokens(hint: string): string[] {
+  const norm = (hint || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const zips = norm.match(/\b\d{5}\b/g) || [];
+  const words = norm
+    .replace(/\b\d+\b/g, ' ')
+    .replace(/[^a-z\- ]+/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length > 3 && !['rue', 'avenue', 'boulevard', 'chemin', 'route', 'place', 'impasse', 'cedex', 'france', 'zone', 'parc'].includes(w));
+  return [...zips, ...words];
 }
 
 /** Normalise un nom de marque pour comparaison (accents, casse, ponctuation). */
@@ -34,8 +59,13 @@ function normBrand(s: string): string {
     .trim();
 }
 
-/** Construit un GMBData agrégé à partir de N fiches (réseau de franchisés / agences). */
-function buildGmbFromListings(listings: RawListing[], brandName: string): GMBData | null {
+/**
+ * Construit un GMBData agrégé à partir de N fiches (réseau de franchisés / agences).
+ * `hqHint` = adresse ou ville du siège déclarée par la carte d'identité : la fiche
+ * de référence doit être celle du siège, jamais « celle qui a le plus d'avis »
+ * (sinon un franchisé local remonte comme fiche officielle du réseau).
+ */
+function buildGmbFromListings(listings: RawListing[], brandName: string, hqHint?: string | null): GMBData | null {
   const valid = listings.filter((l) => l.title || l.address);
   if (valid.length === 0) return null;
 
@@ -44,9 +74,21 @@ function buildGmbFromListings(listings: RawListing[], brandName: string): GMBDat
   const weightedRating = withReviews.length && networkReviews > 0
     ? withReviews.reduce((sum, l) => sum + (l.rating || 0) * (l.reviews || 0), 0) / networkReviews
     : undefined;
+  const meanRating = withReviews.length
+    ? withReviews.reduce((s, l) => s + (l.rating || 0), 0) / withReviews.length
+    : undefined;
+  const medRating = median(withReviews.map((l) => l.rating || 0));
+  const medReviews = median(withReviews.map((l) => l.reviews || 0));
 
-  // Fiche principale = celle avec le plus d'avis (sinon la première)
-  const primary = [...valid].sort((a, b) => (b.reviews || 0) - (a.reviews || 0))[0];
+  // Fiche de référence : siège (localité déclarée) > fiche liée au domaine > plus d'avis
+  const hqTokens = localityTokens(hqHint || '');
+  const normAddr = (a?: string) => (a || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const hqListing = hqTokens.length
+    ? valid.find((l) => { const a = normAddr(l.address) + ' ' + normAddr(l.title); return hqTokens.some((t) => a.includes(t)); })
+    : undefined;
+  const domainListing = valid.find((l) => l.domain_match === true);
+  const primary = hqListing || domainListing || [...valid].sort((a, b) => (b.reviews || 0) - (a.reviews || 0))[0]!;
+  const primarySelection: 'hq' | 'domain' | 'most_reviews' = hqListing ? 'hq' : (domainListing ? 'domain' : 'most_reviews');
   const isNetwork = valid.length > 1;
 
   const quickWins: string[] = [];
@@ -68,9 +110,10 @@ function buildGmbFromListings(listings: RawListing[], brandName: string): GMBDat
     if (quickWins.length < 2) quickWins.push(`Publiez des Google Posts hebdomadaires (offres, actualités, événements) pour maintenir votre fiche active et améliorer votre positionnement local.`);
   }
 
+  const r1 = (v?: number) => (v != null ? Math.round(v * 10) / 10 : undefined);
   return {
     title: primary.title || brandName,
-    rating: typeof primary.rating === 'number' ? primary.rating : (weightedRating != null ? Math.round(weightedRating * 10) / 10 : undefined),
+    rating: typeof primary.rating === 'number' ? primary.rating : r1(weightedRating),
     reviews_count: typeof primary.reviews === 'number' ? primary.reviews : undefined,
     category: primary.category,
     address: primary.address,
@@ -79,13 +122,23 @@ function buildGmbFromListings(listings: RawListing[], brandName: string): GMBDat
     totalReviews: networkReviews > 0 ? networkReviews : (typeof primary.reviews === 'number' ? primary.reviews : undefined),
     locations_count: valid.length,
     ...(networkReviews > 0 ? { network_total_reviews: networkReviews } : {}),
-    ...(weightedRating != null ? { network_avg_rating: Math.round(weightedRating * 10) / 10 } : {}),
+    ...(weightedRating != null ? { network_avg_rating: r1(weightedRating) } : {}),
+    ...(isNetwork && meanRating != null ? { network_mean_rating: r1(meanRating) } : {}),
+    ...(isNetwork && medRating != null ? { network_median_rating: r1(medRating) } : {}),
+    ...(isNetwork && medReviews != null ? { network_median_reviews: Math.round(medReviews) } : {}),
+    ...(isNetwork && withReviews.length ? { network_avg_reviews_per_location: Math.round(networkReviews / valid.length) } : {}),
     is_multi_location: isNetwork,
     measurement_scope: isNetwork ? 'network' : 'single',
+    reference_listing: primarySelection === 'hq'
+      ? 'siège (adresse déclarée)'
+      : primarySelection === 'domain'
+        ? 'fiche rattachée au domaine audité'
+        : 'échantillon : fiche la plus notée (siège non identifié)',
+    ...(isNetwork ? { network_measurement_note: `Agrégats calculés sur ${valid.length} fiche(s) identifiée(s) — échantillon, pas nécessairement l'ensemble du réseau.` } : {}),
   };
 }
 
-export async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number, languageCode: string = 'fr'): Promise<GMBData | null> {
+export async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number, languageCode: string = 'fr', hqHint?: string | null): Promise<GMBData | null> {
   const cleanDomain = domain.replace(/^www\./, '');
   console.log(`📍 Searching GMB for "${brandName}" / ${cleanDomain}...`);
 
@@ -116,9 +169,10 @@ export async function detectGoogleMyBusiness(domain: string, brandName: string, 
           reviews: perf?.total_reviews ?? undefined,
           category: loc.category || undefined,
           address: loc.address || undefined,
+          domain_match: typeof loc.website === 'string' && loc.website.toLowerCase().includes(cleanDomain.toLowerCase()),
         };
       });
-      const aggregated = buildGmbFromListings(listings, brandName);
+      const aggregated = buildGmbFromListings(listings, brandName, hqHint);
       if (aggregated) {
         console.log(`📍 ✅ GMB found in backend: ${aggregated.locations_count} fiche(s), ${aggregated.network_total_reviews ?? 0} avis cumulés (skipping DataForSEO)`);
         return aggregated;
@@ -133,7 +187,9 @@ export async function detectGoogleMyBusiness(domain: string, brandName: string, 
     const response = await fetch('https://api.dataforseo.com/v3/serp/google/maps/live/regular', {
       method: 'POST',
       headers: { 'Authorization': getDataForSeoAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ keyword: brandName, location_code: locationCode, language_code: languageCode, depth: 20 }]),
+      // depth 100 : un réseau de franchisés dépasse largement 20 fiches ; sans cela
+      // l'échantillon est biaisé vers les agences les plus visibles localement.
+      body: JSON.stringify([{ keyword: brandName, location_code: locationCode, language_code: languageCode, depth: 100 }]),
       signal: AbortSignal.timeout(12000),
     });
     if (!response.ok) { console.log(`⚠️ GMB search failed: ${response.status}`); await response.text(); return null; }
@@ -168,11 +224,12 @@ export async function detectGoogleMyBusiness(domain: string, brandName: string, 
       category: m.category || m.snippet || undefined,
       address: m.address || undefined,
       is_claimed: m.is_claimed ?? undefined,
+      domain_match: [m.domain, m.url, m.website].some((v: any) => typeof v === 'string' && v.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').includes(cleanDomain.toLowerCase())),
     }));
 
-    const result = buildGmbFromListings(listings, brandName);
+    const result = buildGmbFromListings(listings, brandName, hqHint);
     if (!result) return null;
-    console.log(`📍 ✅ GMB found: ${result.locations_count} fiche(s) — note réseau ${result.network_avg_rating ?? '?'} / 5, ${result.network_total_reviews ?? 0} avis cumulés`);
+    console.log(`📍 ✅ GMB found: ${result.locations_count} fiche(s) — réf. ${result.reference_listing} — médiane ${result.network_median_rating ?? '?'} / 5 (${result.network_median_reviews ?? '?'} avis), note pondérée ${result.network_avg_rating ?? '?'} / 5, ${result.network_total_reviews ?? 0} avis cumulés`);
     return result;
   } catch (error) { console.error('📍 GMB detection error:', error); return null; }
 }
