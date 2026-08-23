@@ -192,7 +192,7 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
             </tbody>
           </table>`
         : `<p style="font-size:12.5px;color:#374151;margin:0;">Aucun seuil franchi sur l'échantillon : score ${t.toxicity_score}/100.</p>`}
-      <div style="font-size:12px;color:#6b7280;margin-top:6px;">Périmètre : ${t.scope === 'third_party_only' ? 'liens tiers seuls (réseau propre mesuré à part).' : 'tous les référents.'}</div>
+      <div style="font-size:12px;color:#6b7280;margin-top:6px;">Périmètre : ${t.scope === 'third_party_only' ? 'liens tiers' : 'tous référents'}.</div>
       <div style="font-size:12.5px;color:#374151;margin-top:6px;">${esc(t.recommendation)}</div>`
     : '<p style="font-size:12.5px;color:#6b7280;margin:0;">Échantillon insuffisant : aucun verdict.</p>';
 
