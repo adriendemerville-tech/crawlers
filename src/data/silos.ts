@@ -46,7 +46,9 @@ export const SILOS: Record<Silo['id'], Silo> = {
     satellites: [
       { label: 'Méthode d’audit SEO GEO', to: '/audit-seo-geo' },
       { label: 'E-E-A-T : autorité et citations IA', to: '/eeat' },
+      { label: 'Place d’échange de backlinks', to: '/marketplace-backlinks' },
       { label: 'Audit gratuit avec Marina', to: '/marina' },
+
     ],
   },
   'outil-crawl': {
