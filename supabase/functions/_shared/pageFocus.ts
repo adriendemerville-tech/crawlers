@@ -146,7 +146,46 @@ function extractLocality(slug: string, knownLocalities: string[] = []): { locali
   return { locality: null, rest: low };
 }
 
+/**
+ * Nettoie la prestation extraite du slug. Un slug d'agence locale porte souvent
+ * la marque et du bruit administratif (« avenir-renovations-13-marseille-1er-
+ * arrondissement »). Interroger la SERP avec la marque ramène l'entreprise
+ * elle-même, jamais ses concurrents. On retire donc :
+ *   - les tokens de la marque (quand elle est connue) ;
+ *   - les arrondissements, numéros de département et codes postaux.
+ * Si plus rien ne subsiste, on renvoie '' : l'appelant retombe alors sur le
+ * secteur d'activité, ce qui est le comportement voulu.
+ */
+function sanitizeServicePhrase(rest: string, brandName?: string | null, hostname?: string | null): string {
+  let low = String(rest || '').toLowerCase();
+  low = low.replace(/(^|-)\d{1,2}\s*(er|e|eme|ème|nd|nde)?[- ]?arrondissement(-|$)/g, '$1');
+  low = low.replace(/(^|-)arrondissement(-|$)/g, '$1');
+  const deaccent = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // La marque déclarée ET la marque portée par le nom de domaine : sans le
+  // second garde-fou, un slug d'agence reste une requête de marque même quand
+  // l'appelant ne connaît pas le nom commercial.
+  const hostBrand = String(hostname || '')
+    .replace(/^www\./i, '')
+    .replace(/\.[a-z.]{2,10}$/i, '')
+    .replace(/[.]/g, '-');
+  const brandTokens = new Set(
+    deaccent(`${brandName || ''} ${hostBrand}`.toLowerCase())
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length >= 3),
+  );
+
+  const tokens = low.split('-').filter(Boolean).filter((t) => {
+    if (/^\d+$/.test(t)) return false; // « 13 », « 75001 »
+    if (/^\d+(er|e|eme|ème|nd|nde)$/.test(t)) return false; // « 1er », « 2eme »
+    const plain = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (brandTokens.has(plain)) return false;
+    return true;
+  });
+  return tokens.join('-');
+}
+
 function termsOf(phrase: string): string[] {
+
   return humanize(phrase)
     .split(/\s+/)
     .map((w) => w.trim())
@@ -160,14 +199,18 @@ function termsOf(phrase: string): string[] {
  */
 export function derivePageFocus(
   rawUrl: string,
-  meta: { title?: string | null; h1?: string | null; knownLocalities?: string[] } = {},
+  meta: { title?: string | null; h1?: string | null; knownLocalities?: string[]; brandName?: string | null } = {},
 ): PageFocus {
   let path = '';
+  let hostname = '';
   try {
-    path = new URL(rawUrl).pathname.replace(/\/+$/, '');
+    const parsed = new URL(rawUrl);
+    path = parsed.pathname.replace(/\/+$/, '');
+    hostname = parsed.hostname;
   } catch {
     path = '';
   }
+
   const segments = path.split('/').filter(Boolean).map((s) => {
     try { return decodeURIComponent(s); } catch { return s; }
   });
@@ -219,8 +262,10 @@ export function derivePageFocus(
   }
 
   const { locality, rest } = extractLocality(slug.replace(/\.(html?|php|aspx?)$/i, ''), meta.knownLocalities || []);
-  const service = humanize(rest) || null;
+  const cleanedRest = sanitizeServicePhrase(rest, meta.brandName, hostname);
+  const service = humanize(cleanedRest) || null;
   const slugPhrase = humanize(slug);
+
 
   const focusTerms: string[] = [];
   const seen = new Set<string>();
@@ -230,7 +275,7 @@ export function derivePageFocus(
     seen.add(key);
     focusTerms.push(t);
   };
-  for (const t of termsOf(rest)) pushTerm(t);
+  for (const t of termsOf(cleanedRest)) pushTerm(t);
   if (locality) pushTerm(locality);
   // Title / H1 : uniquement les mots pleins absents du slug, plafonnés.
   for (const t of [...termsOf(String(meta.h1 || '')), ...termsOf(String(meta.title || ''))]) {
