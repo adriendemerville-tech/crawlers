@@ -249,17 +249,17 @@ export type GeoGapVerdict =
 
 export interface GeoSubSignalReport {
   signals: GeoSubSignalValue[];
-  /** Pilier A — autorité domaine (25, constant, mutualisé). */
+  /** Pilier A — autorité domaine (25 pts, mutualisé). */
   authority: GeoFamilyScore;
-  /** Pilier B — accessibilité machine (25 → 10, décroissant). */
+  /** Pilier B — accessibilité machine (22 pts, page). */
   accessibility: GeoFamilyScore;
-  /** Pilier C — exploitabilité contenu (50 → 65, croissant). */
+  /** Pilier C — exploitabilité contenu (53 pts, page). */
   content: GeoFamilyScore;
   /** 0-100 : moyenne pondérée des piliers mesurés — reconstitue le GEO lisible. */
   geo_score: number | null;
-  /** Poids en points des trois piliers à la date de l'audit (somme = 100). */
+  /** Poids en points des trois piliers (barème fixe, somme = 100). */
   pillar_points: Record<GeoPillar, number>;
-  /** Tendance de chaque pilier (constant / décroît / monte). */
+  /** Conservé pour compatibilité : tous les piliers sont à poids constant. */
   pillar_trend: Record<GeoPillar, GeoPillarTrend>;
   /** Date de référence de la pondération (ISO). */
   weight_date: string;
