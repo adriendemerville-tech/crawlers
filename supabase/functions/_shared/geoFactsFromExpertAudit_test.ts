@@ -173,3 +173,23 @@ Deno.test('projection : TTFB non mesuré ne fabrique aucun défaut', () => {
   const b = buildGeoSubSignals(geoFactsFromExpertAudit({ ...healthyExpert, performance: { ttfb: 400 } }, strategic, { now: NOW }).inputs);
   assertEquals(a.geo_score, b.geo_score);
 });
+
+Deno.test('plafond sans autorité : un run sans backlinks mesurés ne dépasse pas 75/100', () => {
+  const r = buildGeoSubSignals(geoFactsFromExpertAudit(healthyExpert, null, { now: NOW }).inputs);
+  assert(r.geo_score !== null);
+  assert((r.geo_score as number) <= GEO_NO_AUTHORITY_CAP);
+  assert((r.geo_coverage ?? 100) < 100);
+  assert(r.gates.some((g) => g.axis === 'geo_authority'));
+});
+
+Deno.test('normaliseur : ttfb et htmlAnalysis imbriqués dans le payload sont récupérés', () => {
+  const facts = expertFactsFromAuditPayload({
+    data: {
+      scores: { performance: { ttfb: 2400 } },
+      rawData: { htmlAnalysis: { wordCount: 900, textRatio: 0.3 } },
+    },
+  });
+  assertEquals(facts.performance?.ttfb, 2400);
+  assertEquals((facts.htmlAnalysis as Record<string, unknown>)?.['wordCount'], 900);
+});
+

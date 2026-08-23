@@ -12,6 +12,8 @@ import { resolveSocialProof, fetchPlacesSocialProof, formatSocialProofForPrompt,
 import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
 import { classifyLink, isFalsePositiveDomain, type LinkVerdict } from '../_shared/linkVerdictShared.ts';
 import { measurePerformance } from '../_shared/perfMeasurement.ts';
+import { geoFactsFromExpertAudit, expertFactsFromAuditPayload } from '../_shared/geoFactsFromExpertAudit.ts';
+import { buildGeoSubSignals } from '../_shared/geoSubSignals.ts';
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
@@ -2478,8 +2480,27 @@ Deno.serve(handleRequest(async (req) => {
           },
           robotsAnalysis
         }
-      }
+      } as Record<string, unknown>
     };
+
+    // GEO 3 piliers : calculé ici (juge unique `buildGeoSubSignals`) pour que le
+    // score /100 soit persisté avec l'audit — sinon il n'existait qu'en mémoire
+    // dans l'écran et aucun historique ni export n'était possible. Le /200
+    // technique n'est pas touché.
+    try {
+      const facts = geoFactsFromExpertAudit(expertFactsFromAuditPayload(responseData.data), null);
+      const geoReport = buildGeoSubSignals(facts.inputs);
+      responseData.data['geo_pillars'] = {
+        ...geoReport,
+        fact_sources: facts.sources,
+        fact_notes: facts.notes,
+        computed_at: new Date().toISOString(),
+        computed_by: 'audit-expert-seo',
+      };
+    } catch (e) {
+      console.error('[AUDIT-EXPERT-SEO] GEO pillars non calculés:', e);
+    }
+
 
     // Save raw audit data (fire-and-forget)
     try {

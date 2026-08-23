@@ -58,6 +58,13 @@ export const GEO_ACCESSIBILITY_STEP_MONTHS = 18;
 /** Plancher de l'accessibilité machine. */
 export const GEO_ACCESSIBILITY_FLOOR = 17;
 
+/**
+ * Plafond du GEO quand l'autorité domaine n'est pas mesurée : la
+ * renormalisation sur les piliers mesurés ne doit jamais laisser croire à une
+ * visibilité générative démontrée sans preuve de crédibilité hors site.
+ */
+export const GEO_NO_AUTHORITY_CAP = 75;
+
 /** Points d'accessibilité machine à une date (22 → 17 par tranche de 1 pt / 18 mois). */
 export function geoAccessibilityPoints(now: Date = new Date()): number {
   const steps = Math.floor(geoElapsedMonths(now) / GEO_ACCESSIBILITY_STEP_MONTHS);
@@ -272,6 +279,8 @@ export interface GeoSubSignalReport {
   content: GeoFamilyScore;
   /** 0-100 : moyenne pondérée des piliers mesurés — reconstitue le GEO lisible. */
   geo_score: number | null;
+  /** Part du barème /100 réellement couverte par une mesure (0-100). */
+  geo_coverage: number;
   /** Poids en points des trois piliers à la date de l’audit (somme = 100). */
   pillar_points: Record<GeoPillar, number>;
   /** Tendance du barème : autorité constante, accessibilité décroissante, contenu croissant. */
@@ -610,13 +619,32 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
   const v = verdictFor(pageSide, authority.score);
 
   // geo_score = moyenne pondérée des piliers mesurés par leur poids courant.
+  // La renormalisation sur les seuls piliers mesurés reste nécessaire (sinon un
+  // run partiel serait pénalisé comme s'il valait 0), mais elle est désormais
+  // bornée : sans autorité domaine mesurée, un score GEO élevé n'est pas
+  // démontrable — un site parfaitement structuré mais inconnu ne se fait pas
+  // citer. On plafonne donc à GEO_NO_AUTHORITY_CAP et on expose la couverture.
   const geoParts = [
     { total: pillarTotals.authority, score: authority.score },
     { total: pillarTotals.accessibility, score: accessibility.score },
     { total: pillarTotals.content, score: content.score },
   ].filter((p) => p.score !== null);
   const geoDen = geoParts.reduce((a, p) => a + p.total, 0);
-  const geo = geoDen > 0 ? clamp100(geoParts.reduce((a, p) => a + p.total * (p.score as number), 0) / geoDen) : null;
+  let geo = geoDen > 0 ? clamp100(geoParts.reduce((a, p) => a + p.total * (p.score as number), 0) / geoDen) : null;
+  const geoCoverage = Math.round(Math.min(100, geoDen));
+
+  if (geo !== null && authority.score === null && geo > GEO_NO_AUTHORITY_CAP) {
+    const preAuthCap = geo;
+    geo = GEO_NO_AUTHORITY_CAP;
+    rawGates.push({
+      axis: 'geo_authority',
+      reason: `Autorité domaine non mesurée sur ce run : le score GEO est renormalisé sur ${geoCoverage} % du barème et ne peut donc pas dépasser ${GEO_NO_AUTHORITY_CAP}/100. Être exploitable ne suffit pas : encore faut-il être une source que les moteurs de réponse ont une raison de citer.`,
+      evidence: `couverture ${geoCoverage} % du barème (autorité ${pillarTotals.authority.toFixed(0)} pts non mesurés) → ${preAuthCap}/100 ramené à ${GEO_NO_AUTHORITY_CAP}/100`,
+      measured: `${geoCoverage} % du barème`,
+      target: 'autorité domaine mesurée (backlinks / notoriété)',
+    });
+  }
+
 
   const priority = signals
     .filter((s) => s.value !== null && (s.value as number) < 60)
@@ -632,6 +660,7 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
     accessibility,
     content,
     geo_score: geo,
+    geo_coverage: geoCoverage,
     pillar_points: {
       authority: round1(pillarTotals.authority),
       accessibility: round1(pillarTotals.accessibility),

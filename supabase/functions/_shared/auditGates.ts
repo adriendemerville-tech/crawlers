@@ -70,6 +70,7 @@ const AXIS_LABEL: Record<string, { fr: string; en: string }> = {
   geo_formatting: { fr: 'Mise en forme des réponses plafonnée', en: 'Answer formatting capped' },
   geo_structured_data: { fr: 'Données structurées plafonnées', en: 'Structured data capped' },
   geo_comprehension: { fr: 'Compréhension machine bridée', en: 'Machine comprehension capped' },
+  geo_authority: { fr: 'Autorité domaine non mesurée', en: 'Domain authority not measured' },
 };
 
 export function gateAxisLabel(axis: string, lang?: string): string {
@@ -272,6 +273,7 @@ const AXIS_CATEGORY: Record<string, string> = {
   geo_formatting: 'geo_visibility',
   geo_structured_data: 'structured_data',
   geo_comprehension: 'geo_visibility',
+  geo_authority: 'geo_visibility',
 };
 
 /**
