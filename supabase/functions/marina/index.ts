@@ -1568,14 +1568,20 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
     httpStatus: scores?.technical?.httpStatus || 200,
   };
 
+  // Libellé de la page réellement décrite par les balises. Sans lui, le rapport
+  // affirmait « page d'accueil » même quand le crawl n'avait pas ramené la home.
+  const primaryLabel = crawlMeta.primaryIsHome === false && crawlMeta.primaryUrl
+    ? `la page <code>${(() => { try { return new URL(crawlMeta.primaryUrl).pathname; } catch { return crawlMeta.primaryUrl; } })()}</code> (page d'accueil absente du crawl)`
+    : `la page d'accueil${crawlMeta.primaryUrl ? ` (<code>${(() => { try { return new URL(crawlMeta.primaryUrl).pathname; } catch { return '/'; } })()}</code>)` : ''}`;
+
   const content = `
     <div class="section">
-      <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      <div class="section-title"><span class="section-number">1</span> ${tr.crawlReport}</div>
       ${sectionLead('crawl', lang)}
       ${topHtml}
       ${hostDupHtml}
       ${crawlMeta.pagesFound > 1 ? `<div class="intro-text">Crawl multi-pages analysé : <strong>${crawlMeta.pagesFound}</strong> pages${crawlMeta.avgSeoScore != null ? ` · score SEO moyen <strong>${crawlMeta.avgSeoScore}/100</strong>` : ''}</div>` : ''}
-      <div class="intro-text" style="font-size:12px;color:#6b7280;">Les quatre premières tuiles cumulent l'ensemble des pages explorées ; les balises et la structure de titres qui suivent décrivent la page d'accueil.</div>
+      <div class="intro-text" style="font-size:12px;color:#6b7280;">Les quatre premières tuiles cumulent l'ensemble des pages explorées ; les balises et la structure de titres qui suivent décrivent ${primaryLabel}.</div>
       <div class="stat-grid-4">
         <div class="stat-card"><div class="value">${crawlMeta.wordCount}</div><div class="label">Mots (total site)</div></div>
         <div class="stat-card"><div class="value">${crawlMeta.internalLinks}</div><div class="label">Liens internes (total)</div></div>
@@ -1585,19 +1591,20 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       <div class="stat-grid-4" style="margin-top:12px;">
         <div class="stat-card"><div class="value">${crawlMeta.imagesTotal}</div><div class="label">Images (total site)</div></div>
         <div class="stat-card"><div class="value" style="color:${crawlMeta.imagesWithoutAlt > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.imagesWithoutAlt}</div><div class="label">Images sans alt</div></div>
-        <div class="stat-card"><div class="value">${crawlMeta.h2Count}</div><div class="label">H2 (page d'accueil)</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.h2Count}</div><div class="label">H2 (page décrite)</div></div>
         <div class="stat-card"><div class="value" style="color:${crawlMeta.brokenLinks > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.brokenLinks}</div><div class="label">Pages en erreur</div></div>
       </div>
 
       <div style="margin-top:16px;">
-        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Balises SEO</h3>
-        <div style="padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;margin-bottom:8px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Balises SEO — ${primaryLabel}</h3>
+        <div style="padding:12px;background:#f9fafb;border-radius:8px;font-size:13px;margin-bottom:8px;">
           <strong>Title (${crawlMeta.titleLength} car.):</strong> ${crawlMeta.title || '-'}
         </div>
-        <div style="padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;margin-bottom:8px;">
+        <div style="padding:12px;background:#f9fafb;border-radius:8px;font-size:13px;margin-bottom:8px;">
           <strong>Meta Description (${crawlMeta.metaDescLength} car.):</strong> ${crawlMeta.metaDesc || '-'}
         </div>
-        ${crawlMeta.h1 ? `<div style="padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;"><strong>H1:</strong> ${crawlMeta.h1}</div>` : ''}
+        ${crawlMeta.h1 ? `<div style="padding:12px;background:#f9fafb;border-radius:8px;font-size:13px;"><strong>H1:</strong> ${crawlMeta.h1}</div>` : ''}
+
       </div>
       ${crawlMeta.h2Contents.length > 0 ? `
       <div style="margin-top:16px;">
