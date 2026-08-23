@@ -45,13 +45,64 @@ export interface BacklinkToxicity {
   signals: string[];
   recommendation: string;
   /**
-   * Domaines référents identifiés comme appartenant au même réseau de marque
-   * (même racine de nom sur une autre extension : déclinaisons pays d'une
-   * franchise). Ils sont exclus des signaux de toxicité : un maillage
-   * inter-pays n'est pas un profil manipulé, et les désavouer serait nuisible.
+   * Périmètre réellement scoré. `third_party_only` = le réseau propre (domaines
+   * appartenant à la marque) a été retiré de l'échantillon : le score ne porte
+   * que sur les liens tiers, seul périmètre où le désaveu est un outil pertinent.
    */
+  scope: 'third_party_only' | 'all_referrers';
+  /** Domaines référents rattachés au réseau propre (affichage / traçabilité). */
   own_network_domains?: string[];
+  /** Part des backlinks de l'échantillon issus du réseau propre (0-1). */
+  own_network_backlink_share?: number;
+  /** Liens/domaine tous référents confondus (comparaison avec la valeur hors réseau). */
+  links_per_domain_all?: number;
+  /**
+   * DataForSEO ne rattache pas une ancre à son domaine référent : le ratio
+   * d'ancre dominante porte donc sur tous les référents. Quand le réseau propre
+   * pèse lourd, la pénalité d'ancre est minorée au lieu d'être affirmée.
+   */
+  anchor_attribution: 'all_referrers' | 'all_referrers_downgraded';
 }
+
+/** Nature d'un domaine référent — trois compartiments mesurés séparément. */
+export type ReferrerCompartment = 'own_network' | 'directory_platform' | 'third_party_editorial';
+
+export interface CompartmentStats {
+  compartment: ReferrerCompartment;
+  domains: number;
+  backlinks: number;
+  /** Part des domaines de l'échantillon (0-1) */
+  share_domains: number;
+  avg_rank: number;
+  top_domains: string[];
+}
+
+export interface BacklinkSegmentation {
+  own_network: CompartmentStats;
+  directory_platform: CompartmentStats;
+  third_party_editorial: CompartmentStats;
+  /** Provenance de la classification « à moi » : preuve de propriété ou heuristique de marque. */
+  own_network_source: 'verified' | 'brand_token_suspected' | 'mixed' | 'none';
+  own_network_domains: { domain: string; source: 'verified' | 'suspected'; backlinks: number }[];
+  sampled: number;
+}
+
+/**
+ * Hygiène du réseau propre — indicateur distinct, jamais additionné à la
+ * toxicité. Un footer répliqué sur 6 pays est un vrai défaut SEO, mais il se
+ * corrige à la source, pas par un désaveu.
+ */
+export interface OwnNetworkHygiene {
+  domains: number;
+  backlinks: number;
+  links_per_domain: number;
+  /** Empreinte sitewide probable (liens/domaine élevé sur le réseau propre) */
+  sitewide_suspected: boolean;
+  verdict: 'non_mesure' | 'sain' | 'a_corriger_a_la_source';
+  signals: string[];
+  recommendation: string;
+}
+
 
 
 export interface OrganicVisibility {
