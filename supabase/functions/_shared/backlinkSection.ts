@@ -81,14 +81,23 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
       points: 10,
     });
   }
-  if (dofollowRatio >= 98 && refDomains > 50) {
+  const dc = t.dofollow_context;
+  if (dc && dc.points > 0) {
     rows.push({
-      label: 'Ratio dofollow',
+      label: 'Dofollow — facteur contextuel',
+      measure: `${Math.round(dc.ratio)} % de liens dofollow, avec ${dc.corroborating.length} anomalie${dc.corroborating.length > 1 ? 's' : ''} structurelle${dc.corroborating.length > 1 ? 's' : ''} corroborante${dc.corroborating.length > 1 ? 's' : ''}`,
+      rule: `un lien dofollow n'est pas toxique en soi : 0 pt sans corroboration, 3 pts avec 1 anomalie mesurée, 8 pts à partir de 2 (faisceau d'indices)`,
+      points: dc.points,
+    });
+  } else if (!dc && dofollowRatio >= 98 && refDomains > 50) {
+    rows.push({
+      label: 'Ratio dofollow (calibrage antérieur)',
       measure: `${Math.round(dofollowRatio)} % de liens dofollow`,
-      rule: '≥ 98 % avec plus de 50 domaines référents : 5 pts',
+      rule: 'mesure issue d’un calibrage antérieur : ≥ 98 % avec plus de 50 domaines référents, 5 pts',
       points: 5,
     });
   }
+
 
   const suspicious = t.signals.find((s) => /hors-sujet/i.test(s));
   if (suspicious) {
