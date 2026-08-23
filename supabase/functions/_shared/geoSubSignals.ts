@@ -950,5 +950,14 @@ export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string
       <p style="font-size:12px;color:#374151;line-height:1.6;margin:0;"><strong>${esc(report.verdict_label)}.</strong> ${esc(report.verdict_explanation)}</p>
       ${levers}
     </div>
+    <p style="font-size:11px;color:#6b7280;line-height:1.6;margin:10px 0 0 0;">
+      <strong>${lang === 'en' ? 'Potential vs observed' : 'Potentiel et résultat observé'} :</strong>
+      ${esc(report.citation_calibration.note)}
+      ${report.citation_calibration.applied
+        ? (lang === 'en'
+            ? ` Modulation limited to ±${GEO_CALIBRATION_MAX_PCT} % of the score; the scale itself is unchanged.`
+            : ` Modulation bornée à ±${GEO_CALIBRATION_MAX_PCT} % du score ; le barème lui-même reste inchangé.`)
+        : ''}
+    </p>
   </div>`;
 }
