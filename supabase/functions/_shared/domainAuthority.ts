@@ -781,7 +781,14 @@ export function computeBacklinkDistribution(input: {
  */
 export async function fetchDomainAuthority(
   rawDomain: string,
-  opts?: { ttlMinutes?: number; skipCache?: boolean; organicVisibility?: OrganicVisibility | null },
+  opts?: {
+    ttlMinutes?: number;
+    skipCache?: boolean;
+    organicVisibility?: OrganicVisibility | null;
+    /** Domaines dont la propriété est prouvée (GSC, GMB, sites suivis, déclaration client). */
+    verifiedOwnDomains?: string[];
+  },
+
 ): Promise<AuthorityData> {
   const domain = rawDomain.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase();
   if (!domain) return unavailable(rawDomain, 'domaine invalide');
