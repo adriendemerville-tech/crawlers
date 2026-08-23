@@ -187,7 +187,9 @@ export async function detectGoogleMyBusiness(domain: string, brandName: string, 
     const response = await fetch('https://api.dataforseo.com/v3/serp/google/maps/live/regular', {
       method: 'POST',
       headers: { 'Authorization': getDataForSeoAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ keyword: brandName, location_code: locationCode, language_code: languageCode, depth: 20 }]),
+      // depth 100 : un réseau de franchisés dépasse largement 20 fiches ; sans cela
+      // l'échantillon est biaisé vers les agences les plus visibles localement.
+      body: JSON.stringify([{ keyword: brandName, location_code: locationCode, language_code: languageCode, depth: 100 }]),
       signal: AbortSignal.timeout(12000),
     });
     if (!response.ok) { console.log(`⚠️ GMB search failed: ${response.status}`); await response.text(); return null; }
