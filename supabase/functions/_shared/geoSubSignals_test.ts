@@ -63,7 +63,7 @@ Deno.test('geoSignalWeightsAt : chaque pilier totalise son poids courant', () =>
   const w = geoSignalWeightsAt(at('2026-08-23T00:00:00Z'));
   const sumOf = (keys: string[]) => keys.reduce((a, k) => a + (w[k] ?? 0), 0);
   assertEquals(Math.round(sumOf(['brand_authority', 'serp_presence'])), 25);
-  assertEquals(Math.round(sumOf(['bot_accessibility', 'structured_data_quality', 'content_freshness'])), 22);
+  assertEquals(Math.round(sumOf(['bot_accessibility', 'structured_data_quality', 'ai_bot_policy', 'content_freshness'])), 22);
   assertEquals(
     Math.round(sumOf(['content_quotability', 'answer_formatting', 'knowledge_graph_signals', 'self_citation_signals', 'person_authority'])),
     53,
@@ -73,7 +73,7 @@ Deno.test('geoSignalWeightsAt : chaque pilier totalise son poids courant', () =>
   // Au plancher, l'accessibilité totalise 17 et le contenu 58.
   const wEnd = geoSignalWeightsAt(at('2050-01-01T00:00:00Z'));
   const sumEnd = (keys: string[]) => keys.reduce((a, k) => a + (wEnd[k] ?? 0), 0);
-  assertEquals(Math.round(sumEnd(['bot_accessibility', 'structured_data_quality', 'content_freshness'])), 17);
+  assertEquals(Math.round(sumEnd(['bot_accessibility', 'structured_data_quality', 'ai_bot_policy', 'content_freshness'])), 17);
   assertEquals(
     Math.round(sumEnd(['content_quotability', 'answer_formatting', 'knowledge_graph_signals', 'self_citation_signals', 'person_authority'])),
     58,

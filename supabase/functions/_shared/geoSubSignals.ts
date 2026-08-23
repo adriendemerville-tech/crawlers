@@ -119,7 +119,12 @@ export const GEO_PILLAR_TREND: Record<GeoPillar, GeoPillarTrend> = {
 /** Poids relatifs (fixes) des sous-signaux à l'intérieur de chaque pilier. */
 export const GEO_PILLAR_REL: Record<GeoPillar, Record<string, number>> = {
   authority: { brand_authority: 14, serp_presence: 11 },
-  accessibility: { bot_accessibility: 14, structured_data_quality: 12, content_freshness: 6 },
+  accessibility: {
+    bot_accessibility: 14,
+    structured_data_quality: 12,
+    ai_bot_policy: 8,
+    content_freshness: 6,
+  },
   content: {
     content_quotability: 10,
     answer_formatting: 8,
@@ -128,6 +133,7 @@ export const GEO_PILLAR_REL: Record<GeoPillar, Record<string, number>> = {
     person_authority: 6,
   },
 };
+
 
 /**
  * Poids en points de chaque sous-signal à une date : le poids relatif interne
@@ -192,12 +198,22 @@ export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
   {
     key: 'structured_data_quality',
     family: 'accessibility',
-    label: 'Données structurées',
+    label: 'Données structurées et nœud d’identité',
     weight: 12,
     provenance: 'mesure',
-    meaning: 'Présence et pertinence des balisages JSON-LD qui déclarent la nature des pages.',
-    lever: 'Déclarer les types utiles au domaine (Organization, Person, Article, FAQPage, LocalBusiness, Product).',
+    meaning: 'Présence et pertinence des balisages JSON-LD, et complétude du nœud d’identité (adresse postale, point de contact, comptes officiels) qu’un agent lit pour vérifier que l’entreprise est réelle.',
+    lever: 'Déclarer les types utiles au domaine (Organization, Person, Article, FAQPage, LocalBusiness, Product) et compléter Organization avec postalAddress, contactPoint et sameAs cohérents avec la fiche établissement et l’annuaire légal.',
   },
+  {
+    key: 'ai_bot_policy',
+    family: 'accessibility',
+    label: 'Politique robots IA',
+    weight: 8,
+    provenance: 'mesure',
+    meaning: 'Les robots des moteurs de réponse (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) sont-ils autorisés nommément, et le serveur les laisse-t-il passer sans les brider ? Un blocage involontaire par le WAF ou un 429 produit exactement le même effet qu’un Disallow : le contenu n’existe pas pour ces modèles.',
+    lever: 'Autoriser nommément les robots IA dans robots.txt, et vérifier côté WAF / pare-feu applicatif qu’ils ne reçoivent ni 403 ni 429.',
+  },
+
   {
     key: 'content_freshness',
     family: 'accessibility',
@@ -363,6 +379,49 @@ export interface GeoSignalInputs {
    * pour éviter la double pénalité. `null` / absent = aucune décote.
    */
   ttfbMs?: number | null;
+  /**
+   * Politique robots des moteurs de réponse (check-robots-indexation + faits de
+   * crawl). Effet binaire démontrable : un bot bloqué ne voit rien, et un 429 /
+   * 403 servi par le WAF a exactement le même effet qu'un Disallow.
+   * Tout à `null` / absent = non mesuré, le sous-signal n'est pas noté.
+   */
+  aiBotPolicy?: {
+    /** robots.txt effectivement récupéré (200). */
+    robotsFound?: boolean | null;
+    /** Robots IA explicitement bloqués (Disallow: /) — noms canoniques. */
+    blockedBots?: string[] | null;
+    /** Au moins un robot IA autorisé nommément (politique explicite). */
+    namedAllowlist?: boolean | null;
+    /** Le serveur / WAF a répondu 429 ou 403 à un user-agent de robot IA. */
+    throttled?: boolean | null;
+  } | null;
+  /**
+   * Complétude du nœud d'identité (Organization / LocalBusiness). Ce n'est pas
+   * de la découvrabilité : c'est ce qu'un agent lit pour décider si l'entreprise
+   * est réelle avant de la recommander. Modulateur de
+   * `structured_data_quality`, pas un sous-signal séparé.
+   */
+  identityNode?: {
+    hasOrganization?: boolean | null;
+    hasPostalAddress?: boolean | null;
+    hasContactPoint?: boolean | null;
+    sameAsCount?: number | null;
+    /** Cohérence nom / adresse / téléphone entre site, fiche établissement et annuaire légal. */
+    consistentWithDirectory?: boolean | null;
+  } | null;
+  /**
+   * Qualité des réponses non-200. Effet réel mais marginal : évite le
+   * gaspillage de budget de crawl et les mauvaises lectures des liens morts.
+   * Traité comme une décote plafonnée de `bot_accessibility`, jamais comme un
+   * sous-signal à part entière.
+   */
+  nonOkResponses?: {
+    /** Une URL inexistante renvoie bien un 404/410 (pas un 200 « soft 404 »). */
+    correctStatus?: boolean | null;
+    /** La réponse d'erreur porte un corps utile plutôt qu'une coquille HTML lourde. */
+    usefulBody?: boolean | null;
+  } | null;
+
   /** Agrégats de crawl utiles à la mise en forme des réponses. */
   crawlFormatting?: {
     pagesAnalyzed?: number | null;
@@ -422,13 +481,29 @@ function ttfbPenalty(ttfbMs: unknown): number {
   return 25;
 }
 
-/** Accessibilité robots : signal binaire dégradé par les absences bot-only et la livraison serveur. */
+/**
+ * Décote des réponses non-200, volontairement plafonnée à −10 : une page
+ * d'erreur mal servie gaspille du budget de crawl et fait mal interpréter les
+ * liens morts, mais ce n'est jamais ce qui décide qu'une page est citée.
+ *  - 200 sur une URL inexistante (soft 404) : −7
+ *  - corps d'erreur inutile (coquille HTML lourde) : −3
+ */
+function nonOkPenalty(i: GeoSignalInputs): number {
+  const n = i.nonOkResponses;
+  if (!n) return 0;
+  let p = 0;
+  if (n.correctStatus === false) p += 7;
+  if (n.usefulBody === false) p += 3;
+  return Math.min(10, p);
+}
+
+/** Accessibilité robots : signal binaire dégradé par les absences bot-only, la livraison serveur et les réponses d'erreur. */
 function scoreBotAccessibility(i: GeoSignalInputs): number | null {
   // Une coquille JS est déjà le plancher du signal : la décote TTFB n'ajoute
   // rien (le contenu est absent, pas lent).
   if (i.isBotShell === true) return 5;
   const botOnly = Number(i.botOnlyAbsences ?? 0) || 0;
-  const penalty = ttfbPenalty(i.ttfbMs);
+  const penalty = ttfbPenalty(i.ttfbMs) + nonOkPenalty(i);
   const base = i.isBotShell === false
     ? (botOnly > 0 ? Math.max(35, 90 - botOnly * 15) : 95)
     : botOnly > 0 ? Math.max(35, 90 - botOnly * 15) : null;
@@ -438,6 +513,66 @@ function scoreBotAccessibility(i: GeoSignalInputs): number | null {
   }
   return clamp100(Math.max(20, base - penalty));
 }
+
+/**
+ * Politique robots IA : le seul point d'accessibilité à effet binaire
+ * démontrable. Un robot bloqué ne lit rien, et un 429 / 403 servi par le WAF
+ * produit le même résultat qu'un Disallow. Une politique implicite
+ * (`User-agent: *`) fonctionne mais n'affirme rien : elle plafonne à 80.
+ */
+function scoreAiBotPolicy(i: GeoSignalInputs): number | null {
+  const p = i.aiBotPolicy;
+  if (!p) return null;
+  const blocked = Array.isArray(p.blockedBots) ? p.blockedBots.filter(Boolean) : [];
+  const measured =
+    p.robotsFound != null || p.namedAllowlist != null || p.throttled != null || blocked.length > 0;
+  if (!measured) return null;
+
+  if (p.robotsFound === false) {
+    // Pas de robots.txt : tout est implicitement autorisé, mais rien n'est
+    // affirmé. Le throttling reste opposable.
+    return clamp100(p.throttled === true ? 40 : 70);
+  }
+
+  let score = p.namedAllowlist === true ? 100 : 80;
+  score -= Math.min(75, blocked.length * 25);
+  if (p.throttled === true) score -= 30;
+  return clamp100(Math.max(5, score));
+}
+
+/**
+ * Complétude du nœud d'identité : ce qu'un agent lit pour vérifier qu'une
+ * entreprise est réelle avant de la recommander. Modulateur de
+ * `structured_data_quality` (35 %), pas un sous-signal séparé — c'est la même
+ * question, mesurée en profondeur plutôt qu'en présence.
+ */
+function scoreIdentityNode(i: GeoSignalInputs): number | null {
+  const n = i.identityNode;
+  if (!n) return null;
+  const known =
+    n.hasOrganization != null || n.hasPostalAddress != null || n.hasContactPoint != null ||
+    n.sameAsCount != null || n.consistentWithDirectory != null;
+  if (!known) return null;
+  if (n.hasOrganization === false) return 5;
+
+  let s = 0;
+  if (n.hasOrganization === true) s += 30;
+  if (n.hasPostalAddress === true) s += 25;
+  if (n.hasContactPoint === true) s += 20;
+  const sameAs = Number(n.sameAsCount ?? 0) || 0;
+  s += sameAs >= 2 ? 15 : sameAs === 1 ? 8 : 0;
+  if (n.consistentWithDirectory === true) s += 10;
+  return clamp100(s);
+}
+
+/** Données structurées : présence du balisage (65 %) et complétude du nœud d'identité (35 %). */
+function scoreStructuredData(i: GeoSignalInputs, declared: number | null): number | null {
+  const identity = scoreIdentityNode(i);
+  if (identity === null) return declared;
+  if (declared === null) return identity;
+  return clamp100(declared * 0.65 + identity * 0.35);
+}
+
 
 /**
  * Mise en forme des réponses : déduite d'agrégats de crawl. Les composantes
@@ -556,7 +691,9 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
   const b = inputs.breakdown || {};
   const resolved: Record<string, number | null> = {
     bot_accessibility: scoreBotAccessibility(inputs),
-    structured_data_quality: num(b['structured_data_quality']),
+    structured_data_quality: scoreStructuredData(inputs, num(b['structured_data_quality'])),
+    ai_bot_policy: scoreAiBotPolicy(inputs),
+
     content_quotability: num(b['content_quotability']),
     answer_formatting: scoreAnswerFormatting(inputs),
     content_freshness: num(b['content_freshness']),
@@ -578,6 +715,27 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
     ? Math.max(0, Math.round(inputs.extractedWords)) : null;
   const ratio = typeof inputs.textRatioPct === 'number' && Number.isFinite(inputs.textRatioPct)
     ? Math.max(0, Math.round(inputs.textRatioPct * 10) / 10) : null;
+
+  // Robots IA bloqués ou bridés : fait binaire, remonté en tête du workbench.
+  const blockedAiBots = Array.isArray(inputs.aiBotPolicy?.blockedBots)
+    ? (inputs.aiBotPolicy!.blockedBots as string[]).filter(Boolean)
+    : [];
+  const aiThrottled = inputs.aiBotPolicy?.throttled === true;
+  if (blockedAiBots.length > 0 || aiThrottled) {
+    rawGates.push({
+      axis: 'geo_bot_policy',
+      reason: blockedAiBots.length > 0
+        ? 'Des robots de moteurs de réponse sont explicitement bloqués : pour ces modèles, le contenu du site n’existe pas, quelle que soit sa qualité.'
+        : 'Le serveur ou le pare-feu applicatif bride les robots de moteurs de réponse (429 / 403) : l’effet est identique à un Disallow.',
+      evidence: [
+        blockedAiBots.length > 0 ? `robots bloqués : ${blockedAiBots.join(', ')}` : null,
+        aiThrottled ? 'réponse 429 / 403 servie à un user-agent de robot IA' : null,
+      ].filter(Boolean).join(' · '),
+      measured: blockedAiBots.length > 0 ? `${blockedAiBots.length} robot(s) IA bloqué(s)` : 'robots IA bridés',
+      target: 'autorisation nommée dans robots.txt et aucun blocage WAF',
+    });
+  }
+
 
   const shellMeasured = inputs.isBotShell === true;
   const starvedByText = words !== null && words < 200 && (ratio === null || ratio < 5);

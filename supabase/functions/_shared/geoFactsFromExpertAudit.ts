@@ -24,17 +24,28 @@ import type { GeoSignalInputs } from './geoSubSignals.ts';
 /* ─── Formes d'entrée (volontairement permissives) ────────────────────────── */
 
 /** Sous-ensemble de `data` renvoyé par audit-expert-seo utile au GEO. */
+/** Faits robots communs aux blocs `aiReady` et `technical`. */
+export interface RobotsPolicyFacts {
+  hasRobotsTxt?: boolean | null;
+  robotsPermissive?: boolean | null;
+  allowsAIBots?: boolean | null;
+  /** Robots IA explicitement bloqués (noms canoniques). */
+  blockedAIBots?: string[] | null;
+  /** Au moins un robot IA autorisé nommément (politique explicite). */
+  namedAIAllowlist?: boolean | null;
+  /** 429 / 403 observé sur un user-agent de robot IA (WAF, rate-limit). */
+  aiBotsThrottled?: boolean | null;
+}
+
 export interface ExpertAuditFacts {
   scores?: {
-    aiReady?: {
+    aiReady?: ({
       score?: number | null;
       maxScore?: number | null;
       hasSchemaOrg?: boolean | null;
       schemaTypes?: string[] | null;
-      hasRobotsTxt?: boolean | null;
-      robotsPermissive?: boolean | null;
-      allowsAIBots?: boolean | null;
-    } | null;
+    } & RobotsPolicyFacts) | null;
+    technical?: RobotsPolicyFacts | null;
     semantic?: {
       wordCount?: number | null;
       hasUniqueH1?: boolean | null;
@@ -43,6 +54,7 @@ export interface ExpertAuditFacts {
       hasMetaDesc?: boolean | null;
     } | null;
   } | null;
+
   htmlAnalysis?: {
     wordCount?: number | null;
     textRatio?: number | null;
@@ -64,7 +76,24 @@ export interface ExpertAuditFacts {
   } | null;
   /** Bloc performance de l'audit expert : seul le TTFB alimente le GEO. */
   performance?: { ttfb?: number | null } | null;
+  /**
+   * Complétude du nœud d'identité JSON-LD (Organization / LocalBusiness) :
+   * ce qu'un agent lit pour vérifier que l'entreprise est réelle.
+   */
+  identity?: {
+    hasOrganization?: boolean | null;
+    hasPostalAddress?: boolean | null;
+    hasContactPoint?: boolean | null;
+    sameAsCount?: number | null;
+    consistentWithDirectory?: boolean | null;
+  } | null;
+  /** Qualité des réponses non-200 (statut correct, corps utile). */
+  nonOkResponses?: {
+    correctStatus?: boolean | null;
+    usefulBody?: boolean | null;
+  } | null;
   meta?: { renderingMode?: string | null } | null;
+
 }
 
 /** Sous-ensemble du JSON de l'audit stratégique IA utile au GEO. */
@@ -145,8 +174,12 @@ function hasFinding(e: ExpertAuditFacts | null | undefined, id: string): boolean
  * Données structurées : mesure directe sur le HTML servi.
  * Base 0, +45 balisage présent, +25 types utiles au-delà d'un seul,
  * +20 FAQPage adossé à une FAQ visible, −20 si le JSON-LD est généré en JS
- * (invisible pour un robot qui n'exécute pas le JavaScript), +10 robots ouvert
- * aux bots IA (le balisage ne sert à rien s'il est interdit à la lecture).
+ * (invisible pour un robot qui n'exécute pas le JavaScript).
+ *
+ * L'autorisation des robots IA n'est plus comptée ici : elle constitue depuis
+ * le sous-signal `ai_bot_policy` du pilier accessibilité (sinon elle serait
+ * comptée deux fois). La complétude du nœud d'identité (adresse, contact,
+ * comptes officiels) est ajoutée en aval par `geoSubSignals` via `identityNode`.
  */
 export function structuredDataFromExpert(e: ExpertAuditFacts): number | null {
   const ai = e.scores?.aiReady ?? null;
@@ -166,11 +199,41 @@ export function structuredDataFromExpert(e: ExpertAuditFacts): number | null {
   if (faqSchema && faqContent !== false) score += 20;
 
   if (e.insights?.jsonLdValidation?.isJsGenerated === true) score -= 20;
-  if (ai?.allowsAIBots === true) score += 10;
-  else if (ai?.allowsAIBots === false) score -= 15;
 
   return n100(score);
 }
+
+/**
+ * Politique robots IA : projection des faits robots.txt de l'audit expert.
+ * `allowsAIBots === false` vaut blocage explicite ; la liste nominative des
+ * robots bloqués est utilisée quand elle est disponible.
+ */
+export function aiBotPolicyFromExpert(e: ExpertAuditFacts): GeoSignalInputs['aiBotPolicy'] {
+  const t = e.scores?.technical ?? null;
+  const ai = e.scores?.aiReady ?? null;
+  const robotsFound = bool(t?.hasRobotsTxt) ?? bool(ai?.hasRobotsTxt);
+  const allows = bool(ai?.allowsAIBots) ?? bool(t?.allowsAIBots);
+  const named = bool(ai?.namedAIAllowlist) ?? bool(t?.namedAIAllowlist);
+  const blockedList = (ai?.blockedAIBots ?? t?.blockedAIBots ?? null) || null;
+  const throttled = bool(ai?.aiBotsThrottled) ?? bool(t?.aiBotsThrottled);
+
+  const blocked = blockedList && blockedList.length > 0
+    ? blockedList.map((b) => String(b))
+    : allows === false
+      ? ['GPTBot', 'ClaudeBot', 'PerplexityBot']
+      : [];
+
+  if (robotsFound === null && allows === null && named === null && throttled === null && blocked.length === 0) {
+    return null;
+  }
+  return {
+    robotsFound,
+    blockedBots: blocked,
+    namedAllowlist: named,
+    throttled,
+  };
+}
+
 
 /**
  * Mise en forme des réponses : l'audit expert n'analyse qu'UNE page, donc le
@@ -377,7 +440,17 @@ export function geoFactsFromExpertAudit(
     notes.push(`Livraison serveur mesurée à ${ttfbMs} ms : accessibilité robots décotée (cible < 800 ms).`);
   }
 
+  const botPolicy = aiBotPolicyFromExpert(expert);
+  sources['ai_bot_policy'] = botPolicy ? 'expert_measure' : 'unmeasured';
+  if (botPolicy && (botPolicy.blockedBots?.length || botPolicy.throttled === true)) {
+    notes.push('Robots IA bloqués ou bridés : politique robots notée à la baisse (fait binaire).');
+  }
+  if (expert.identity) {
+    notes.push('Complétude du nœud d’identité mesurée : elle module les données structurées (35 %).');
+  }
+
   const inputs: GeoSignalInputs = {
+
     breakdown: {
       structured_data_quality: structured,
       content_freshness: freshness,
@@ -390,6 +463,10 @@ export function geoFactsFromExpertAudit(
     isBotShell: shell.isBotShell,
     botOnlyAbsences: shell.botOnlyAbsences,
     ttfbMs,
+    aiBotPolicy: botPolicy,
+    identityNode: expert.identity ?? null,
+    nonOkResponses: expert.nonOkResponses ?? null,
+
     crawlFormatting: formatting,
     founderResolved: person.resolved,
     founderCorroborated: person.corroborated,
