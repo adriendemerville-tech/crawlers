@@ -99,3 +99,63 @@ Deno.test('GEO_PILLAR_REL : 10 sous-signaux uniques répartis 2 / 3 / 5', () => 
   assertEquals(all.length, 10);
   assertEquals(new Set(all).size, 10, 'aucune clé dupliquée entre piliers');
 });
+
+// ─── Calibration par la citation réellement observée (±10 %) ───
+
+const fullBreakdown = {
+  brand_authority: 60,
+  serp_presence: 60,
+  bot_accessibility: 60,
+  structured_data_quality: 60,
+  content_freshness: 60,
+  content_quotability: 60,
+  answer_formatting: 60,
+  knowledge_graph_signals: 60,
+  self_citation_signals: 60,
+  person_authority: 60,
+};
+
+Deno.test('calibration : citation observée haute majore le score, dans la limite de +10 %', () => {
+  const base = buildGeoSubSignals({ breakdown: fullBreakdown, now: at('2026-08-23T00:00:00Z') });
+  const up = buildGeoSubSignals({
+    breakdown: fullBreakdown,
+    observedCitation: { ratePct: 80, observations: 9 },
+    now: at('2026-08-23T00:00:00Z'),
+  });
+  assert(up.citation_calibration.applied, 'calibration attendue');
+  assertEquals(up.citation_calibration.factor_pct, GEO_CALIBRATION_MAX_PCT);
+  assert(up.geo_score! > base.geo_score!, 'le score doit monter');
+  assert(up.geo_score! <= Math.round(base.geo_score! * 1.1), 'majoration bornée à +10 %');
+});
+
+Deno.test('calibration : citation nulle applique la décote maximale et un plafond geo_citation', () => {
+  const down = buildGeoSubSignals({
+    breakdown: fullBreakdown,
+    observedCitation: { ratePct: 0, observations: 9 },
+    now: at('2026-08-23T00:00:00Z'),
+  });
+  assertEquals(down.citation_calibration.factor_pct, -GEO_CALIBRATION_MAX_PCT);
+  assert(down.gates.some((g) => g.axis === 'geo_citation'), 'plafond geo_citation attendu');
+});
+
+Deno.test('calibration : échantillon trop court ou non mesuré ne change pas le score', () => {
+  const base = buildGeoSubSignals({ breakdown: fullBreakdown, now: at('2026-08-23T00:00:00Z') });
+  const short = buildGeoSubSignals({
+    breakdown: fullBreakdown,
+    observedCitation: { ratePct: 0, observations: GEO_CALIBRATION_MIN_OBSERVATIONS - 1 },
+    now: at('2026-08-23T00:00:00Z'),
+  });
+  assertEquals(short.citation_calibration.applied, false);
+  assertEquals(short.geo_score, base.geo_score);
+  assertEquals(base.citation_calibration.applied, false);
+});
+
+Deno.test('calibration : cible neutre sans effet, score borné 0-100', () => {
+  const neutral = buildGeoSubSignals({
+    breakdown: fullBreakdown,
+    observedCitation: { ratePct: GEO_CALIBRATION_NEUTRAL_PCT, observations: 12 },
+    now: at('2026-08-23T00:00:00Z'),
+  });
+  assertEquals(neutral.citation_calibration.factor_pct, 0);
+  assert(neutral.geo_score! >= 0 && neutral.geo_score! <= 100);
+});
