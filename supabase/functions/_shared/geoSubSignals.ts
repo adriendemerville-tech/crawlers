@@ -753,9 +753,11 @@ export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string
       </ul>`
     : '';
 
+  const pp = report.pillar_points;
   const note = lang === 'en'
-    ? `Fixed GEO scale: domain authority 25 pts (mutualized), machine accessibility 22 pts, content exploitability 53 pts. 75 of the 100 pts therefore depend on the audited page itself, and weights are identical across audits — two reports compare directly.`
-    : `Barème GEO fixe : autorité domaine 25 pts (mutualisée), accessibilité machine 22 pts, exploitabilité contenu 53 pts. 75 des 100 pts dépendent donc de la page auditée elle-même, et les poids sont identiques d’un audit à l’autre : deux rapports se comparent directement.`;
+    ? `GEO scale at ${report.weight_date}: domain authority ${pp.authority} pts (mutualized, constant), machine accessibility ${pp.accessibility} pts, content exploitability ${pp.content} pts. ${100 - pp.authority} of the 100 pts therefore depend on the audited page itself. Machine accessibility loses 1 pt every ${GEO_ACCESSIBILITY_STEP_MONTHS} months down to a ${GEO_ACCESSIBILITY_FLOOR} pt floor — the advantage of being crawlable becomes a commodity as the web is renovated — and content exploitability absorbs those points, up to ${100 - GEO_PILLAR_POINTS.authority - GEO_ACCESSIBILITY_FLOOR} pts.`
+    : `Barème GEO au ${report.weight_date} : autorité domaine ${pp.authority} pts (mutualisée, constante), accessibilité machine ${pp.accessibility} pts, exploitabilité contenu ${pp.content} pts. ${100 - pp.authority} des 100 pts dépendent donc de la page auditée elle-même. L’accessibilité machine perd 1 pt tous les ${GEO_ACCESSIBILITY_STEP_MONTHS} mois jusqu’à un plancher de ${GEO_ACCESSIBILITY_FLOOR} pts — être crawlable se commoditise à mesure que le parc de sites se rénove — et l’exploitabilité du contenu récupère ces points, jusqu’à ${100 - GEO_PILLAR_POINTS.authority - GEO_ACCESSIBILITY_FLOOR} pts.`;
+
 
   return `<div style="margin-top:16px;padding:14px;border:1px solid #e5e7eb;border-radius:8px;background:#ffffff;page-break-inside:avoid;text-align:left;">
     <h4 style="font-size:14px;font-weight:600;color:#111827;margin:0 0 6px;">${lang === 'en' ? 'GEO in 10 sub-signals across 3 pillars' : 'Le GEO en 10 sous-signaux, 3 piliers'}</h4>
