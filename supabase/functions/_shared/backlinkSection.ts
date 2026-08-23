@@ -373,8 +373,14 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
     ${volumetry}
     ${sub('Comment l’Authority Score est calculé', 'Un score maison, reconstitué à partir du rank mesuré et de la diversité des référents.', scoreExplain)}
     ${sub('Segmentation du profil — trois compartiments', 'Vos propres domaines, les annuaires et l’éditorial tiers sont mesurés séparément : ils n’exposent pas aux mêmes risques et ne se corrigent pas de la même façon.', segHtml)}
-    ${sub('Score de toxicité — détail du calcul', 'Risque de dévaluation sur les liens tiers. Chaque signal mesuré ajoute des points ; le total borné à 100 donne le verdict.', toxTable)}
+    ${sub('Score de toxicité — détail du calcul', 'Risque de dévaluation sur les liens tiers. Le score est la conséquence du faisceau d’indices mesuré, pas son point de départ : chaque signal ajoute des points, le total borné à 100 donne le niveau de risque.', toxTable)}
+    ${sub('Lecture méthodologique et règle de désaveu', 'Ce que ce score dit — et ce qu’il ne dit pas.', methodNoteHtml)}
+    ${sub(dctx ? `Pourquoi ${Math.round(dctx.ratio)} % dofollow devient un signal dans ce contexte ?` : 'Dofollow — facteur contextuel', 'Le caractère dofollow est un facteur contextuel, jamais une preuve autonome de toxicité.', dofollowHtml)}
+    ${sub('1 lien ne vaut pas nécessairement 1 recommandation', 'Pourquoi la volumétrie brute doit être segmentée avant d’être interprétée.', sitewideHtml)}
+    ${sub('Autorité apparente vs autorité indépendante estimée', 'Simulation indicative — non équivalente au calcul de Google.', independenceHtml)}
+    ${sub('Que se passerait-il si Google faisait le même constat ?', 'Scénarios possibles, du plus probable au plus sévère.', googleHtml)}
     ${sub('Hygiène du réseau propre', 'Indicateur distinct, jamais additionné à la toxicité : sur des domaines que vous contrôlez, un défaut se corrige à la source et jamais par un désaveu.', hygieneHtml)}
+
     ${sub('Répartition du profil de liens', 'D’où viennent les liens : extensions, pays et types de plateformes mesurés sur l’échantillon.', distHtml)}
 
     ${sub('Principaux domaines référents', 'Les dix sources les plus actives de l’échantillon, avec leur autorité mesurée.', refs)}
