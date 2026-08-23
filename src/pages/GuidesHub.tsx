@@ -1,10 +1,10 @@
-import { memo, useEffect, useState, lazy, Suspense } from 'react';
+import { memo, lazy, Suspense } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link } from '@/lib/router-compat';
-import { Helmet } from 'react-helmet-async';
-import { supabase } from '@/integrations/supabase/client';
+import { getRouteApi } from '@tanstack/react-router';
 import { Header } from '@/components/Header';
-import { Loader2, ArrowRight, Building2, Search } from 'lucide-react';
+import { ArrowRight, Building2, Search } from 'lucide-react';
+import { PageEditorial } from '@/components/seo/PageEditorial';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -16,49 +16,19 @@ interface GuideEntry {
   guide_category: string | null;
 }
 
-const collectionJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: 'Guides SEO & GEO par métier et profil',
-  description: 'Guides pratiques pour améliorer votre visibilité sur Google et les IA, adaptés à votre métier.',
-  url: 'https://crawlers.fr/guides',
-  publisher: {
-    '@type': 'Organization',
-    name: 'Crawlers',
-    url: 'https://crawlers.fr',
-  },
-};
+const routeApi = getRouteApi('/guides/');
 
 function GuidesHubComponent() {
   useCanonicalHreflang('/guides');
   const { language } = useLanguage();
-  const [guides, setGuides] = useState<GuideEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const guides = (routeApi.useLoaderData() as GuideEntry[]) ?? [];
 
-  useEffect(() => {
-    const fetchGuides = async () => {
-      const { data } = await supabase
-        .from('seo_page_drafts' as any)
-        .select('slug, title, meta_description, guide_category')
-        .eq('page_type', 'guide')
-        .eq('status', 'published')
-        .order('created_at', { ascending: true });
-
-      if (data) setGuides(data as unknown as GuideEntry[]);
-      setLoading(false);
-    };
-    fetchGuides();
-  }, []);
 
   const blocA = guides.filter(g => g.guide_category === 'bloc_a');
   const blocB = guides.filter(g => g.guide_category === 'bloc_b');
 
   return (
     <>
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(collectionJsonLd)}</script>
-      </Helmet>
-
       <Header />
 
       <main className="min-h-screen bg-background">
@@ -73,11 +43,7 @@ function GuidesHubComponent() {
             </p>
           </div>
 
-          {loading ? (
-            <div className="flex justify-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : guides.length === 0 ? (
+          {guides.length === 0 ? (
             <p className="text-center text-muted-foreground py-16">
               Les guides arrivent bientôt. Revenez vite !
             </p>
