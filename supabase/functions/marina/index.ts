@@ -42,6 +42,8 @@ import {
 } from '../_shared/auditGates.ts';
 
 import { verdictsFromCocoonRisks, pillarSatelliteBlockHTML, pageAuthority } from '../_shared/pillarSatelliteVerdict.ts';
+import { buildBacklinkSectionHTML } from '../_shared/backlinkSection.ts';
+
 
 
 
@@ -1774,8 +1776,8 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       <!-- ── Bloc mots-clés et marché ── -->
       ${buildKeywordPositioningSection(keywordPos, rankingOverview)}
       ${buildModuleSection('Contenus prioritaires à créer / renforcer', '🧭', priorityContent)}
-      ${buildModuleSection('Marché et autorité de domaine', '🔗', domainAuthority)}
-      ${authorityTrendHtml}
+      ${buildBacklinkSectionHTML(domainAuthority, authorityTrendHtml)}
+
       ${buildModuleSection('Données Marché', '📈', marketData)}
 
       <!-- ── Bloc marque, concurrence, audience ── -->

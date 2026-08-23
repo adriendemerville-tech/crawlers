@@ -52,3 +52,10 @@ Câblage :
 ## Correctif transverse
 
 `audit-strategique-ia` insérait ses constats avec `source_type: 'audit'`, valeur absente de l'enum `diagnostic_source_type` : **tous** les upserts Workbench de cette fonction échouaient silencieusement. Corrigé en `audit_strategic` (chunkability, fan-out, autorité, liens cassés, toxicité, réécriture AEO).
+
+## Section dédiée « Profil de backlinks » (rapports)
+
+- `supabase/functions/_shared/backlinkSection.ts` → `buildBacklinkSectionHTML(authority, trendHtml)` : section autonome, 0 token LLM, qui remplace le dump JSON « Marché et autorité de domaine » dans Marina.
+- Contenu : volumétrie (liens **externes** uniquement, liens/domaine, dofollow, cassés), reconstitution du calcul de l'Authority Score, **tableau du détail du score de toxicité** (signal / mesure / règle appliquée / points, total borné à 100, seuils 0-34 sain · 35-59 à surveiller · 60-100 pollué), répartition TLD/pays/plateformes, top référents, ancres, pages les plus liées, tendance, puis fiabilité de l'échantillon.
+- `toxicityPenaltyRows()` rejoue exactement les formules de `computeBacklinkToxicity` (le nombre de référents hors-sujet est relu depuis `signals`) : chaque point affiché est vérifiable à la main.
+- Mesure indisponible → bloc explicite « aucune conclusion » au lieu d'un score.
