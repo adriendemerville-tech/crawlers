@@ -293,9 +293,17 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
       <p style="font-size:12px;color:#6b7280;margin:0;line-height:1.7;">${esc(ind.method)}</p>`
     : '';
 
-  const googleHtml = `<p style="font-size:12.5px;color:#374151;margin:0;line-height:1.7;">
+  // Les scénarios Google ne se lisent que si un risque est réellement mesuré :
+  // sur un profil sain, ce bloc serait alarmiste sans fait qui le justifie.
+  const googleScenariosRelevant = Boolean(
+    (dctx && dctx.level !== 'faible') || (t && t.toxicity_score >= 40),
+  );
+  const googleHtml = googleScenariosRelevant
+    ? `<p style="font-size:12.5px;color:#374151;margin:0;line-height:1.7;">
       Si les systèmes de Google relèvent les mêmes caractéristiques, plusieurs traitements sont possibles. Le premier scénario est la <strong>neutralisation</strong> de tout ou partie des liens : Google ne leur attribue simplement pas le poids attendu, et un volume important de backlinks disparaît de fait du calcul d’autorité sans qu’une pénalité du domaine soit nécessaire. Le deuxième est une <strong>dévaluation plus large</strong> des signaux issus du réseau, lorsque les liens ne sont pas considérés comme des recommandations éditoriales indépendantes. Dans les situations les plus problématiques, lorsqu’un schéma de liens destiné à manipuler les classements est établi, une <strong>action plus sévère</strong> reste envisageable. Ce rapport n’affirme jamais qu’une pénalité existe sur la seule base de l’analyse des backlinks.
-    </p>`;
+    </p>`
+    : '';
+
 
   const methodNoteHtml = `<p style="font-size:12px;color:#374151;margin:0;line-height:1.7;">
       <strong>Important :</strong> ce score est une estimation propriétaire du risque de profil de liens. Il ne correspond pas à une note Google et ne permet pas de conclure à l’existence d’une pénalité algorithmique ou manuelle.${t && t.toxicity_score >= 60 ? ' Un score élevé signifie que plusieurs caractéristiques du profil sont compatibles avec un schéma de liens artificiel ou sur-optimisé : c’est un signal d’investigation, pas une preuve de sanction.' : ''}
