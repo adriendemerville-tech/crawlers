@@ -4987,6 +4987,33 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           // Lot 4B : les pondérations annoncées sont rendues dans la fiche de
           // l'URL, avec la valeur mesurée et les points obtenus par axe.
           geoSignals: geoSubSignalsReport?.signals ?? null,
+
+          // GEO en 3 piliers (autorité domaine / accessibilité / contenu) à la
+          // date de l'audit : scores, points courants et tendance, rendus sous
+          // le score GEO de la fiche. Seule l'autorité domaine est mutualisée.
+          geoPillars: [
+            {
+              key: 'authority',
+              label: detectedLang === 'en' ? 'Domain authority' : detectedLang === 'es' ? 'Autoridad de dominio' : 'Autorité domaine',
+              score: geoSubSignalsReport?.authority?.score ?? null,
+              points: Number(geoSubSignalsReport?.pillar_points?.authority ?? 25),
+              trend: 'constant',
+            },
+            {
+              key: 'accessibility',
+              label: detectedLang === 'en' ? 'Machine accessibility' : detectedLang === 'es' ? 'Accesibilidad de máquina' : 'Accessibilité machine',
+              score: geoSubSignalsReport?.accessibility?.score ?? null,
+              points: Number(geoSubSignalsReport?.pillar_points?.accessibility ?? 25),
+              trend: detectedLang === 'en' ? 'decays toward 10 pts' : 'décroît vers 10 pts',
+            },
+            {
+              key: 'content',
+              label: detectedLang === 'en' ? 'Content exploitability' : detectedLang === 'es' ? 'Explotabilidad de contenido' : 'Exploitabilité contenu',
+              score: geoSubSignalsReport?.content?.score ?? null,
+              points: Number(geoSubSignalsReport?.pillar_points?.content ?? 50),
+              trend: detectedLang === 'en' ? 'rises toward 65 pts' : 'monte vers 65 pts',
+            },
+          ],
         });
         const cocoonPageHTML = buildCocoonPageFocusHTML(cocoonResult, url, detectedLang);
 
