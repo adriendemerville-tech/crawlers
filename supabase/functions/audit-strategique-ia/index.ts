@@ -259,7 +259,7 @@ Deno.serve(handleRequest(async (req) => {
       const needsLlmCheck = !toolsData?.llm || toolsData.llm.note;
       // Localité de la page auditée (slug) : sur « /renovation-maison-marseille »
       // les concurrents doivent être ceux de la SERP « rénovation maison Marseille ».
-      const auditedPageFocus = derivePageFocus(url, { title: pageMetadata?.title ?? null, h1: pageMetadata?.h1 ?? null });
+      const auditedPageFocus = derivePageFocus(url, { title: (metadataResult as any)?.title ?? null, h1: (metadataResult as any)?.h1 ?? null });
       if (auditedPageFocus.locality) console.log(`📍 Page localisée détectée: ${auditedPageFocus.locality}${auditedPageFocus.service ? ` (${auditedPageFocus.service})` : ''}`);
       const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult, authorityResult] = await Promise.allSettled([
         withDeadline(fetchMarketData(domain, context, pageContentContext, url, existingKeywords), 120_000, 'market_data'),
