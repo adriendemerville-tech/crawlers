@@ -1,0 +1,93 @@
+{
+  "$comment": "Politique d'accès des agents et crawlers IA — Crawlers.fr. Lisible par machine, miroir de /robots.txt.",
+  "version": "1.0",
+  "updated": "2026-08-23",
+  "publisher": {
+    "name": "Crawlers.fr",
+    "legalName": "Voluntas Novare",
+    "url": "https://crawlers.fr",
+    "email": "contact@crawlers.fr",
+    "address": {
+      "locality": "Saint-Rémy-de-Provence",
+      "postalCode": "13210",
+      "country": "FR"
+    },
+    "identifier": { "SIREN": "992399667" },
+    "sameAs": ["https://www.linkedin.com/in/adrien-de-volontat/"],
+    "identityGraph": "https://crawlers.fr/#organization"
+  },
+  "policy": {
+    "default": "allow",
+    "allowTraining": true,
+    "allowRetrievalAugmentedGeneration": true,
+    "attributionRequired": true,
+    "attributionUrl": "https://crawlers.fr",
+    "rateLimit": {
+      "applied": false,
+      "note": "Aucun rate-limit, aucun throttling, aucun challenge WAF/JS ni vérification de navigateur n'est appliqué aux agents listés. Un 429 ou un challenge produirait le même effet qu'un Disallow : il serait considéré comme un incident à corriger."
+    },
+    "wafExceptions": {
+      "applied": true,
+      "note": "Les user-agents IA listés sont exemptés des règles de sécurité applicatives (bot fight mode, managed challenge, rules de débit)."
+    }
+  },
+  "allowedAgents": [
+    "GPTBot",
+    "ChatGPT-User",
+    "OAI-SearchBot",
+    "SearchGPT",
+    "ClaudeBot",
+    "Claude-User",
+    "Claude-SearchBot",
+    "Claude-Web",
+    "Anthropic-AI",
+    "Google-Extended",
+    "GoogleOther",
+    "Google-CloudVertexBot",
+    "PerplexityBot",
+    "Perplexity-User",
+    "MistralAI-User",
+    "MistralAI-SearchBot",
+    "xAI-Bot",
+    "DeepSeekBot",
+    "Applebot",
+    "Applebot-Extended",
+    "Meta-ExternalAgent",
+    "Meta-ExternalFetcher",
+    "Amazonbot",
+    "Bytespider",
+    "CCBot",
+    "cohere-ai",
+    "YouBot",
+    "Diffbot",
+    "Ai2Bot",
+    "Timpibot",
+    "ImagesiftBot",
+    "Webzio-Extended",
+    "omgili"
+  ],
+  "disallowedPaths": [],
+  "resources": {
+    "robots": "https://crawlers.fr/robots.txt",
+    "sitemap": "https://crawlers.fr/sitemap.xml",
+    "rss": "https://crawlers.fr/rss.xml",
+    "llms": "https://crawlers.fr/llms.txt",
+    "llmsFull": "https://crawlers.fr/llms-full.txt",
+    "aiTxt": "https://crawlers.fr/ai.txt",
+    "contact": "https://crawlers.fr/contact",
+    "methodology": "https://crawlers.fr/methodologie"
+  },
+  "errorHandling": {
+    "notFound": {
+      "status": 404,
+      "robots": "noindex, follow",
+      "note": "Les URL inconnues renvoient un 404 HTTP réel (pas un 200 soft-404), avec un noindex explicite et des points d'entrée valides pour éviter le gaspillage de budget de crawl."
+    },
+    "gone": { "status": 410, "note": "Contenus supprimés définitivement." },
+    "redirects": { "status": 301, "note": "Redirections permanentes en une seule étape, jamais en chaîne." }
+  },
+  "contactForIssues": {
+    "email": "contact@crawlers.fr",
+    "note": "Signaler tout blocage, 429 ou challenge rencontré par un agent IA : traité comme un incident de visibilité."
+  }
+}

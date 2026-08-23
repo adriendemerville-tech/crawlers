@@ -30,6 +30,7 @@ import { AISidebarPageWrapper } from "@/components/AISidebarPageWrapper";
 import { FloatingChatBubble } from "@/components/Support/FloatingChatBubble";
 import { SurveyModal } from "@/components/Survey/SurveyModal";
 import NotFound from "@/pages/NotFound";
+import { SITEWIDE_JSONLD } from "@/lib/seo/organization";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { initGlobalErrorListener } from "@/lib/globalErrorListener";
 
@@ -133,6 +134,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: "/fonts-deferred.css" },
     ],
     scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(SITEWIDE_JSONLD),
+      },
       { children: GTAG_BOOTSTRAP },
       { children: DOMAIN_CANONICALIZATION },
       { children: TEXT_SIZE_BOOTSTRAP },
