@@ -165,7 +165,7 @@ export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
     lever: 'Afficher une date de mise à jour réelle et rafraîchir les pages stratégiques.',
   },
 
-  // ── Pilier exploitabilité contenu (50 → 65, croissant) ───────────────────
+  // ── Pilier exploitabilité contenu (53 pts) ───────────────────────────────
   {
     key: 'content_quotability',
     family: 'content',
