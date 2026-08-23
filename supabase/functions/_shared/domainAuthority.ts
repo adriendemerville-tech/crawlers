@@ -469,8 +469,12 @@ export function computeBacklinkToxicity(input: {
   referringDomains: number;
   brokenBacklinks: number;
   dofollowRatio: number;
-  /** Domaine audité : sert à écarter le réseau propre de la marque. */
+  /** Domaine audité : sert à rattacher le réseau propre de la marque. */
   auditedDomain?: string;
+  /** Domaines dont la propriété est prouvée (GSC, GMB, sites suivis, déclaration). */
+  verifiedOwnDomains?: string[];
+  /** Segmentation déjà calculée (évite un double calcul par l'appelant). */
+  segmentation?: BacklinkSegmentation | null;
 }): BacklinkToxicity {
   const totalAnchorCount = input.anchors.reduce((s, a) => s + (a.count || 0), 0);
   const sorted = [...input.anchors].sort((a, b) => (b.count || 0) - (a.count || 0));
@@ -485,20 +489,33 @@ export function computeBacklinkToxicity(input: {
     ? Math.round((unnaturalCount / totalAnchorCount) * 100) / 100
     : 0;
   const rawSample = (input.sampleReferringDomains?.length ? input.sampleReferringDomains : input.topReferringDomains) || [];
-  // Le réseau propre (déclinaisons pays de la même marque) sort de l'échantillon
-  // de toxicité : ni pénalité de rank, ni suspicion, ni désaveu recommandé.
-  const ownNetwork = input.auditedDomain ? detectOwnNetworkDomains(input.auditedDomain, rawSample) : [];
+  // Segmentation en trois compartiments : le score de toxicité ne porte que sur
+  // les liens tiers (éditorial + annuaires), seul périmètre où le désaveu a un
+  // sens. Le réseau propre est mesuré séparément (hygiène), pas exclu en silence.
+  const seg = input.segmentation
+    ?? (input.auditedDomain ? segmentReferringDomains(input.auditedDomain, rawSample, input.verifiedOwnDomains || []) : null);
+  const ownNetwork = seg ? seg.own_network_domains.map((d) => d.domain) : [];
   const ownSet = new Set(ownNetwork);
-  const refSample = rawSample.filter(
-    (d) => !ownSet.has(String(d?.domain || '').toLowerCase().replace(/^www\./, '')),
-  );
+  const refSample = rawSample.filter((d) => !ownSet.has(norm(d?.domain || '')));
   const ranks = refSample.map((d) => normalizeDomainRank(d.rank));
   const avgReferrerRank = ranks.length
     ? Math.round((ranks.reduce((s, r) => s + r, 0) / ranks.length) * 10) / 10
     : 0;
 
-  const linksPerDomain = input.referringDomains > 0
+  // Liens/domaine : deux volumétries, « tous référents » et « hors réseau propre ».
+  // La seconde sert au score, la première reste affichée pour la vérification.
+  const linksPerDomainAll = input.referringDomains > 0
     ? Math.round((input.backlinksTotal / input.referringDomains) * 10) / 10
+    : 0;
+  const ownBacklinks = seg?.own_network.backlinks ?? 0;
+  const ownDomains = seg?.own_network.domains ?? 0;
+  const thirdBacklinks = Math.max(0, input.backlinksTotal - ownBacklinks);
+  const thirdDomains = Math.max(0, input.referringDomains - ownDomains);
+  const linksPerDomain = thirdDomains > 0
+    ? Math.round((thirdBacklinks / thirdDomains) * 10) / 10
+    : linksPerDomainAll;
+  const ownBacklinkShare = input.backlinksTotal > 0
+    ? Math.round((ownBacklinks / input.backlinksTotal) * 1000) / 1000
     : 0;
   const brokenRatio = input.backlinksTotal > 0
     ? Math.round((input.brokenBacklinks / input.backlinksTotal) * 100) / 100
@@ -507,9 +524,19 @@ export function computeBacklinkToxicity(input: {
   const signals: string[] = [];
   let score = 0;
 
+  // L'ancre n'est pas rattachable à son domaine référent par la source : quand le
+  // réseau propre pèse 20 % des liens ou plus, la pénalité est minorée de moitié
+  // et l'ancre est renvoyée vers l'hygiène du réseau propre.
+  const anchorDowngraded = ownBacklinkShare >= 0.2;
   if (dominantRatio >= 0.3) {
-    score += Math.min(35, Math.round((dominantRatio - 0.3) * 100) + 15);
-    signals.push(`ancre « ${dominant?.anchor} » répétée sur ${Math.round(dominantRatio * 100)} % de l'échantillon`);
+    const full = Math.min(35, Math.round((dominantRatio - 0.3) * 100) + 15);
+    const applied = anchorDowngraded ? Math.round(full / 2) : full;
+    score += applied;
+    signals.push(
+      anchorDowngraded
+        ? `ancre « ${dominant?.anchor} » répétée sur ${Math.round(dominantRatio * 100)} % de l'échantillon — pénalité minorée (${applied} au lieu de ${full}) : ${Math.round(ownBacklinkShare * 100)} % des liens viennent du réseau propre et la source ne rattache pas les ancres à leur domaine`
+        : `ancre « ${dominant?.anchor} » répétée sur ${Math.round(dominantRatio * 100)} % de l'échantillon`,
+    );
   }
   if (unnaturalRatio >= 0.25) {
     score += Math.min(25, Math.round((unnaturalRatio - 0.25) * 60) + 10);
@@ -517,12 +544,13 @@ export function computeBacklinkToxicity(input: {
   }
   if (ranks.length >= 3 && avgReferrerRank < 15) {
     score += 20;
-    signals.push(`principaux référents à faible autorité (rank moyen ${avgReferrerRank}/100)`);
+    signals.push(`principaux référents tiers à faible autorité (rank moyen ${avgReferrerRank}/100)`);
   }
   if (linksPerDomain >= 25) {
     score += Math.min(20, Math.round(linksPerDomain / 5));
-    signals.push(`${linksPerDomain} liens par domaine référent en moyenne — empreinte de type annuaire`);
+    signals.push(`${linksPerDomain} liens par domaine référent tiers en moyenne — empreinte de type annuaire`);
   }
+
   if (brokenRatio >= 0.1) {
     score += 10;
     signals.push(`${Math.round(brokenRatio * 100)} % de liens entrants cassés`);
