@@ -621,12 +621,17 @@ export function computeBacklinkToxicity(input: {
   if (ownBacklinkShare >= 0.2) {
     corroborating.push(`${Math.round(ownBacklinkShare * 100)} % des liens proviennent de ${ownDomains} domaine${ownDomains > 1 ? 's' : ''} rattaché${ownDomains > 1 ? 's' : ''} au réseau propre`);
   }
-  if (dominantRatio >= 0.3) {
+  // Sur un échantillon d'ancres minuscule, toute part est mécaniquement élevée :
+  // la concentration d'ancre ne corrobore qu'au-delà d'une base mesurable.
+  const anchorEvidenceSufficient = totalAnchorCount >= 15 && input.anchors.length >= 5;
+  if (dominantRatio >= 0.3 && anchorEvidenceSufficient) {
     corroborating.push(`ancre « ${dominant?.anchor} » sur ${Math.round(dominantRatio * 100)} % de l'échantillon`);
   }
-  if (unnaturalRatio >= 0.25) {
+
+  if (unnaturalRatio >= 0.25 && anchorEvidenceSufficient) {
     corroborating.push(`${Math.round(unnaturalRatio * 100)} % d'ancres non naturelles`);
   }
+
   if (ranks.length >= 3 && avgReferrerRank < 15) {
     corroborating.push(`autorité moyenne des domaines tiers très faible (${avgReferrerRank}/100)`);
   }

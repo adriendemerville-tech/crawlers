@@ -270,8 +270,13 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
         : `<p style="font-size:12px;color:#6b7280;margin:0;">Aucune anomalie structurelle corroborante mesurée : le ratio dofollow n’ajoute aucun point.</p>`}`
     : '';
 
-  const sitewideHtml = `<p style="font-size:12.5px;color:#374151;margin:0 0 8px 0;line-height:1.7;">
-      La volumétrie brute doit être interprétée avec prudence. Si un site place un lien dans son pied de page et que ce pied de page est présent sur 1 300 pages, l’outil comptabilise environ 1 300 backlinks — mais il ne s’agit pas de 1 300 recommandations éditoriales indépendantes : c’est une seule relation entre deux sites, répétée techniquement.
+  // Pédagogie utile seulement quand la volumétrie dépasse nettement le nombre de
+  // domaines (donc quand la répétition est plausible) ou qu'un sitewide est suspecté.
+  const linksPerDomain = a.referring_domains > 0 ? a.backlinks_total / a.referring_domains : 0;
+  const sitewideRelevant = Boolean(t?.dofollow_context?.sitewide_suspected) || linksPerDomain >= 5;
+  const sitewideHtml = sitewideRelevant
+    ? `<p style="font-size:12.5px;color:#374151;margin:0 0 8px 0;line-height:1.7;">
+      La volumétrie brute doit être interprétée avec prudence. Sur ce domaine, on compte en moyenne ${linksPerDomain.toFixed(1)} liens par domaine référent. Si un site place un lien dans son pied de page et que ce pied de page est présent sur des centaines de pages, l’outil comptabilise autant de backlinks — mais il ne s’agit pas d’autant de recommandations éditoriales indépendantes : c’est une seule relation entre deux sites, répétée techniquement.
     </p>
     <ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.7;">
       <li>liens réellement éditoriaux et contextuels ;</li>
@@ -279,7 +284,9 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
       <li>liens de navigation et liens issus de templates ;</li>
       <li>liens de domaines indépendants ;</li>
       <li>liens d’un réseau contrôlé ou fortement apparenté.</li>
-    </ul>`;
+    </ul>`
+    : '';
+
 
   const ind = t?.independence ?? null;
   const independenceHtml = ind
@@ -293,9 +300,17 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
       <p style="font-size:12px;color:#6b7280;margin:0;line-height:1.7;">${esc(ind.method)}</p>`
     : '';
 
-  const googleHtml = `<p style="font-size:12.5px;color:#374151;margin:0;line-height:1.7;">
+  // Les scénarios Google ne se lisent que si un risque est réellement mesuré :
+  // sur un profil sain, ce bloc serait alarmiste sans fait qui le justifie.
+  const googleScenariosRelevant = Boolean(
+    (dctx && dctx.level !== 'faible') || (t && t.toxicity_score >= 40),
+  );
+  const googleHtml = googleScenariosRelevant
+    ? `<p style="font-size:12.5px;color:#374151;margin:0;line-height:1.7;">
       Si les systèmes de Google relèvent les mêmes caractéristiques, plusieurs traitements sont possibles. Le premier scénario est la <strong>neutralisation</strong> de tout ou partie des liens : Google ne leur attribue simplement pas le poids attendu, et un volume important de backlinks disparaît de fait du calcul d’autorité sans qu’une pénalité du domaine soit nécessaire. Le deuxième est une <strong>dévaluation plus large</strong> des signaux issus du réseau, lorsque les liens ne sont pas considérés comme des recommandations éditoriales indépendantes. Dans les situations les plus problématiques, lorsqu’un schéma de liens destiné à manipuler les classements est établi, une <strong>action plus sévère</strong> reste envisageable. Ce rapport n’affirme jamais qu’une pénalité existe sur la seule base de l’analyse des backlinks.
-    </p>`;
+    </p>`
+    : '';
+
 
   const methodNoteHtml = `<p style="font-size:12px;color:#374151;margin:0;line-height:1.7;">
       <strong>Important :</strong> ce score est une estimation propriétaire du risque de profil de liens. Il ne correspond pas à une note Google et ne permet pas de conclure à l’existence d’une pénalité algorithmique ou manuelle.${t && t.toxicity_score >= 60 ? ' Un score élevé signifie que plusieurs caractéristiques du profil sont compatibles avec un schéma de liens artificiel ou sur-optimisé : c’est un signal d’investigation, pas une preuve de sanction.' : ''}
