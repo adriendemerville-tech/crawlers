@@ -136,7 +136,7 @@ export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
     lever: 'Consolider les pages proches du top 10 avant d’en créer de nouvelles.',
   },
 
-  // ── Pilier accessibilité machine (25 → 10, décroissant) ──────────────────
+  // ── Pilier accessibilité machine (22 pts) ────────────────────────────────
   {
     key: 'bot_accessibility',
     family: 'accessibility',
