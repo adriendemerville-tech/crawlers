@@ -143,6 +143,10 @@ function FooterComponent() {
   ];
 
   const legalLinks = [
+    {
+      label: t3(language, 'Contact', 'Contact', 'Contacto'),
+      href: '/contact'
+    },
     { 
       label: t3(language, 'Mentions légales', 'Legal Notice', 'Aviso legal'),
       href: '/mentions-legales'
