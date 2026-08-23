@@ -224,11 +224,12 @@ export async function detectGoogleMyBusiness(domain: string, brandName: string, 
       category: m.category || m.snippet || undefined,
       address: m.address || undefined,
       is_claimed: m.is_claimed ?? undefined,
+      domain_match: [m.domain, m.url, m.website].some((v: any) => typeof v === 'string' && v.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').includes(cleanDomain.toLowerCase())),
     }));
 
-    const result = buildGmbFromListings(listings, brandName);
+    const result = buildGmbFromListings(listings, brandName, hqHint);
     if (!result) return null;
-    console.log(`📍 ✅ GMB found: ${result.locations_count} fiche(s) — note réseau ${result.network_avg_rating ?? '?'} / 5, ${result.network_total_reviews ?? 0} avis cumulés`);
+    console.log(`📍 ✅ GMB found: ${result.locations_count} fiche(s) — réf. ${result.reference_listing} — médiane ${result.network_median_rating ?? '?'} / 5 (${result.network_median_reviews ?? '?'} avis), note pondérée ${result.network_avg_rating ?? '?'} / 5, ${result.network_total_reviews ?? 0} avis cumulés`);
     return result;
   } catch (error) { console.error('📍 GMB detection error:', error); return null; }
 }
