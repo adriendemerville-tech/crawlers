@@ -2169,6 +2169,13 @@ Deno.serve(handleRequest(async (req) => {
     ]);
     const psiData = perf.psiData;
 
+    // TTFB : PageSpeed fait autorité, mais son absence ne doit pas offrir le
+    // plein score d'accessibilité machine au GEO. Repli par mesure directe.
+    const psiTtfb = perf.psiData?.lighthouseResult?.audits?.['server-response-time']?.numericValue;
+    const ttfbMeasurement = (typeof psiTtfb === 'number' && Number.isFinite(psiTtfb) && psiTtfb > 0)
+      ? { ttfbMs: Math.round(psiTtfb), source: 'psi_server_response' as const, note: `Délai serveur mesuré à ${Math.round(psiTtfb)} ms par PageSpeed.` }
+      : await measureTtfbDirect(normalizedUrl);
+
     
     // Step 2b: Check sitemap/robots.txt coherence (depends on robotsAnalysis)
     const sitemapRobotsCoherence = await checkSitemapRobotsCoherence(normalizedUrl, robotsAnalysis.content, robotsAnalysis.exists);
