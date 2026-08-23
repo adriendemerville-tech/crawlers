@@ -195,7 +195,7 @@ export function scorePenaltyBlockHTML(
   const lcpS = opts?.lcpMs && Number.isFinite(opts.lcpMs)
     ? `${(Number(opts.lcpMs) / 1000).toFixed(2)} s`
     : perf?.measured || null;
-  const techMax = Number(opts?.techMax) > 0 ? Math.round(Number(opts.techMax)) : 200;
+  const techMax = Number(opts?.techMax) > 0 ? Math.round(Number(opts?.techMax)) : 200;
 
   const lines: string[] = [];
 
