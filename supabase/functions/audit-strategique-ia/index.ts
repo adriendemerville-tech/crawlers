@@ -33,6 +33,8 @@ import { detectBusinessContext, KNOWN_LOCATIONS } from '../_shared/strategicAudi
 import { fetchMarketData, fetchRankedKeywords } from '../_shared/strategicAudit/dataForSeo.ts';
 import { detectGoogleMyBusiness, searchFounderProfile, searchFacebookPage, findLocalCompetitor } from '../_shared/strategicAudit/socialDiscovery.ts';
 import { extractPageMetadata } from '../_shared/strategicAudit/pageAnalyzer.ts';
+import { derivePageFocus } from '../_shared/pageFocus.ts';
+
 import { buildUserPrompt, getSystemPromptForPageType } from '../_shared/strategicAudit/prompts.ts';
 import { saveStrategicRecommendationsToRegistry, saveToCache, buildFallbackResult, feedKeywordUniverse, persistIdentityData } from '../_shared/strategicAudit/registrySaver.ts';
 import {
