@@ -1,5 +1,5 @@
 /**
- * _shared/geoSubSignals.ts — GEO en 3 piliers (barème fixe 25 / 22 / 53)
+ * _shared/geoSubSignals.ts — GEO en 3 piliers (barème 25 / 22→17 / 53→58)
  *
  * Le score GEO global (0-100) mélange ce que la machine comprend du site, la
  * valeur du contenu à citer, et ce que le web dit du site. Deux pages peuvent
