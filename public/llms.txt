@@ -379,3 +379,7 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int√
 - [Conditions d'utilisation](/conditions-utilisation)
 - [CGVU](/cgvu)
 - [RGPD](/rgpd)
+
+# Politique d'acces des agents IA (JSON, lisible par machine) :
+#   https://crawlers.fr/.well-known/ai-crawler-policy.json
+# Aucun rate-limit ni challenge WAF n'est applique aux agents IA listes.
