@@ -825,12 +825,37 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
   const htmlAnalysis = rawData?.htmlAnalysis || {};
   const linkProfile = htmlAnalysis?.insights?.linkProfile || {};
   const brokenLinksInsight = htmlAnalysis?.insights?.brokenLinks || {};
-  const normalizedHome = normalizeUrl(`https://${domain}`);
+  // Sélection de la page d'accueil : comparaison sur le chemin, insensible au
+  // sous-domaine www et au protocole. L'ancienne comparaison d'URL complète
+  // échouait dès que le crawl stockait `https://www.domaine/` alors que
+  // `domain` était l'apex : on retombait alors sur `crawlPages[0]` (souvent une
+  // page interne) et le rapport attribuait ses balises à la page d'accueil.
+  const sameHost = (raw: string): boolean => {
+    try {
+      return new URL(raw).hostname.replace(/^www\./, '').toLowerCase()
+        === domain.replace(/^www\./, '').toLowerCase();
+    } catch { return false; }
+  };
+  const pathOf = (raw: string): string | null => {
+    try { return new URL(raw).pathname.replace(/\/+$/, '') || '/'; } catch { return null; }
+  };
+  const homeCandidates = crawlPages.filter((page) => {
+    const raw = String(page?.url || '');
+    if (!sameHost(raw)) return false;
+    const p = pathOf(raw);
+    return p === '/' || p === '/index' || p === '/index.html' || p === '/index.php';
+  });
+  // À défaut de home dans le crawl, on prend la page la moins profonde plutôt
+  // qu'une page arbitraire — et on dit dans le rapport quelle URL est décrite.
+  const fallbackPage = [...crawlPages]
+    .filter((p) => sameHost(String(p?.url || '')))
+    .sort((a, b) => (pathOf(String(a?.url || ''))?.split('/').length || 99)
+      - (pathOf(String(b?.url || ''))?.split('/').length || 99))[0]
+    || crawlPages[0] || null;
+  const primaryPage = homeCandidates[0] || fallbackPage;
+  const primaryUrl = String(primaryPage?.url || '') || null;
+  const primaryIsHome = homeCandidates.length > 0;
 
-  const primaryPage = crawlPages.find((page) => {
-    const normalizedPage = normalizeUrl(page?.url);
-    return normalizedPage === normalizedHome || normalizedPage === `${normalizedHome}/index`;
-  }) || crawlPages[0] || null;
 
   const totalWordCount = crawlPages.reduce((sum, page) => sum + Number(page?.word_count || 0), 0);
   const totalInternalLinks = crawlPages.reduce((sum, page) => sum + Number(page?.internal_links || 0), 0);
