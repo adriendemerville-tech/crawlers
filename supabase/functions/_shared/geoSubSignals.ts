@@ -1,5 +1,5 @@
 /**
- * _shared/geoSubSignals.ts — GEO en 3 piliers (barème fixe 25 / 22 / 53)
+ * _shared/geoSubSignals.ts — GEO en 3 piliers (barème 25 / 22→17 / 53→58)
  *
  * Le score GEO global (0-100) mélange ce que la machine comprend du site, la
  * valeur du contenu à citer, et ce que le web dit du site. Deux pages peuvent
@@ -11,7 +11,7 @@
  *   AUTORITÉ DOMAINE (25 pts, mutualisé au domaine)
  *     — crédibilité de la marque et présence mesurées hors de la page.
  *
- *   ACCESSIBILITÉ MACHINE (22 pts, page)
+ *   ACCESSIBILITÉ MACHINE (22 → 17 pts, page)
  *     — ce qu'une machine peut lire et extraire du site tel qu'il est servi.
  *
  *   EXPLOITABILITÉ CONTENU (53 pts, page)
@@ -37,40 +37,55 @@ export type GeoPillar = 'authority' | 'accessibility' | 'content';
 /** Le « GeoFamily » historique (compréhension/autorité) devient ces 3 piliers. */
 export type GeoFamily = GeoPillar;
 
-/**
- * Conservé pour compatibilité : le barème est désormais FIXE, cette valeur n'est
- * plus utilisée dans le calcul des poids.
- */
+/** Ancre du barème : 2026-08-23. */
+export const GEO_WEIGHTS_ANCHOR_ISO = '2026-08-23';
+
+/** Mois écoulés depuis l'ancre (0 avant l'ancre). */
 export function geoElapsedMonths(now: Date = new Date()): number {
-  const anchor = Date.UTC(2026, 7, 1); // 2026-08-01 00:00 UTC
+  const anchor = Date.UTC(2026, 7, 23); // 2026-08-23 00:00 UTC
   return Math.max(0, (now.getTime() - anchor) / (1000 * 60 * 60 * 24 * (365.25 / 12)));
 }
 
-/** Barème GEO fixe (somme = 100) : 25 / 22 / 53. */
+/** Barème de départ (à l'ancre, somme = 100) : 25 / 22 / 53. */
 export const GEO_PILLAR_POINTS: Record<GeoPillar, number> = {
   authority: 25,
   accessibility: 22,
   content: 53,
 };
 
-/**
- * Poids des trois piliers (toujours sur 100, identiques à toute date) :
- *  - autorité domaine    : 25 (mutualisé)
- *  - accessibilité machine : 22 (page)
- *  - exploitabilité contenu : 53 (page)
- * Le paramètre `now` est conservé pour la compatibilité des appelants.
- */
-export function geoPillarTotals(_now: Date = new Date()): Record<GeoPillar, number> {
-  return { ...GEO_PILLAR_POINTS };
+/** Palier de décroissance de l'accessibilité machine : −1 pt tous les 18 mois. */
+export const GEO_ACCESSIBILITY_STEP_MONTHS = 18;
+/** Plancher de l'accessibilité machine. */
+export const GEO_ACCESSIBILITY_FLOOR = 17;
+
+/** Points d'accessibilité machine à une date (22 → 17 par tranche de 1 pt / 18 mois). */
+export function geoAccessibilityPoints(now: Date = new Date()): number {
+  const steps = Math.floor(geoElapsedMonths(now) / GEO_ACCESSIBILITY_STEP_MONTHS);
+  return Math.max(GEO_ACCESSIBILITY_FLOOR, GEO_PILLAR_POINTS.accessibility - steps);
 }
 
-/** Tendance de chaque pilier : le barème est fixe, donc constant partout. */
+/**
+ * Poids des trois piliers (somme toujours 100) :
+ *  - autorité domaine       : 25 (constant, mutualisé)
+ *  - accessibilité machine  : 22 → 17, −1 pt par tranche de 18 mois (page)
+ *  - exploitabilité contenu : le reste, donc 53 → 58 (page)
+ * Décroissance en marches : le barème est stable pendant 18 mois, donc deux
+ * audits d'une même tranche se comparent directement.
+ */
+export function geoPillarTotals(now: Date = new Date()): Record<GeoPillar, number> {
+  const accessibility = geoAccessibilityPoints(now);
+  const authority = GEO_PILLAR_POINTS.authority;
+  return { authority, accessibility, content: 100 - authority - accessibility };
+}
+
+/** Tendance de chaque pilier au regard de la courbe de décroissance. */
 export type GeoPillarTrend = 'constant' | 'decays' | 'grows';
 export const GEO_PILLAR_TREND: Record<GeoPillar, GeoPillarTrend> = {
   authority: 'constant',
-  accessibility: 'constant',
-  content: 'constant',
+  accessibility: 'decays',
+  content: 'grows',
 };
+
 
 
 /** Poids relatifs (fixes) des sous-signaux à l'intérieur de chaque pilier. */
@@ -253,14 +268,15 @@ export interface GeoSubSignalReport {
   authority: GeoFamilyScore;
   /** Pilier B — accessibilité machine (22 pts, page). */
   accessibility: GeoFamilyScore;
-  /** Pilier C — exploitabilité contenu (53 pts, page). */
+  /** Pilier C — exploitabilité contenu (53 → 58 pts, page). */
   content: GeoFamilyScore;
   /** 0-100 : moyenne pondérée des piliers mesurés — reconstitue le GEO lisible. */
   geo_score: number | null;
-  /** Poids en points des trois piliers (barème fixe, somme = 100). */
+  /** Poids en points des trois piliers à la date de l’audit (somme = 100). */
   pillar_points: Record<GeoPillar, number>;
-  /** Conservé pour compatibilité : tous les piliers sont à poids constant. */
+  /** Tendance du barème : autorité constante, accessibilité décroissante, contenu croissant. */
   pillar_trend: Record<GeoPillar, GeoPillarTrend>;
+
   /** Date de référence de la pondération (ISO). */
   weight_date: string;
   gap: number | null;
@@ -611,11 +627,19 @@ const PILLAR_ACCENT: Record<GeoPillar, string> = {
   content: '#111827',
 };
 
-/** Barème fixe : chaque pilier porte un poids constant, indiqué en clair. */
+/** Tendance du barème : autorité constante, accessibilité en marches, contenu croissant. */
 function trendText(p: GeoPillar, lang?: string): string {
-  const pts = GEO_PILLAR_POINTS[p];
-  return lang === 'en' ? `fixed ${pts} pts` : `poids fixe ${pts} pts`;
+  const en = lang === 'en';
+  if (p === 'authority') return en ? 'constant 25 pts' : 'constant 25 pts';
+  if (p === 'accessibility') {
+    return en
+      ? `−1 pt / ${GEO_ACCESSIBILITY_STEP_MONTHS} months, floor ${GEO_ACCESSIBILITY_FLOOR} pts`
+      : `−1 pt / ${GEO_ACCESSIBILITY_STEP_MONTHS} mois, plancher ${GEO_ACCESSIBILITY_FLOOR} pts`;
+  }
+  const ceiling = 100 - GEO_PILLAR_POINTS.authority - GEO_ACCESSIBILITY_FLOOR;
+  return en ? `rises to ${ceiling} pts` : `monte vers ${ceiling} pts`;
 }
+
 
 function barRow(s: GeoSubSignalValue, lang?: string): string {
   const v = s.value;
@@ -730,9 +754,11 @@ export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string
       </ul>`
     : '';
 
+  const pp = report.pillar_points;
   const note = lang === 'en'
-    ? `Fixed GEO scale: domain authority 25 pts (mutualized), machine accessibility 22 pts, content exploitability 53 pts. 75 of the 100 pts therefore depend on the audited page itself, and weights are identical across audits — two reports compare directly.`
-    : `Barème GEO fixe : autorité domaine 25 pts (mutualisée), accessibilité machine 22 pts, exploitabilité contenu 53 pts. 75 des 100 pts dépendent donc de la page auditée elle-même, et les poids sont identiques d’un audit à l’autre : deux rapports se comparent directement.`;
+    ? `GEO scale at ${report.weight_date}: domain authority ${pp.authority} pts (mutualized, constant), machine accessibility ${pp.accessibility} pts, content exploitability ${pp.content} pts. ${100 - pp.authority} of the 100 pts therefore depend on the audited page itself. Machine accessibility loses 1 pt every ${GEO_ACCESSIBILITY_STEP_MONTHS} months down to a ${GEO_ACCESSIBILITY_FLOOR} pt floor — the advantage of being crawlable becomes a commodity as the web is renovated — and content exploitability absorbs those points, up to ${100 - GEO_PILLAR_POINTS.authority - GEO_ACCESSIBILITY_FLOOR} pts.`
+    : `Barème GEO au ${report.weight_date} : autorité domaine ${pp.authority} pts (mutualisée, constante), accessibilité machine ${pp.accessibility} pts, exploitabilité contenu ${pp.content} pts. ${100 - pp.authority} des 100 pts dépendent donc de la page auditée elle-même. L’accessibilité machine perd 1 pt tous les ${GEO_ACCESSIBILITY_STEP_MONTHS} mois jusqu’à un plancher de ${GEO_ACCESSIBILITY_FLOOR} pts — être crawlable se commoditise à mesure que le parc de sites se rénove — et l’exploitabilité du contenu récupère ces points, jusqu’à ${100 - GEO_PILLAR_POINTS.authority - GEO_ACCESSIBILITY_FLOOR} pts.`;
+
 
   return `<div style="margin-top:16px;padding:14px;border:1px solid #e5e7eb;border-radius:8px;background:#ffffff;page-break-inside:avoid;text-align:left;">
     <h4 style="font-size:14px;font-weight:600;color:#111827;margin:0 0 6px;">${lang === 'en' ? 'GEO in 10 sub-signals across 3 pillars' : 'Le GEO en 10 sous-signaux, 3 piliers'}</h4>
