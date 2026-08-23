@@ -5654,7 +5654,7 @@ Deno.serve(handleRequest(async (req) => {
       
       const { data: job } = await sb
         .from('async_jobs')
-        .select('status, result_data, error_message, progress, input_payload')
+        .select('status, result_data, error_message, progress, input_payload, created_at, started_at')
         .eq('id', jobId)
         .single();
       
@@ -5672,6 +5672,27 @@ Deno.serve(handleRequest(async (req) => {
       if (job.status === 'failed') {
         return json({ success: false, error: job.error_message, status: 'failed' });
       }
+
+      // ── En file d'attente : jamais démarré (pas de started_at) ──
+      // On renvoie explicitement `queued` + la position, sans progression ni
+      // compteur de pages (chiffres qui seraient hérités et donc trompeurs).
+      if (job.status === 'pending' && !job.started_at) {
+        const { count: ahead } = await sb
+          .from('async_jobs')
+          .select('id', { count: 'exact', head: true })
+          .eq('function_name', 'marina')
+          .eq('status', 'pending')
+          .is('started_at', null)
+          .lt('created_at', job.created_at);
+        return json({
+          status: 'queued',
+          queue_position: (ahead || 0) + 1,
+          progress: null,
+          phase: null,
+          scan_mode: null,
+          pages_crawled: null,
+        });
+      }
       
       return json({ 
         status: job.status, 
@@ -5680,6 +5701,7 @@ Deno.serve(handleRequest(async (req) => {
         scan_mode: (job.input_payload as any)?.scan_mode || null,
         pages_crawled: (job.input_payload as any)?.pages_crawled ?? null,
       });
+
     }
 
     // ═══ POST: Start pipeline or list jobs ═══
