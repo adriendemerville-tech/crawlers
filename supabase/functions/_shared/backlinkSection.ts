@@ -48,8 +48,6 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
 
   if (t.dominant_anchor_ratio >= 0.3) {
     const full = Math.min(35, Math.round((t.dominant_anchor_ratio - 0.3) * 100) + 15);
-  if (t.dominant_anchor_ratio >= 0.3) {
-    const full = Math.min(35, Math.round((t.dominant_anchor_ratio - 0.3) * 100) + 15);
     const downgraded = t.anchor_attribution === 'all_referrers_downgraded';
     rows.push({
       label: 'Ancre dominante',
