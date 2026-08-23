@@ -30,6 +30,7 @@ import { AISidebarPageWrapper } from "@/components/AISidebarPageWrapper";
 import { FloatingChatBubble } from "@/components/Support/FloatingChatBubble";
 import { SurveyModal } from "@/components/Survey/SurveyModal";
 import NotFound from "@/pages/NotFound";
+import { SITEWIDE_JSONLD } from "@/lib/seo/organization";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { initGlobalErrorListener } from "@/lib/globalErrorListener";
 
