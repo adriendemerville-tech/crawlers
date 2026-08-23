@@ -62,6 +62,38 @@ export interface BacklinkToxicity {
    * pèse lourd, la pénalité d'ancre est minorée au lieu d'être affirmée.
    */
   anchor_attribution: 'all_referrers' | 'all_referrers_downgraded';
+  /** Dofollow lu comme facteur contextuel, jamais comme preuve autonome. */
+  dofollow_context?: DofollowContext | null;
+  /** Autorité apparente vs autorité indépendante estimée (simulation indicative). */
+  independence?: IndependenceEstimate | null;
+}
+
+/**
+ * Le caractère dofollow d'un lien est normal en SEO. Il n'est retenu comme
+ * facteur aggravant que lorsqu'il est corroboré par d'autres anomalies
+ * structurelles mesurées sur le profil (faisceau d'indices).
+ */
+export interface DofollowContext {
+  ratio: number;
+  level: 'faible' | 'a_surveiller' | 'aggravant';
+  /** Points effectivement ajoutés au score de toxicité (0, 3 ou 8). */
+  points: number;
+  /** Anomalies mesurées qui corroborent la lecture — jamais des suppositions. */
+  corroborating: string[];
+  sitewide_suspected: boolean;
+  note: string;
+}
+
+/** Volumétrie apparente ramenée à une volumétrie de recommandations plausibles. */
+export interface IndependenceEstimate {
+  apparent_backlinks: number;
+  own_network_backlinks: number;
+  repeated_third_party_backlinks: number;
+  estimated_independent_backlinks: number;
+  estimated_independent_domains: number;
+  /** Part de la volumétrie dépendante du réseau propre ou de la répétition (0-1). */
+  dependency_share: number;
+  method: string;
 }
 
 /** Nature d'un domaine référent — trois compartiments mesurés séparément. */
