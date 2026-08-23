@@ -731,6 +731,15 @@ const Index = () => {
           </LazyVisible>
         </div>
 
+        {/* Place d'échange de backlinks */}
+        <LazyVisible minHeight="420px">
+          <Suspense fallback={<SectionSkeleton />}>
+            <div className="cv-auto"><MarketplaceTeaserSection /></div>
+          </Suspense>
+        </LazyVisible>
+
+
+
         {/* Breathing Spiral — Canvas + framer-motion (gros chunk) */}
         <LazyVisible minHeight="600px">
           <Suspense fallback={<SectionSkeleton />}>
