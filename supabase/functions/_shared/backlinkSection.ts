@@ -270,8 +270,13 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
         : `<p style="font-size:12px;color:#6b7280;margin:0;">Aucune anomalie structurelle corroborante mesurée : le ratio dofollow n’ajoute aucun point.</p>`}`
     : '';
 
-  const sitewideHtml = `<p style="font-size:12.5px;color:#374151;margin:0 0 8px 0;line-height:1.7;">
-      La volumétrie brute doit être interprétée avec prudence. Si un site place un lien dans son pied de page et que ce pied de page est présent sur 1 300 pages, l’outil comptabilise environ 1 300 backlinks — mais il ne s’agit pas de 1 300 recommandations éditoriales indépendantes : c’est une seule relation entre deux sites, répétée techniquement.
+  // Pédagogie utile seulement quand la volumétrie dépasse nettement le nombre de
+  // domaines (donc quand la répétition est plausible) ou qu'un sitewide est suspecté.
+  const linksPerDomain = a.referring_domains > 0 ? a.backlinks_total / a.referring_domains : 0;
+  const sitewideRelevant = Boolean(t?.dofollow_context?.sitewide_suspected) || linksPerDomain >= 5;
+  const sitewideHtml = sitewideRelevant
+    ? `<p style="font-size:12.5px;color:#374151;margin:0 0 8px 0;line-height:1.7;">
+      La volumétrie brute doit être interprétée avec prudence. Sur ce domaine, on compte en moyenne ${linksPerDomain.toFixed(1)} liens par domaine référent. Si un site place un lien dans son pied de page et que ce pied de page est présent sur des centaines de pages, l’outil comptabilise autant de backlinks — mais il ne s’agit pas d’autant de recommandations éditoriales indépendantes : c’est une seule relation entre deux sites, répétée techniquement.
     </p>
     <ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.7;">
       <li>liens réellement éditoriaux et contextuels ;</li>
@@ -279,7 +284,9 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
       <li>liens de navigation et liens issus de templates ;</li>
       <li>liens de domaines indépendants ;</li>
       <li>liens d’un réseau contrôlé ou fortement apparenté.</li>
-    </ul>`;
+    </ul>`
+    : '';
+
 
   const ind = t?.independence ?? null;
   const independenceHtml = ind
