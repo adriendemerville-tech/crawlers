@@ -268,14 +268,15 @@ export interface GeoSubSignalReport {
   authority: GeoFamilyScore;
   /** Pilier B — accessibilité machine (22 pts, page). */
   accessibility: GeoFamilyScore;
-  /** Pilier C — exploitabilité contenu (53 pts, page). */
+  /** Pilier C — exploitabilité contenu (53 → 58 pts, page). */
   content: GeoFamilyScore;
   /** 0-100 : moyenne pondérée des piliers mesurés — reconstitue le GEO lisible. */
   geo_score: number | null;
-  /** Poids en points des trois piliers (barème fixe, somme = 100). */
+  /** Poids en points des trois piliers à la date de l’audit (somme = 100). */
   pillar_points: Record<GeoPillar, number>;
-  /** Conservé pour compatibilité : tous les piliers sont à poids constant. */
+  /** Tendance du barème : autorité constante, accessibilité décroissante, contenu croissant. */
   pillar_trend: Record<GeoPillar, GeoPillarTrend>;
+
   /** Date de référence de la pondération (ISO). */
   weight_date: string;
   gap: number | null;
