@@ -8,10 +8,12 @@ import {
   computeAuthorityScore,
   computeBacklinkDistribution,
   computeBacklinkToxicity,
+  computeOwnNetworkHygiene,
   extractAnchorsFromEndpoint,
   extractDistribution,
   extractLinkedPages,
   normalizeDomainRank,
+  segmentReferringDomains,
 } from './domainAuthority.ts';
 
 Deno.test('normalizeDomainRank : courbe 0-1000 → 0-95', () => {
