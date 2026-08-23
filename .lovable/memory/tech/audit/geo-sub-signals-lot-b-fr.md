@@ -1,36 +1,54 @@
 ---
-name: GEO en 10 sous-signaux (Lot B)
-description: Décomposition GEO en 2 familles (compréhension machine / autorité perçue), verdict d'écart, et verdict pilier/satellite sur la cannibalisation
+name: GEO en 3 piliers à pondération décroissante
+description: GEO décomposé en 10 sous-signaux / 3 piliers (autorité 25 constant, accessibilité 25→10 décroissant, contenu 50→65 croissant), demi-vie 18 mois ancrée 2026-08, score toujours sur 100
 type: feature
 ---
 
-# Lot B — GEO en 10 sous-signaux + verdict pilier/satellite
+# GEO en 3 piliers à pondération décroissante (remplace le Lot B 2 familles)
 
 ## `_shared/geoSubSignals.ts`
-Un score GEO global masque deux causes opposées : il est donc décomposé en 10 sous-signaux, 2 familles de 50 points, sans recouvrement.
+Un score GEO global masque trois réalités opposées. Il est décomposé en
+**10 sous-signaux répartis en 3 piliers** dont les poids évoluent dans le temps
+pour refléter la maturité du marché GEO (le parc de sites se rénove).
 
-**Compréhension machine (50)** : `bot_accessibility` (14, mesuré — coquille JS / absences bot-only), `structured_data_quality` (12, mesuré), `content_quotability` (10, testé), `answer_formatting` (8, déduit — H1/FAQ/listes/volume agrégés au crawl), `content_freshness` (6, mesuré).
+**Pilier A — Autorité domaine (25, constant, mutualisé)** : `brand_authority` (14),
+`serp_presence` (11).
 
-**Autorité perçue (50)** : `brand_authority` (14, mesuré), `serp_presence` (12, mesuré), `knowledge_graph_signals` (10, testé), `self_citation_signals` (8, déduit), `person_authority` (6, déduit — voix experte nommée=55, corroborée hors site=90).
+**Pilier B — Accessibilité machine (25 → 10, décroissant)** : `bot_accessibility`
+(14), `structured_data_quality` (12), `content_freshness` (6). Poids ÉLEVÉ
+aujourd'hui car beaucoup de concurrents sont mal crawlables ou trop lents ;
+avantage **transitoire** qui se commoditise → décroît.
 
-Règles :
-- Un sous-signal non mesuré est exclu du numérateur ET du dénominateur de sa famille (`coverage` indique le poids réellement couvert). Idem pour les composantes de `answer_formatting` : une colonne non collectée au crawl n'est jamais lue comme une absence de balisage.
-- `geo_score` lisible = moyenne des deux familles mesurées.
-- Verdicts d'écart (seuil 20 points) : `authority_lag` (site lisible, marque peu crédible → levier hors-site), `comprehension_lag` (marque crédible, site mal lisible → levier site), `both_low` (< 40 partout → structurer d'abord, notoriété ensuite), `aligned` / `aligned_strong`, `unknown`.
-- 3 leviers prioritaires déduits par `poids × (100 − valeur)`.
-- 0 appel LLM : réagrégation de signaux déjà mesurés ou testés ailleurs.
+**Pilier C — Exploitabilité contenu (50 → 65, croissant)** : `content_quotability`
+(10), `answer_formatting` (8), `knowledge_graph_signals` (10),
+`self_citation_signals` (8), `person_authority` (6). Levier durable → monte.
+(`knowledge_graph_signals` déplacé de l'autorité ici : levier actionnable en page.)
 
-## `_shared/pillarSatelliteVerdict.ts`
-Un « risque de cannibalisation /a ↔ /b » ne dit pas quelle page garder. Chaque groupe reçoit un verdict unique, autorité interne = `seo_score + min(40, mots/50) + 3×liens entrants − 2×profondeur` (même formule que `cannibalizationClusters.ts`, pour éviter deux classements contradictoires) :
-- `pilier_net` (dominance ≥ 1,25) → 301 des satellites vers le pilier.
-- `pilier_conteste` (dominance < 1,25) → arbitrage métier explicite puis fusion.
-- `sans_pilier` (meilleure page < 35 pts) → refonte en une page de référence.
-- `satellites_legitimes` (intentions déclarées toutes distinctes, ≤ 3 pages) → pas de 301, différenciation des titres et maillage avec ancres variées.
+## Pondération temporelle (déterministe)
+- Demi-vie **18 mois**, ancrée au **2026-08-01** (`geoElapsedMonths`).
+- `geoPillarTotals(now)` : `authority=25`, `accessibility=10+15×0,5^(t/18)`,
+  `content=100−25−accessibility`. **La somme vaut toujours 100.**
+- `geoSignalWeightsAt(now)` : poids relatifs fixes par pilier, mis à l'échelle
+  pour que chaque pilier totalise son poids courant. Deux audits du même jour
+  donnent les mêmes poids (`inputs.now` injectable pour tests/re-rendus datés).
 
-`verdictsFromCocoonRisks(risks, nodes)` recolle les métriques des nœuds du graphe aux URL des risques du cocon.
+## Règles de calcul
+- Un sous-signal non mesuré est exclu du numérateur ET du dénominateur de son
+  pilier (`coverage` = poids réellement couvert).
+- `geo_score` = moyenne **pondérée** des piliers mesurés par leur poids courant.
+- Verdict d'écart (seuil 20) entre le **bloc page** (accessibilité + contenu) et
+  l'**autorité domaine** : `authority_lag` / `comprehension_lag` / `both_low` /
+  `aligned` / `aligned_strong` / `unknown`.
+- Plafonds de cohérence conservés : sous-signaux (quotability ≤15, formatting ≤25,
+  structured_data ≤40) + plafond du bloc page à 30 en cas de coquille JS / texte
+  quasi nul.
+- 3 leviers prioritaires déduits par `poids × (100 − valeur)`. 0 appel LLM.
 
 ## Intégration Marina
-- Bloc « Le GEO en 10 sous-signaux » inséré dans la section stratégique, juste avant le bloc de visibilité IA (paramètre `geoSubSignalsHtml`).
-- Section cocon : le bloc pilier/satellite remplace la liste brute des risques ; repli sur la liste si les métriques de nœuds manquent.
-- `buildMultiPageCrawlSnapshot` expose `answerFormatting` (pages avec H1 / FAQ / listes, volume moyen).
-- Charte respectée : violet #6d28d9, or #8a6d1f, noir, gris ; bordures sans fond plein, aucun emoji, aucun bleu IA.
+- Bloc « Le GEO en 10 sous-signaux, 3 piliers » dans la section stratégique :
+  3 blocs (score/100, points du jour, tendance), témoin « Pondération au <date> ».
+- Fiches page : 3 mini-cells piliers sous le score GEO (`geoPillars`) pour
+  restaurer la variance entre URLs — seule l'autorité domaine (25) est mutualisée,
+  accessibilité + contenu (75) varient par page.
+- Charte respectée : violet #6d28d9, or #8a6d1f, noir, gris ; bordures sans fond
+  plein, aucun emoji, aucun bleu IA.
