@@ -178,6 +178,9 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
             </tbody>
           </table>`
         : `<p style="font-size:12.5px;color:#374151;margin:0;">Aucun seuil de manipulation n’est franchi sur l’échantillon mesuré : le score reste à ${t.toxicity_score}/100. Les critères testés sont l’ancre dominante (&gt; 30 %), les ancres non naturelles (&gt; 25 %), l’autorité moyenne des référents (&lt; 15/100), les liens par domaine (≥ 25), les liens cassés (≥ 10 %), un ratio dofollow ≥ 98 % et la présence de référents hors-sujet.</p>`}
+      ${t.own_network_domains?.length
+        ? `<div style="font-size:12.5px;color:#374151;margin-top:10px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;"><strong>Réseau propre exclu du calcul :</strong> ${t.own_network_domains.slice(0, 8).map((d) => esc(d)).join(', ')}. Ces domaines portent la même racine de marque sur une autre extension (déclinaisons pays) : le maillage inter-pays n’est pas un signal de manipulation et ces domaines ne doivent jamais figurer dans un fichier de désaveu.</div>`
+        : ''}
       <div style="font-size:12.5px;color:#374151;margin-top:10px;"><strong>Lecture :</strong> ${esc(t.recommendation)}</div>`
     : '<p style="font-size:12.5px;color:#6b7280;margin:0;">Échantillon insuffisant pour calculer un score de toxicité : aucun verdict n’est émis.</p>';
 
