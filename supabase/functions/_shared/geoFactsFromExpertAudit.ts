@@ -339,7 +339,7 @@ export function geoFactsFromExpertAudit(
   const words = expert.scores?.semantic?.wordCount ?? expert.htmlAnalysis?.wordCount ?? null;
   const ratioRaw = expert.htmlAnalysis?.textRatioPct ?? expert.htmlAnalysis?.textRatio ?? null;
   const textRatioPct = typeof ratioRaw === 'number' && Number.isFinite(ratioRaw)
-    ? (ratioRaw > 0 && ratioRaw <= 1 ? ratioRaw * 100 : ratioRaw)
+    ? Math.round((ratioRaw > 0 && ratioRaw <= 1 ? ratioRaw * 100 : ratioRaw) * 10) / 10
     : null;
 
   const inputs: GeoSignalInputs = {
