@@ -4997,7 +4997,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               label: detectedLang === 'en' ? 'Domain authority' : detectedLang === 'es' ? 'Autoridad de dominio' : 'Autorité domaine',
               score: geoSubSignalsReport?.authority?.score ?? null,
               points: Number(geoSubSignalsReport?.pillar_points?.authority ?? 25),
-              trend: detectedLang === 'en' ? 'fixed 25 pts' : 'poids fixe 25 pts',
+              trend: detectedLang === 'en' ? 'constant 25 pts' : 'constant 25 pts',
             },
             {
               key: 'accessibility',
