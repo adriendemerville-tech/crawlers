@@ -40,12 +40,12 @@ const MentionsLegales = () => {
                 {t3(language, '1. Éditeur du site', '1. Website Publisher', '1. Editor del sitio')}
               </h2>
               <div className="bg-muted/50 rounded-lg p-6 space-y-2 text-muted-foreground">
-                <p><strong className="text-foreground">{t3(language, 'Raison sociale :', 'Company name:', 'Razón social:')}</strong> Adrien de Volontat (Entrepreneur individuel)</p>
-                <p><strong className="text-foreground">{t3(language, 'Nom commercial :', 'Trade name:', 'Nombre comercial:')}</strong> Crawlers</p>
-                <p><strong className="text-foreground">SIRET :</strong> 992 399 667 00011</p>
+                <p><strong className="text-foreground">{t3(language, 'Société éditrice :', 'Publishing company:', 'Empresa editora:')}</strong> Voluntas Novare — SASU</p>
+                <p><strong className="text-foreground">{t3(language, 'Siège social / Adresse postale :', 'Registered office / Postal address:', 'Sede social / Dirección postal:')}</strong> {t3(language, 'Adresse de la société éditrice', 'Address of the publishing company', 'Dirección de la empresa editora')}</p>
+                <p><strong className="text-foreground">SIREN / SIRET :</strong> {t3(language, 'Numéro SIREN de la société éditrice', 'SIREN number of the publishing company', 'Número SIREN de la empresa editora')}</p>
                 <p><strong className="text-foreground">{t3(language, 'Code APE :', 'APE Code:', 'Código APE:')}</strong> 6201Z — Programmation informatique</p>
                 <p><strong className="text-foreground">{t3(language, 'Directeur de la publication :', 'Publication Director:', 'Director de la publicación:')}</strong> Adrien de Volontat</p>
-                <p><strong className="text-foreground">{t3(language, 'Responsable du traitement des données :', 'Data Controller:', 'Responsable del tratamiento de datos:')}</strong> Adrien de Volontat — <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
+                <p><strong className="text-foreground">{t3(language, 'Responsable du traitement des données :', 'Data Controller:', 'Responsable del tratamiento de datos:')}</strong> Voluntas Novare — SASU — <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
                 <p><strong className="text-foreground">{t3(language, 'URL du site :', 'Website URL:', 'URL del sitio:')}</strong> <a href="https://crawlers.fr" className="text-primary hover:underline">https://crawlers.fr</a></p>
                 <p><strong className="text-foreground">Email :</strong> <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
               </div>
@@ -100,9 +100,9 @@ const MentionsLegales = () => {
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'L\'ensemble du contenu de ce site (textes, images, graphismes, logo, icônes, sons, logiciels, etc.) est la propriété exclusive de Crawlers AI ou de ses partenaires. Toute reproduction, représentation, modification, publication, adaptation de tout ou partie des éléments du site, quel que soit le moyen ou le procédé utilisé, est interdite, sauf autorisation écrite préalable.',
-                  'All content on this site (texts, images, graphics, logos, icons, sounds, software, etc.) is the exclusive property of Crawlers AI or its partners. Any reproduction, representation, modification, publication, adaptation of all or part of the elements of the site, whatever the means or process used, is prohibited, except with prior written authorization.',
-                  'Todo el contenido de este sitio (textos, imágenes, gráficos, logotipos, iconos, sonidos, software, etc.) es propiedad exclusiva de Crawlers AI o de sus socios. Toda reproducción, representación, modificación, publicación o adaptación de todo o parte de los elementos del sitio, cualquiera que sea el medio o procedimiento utilizado, está prohibida, salvo autorización escrita previa.'
+                  'Crawlers.fr, sa marque, son domaine et ses technologies sont la propriété exclusive de la société éditrice Voluntas Novare. L\'ensemble du contenu de ce site (textes, images, graphismes, logo, icônes, sons, logiciels, etc.) est la propriété exclusive de Crawlers.fr / Voluntas Novare ou de ses partenaires. Toute reproduction, représentation, modification, publication, adaptation de tout ou partie des éléments du site, quel que soit le moyen ou le procédé utilisé, est interdite, sauf autorisation écrite préalable.',
+                  'Crawlers.fr, its brand, its domain and its technologies are the exclusive property of the publishing company Voluntas Novare. All content on this site (texts, images, graphics, logos, icons, sounds, software, etc.) is the exclusive property of Crawlers.fr / Voluntas Novare or its partners. Any reproduction, representation, modification, publication, adaptation of all or part of the elements of the site, whatever the means or process used, is prohibited, except with prior written authorization.',
+                  'Crawlers.fr, su marca, su dominio y sus tecnologías son propiedad exclusiva de la empresa editora Voluntas Novare. Todo el contenido de este sitio (textos, imágenes, gráficos, logotipos, iconos, sonidos, software, etc.) es propiedad exclusiva de Crawlers.fr / Voluntas Novare o de sus socios. Toda reproducción, representación, modificación, publicación o adaptación de todo o parte de los elementos del sitio, cualquiera que sea el medio o procedimiento utilizado, está prohibida, salvo autorización escrita previa.'
                 )}
               </p>
             </section>
