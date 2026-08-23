@@ -1090,7 +1090,27 @@ export default function Tarifs() {
             </div>
 
 
+            {/* Place d'échange — revenu de compensation */}
+            <Card className="border-muted">
+              <CardContent className="pt-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {language === 'fr'
+                    ? 'Incluse dans les offres payantes : la place d’échange de backlinks vous permet de céder un emplacement de lien sur vos pages les moins stratégiques, à un prix calculé (5 paliers de 40 € à 350 €, commission de 15 %).'
+                    : 'Included with paid plans: the backlink exchange lets you sell a link slot on your least strategic pages at a computed price (5 tiers from €40 to €350, 15% commission).'}
+                </p>
+                <Link
+                  to="/marketplace-backlinks"
+                  className="mt-3 inline-block text-sm font-medium underline hover:no-underline"
+                >
+                  {language === 'fr'
+                    ? 'Comprendre la place d’échange de backlinks'
+                    : 'Learn about the backlink exchange'}
+                </Link>
+              </CardContent>
+            </Card>
+
             {/* Proof: case study */}
+
             <Card className="border-muted">
               <CardContent className="pt-6 text-center">
                 <p className="text-sm text-muted-foreground">
