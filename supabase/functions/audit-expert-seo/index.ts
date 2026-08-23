@@ -2376,29 +2376,41 @@ Deno.serve(handleRequest(async (req) => {
     const rawTotalScore = performanceScore + technicalScore + semanticScore + aiReadyScore + securityScore + brokenLinksBonus;
     let totalScore = Math.round(Math.max(0, rawTotalScore) * smartFetchResult.selfAudit.reliabilityScore);
 
-    // Plafond global — désormais réservé aux défauts réellement bloquants.
+    // Plafond global — plus aucun score par défaut.
     //
-    // Un LCP dégradé est déjà payé sur son axe (abattement progressif ci-dessus) :
-    // le rejouer en plafond global revenait à sanctionner deux fois le même fait
-    // et à écraser toutes les pages lentes sur la même note (130/200 = 65).
-    // Ne subsistent donc que :
-    //   - contenu non extractible (`technical`) : les robots ne lisent rien → 130 ;
-    //   - mesures indisponibles (`estimated`) : la note n'est pas vérifiée → 150 ;
-    //   - LCP « poor » confirmé (> 4 s) : simple interdiction de la zone
-    //     « excellent » (170/200), sans écrasement de la variance.
-    const contentGate = scoreGates.some((g) => g.axis === 'technical');
+    // Chaque fait mesuré est désormais payé une seule fois, sur son axe, par un
+    // abattement proportionnel (LCP sur la performance, texte non extractible
+    // sur le technique et la sémantique). Le plafond global ne sert plus qu'à
+    // interdire la zone « excellent » quand un défaut sérieux est confirmé, et
+    // ce seuil est lui-même graduel : il descend avec la sévérité mesurée, il ne
+    // colle plus toutes les pages sur la même note.
     const estimatedGate = scoreGates.some((g) => g.axis === 'estimated');
     const poorLcp = lcpMsMeasured !== null && lcpMsMeasured > 4000
       && scoreGates.some((g) => g.axis === 'performance');
-    const totalCap = contentGate ? 130 : (estimatedGate ? 150 : (poorLcp ? 170 : null));
+
+    const caps: Array<{ cap: number; reason: string }> = [];
+    if (textStarved) {
+      // 170 à sévérité 0,45 → 150 à sévérité 1. Le contenu non extractible reste
+      // le défaut le plus grave, mais il ne fixe plus la note.
+      const cap = Math.round(170 - 20 * ((starvationSeverity - 0.45) / 0.55));
+      caps.push({
+        cap,
+        reason: 'Texte servi aux robots très insuffisant : la zone « excellent » reste fermée tant que le contenu n’est pas lisible sans JS',
+      });
+    }
+    if (estimatedGate) {
+      caps.push({ cap: 150, reason: 'Mesures de performance indisponibles : la note n’est pas vérifiée, le score global reste hors de la zone « excellent »' });
+    }
+    if (poorLcp) {
+      caps.push({ cap: 170, reason: 'LCP mobile « poor » confirmé : la zone « excellent » reste fermée tant que la cible n’est pas atteinte' });
+    }
+
+    const strictest = caps.length ? caps.reduce((a, b) => (b.cap < a.cap ? b : a)) : null;
+    const totalCap = strictest?.cap ?? null;
     if (totalCap !== null && totalScore > totalCap) {
       scoreGates.push({
         axis: 'total',
-        reason: contentGate
-          ? 'Contenu non extractible : le score global est plafonné hors de la zone « excellent »'
-          : estimatedGate
-            ? 'Mesures de performance indisponibles : le score global reste hors de la zone « excellent »'
-            : 'LCP mobile « poor » confirmé : la zone « excellent » reste fermée tant que la cible n’est pas atteinte',
+        reason: strictest!.reason,
         evidence: `${totalScore}/200 avant plafond → ${totalCap}/200 (soit −${totalScore - totalCap} points)`,
         pointsLost: totalScore - totalCap,
         measured: `${totalScore}/200`,
@@ -2407,6 +2419,7 @@ Deno.serve(handleRequest(async (req) => {
 
       totalScore = totalCap;
     }
+
 
     if (scoreGates.length) {
       console.log(`[Audit-Expert-SEO] 🚧 ${scoreGates.length} plafond(s) de cohérence appliqué(s): ${scoreGates.map((g) => g.axis).join(', ')}`);
