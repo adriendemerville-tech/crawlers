@@ -412,7 +412,7 @@ export function buildPageVerdictHTML(
             const pts = (Number(s.weight) * Number(s.value)) / 100;
             return `<tr style="border-top:1px solid #f3f4f6;">
           <td style="padding:3px 6px 3px 0;">${esc(s.label)}</td>
-          <td style="padding:3px 6px;text-align:right;color:#6b7280;">${Number(s.weight)}</td>
+          <td style="padding:3px 6px;text-align:right;color:#6b7280;">${round1(Number(s.weight))}</td>
           <td style="padding:3px 6px;text-align:right;">${Math.round(Number(s.value))}/100</td>
           <td style="padding:3px 0 3px 6px;text-align:right;font-weight:600;">${pts.toFixed(1)}</td>
         </tr>`;
