@@ -163,8 +163,8 @@ Deno.test('projection : TTFB lent décote l’accessibilité robots sans changer
   assert(vFast !== null && vSlow !== null);
   assertEquals(vSlow, (vFast as number) - 25);
   // Le barème des piliers reste inchangé.
-  const wFast = buildGeoSubSignals(fast.inputs).accessibility.weight;
-  const wSlow = buildGeoSubSignals(slow.inputs).accessibility.weight;
+  const wFast = buildGeoSubSignals(fast.inputs).weights.accessibility;
+  const wSlow = buildGeoSubSignals(slow.inputs).weights.accessibility;
   assertEquals(wFast, wSlow);
 });
 
