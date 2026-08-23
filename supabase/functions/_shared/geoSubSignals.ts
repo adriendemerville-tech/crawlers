@@ -640,10 +640,9 @@ function pillarBlock(
   lang?: string,
 ): string {
   const pts = report.pillar_points[key];
-  const trend = trendText(key, lang);
   const introText = lang === 'en'
-    ? `${intro} ${f.measured}/${f.total} sub-signals measured (${f.coverage} % of weight). Weight ${pts} pts today — ${trend}.`
-    : `${intro} ${f.measured}/${f.total} sous-signaux mesurés (${f.coverage} % du poids). Poids ${pts} pts aujourd’hui — ${trend}.`;
+    ? `${intro} ${f.measured}/${f.total} sub-signals measured (${f.coverage} % of weight). Weight ${pts} pts out of 100.`
+    : `${intro} ${f.measured}/${f.total} sous-signaux mesurés (${f.coverage} % du poids). Poids ${pts} pts sur 100.`;
   return `<div style="flex:1 1 280px;border:1px solid #e5e7eb;border-left:3px solid ${PILLAR_ACCENT[key]};border-radius:8px;padding:12px 14px;background:#ffffff;">
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
       <h4 style="font-size:13px;font-weight:600;color:#111827;margin:0;">${esc(f.label)}</h4>
