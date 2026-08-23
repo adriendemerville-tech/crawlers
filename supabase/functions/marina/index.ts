@@ -4347,7 +4347,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           if (crawlPagesError) {
             console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
           } else if (crawlPages?.length) {
-            crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain);
+            crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain, url);
 
             // Doublon d'hôte (www vs apex) : preuve directe dans les pages
             // crawlées + sonde HTTP de 2 requêtes pour savoir si une 301 existe.
