@@ -782,10 +782,21 @@ export default function Marina() {
             cancelled = true;
             return;
           }
-          setProgress(data.progress || 0);
-          if (data.scan_mode?.mode) setActiveScanMode(data.scan_mode as ActiveScanMode);
-          if (typeof data.pages_crawled === 'number') setScanPagesCrawled(data.pages_crawled);
-          setPhase(data.phase || t.phases.inProgress);
+          if (data.status === 'queued') {
+            // Job non démarré : on n'affiche ni % ni pages (valeurs héritées trompeuses)
+            setQueuePosition(typeof data.queue_position === 'number' ? data.queue_position : 1);
+            setProgress(0);
+            setScanPagesCrawled(null);
+            setActiveScanMode(null);
+            setPhase('');
+          } else {
+            setQueuePosition(null);
+            setProgress(data.progress || 0);
+            if (data.scan_mode?.mode) setActiveScanMode(data.scan_mode as ActiveScanMode);
+            if (typeof data.pages_crawled === 'number') setScanPagesCrawled(data.pages_crawled);
+            setPhase(data.phase || t.phases.inProgress);
+          }
+
         } catch {}
         await new Promise(r => setTimeout(r, 4000));
       }
