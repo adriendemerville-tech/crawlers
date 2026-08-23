@@ -1049,6 +1049,11 @@ function pillarTableHTML(report: GeoSubSignalReport, lang?: string): string {
       return f.score === null ? acc : acc + (f.score / 100) * report.pillar_points[key];
     }, 0);
 
+  const cal = report.citation_calibration;
+  const prePotential = cal.applied && cal.pre_score !== null ? cal.pre_score : report.geo_score;
+
+
+
   return `<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;margin:0 0 14px;background:#ffffff;">
     <thead>
       <tr style="background:#f9fafb;">
