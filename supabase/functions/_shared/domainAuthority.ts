@@ -318,6 +318,140 @@ export function detectOwnNetworkDomains(
   return Array.from(new Set(out));
 }
 
+const norm = (h: string) => String(h || '').toLowerCase().replace(/^www\./, '').replace(/\/.*$/, '');
+
+/**
+ * Annuaires, agrégateurs et plateformes de publication ouverte. Ce sont des
+ * liens tiers (ils comptent donc dans la toxicité), mais on les isole pour que
+ * le lecteur voie d'où vient réellement son profil.
+ */
+const DIRECTORY_PATTERNS: RegExp[] = [
+  /\b(annuaire|directory|listing|pagesjaunes|yellowpages|kompass|societe|verif|infogreffe|bilansgratuits)\b/i,
+  /(pages-?jaunes|118000|justacote|hotfrog|cylex|opendi|tuugo|nicelocal|europages|manageo|bloomberg-?directory)/i,
+  /\b(blogspot|wordpress|wixsite|weebly|jimdo|over-?blog|medium|tumblr|webnode|strikingly)\b/i,
+  /\b(forum|annonces|petites-?annonces|classifieds)\b/i,
+];
+
+function isDirectoryLike(host: string): boolean {
+  return DIRECTORY_PATTERNS.some((re) => re.test(host));
+}
+
+function statsFor(
+  compartment: ReferrerCompartment,
+  items: { domain: string; rank: number; backlinks: number }[],
+  sampled: number,
+): CompartmentStats {
+  const ranks = items.map((i) => normalizeDomainRank(i.rank));
+  return {
+    compartment,
+    domains: items.length,
+    backlinks: items.reduce((s, i) => s + (i.backlinks || 0), 0),
+    share_domains: sampled > 0 ? Math.round((items.length / sampled) * 1000) / 1000 : 0,
+    avg_rank: ranks.length ? Math.round((ranks.reduce((s, r) => s + r, 0) / ranks.length) * 10) / 10 : 0,
+    top_domains: [...items]
+      .sort((a, b) => (b.backlinks || 0) - (a.backlinks || 0))
+      .slice(0, 8)
+      .map((i) => norm(i.domain)),
+  };
+}
+
+/**
+ * Segmente l'échantillon de référents en trois compartiments.
+ *
+ * La classification « à moi » suit l'ordre preuves d'abord :
+ *   1. `verifiedOwnDomains` — propriété prouvée (Search Console, GMB, sites
+ *      suivis, déclaration client) ;
+ *   2. racine de marque commune — simple **suggestion**, marquée `suspected`,
+ *      jamais présentée comme un fait.
+ */
+export function segmentReferringDomains(
+  auditedDomain: string,
+  sample: { domain: string; rank: number; backlinks: number }[],
+  verifiedOwnDomains: string[] = [],
+): BacklinkSegmentation {
+  const items = (sample || []).filter((d) => d?.domain).map((d) => ({ ...d, domain: norm(d.domain) }));
+  const verified = new Set(verifiedOwnDomains.map(norm).filter(Boolean));
+  const suspected = new Set(detectOwnNetworkDomains(auditedDomain, items).map(norm));
+
+  const own: typeof items = [];
+  const dir: typeof items = [];
+  const third: typeof items = [];
+  const ownDetail: BacklinkSegmentation['own_network_domains'] = [];
+
+  for (const it of items) {
+    if (verified.has(it.domain)) {
+      own.push(it);
+      ownDetail.push({ domain: it.domain, source: 'verified', backlinks: it.backlinks || 0 });
+    } else if (suspected.has(it.domain)) {
+      own.push(it);
+      ownDetail.push({ domain: it.domain, source: 'suspected', backlinks: it.backlinks || 0 });
+    } else if (isDirectoryLike(it.domain)) {
+      dir.push(it);
+    } else {
+      third.push(it);
+    }
+  }
+
+  const hasVerified = ownDetail.some((d) => d.source === 'verified');
+  const hasSuspected = ownDetail.some((d) => d.source === 'suspected');
+  const ownSource: BacklinkSegmentation['own_network_source'] = hasVerified && hasSuspected
+    ? 'mixed'
+    : hasVerified ? 'verified' : hasSuspected ? 'brand_token_suspected' : 'none';
+
+  return {
+    own_network: statsFor('own_network', own, items.length),
+    directory_platform: statsFor('directory_platform', dir, items.length),
+    third_party_editorial: statsFor('third_party_editorial', third, items.length),
+    own_network_source: ownSource,
+    own_network_domains: ownDetail.sort((a, b) => b.backlinks - a.backlinks),
+    sampled: items.length,
+  };
+}
+
+/**
+ * Hygiène du réseau propre. Verdict actionnable à la source, jamais un désaveu :
+ * le site est contrôlé par le client, donc on corrige le footer et les ancres,
+ * on ne demande rien à Google.
+ */
+export function computeOwnNetworkHygiene(
+  seg: BacklinkSegmentation | null,
+  dominantAnchor: string | null,
+  dominantAnchorRatio: number,
+): OwnNetworkHygiene {
+  const s = seg?.own_network;
+  if (!s || s.domains === 0) {
+    return {
+      domains: 0,
+      backlinks: 0,
+      links_per_domain: 0,
+      sitewide_suspected: false,
+      verdict: 'non_mesure',
+      signals: [],
+      recommendation:
+        "Aucun domaine du réseau propre détecté dans l'échantillon : rien à corriger à la source sur ce périmètre.",
+    };
+  }
+  const lpd = s.domains > 0 ? Math.round((s.backlinks / s.domains) * 10) / 10 : 0;
+  const sitewide = lpd >= 10;
+  const signals: string[] = [
+    `${s.domains} domaine${s.domains > 1 ? 's' : ''} du réseau propre (${s.top_domains.slice(0, 6).join(', ')})`,
+    `${s.backlinks} liens, soit ${lpd} liens par domaine`,
+  ];
+  if (sitewide) signals.push(`empreinte sitewide probable : ${lpd} liens par domaine du réseau (footer ou en-tête répliqué)`);
+  if (dominantAnchorRatio >= 0.3 && dominantAnchor) {
+    signals.push(
+      `ancre dominante « ${dominantAnchor} » à ${Math.round(dominantAnchorRatio * 100)} % — non rattachable domaine par domaine par la source, à vérifier d'abord sur le réseau propre`,
+    );
+  }
+  const verdict: OwnNetworkHygiene['verdict'] = sitewide || dominantAnchorRatio >= 0.3 ? 'a_corriger_a_la_source' : 'sain';
+  const recommendation = verdict === 'a_corriger_a_la_source'
+    ? "Ne pas désavouer : ces domaines vous appartiennent. Corriger à la source — sortir les liens du footer répliqué pour les placer dans du contenu contextuel, et varier ou neutraliser les ancres exactes (marque, nom de pays, URL nue) plutôt que de répéter la même."
+    : 'Maillage inter-pays cohérent : liens peu nombreux par domaine et ancres non saturées. Aucune action, et en aucun cas un désaveu.';
+  return { domains: s.domains, backlinks: s.backlinks, links_per_domain: lpd, sitewide_suspected: sitewide, verdict, signals, recommendation };
+}
+
+
+
 /**
  * Toxicité du profil de liens — 100 % déterministe.
  *
