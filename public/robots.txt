@@ -218,6 +218,81 @@ User-agent: DeepSeekBot
 Allow: /
 Disallow:
 
+# Bots IA additionnels (2026) — même politique : accès total, aucun
+# rate-limit, aucune règle WAF, aucun challenge JS. Un 429 ou un
+# challenge sur ces agents équivaut à un Disallow.
+User-agent: GoogleOther
+Allow: /
+Disallow:
+
+User-agent: Google-CloudVertexBot
+Allow: /
+Disallow:
+
+User-agent: Google-Firebase
+Allow: /
+Disallow:
+
+User-agent: Ai2Bot
+Allow: /
+Disallow:
+
+User-agent: Ai2Bot-Dolma
+Allow: /
+Disallow:
+
+User-agent: Diffbot
+Allow: /
+Disallow:
+
+User-agent: omgili
+Allow: /
+Disallow:
+
+User-agent: omgilibot
+Allow: /
+Disallow:
+
+User-agent: Timpibot
+Allow: /
+Disallow:
+
+User-agent: ImagesiftBot
+Allow: /
+Disallow:
+
+User-agent: Kangaroo Bot
+Allow: /
+Disallow:
+
+User-agent: PanguBot
+Allow: /
+Disallow:
+
+User-agent: Webzio-Extended
+Allow: /
+Disallow:
+
+User-agent: SearchGPT
+Allow: /
+Disallow:
+
+User-agent: MistralAI-SearchBot
+Allow: /
+Disallow:
+
+User-agent: Claude-SearchBot
+Allow: /
+Disallow:
+
+User-agent: Claude-Web
+Allow: /
+Disallow:
+
+User-agent: YandexAdditional
+Allow: /
+Disallow:
+
 # --------------------------------------------
 # Outils SEO concurrents → /app/ bloqué (zone privée
 # de pilotage produit, pas pertinente pour leur index)
@@ -246,6 +321,12 @@ Allow: /
 # Ressources
 # --------------------------------------------
 Sitemap: https://crawlers.fr/sitemap.xml
+
+# Politique d'accès des agents IA, lisible par machine :
+#   https://crawlers.fr/.well-known/ai-crawler-policy.json
+# Engagement explicite : aucun rate-limit, aucun challenge WAF/JS et aucune
+# règle de blocage n'est appliquée aux agents listés ci-dessus. Les réponses
+# non-200 sont normalisées (404 réel + noindex + points d'entrée valides).
 
 # Flux RSS du blog (découverte rapide des nouveaux contenus) :
 #   https://crawlers.fr/rss.xml
