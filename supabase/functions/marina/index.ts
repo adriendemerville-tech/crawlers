@@ -43,6 +43,7 @@ import {
 
 import { verdictsFromCocoonRisks, pillarSatelliteBlockHTML, pageAuthority } from '../_shared/pillarSatelliteVerdict.ts';
 import { buildBacklinkSectionHTML } from '../_shared/backlinkSection.ts';
+import { fetchDomainAuthority } from '../_shared/domainAuthority.ts';
 
 
 
