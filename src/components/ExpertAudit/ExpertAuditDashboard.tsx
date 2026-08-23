@@ -41,6 +41,7 @@ import { AEOScoreCard } from './AEOScoreCard';
 import { StrategicErrorBoundary } from './StrategicErrorBoundary';
 import { TechnicalResultsSection } from './TechnicalResultsSection';
 import { StrategicResultsSection } from './StrategicResultsSection';
+import { GeoPillarsCard } from './GeoPillarsCard';
 import { NextStepFloatingButton } from './NextStepFloatingButton';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
@@ -1527,6 +1528,8 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
           {auditMode === 'technical' && (
             <StrategicErrorBoundary onReset={handleNewAudit}>
               <TechnicalResultsSection result={result} url={url} t={t} onReportClick={handleReportButtonClick} />
+              <GeoPillarsCard technicalResult={technicalResult ?? result} strategicResult={strategicResult} />
+
               <NextStepFloatingButton
                 nextStepLabel={language === 'en' ? 'Next: AI Visibility Audit' : language === 'es' ? 'Siguiente: Auditoría GEO' : 'Étape suivante : Audit GEO'}
                 onNextStep={() => handleStrategicAudit()}
@@ -1561,6 +1564,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
                   setTimeout(() => runStrategicAudit(normalizedUrl), 100);
                 }}
               />
+              <GeoPillarsCard technicalResult={technicalResult ?? result} strategicResult={strategicResult} />
               <NextStepFloatingButton
                 nextStepLabel={language === 'en' ? 'Next: Corrective Code' : language === 'es' ? 'Siguiente: Código Correctivo' : 'Étape suivante : Code Correctif'}
                 onNextStep={() => setIsCodeEditorOpen(true)}
