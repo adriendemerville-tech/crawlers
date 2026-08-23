@@ -13,6 +13,8 @@ import type { AuthorityData, BacklinkToxicity } from './domainAuthority.ts';
 const esc = (v: unknown) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const nf = (n: number) => Math.round(n).toLocaleString('fr-FR');
 const pct = (r: number) => `${Math.round((r || 0) * 100)} %`;
+/** Budget rédactionnel serré : on tronque proprement au dernier mot. */
+const clip = (s: string, max: number) => (s.length <= max ? s : `${s.slice(0, s.lastIndexOf(' ', max) > 0 ? s.lastIndexOf(' ', max) : max)}…`);
 
 const VERDICT_LABEL: Record<BacklinkToxicity['verdict'], string> = {
   sain: 'Sain',
