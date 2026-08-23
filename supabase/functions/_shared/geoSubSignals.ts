@@ -742,8 +742,8 @@ export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string
     : '';
 
   const note = lang === 'en'
-    ? `Weighting as of ${report.weight_date}. Machine accessibility (${report.pillar_points.accessibility} pts today) carries weight while many competing sites remain hard to crawl or too slow — it decays toward 10 pts as the site park renovates. Content exploitability (${report.pillar_points.content} pts today) is the durable lever and rises toward 65 pts.`
-    : `Pondération au ${report.weight_date}. L’accessibilité machine (${report.pillar_points.accessibility} pts aujourd’hui) pèse fort tant que beaucoup de sites concurrents restent difficilement crawlables ou trop lents : elle décroît vers 10 pts à mesure que le parc de sites se rénove. L’exploitabilité du contenu (${report.pillar_points.content} pts aujourd’hui) est le levier durable : elle monte vers 65 pts.`;
+    ? `Fixed GEO scale: domain authority 25 pts (mutualized), machine accessibility 22 pts, content exploitability 53 pts. 75 of the 100 pts therefore depend on the audited page itself, and weights are identical across audits — two reports compare directly.`
+    : `Barème GEO fixe : autorité domaine 25 pts (mutualisée), accessibilité machine 22 pts, exploitabilité contenu 53 pts. 75 des 100 pts dépendent donc de la page auditée elle-même, et les poids sont identiques d’un audit à l’autre : deux rapports se comparent directement.`;
 
   return `<div style="margin-top:16px;padding:14px;border:1px solid #e5e7eb;border-radius:8px;background:#ffffff;page-break-inside:avoid;text-align:left;">
     <h4 style="font-size:14px;font-weight:600;color:#111827;margin:0 0 6px;">${lang === 'en' ? 'GEO in 10 sub-signals across 3 pillars' : 'Le GEO en 10 sous-signaux, 3 piliers'}</h4>
