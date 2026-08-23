@@ -602,7 +602,10 @@ export function computeBacklinkToxicity(input: {
   // que s'il est corroboré par d'autres anomalies structurelles mesurées
   // (répétition, empreinte sitewide, concentration, ancres, faible autorité).
   const ownLinksPerDomain = ownDomains > 0 ? Math.round((ownBacklinks / ownDomains) * 10) / 10 : 0;
-  const topReferrerShare = input.backlinksTotal > 0
+  // La concentration n'a de sens qu'à partir d'une volumétrie mesurable : sinon
+  // 2 liens sur 6 suffiraient à fabriquer une « anomalie ».
+  const topReferrerShare = input.backlinksTotal >= 50
+
     ? Math.max(0, ...rawSample.map((d) => (d.backlinks || 0) / input.backlinksTotal))
     : 0;
   const sitewideSuspected = ownLinksPerDomain >= 10 || linksPerDomainAll >= 25;
