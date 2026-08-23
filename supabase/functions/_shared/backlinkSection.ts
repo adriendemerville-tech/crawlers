@@ -141,7 +141,14 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
   const volumetry = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
       ${card(nf(a.backlinks_total), 'Backlinks entrants (externes)', 'liens depuis d’autres domaines, liens internes exclus')}
       ${card(nf(a.referring_domains), 'Domaines référents')}
-      ${card(t ? String(t.links_per_domain) : nf(a.referring_domains ? a.backlinks_total / a.referring_domains : 0), 'Liens par domaine', 'un ratio élevé signe quelques sources massives')}
+      ${card(
+        t ? String(t.links_per_domain_all ?? t.links_per_domain) : nf(a.referring_domains ? a.backlinks_total / a.referring_domains : 0),
+        'Liens par domaine',
+        t && typeof t.links_per_domain_all === 'number' && t.links_per_domain_all !== t.links_per_domain
+          ? `${t.links_per_domain} hors réseau propre — un ratio élevé signe quelques sources massives`
+          : 'un ratio élevé signe quelques sources massives',
+      )}
+
       ${card(`${Math.round(a.dofollow_ratio)} %`, 'Liens dofollow')}
       ${card(nf(a.broken_backlinks), 'Liens entrants cassés')}
       ${card(`${a.authority_score}/100`, 'Authority Score Crawlers', 'estimation propriétaire, plafonnée à 92')}
