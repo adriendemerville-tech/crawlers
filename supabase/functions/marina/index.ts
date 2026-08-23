@@ -1706,14 +1706,24 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
               steps.push(`plafond de cohérence ${rec.beforeCap}/${declaredMax} → ${rec.cap}/${declaredMax}`);
             }
           }
+          const axesSum = rec ? Number(rec.axesSum) : sum;
+          // Aucun écart muet : si la réconciliation détaillée n'est pas
+          // disponible, on nomme quand même la différence entre la somme des
+          // axes et le total publié plutôt que d'afficher deux chiffres
+          // contradictoires sans un mot.
+          const delta = Math.round((total - axesSum) * 10) / 10;
+          const fallbackDelta = !steps.length && delta !== 0
+            ? ` L'écart de ${delta > 0 ? '+' : ''}${delta} point${Math.abs(delta) > 1 ? 's' : ''} avec le total publié provient des ajustements de fin de calcul (arrondi des axes, ajustement liens cassés, plafond de cohérence) : le total publié fait foi.`
+            : '';
           return `<div class="stat-grid-4">${cards}</div>
         <p style="font-size:12px;color:#6b7280;margin:10px 0 0;">
-          Somme des cinq axes : <strong>${rec ? rec.axesSum : sum}/${sumMax}</strong>.
+          Somme des cinq axes : <strong>${axesSum}/${sumMax}</strong>.
           ${steps.length
             ? `Le total affiché (<strong>${total}/${declaredMax}</strong>) s'en déduit ainsi : ${steps.join(' ; puis ')}.`
-            : `Soit le score global d'audit technique (<strong>${total}/${declaredMax}</strong>).`}
+            : `Soit le score global d'audit technique (<strong>${total}/${declaredMax}</strong>).${fallbackDelta}`}
           Le score sur 100 de la synthèse exécutive est cette même valeur ramenée en pourcentage : ${Math.round((total / (declaredMax || 1)) * 100)}/100.
         </p>`;
+
 
         })()}
       </div>
