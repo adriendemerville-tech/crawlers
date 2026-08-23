@@ -279,6 +279,8 @@ export function computeBacklinkToxicity(input: {
   referringDomains: number;
   brokenBacklinks: number;
   dofollowRatio: number;
+  /** Domaine audité : sert à écarter le réseau propre de la marque. */
+  auditedDomain?: string;
 }): BacklinkToxicity {
   const totalAnchorCount = input.anchors.reduce((s, a) => s + (a.count || 0), 0);
   const sorted = [...input.anchors].sort((a, b) => (b.count || 0) - (a.count || 0));
@@ -292,11 +294,19 @@ export function computeBacklinkToxicity(input: {
   const unnaturalRatio = totalAnchorCount > 0
     ? Math.round((unnaturalCount / totalAnchorCount) * 100) / 100
     : 0;
-  const refSample = (input.sampleReferringDomains?.length ? input.sampleReferringDomains : input.topReferringDomains) || [];
+  const rawSample = (input.sampleReferringDomains?.length ? input.sampleReferringDomains : input.topReferringDomains) || [];
+  // Le réseau propre (déclinaisons pays de la même marque) sort de l'échantillon
+  // de toxicité : ni pénalité de rank, ni suspicion, ni désaveu recommandé.
+  const ownNetwork = input.auditedDomain ? detectOwnNetworkDomains(input.auditedDomain, rawSample) : [];
+  const ownSet = new Set(ownNetwork);
+  const refSample = rawSample.filter(
+    (d) => !ownSet.has(String(d?.domain || '').toLowerCase().replace(/^www\./, '')),
+  );
   const ranks = refSample.map((d) => normalizeDomainRank(d.rank));
   const avgReferrerRank = ranks.length
     ? Math.round((ranks.reduce((s, r) => s + r, 0) / ranks.length) * 10) / 10
     : 0;
+
   const linksPerDomain = input.referringDomains > 0
     ? Math.round((input.backlinksTotal / input.referringDomains) * 10) / 10
     : 0;
