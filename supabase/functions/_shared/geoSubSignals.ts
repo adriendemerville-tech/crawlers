@@ -38,33 +38,41 @@ export type GeoPillar = 'authority' | 'accessibility' | 'content';
 /** Le « GeoFamily » historique (compréhension/autorité) devient ces 3 piliers. */
 export type GeoFamily = GeoPillar;
 
-/** Mois écoulés depuis l'ancre de pondération (2026-08-01). */
+/**
+ * Conservé pour compatibilité : le barème est désormais FIXE, cette valeur n'est
+ * plus utilisée dans le calcul des poids.
+ */
 export function geoElapsedMonths(now: Date = new Date()): number {
   const anchor = Date.UTC(2026, 7, 1); // 2026-08-01 00:00 UTC
   return Math.max(0, (now.getTime() - anchor) / (1000 * 60 * 60 * 24 * (365.25 / 12)));
 }
 
+/** Barème GEO fixe (somme = 100) : 25 / 22 / 53. */
+export const GEO_PILLAR_POINTS: Record<GeoPillar, number> = {
+  authority: 25,
+  accessibility: 22,
+  content: 53,
+};
+
 /**
- * Poids des trois piliers à une date donnée (toujours sur 100).
- *  - autorité domaine  : constant 25
- *  - accessibilité     : 10 + 15 × 0,5^(t/18)  (décroît de 25 → 10)
- *  - contenu           : 100 − 25 − accessibilité  (monte de 50 → 65)
+ * Poids des trois piliers (toujours sur 100, identiques à toute date) :
+ *  - autorité domaine    : 25 (mutualisé)
+ *  - accessibilité machine : 22 (page)
+ *  - exploitabilité contenu : 53 (page)
+ * Le paramètre `now` est conservé pour la compatibilité des appelants.
  */
-export function geoPillarTotals(now: Date = new Date()): Record<GeoPillar, number> {
-  const t = geoElapsedMonths(now);
-  const authority = 25;
-  const accessibility = 10 + 15 * Math.pow(0.5, t / 18);
-  const content = 100 - authority - accessibility;
-  return { authority, accessibility, content };
+export function geoPillarTotals(_now: Date = new Date()): Record<GeoPillar, number> {
+  return { ...GEO_PILLAR_POINTS };
 }
 
-/** Tendance de chaque pilier : constant / décroît / monte. */
+/** Tendance de chaque pilier : le barème est fixe, donc constant partout. */
 export type GeoPillarTrend = 'constant' | 'decays' | 'grows';
 export const GEO_PILLAR_TREND: Record<GeoPillar, GeoPillarTrend> = {
   authority: 'constant',
-  accessibility: 'decays',
-  content: 'grows',
+  accessibility: 'constant',
+  content: 'constant',
 };
+
 
 /** Poids relatifs (fixes) des sous-signaux à l'intérieur de chaque pilier. */
 export const GEO_PILLAR_REL: Record<GeoPillar, Record<string, number>> = {
