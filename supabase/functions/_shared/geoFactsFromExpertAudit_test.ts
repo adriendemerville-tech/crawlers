@@ -1,6 +1,7 @@
 import { assert, assertEquals } from 'https://deno.land/std@0.208.0/assert/mod.ts';
 import {
   geoFactsFromExpertAudit,
+  expertFactsFromAuditPayload,
   structuredDataFromExpert,
   crawlFormattingFromExpert,
   botShellFromExpert,
@@ -9,7 +10,7 @@ import {
   type ExpertAuditFacts,
   type StrategicAuditFacts,
 } from './geoFactsFromExpertAudit.ts';
-import { buildGeoSubSignals } from './geoSubSignals.ts';
+import { buildGeoSubSignals, GEO_NO_AUTHORITY_CAP } from './geoSubSignals.ts';
 
 const NOW = new Date('2026-08-23T00:00:00Z');
 
