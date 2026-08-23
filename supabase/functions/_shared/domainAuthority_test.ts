@@ -8,10 +8,12 @@ import {
   computeAuthorityScore,
   computeBacklinkDistribution,
   computeBacklinkToxicity,
+  computeOwnNetworkHygiene,
   extractAnchorsFromEndpoint,
   extractDistribution,
   extractLinkedPages,
   normalizeDomainRank,
+  segmentReferringDomains,
 } from './domainAuthority.ts';
 
 Deno.test('normalizeDomainRank : courbe 0-1000 → 0-95', () => {
@@ -175,4 +177,80 @@ Deno.test('computeBacklinkDistribution : absence de données ne fabrique aucun c
   assertEquals(d.source, 'unavailable');
   assertEquals(d.signals.length, 0);
   assert(/non mesurable/.test(d.recommendation));
+});
+
+// ─── Segmentation en trois compartiments (2026-08-23) ───
+
+Deno.test('segmentReferringDomains : propriété prouvée avant racine de marque', () => {
+  const seg = segmentReferringDomains(
+    'avenir-renovations.fr',
+    [
+      { domain: 'avenir-renovations.be', rank: 400, backlinks: 300 },
+      { domain: 'partenaire-metallerie.fr', rank: 500, backlinks: 2 },
+      { domain: 'annuaire-pro.fr', rank: 90, backlinks: 40 },
+      { domain: 'lemoniteur.fr', rank: 700, backlinks: 3 },
+    ],
+    ['partenaire-metallerie.fr'],
+  );
+  assertEquals(seg.own_network.domains, 2);
+  assertEquals(seg.own_network_source, 'mixed');
+  assertEquals(
+    seg.own_network_domains.find((d) => d.domain === 'partenaire-metallerie.fr')?.source,
+    'verified',
+  );
+  assertEquals(
+    seg.own_network_domains.find((d) => d.domain === 'avenir-renovations.be')?.source,
+    'suspected',
+  );
+  assertEquals(seg.directory_platform.domains, 1);
+  assertEquals(seg.third_party_editorial.domains, 1);
+});
+
+Deno.test('computeBacklinkToxicity : liens/domaine et ancre corrigés du réseau propre', () => {
+  const sample = [
+    { domain: 'avenir-renovations.be', rank: 400, backlinks: 6000 },
+    { domain: 'avenir-renovations.lu', rank: 380, backlinks: 4000 },
+    { domain: 'lemoniteur.fr', rank: 700, backlinks: 5 },
+    { domain: 'batiactu.com', rank: 650, backlinks: 4 },
+    { domain: 'blogperso.fr', rank: 300, backlinks: 3 },
+  ];
+  const t = computeBacklinkToxicity({
+    anchors: [{ anchor: 'France', count: 42 }, { anchor: 'rénovation intérieure', count: 58 }],
+    topReferringDomains: sample,
+    sampleReferringDomains: sample,
+    backlinksTotal: 20000,
+    referringDomains: 500,
+    brokenBacklinks: 100,
+    dofollowRatio: 92,
+    auditedDomain: 'avenir-renovations.fr',
+  });
+  assertEquals(t.scope, 'third_party_only');
+  // 20000 liens / 500 domaines = 40 tous référents ; hors réseau propre : 10000/498 ≈ 20,1
+  assertEquals(t.links_per_domain_all, 40);
+  assertEquals(t.links_per_domain < 25, true);
+  // Le réseau propre pèse 50 % des liens → pénalité d'ancre minorée, jamais affirmée
+  assertEquals(t.anchor_attribution, 'all_referrers_downgraded');
+  assertEquals(/désavou/i.test(t.recommendation), false);
+});
+
+Deno.test("computeOwnNetworkHygiene : footer répliqué se corrige à la source, jamais par désaveu", () => {
+  const seg = segmentReferringDomains(
+    'avenir-renovations.fr',
+    [
+      { domain: 'avenir-renovations.be', rank: 400, backlinks: 6000 },
+      { domain: 'avenir-renovations.lu', rank: 380, backlinks: 4000 },
+      { domain: 'lemoniteur.fr', rank: 700, backlinks: 5 },
+    ],
+  );
+  const h = computeOwnNetworkHygiene(seg, 'France', 0.42);
+  assertEquals(h.verdict, 'a_corriger_a_la_source');
+  assertEquals(h.sitewide_suspected, true);
+  assertEquals(/Ne pas désavouer/i.test(h.recommendation), true);
+});
+
+Deno.test("computeOwnNetworkHygiene : aucun réseau propre = aucun constat inventé", () => {
+  const seg = segmentReferringDomains('crawlers.fr', [{ domain: 'lemoniteur.fr', rank: 700, backlinks: 4 }]);
+  const h = computeOwnNetworkHygiene(seg, null, 0);
+  assertEquals(h.verdict, 'non_mesure');
+  assertEquals(h.signals.length, 0);
 });

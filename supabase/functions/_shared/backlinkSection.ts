@@ -38,11 +38,15 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
   const rows: PenaltyRow[] = [];
 
   if (t.dominant_anchor_ratio >= 0.3) {
+    const full = Math.min(35, Math.round((t.dominant_anchor_ratio - 0.3) * 100) + 15);
+    const downgraded = t.anchor_attribution === 'all_referrers_downgraded';
     rows.push({
       label: 'Ancre dominante',
       measure: `« ${t.dominant_anchor ?? 'n/d'} » sur ${pct(t.dominant_anchor_ratio)} de l'échantillon`,
-      rule: 'au-delà de 30 % : 15 pts + 1 pt par point de pourcentage excédentaire (max 35)',
-      points: Math.min(35, Math.round((t.dominant_anchor_ratio - 0.3) * 100) + 15),
+      rule: downgraded
+        ? `au-delà de 30 % : 15 pts + 1 pt par point excédentaire (max 35), soit ${full} pts — divisé par 2 car ${pct(t.own_network_backlink_share || 0)} des liens viennent du réseau propre et la source ne rattache pas les ancres à leur domaine`
+        : 'au-delà de 30 % : 15 pts + 1 pt par point de pourcentage excédentaire (max 35)',
+      points: downgraded ? Math.round(full / 2) : full,
     });
   }
   if (t.unnatural_anchor_ratio >= 0.25) {
@@ -55,16 +59,16 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
   }
   if (t.avg_referrer_rank > 0 && t.avg_referrer_rank < 15) {
     rows.push({
-      label: 'Autorité des référents',
-      measure: `rank moyen ${t.avg_referrer_rank}/100 sur l'échantillon`,
+      label: 'Autorité des référents tiers',
+      measure: `rank moyen ${t.avg_referrer_rank}/100 sur l'échantillon hors réseau propre`,
       rule: 'rank moyen < 15/100 : 20 pts',
       points: 20,
     });
   }
   if (t.links_per_domain >= 25) {
     rows.push({
-      label: 'Liens par domaine',
-      measure: `${t.links_per_domain} liens par domaine référent`,
+      label: 'Liens par domaine tiers',
+      measure: `${t.links_per_domain} liens par domaine référent hors réseau propre${typeof t.links_per_domain_all === 'number' ? ` (${t.links_per_domain_all} tous référents confondus)` : ''}`,
       rule: 'à partir de 25 liens/domaine : liens ÷ 5 (max 20) — empreinte de type annuaire',
       points: Math.min(20, Math.round(t.links_per_domain / 5)),
     });
@@ -99,6 +103,7 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
 
   return rows;
 }
+
 
 /**
  * Section HTML autonome. Rien n'est affirmé sans mesure : chaque bloc absent
@@ -136,7 +141,14 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
   const volumetry = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
       ${card(nf(a.backlinks_total), 'Backlinks entrants (externes)', 'liens depuis d’autres domaines, liens internes exclus')}
       ${card(nf(a.referring_domains), 'Domaines référents')}
-      ${card(t ? String(t.links_per_domain) : nf(a.referring_domains ? a.backlinks_total / a.referring_domains : 0), 'Liens par domaine', 'un ratio élevé signe quelques sources massives')}
+      ${card(
+        t ? String(t.links_per_domain_all ?? t.links_per_domain) : nf(a.referring_domains ? a.backlinks_total / a.referring_domains : 0),
+        'Liens par domaine',
+        t && typeof t.links_per_domain_all === 'number' && t.links_per_domain_all !== t.links_per_domain
+          ? `${t.links_per_domain} hors réseau propre — un ratio élevé signe quelques sources massives`
+          : 'un ratio élevé signe quelques sources massives',
+      )}
+
       ${card(`${Math.round(a.dofollow_ratio)} %`, 'Liens dofollow')}
       ${card(nf(a.broken_backlinks), 'Liens entrants cassés')}
       ${card(`${a.authority_score}/100`, 'Authority Score Crawlers', 'estimation propriétaire, plafonnée à 92')}
@@ -178,11 +190,65 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
             </tbody>
           </table>`
         : `<p style="font-size:12.5px;color:#374151;margin:0;">Aucun seuil de manipulation n’est franchi sur l’échantillon mesuré : le score reste à ${t.toxicity_score}/100. Les critères testés sont l’ancre dominante (&gt; 30 %), les ancres non naturelles (&gt; 25 %), l’autorité moyenne des référents (&lt; 15/100), les liens par domaine (≥ 25), les liens cassés (≥ 10 %), un ratio dofollow ≥ 98 % et la présence de référents hors-sujet.</p>`}
-      ${t.own_network_domains?.length
-        ? `<div style="font-size:12.5px;color:#374151;margin-top:10px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;"><strong>Réseau propre exclu du calcul :</strong> ${t.own_network_domains.slice(0, 8).map((d) => esc(d)).join(', ')}. Ces domaines portent la même racine de marque sur une autre extension (déclinaisons pays) : le maillage inter-pays n’est pas un signal de manipulation et ces domaines ne doivent jamais figurer dans un fichier de désaveu.</div>`
-        : ''}
+      <div style="font-size:12px;color:#6b7280;margin-top:8px;">Périmètre du score : ${t.scope === 'third_party_only' ? 'liens tiers uniquement. Le réseau propre est mesuré séparément ci-dessous — le désaveu n’a de sens que sur des domaines que vous ne contrôlez pas.' : 'tous les référents de l’échantillon (aucun réseau propre détecté).'}</div>
       <div style="font-size:12.5px;color:#374151;margin-top:10px;"><strong>Lecture :</strong> ${esc(t.recommendation)}</div>`
     : '<p style="font-size:12.5px;color:#6b7280;margin:0;">Échantillon insuffisant pour calculer un score de toxicité : aucun verdict n’est émis.</p>';
+
+  // Trois compartiments mesurés séparément : le lecteur voit d'où vient son
+  // profil au lieu de découvrir qu'une partie a été retirée du calcul.
+  const seg = a.segmentation;
+  const COMPARTMENT_LABEL: Record<string, string> = {
+    own_network: 'Réseau propre (vos domaines)',
+    directory_platform: 'Annuaires et plateformes',
+    third_party_editorial: 'Éditorial tiers',
+  };
+  const segRow = (c: { compartment: string; domains: number; backlinks: number; share_domains: number; avg_rank: number; top_domains: string[] }) =>
+    `<tr style="border-bottom:1px solid #e5e7eb;">
+      <td style="padding:6px 10px;font-weight:600;color:#111827;">${COMPARTMENT_LABEL[c.compartment] || esc(c.compartment)}</td>
+      <td style="padding:6px 10px;text-align:right;">${nf(c.domains)}</td>
+      <td style="padding:6px 10px;text-align:right;">${pct(c.share_domains)}</td>
+      <td style="padding:6px 10px;text-align:right;">${nf(c.backlinks)}</td>
+      <td style="padding:6px 10px;text-align:right;">${c.avg_rank}/100</td>
+      <td style="padding:6px 10px;color:#6b7280;">${c.top_domains.slice(0, 4).map((d) => esc(d)).join(', ') || '—'}</td>
+    </tr>`;
+  const segHtml = seg && seg.sampled > 0
+    ? `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:#f3f4f6;">
+          <th style="padding:6px 10px;text-align:left;color:#6b7280;">Compartiment</th>
+          <th style="padding:6px 10px;text-align:right;color:#6b7280;">Domaines</th>
+          <th style="padding:6px 10px;text-align:right;color:#6b7280;">Part</th>
+          <th style="padding:6px 10px;text-align:right;color:#6b7280;">Liens</th>
+          <th style="padding:6px 10px;text-align:right;color:#6b7280;">Rank moyen</th>
+          <th style="padding:6px 10px;text-align:left;color:#6b7280;">Exemples</th>
+        </tr></thead>
+        <tbody>
+          ${segRow(seg.own_network)}
+          ${segRow(seg.directory_platform)}
+          ${segRow(seg.third_party_editorial)}
+        </tbody>
+      </table>
+      <div style="font-size:12px;color:#6b7280;margin-top:8px;">
+        Classification « vos domaines » : ${seg.own_network_source === 'verified'
+          ? 'propriété prouvée (accès Search Console, fiche établissement ou site suivi).'
+          : seg.own_network_source === 'brand_token_suspected'
+            ? 'rattachement par racine de marque commune — <strong>suggestion à confirmer</strong>, pas une preuve de propriété.'
+            : seg.own_network_source === 'mixed'
+              ? 'en partie prouvée, en partie déduite de la racine de marque (à confirmer).'
+              : 'aucun domaine de votre réseau détecté dans l’échantillon.'}
+        Le score de toxicité ne porte que sur les liens tiers ; les deux volumétries (avec et hors réseau propre) restent affichées pour que le calcul soit vérifiable.
+      </div>`
+    : '';
+
+  const h = a.own_network_hygiene;
+  const hygieneHtml = h && h.verdict !== 'non_mesure'
+    ? `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:700;color:${h.verdict === 'a_corriger_a_la_source' ? '#b45309' : '#15803d'};">${h.verdict === 'a_corriger_a_la_source' ? 'À corriger à la source' : 'Sain'}</div>
+        <div style="font-size:12px;color:#6b7280;">${nf(h.domains)} domaines · ${nf(h.backlinks)} liens · ${h.links_per_domain} liens par domaine</div>
+      </div>
+      <ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.7;">${h.signals.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>
+      <div style="font-size:12.5px;color:#374151;margin-top:8px;"><strong>Lecture :</strong> ${esc(h.recommendation)}</div>`
+    : '';
+
 
   const dist = a.distribution;
   const bucketList = (b: { key: string; share: number }[]) =>
@@ -242,8 +308,11 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
     <p style="font-size:12px;color:#6b7280;margin:0 0 12px 0;">Ce que d’autres sites disent de ${esc(a.domain)}. Tous les liens comptés ici sont <strong>externes</strong> : le maillage interne est exclu de la mesure. Le détail du calcul est donné pour que chaque chiffre soit vérifiable.</p>
     ${volumetry}
     ${sub('Comment l’Authority Score est calculé', 'Un score maison, reconstitué à partir du rank mesuré et de la diversité des référents.', scoreExplain)}
-    ${sub('Score de toxicité — détail du calcul', 'Chaque signal mesuré ajoute des points. Le total borné à 100 donne le verdict.', toxTable)}
+    ${sub('Segmentation du profil — trois compartiments', 'Vos propres domaines, les annuaires et l’éditorial tiers sont mesurés séparément : ils n’exposent pas aux mêmes risques et ne se corrigent pas de la même façon.', segHtml)}
+    ${sub('Score de toxicité — détail du calcul', 'Risque de dévaluation sur les liens tiers. Chaque signal mesuré ajoute des points ; le total borné à 100 donne le verdict.', toxTable)}
+    ${sub('Hygiène du réseau propre', 'Indicateur distinct, jamais additionné à la toxicité : sur des domaines que vous contrôlez, un défaut se corrige à la source et jamais par un désaveu.', hygieneHtml)}
     ${sub('Répartition du profil de liens', 'D’où viennent les liens : extensions, pays et types de plateformes mesurés sur l’échantillon.', distHtml)}
+
     ${sub('Principaux domaines référents', 'Les dix sources les plus actives de l’échantillon, avec leur autorité mesurée.', refs)}
     ${sub('Ancres les plus fréquentes', 'Le texte cliquable des liens entrants : une ancre trop répétée est le premier marqueur d’achat de liens.', anchors)}
     ${sub('Pages les plus liées', 'Les pages du domaine qui concentrent les liens externes.', pages)}

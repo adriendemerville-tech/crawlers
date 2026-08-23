@@ -623,6 +623,8 @@ function unavailable(domain: string, reason: string): AuthorityData {
     referring_main_domains: 0, backlinks_total: 0, dofollow_ratio: 0, broken_backlinks: 0,
     first_seen: null, top_referring_domains: [], top_anchors: [], top_anchors_detail: [],
     toxicity: null, distribution: null, top_linked_pages: [], organic_visibility: null,
+    segmentation: null, own_network_hygiene: null,
+
     referring_domains_sampled: 0, anchors_sampled: 0, anchors_source: 'unavailable',
     confidence: 'low', confidence_reason: reason,
     calibration_version: AUTHORITY_CALIBRATION_VERSION,
@@ -779,7 +781,14 @@ export function computeBacklinkDistribution(input: {
  */
 export async function fetchDomainAuthority(
   rawDomain: string,
-  opts?: { ttlMinutes?: number; skipCache?: boolean; organicVisibility?: OrganicVisibility | null },
+  opts?: {
+    ttlMinutes?: number;
+    skipCache?: boolean;
+    organicVisibility?: OrganicVisibility | null;
+    /** Domaines dont la propriété est prouvée (GSC, GMB, sites suivis, déclaration client). */
+    verifiedOwnDomains?: string[];
+  },
+
 ): Promise<AuthorityData> {
   const domain = rawDomain.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '').toLowerCase();
   if (!domain) return unavailable(rawDomain, 'domaine invalide');
@@ -846,6 +855,10 @@ export async function fetchDomainAuthority(
       ? 'anchors_endpoint'
       : summaryAnchors.length ? 'summary_sample' : 'unavailable';
 
+    // Segmentation en trois compartiments, calculée une seule fois puis partagée
+    // avec le score de toxicité et l'indicateur d'hygiène du réseau propre.
+    const segmentation = segmentReferringDomains(domain, refSample, opts?.verifiedOwnDomains || []);
+
     const toxicity = computeBacklinkToxicity({
       anchors,
       topReferringDomains: topRef,
@@ -855,7 +868,15 @@ export async function fetchDomainAuthority(
       brokenBacklinks: s.broken_backlinks || 0,
       dofollowRatio: dofollow,
       auditedDomain: domain,
+      verifiedOwnDomains: opts?.verifiedOwnDomains || [],
+      segmentation,
     });
+    const ownNetworkHygiene = computeOwnNetworkHygiene(
+      segmentation,
+      toxicity.dominant_anchor,
+      toxicity.dominant_anchor_ratio,
+    );
+
 
 
     // Lot 2 : répartitions TLD / pays / plateformes (déjà dans le résumé, 0 appel
@@ -902,6 +923,9 @@ export async function fetchDomainAuthority(
       toxicity,
       distribution,
       top_linked_pages: linkedPages.slice(0, 10),
+      segmentation,
+      own_network_hygiene: ownNetworkHygiene,
+
       organic_visibility: opts?.organicVisibility ?? null,
       referring_domains_sampled: refSample.length,
       anchors_sampled: anchors.length,
@@ -947,14 +971,30 @@ export function buildAuthorityPromptSection(a: AuthorityData | null): string {
     `- Échantillon analysé : ${a.referring_domains_sampled} domaines référents sur ${a.referring_domains}, ${a.anchors_sampled} ancres (${a.anchors_source === 'anchors_endpoint' ? 'ancres mesurées via endpoint dédié' : a.anchors_source === 'summary_sample' ? 'ancres issues du résumé, échantillon tronqué' : 'ancres indisponibles'})`,
     a.top_anchors.length ? `- Ancres principales : ${a.top_anchors.join(', ')}` : `- Ancres principales : non exploitables`,
   ];
+  if (a.segmentation && a.segmentation.sampled > 0) {
+    const g = a.segmentation;
+    const fmt = (c: CompartmentStats) => `${c.domains} domaines (${Math.round(c.share_domains * 100)} %), ${c.backlinks} liens, rank moyen ${c.avg_rank}/100`;
+    lines.push(
+      `- SEGMENTATION DU PROFIL (échantillon de ${g.sampled} référents) : réseau propre → ${fmt(g.own_network)} ; annuaires/plateformes → ${fmt(g.directory_platform)} ; éditorial tiers → ${fmt(g.third_party_editorial)}`,
+      `- Classification du réseau propre : ${g.own_network_source === 'verified' ? 'propriété prouvée' : g.own_network_source === 'brand_token_suspected' ? 'rattachement par racine de marque, À CONFIRMER (ne pas affirmer que ces domaines appartiennent au client)' : g.own_network_source === 'mixed' ? 'partiellement prouvée, partiellement supposée' : 'aucun réseau propre détecté'}`,
+    );
+  }
   if (a.toxicity) {
     const t = a.toxicity;
     lines.push(
-      `- TOXICITE DU PROFIL = ${t.toxicity_score}/100, verdict "${t.verdict}" (ancre dominante ${Math.round(t.dominant_anchor_ratio * 100)} %, ancres non naturelles ${Math.round(t.unnatural_anchor_ratio * 100)} %, rank moyen des référents ${t.avg_referrer_rank}/100, ${t.links_per_domain} liens/domaine)`,
+      `- TOXICITE DU PROFIL = ${t.toxicity_score}/100 (périmètre : ${t.scope === 'third_party_only' ? 'liens tiers uniquement, réseau propre exclu' : 'tous les référents'}), verdict "${t.verdict}" (ancre dominante ${Math.round(t.dominant_anchor_ratio * 100)} %, ancres non naturelles ${Math.round(t.unnatural_anchor_ratio * 100)} %, rank moyen des référents tiers ${t.avg_referrer_rank}/100, ${t.links_per_domain} liens/domaine hors réseau propre${typeof t.links_per_domain_all === 'number' ? ` contre ${t.links_per_domain_all} tous référents` : ''})`,
       t.signals.length ? `- Signaux de toxicité : ${t.signals.join(' ; ')}` : `- Signaux de toxicité : aucun`,
       `- Action liens : ${t.recommendation}`,
     );
   }
+  if (a.own_network_hygiene && a.own_network_hygiene.verdict !== 'non_mesure') {
+    const h = a.own_network_hygiene;
+    lines.push(
+      `- HYGIENE DU RESEAU PROPRE (indicateur distinct, JAMAIS additionné à la toxicité) = verdict "${h.verdict}" : ${h.domains} domaines, ${h.backlinks} liens, ${h.links_per_domain} liens/domaine${h.sitewide_suspected ? ', empreinte sitewide probable' : ''}`,
+      `- Action réseau propre : ${h.recommendation} Ne jamais proposer de désaveu sur ces domaines.`,
+    );
+  }
+
   const d = a.distribution;
   if (d && d.source !== 'unavailable') {
     const pct = (b: DistributionBucket) => `${b.key} ${Math.round(b.share * 100)} %`;
