@@ -1,54 +1,39 @@
 ---
-name: GEO en 3 piliers à pondération décroissante
-description: GEO décomposé en 10 sous-signaux / 3 piliers (autorité 25 constant, accessibilité 25→10 décroissant, contenu 50→65 croissant), demi-vie 18 mois ancrée 2026-08, score toujours sur 100
+name: GEO en 3 piliers, barème fixe 25 / 22 / 53
+description: GEO décomposé en 10 sous-signaux / 3 piliers à barème FIXE (autorité domaine 25, accessibilité machine 22, exploitabilité contenu 53), score sur 100, tableau de décomposition dans le rapport Marina
 type: feature
 ---
 
-# GEO en 3 piliers à pondération décroissante (remplace le Lot B 2 familles)
+# GEO en 3 piliers, barème fixe 25 / 22 / 53
 
 ## `_shared/geoSubSignals.ts`
-Un score GEO global masque trois réalités opposées. Il est décomposé en
-**10 sous-signaux répartis en 3 piliers** dont les poids évoluent dans le temps
-pour refléter la maturité du marché GEO (le parc de sites se rénove).
+Un score GEO global masque trois réalités. Il est décomposé en **10 sous-signaux
+répartis en 3 piliers** à **poids fixes** (plus de décroissance temporelle : deux
+audits, quelle que soit leur date, se comparent directement).
 
-**Pilier A — Autorité domaine (25, constant, mutualisé)** : `brand_authority` (14),
-`serp_presence` (11).
+- **Pilier A — Autorité domaine (25 pts, mutualisé)** : `brand_authority` (rel 14),
+  `serp_presence` (11).
+- **Pilier B — Accessibilité machine (22 pts, page)** : `bot_accessibility` (14),
+  `structured_data_quality` (12), `content_freshness` (6).
+- **Pilier C — Exploitabilité contenu (53 pts, page)** : `content_quotability` (10),
+  `answer_formatting` (8), `knowledge_graph_signals` (10), `self_citation_signals` (8),
+  `person_authority` (6).
 
-**Pilier B — Accessibilité machine (25 → 10, décroissant)** : `bot_accessibility`
-(14), `structured_data_quality` (12), `content_freshness` (6). Poids ÉLEVÉ
-aujourd'hui car beaucoup de concurrents sont mal crawlables ou trop lents ;
-avantage **transitoire** qui se commoditise → décroît.
-
-**Pilier C — Exploitabilité contenu (50 → 65, croissant)** : `content_quotability`
-(10), `answer_formatting` (8), `knowledge_graph_signals` (10),
-`self_citation_signals` (8), `person_authority` (6). Levier durable → monte.
-(`knowledge_graph_signals` déplacé de l'autorité ici : levier actionnable en page.)
-
-## Pondération temporelle (déterministe)
-- Demi-vie **18 mois**, ancrée au **2026-08-01** (`geoElapsedMonths`).
-- `geoPillarTotals(now)` : `authority=25`, `accessibility=10+15×0,5^(t/18)`,
-  `content=100−25−accessibility`. **La somme vaut toujours 100.**
-- `geoSignalWeightsAt(now)` : poids relatifs fixes par pilier, mis à l'échelle
-  pour que chaque pilier totalise son poids courant. Deux audits du même jour
-  donnent les mêmes poids (`inputs.now` injectable pour tests/re-rendus datés).
+`GEO_PILLAR_POINTS = { authority: 25, accessibility: 22, content: 53 }` (somme 100).
+`geoPillarTotals(now)` retourne ce barème quelle que soit la date (`now` conservé pour
+compatibilité). `geoSignalWeightsAt()` met à l'échelle les poids relatifs internes pour
+que chaque pilier totalise son poids. 75 des 100 pts dépendent de la page auditée.
 
 ## Règles de calcul
-- Un sous-signal non mesuré est exclu du numérateur ET du dénominateur de son
-  pilier (`coverage` = poids réellement couvert).
-- `geo_score` = moyenne **pondérée** des piliers mesurés par leur poids courant.
-- Verdict d'écart (seuil 20) entre le **bloc page** (accessibilité + contenu) et
-  l'**autorité domaine** : `authority_lag` / `comprehension_lag` / `both_low` /
-  `aligned` / `aligned_strong` / `unknown`.
-- Plafonds de cohérence conservés : sous-signaux (quotability ≤15, formatting ≤25,
-  structured_data ≤40) + plafond du bloc page à 30 en cas de coquille JS / texte
-  quasi nul.
-- 3 leviers prioritaires déduits par `poids × (100 − valeur)`. 0 appel LLM.
+- Un sous-signal non mesuré est exclu du numérateur ET du dénominateur de son pilier.
+- `geo_score` = moyenne pondérée des piliers mesurés par leur poids.
+- Verdict d'écart (seuil 20) entre bloc page (accessibilité + contenu) et autorité domaine.
+- Plafonds de cohérence conservés (quotability ≤15, formatting ≤25, structured_data ≤40,
+  bloc page ≤30 en coquille JS / texte quasi nul). 0 appel LLM.
 
-## Intégration Marina
-- Bloc « Le GEO en 10 sous-signaux, 3 piliers » dans la section stratégique :
-  3 blocs (score/100, points du jour, tendance), témoin « Pondération au <date> ».
-- Fiches page : 3 mini-cells piliers sous le score GEO (`geoPillars`) pour
-  restaurer la variance entre URLs — seule l'autorité domaine (25) est mutualisée,
-  accessibilité + contenu (75) varient par page.
-- Charte respectée : violet #6d28d9, or #8a6d1f, noir, gris ; bordures sans fond
-  plein, aucun emoji, aucun bleu IA.
+## Rendu Marina
+- Tableau de décomposition (`pillarTableHTML`) : par pilier, ses sous-signaux avec leur
+  poids en points, le poids du pilier, son score /100, les points acquis ; ligne de total
+  à 100 pts. Colonne « Barème » = poids fixe.
+- Cartes de piliers + mini-cells `geoPillars` par fiche URL pour la variance.
+- Charte : violet #6d28d9, or #8a6d1f, noir, gris ; bordures sans fond plein, aucun emoji.
