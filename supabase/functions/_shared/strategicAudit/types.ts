@@ -90,8 +90,19 @@ export interface GMBData {
   /** Réseau multi-établissements (franchises, agences). */
   locations_count?: number;
   network_total_reviews?: number;
+  /** Note pondérée par le volume d'avis (réseau). */
   network_avg_rating?: number;
+  /** Moyenne simple des notes des fiches (non pondérée). */
+  network_mean_rating?: number;
+  /** Médianes réseau — robustes aux fiches extrêmes. */
+  network_median_rating?: number;
+  network_median_reviews?: number;
+  network_avg_reviews_per_location?: number;
   is_multi_location?: boolean;
+  /** Origine de la fiche de référence affichée (siège / domaine / échantillon). */
+  reference_listing?: string;
+  /** Avertissement d'échantillonnage quand le réseau dépasse les fiches collectées. */
+  network_measurement_note?: string;
   /** 'single' | 'network' | 'not_measured' — provenance de la mesure. */
   measurement_scope?: 'single' | 'network' | 'not_measured';
 }
