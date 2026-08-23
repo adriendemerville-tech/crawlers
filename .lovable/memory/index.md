@@ -22,6 +22,8 @@
 - **Éditorial:** Une tactique SEO (balise title, maillage, schema) n'est JAMAIS un sujet d'article, sauf sur crawlers.fr — voir [Garde stratégie ≠ sujet](mem://tech/autopilot/strategy-vs-subject-guard-fr).
 
 ## Memories
+- [Concurrents locaux depuis le slug](mem://tech/geo/local-competitors-from-slug-fr) — SERP « prestation + ville » prioritaire sur carte d'identité et GMB
+
 - [Place d'échange — règles v1](mem://features/marketplace/v1-core-rules-fr) — Commission 15%, sponsored par défaut, attribut à deux axes (besoin acheteur × capacité vendeur), Stripe Connect KYC, balance d'autorité
 - [Plan Jeune Entreprise v1](mem://features/pricing/plan-jeune-entreprise-v1-fr) — Gratuité 12 mois FR, vérif SIRET+Kbis, quotas F1-F10, F6 = dégradation 1j, F8 purge non tranché
 - [Garde stratégie ≠ sujet](mem://tech/autopilot/strategy-vs-subject-guard-fr) — editorialSubjectGuard : requalification en mot-clé métier ou blocage de la publication
