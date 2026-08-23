@@ -59,8 +59,13 @@ function normBrand(s: string): string {
     .trim();
 }
 
-/** Construit un GMBData agrégé à partir de N fiches (réseau de franchisés / agences). */
-function buildGmbFromListings(listings: RawListing[], brandName: string): GMBData | null {
+/**
+ * Construit un GMBData agrégé à partir de N fiches (réseau de franchisés / agences).
+ * `hqHint` = adresse ou ville du siège déclarée par la carte d'identité : la fiche
+ * de référence doit être celle du siège, jamais « celle qui a le plus d'avis »
+ * (sinon un franchisé local remonte comme fiche officielle du réseau).
+ */
+function buildGmbFromListings(listings: RawListing[], brandName: string, hqHint?: string | null): GMBData | null {
   const valid = listings.filter((l) => l.title || l.address);
   if (valid.length === 0) return null;
 
@@ -69,9 +74,21 @@ function buildGmbFromListings(listings: RawListing[], brandName: string): GMBDat
   const weightedRating = withReviews.length && networkReviews > 0
     ? withReviews.reduce((sum, l) => sum + (l.rating || 0) * (l.reviews || 0), 0) / networkReviews
     : undefined;
+  const meanRating = withReviews.length
+    ? withReviews.reduce((s, l) => s + (l.rating || 0), 0) / withReviews.length
+    : undefined;
+  const medRating = median(withReviews.map((l) => l.rating || 0));
+  const medReviews = median(withReviews.map((l) => l.reviews || 0));
 
-  // Fiche principale = celle avec le plus d'avis (sinon la première)
-  const primary = [...valid].sort((a, b) => (b.reviews || 0) - (a.reviews || 0))[0];
+  // Fiche de référence : siège (localité déclarée) > fiche liée au domaine > plus d'avis
+  const hqTokens = localityTokens(hqHint || '');
+  const normAddr = (a?: string) => (a || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const hqListing = hqTokens.length
+    ? valid.find((l) => { const a = normAddr(l.address) + ' ' + normAddr(l.title); return hqTokens.some((t) => a.includes(t)); })
+    : undefined;
+  const domainListing = valid.find((l) => l.domain_match === true);
+  const primary = hqListing || domainListing || [...valid].sort((a, b) => (b.reviews || 0) - (a.reviews || 0))[0]!;
+  const primarySelection: 'hq' | 'domain' | 'most_reviews' = hqListing ? 'hq' : (domainListing ? 'domain' : 'most_reviews');
   const isNetwork = valid.length > 1;
 
   const quickWins: string[] = [];
