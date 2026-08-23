@@ -854,6 +854,7 @@ export default function Marina() {
     setError(null);
     setReportUrl(null);
     setProgress(0);
+    setQueuePosition(null);
     setPhase(t.phases.init);
 
     try {
