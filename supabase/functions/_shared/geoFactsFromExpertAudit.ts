@@ -62,6 +62,8 @@ export interface ExpertAuditFacts {
     /** Findings id-based : `no-faq-section`, `faq-content-without-schema`, … */
     findings?: Array<{ id?: string | null }> | null;
   } | null;
+  /** Bloc performance de l'audit expert : seul le TTFB alimente le GEO. */
+  performance?: { ttfb?: number | null } | null;
   meta?: { renderingMode?: string | null } | null;
 }
 
@@ -342,6 +344,15 @@ export function geoFactsFromExpertAudit(
     ? Math.round((ratioRaw > 0 && ratioRaw <= 1 ? ratioRaw * 100 : ratioRaw) * 10) / 10
     : null;
 
+  // Livraison serveur : décote locale de `bot_accessibility` (cf. geoSubSignals),
+  // sans toucher au barème des 3 piliers. Le LCP reste hors du GEO.
+  const ttfbRaw = expert.performance?.ttfb ?? null;
+  const ttfbMs = typeof ttfbRaw === 'number' && Number.isFinite(ttfbRaw) && ttfbRaw > 0
+    ? Math.round(ttfbRaw) : null;
+  if (ttfbMs !== null && ttfbMs >= 800) {
+    notes.push(`Livraison serveur mesurée à ${ttfbMs} ms : accessibilité robots décotée (cible < 800 ms).`);
+  }
+
   const inputs: GeoSignalInputs = {
     breakdown: {
       structured_data_quality: structured,
@@ -354,6 +365,7 @@ export function geoFactsFromExpertAudit(
     },
     isBotShell: shell.isBotShell,
     botOnlyAbsences: shell.botOnlyAbsences,
+    ttfbMs,
     crawlFormatting: formatting,
     founderResolved: person.resolved,
     founderCorroborated: person.corroborated,

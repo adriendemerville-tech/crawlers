@@ -158,8 +158,8 @@ export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
     label: 'Contenu accessible aux robots',
     weight: 14,
     provenance: 'mesure',
-    meaning: 'Le contenu est présent dans le HTML servi, sans exécution de JavaScript.',
-    lever: 'Rendre le contenu au serveur (SSR / prérendu) : sans cela, aucun autre signal de compréhension ne compte.',
+    meaning: 'Le contenu est présent dans le HTML servi, sans exécution de JavaScript, et livré assez vite pour être récupéré par les robots.',
+    lever: 'Rendre le contenu au serveur (SSR / prérendu) et servir le premier octet en moins de 800 ms.',
   },
   {
     key: 'structured_data_quality',
@@ -300,6 +300,12 @@ export interface GeoSignalInputs {
   isBotShell?: boolean | null;
   /** Nombre de pages où un tag attendu est absent uniquement pour les robots. */
   botOnlyAbsences?: number | null;
+  /**
+   * Temps de livraison du premier octet (ms), mesuré. Décote l'accessibilité
+   * robots seulement : le confort visuel humain (LCP/INP/CLS) reste hors du GEO
+   * pour éviter la double pénalité. `null` / absent = aucune décote.
+   */
+  ttfbMs?: number | null;
   /** Agrégats de crawl utiles à la mise en forme des réponses. */
   crawlFormatting?: {
     pagesAnalyzed?: number | null;
@@ -335,13 +341,45 @@ function num(v: unknown): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? clamp100(v) : null;
 }
 
-/** Accessibilité robots : signal binaire dégradé par les absences bot-only. */
+/**
+ * Décote de livraison serveur appliquée à l'accessibilité robots.
+ *
+ * Le TTFB n'est pas une métrique de confort visuel : c'est le temps qu'un
+ * crawler attend avant d'obtenir le moindre octet, et les budgets de crawl des
+ * robots IA sont bien plus courts que la patience d'un humain. La décote reste
+ * volontairement locale à `bot_accessibility` (aucun changement de barème) et
+ * ne s'applique qu'à une mesure disponible — un TTFB non mesuré ne fabrique
+ * aucun défaut.
+ *
+ *  - < 800 ms  : plein score (aucune décote)
+ *  - 800-1500 ms : −5
+ *  - 1,5-2,5 s : −15
+ *  - > 2,5 s   : −25
+ */
+function ttfbPenalty(ttfbMs: unknown): number {
+  const t = typeof ttfbMs === 'number' && Number.isFinite(ttfbMs) ? ttfbMs : null;
+  if (t === null || t <= 0) return 0;
+  if (t < 800) return 0;
+  if (t < 1500) return 5;
+  if (t <= 2500) return 15;
+  return 25;
+}
+
+/** Accessibilité robots : signal binaire dégradé par les absences bot-only et la livraison serveur. */
 function scoreBotAccessibility(i: GeoSignalInputs): number | null {
+  // Une coquille JS est déjà le plancher du signal : la décote TTFB n'ajoute
+  // rien (le contenu est absent, pas lent).
   if (i.isBotShell === true) return 5;
   const botOnly = Number(i.botOnlyAbsences ?? 0) || 0;
-  if (i.isBotShell === false) return botOnly > 0 ? Math.max(35, 90 - botOnly * 15) : 95;
-  if (botOnly > 0) return Math.max(35, 90 - botOnly * 15);
-  return null;
+  const penalty = ttfbPenalty(i.ttfbMs);
+  const base = i.isBotShell === false
+    ? (botOnly > 0 ? Math.max(35, 90 - botOnly * 15) : 95)
+    : botOnly > 0 ? Math.max(35, 90 - botOnly * 15) : null;
+  if (base === null) {
+    // Aucun fait d'accessibilité : un TTFB seul ne suffit pas à noter le signal.
+    return null;
+  }
+  return clamp100(Math.max(20, base - penalty));
 }
 
 /**

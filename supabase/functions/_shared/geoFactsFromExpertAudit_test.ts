@@ -153,3 +153,23 @@ Deno.test('projection : ratio de texte accepté en fraction (0-1) comme en pourc
   assertEquals(a, 14);
   assertEquals(b, 14);
 });
+
+Deno.test('projection : TTFB lent décote l’accessibilité robots sans changer le barème', () => {
+  const fast = geoFactsFromExpertAudit({ ...healthyExpert, performance: { ttfb: 320 } }, strategic, { now: NOW });
+  const slow = geoFactsFromExpertAudit({ ...healthyExpert, performance: { ttfb: 3200 } }, strategic, { now: NOW });
+  const sig = (p: typeof fast) => buildGeoSubSignals(p.inputs).signals.find((s) => s.key === 'bot_accessibility')!.value;
+  const vFast = sig(fast);
+  const vSlow = sig(slow);
+  assert(vFast !== null && vSlow !== null);
+  assertEquals(vSlow, (vFast as number) - 25);
+  // Le barème des piliers reste inchangé.
+  const wFast = buildGeoSubSignals(fast.inputs).pillar_points.accessibility;
+  const wSlow = buildGeoSubSignals(slow.inputs).pillar_points.accessibility;
+  assertEquals(wFast, wSlow);
+});
+
+Deno.test('projection : TTFB non mesuré ne fabrique aucun défaut', () => {
+  const a = buildGeoSubSignals(geoFactsFromExpertAudit(healthyExpert, strategic, { now: NOW }).inputs);
+  const b = buildGeoSubSignals(geoFactsFromExpertAudit({ ...healthyExpert, performance: { ttfb: 400 } }, strategic, { now: NOW }).inputs);
+  assertEquals(a.geo_score, b.geo_score);
+});

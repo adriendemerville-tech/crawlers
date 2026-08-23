@@ -2385,6 +2385,9 @@ Deno.serve(handleRequest(async (req) => {
           confirmed: lcpIsConfirmed,
           note: perf.methodNote,
         },
+        // TTFB : attente d'un robot avant le premier octet. Exposé pour décoter
+        // l'accessibilité machine du GEO (cf. geoSubSignals), pas le /200.
+        ttfb: audits['server-response-time']?.numericValue ?? null,
         fcp: audits['first-contentful-paint']?.numericValue || null,
         cls: audits['cumulative-layout-shift']?.numericValue || null,
         tbt: audits['total-blocking-time']?.numericValue || null,
