@@ -65,6 +65,7 @@ import { Route as OptimisationLlmSeoRouteImport } from './routes/optimisation-ll
 import { Route as OutilGeoIaRouteImport } from './routes/outil-geo-ia'
 import { Route as PagespeedRouteImport } from './routes/pagespeed'
 import { Route as PolitiqueConfidentialiteRouteImport } from './routes/politique-confidentialite'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivacyGoogleAdsRouteImport } from './routes/privacy-google-ads'
 import { Route as ProAgencyRouteImport } from './routes/pro-agency'
 import { Route as ProfilRouteImport } from './routes/profil'
@@ -435,6 +436,11 @@ const PolitiqueConfidentialiteRoute =
     path: '/politique-confidentialite',
     getParentRoute: () => rootRouteImport,
   } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyGoogleAdsRoute = PrivacyGoogleAdsRouteImport.update({
   id: '/privacy-google-ads',
   path: '/privacy-google-ads',
@@ -899,6 +905,7 @@ export interface FileRoutesByFullPath {
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
+  '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
@@ -1037,6 +1044,7 @@ export interface FileRoutesByTo {
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
+  '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
@@ -1176,6 +1184,7 @@ export interface FileRoutesById {
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
+  '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
@@ -1316,6 +1325,7 @@ export interface FileRouteTypes {
     | '/outil-geo-ia'
     | '/pagespeed'
     | '/politique-confidentialite'
+    | '/privacy'
     | '/privacy-google-ads'
     | '/pro-agency'
     | '/profil'
@@ -1454,6 +1464,7 @@ export interface FileRouteTypes {
     | '/outil-geo-ia'
     | '/pagespeed'
     | '/politique-confidentialite'
+    | '/privacy'
     | '/privacy-google-ads'
     | '/pro-agency'
     | '/profil'
@@ -1592,6 +1603,7 @@ export interface FileRouteTypes {
     | '/outil-geo-ia'
     | '/pagespeed'
     | '/politique-confidentialite'
+    | '/privacy'
     | '/privacy-google-ads'
     | '/pro-agency'
     | '/profil'
@@ -1731,6 +1743,7 @@ export interface RootRouteChildren {
   OutilGeoIaRoute: typeof OutilGeoIaRoute
   PagespeedRoute: typeof PagespeedRoute
   PolitiqueConfidentialiteRoute: typeof PolitiqueConfidentialiteRoute
+  PrivacyRoute: typeof PrivacyRoute
   PrivacyGoogleAdsRoute: typeof PrivacyGoogleAdsRoute
   ProAgencyRoute: typeof ProAgencyRoute
   ProfilRoute: typeof ProfilRoute
@@ -2205,6 +2218,13 @@ declare module '@tanstack/react-router' {
       path: '/politique-confidentialite'
       fullPath: '/politique-confidentialite'
       preLoaderRoute: typeof PolitiqueConfidentialiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy-google-ads': {
@@ -2827,6 +2847,7 @@ const rootRouteChildren: RootRouteChildren = {
   OutilGeoIaRoute: OutilGeoIaRoute,
   PagespeedRoute: PagespeedRoute,
   PolitiqueConfidentialiteRoute: PolitiqueConfidentialiteRoute,
+  PrivacyRoute: PrivacyRoute,
   PrivacyGoogleAdsRoute: PrivacyGoogleAdsRoute,
   ProAgencyRoute: ProAgencyRoute,
   ProfilRoute: ProfilRoute,
