@@ -37,9 +37,9 @@ const PolitiqueConfidentialite = () => {
 
             <p className="text-muted-foreground leading-relaxed mb-8">
               {t3(language,
-                'Crawlers AI (Adrien de Volontat, entrepreneur individuel — SIRET 992 399 667 00011) s\'engage à protéger la vie privée des utilisateurs de son site. Cette politique de confidentialité explique comment nous collectons, utilisons et protégeons vos données personnelles, y compris dans le cadre des transactions de paiement et des connexions CMS.',
-                'Crawlers AI (Adrien de Volontat, sole proprietor — SIRET 992 399 667 00011) is committed to protecting the privacy of its website users. This privacy policy explains how we collect, use and protect your personal data, including in the context of payment transactions and CMS connections.',
-                'Crawlers AI (Adrien de Volontat, empresario individual — SIRET 992 399 667 00011) se compromete a proteger la privacidad de los usuarios de su sitio. Esta política de privacidad explica cómo recopilamos, utilizamos y protegemos sus datos personales, incluso en el marco de las transacciones de pago y las conexiones CMS.'
+                'Crawlers.fr, sa marque, son domaine et ses technologies sont la propriété exclusive de la société éditrice Voluntas Novare (SASU). Cette politique de confidentialité explique comment nous collectons, utilisons et protégeons vos données personnelles, y compris dans le cadre des transactions de paiement et des connexions CMS.',
+                'Crawlers.fr, its brand, its domain and its technologies are the exclusive property of the publishing company Voluntas Novare (SASU). This privacy policy explains how we collect, use and protect your personal data, including in the context of payment transactions and CMS connections.',
+                'Crawlers.fr, su marca, su dominio y sus tecnologías son propiedad exclusiva de la empresa editora Voluntas Novare (SASU). Esta política de privacidad explica cómo recopilamos, utilizamos y protegemos sus datos personales, incluso en el marco de las transacciones de pago y las conexiones CMS.'
               )}
             </p>
 
