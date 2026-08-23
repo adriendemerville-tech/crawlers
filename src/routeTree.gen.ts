@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AProposRouteImport } from './routes/a-propos'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AideRouteImport } from './routes/aide'
 import { Route as AnalyseBotsIaRouteImport } from './routes/analyse-bots-ia'
 import { Route as AnalyseLogsRouteImport } from './routes/analyse-logs'
@@ -35,6 +36,7 @@ import { Route as ComparatifCrawlersSemrushRouteImport } from './routes/comparat
 import { Route as ComparatifPlateformeSeoIaRouteImport } from './routes/comparatif-plateforme-seo-ia'
 import { Route as ConditionsUtilisationRouteImport } from './routes/conditions-utilisation'
 import { Route as ConsoleRouteImport } from './routes/console'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ContentArchitectRouteImport } from './routes/content-architect'
 import { Route as ConversionOptimizerRouteImport } from './routes/conversion-optimizer'
 import { Route as CrawlRouteImport } from './routes/crawl'
@@ -63,6 +65,7 @@ import { Route as OptimisationLlmSeoRouteImport } from './routes/optimisation-ll
 import { Route as OutilGeoIaRouteImport } from './routes/outil-geo-ia'
 import { Route as PagespeedRouteImport } from './routes/pagespeed'
 import { Route as PolitiqueConfidentialiteRouteImport } from './routes/politique-confidentialite'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivacyGoogleAdsRouteImport } from './routes/privacy-google-ads'
 import { Route as ProAgencyRouteImport } from './routes/pro-agency'
 import { Route as ProfilRouteImport } from './routes/profil'
@@ -152,6 +155,11 @@ const IndexRoute = IndexRouteImport.update({
 const AProposRoute = AProposRouteImport.update({
   id: '/a-propos',
   path: '/a-propos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AideRoute = AideRouteImport.update({
@@ -277,6 +285,11 @@ const ConditionsUtilisationRoute = ConditionsUtilisationRouteImport.update({
 const ConsoleRoute = ConsoleRouteImport.update({
   id: '/console',
   path: '/console',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContentArchitectRoute = ContentArchitectRouteImport.update({
@@ -423,6 +436,11 @@ const PolitiqueConfidentialiteRoute =
     path: '/politique-confidentialite',
     getParentRoute: () => rootRouteImport,
   } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyGoogleAdsRoute = PrivacyGoogleAdsRouteImport.update({
   id: '/privacy-google-ads',
   path: '/privacy-google-ads',
@@ -833,6 +851,7 @@ const ApiPublicHooksMarinaBatchTickRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
+  '/about': typeof AboutRoute
   '/aide': typeof AideRoute
   '/analyse-bots-ia': typeof AnalyseBotsIaRoute
   '/analyse-logs': typeof AnalyseLogsRoute
@@ -857,6 +876,7 @@ export interface FileRoutesByFullPath {
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
   '/console': typeof ConsoleRoute
+  '/contact': typeof ContactRoute
   '/content-architect': typeof ContentArchitectRoute
   '/conversion-optimizer': typeof ConversionOptimizerRoute
   '/crawl': typeof CrawlRoute
@@ -885,6 +905,7 @@ export interface FileRoutesByFullPath {
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
+  '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
@@ -969,6 +990,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
+  '/about': typeof AboutRoute
   '/aide': typeof AideRoute
   '/analyse-bots-ia': typeof AnalyseBotsIaRoute
   '/analyse-logs': typeof AnalyseLogsRoute
@@ -993,6 +1015,7 @@ export interface FileRoutesByTo {
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
   '/console': typeof ConsoleRoute
+  '/contact': typeof ContactRoute
   '/content-architect': typeof ContentArchitectRoute
   '/conversion-optimizer': typeof ConversionOptimizerRoute
   '/crawl': typeof CrawlRoute
@@ -1021,6 +1044,7 @@ export interface FileRoutesByTo {
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
+  '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
@@ -1106,6 +1130,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
+  '/about': typeof AboutRoute
   '/aide': typeof AideRoute
   '/analyse-bots-ia': typeof AnalyseBotsIaRoute
   '/analyse-logs': typeof AnalyseLogsRoute
@@ -1130,6 +1155,7 @@ export interface FileRoutesById {
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
   '/console': typeof ConsoleRoute
+  '/contact': typeof ContactRoute
   '/content-architect': typeof ContentArchitectRoute
   '/conversion-optimizer': typeof ConversionOptimizerRoute
   '/crawl': typeof CrawlRoute
@@ -1158,6 +1184,7 @@ export interface FileRoutesById {
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
+  '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
@@ -1244,6 +1271,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/a-propos'
+    | '/about'
     | '/aide'
     | '/analyse-bots-ia'
     | '/analyse-logs'
@@ -1268,6 +1296,7 @@ export interface FileRouteTypes {
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
     | '/console'
+    | '/contact'
     | '/content-architect'
     | '/conversion-optimizer'
     | '/crawl'
@@ -1296,6 +1325,7 @@ export interface FileRouteTypes {
     | '/outil-geo-ia'
     | '/pagespeed'
     | '/politique-confidentialite'
+    | '/privacy'
     | '/privacy-google-ads'
     | '/pro-agency'
     | '/profil'
@@ -1380,6 +1410,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/a-propos'
+    | '/about'
     | '/aide'
     | '/analyse-bots-ia'
     | '/analyse-logs'
@@ -1404,6 +1435,7 @@ export interface FileRouteTypes {
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
     | '/console'
+    | '/contact'
     | '/content-architect'
     | '/conversion-optimizer'
     | '/crawl'
@@ -1432,6 +1464,7 @@ export interface FileRouteTypes {
     | '/outil-geo-ia'
     | '/pagespeed'
     | '/politique-confidentialite'
+    | '/privacy'
     | '/privacy-google-ads'
     | '/pro-agency'
     | '/profil'
@@ -1516,6 +1549,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/a-propos'
+    | '/about'
     | '/aide'
     | '/analyse-bots-ia'
     | '/analyse-logs'
@@ -1540,6 +1574,7 @@ export interface FileRouteTypes {
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
     | '/console'
+    | '/contact'
     | '/content-architect'
     | '/conversion-optimizer'
     | '/crawl'
@@ -1568,6 +1603,7 @@ export interface FileRouteTypes {
     | '/outil-geo-ia'
     | '/pagespeed'
     | '/politique-confidentialite'
+    | '/privacy'
     | '/privacy-google-ads'
     | '/pro-agency'
     | '/profil'
@@ -1653,6 +1689,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AProposRoute: typeof AProposRoute
+  AboutRoute: typeof AboutRoute
   AideRoute: typeof AideRoute
   AnalyseBotsIaRoute: typeof AnalyseBotsIaRoute
   AnalyseLogsRoute: typeof AnalyseLogsRoute
@@ -1677,6 +1714,7 @@ export interface RootRouteChildren {
   ComparatifPlateformeSeoIaRoute: typeof ComparatifPlateformeSeoIaRoute
   ConditionsUtilisationRoute: typeof ConditionsUtilisationRoute
   ConsoleRoute: typeof ConsoleRoute
+  ContactRoute: typeof ContactRoute
   ContentArchitectRoute: typeof ContentArchitectRoute
   ConversionOptimizerRoute: typeof ConversionOptimizerRoute
   CrawlRoute: typeof CrawlRoute
@@ -1705,6 +1743,7 @@ export interface RootRouteChildren {
   OutilGeoIaRoute: typeof OutilGeoIaRoute
   PagespeedRoute: typeof PagespeedRoute
   PolitiqueConfidentialiteRoute: typeof PolitiqueConfidentialiteRoute
+  PrivacyRoute: typeof PrivacyRoute
   PrivacyGoogleAdsRoute: typeof PrivacyGoogleAdsRoute
   ProAgencyRoute: typeof ProAgencyRoute
   ProfilRoute: typeof ProfilRoute
@@ -1801,6 +1840,13 @@ declare module '@tanstack/react-router' {
       path: '/a-propos'
       fullPath: '/a-propos'
       preLoaderRoute: typeof AProposRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/aide': {
@@ -1969,6 +2015,13 @@ declare module '@tanstack/react-router' {
       path: '/console'
       fullPath: '/console'
       preLoaderRoute: typeof ConsoleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/content-architect': {
@@ -2165,6 +2218,13 @@ declare module '@tanstack/react-router' {
       path: '/politique-confidentialite'
       fullPath: '/politique-confidentialite'
       preLoaderRoute: typeof PolitiqueConfidentialiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy-google-ads': {
@@ -2733,6 +2793,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AProposRoute: AProposRoute,
+  AboutRoute: AboutRoute,
   AideRoute: AideRoute,
   AnalyseBotsIaRoute: AnalyseBotsIaRoute,
   AnalyseLogsRoute: AnalyseLogsRoute,
@@ -2757,6 +2818,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComparatifPlateformeSeoIaRoute: ComparatifPlateformeSeoIaRoute,
   ConditionsUtilisationRoute: ConditionsUtilisationRoute,
   ConsoleRoute: ConsoleRoute,
+  ContactRoute: ContactRoute,
   ContentArchitectRoute: ContentArchitectRoute,
   ConversionOptimizerRoute: ConversionOptimizerRoute,
   CrawlRoute: CrawlRoute,
@@ -2785,6 +2847,7 @@ const rootRouteChildren: RootRouteChildren = {
   OutilGeoIaRoute: OutilGeoIaRoute,
   PagespeedRoute: PagespeedRoute,
   PolitiqueConfidentialiteRoute: PolitiqueConfidentialiteRoute,
+  PrivacyRoute: PrivacyRoute,
   PrivacyGoogleAdsRoute: PrivacyGoogleAdsRoute,
   ProAgencyRoute: ProAgencyRoute,
   ProfilRoute: ProfilRoute,

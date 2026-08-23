@@ -5,9 +5,8 @@ import { pageHead } from "@/lib/seo/pageHead";
 export const Route = createFileRoute("/politique-confidentialite")({
   head: () => pageHead({
     title: "Politique de confidentialité | Crawlers.fr",
-    description: "Politique de confidentialité de Crawlers.fr",
+    description: "Comment Crawlers collecte, héberge (UE) et conserve les données : traitements, durées, sous-traitants, cookies et exercice des droits RGPD.",
     path: "/politique-confidentialite",
-    noIndex: true,
   }),
   component: PolitiqueConfidentialite,
 });

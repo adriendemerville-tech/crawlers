@@ -14,6 +14,7 @@ const FALLBACK_PATHS = [
   "/audit-seo-geo",
   "/generative-engine-optimization",
   "/a-propos",
+  "/contact",
   "/faq",
   "/aide",
   "/mentions-legales",
