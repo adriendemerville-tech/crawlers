@@ -43,6 +43,7 @@ import {
 
 import { verdictsFromCocoonRisks, pillarSatelliteBlockHTML, pageAuthority } from '../_shared/pillarSatelliteVerdict.ts';
 import { buildBacklinkSectionHTML } from '../_shared/backlinkSection.ts';
+import { fetchDomainAuthority } from '../_shared/domainAuthority.ts';
 
 
 
@@ -5696,6 +5697,53 @@ Deno.serve(handleRequest(async (req) => {
       console.log(`[Marina] 🧹 purge_cache ${purgeDomain} par ${userId}`, purged);
       return json({ success: true, domain: purgeDomain, purged });
     }
+
+    // ── Recalcul du profil de backlinks (ADMIN uniquement, 0 token LLM) ──
+    // Sert à rafraîchir la section « Profil de backlinks » d'un rapport déjà
+    // produit après une évolution du moteur de segmentation, sans relancer un
+    // audit complet. Renvoie la section HTML prête à intégrer + les mesures.
+    if (body.action === 'backlink_section') {
+      let isAdminCaller = false;
+      try {
+        const { data: adminCheck } = await sb.rpc('has_role', { _user_id: userId, _role: 'admin' });
+        isAdminCaller = adminCheck === true;
+      } catch (e) {
+        console.warn('[Marina] backlink_section: has_role failed', e);
+      }
+      if (!isAdminCaller) return json({ error: 'Forbidden' }, 403);
+
+      let blDomain = '';
+      try {
+        const raw = String(body.url || body.domain || '').trim();
+        if (!raw) return json({ error: 'url ou domain requis' }, 400);
+        blDomain = new URL(raw.startsWith('http') ? raw : `https://${raw}`).hostname
+          .toLowerCase()
+          .replace(/^www\./, '');
+      } catch {
+        return json({ error: 'URL invalide' }, 400);
+      }
+
+      const verifiedOwnDomains = Array.isArray(body.verifiedOwnDomains)
+        ? (body.verifiedOwnDomains as unknown[]).map((d) => String(d || '').toLowerCase().replace(/^www\./, '')).filter(Boolean)
+        : [];
+
+      const authority = await fetchDomainAuthority(blDomain, {
+        skipCache: body.skipCache !== false,
+        verifiedOwnDomains,
+      });
+
+      return json({
+        success: true,
+        domain: blDomain,
+        html: buildBacklinkSectionHTML(authority, ''),
+        authority_score: authority.authority_score,
+        toxicity: authority.toxicity ?? null,
+        segmentation: authority.segmentation ?? null,
+        own_network_hygiene: (authority as unknown as Record<string, unknown>)['own_network_hygiene'] ?? null,
+      });
+    }
+
+
 
 
     // ── Carte d'identité : édition / verrouillage AVANT le crawl ──
