@@ -177,7 +177,13 @@ const TOXIC_ANCHORS = [
  * - Supprime les espaces et caractères invisibles
  * - Gère les URLs mal formatées
  */
+/** Borne une valeur dans [0, 1] — sévérités et abattements progressifs. */
+function clamp01(n: number): number {
+  return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 0;
+}
+
 function normalizeUrl(url: string): string {
+
   // Nettoyage basique
   let normalized = url
     .trim()
