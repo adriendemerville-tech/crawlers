@@ -1663,11 +1663,32 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
           }).join('');
           const total = Number(expertSeoData?.totalScore ?? sum);
           const declaredMax = Number(expertSeoData?.maxScore || sumMax);
+          // Réconciliation chiffrée de l'écart entre la somme des axes et le
+          // total affiché : bonus/malus liens cassés, facteur de fiabilité de
+          // collecte, puis plafond de cohérence. Aucun écart n'est laissé sans
+          // explication vérifiable.
+          const rec = scores?.reconciliation || null;
+          const steps: string[] = [];
+          if (rec) {
+            if (Number(rec.brokenLinksAdjustment)) {
+              steps.push(`ajustement liens cassés ${Number(rec.brokenLinksAdjustment) > 0 ? '+' : ''}${Number(rec.brokenLinksAdjustment)} point${Math.abs(Number(rec.brokenLinksAdjustment)) > 1 ? 's' : ''}${rec.brokenLinksVerdict ? ` (verdict « ${rec.brokenLinksVerdict} »)` : ''}`);
+            }
+            if (Number(rec.reliabilityFactor) && Number(rec.reliabilityFactor) < 1) {
+              steps.push(`facteur de fiabilité de collecte ×${Number(rec.reliabilityFactor).toFixed(2)}`);
+            }
+            if (rec.cap != null && Number(rec.beforeCap) > Number(rec.cap)) {
+              steps.push(`plafond de cohérence ${rec.beforeCap}/${declaredMax} → ${rec.cap}/${declaredMax}`);
+            }
+          }
           return `<div class="stat-grid-4">${cards}</div>
         <p style="font-size:12px;color:#6b7280;margin:10px 0 0;">
-          Somme des cinq axes : <strong>${sum}/${sumMax}</strong>${total !== sum ? ` — le score global d'audit technique affiché ailleurs (${total}/${declaredMax}) intègre en plus les contrôles hors page d'accueil (sitemaps, robots.txt, llms.txt).` : `, soit le score global d'audit technique (${total}/${declaredMax}).`}
+          Somme des cinq axes : <strong>${rec ? rec.axesSum : sum}/${sumMax}</strong>.
+          ${steps.length
+            ? `Le total affiché (<strong>${total}/${declaredMax}</strong>) s'en déduit ainsi : ${steps.join(' ; puis ')}.`
+            : `Soit le score global d'audit technique (<strong>${total}/${declaredMax}</strong>).`}
           Le score sur 100 de la synthèse exécutive est cette même valeur ramenée en pourcentage : ${Math.round((total / (declaredMax || 1)) * 100)}/100.
         </p>`;
+
         })()}
       </div>
     </div>`;
