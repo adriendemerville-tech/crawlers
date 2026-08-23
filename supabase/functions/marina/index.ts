@@ -1774,8 +1774,8 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       <!-- ── Bloc mots-clés et marché ── -->
       ${buildKeywordPositioningSection(keywordPos, rankingOverview)}
       ${buildModuleSection('Contenus prioritaires à créer / renforcer', '🧭', priorityContent)}
-      ${buildModuleSection('Marché et autorité de domaine', '🔗', domainAuthority)}
-      ${authorityTrendHtml}
+      ${buildBacklinkSectionHTML(domainAuthority, authorityTrendHtml)}
+
       ${buildModuleSection('Données Marché', '📈', marketData)}
 
       <!-- ── Bloc marque, concurrence, audience ── -->
