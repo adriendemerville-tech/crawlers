@@ -170,7 +170,12 @@ export interface AuthorityData {
   distribution: BacklinkDistribution | null;
   /** Pages du domaine les plus liées (top 10 de l'échantillon) */
   top_linked_pages: LinkedPage[];
+  /** Segmentation du profil en trois compartiments (réseau propre / annuaires / éditorial tiers) */
+  segmentation?: BacklinkSegmentation | null;
+  /** Hygiène du réseau propre — indicateur séparé, jamais ajouté à la toxicité */
+  own_network_hygiene?: OwnNetworkHygiene | null;
   organic_visibility?: OrganicVisibility | null;
+
   /** Nombre de domaines référents réellement analysés (échantillon, ≠ total) */
   referring_domains_sampled: number;
   /** Nombre d'ancres réellement analysées */
