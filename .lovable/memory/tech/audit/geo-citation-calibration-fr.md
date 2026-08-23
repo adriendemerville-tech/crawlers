@@ -31,3 +31,12 @@ Le bandeau de synthèse exécutive affiche **`pageGeo100`** (déterministe calib
 la note narrative de l'audit stratégique LLM ne sert plus que de repli si aucun
 sous-signal n'est mesuré. Un paragraphe pédagogique rend la calibration explicite
 dans le bandeau et dans le bloc « 10 sous-signaux, 3 piliers ».
+
+## Explicitation dans le rapport
+Le tableau des piliers affiche « Sous-total des signaux mesurés (potentiel) », une
+ligne « Calibration par la citation observée » (taux, observations, facteur signé,
+`pre → post`, mention « 0 % de citation = −10 % ») puis « Total GEO après
+calibration ». Un encadré or énonce la règle complète (cible 20 %, pénalité linéaire
+jusqu'à −10 % à 0 % de citation, bonus jusqu'à +10 % à 60 %, minimum 6 observations).
+Le badge de l'audit stratégique est explicitement étiqueté « Score stratégique global »
+avec la mention « ce n'est pas le score GEO » pour lever la confusion des deux notes.

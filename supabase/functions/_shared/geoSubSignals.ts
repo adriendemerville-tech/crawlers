@@ -1049,6 +1049,11 @@ function pillarTableHTML(report: GeoSubSignalReport, lang?: string): string {
       return f.score === null ? acc : acc + (f.score / 100) * report.pillar_points[key];
     }, 0);
 
+  const cal = report.citation_calibration;
+  const prePotential = cal.applied && cal.pre_score !== null ? cal.pre_score : report.geo_score;
+
+
+
   return `<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;margin:0 0 14px;background:#ffffff;">
     <thead>
       <tr style="background:#f9fafb;">
@@ -1062,15 +1067,36 @@ function pillarTableHTML(report: GeoSubSignalReport, lang?: string): string {
     <tbody>
       ${rows}
       <tr style="background:#f9fafb;">
-        <td style="padding:8px 10px;font-size:12px;font-weight:700;color:#111827;">${en ? 'GEO total' : 'Total GEO'}</td>
+        <td style="padding:8px 10px;font-size:12px;font-weight:700;color:#111827;">${cal.applied && cal.factor_pct !== 0 ? (en ? 'Sub-total of measured signals (potential)' : 'Sous-total des signaux mesurés (potentiel)') : (en ? 'GEO total' : 'Total GEO')}</td>
         <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;color:#111827;white-space:nowrap;">100 pts</td>
-        <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:700;color:#111827;white-space:nowrap;">${report.geo_score === null ? 'n/m' : `${report.geo_score}/100`}</td>
+        <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:700;color:#111827;white-space:nowrap;">${prePotential === null ? 'n/m' : `${prePotential}/100`}</td>
         <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:700;color:#111827;white-space:nowrap;">${report.geo_score === null ? '—' : `${Math.round(totalEarned * 10) / 10} pts`}</td>
         <td style="padding:8px 10px;"></td>
       </tr>
+      ${cal.applied && cal.factor_pct !== 0 ? `
+      <tr>
+        <td style="padding:8px 10px;border-top:1px solid #e5e7eb;font-size:12px;color:#374151;">
+          <strong style="color:#111827;">${en ? 'Observed-citation calibration' : 'Calibration par la citation observée'}</strong>
+          <div style="font-size:10.5px;color:#6b7280;margin-top:2px;">${en
+            ? `Observed citation rate ${cal.rate_pct} % over ${cal.observations} observations (neutral target ${GEO_CALIBRATION_NEUTRAL_PCT} %).`
+            : `Taux de citation observé ${cal.rate_pct} % sur ${cal.observations} observations (cible neutre ${GEO_CALIBRATION_NEUTRAL_PCT} %).`}</div>
+        </td>
+        <td style="padding:8px 10px;border-top:1px solid #e5e7eb;text-align:right;font-size:12px;color:#6b7280;white-space:nowrap;">±${GEO_CALIBRATION_MAX_PCT} % max</td>
+        <td style="padding:8px 10px;border-top:1px solid #e5e7eb;text-align:right;font-size:12px;font-weight:600;color:${cal.factor_pct < 0 ? GOLD : '#111827'};white-space:nowrap;">${cal.factor_pct > 0 ? '+' : ''}${cal.factor_pct} %</td>
+        <td style="padding:8px 10px;border-top:1px solid #e5e7eb;text-align:right;font-size:12px;color:#374151;white-space:nowrap;">${cal.pre_score}/100 → ${cal.post_score}/100</td>
+        <td style="padding:8px 10px;border-top:1px solid #e5e7eb;font-size:10.5px;color:#6b7280;white-space:nowrap;">${en ? '0 % citation = −10 %' : '0 % de citation = −10 %'}</td>
+      </tr>
+      <tr style="background:#f9fafb;">
+        <td style="padding:8px 10px;font-size:12px;font-weight:700;color:#111827;">${en ? 'GEO total after calibration' : 'Total GEO après calibration'}</td>
+        <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;color:#111827;white-space:nowrap;">100 pts</td>
+        <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:700;color:#111827;white-space:nowrap;">${report.geo_score === null ? 'n/m' : `${report.geo_score}/100`}</td>
+        <td style="padding:8px 10px;"></td>
+        <td style="padding:8px 10px;"></td>
+      </tr>` : ''}
     </tbody>
   </table>`;
 }
+
 
 export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string): string {
   if (!report || report.signals.every((s) => s.value === null)) return '';
@@ -1108,14 +1134,13 @@ export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string
       <p style="font-size:12px;color:#374151;line-height:1.6;margin:0;"><strong>${esc(report.verdict_label)}.</strong> ${esc(report.verdict_explanation)}</p>
       ${levers}
     </div>
-    <p style="font-size:11px;color:#6b7280;line-height:1.6;margin:10px 0 0 0;">
-      <strong>${lang === 'en' ? 'Potential vs observed' : 'Potentiel et résultat observé'} :</strong>
-      ${esc(report.citation_calibration.note)}
-      ${report.citation_calibration.applied
-        ? (lang === 'en'
-            ? ` Modulation limited to ±${GEO_CALIBRATION_MAX_PCT} % of the score; the scale itself is unchanged.`
-            : ` Modulation bornée à ±${GEO_CALIBRATION_MAX_PCT} % du score ; le barème lui-même reste inchangé.`)
-        : ''}
-    </p>
+    <div style="margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-left:3px solid ${GOLD};border-radius:8px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:4px;">${lang === 'en' ? 'Observed-citation calibration' : 'Calibration par la citation observée'}${report.citation_calibration.applied ? ` — ${report.citation_calibration.factor_pct > 0 ? '+' : ''}${report.citation_calibration.factor_pct} %` : ''}</div>
+      <p style="font-size:12px;color:#374151;line-height:1.6;margin:0 0 6px;">${esc(report.citation_calibration.note)}</p>
+      <p style="font-size:11px;color:#6b7280;line-height:1.6;margin:0;">${lang === 'en'
+        ? `Rule: the sub-signals measure a citation <em>potential</em>; the LLM benchmark measures the <em>result</em>. The gap modulates the score by ±${GEO_CALIBRATION_MAX_PCT} % at most, never the scale. ${GEO_CALIBRATION_NEUTRAL_PCT} % observed citation is the neutral target (no adjustment); the penalty grows linearly below it and reaches its maximum, <strong>−${GEO_CALIBRATION_MAX_PCT} % of the score, when the brand is never cited by any answer engine (0 % citation)</strong>; above the target the bonus grows up to +${GEO_CALIBRATION_MAX_PCT} % at ${GEO_CALIBRATION_HIGH_PCT} %. Below ${GEO_CALIBRATION_MIN_OBSERVATIONS} observations no calibration is applied: too short a sample is not a measurement.`
+        : `Règle : les sous-signaux mesurent un <em>potentiel</em> de citation, le benchmark LLM mesure le <em>résultat</em>. L’écart module le score de ±${GEO_CALIBRATION_MAX_PCT} % au maximum, jamais le barème. ${GEO_CALIBRATION_NEUTRAL_PCT} % de citation observée est la cible neutre (aucun ajustement) ; en dessous, la pénalité croît linéairement et atteint son maximum, <strong>−${GEO_CALIBRATION_MAX_PCT} % du score lorsque la marque n’est jamais citée par aucun moteur de réponse (0 % de citation)</strong> ; au-dessus de la cible, le bonus monte jusqu’à +${GEO_CALIBRATION_MAX_PCT} % à ${GEO_CALIBRATION_HIGH_PCT} %. Sous ${GEO_CALIBRATION_MIN_OBSERVATIONS} observations, aucune calibration n’est appliquée : un échantillon trop court n’est pas une mesure.`}</p>
+    </div>
+
   </div>`;
 }
