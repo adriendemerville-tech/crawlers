@@ -42,7 +42,7 @@ const MentionsLegales = () => {
               <div className="bg-muted/50 rounded-lg p-6 space-y-2 text-muted-foreground">
                 <p><strong className="text-foreground">{t3(language, 'Société éditrice :', 'Publishing company:', 'Empresa editora:')}</strong> Voluntas Novare — SASU</p>
                 <p><strong className="text-foreground">{t3(language, 'Siège social / Adresse postale :', 'Registered office / Postal address:', 'Sede social / Dirección postal:')}</strong> Saint-Rémy-de-Provence, France</p>
-                <p><strong className="text-foreground">SIREN / SIRET :</strong> {t3(language, 'Numéro SIREN de la société éditrice', 'SIREN number of the publishing company', 'Número SIREN de la empresa editora')}</p>
+                <p><strong className="text-foreground">SIREN / SIRET :</strong> 992 399 667</p>
                 <p><strong className="text-foreground">{t3(language, 'Code APE :', 'APE Code:', 'Código APE:')}</strong> 6201Z — Programmation informatique</p>
                 <p><strong className="text-foreground">{t3(language, 'Directeur de la publication :', 'Publication Director:', 'Director de la publicación:')}</strong> Adrien de Volontat</p>
                 <p><strong className="text-foreground">{t3(language, 'Responsable du traitement des données :', 'Data Controller:', 'Responsable del tratamiento de datos:')}</strong> Voluntas Novare — SASU — <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
