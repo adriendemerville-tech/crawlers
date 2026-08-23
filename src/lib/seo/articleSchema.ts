@@ -6,6 +6,7 @@
  */
 
 import { SITE_URL } from './pageHead';
+import { ORGANIZATION_REF } from './organization';
 import { resolveArticleDates } from '@/lib/blog/lastUpdated';
 
 
@@ -50,11 +51,9 @@ export function buildArticleJsonLd(input: ArticleJsonLdInput) {
       name: author,
       url: `${SITE_URL}/auteur/${authorSlug}`,
     },
-    publisher: {
-      '@type': 'Organization',
-      name: 'Crawlers.fr',
-      logo: { '@type': 'ImageObject', url: `${SITE_URL}/favicon.svg` },
-    },
+    // Référence au nœud d'identité canonique émis une fois par le root :
+    // pas de second nœud Organization concurrent et incomplet.
+    publisher: ORGANIZATION_REF,
     ...(datePublished ? { datePublished } : {}),
     ...(dateModified ? { dateModified } : {}),
 
@@ -140,11 +139,7 @@ export function buildProfilePageJsonLd(input: {
       ...(input.image ? { image: input.image } : {}),
       ...(input.knowsAbout?.length ? { knowsAbout: input.knowsAbout } : {}),
       ...(input.sameAs?.length ? { sameAs: input.sameAs } : {}),
-      worksFor: {
-        '@type': 'Organization',
-        name: 'Crawlers.fr',
-        url: SITE_URL,
-      },
+      worksFor: ORGANIZATION_REF,
     },
   };
 }
