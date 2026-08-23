@@ -293,7 +293,7 @@ const ConditionsUtilisation = () => {
               </p>
               <div className="bg-muted/50 rounded-lg p-6 mt-4 space-y-2 text-muted-foreground">
                 <p><strong className="text-foreground">{t3(language, 'Société éditrice :', 'Publishing company:', 'Empresa editora:')}</strong> Voluntas Novare — SASU</p>
-                <p><strong className="text-foreground">{t3(language, 'Adresse postale :', 'Postal address:', 'Dirección postal:')}</strong> {t3(language, 'Adresse de la société éditrice', 'Address of the publishing company', 'Dirección de la empresa editora')}</p>
+                <p><strong className="text-foreground">{t3(language, 'Adresse postale :', 'Postal address:', 'Dirección postal:')}</strong> Saint-Rémy-de-Provence, France</p>
                 <p><strong className="text-foreground">Email :</strong> <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
               </div>
             </section>
