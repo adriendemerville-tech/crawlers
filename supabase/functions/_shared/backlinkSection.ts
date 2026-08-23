@@ -264,7 +264,7 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
           <th style="padding:6px 10px;text-align:right;color:#6b7280;">Liens</th>
         </tr></thead>
         <tbody>${a.top_referring_domains
-          .slice(0, 5)
+          .slice(0, 4)
           .map(
             (d) => `<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:6px 10px;">${esc(d.domain)}</td><td style="padding:6px 10px;text-align:right;">${d.rank}</td><td style="padding:6px 10px;text-align:right;">${nf(d.backlinks)}</td></tr>`,
           )
@@ -273,29 +273,29 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
     : '';
 
   const anchors = a.top_anchors_detail?.length
-    ? `<ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.6;">${a.top_anchors_detail
-        .slice(0, 5)
-        .map((x) => `<li>« ${esc(x.anchor)} » — ${nf(x.count)}</li>`)
-        .join('')}</ul>`
+    ? `<div style="font-size:12px;color:#374151;">${a.top_anchors_detail
+        .slice(0, 3)
+        .map((x) => `« ${clip(esc(x.anchor), 28)} » ${nf(x.count)}`)
+        .join(' · ')}</div>`
     : '';
 
   const reliability = `<p style="font-size:11.5px;color:#6b7280;margin:0;line-height:1.6;">
-      Échantillon ${nf(a.referring_domains_sampled)}/${nf(a.referring_domains)} domaines · ${nf(a.anchors_sampled)} ancres · fiabilité ${CONFIDENCE_LABEL[a.confidence] || a.confidence} · DataForSEO ${esc(a.fetched_at?.slice(0, 10) || 'n/d')}, calibration v${a.calibration_version}. Estimation Crawlers : signal d'investigation, pas preuve de pénalité.
+      ${nf(a.referring_domains_sampled)}/${nf(a.referring_domains)} domaines · ${nf(a.anchors_sampled)} ancres · fiabilité ${CONFIDENCE_LABEL[a.confidence] || a.confidence} · DataForSEO ${esc(a.fetched_at?.slice(0, 10) || 'n/d')} v${a.calibration_version}. Estimation Crawlers, pas une pénalité Google.
     </p>`;
 
   return `<div data-marina-block="backlinks" style="margin-top:20px;padding:16px;background:#ffffff;border-radius:8px;border:1px solid #e5e7eb;">
-    <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">Profil de backlinks — volumétrie, autorité et toxicité</h3>
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">Profil de backlinks</h3>
     <p style="font-size:12px;color:#6b7280;margin:0 0 10px 0;">Liens externes vers ${esc(a.domain)}.</p>
     ${volumetry}
-    ${sub('Score de toxicité — détail du calcul', toxTable)}
-    ${sub('Segmentation du profil', segHtml)}
-    ${sub(dctx ? `Dofollow (${Math.round(dctx.ratio)} %) — facteur contextuel` : 'Dofollow — facteur contextuel', dofollowHtml)}
-    ${sub('Autorité apparente vs indépendante estimée', independenceHtml)}
-    ${sub('Hygiène du réseau propre', hygieneHtml)}
-    ${sub('Principaux domaines référents', refs)}
-    ${sub('Ancres les plus fréquentes', anchors)}
+    ${sub('Toxicité — détail du calcul', toxTable)}
+    ${sub('Segmentation', segHtml)}
+    ${sub(dctx ? `Dofollow (${Math.round(dctx.ratio)} %) en contexte` : 'Dofollow en contexte', dofollowHtml)}
+    ${sub('Autorité apparente vs indépendante', independenceHtml)}
+    ${sub('Réseau propre', hygieneHtml)}
+    ${sub('Principaux référents', refs)}
+    ${sub('Ancres', anchors)}
     ${trendHtml}
-    ${sub('Fiabilité et portée', reliability)}
+    ${sub('Fiabilité', reliability)}
   </div>`;
 }
 
