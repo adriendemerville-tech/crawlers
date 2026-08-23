@@ -16,9 +16,16 @@ const pct = (r: number) => `${Math.round((r || 0) * 100)} %`;
 
 const VERDICT_LABEL: Record<BacklinkToxicity['verdict'], string> = {
   sain: 'Sain',
-  a_surveiller: 'À surveiller',
-  pollue: 'Pollué',
+  a_surveiller: 'À surveiller — profil à documenter',
+  pollue: 'Risque élevé — profil à investiguer',
 };
+
+const DOFOLLOW_LEVEL_LABEL: Record<string, string> = {
+  faible: 'Faible',
+  a_surveiller: 'À surveiller',
+  aggravant: 'Aggravant',
+};
+
 
 const CONFIDENCE_LABEL: Record<string, string> = {
   high: 'élevée',
