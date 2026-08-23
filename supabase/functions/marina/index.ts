@@ -921,7 +921,7 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     imagesTotal: totalImages || htmlAnalysis?.imagesTotal || 0,
     imagesWithoutAlt: totalImagesWithoutAlt,
     h1,
-    h2Count: primaryPage?.h2_count ?? htmlAnalysis?.h2Count ?? 0,
+    h2Count: primaryPage?.h2_count ?? (expertDescribesPrimary ? (htmlAnalysis?.h2Count ?? 0) : 0),
     hasSchema: primaryPage?.has_schema_org ?? htmlAnalysis?.hasSchemaOrg ?? false,
     // Priorité au crawl réel : l'analyse expert ne voyait pas les balises
     // injectées côté serveur et déclarait canonical/OG absents à tort.
