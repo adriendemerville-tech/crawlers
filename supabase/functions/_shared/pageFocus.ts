@@ -146,7 +146,40 @@ function extractLocality(slug: string, knownLocalities: string[] = []): { locali
   return { locality: null, rest: low };
 }
 
+/**
+ * Nettoie la prestation extraite du slug. Un slug d'agence locale porte souvent
+ * la marque et du bruit administratif (« avenir-renovations-13-marseille-1er-
+ * arrondissement »). Interroger la SERP avec la marque ramène l'entreprise
+ * elle-même, jamais ses concurrents. On retire donc :
+ *   - les tokens de la marque (quand elle est connue) ;
+ *   - les arrondissements, numéros de département et codes postaux.
+ * Si plus rien ne subsiste, on renvoie '' : l'appelant retombe alors sur le
+ * secteur d'activité, ce qui est le comportement voulu.
+ */
+function sanitizeServicePhrase(rest: string, brandName?: string | null): string {
+  let low = String(rest || '').toLowerCase();
+  low = low.replace(/(^|-)\d{1,2}\s*(er|e|eme|ème|nd|nde)?[- ]?arrondissement(-|$)/g, '$1');
+  low = low.replace(/(^|-)arrondissement(-|$)/g, '$1');
+  const brandTokens = new Set(
+    String(brandName || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length >= 3),
+  );
+  const tokens = low.split('-').filter(Boolean).filter((t) => {
+    if (/^\d+$/.test(t)) return false; // « 13 », « 75001 »
+    if (/^\d+(er|e|eme|ème|nd|nde)$/.test(t)) return false; // « 1er », « 2eme »
+    const plain = t.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (brandTokens.has(plain)) return false;
+    return true;
+  });
+  return tokens.join('-');
+}
+
 function termsOf(phrase: string): string[] {
+
   return humanize(phrase)
     .split(/\s+/)
     .map((w) => w.trim())
