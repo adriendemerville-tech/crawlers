@@ -133,6 +133,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: "/fonts-deferred.css" },
     ],
     scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(SITEWIDE_JSONLD),
+      },
       { children: GTAG_BOOTSTRAP },
       { children: DOMAIN_CANONICALIZATION },
       { children: TEXT_SIZE_BOOTSTRAP },
