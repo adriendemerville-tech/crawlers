@@ -612,19 +612,10 @@ const PILLAR_ACCENT: Record<GeoPillar, string> = {
   content: '#111827',
 };
 
+/** Barème fixe : chaque pilier porte un poids constant, indiqué en clair. */
 function trendText(p: GeoPillar, lang?: string): string {
-  const fr = {
-    authority: 'constant',
-    accessibility: 'décroît vers 10 pts',
-    content: 'monte vers 65 pts',
-  };
-  const en = {
-    authority: 'constant',
-    accessibility: 'decays toward 10 pts',
-    content: 'rises toward 65 pts',
-  };
-  const map = lang === 'en' ? en : fr;
-  return map[p];
+  const pts = GEO_PILLAR_POINTS[p];
+  return lang === 'en' ? `fixed ${pts} pts` : `poids fixe ${pts} pts`;
 }
 
 function barRow(s: GeoSubSignalValue, lang?: string): string {
