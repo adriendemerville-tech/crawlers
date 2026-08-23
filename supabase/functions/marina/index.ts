@@ -5011,7 +5011,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               label: detectedLang === 'en' ? 'Content exploitability' : detectedLang === 'es' ? 'Explotabilidad de contenido' : 'Exploitabilité contenu',
               score: geoSubSignalsReport?.content?.score ?? null,
               points: Number(geoSubSignalsReport?.pillar_points?.content ?? 53),
-              trend: detectedLang === 'en' ? 'fixed 53 pts' : 'poids fixe 53 pts',
+              trend: detectedLang === 'en' ? 'rises to 58 pts' : 'monte vers 58 pts',
             },
           ],
         });
