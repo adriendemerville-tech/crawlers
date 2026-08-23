@@ -2861,18 +2861,37 @@ function compileMarinaReport(
 
     <!-- Table of Contents -->
     <div class="toc" data-pdf-section>
-      <div class="toc-item"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
-      ${sectionHTMLs.archetypes ? `<div class="toc-item"><span class="section-number">1b</span> ${lang === 'fr' ? 'Audit par type de page' : lang === 'es' ? 'Auditoría por tipo de página' : 'Audit by page type'}</div>` : ''}
-      <div class="toc-item"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
-      <div class="toc-item"><span class="section-number">3</span> 🎯 ${tr.strategicAudit}</div>
-      ${sectionHTMLs.ownerPerformance ? `<div class="toc-item"><span class="section-number">3b</span> ${lang === 'fr' ? 'Données propriétaires du domaine' : lang === 'es' ? 'Datos propietarios del dominio' : 'First-party domain data'}</div>` : ''}
+      <div class="toc-item"><span class="section-number">1</span> 🎯 ${tr.strategicAudit}</div>
+      ${sectionHTMLs.ownerPerformance ? `<div class="toc-item"><span class="section-number">1b</span> ${lang === 'fr' ? 'Données propriétaires du domaine' : lang === 'es' ? 'Datos propietarios del dominio' : 'First-party domain data'}</div>` : ''}
+      <div class="toc-item"><span class="section-number">2</span> 🕷️ ${tr.crawlReport}</div>
+      ${sectionHTMLs.archetypes ? `<div class="toc-item"><span class="section-number">2b</span> ${lang === 'fr' ? 'Audit par type de page' : lang === 'es' ? 'Auditoría por tipo de página' : 'Audit by page type'}</div>` : ''}
+      <div class="toc-item"><span class="section-number">3</span> 🔍 ${tr.techAudit}</div>
       <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
       ${sectionHTMLs.indexation ? `<div class="toc-item"><span class="section-number">5</span> 📊 ${lang === 'fr' ? 'Santé d\'indexation' : lang === 'es' ? 'Salud de indexación' : 'Indexation Health'}</div>` : ''}
       ${sectionHTMLs.consolidatedPlan ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '6' : '5'}</span> ${lang === 'fr' ? "Plan d'action consolidé" : lang === 'es' ? 'Plan de acción consolidado' : 'Consolidated Action Plan'}</div>` : ''}
       ${sectionHTMLs.conclusion ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '7' : '6'}</span> ${lang === 'fr' ? 'Conclusion et priorités' : lang === 'es' ? 'Conclusión y prioridades' : 'Conclusion and priorities'}</div>` : ''}
     </div>
 
-    <!-- Section 1: Crawl (périmètre site) -->
+    <!-- Section 1 : Audit stratégique — le score de tête du rapport, périmètre domaine.
+         Placé en premier : c'est le cadre de lecture de tout ce qui suit. -->
+    <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
+
+    ${llmVisibilityBlock ? `
+    <!-- Visibilité / citabilité IA, rattachée à la section stratégique (elle en est l'objet).
+         Périmètre site sur la home, périmètre page sur une URL profonde. -->
+
+    <div data-marina-scope="${llmScopeIsPage ? 'page' : 'site'}" data-marina-block="llm">${llmVisibilityBlock}</div>
+    ` : ''}
+
+    ${sectionHTMLs.ownerPerformance ? `
+    <div class="marina-separator"></div>
+    <!-- Section 1b : données propriétaires GSC/GA4 (périmètre site, mutualisable) -->
+    ${sectionHTMLs.ownerPerformance}
+    ` : ''}
+
+    <div class="marina-separator"></div>
+
+    <!-- Section 2: Crawl (périmètre site) -->
     <div data-marina-scope="site" data-marina-block="crawl">${crawlContent}</div>
 
     ${sectionHTMLs.archetypes ? `
@@ -2884,31 +2903,14 @@ function compileMarinaReport(
     <div class="marina-separator"></div>
 
     ${sectionHTMLs.pageVerdict ? `
-    <!-- Conclusion intermédiaire propre à cette URL (périmètre page, en tête de la partie URL) -->
+    <!-- Conclusion intermédiaire propre à cette URL (périmètre page) -->
     ${sectionHTMLs.pageVerdict}
     <div class="marina-separator"></div>
     ` : ''}
 
-    <!-- Section 2: Technical SEO (périmètre page) -->
+    <!-- Section 3: Technical SEO (périmètre page) -->
     <div data-marina-scope="page" data-marina-block="tech">${techContent}</div>
 
-    <div class="marina-separator"></div>
-
-    <!-- Section 3: Strategic GEO (périmètre page) -->
-    <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
-
-    ${llmVisibilityBlock ? `
-    <!-- Visibilité / citabilité IA, rattachée à la section GEO (elle en est l'objet).
-         Périmètre site sur la home, périmètre page sur une URL profonde. -->
-
-    <div data-marina-scope="${llmScopeIsPage ? 'page' : 'site'}" data-marina-block="llm">${llmVisibilityBlock}</div>
-    ` : ''}
-
-    ${sectionHTMLs.ownerPerformance ? `
-    <div class="marina-separator"></div>
-    <!-- Section 3b : données propriétaires GSC/GA4 (périmètre site, mutualisable) -->
-    ${sectionHTMLs.ownerPerformance}
-    ` : ''}
 
     <div class="marina-separator"></div>
 
