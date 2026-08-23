@@ -1052,8 +1052,37 @@ export default function Marina() {
                   </div>
                 )}
 
+                {/* En file d'attente : aucun pourcentage ni compteur de pages */}
+                {loading && queuePosition !== null && (
+                  <div className="mt-6 border border-border rounded-lg p-4 bg-card">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <span className="text-sm font-medium">
+                        {language === 'en'
+                          ? 'Queued'
+                          : language === 'es'
+                            ? 'En cola'
+                            : 'En file d’attente'}
+                        {' — '}
+                        {language === 'en'
+                          ? `position ${queuePosition}`
+                          : language === 'es'
+                            ? `posición ${queuePosition}`
+                            : `position ${queuePosition}`}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {language === 'en'
+                        ? 'Your audit has not started yet: the concurrency limit is reached (2 audits per account). It will start automatically as soon as a slot frees up.'
+                        : language === 'es'
+                          ? 'Su auditoría aún no ha comenzado: se alcanzó el límite de simultaneidad (2 auditorías por cuenta). Comenzará automáticamente cuando se libere un espacio.'
+                          : 'Votre audit n’a pas encore démarré : la limite de traitements simultanés est atteinte (2 audits par compte). Il partira automatiquement dès qu’un créneau se libère.'}
+                    </p>
+                  </div>
+                )}
+
                 {/* Progression de l'audit */}
-                {loading && (
+                {loading && queuePosition === null && (
                   <MarinaProgressTimeline
                     phase={phase}
                     progress={progress}
@@ -1062,6 +1091,7 @@ export default function Marina() {
                     scanModeLabel={activeScanMode?.mode ?? null}
                   />
                 )}
+
 
 
                 {/* Audit multipages (max 15 URLs, PDF unique) */}
