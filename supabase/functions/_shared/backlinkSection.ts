@@ -255,7 +255,55 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
       </div>`
     : '';
 
+  // ── Dofollow lu en contexte, autorité indépendante, scénarios Google ───────
+  const dctx = t?.dofollow_context ?? null;
+  const dofollowHtml = dctx
+    ? `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:700;color:${dctx.level === 'aggravant' ? '#b91c1c' : dctx.level === 'a_surveiller' ? '#b45309' : '#15803d'};">${DOFOLLOW_LEVEL_LABEL[dctx.level]}</div>
+        <div style="font-size:12px;color:#6b7280;">${Math.round(dctx.ratio)} % de liens dofollow · ${dctx.points} pt${dctx.points > 1 ? 's' : ''} ajoutés au score de toxicité</div>
+      </div>
+      <p style="font-size:12.5px;color:#374151;margin:0 0 8px 0;line-height:1.7;">Un lien dofollow n’est pas intrinsèquement toxique : c’est le comportement normal d’un lien éditorial, et un profil naturel peut contenir une très forte proportion de liens dofollow. Le signal n’apparaît que lorsque ce caractère se combine à d’autres anomalies structurelles.</p>
+      ${dctx.corroborating.length
+        ? `<div style="font-size:12px;color:#111827;font-weight:600;margin-bottom:4px;">Anomalies mesurées qui corroborent la lecture</div>
+           <ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.7;">${dctx.corroborating.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
+           <p style="font-size:12.5px;color:#374151;margin:8px 0 0 0;line-height:1.7;">Dans ce contexte, les liens ne ressemblent plus nécessairement à autant de recommandations indépendantes : une partie de la volumétrie peut correspondre à quelques relations entre domaines, répétées sur un grand nombre de pages. Le caractère dofollow devient alors un facteur aggravant, car ces liens sont susceptibles de transmettre des signaux SEO, contrairement à des liens qualifiés <em>nofollow</em>, <em>ugc</em> ou <em>sponsored</em>. Cela ne permet pas de conclure qu’une pénalité Google existe : seul Google connaît le traitement réellement appliqué.</p>`
+        : `<p style="font-size:12px;color:#6b7280;margin:0;">Aucune anomalie structurelle corroborante mesurée : le ratio dofollow n’ajoute aucun point.</p>`}`
+    : '';
+
+  const sitewideHtml = `<p style="font-size:12.5px;color:#374151;margin:0 0 8px 0;line-height:1.7;">
+      La volumétrie brute doit être interprétée avec prudence. Si un site place un lien dans son pied de page et que ce pied de page est présent sur 1 300 pages, l’outil comptabilise environ 1 300 backlinks — mais il ne s’agit pas de 1 300 recommandations éditoriales indépendantes : c’est une seule relation entre deux sites, répétée techniquement.
+    </p>
+    <ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.7;">
+      <li>liens réellement éditoriaux et contextuels ;</li>
+      <li>liens sitewide (pied de page, en-tête, sidebar) ;</li>
+      <li>liens de navigation et liens issus de templates ;</li>
+      <li>liens de domaines indépendants ;</li>
+      <li>liens d’un réseau contrôlé ou fortement apparenté.</li>
+    </ul>`;
+
+  const ind = t?.independence ?? null;
+  const independenceHtml = ind
+    ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px;">
+        ${card(nf(ind.apparent_backlinks), 'Autorité apparente', 'backlinks externes bruts')}
+        ${card(nf(ind.own_network_backlinks), 'Liens du réseau propre')}
+        ${card(nf(ind.repeated_third_party_backlinks), 'Liens tiers répétés', 'au-delà de 3 liens par domaine')}
+        ${card(nf(ind.estimated_independent_backlinks), 'Autorité indépendante estimée', `sur ${nf(ind.estimated_independent_domains)} domaines tiers`)}
+        ${card(pct(ind.dependency_share), 'Part dépendante', 'réseau propre + répétition')}
+      </div>
+      <p style="font-size:12px;color:#6b7280;margin:0;line-height:1.7;">${esc(ind.method)}</p>`
+    : '';
+
+  const googleHtml = `<p style="font-size:12.5px;color:#374151;margin:0;line-height:1.7;">
+      Si les systèmes de Google relèvent les mêmes caractéristiques, plusieurs traitements sont possibles. Le premier scénario est la <strong>neutralisation</strong> de tout ou partie des liens : Google ne leur attribue simplement pas le poids attendu, et un volume important de backlinks disparaît de fait du calcul d’autorité sans qu’une pénalité du domaine soit nécessaire. Le deuxième est une <strong>dévaluation plus large</strong> des signaux issus du réseau, lorsque les liens ne sont pas considérés comme des recommandations éditoriales indépendantes. Dans les situations les plus problématiques, lorsqu’un schéma de liens destiné à manipuler les classements est établi, une <strong>action plus sévère</strong> reste envisageable. Ce rapport n’affirme jamais qu’une pénalité existe sur la seule base de l’analyse des backlinks.
+    </p>`;
+
+  const methodNoteHtml = `<p style="font-size:12px;color:#374151;margin:0;line-height:1.7;">
+      <strong>Important :</strong> ce score est une estimation propriétaire du risque de profil de liens. Il ne correspond pas à une note Google et ne permet pas de conclure à l’existence d’une pénalité algorithmique ou manuelle.${t && t.toxicity_score >= 60 ? ' Un score élevé signifie que plusieurs caractéristiques du profil sont compatibles avec un schéma de liens artificiel ou sur-optimisé : c’est un signal d’investigation, pas une preuve de sanction.' : ''}
+      Avant tout désaveu, vérifier que le domaine est réellement tiers, que les liens sont manifestement construits, et qu’il ne s’agit pas d’un annuaire ou d’une plateforme légitime. Sur les domaines du réseau propre : ne pas désavouer, corriger à la source. Un domaine n’est jamais déclaré rattaché au réseau propre sur la seule base d’une racine de marque commune — il est alors marqué « à confirmer ».
+    </p>`;
+
   const h = a.own_network_hygiene;
+
   const hygieneHtml = h && h.verdict !== 'non_mesure'
     ? `<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px;">
         <div style="font-size:13px;font-weight:700;color:${h.verdict === 'a_corriger_a_la_source' ? '#b45309' : '#15803d'};">${h.verdict === 'a_corriger_a_la_source' ? 'À corriger à la source' : 'Sain'}</div>
