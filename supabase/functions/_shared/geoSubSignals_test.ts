@@ -1,68 +1,93 @@
 /**
- * Tests déterministes du modèle GEO 3 piliers à barème FIXE 25 / 22 / 53.
- * Objectif : figer le barème pour qu'aucune régression ne brise la somme à 100
- * ni la répartition des points entre sous-signaux.
+ * Tests déterministes du barème GEO 3 piliers.
+ * Ancre 2026-08-23 : autorité 25 (constante), accessibilité 22 puis −1 pt par
+ * tranche de 18 mois jusqu'au plancher 17, contenu = le reste (53 → 58).
  */
 import { assert, assertEquals } from 'https://deno.land/std@0.208.0/assert/mod.ts';
 import {
+  geoAccessibilityPoints,
+  geoElapsedMonths,
   geoPillarTotals,
   geoSignalWeightsAt,
-  GEO_PILLAR_POINTS,
+  GEO_ACCESSIBILITY_FLOOR,
   GEO_PILLAR_REL,
 } from './geoSubSignals.ts';
 
 const at = (iso: string) => new Date(iso);
 
-Deno.test('GEO_PILLAR_POINTS : barème 25 / 22 / 53, somme 100', () => {
-  assertEquals(GEO_PILLAR_POINTS.authority, 25);
-  assertEquals(GEO_PILLAR_POINTS.accessibility, 22);
-  assertEquals(GEO_PILLAR_POINTS.content, 53);
-  assertEquals(
-    GEO_PILLAR_POINTS.authority + GEO_PILLAR_POINTS.accessibility + GEO_PILLAR_POINTS.content,
-    100,
-  );
+Deno.test('geoElapsedMonths : 0 à l’ancre (2026-08-23), ~18 à +18 mois', () => {
+  assertEquals(geoElapsedMonths(at('2026-08-23T00:00:00Z')), 0);
+  assertEquals(geoElapsedMonths(at('2026-01-01T00:00:00Z')), 0, 'avant l’ancre : 0');
+  const m18 = geoElapsedMonths(at('2028-02-23T00:00:00Z'));
+  assert(Math.abs(m18 - 18) < 0.1, `attendu ~18 mois, obtenu ${m18}`);
 });
 
-Deno.test('geoPillarTotals : identique à toute date (barème fixe)', () => {
-  const dates = ['2026-08-01T00:00:00Z', '2028-02-01T00:00:00Z', '2036-08-01T00:00:00Z'];
+Deno.test('geoAccessibilityPoints : marches de 1 pt tous les 18 mois, plancher 17', () => {
+  assertEquals(geoAccessibilityPoints(at('2026-08-23T00:00:00Z')), 22);
+  // Palier stable pendant 18 mois.
+  assertEquals(geoAccessibilityPoints(at('2027-06-01T00:00:00Z')), 22);
+  assertEquals(geoAccessibilityPoints(at('2028-02-24T00:00:00Z')), 21);
+  assertEquals(geoAccessibilityPoints(at('2029-08-24T00:00:00Z')), 20);
+  assertEquals(geoAccessibilityPoints(at('2031-02-24T00:00:00Z')), 19);
+  assertEquals(geoAccessibilityPoints(at('2032-08-24T00:00:00Z')), 18);
+  assertEquals(geoAccessibilityPoints(at('2034-02-24T00:00:00Z')), 17);
+  // Plancher : ne descend jamais sous 17, même très loin dans le temps.
+  assertEquals(geoAccessibilityPoints(at('2050-01-01T00:00:00Z')), GEO_ACCESSIBILITY_FLOOR);
+});
+
+Deno.test('geoPillarTotals : somme 100 à toute date, contenu absorbe la baisse', () => {
+  const dates = ['2026-08-23', '2028-02-24', '2029-08-24', '2034-02-24', '2050-01-01'];
+  let prevAccess = Infinity;
+  let prevContent = -Infinity;
   for (const d of dates) {
-    const t = geoPillarTotals(at(d));
-    assertEquals(t.authority, 25);
-    assertEquals(t.accessibility, 22);
-    assertEquals(t.content, 53);
-    assertEquals(t.authority + t.accessibility + t.content, 100);
+    const t = geoPillarTotals(at(`${d}T00:00:00Z`));
+    assertEquals(t.authority, 25, `autorité constante au ${d}`);
+    assertEquals(t.authority + t.accessibility + t.content, 100, `somme 100 au ${d}`);
+    assert(t.accessibility <= prevAccess, `accessibilité non croissante au ${d}`);
+    assert(t.content >= prevContent, `contenu non décroissant au ${d}`);
+    prevAccess = t.accessibility;
+    prevContent = t.content;
   }
+  // Bornes du barème.
+  const t0 = geoPillarTotals(at('2026-08-23T00:00:00Z'));
+  assertEquals([t0.authority, t0.accessibility, t0.content], [25, 22, 53]);
+  const tEnd = geoPillarTotals(at('2050-01-01T00:00:00Z'));
+  assertEquals([tEnd.authority, tEnd.accessibility, tEnd.content], [25, 17, 58]);
 });
 
-Deno.test('geoSignalWeightsAt : chaque pilier totalise son poids fixe', () => {
-  const w = geoSignalWeightsAt(at('2026-08-01T00:00:00Z'));
+Deno.test('geoSignalWeightsAt : chaque pilier totalise son poids courant', () => {
+  const w = geoSignalWeightsAt(at('2026-08-23T00:00:00Z'));
   const sumOf = (keys: string[]) => keys.reduce((a, k) => a + (w[k] ?? 0), 0);
   assertEquals(Math.round(sumOf(['brand_authority', 'serp_presence'])), 25);
   assertEquals(Math.round(sumOf(['bot_accessibility', 'structured_data_quality', 'content_freshness'])), 22);
   assertEquals(
-    Math.round(sumOf([
-      'content_quotability',
-      'answer_formatting',
-      'knowledge_graph_signals',
-      'self_citation_signals',
-      'person_authority',
-    ])),
+    Math.round(sumOf(['content_quotability', 'answer_formatting', 'knowledge_graph_signals', 'self_citation_signals', 'person_authority'])),
     53,
   );
   for (const v of Object.values(w)) assert(v > 0);
+
+  // Au plancher, l'accessibilité totalise 17 et le contenu 58.
+  const wEnd = geoSignalWeightsAt(at('2050-01-01T00:00:00Z'));
+  const sumEnd = (keys: string[]) => keys.reduce((a, k) => a + (wEnd[k] ?? 0), 0);
+  assertEquals(Math.round(sumEnd(['bot_accessibility', 'structured_data_quality', 'content_freshness'])), 17);
+  assertEquals(
+    Math.round(sumEnd(['content_quotability', 'answer_formatting', 'knowledge_graph_signals', 'self_citation_signals', 'person_authority'])),
+    58,
+  );
 });
 
-Deno.test('geoSignalWeightsAt : proportions internes conservées et stables dans le temps', () => {
+Deno.test('geoSignalWeightsAt : proportions internes constantes dans le temps', () => {
   const ratio = (w: Record<string, number>, a: string, b: string) => (w[a] ?? 0) / (w[b] ?? 0);
-  const w0 = geoSignalWeightsAt(at('2026-08-01T00:00:00Z'));
-  const w18 = geoSignalWeightsAt(at('2028-02-01T00:00:00Z'));
+  const w0 = geoSignalWeightsAt(at('2026-08-23T00:00:00Z'));
+  const wLate = geoSignalWeightsAt(at('2034-02-24T00:00:00Z'));
   assert(Math.abs(ratio(w0, 'bot_accessibility', 'structured_data_quality') - 14 / 12) < 1e-3);
-  assert(Math.abs(ratio(w18, 'bot_accessibility', 'structured_data_quality') - 14 / 12) < 1e-3);
-  // Barème fixe : aucun poids ne bouge d'une date à l'autre.
-  for (const k of Object.keys(w0)) assert(Math.abs((w0[k] ?? 0) - (w18[k] ?? 0)) < 1e-9);
+  assert(Math.abs(ratio(wLate, 'bot_accessibility', 'structured_data_quality') - 14 / 12) < 1e-3);
+  // Le poids absolu d'un sous-signal d'accessibilité décroît, celui du contenu croît.
+  assert(wLate.bot_accessibility < w0.bot_accessibility);
+  assert(wLate.content_quotability > w0.content_quotability);
 });
 
-Deno.test('GEO_PILLAR_REL : clés alignées sur les 10 sous-signaux, sommes cohérentes', () => {
+Deno.test('GEO_PILLAR_REL : 10 sous-signaux uniques répartis 2 / 3 / 5', () => {
   assertEquals(Object.keys(GEO_PILLAR_REL.authority).length, 2);
   assertEquals(Object.keys(GEO_PILLAR_REL.accessibility).length, 3);
   assertEquals(Object.keys(GEO_PILLAR_REL.content).length, 5);
