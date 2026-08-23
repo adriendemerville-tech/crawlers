@@ -65,6 +65,27 @@ export const GEO_ACCESSIBILITY_FLOOR = 17;
  */
 export const GEO_NO_AUTHORITY_CAP = 75;
 
+/**
+ * Calibration par la citation réellement observée (benchmark LLM).
+ *
+ * Les 10 sous-signaux mesurent un POTENTIEL de citation (autorité,
+ * accessibilité, exploitabilité). Le benchmark, lui, mesure le RÉSULTAT :
+ * la marque est-elle citée quand un client potentiel interroge un moteur de
+ * réponse ? Plutôt que d'ajouter un 11e sous-signal (qui écraserait la variance
+ * par page, la mesure étant mutualisée au domaine), on module le score final de
+ * ±GEO_CALIBRATION_MAX_PCT % : le barème reste inchangé, seul l'écart entre
+ * potentiel et réel est corrigé.
+ *
+ * Neutre à GEO_CALIBRATION_NEUTRAL_PCT de couverture ; borne haute atteinte à
+ * GEO_CALIBRATION_HIGH_PCT ; 0 % de citation applique la décote maximale.
+ * Aucune calibration sous GEO_CALIBRATION_MIN_OBSERVATIONS observations : un
+ * échantillon trop court n'est pas une mesure.
+ */
+export const GEO_CALIBRATION_MAX_PCT = 10;
+export const GEO_CALIBRATION_NEUTRAL_PCT = 20;
+export const GEO_CALIBRATION_HIGH_PCT = 60;
+export const GEO_CALIBRATION_MIN_OBSERVATIONS = 6;
+
 /** Points d'accessibilité machine à une date (22 → 17 par tranche de 1 pt / 18 mois). */
 export function geoAccessibilityPoints(now: Date = new Date()): number {
   const steps = Math.floor(geoElapsedMonths(now) / GEO_ACCESSIBILITY_STEP_MONTHS);
