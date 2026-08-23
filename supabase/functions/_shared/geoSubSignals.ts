@@ -300,6 +300,12 @@ export interface GeoSignalInputs {
   isBotShell?: boolean | null;
   /** Nombre de pages où un tag attendu est absent uniquement pour les robots. */
   botOnlyAbsences?: number | null;
+  /**
+   * Temps de livraison du premier octet (ms), mesuré. Décote l'accessibilité
+   * robots seulement : le confort visuel humain (LCP/INP/CLS) reste hors du GEO
+   * pour éviter la double pénalité. `null` / absent = aucune décote.
+   */
+  ttfbMs?: number | null;
   /** Agrégats de crawl utiles à la mise en forme des réponses. */
   crawlFormatting?: {
     pagesAnalyzed?: number | null;
