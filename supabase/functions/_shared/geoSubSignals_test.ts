@@ -91,13 +91,14 @@ Deno.test('geoSignalWeightsAt : proportions internes constantes dans le temps', 
   assert(wLate.content_quotability > w0.content_quotability);
 });
 
-Deno.test('GEO_PILLAR_REL : 10 sous-signaux uniques répartis 2 / 3 / 5', () => {
+Deno.test('GEO_PILLAR_REL : 11 sous-signaux uniques répartis 2 / 4 / 5', () => {
   assertEquals(Object.keys(GEO_PILLAR_REL.authority).length, 2);
-  assertEquals(Object.keys(GEO_PILLAR_REL.accessibility).length, 3);
+  assertEquals(Object.keys(GEO_PILLAR_REL.accessibility).length, 4);
   assertEquals(Object.keys(GEO_PILLAR_REL.content).length, 5);
   const all = Object.values(GEO_PILLAR_REL).flatMap((r) => Object.keys(r));
-  assertEquals(all.length, 10);
-  assertEquals(new Set(all).size, 10, 'aucune clé dupliquée entre piliers');
+  assertEquals(all.length, 11);
+  assertEquals(new Set(all).size, 11, 'aucune clé dupliquée entre piliers');
+
 });
 
 // ─── Calibration par la citation réellement observée (±10 %) ───
