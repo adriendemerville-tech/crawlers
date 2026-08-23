@@ -1,40 +1,105 @@
 /**
- * _shared/geoSubSignals.ts — Lot B
+ * _shared/geoSubSignals.ts — GEO en 3 piliers à pondération décroissante
  *
- * Le score GEO global (0-100) est illisible : il mélange ce que la machine
- * comprend du site et ce que le web dit du site. Deux causes opposées
- * produisent le même chiffre, donc la même recommandation générique.
+ * Le score GEO global (0-100) mélange ce que la machine comprend du site, la
+ * valeur du contenu à citer, et ce que le web dit du site. Deux pages peuvent
+ * afficher le même chiffre pour des raisons opposées, donc la même
+ * recommandation générique.
  *
- * Ce module décompose le GEO en 10 sous-signaux répartis en deux familles
- * disjointes :
+ * Ce module décompose le GEO en 10 sous-signaux répartis en 3 piliers :
  *
- *   COMPRÉHENSION (50 pts) — ce qu'une machine peut lire, extraire et citer
- *     du site tel qu'il est servi. Levier = structure, rendu, formulation.
+ *   AUTORITÉ DOMAINE (25 pts, constant, mutualisé au domaine)
+ *     — crédibilité de la marque et présence mesurées hors de la page.
  *
- *   AUTORITÉ (50 pts) — ce qui rend la marque crédible et rattachable en
- *     dehors du site. Levier = notoriété, mentions, entité, personnes.
+ *   ACCESSIBILITÉ MACHINE (25 → 10 pts, décroissant)
+ *     — ce qu'une machine peut lire et extraire du site tel qu'il est servi.
+ *       Son poids est ÉLEVÉ aujourd'hui (le parc de sites concurrents est
+ *       encore mal crawlable ou trop lent) et DÉCROÎT à mesure que ce parc se
+ *       rénove : c'est un différenciateur transitoire qui se commoditise.
  *
- * Le verdict d'écart entre les deux familles est le constat exploitable :
- * un site lisible mais sans autorité ne se corrige pas comme un site
- * réputé mais illisible pour les robots.
+ *   EXPLOITABILITÉ CONTENU (50 → 65 pts, croissant)
+ *     — la valeur du contenu à citer (passages autoportants, données
+ *       propriétaires, voix experte). Levier durable : son poids MONTE.
+ *
+ * La somme des trois piliers vaut toujours 100 : seul le partage glisse avec
+ * le temps (demi-vie 18 mois, ancrée au 2026-08-01).
  *
  * Aucun appel LLM : agrégation déterministe de signaux déjà mesurés ou testés
  * ailleurs. Chaque sous-signal porte sa provenance (voir provenance.ts).
  *
- * Consommateurs : marina, audit-strategique-ia, strategic-synthesis.
+ * Consommateurs : marina (fiches + bloc stratégique), audit-strategique-ia.
  */
 
 import { provenanceBadge, type ProvenanceLevel } from './provenance.ts';
 import { normalizeGates, type AuditGate } from './auditGates.ts';
 
 
-export type GeoFamily = 'comprehension' | 'authority';
+export type GeoPillar = 'authority' | 'accessibility' | 'content';
+/** Le « GeoFamily » historique (compréhension/autorité) devient ces 3 piliers. */
+export type GeoFamily = GeoPillar;
+
+/** Mois écoulés depuis l'ancre de pondération (2026-08-01). */
+export function geoElapsedMonths(now: Date = new Date()): number {
+  const anchor = Date.UTC(2026, 7, 1); // 2026-08-01 00:00 UTC
+  return Math.max(0, (now.getTime() - anchor) / (1000 * 60 * 60 * 24 * (365.25 / 12)));
+}
+
+/**
+ * Poids des trois piliers à une date donnée (toujours sur 100).
+ *  - autorité domaine  : constant 25
+ *  - accessibilité     : 10 + 15 × 0,5^(t/18)  (décroît de 25 → 10)
+ *  - contenu           : 100 − 25 − accessibilité  (monte de 50 → 65)
+ */
+export function geoPillarTotals(now: Date = new Date()): Record<GeoPillar, number> {
+  const t = geoElapsedMonths(now);
+  const authority = 25;
+  const accessibility = 10 + 15 * Math.pow(0.5, t / 18);
+  const content = 100 - authority - accessibility;
+  return { authority, accessibility, content };
+}
+
+/** Tendance de chaque pilier : constant / décroît / monte. */
+export type GeoPillarTrend = 'constant' | 'decays' | 'grows';
+export const GEO_PILLAR_TREND: Record<GeoPillar, GeoPillarTrend> = {
+  authority: 'constant',
+  accessibility: 'decays',
+  content: 'grows',
+};
+
+/** Poids relatifs (fixes) des sous-signaux à l'intérieur de chaque pilier. */
+export const GEO_PILLAR_REL: Record<GeoPillar, Record<string, number>> = {
+  authority: { brand_authority: 14, serp_presence: 11 },
+  accessibility: { bot_accessibility: 14, structured_data_quality: 12, content_freshness: 6 },
+  content: {
+    content_quotability: 10,
+    answer_formatting: 8,
+    knowledge_graph_signals: 10,
+    self_citation_signals: 8,
+    person_authority: 6,
+  },
+};
+
+/**
+ * Poids en points de chaque sous-signal à une date : le poids relatif interne
+ * est mis à l'échelle pour que le pilier totalise son poids courant.
+ */
+export function geoSignalWeightsAt(now: Date = new Date()): Record<string, number> {
+  const totals = geoPillarTotals(now);
+  const out: Record<string, number> = {};
+  for (const [pillar, rels] of Object.entries(GEO_PILLAR_REL)) {
+    const sum = Object.values(rels).reduce((a, b) => a + b, 0);
+    for (const [key, rel] of Object.entries(rels)) {
+      out[key] = (totals[pillar as GeoPillar] * rel) / sum;
+    }
+  }
+  return out;
+}
 
 export interface GeoSubSignalSpec {
   key: string;
-  family: GeoFamily;
+  family: GeoPillar;
   label: string;
-  /** Poids en points dans sa famille (chaque famille totalise 50). */
+  /** Poids RELATIF dans son pilier (proportions de mise à l'échelle). */
   weight: number;
   provenance: ProvenanceLevel;
   /** Ce que le signal mesure, en une phrase lisible par un non-technicien. */
@@ -44,54 +109,7 @@ export interface GeoSubSignalSpec {
 }
 
 export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
-  // ── Famille compréhension (50) ─────────────────────────────────────────
-  {
-    key: 'bot_accessibility',
-    family: 'comprehension',
-    label: 'Contenu accessible aux robots',
-    weight: 14,
-    provenance: 'mesure',
-    meaning: 'Le contenu est présent dans le HTML servi, sans exécution de JavaScript.',
-    lever: 'Rendre le contenu au serveur (SSR / prérendu) : sans cela, aucun autre signal de compréhension ne compte.',
-  },
-  {
-    key: 'structured_data_quality',
-    family: 'comprehension',
-    label: 'Données structurées',
-    weight: 12,
-    provenance: 'mesure',
-    meaning: 'Présence et pertinence des balisages JSON-LD qui déclarent la nature des pages.',
-    lever: 'Déclarer les types utiles au domaine (Organization, Person, Article, FAQPage, LocalBusiness, Product).',
-  },
-  {
-    key: 'content_quotability',
-    family: 'comprehension',
-    label: 'Passages citables',
-    weight: 10,
-    provenance: 'test',
-    meaning: 'Le contenu contient des passages autoportants qu’un moteur de réponse peut extraire tels quels.',
-    lever: 'Ouvrir chaque page par une réponse directe de 2 à 3 phrases, puis développer.',
-  },
-  {
-    key: 'answer_formatting',
-    family: 'comprehension',
-    label: 'Mise en forme des réponses',
-    weight: 8,
-    provenance: 'deduction',
-    meaning: 'Titres hiérarchisés, questions explicites, listes et définitions qui balisent les réponses.',
-    lever: 'Structurer en H2 interrogatifs, ajouter des listes et un bloc de questions fréquentes.',
-  },
-  {
-    key: 'content_freshness',
-    family: 'comprehension',
-    label: 'Fraîcheur',
-    weight: 6,
-    provenance: 'mesure',
-    meaning: 'Dates de mise à jour lisibles et contenu rattaché à la période courante.',
-    lever: 'Afficher une date de mise à jour réelle et rafraîchir les pages stratégiques.',
-  },
-
-  // ── Famille autorité (50) ──────────────────────────────────────────────
+  // ── Pilier autorité domaine (25, constant) ────────────────────────────────
   {
     key: 'brand_authority',
     family: 'authority',
@@ -105,14 +123,63 @@ export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
     key: 'serp_presence',
     family: 'authority',
     label: 'Présence SERP',
-    weight: 12,
+    weight: 11,
     provenance: 'mesure',
     meaning: 'Positions organiques réelles : les moteurs de réponse s’appuient largement sur les sources bien classées.',
     lever: 'Consolider les pages proches du top 10 avant d’en créer de nouvelles.',
   },
+
+  // ── Pilier accessibilité machine (25 → 10, décroissant) ──────────────────
+  {
+    key: 'bot_accessibility',
+    family: 'accessibility',
+    label: 'Contenu accessible aux robots',
+    weight: 14,
+    provenance: 'mesure',
+    meaning: 'Le contenu est présent dans le HTML servi, sans exécution de JavaScript.',
+    lever: 'Rendre le contenu au serveur (SSR / prérendu) : sans cela, aucun autre signal de compréhension ne compte.',
+  },
+  {
+    key: 'structured_data_quality',
+    family: 'accessibility',
+    label: 'Données structurées',
+    weight: 12,
+    provenance: 'mesure',
+    meaning: 'Présence et pertinence des balisages JSON-LD qui déclarent la nature des pages.',
+    lever: 'Déclarer les types utiles au domaine (Organization, Person, Article, FAQPage, LocalBusiness, Product).',
+  },
+  {
+    key: 'content_freshness',
+    family: 'accessibility',
+    label: 'Fraîcheur',
+    weight: 6,
+    provenance: 'mesure',
+    meaning: 'Dates de mise à jour lisibles et contenu rattaché à la période courante.',
+    lever: 'Afficher une date de mise à jour réelle et rafraîchir les pages stratégiques.',
+  },
+
+  // ── Pilier exploitabilité contenu (50 → 65, croissant) ───────────────────
+  {
+    key: 'content_quotability',
+    family: 'content',
+    label: 'Passages citables',
+    weight: 10,
+    provenance: 'test',
+    meaning: 'Le contenu contient des passages autoportants qu’un moteur de réponse peut extraire tels quels.',
+    lever: 'Ouvrir chaque page par une réponse directe de 2 à 3 phrases, puis développer.',
+  },
+  {
+    key: 'answer_formatting',
+    family: 'content',
+    label: 'Mise en forme des réponses',
+    weight: 8,
+    provenance: 'deduction',
+    meaning: 'Titres hiérarchisés, questions explicites, listes et définitions qui balisent les réponses.',
+    lever: 'Structurer en H2 interrogatifs, ajouter des listes et un bloc de questions fréquentes.',
+  },
   {
     key: 'knowledge_graph_signals',
-    family: 'authority',
+    family: 'content',
     label: 'Entité reconnue',
     weight: 10,
     provenance: 'test',
@@ -121,7 +188,7 @@ export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
   },
   {
     key: 'self_citation_signals',
-    family: 'authority',
+    family: 'content',
     label: 'Sources et attributions',
     weight: 8,
     provenance: 'deduction',
@@ -130,7 +197,7 @@ export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
   },
   {
     key: 'person_authority',
-    family: 'authority',
+    family: 'content',
     label: 'Voix experte identifiée',
     weight: 6,
     provenance: 'deduction',
@@ -140,11 +207,16 @@ export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
 ];
 
 export const FAMILY_LABEL: Record<GeoFamily, string> = {
-  comprehension: 'Compréhension machine',
-  authority: 'Autorité perçue',
+  authority: 'Autorité domaine',
+  accessibility: 'Accessibilité machine',
+  content: 'Exploitabilité contenu',
 };
 
+export const PILLAR_LABEL: Record<GeoPillar, string> = FAMILY_LABEL;
+
 export interface GeoSubSignalValue extends GeoSubSignalSpec {
+  /** Poids en POINTS à la date de l'audit (arrondi à 1 décimale). */
+  weight: number;
   /** 0-100, ou null si non mesuré sur ce run. */
   value: number | null;
 }
@@ -152,9 +224,9 @@ export interface GeoSubSignalValue extends GeoSubSignalSpec {
 export interface GeoFamilyScore {
   family: GeoFamily;
   label: string;
-  /** 0-100 : moyenne pondérée des sous-signaux mesurés de la famille. */
+  /** 0-100 : moyenne pondérée des sous-signaux mesurés du pilier. */
   score: number | null;
-  /** Part du poids de la famille réellement couverte par une mesure (0-100). */
+  /** Part du poids du pilier réellement couverte par une mesure (0-100). */
   coverage: number;
   measured: number;
   total: number;
@@ -170,10 +242,20 @@ export type GeoGapVerdict =
 
 export interface GeoSubSignalReport {
   signals: GeoSubSignalValue[];
-  comprehension: GeoFamilyScore;
+  /** Pilier A — autorité domaine (25, constant, mutualisé). */
   authority: GeoFamilyScore;
-  /** 0-100 : moyenne des deux familles mesurées — reconstitue le GEO lisible. */
+  /** Pilier B — accessibilité machine (25 → 10, décroissant). */
+  accessibility: GeoFamilyScore;
+  /** Pilier C — exploitabilité contenu (50 → 65, croissant). */
+  content: GeoFamilyScore;
+  /** 0-100 : moyenne pondérée des piliers mesurés — reconstitue le GEO lisible. */
   geo_score: number | null;
+  /** Poids en points des trois piliers à la date de l'audit (somme = 100). */
+  pillar_points: Record<GeoPillar, number>;
+  /** Tendance de chaque pilier (constant / décroît / monte). */
+  pillar_trend: Record<GeoPillar, GeoPillarTrend>;
+  /** Date de référence de la pondération (ISO). */
+  weight_date: string;
   gap: number | null;
   verdict: GeoGapVerdict;
   verdict_label: string;
@@ -214,6 +296,11 @@ export interface GeoSignalInputs {
    */
   extractedWords?: number | null;
   textRatioPct?: number | null;
+  /**
+   * Date de référence de la pondération. Par défaut `new Date()` (l'audit en
+   * cours). Injectable pour les tests et les re-rendus datés.
+   */
+  now?: Date;
 }
 
 
@@ -286,57 +373,68 @@ function familyScore(family: GeoFamily, signals: GeoSubSignalValue[]): GeoFamily
   };
 }
 
-function verdictFor(comp: number | null, auth: number | null): { verdict: GeoGapVerdict; label: string; explanation: string } {
-  if (comp === null || auth === null) {
+/**
+ * Verdict d'écart entre le bloc page (accessibilité + contenu, ce que l'on peut
+ * corriger sur le site) et l'autorité domaine (crédibilité hors site). Conserve
+ * le diagnostic historique « comprendre vs autorité » en le recalant sur les
+ * piliers : la vraie question reste « le problème est-il sur le site ou hors du
+ * site ? ».
+ */
+function verdictFor(pageSide: number | null, auth: number | null): { verdict: GeoGapVerdict; label: string; explanation: string } {
+  if (pageSide === null || auth === null) {
     return {
       verdict: 'unknown',
       label: 'Écart non interprétable',
       explanation:
-        'Une des deux familles n’a pas assez de sous-signaux mesurés sur ce run : l’écart compréhension / autorité n’est pas exploitable. Relancez l’audit avec les connexions de données actives.',
+        'Une des deux faces (bloc page ou autorité domaine) n’a pas assez de sous-signaux mesurés sur ce run : l’écart n’est pas exploitable. Relancez l’audit avec les connexions de données actives.',
     };
   }
-  const gap = comp - auth;
+  const gap = pageSide - auth;
   if (gap >= 20) {
     return {
       verdict: 'authority_lag',
-      label: 'Site lisible, marque peu crédible',
+      label: 'Site exploitable, marque peu crédible',
       explanation:
-        `La compréhension machine est à ${comp}/100 alors que l’autorité perçue n’est qu’à ${auth}/100. Le site est correctement structuré : les moteurs de réponse peuvent l’extraire, mais rien ne leur garantit qu’il faut le citer plutôt qu’une autre source. Le levier n’est pas une nouvelle passe technique mais la crédibilité hors site : mentions sur des sources de référence du secteur, cohérence de l’entité, auteurs nommés et corroborés.`,
+        `Le bloc page (accessibilité + contenu) est à ${pageSide}/100 alors que l’autorité perçue n’est qu’à ${auth}/100. Le site est correctement structuré : les moteurs de réponse peuvent l’extraire, mais rien ne leur garantit qu’il faut le citer plutôt qu’une autre source. Le levier n’est pas une nouvelle passe technique mais la crédibilité hors site : mentions sur des sources de référence du secteur, cohérence de l’entité, auteurs nommés et corroborés.`,
     };
   }
   if (gap <= -20) {
     return {
       verdict: 'comprehension_lag',
-      label: 'Marque crédible, site mal lisible',
+      label: 'Marque crédible, site peu exploitable',
       explanation:
-        `L’autorité perçue est à ${auth}/100 alors que la compréhension machine plafonne à ${comp}/100. La notoriété existe déjà : chaque point gagné en lisibilité se convertit donc vite en citation. Le levier est le site lui-même — rendu accessible aux robots, données structurées, passages autoportants et mise en forme des réponses — avant tout nouvel effort de notoriété.`,
+        `L’autorité perçue est à ${auth}/100 alors que le bloc page plafonne à ${pageSide}/100. La notoriété existe déjà : chaque point gagné en accessibilité ou en exploitabilité du contenu se convertit donc vite en citation. Le levier est le site lui-même — rendu accessible aux robots, données structurées, passages autoportants et mise en forme des réponses — avant tout nouvel effort de notoriété.`,
     };
   }
-  if (comp < 40 && auth < 40) {
+  if (pageSide < 40 && auth < 40) {
     return {
       verdict: 'both_low',
       label: 'Fondations et autorité faibles',
       explanation:
-        `Compréhension ${comp}/100 et autorité ${auth}/100 : les deux familles sont basses et cohérentes. L’ordre compte — structurer d’abord (accessibilité robots, données structurées, passages citables), travailler la notoriété ensuite. Inversé, l’effort de notoriété produit des mentions que rien ne rattache au site.`,
+        `Bloc page ${pageSide}/100 et autorité ${auth}/100 : les deux faces sont basses et cohérentes. L’ordre compte — structurer d’abord (accessibilité robots, données structurées, passages citables), travailler la notoriété ensuite. Inversé, l’effort de notoriété produit des mentions que rien ne rattache au site.`,
     };
   }
-  if (comp >= 65 && auth >= 65) {
+  if (pageSide >= 65 && auth >= 65) {
     return {
       verdict: 'aligned_strong',
-      label: 'Familles alignées à bon niveau',
+      label: 'Faces alignées à bon niveau',
       explanation:
-        `Compréhension ${comp}/100 et autorité ${auth}/100 progressent ensemble à bon niveau. Il n’y a pas de blocage structurel : le gain vient désormais de la couverture d’intentions non encore traitées et de la profondeur des pages existantes, pas d’un correctif transversal.`,
+        `Bloc page ${pageSide}/100 et autorité ${auth}/100 progressent ensemble à bon niveau. Il n’y a pas de blocage structurel : le gain vient désormais de la couverture d’intentions non encore traitées et de la profondeur des pages existantes, pas d’un correctif transversal.`,
     };
   }
   return {
     verdict: 'aligned',
-    label: 'Familles alignées, niveau intermédiaire',
+    label: 'Faces alignées, niveau intermédiaire',
     explanation:
-      `Compréhension ${comp}/100 et autorité ${auth}/100 sont du même ordre : aucune des deux ne bride l’autre. La priorisation se fait donc sous-signal par sous-signal, sur les plus bas, et non par grande famille.`,
+      `Bloc page ${pageSide}/100 et autorité ${auth}/100 sont du même ordre : aucune des deux ne bride l’autre. La priorisation se fait donc sous-signal par sous-signal, sur les plus bas, et non par grand pilier.`,
   };
 }
 
 export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport {
+  const now = inputs.now || new Date();
+  const pillarTotals = geoPillarTotals(now);
+  const signalWeights = geoSignalWeightsAt(now);
+
   const b = inputs.breakdown || {};
   const resolved: Record<string, number | null> = {
     bot_accessibility: scoreBotAccessibility(inputs),
@@ -403,28 +501,61 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
     );
   }
 
-  const signals: GeoSubSignalValue[] = GEO_SUB_SIGNALS.map((s) => ({ ...s, value: resolved[s.key] ?? null }));
-  const comprehension = familyScore('comprehension', signals);
-  const authority = familyScore('authority', signals);
+  // Chaque sous-signal porte son poids en POINTS à la date de l'audit
+  // (arrondi à 1 décimale pour un affichage lisible ; l'erreur sur le total
+  // reste < 0,1 point sur 100).
+  const signals: GeoSubSignalValue[] = GEO_SUB_SIGNALS.map((s) => ({
+    ...s,
+    weight: Math.round((signalWeights[s.key] ?? 0) * 10) / 10,
+    value: resolved[s.key] ?? null,
+  }));
 
-  // Plafond de famille : même après plafonnement des sous-signaux, une page sans
-  // texte extractible ne peut pas afficher une compréhension machine moyenne.
-  if (textStarved && comprehension.score !== null && comprehension.score > 30) {
+  const authority = familyScore('authority', signals);
+  const accessibility = familyScore('accessibility', signals);
+  const content = familyScore('content', signals);
+
+  // Bloc page = accessibilité + contenu (ce que l'on corrige sur le site).
+  const pageParts = () => [
+    { total: pillarTotals.accessibility, score: accessibility.score },
+    { total: pillarTotals.content, score: content.score },
+  ];
+  const calcPageSide = () => {
+    const meas = pageParts().filter((p) => p.score !== null);
+    const den = meas.reduce((a, p) => a + p.total, 0);
+    return den > 0 ? clamp100(meas.reduce((a, p) => a + p.total * (p.score as number), 0) / den) : null;
+  };
+  let pageSide = calcPageSide();
+
+  // Plafond de bloc page : même après plafonnement des sous-signaux, une page
+  // sans texte extractible ne peut pas afficher une exploitabilité confortable.
+  // On réduit proportionnellement accessibilité + contenu pour que leur bloc
+  // totalise au plus 30/100 — le rendu reste cohérent avec le plafond d'origine
+  // sur la « compréhension machine ».
+  if (textStarved && pageSide !== null && pageSide > 30) {
+    const preCap = pageSide;
+    const scale = 30 / pageSide;
+    if (accessibility.score !== null) accessibility.score = clamp100(accessibility.score * scale);
+    if (content.score !== null) content.score = clamp100(content.score * scale);
+    pageSide = calcPageSide();
     rawGates.push({
       axis: 'geo_comprehension',
-      reason: 'Compréhension machine bridée : sans contenu rendu côté serveur, aucun autre signal de compréhension ne peut produire son effet.',
-      evidence: `${shellMeasured ? 'coquille JS mesurée' : `${words} mots extraits`} → cible contenu rendu au serveur (famille ramenée de ${comprehension.score}/100 à 30/100)`,
+      reason: 'Bloc page bridé : sans contenu rendu côté serveur, ni l’accessibilité ni l’exploitabilité du contenu ne peuvent produire leur effet.',
+      evidence: `${shellMeasured ? 'coquille JS mesurée' : `${words} mots extraits`} → cible contenu rendu au serveur (bloc accessibilité + contenu ramené de ${preCap}/100 à 30/100)`,
       measured: shellMeasured ? 'coquille JS' : `${words} mots`,
       target: 'contenu rendu au serveur',
     });
-    comprehension.score = 30;
   }
 
-  const v = verdictFor(comprehension.score, authority.score);
+  const v = verdictFor(pageSide, authority.score);
 
-
-  const both = [comprehension.score, authority.score].filter((x): x is number => x !== null);
-  const geo = both.length > 0 ? clamp100(both.reduce((a, c) => a + c, 0) / both.length) : null;
+  // geo_score = moyenne pondérée des piliers mesurés par leur poids courant.
+  const geoParts = [
+    { total: pillarTotals.authority, score: authority.score },
+    { total: pillarTotals.accessibility, score: accessibility.score },
+    { total: pillarTotals.content, score: content.score },
+  ].filter((p) => p.score !== null);
+  const geoDen = geoParts.reduce((a, p) => a + p.total, 0);
+  const geo = geoDen > 0 ? clamp100(geoParts.reduce((a, p) => a + p.total * (p.score as number), 0) / geoDen) : null;
 
   const priority = signals
     .filter((s) => s.value !== null && (s.value as number) < 60)
@@ -432,18 +563,27 @@ export function buildGeoSubSignals(inputs: GeoSignalInputs): GeoSubSignalReport 
     .slice(0, 3)
     .map((s) => ({ key: s.key, label: s.label, value: s.value as number, lever: s.lever }));
 
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+
   return {
     signals,
-    comprehension,
     authority,
+    accessibility,
+    content,
     geo_score: geo,
-    gap: comprehension.score !== null && authority.score !== null ? comprehension.score - authority.score : null,
+    pillar_points: {
+      authority: round1(pillarTotals.authority),
+      accessibility: round1(pillarTotals.accessibility),
+      content: round1(pillarTotals.content),
+    },
+    pillar_trend: { ...GEO_PILLAR_TREND },
+    weight_date: now.toISOString().slice(0, 10),
+    gap: pageSide !== null && authority.score !== null ? Math.round((pageSide - authority.score) * 10) / 10 : null,
     verdict: v.verdict,
     verdict_label: v.label,
     verdict_explanation: v.explanation,
     priority_levers: priority,
     gates: normalizeGates(rawGates, 'geo'),
-
   };
 }
 
@@ -456,6 +596,27 @@ const GOLD = '#8a6d1f';
 
 function esc(s: string): string {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+const PILLAR_ACCENT: Record<GeoPillar, string> = {
+  authority: GOLD,
+  accessibility: VIOLET,
+  content: '#111827',
+};
+
+function trendText(p: GeoPillar, lang?: string): string {
+  const fr = {
+    authority: 'constant',
+    accessibility: 'décroît vers 10 pts',
+    content: 'monte vers 65 pts',
+  };
+  const en = {
+    authority: 'constant',
+    accessibility: 'decays toward 10 pts',
+    content: 'rises toward 65 pts',
+  };
+  const map = lang === 'en' ? en : fr;
+  return map[p];
 }
 
 function barRow(s: GeoSubSignalValue, lang?: string): string {
@@ -472,14 +633,26 @@ function barRow(s: GeoSubSignalValue, lang?: string): string {
   </div>`;
 }
 
-function familyBlock(f: GeoFamilyScore, signals: GeoSubSignalValue[], intro: string, lang?: string): string {
-  return `<div style="flex:1 1 300px;border:1px solid #e5e7eb;border-left:3px solid ${f.family === 'comprehension' ? VIOLET : GOLD};border-radius:8px;padding:12px 14px;background:#ffffff;">
+function pillarBlock(
+  key: GeoPillar,
+  f: GeoFamilyScore,
+  report: GeoSubSignalReport,
+  signals: GeoSubSignalValue[],
+  intro: string,
+  lang?: string,
+): string {
+  const pts = report.pillar_points[key];
+  const trend = trendText(key, lang);
+  const introText = lang === 'en'
+    ? `${intro} ${f.measured}/${f.total} sub-signals measured (${f.coverage} % of weight). Weight ${pts} pts today — ${trend}.`
+    : `${intro} ${f.measured}/${f.total} sous-signaux mesurés (${f.coverage} % du poids). Poids ${pts} pts aujourd’hui — ${trend}.`;
+  return `<div style="flex:1 1 280px;border:1px solid #e5e7eb;border-left:3px solid ${PILLAR_ACCENT[key]};border-radius:8px;padding:12px 14px;background:#ffffff;">
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
       <h4 style="font-size:13px;font-weight:600;color:#111827;margin:0;">${esc(f.label)}</h4>
       <span style="font-size:18px;font-weight:700;color:#111827;">${f.score === null ? 'n/m' : `${f.score}/100`}</span>
     </div>
-    <p style="font-size:11px;color:#6b7280;margin:0 0 10px;line-height:1.5;">${esc(intro)} ${f.measured}/${f.total} sous-signaux mesurés (${f.coverage} % du poids).</p>
-    ${signals.filter((s) => s.family === f.family).map((s) => barRow(s, lang)).join('')}
+    <p style="font-size:11px;color:#6b7280;margin:0 0 10px;line-height:1.5;">${esc(introText)}</p>
+    ${signals.filter((s) => s.family === key).map((s) => barRow(s, lang)).join('')}
   </div>`;
 }
 
@@ -496,15 +669,23 @@ export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string
       </ul>`
     : '';
 
+  const note = lang === 'en'
+    ? `Weighting as of ${report.weight_date}. Machine accessibility (${report.pillar_points.accessibility} pts today) carries weight while many competing sites remain hard to crawl or too slow — it decays toward 10 pts as the site park renovates. Content exploitability (${report.pillar_points.content} pts today) is the durable lever and rises toward 65 pts.`
+    : `Pondération au ${report.weight_date}. L’accessibilité machine (${report.pillar_points.accessibility} pts aujourd’hui) pèse fort tant que beaucoup de sites concurrents restent difficilement crawlables ou trop lents : elle décroît vers 10 pts à mesure que le parc de sites se rénove. L’exploitabilité du contenu (${report.pillar_points.content} pts aujourd’hui) est le levier durable : elle monte vers 65 pts.`;
+
   return `<div style="margin-top:16px;padding:14px;border:1px solid #e5e7eb;border-radius:8px;background:#ffffff;page-break-inside:avoid;text-align:left;">
-    <h4 style="font-size:14px;font-weight:600;color:#111827;margin:0 0 6px;">Le GEO en 10 sous-signaux</h4>
-    <p style="font-size:12px;color:#374151;line-height:1.6;margin:0 0 12px;">Un score GEO global masque deux réalités opposées. Les dix sous-signaux ci-dessous sont donc répartis en deux familles distinctes : ce que la machine <strong>comprend</strong> du site, et ce qui rend la marque <strong>crédible</strong> hors du site. Chaque sous-signal porte le statut de sa donnée.</p>
+    <h4 style="font-size:14px;font-weight:600;color:#111827;margin:0 0 6px;">${lang === 'en' ? 'GEO in 10 sub-signals across 3 pillars' : 'Le GEO en 10 sous-signaux, 3 piliers'}</h4>
+    <p style="font-size:12px;color:#374151;line-height:1.6;margin:0 0 12px;">${lang === 'en'
+      ? 'A single GEO score hides three realities. The ten sub-signals below are split into three pillars: what the machine can read and extract (accessibility), the value of the content worth citing (exploitability), and the credibility of the brand outside the site (domain authority). Each sub-signal carries the status of its data.'
+      : 'Un score GEO global masque trois réalités. Les dix sous-signaux ci-dessous sont répartis en trois piliers : ce que la machine peut lire et extraire du site (accessibilité), la valeur du contenu à citer (exploitabilité), et la crédibilité de la marque hors du site (autorité domaine). Chaque sous-signal porte le statut de sa donnée.'}</p>
     <div style="display:flex;flex-wrap:wrap;gap:12px;">
-      ${familyBlock(report.comprehension, report.signals, 'Lisibilité et extractibilité du site tel qu’il est servi.', lang)}
-      ${familyBlock(report.authority, report.signals, 'Crédibilité et rattachement de l’entité hors du site.', lang)}
+      ${pillarBlock('authority', report.authority, report, report.signals, lang === 'en' ? 'Credibility and entity attachment outside the site (mutualized at domain level).' : 'Crédibilité et rattachement de l’entité hors du site (mutualisée au domaine).', lang)}
+      ${pillarBlock('accessibility', report.accessibility, report, report.signals, lang === 'en' ? 'Readability and extractability of the site as served.' : 'Lisibilité et extractibilité du site tel qu’il est servi.', lang)}
+      ${pillarBlock('content', report.content, report, report.signals, lang === 'en' ? 'Value and quotability of the content itself.' : 'Valeur et citabilité du contenu lui-même.', lang)}
     </div>
-    <div style="margin-top:12px;padding:12px;border:1px solid #e5e7eb;border-left:3px solid ${accent};border-radius:8px;">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:4px;">Verdict d’écart${report.gap !== null ? ` — ${report.gap > 0 ? '+' : ''}${report.gap} points` : ''}</div>
+    <p style="font-size:11px;color:#6b7280;line-height:1.6;margin:10px 0 0 0;">${esc(note)}</p>
+    <div style="margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-left:3px solid ${accent};border-radius:8px;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:4px;">${lang === 'en' ? 'Gap verdict' : 'Verdict d’écart'}${report.gap !== null ? ` — ${report.gap > 0 ? '+' : ''}${report.gap} points` : ''}</div>
       <p style="font-size:12px;color:#374151;line-height:1.6;margin:0;"><strong>${esc(report.verdict_label)}.</strong> ${esc(report.verdict_explanation)}</p>
       ${levers}
     </div>
