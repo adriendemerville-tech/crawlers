@@ -825,12 +825,37 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
   const htmlAnalysis = rawData?.htmlAnalysis || {};
   const linkProfile = htmlAnalysis?.insights?.linkProfile || {};
   const brokenLinksInsight = htmlAnalysis?.insights?.brokenLinks || {};
-  const normalizedHome = normalizeUrl(`https://${domain}`);
+  // Sélection de la page d'accueil : comparaison sur le chemin, insensible au
+  // sous-domaine www et au protocole. L'ancienne comparaison d'URL complète
+  // échouait dès que le crawl stockait `https://www.domaine/` alors que
+  // `domain` était l'apex : on retombait alors sur `crawlPages[0]` (souvent une
+  // page interne) et le rapport attribuait ses balises à la page d'accueil.
+  const sameHost = (raw: string): boolean => {
+    try {
+      return new URL(raw).hostname.replace(/^www\./, '').toLowerCase()
+        === domain.replace(/^www\./, '').toLowerCase();
+    } catch { return false; }
+  };
+  const pathOf = (raw: string): string | null => {
+    try { return new URL(raw).pathname.replace(/\/+$/, '') || '/'; } catch { return null; }
+  };
+  const homeCandidates = crawlPages.filter((page) => {
+    const raw = String(page?.url || '');
+    if (!sameHost(raw)) return false;
+    const p = pathOf(raw);
+    return p === '/' || p === '/index' || p === '/index.html' || p === '/index.php';
+  });
+  // À défaut de home dans le crawl, on prend la page la moins profonde plutôt
+  // qu'une page arbitraire — et on dit dans le rapport quelle URL est décrite.
+  const fallbackPage = [...crawlPages]
+    .filter((p) => sameHost(String(p?.url || '')))
+    .sort((a, b) => (pathOf(String(a?.url || ''))?.split('/').length || 99)
+      - (pathOf(String(b?.url || ''))?.split('/').length || 99))[0]
+    || crawlPages[0] || null;
+  const primaryPage = homeCandidates[0] || fallbackPage;
+  const primaryUrl = String(primaryPage?.url || '') || null;
+  const primaryIsHome = homeCandidates.length > 0;
 
-  const primaryPage = crawlPages.find((page) => {
-    const normalizedPage = normalizeUrl(page?.url);
-    return normalizedPage === normalizedHome || normalizedPage === `${normalizedHome}/index`;
-  }) || crawlPages[0] || null;
 
   const totalWordCount = crawlPages.reduce((sum, page) => sum + Number(page?.word_count || 0), 0);
   const totalInternalLinks = crawlPages.reduce((sum, page) => sum + Number(page?.internal_links || 0), 0);
@@ -857,7 +882,12 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
   const h1 = primaryPage?.h1 || htmlAnalysis?.h1Contents?.[0] || '';
 
   return {
+    // URL réellement décrite par les balises ci-dessous : le rapport doit la
+    // nommer au lieu de supposer « page d'accueil ».
+    primaryUrl,
+    primaryIsHome,
     pagesFound: Number(crawl?.crawled_pages || crawlPages.length || 1),
+
     // Alias consommés par la synthèse exécutive et « Portée et limites » :
     // sans eux, « Pages explorées » retombait sur n/d et le rapport se déclarait
     // mono-page alors que le crawl multi-pages avait bien tourné.
@@ -1499,8 +1529,11 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
   const brokenLinksInsight = htmlAnalysis?.insights?.brokenLinks || {};
 
   const crawlMeta = crawlSnapshot || {
+    primaryUrl: url || null,
+    primaryIsHome: (() => { try { return (new URL(url).pathname.replace(/\/+$/, '') || '/') === '/'; } catch { return true; } })(),
     pagesFound: rawData?.internalLinks?.length || linkProfile?.internal || 1,
     avgSeoScore: null,
+
     avgResponseTime: rawData?.responseTimeMs || null,
     wordCount: htmlAnalysis?.wordCount || 0,
     imagesTotal: htmlAnalysis?.imagesTotal || 0,
@@ -1538,14 +1571,20 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
     httpStatus: scores?.technical?.httpStatus || 200,
   };
 
+  // Libellé de la page réellement décrite par les balises. Sans lui, le rapport
+  // affirmait « page d'accueil » même quand le crawl n'avait pas ramené la home.
+  const primaryLabel = crawlMeta.primaryIsHome === false && crawlMeta.primaryUrl
+    ? `la page <code>${(() => { try { return new URL(crawlMeta.primaryUrl).pathname; } catch { return crawlMeta.primaryUrl; } })()}</code> (page d'accueil absente du crawl)`
+    : `la page d'accueil${crawlMeta.primaryUrl ? ` (<code>${(() => { try { return new URL(crawlMeta.primaryUrl).pathname; } catch { return '/'; } })()}</code>)` : ''}`;
+
   const content = `
     <div class="section">
-      <div class="section-title"><span class="section-number">1</span> 🕷️ ${tr.crawlReport}</div>
+      <div class="section-title"><span class="section-number">1</span> ${tr.crawlReport}</div>
       ${sectionLead('crawl', lang)}
       ${topHtml}
       ${hostDupHtml}
       ${crawlMeta.pagesFound > 1 ? `<div class="intro-text">Crawl multi-pages analysé : <strong>${crawlMeta.pagesFound}</strong> pages${crawlMeta.avgSeoScore != null ? ` · score SEO moyen <strong>${crawlMeta.avgSeoScore}/100</strong>` : ''}</div>` : ''}
-      <div class="intro-text" style="font-size:12px;color:#6b7280;">Les quatre premières tuiles cumulent l'ensemble des pages explorées ; les balises et la structure de titres qui suivent décrivent la page d'accueil.</div>
+      <div class="intro-text" style="font-size:12px;color:#6b7280;">Les quatre premières tuiles cumulent l'ensemble des pages explorées ; les balises et la structure de titres qui suivent décrivent ${primaryLabel}.</div>
       <div class="stat-grid-4">
         <div class="stat-card"><div class="value">${crawlMeta.wordCount}</div><div class="label">Mots (total site)</div></div>
         <div class="stat-card"><div class="value">${crawlMeta.internalLinks}</div><div class="label">Liens internes (total)</div></div>
@@ -1555,19 +1594,20 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
       <div class="stat-grid-4" style="margin-top:12px;">
         <div class="stat-card"><div class="value">${crawlMeta.imagesTotal}</div><div class="label">Images (total site)</div></div>
         <div class="stat-card"><div class="value" style="color:${crawlMeta.imagesWithoutAlt > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.imagesWithoutAlt}</div><div class="label">Images sans alt</div></div>
-        <div class="stat-card"><div class="value">${crawlMeta.h2Count}</div><div class="label">H2 (page d'accueil)</div></div>
+        <div class="stat-card"><div class="value">${crawlMeta.h2Count}</div><div class="label">H2 (page décrite)</div></div>
         <div class="stat-card"><div class="value" style="color:${crawlMeta.brokenLinks > 0 ? '#ef4444' : '#22c55e'}">${crawlMeta.brokenLinks}</div><div class="label">Pages en erreur</div></div>
       </div>
 
       <div style="margin-top:16px;">
-        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Balises SEO</h3>
-        <div style="padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;margin-bottom:8px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:8px;">Balises SEO — ${primaryLabel}</h3>
+        <div style="padding:12px;background:#f9fafb;border-radius:8px;font-size:13px;margin-bottom:8px;">
           <strong>Title (${crawlMeta.titleLength} car.):</strong> ${crawlMeta.title || '-'}
         </div>
-        <div style="padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;margin-bottom:8px;">
+        <div style="padding:12px;background:#f9fafb;border-radius:8px;font-size:13px;margin-bottom:8px;">
           <strong>Meta Description (${crawlMeta.metaDescLength} car.):</strong> ${crawlMeta.metaDesc || '-'}
         </div>
-        ${crawlMeta.h1 ? `<div style="padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;"><strong>H1:</strong> ${crawlMeta.h1}</div>` : ''}
+        ${crawlMeta.h1 ? `<div style="padding:12px;background:#f9fafb;border-radius:8px;font-size:13px;"><strong>H1:</strong> ${crawlMeta.h1}</div>` : ''}
+
       </div>
       ${crawlMeta.h2Contents.length > 0 ? `
       <div style="margin-top:16px;">
@@ -1623,11 +1663,32 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
           }).join('');
           const total = Number(expertSeoData?.totalScore ?? sum);
           const declaredMax = Number(expertSeoData?.maxScore || sumMax);
+          // Réconciliation chiffrée de l'écart entre la somme des axes et le
+          // total affiché : bonus/malus liens cassés, facteur de fiabilité de
+          // collecte, puis plafond de cohérence. Aucun écart n'est laissé sans
+          // explication vérifiable.
+          const rec = scores?.reconciliation || null;
+          const steps: string[] = [];
+          if (rec) {
+            if (Number(rec.brokenLinksAdjustment)) {
+              steps.push(`ajustement liens cassés ${Number(rec.brokenLinksAdjustment) > 0 ? '+' : ''}${Number(rec.brokenLinksAdjustment)} point${Math.abs(Number(rec.brokenLinksAdjustment)) > 1 ? 's' : ''}${rec.brokenLinksVerdict ? ` (verdict « ${rec.brokenLinksVerdict} »)` : ''}`);
+            }
+            if (Number(rec.reliabilityFactor) && Number(rec.reliabilityFactor) < 1) {
+              steps.push(`facteur de fiabilité de collecte ×${Number(rec.reliabilityFactor).toFixed(2)}`);
+            }
+            if (rec.cap != null && Number(rec.beforeCap) > Number(rec.cap)) {
+              steps.push(`plafond de cohérence ${rec.beforeCap}/${declaredMax} → ${rec.cap}/${declaredMax}`);
+            }
+          }
           return `<div class="stat-grid-4">${cards}</div>
         <p style="font-size:12px;color:#6b7280;margin:10px 0 0;">
-          Somme des cinq axes : <strong>${sum}/${sumMax}</strong>${total !== sum ? ` — le score global d'audit technique affiché ailleurs (${total}/${declaredMax}) intègre en plus les contrôles hors page d'accueil (sitemaps, robots.txt, llms.txt).` : `, soit le score global d'audit technique (${total}/${declaredMax}).`}
+          Somme des cinq axes : <strong>${rec ? rec.axesSum : sum}/${sumMax}</strong>.
+          ${steps.length
+            ? `Le total affiché (<strong>${total}/${declaredMax}</strong>) s'en déduit ainsi : ${steps.join(' ; puis ')}.`
+            : `Soit le score global d'audit technique (<strong>${total}/${declaredMax}</strong>).`}
           Le score sur 100 de la synthèse exécutive est cette même valeur ramenée en pourcentage : ${Math.round((total / (declaredMax || 1)) * 100)}/100.
         </p>`;
+
         })()}
       </div>
     </div>`;

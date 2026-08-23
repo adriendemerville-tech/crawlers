@@ -44,7 +44,15 @@ export interface BacklinkToxicity {
   broken_ratio: number;
   signals: string[];
   recommendation: string;
+  /**
+   * Domaines référents identifiés comme appartenant au même réseau de marque
+   * (même racine de nom sur une autre extension : déclinaisons pays d'une
+   * franchise). Ils sont exclus des signaux de toxicité : un maillage
+   * inter-pays n'est pas un profil manipulé, et les désavouer serait nuisible.
+   */
+  own_network_domains?: string[];
 }
+
 
 export interface OrganicVisibility {
   estimated_traffic: number | null;
@@ -215,6 +223,46 @@ export function detectSuspiciousReferringDomains(
 }
 
 /**
+ * Réseau propre de la marque : déclinaisons du même nom sur d'autres extensions
+ * ou avec un suffixe traduit (avenir-renovations.fr → .be, .lu, .ch,
+ * avenir-reformas.es, avenir-obras.pt). Ces liens sont du maillage inter-pays,
+ * pas de l'achat de liens : les compter comme toxiques conduirait à recommander
+ * un désaveu contre-productif.
+ *
+ * Règle déterministe : on compare les jetons du label de second niveau. Un jeton
+ * commun de 5 caractères ou plus (hors mots très génériques) suffit à rattacher
+ * le référent au même réseau.
+ */
+const GENERIC_BRAND_TOKENS = new Set([
+  'group', 'groupe', 'france', 'europe', 'world', 'international', 'travaux',
+  'maison', 'batiment', 'service', 'services', 'online', 'contact', 'agence',
+]);
+
+function brandTokens(host: string): string[] {
+  const label = String(host || '').toLowerCase().replace(/^www\./, '').split('.')[0] || '';
+  return label
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length >= 5 && !GENERIC_BRAND_TOKENS.has(t));
+}
+
+export function detectOwnNetworkDomains(
+  auditedDomain: string,
+  domains: { domain: string }[],
+): string[] {
+  const own = brandTokens(auditedDomain);
+  if (own.length === 0) return [];
+  const audited = String(auditedDomain || '').toLowerCase().replace(/^www\./, '');
+  const out: string[] = [];
+  for (const d of domains || []) {
+    const host = String(d?.domain || '').toLowerCase().replace(/^www\./, '');
+    if (!host || host === audited) continue;
+    const tokens = brandTokens(host);
+    if (tokens.some((t) => own.includes(t))) out.push(host);
+  }
+  return Array.from(new Set(out));
+}
+
+/**
  * Toxicité du profil de liens — 100 % déterministe.
  *
  * `topReferringDomains` sert à l'affichage ; `sampleReferringDomains`, quand il
@@ -222,6 +270,7 @@ export function detectSuspiciousReferringDomains(
  * calculés le rank moyen des référents et la détection de domaines hors-sujet.
  * Sans lui, on retombe sur le top 10 (comportement historique).
  */
+
 export function computeBacklinkToxicity(input: {
   anchors: { anchor: string; count: number }[];
   topReferringDomains: { domain: string; rank: number; backlinks: number }[];
@@ -230,6 +279,8 @@ export function computeBacklinkToxicity(input: {
   referringDomains: number;
   brokenBacklinks: number;
   dofollowRatio: number;
+  /** Domaine audité : sert à écarter le réseau propre de la marque. */
+  auditedDomain?: string;
 }): BacklinkToxicity {
   const totalAnchorCount = input.anchors.reduce((s, a) => s + (a.count || 0), 0);
   const sorted = [...input.anchors].sort((a, b) => (b.count || 0) - (a.count || 0));
@@ -243,11 +294,19 @@ export function computeBacklinkToxicity(input: {
   const unnaturalRatio = totalAnchorCount > 0
     ? Math.round((unnaturalCount / totalAnchorCount) * 100) / 100
     : 0;
-  const refSample = (input.sampleReferringDomains?.length ? input.sampleReferringDomains : input.topReferringDomains) || [];
+  const rawSample = (input.sampleReferringDomains?.length ? input.sampleReferringDomains : input.topReferringDomains) || [];
+  // Le réseau propre (déclinaisons pays de la même marque) sort de l'échantillon
+  // de toxicité : ni pénalité de rank, ni suspicion, ni désaveu recommandé.
+  const ownNetwork = input.auditedDomain ? detectOwnNetworkDomains(input.auditedDomain, rawSample) : [];
+  const ownSet = new Set(ownNetwork);
+  const refSample = rawSample.filter(
+    (d) => !ownSet.has(String(d?.domain || '').toLowerCase().replace(/^www\./, '')),
+  );
   const ranks = refSample.map((d) => normalizeDomainRank(d.rank));
   const avgReferrerRank = ranks.length
     ? Math.round((ranks.reduce((s, r) => s + r, 0) / ranks.length) * 10) / 10
     : 0;
+
   const linksPerDomain = input.referringDomains > 0
     ? Math.round((input.backlinksTotal / input.referringDomains) * 10) / 10
     : 0;
@@ -301,11 +360,20 @@ export function computeBacklinkToxicity(input: {
   const suspiciousNote = suspicious.length > 0
     ? ` Domaines à examiner en priorité : ${suspicious.slice(0, 6).join(', ')}.`
     : '';
-  const recommendation = verdict === 'pollue'
+  // Garde anti-désaveu : dès qu'un réseau propre est détecté, le rapport le dit
+  // et interdit d'inclure ces domaines dans un fichier de désaveu.
+  const ownNote = ownNetwork.length > 0
+    ? ` ${ownNetwork.length} domaine${ownNetwork.length > 1 ? 's' : ''} référent${ownNetwork.length > 1 ? 's' : ''} appartien${ownNetwork.length > 1 ? 'nent' : 't'} au même réseau de marque (${ownNetwork.slice(0, 6).join(', ')}) : maillage inter-pays, exclu du calcul de toxicité et à ne jamais désavouer.`
+    : '';
+  if (ownNetwork.length > 0) {
+    signals.push(`réseau propre exclu du calcul : ${ownNetwork.slice(0, 6).join(', ')}`);
+  }
+  const recommendation = (verdict === 'pollue'
     ? `Priorité au nettoyage : constituez un fichier de désaveu sur les domaines d'annuaire et MFA, et diversifiez les ancres avant tout nouvel achat de liens.${suspiciousNote}`
     : verdict === 'a_surveiller'
       ? `Surveillez la répétition d'ancres et la qualité des nouveaux référents ; un désaveu ciblé peut être utile sur les domaines les plus faibles.${suspiciousNote}`
-      : "Aucun signal de manipulation sur l'échantillon reçu : pas de désaveu justifié à ce stade, l'échantillon reste toutefois limité aux principaux référents.";
+      : "Aucun signal de manipulation sur l'échantillon reçu : pas de désaveu justifié à ce stade, l'échantillon reste toutefois limité aux principaux référents.")
+    + ownNote;
 
   return {
     toxicity_score: toxicity,
@@ -318,8 +386,10 @@ export function computeBacklinkToxicity(input: {
     broken_ratio: brokenRatio,
     signals,
     recommendation,
+    own_network_domains: ownNetwork,
   };
 }
+
 
 function unavailable(domain: string, reason: string): AuthorityData {
   return {
@@ -558,7 +628,9 @@ export async function fetchDomainAuthority(
       referringDomains,
       brokenBacklinks: s.broken_backlinks || 0,
       dofollowRatio: dofollow,
+      auditedDomain: domain,
     });
+
 
     // Lot 2 : répartitions TLD / pays / plateformes (déjà dans le résumé, 0 appel
     // supplémentaire) + pages cibles mesurées via `domain_pages`.

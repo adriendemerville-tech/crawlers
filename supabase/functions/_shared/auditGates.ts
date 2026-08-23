@@ -294,15 +294,17 @@ export async function writeGatesToWorkbench(
     if (actionable.length === 0) return { attempted: 0, written: 0 };
 
     const scopeKey = opts.url ? new URL(opts.url).pathname.replace(/\/+$/, '') || '/' : '*';
+    const measuredAt = new Date().toISOString();
     let written = 0;
     for (const g of actionable) {
+      const recordId = `gate_${opts.domain}_${scopeKey}_${g.source}_${g.axis}`;
       const row = {
         domain: opts.domain,
         tracked_site_id: opts.trackedSiteId || null,
         user_id: opts.userId,
         source_type: 'audit_strategic',
         source_function: 'audit-gates',
-        source_record_id: `gate_${opts.domain}_${scopeKey}_${g.source}_${g.axis}`,
+        source_record_id: recordId,
         finding_category: AXIS_CATEGORY[g.axis] || 'geo_visibility',
         severity: 'critical',
         title: `Cause racine — ${gateAxisLabel(g.axis)}`.slice(0, 280),
@@ -315,6 +317,9 @@ export async function writeGatesToWorkbench(
           evidence: g.evidence || null,
           measured: g.measured ?? null,
           target: g.target ?? null,
+          // Horodatage de la mesure : c'est lui qui permet d'écarter une valeur
+          // périmée au moment de construire le plan consolidé.
+          measured_at: measuredAt,
         },
       };
       try {
@@ -323,10 +328,31 @@ export async function writeGatesToWorkbench(
           .upsert(row, { onConflict: 'source_type,source_record_id' });
         if (!error) written++;
         else console.warn(`[auditGates] upsert failed (${row.source_record_id}): ${error.message}`);
+        // Purge des doublons d'un même axe sur une même URL : un run antérieur
+        // (ou un autre moteur) avait pu écrire le même plafond sous une autre
+        // clé de portée, avec une valeur mesurée différente. Le plan consolidé
+        // affichait alors deux LCP contradictoires pour la même page.
+        if (!error) {
+          try {
+            let del = sb
+              .from('architect_workbench')
+              .delete()
+              .eq('domain', opts.domain)
+              .eq('source_function', 'audit-gates')
+              .eq('payload->>gate_axis', g.axis)
+              .neq('source_record_id', recordId);
+            del = opts.url ? del.eq('target_url', opts.url) : del.is('target_url', null);
+            const { error: delErr } = await del;
+            if (delErr) console.warn(`[auditGates] purge doublons échouée (${g.axis}): ${delErr.message}`);
+          } catch (pe) {
+            console.warn('[auditGates] purge exception:', pe);
+          }
+        }
       } catch (e) {
         console.warn('[auditGates] upsert exception:', e);
       }
     }
+
     console.log(`[auditGates] ${written}/${actionable.length} gate(s) poussés en tête de workbench (${opts.domain})`);
     return { attempted: actionable.length, written };
   } catch (e) {

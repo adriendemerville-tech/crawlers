@@ -2347,6 +2347,22 @@ Deno.serve(handleRequest(async (req) => {
       // Plafonds appliqués : rendus dans le rapport pour que l'écart entre le
       // score brut et le score affiché soit toujours justifié par un fait.
       gates: scoreGates,
+      // Réconciliation du total : la somme des cinq axes ne suffit pas à
+      // expliquer le total, car un bonus/malus « liens cassés » et un facteur de
+      // fiabilité de collecte s'y appliquent. Sans ces valeurs, le rapport
+      // affichait « 172 » d'un côté et « 177 avant plafond » de l'autre sans
+      // justifier l'écart.
+      reconciliation: {
+        axesSum: performanceScore + technicalScore + semanticScore + aiReadyScore + securityScore,
+        brokenLinksAdjustment: brokenLinksBonus,
+        brokenLinksVerdict: brokenLinksAnalysis?.verdict ?? null,
+        reliabilityFactor: smartFetchResult.selfAudit.reliabilityScore,
+        rawTotal: rawTotalScore,
+        beforeCap: Math.round(Math.max(0, rawTotalScore) * smartFetchResult.selfAudit.reliabilityScore),
+        cap: totalCap,
+        displayed: totalScore,
+      },
+
       performance: {
         score: performanceScore,
         maxScore: 40,
