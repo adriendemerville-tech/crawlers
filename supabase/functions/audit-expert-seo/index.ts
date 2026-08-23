@@ -2267,22 +2267,47 @@ Deno.serve(handleRequest(async (req) => {
 
 
     // Contenu non extractible : le HTML est servi mais le texte visible est
-    // quasi absent (coquille JS). Le score technique ne peut pas rester haut :
-    // les robots ne lisent rien.
+    // quasi absent (coquille JS). Là aussi, pénalité graduée et non score par
+    // défaut : une page à 180 mots et une page à 12 mots ne sont pas le même
+    // dossier, et le même fait mesuré est déjà payé côté GEO
+    // (bot_accessibility + quotability). Un plafond forfaitaire de part et
+    // d'autre sanctionnait trois fois la même cause.
+    //
+    // Sévérité continue (0 → 1), croisement du ratio de texte et du volume :
+    //   ratio  15 % ou plus → 0        ratio  0 %  → 1
+    //   500 mots ou plus    → 0        0 mot       → 1
     const density = htmlAnalysis.insights?.contentDensity;
     const densityKnown = Boolean(density) && density.verdict !== 'unknown';
-    const textStarved = densityKnown && density.ratio < 5 && htmlAnalysis.wordCount < 200;
-    if (textStarved && technicalScore > 25) {
-      scoreGates.push({
-        axis: 'technical',
-        reason: 'Texte visible quasi absent du HTML servi (rendu probablement dépendant du JS)',
-        evidence: `${density.ratio}% de texte et ${htmlAnalysis.wordCount} mots → cible > 15% (score plafonné à 25/50, soit −${technicalScore - 25} points)`,
-        pointsLost: technicalScore - 25,
-        measured: `${density.ratio}%`,
-        target: '> 15%',
-      });
-      technicalScore = 25;
+    const starvationSeverity = (() => {
+      if (!densityKnown) return 0;
+      const ratioSev = clamp01((15 - Number(density.ratio)) / 15);
+      const wordSev = clamp01((500 - Number(htmlAnalysis.wordCount)) / 500);
+      // Le ratio pèse plus : c'est lui qui distingue une page courte assumée
+      // d'une coquille JS (beaucoup de HTML, aucun texte).
+      return clamp01(ratioSev * 0.6 + wordSev * 0.4);
+    })();
+    // En dessous de 0,45, on est sur une page courte, pas sur une coquille.
+    const textStarved = starvationSeverity >= 0.45;
+
+    if (textStarved) {
+      // Abattement de l'axe technique : jusqu'à −55 % à sévérité maximale,
+      // plancher 25/50 (la page garde ses points de robots.txt, HTTPS, etc.).
+      const cut = 0.55 * ((starvationSeverity - 0.45) / 0.55);
+      const penalised = Math.max(25, Math.round(technicalScore * (1 - cut)));
+      if (penalised < technicalScore) {
+        const lost = technicalScore - penalised;
+        scoreGates.push({
+          axis: 'technical',
+          reason: 'Texte visible très insuffisant dans le HTML servi (rendu probablement dépendant du JS)',
+          evidence: `${density.ratio}% de texte et ${htmlAnalysis.wordCount} mots → cible > 15% et ≥ 500 mots (abattement de ${Math.round(cut * 100)} % de l'axe technique, soit −${lost} points sur 50)`,
+          pointsLost: lost,
+          measured: `${density.ratio}%`,
+          target: '> 15%',
+        });
+        technicalScore = penalised;
+      }
     }
+
 
     if (!psiAvailable) {
       console.warn('[Audit-Expert-SEO] ⚠️ PSI indisponible — scores Performance et Technique estimés (fallback 50%)');
