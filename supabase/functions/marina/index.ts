@@ -2391,6 +2391,21 @@ function buildExecutiveSummaryHTML(
       ${metric ? `<div style="margin-top:5px;">${metricBadge(metric, lang)}</div>` : ''}
     </div>`;
 
+  // Profil de liens : le paragraphe n'apparaît que si le faisceau d'indices est
+  // réellement mesuré (dofollow élevé + anomalies structurelles corroborantes).
+  const dctx = ctx.strategicData?.domain_authority?.toxicity?.dofollow_context ?? null;
+  const backlinkVigilanceHTML = dctx && dctx.level !== 'faible'
+    ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;border-left:3px solid #d4af37;padding-left:12px;">
+        <strong>${t('Profil de liens : vigilance élevée.', 'Link profile: high vigilance.', 'Perfil de enlaces: vigilancia alta.')}</strong>
+        ${t(
+          `Le volume de backlinks ne doit pas être interprété comme un volume équivalent de recommandations indépendantes. Une part importante des liens peut provenir de quelques domaines apparentés et être répétée à l'échelle du site. Le caractère ${Math.round(dctx.ratio)} % dofollow n'est pas toxique en soi, mais devient un facteur aggravant lorsqu'il est associé à une forte empreinte sitewide, des ancres répétitives et une faible diversité réelle des sources. Cette configuration est compatible avec un profil sur-optimisé ou un schéma de liens artificiel et justifie une investigation approfondie. Elle ne permet toutefois pas, à elle seule, de conclure à une pénalité Google.`,
+          `Backlink volume must not be read as an equivalent volume of independent recommendations. A significant share of links may come from a few related domains and be repeated site-wide. A ${Math.round(dctx.ratio)} % dofollow ratio is not toxic in itself, but becomes an aggravating factor alongside a strong sitewide footprint, repetitive anchors and low real source diversity. This is consistent with an over-optimised profile or an artificial link scheme and warrants investigation. It is not, on its own, evidence of a Google penalty.`,
+          `El volumen de backlinks no equivale a un volumen de recomendaciones independientes. Un ${Math.round(dctx.ratio)} % dofollow no es tóxico en sí mismo, pero es un factor agravante junto a una huella sitewide fuerte, anclas repetitivas y poca diversidad real. No prueba por sí solo una penalización de Google.`,
+        )}
+      </p>`
+    : '';
+
+
   return `
   <div class="section" data-marina-scope="page" data-marina-block="summary" style="border-left:6px solid #d4af37;">
     <h2 style="font-size:20px;margin:0 0 4px 0;">${t('Synthèse exécutive', 'Executive summary', 'Síntesis ejecutiva')}</h2>
