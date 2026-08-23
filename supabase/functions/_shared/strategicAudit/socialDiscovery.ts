@@ -169,9 +169,10 @@ export async function detectGoogleMyBusiness(domain: string, brandName: string, 
           reviews: perf?.total_reviews ?? undefined,
           category: loc.category || undefined,
           address: loc.address || undefined,
+          domain_match: typeof loc.website === 'string' && loc.website.toLowerCase().includes(cleanDomain.toLowerCase()),
         };
       });
-      const aggregated = buildGmbFromListings(listings, brandName);
+      const aggregated = buildGmbFromListings(listings, brandName, hqHint);
       if (aggregated) {
         console.log(`📍 ✅ GMB found in backend: ${aggregated.locations_count} fiche(s), ${aggregated.network_total_reviews ?? 0} avis cumulés (skipping DataForSEO)`);
         return aggregated;
