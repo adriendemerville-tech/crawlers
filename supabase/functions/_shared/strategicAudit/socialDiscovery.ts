@@ -138,7 +138,7 @@ function buildGmbFromListings(listings: RawListing[], brandName: string, hqHint?
   };
 }
 
-export async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number, languageCode: string = 'fr'): Promise<GMBData | null> {
+export async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number, languageCode: string = 'fr', hqHint?: string | null): Promise<GMBData | null> {
   const cleanDomain = domain.replace(/^www\./, '');
   console.log(`📍 Searching GMB for "${brandName}" / ${cleanDomain}...`);
 
