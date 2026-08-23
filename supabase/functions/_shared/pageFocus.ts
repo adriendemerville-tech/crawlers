@@ -265,7 +265,7 @@ export function derivePageFocus(
     seen.add(key);
     focusTerms.push(t);
   };
-  for (const t of termsOf(rest)) pushTerm(t);
+  for (const t of termsOf(cleanedRest)) pushTerm(t);
   if (locality) pushTerm(locality);
   // Title / H1 : uniquement les mots pleins absents du slug, plafonnés.
   for (const t of [...termsOf(String(meta.h1 || '')), ...termsOf(String(meta.title || ''))]) {
