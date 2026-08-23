@@ -700,6 +700,14 @@ export default function Marina() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
+  // Quand le rapport est prêt, la carte "Rapport prêt" est remontée sous la barre
+  // d'URL : on recentre la vue dessus même si l'utilisateur a scrollé pendant l'analyse.
+  useEffect(() => {
+    if (!reportUrl) return;
+    const el = document.getElementById('marina-report-ready');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [reportUrl]);
+
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     window.history.replaceState(null, '', `#${value}`);
