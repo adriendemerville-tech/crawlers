@@ -129,7 +129,7 @@ export const getLatestMarinaBatch = createServerFn({ method: 'GET' })
     return { batchId: (data as any)?.id ? String((data as any).id) : null };
   });
 
-/** Arrête la file d'un lot. Les audits déjà lancés se terminent côté serveur. */
+/** Arrête la file d'un lot et libère immédiatement ses créneaux Marina. */
 export const cancelMarinaBatch = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { batchId: string }) => {
@@ -138,12 +138,44 @@ export const cancelMarinaBatch = createServerFn({ method: 'POST' })
   })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const now = new Date().toISOString();
     const { error } = await supabaseAdmin
       .from('marina_batches')
-      .update({ status: 'cancelled', lock_until: null, updated_at: new Date().toISOString() } as never)
+      .update({ status: 'cancelled', lock_until: null, updated_at: now } as never)
       .eq('id', data.batchId)
       .eq('user_id', context.userId);
     if (error) throw new Error(error.message);
+
+    const { data: activeItems } = await supabaseAdmin
+      .from('marina_batch_items')
+      .select('id, job_id')
+      .eq('batch_id', data.batchId)
+      .eq('user_id', context.userId)
+      .in('status', ['pending', 'running']);
+
+    const jobIds = (activeItems || [])
+      .map((item: any) => item.job_id as string | null)
+      .filter((id): id is string => Boolean(id));
+    if (jobIds.length > 0) {
+      await supabaseAdmin
+        .from('async_jobs')
+        .update({
+          status: 'failed',
+          error_message: 'Audit annulé avec le lot multipages',
+          completed_at: now,
+          updated_at: now,
+        } as never)
+        .in('id', jobIds)
+        .eq('user_id', context.userId)
+        .in('status', ['pending', 'processing']);
+    }
+
+    await supabaseAdmin
+      .from('marina_batch_items')
+      .update({ status: 'failed', error: 'Lot annulé', updated_at: now } as never)
+      .eq('batch_id', data.batchId)
+      .eq('user_id', context.userId)
+      .in('status', ['pending', 'running']);
     return { ok: true };
   });
 

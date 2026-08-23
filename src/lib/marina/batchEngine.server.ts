@@ -104,8 +104,13 @@ async function reconcile(sb: SupabaseClient, items: ItemRow[]): Promise<number> 
 
     if (jobStatus === 'completed' || jobStatus === 'partial') {
       next = { status: jobStatus as ItemStatus, progress: 100, error: null };
-    } else if (jobStatus === 'failed') {
+    } else if (jobStatus === 'failed' || jobStatus === 'cancelled') {
       next = { status: 'failed', error: job.error_message || 'Échec de la génération' };
+    } else if (jobStatus === 'pending') {
+      // Le job existe mais attend encore un créneau Marina global. Ne pas le
+      // présenter comme un audit actif figé à 0 % et ne pas consommer un des
+      // créneaux propres au lot.
+      next = { status: 'pending', progress: 0, error: null };
     } else if (Number(job.progress ?? 0) !== item.progress || item.status !== 'running') {
       next = { status: 'running', progress: Number(job.progress ?? 0) };
     }
@@ -218,7 +223,7 @@ export async function advanceBatch(sb: SupabaseClient, batchId: string): Promise
 
     const reconciled = await reconcile(sb, items);
 
-    const inFlight = items.filter((i) => i.status === 'running' || (i.job_id && !TERMINAL.includes(i.status)));
+    const inFlight = items.filter((i) => i.status === 'running');
     const pending = items.filter((i) => i.status === 'pending' && !i.job_id);
     const concurrency = Number(b.concurrency) || DEFAULT_CONCURRENCY;
 

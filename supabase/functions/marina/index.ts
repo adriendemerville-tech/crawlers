@@ -4247,13 +4247,19 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         }
         try {
           console.log(`[Marina] Phase 3: calculate-llm-visibility for ${llmCacheDomain}`);
-          const result = await callFunction('calculate-llm-visibility', {
-            tracked_site_id: trackedSiteId,
-            user_id: parentJob.user_id,
-            ...(hasMarinaContext ? { siteContext: marinaSiteContext } : {}),
-            // Questions ancrées sur l'intention de la page auditée.
-            ...(llmIsDeepPage ? { pageUrl: url } : {}),
-          });
+          const result = await Promise.race([
+            callFunction('calculate-llm-visibility', {
+              tracked_site_id: trackedSiteId,
+              user_id: parentJob.user_id,
+              ...(hasMarinaContext ? { siteContext: marinaSiteContext } : {}),
+              // Questions ancrées sur l'intention de la page auditée.
+              ...(llmIsDeepPage ? { pageUrl: url } : {}),
+            }),
+            new Promise<never>((_, reject) => setTimeout(
+              () => reject(new Error('LLM visibility timeout after 120s')),
+              120_000,
+            )),
+          ]);
           const normalizedResult = unwrapFunctionPayload(result);
           if (normalizedResult && !result?.error && Array.isArray(normalizedResult.scores)) {
             llmVisibilityData = normalizedResult;
@@ -4337,7 +4343,10 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       //  2. les questions sont persistées (3 benchmarks) mais des modèles répondent encore.
       // Dans les deux cas on repolle le cache domaine jusqu'à obtenir un payload
       // « settled » (statut != processing et aucun score pending), avec un budget borné.
-      const LLM_SETTLE_ATTEMPTS = 36; // 36 × 5s = 3 min max d'attente supplémentaire
+      // Cette mesure enrichit le rapport mais ne doit jamais immobiliser tout un
+      // lot multipages. Une minute suffit pour récupérer une écriture tardive ;
+      // au-delà, le rapport est finalisé en mode partiel et le créneau est libéré.
+      const LLM_SETTLE_ATTEMPTS = 12; // 12 × 5s = 1 min max
       if (!isSettledLlmPayload(llmVisibilityData)) {
         for (let attempt = 0; attempt < LLM_SETTLE_ATTEMPTS; attempt++) {
           try {
@@ -4365,6 +4374,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             console.warn('[Marina] read-back visibilité LLM échoué (non-fatal):', e);
             break;
           }
+          // Heartbeat explicite : le watchdog distingue une attente bornée et
+          // active d'un worker réellement interrompu.
+          if (attempt % 4 === 0) await updateProgress(82, 'llm_visibility_settle');
           await new Promise((r) => setTimeout(r, 5_000));
         }
         if (!llmVisibilityData) {
