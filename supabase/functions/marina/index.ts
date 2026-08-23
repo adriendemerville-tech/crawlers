@@ -1742,7 +1742,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 
   const content = `
     <div class="section">
-      <div class="section-title"><span class="section-number">2</span> 🔍 ${tr.techAudit}</div>
+      <div class="section-title"><span class="section-number">3</span> 🔍 ${tr.techAudit}</div>
       ${sectionLead('tech', lang)}
       ${topHtml}
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
