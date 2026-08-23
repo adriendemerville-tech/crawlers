@@ -221,13 +221,7 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
         </tr></thead>
         <tbody>${segRow(seg.own_network)}${segRow(seg.directory_platform)}${segRow(seg.third_party_editorial)}</tbody>
       </table>
-      <div style="font-size:11.5px;color:#6b7280;margin-top:6px;">Réseau propre : ${seg.own_network_source === 'verified'
-        ? 'propriété prouvée.'
-        : seg.own_network_source === 'brand_token_suspected'
-          ? 'racine de marque commune, à confirmer.'
-          : seg.own_network_source === 'mixed'
-            ? 'en partie prouvée, en partie à confirmer.'
-            : 'non détecté.'} Toxicité calculée sur les liens tiers.</div>`
+      <div style="font-size:11.5px;color:#6b7280;margin-top:6px;">Réseau propre : ${seg.own_network_source === 'verified' ? 'prouvé' : seg.own_network_source === 'brand_token_suspected' ? 'à confirmer' : seg.own_network_source === 'mixed' ? 'partiellement prouvé' : 'non détecté'}.</div>`
     : '';
 
   const dctx = t?.dofollow_context ?? null;
