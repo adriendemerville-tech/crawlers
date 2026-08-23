@@ -1605,7 +1605,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
 
   const content = `
     <div class="section">
-      <div class="section-title"><span class="section-number">1</span> ${tr.crawlReport}</div>
+      <div class="section-title"><span class="section-number">2</span> ${tr.crawlReport}</div>
       ${sectionLead('crawl', lang)}
       ${topHtml}
       ${hostDupHtml}
