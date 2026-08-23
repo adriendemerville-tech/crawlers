@@ -202,11 +202,15 @@ export function derivePageFocus(
   meta: { title?: string | null; h1?: string | null; knownLocalities?: string[]; brandName?: string | null } = {},
 ): PageFocus {
   let path = '';
+  let hostname = '';
   try {
-    path = new URL(rawUrl).pathname.replace(/\/+$/, '');
+    const parsed = new URL(rawUrl);
+    path = parsed.pathname.replace(/\/+$/, '');
+    hostname = parsed.hostname;
   } catch {
     path = '';
   }
+
   const segments = path.split('/').filter(Boolean).map((s) => {
     try { return decodeURIComponent(s); } catch { return s; }
   });
