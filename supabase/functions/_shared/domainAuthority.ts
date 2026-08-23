@@ -44,7 +44,15 @@ export interface BacklinkToxicity {
   broken_ratio: number;
   signals: string[];
   recommendation: string;
+  /**
+   * Domaines référents identifiés comme appartenant au même réseau de marque
+   * (même racine de nom sur une autre extension : déclinaisons pays d'une
+   * franchise). Ils sont exclus des signaux de toxicité : un maillage
+   * inter-pays n'est pas un profil manipulé, et les désavouer serait nuisible.
+   */
+  own_network_domains?: string[];
 }
+
 
 export interface OrganicVisibility {
   estimated_traffic: number | null;
