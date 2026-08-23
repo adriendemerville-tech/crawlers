@@ -53,6 +53,7 @@ import { Route as IndiceAlignementStrategiqueRouteImport } from './routes/indice
 import { Route as IntegrationGtmRouteImport } from './routes/integration-gtm'
 import { Route as MachineLayerScannerRouteImport } from './routes/machine-layer-scanner'
 import { Route as MarinaRouteImport } from './routes/marina'
+import { Route as MarketplaceBacklinksRouteImport } from './routes/marketplace-backlinks'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MethodologieRouteImport } from './routes/methodologie'
 import { Route as ModifierCodeWordpressRouteImport } from './routes/modifier-code-wordpress'
@@ -368,6 +369,11 @@ const MachineLayerScannerRoute = MachineLayerScannerRouteImport.update({
 const MarinaRoute = MarinaRouteImport.update({
   id: '/marina',
   path: '/marina',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketplaceBacklinksRoute = MarketplaceBacklinksRouteImport.update({
+  id: '/marketplace-backlinks',
+  path: '/marketplace-backlinks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
@@ -869,6 +875,7 @@ export interface FileRoutesByFullPath {
   '/integration-gtm': typeof IntegrationGtmRoute
   '/machine-layer-scanner': typeof MachineLayerScannerRoute
   '/marina': typeof MarinaRoute
+  '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methodologie': typeof MethodologieRoute
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
@@ -1004,6 +1011,7 @@ export interface FileRoutesByTo {
   '/integration-gtm': typeof IntegrationGtmRoute
   '/machine-layer-scanner': typeof MachineLayerScannerRoute
   '/marina': typeof MarinaRoute
+  '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methodologie': typeof MethodologieRoute
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
@@ -1140,6 +1148,7 @@ export interface FileRoutesById {
   '/integration-gtm': typeof IntegrationGtmRoute
   '/machine-layer-scanner': typeof MachineLayerScannerRoute
   '/marina': typeof MarinaRoute
+  '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methodologie': typeof MethodologieRoute
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
@@ -1277,6 +1286,7 @@ export interface FileRouteTypes {
     | '/integration-gtm'
     | '/machine-layer-scanner'
     | '/marina'
+    | '/marketplace-backlinks'
     | '/mentions-legales'
     | '/methodologie'
     | '/modifier-code-wordpress'
@@ -1412,6 +1422,7 @@ export interface FileRouteTypes {
     | '/integration-gtm'
     | '/machine-layer-scanner'
     | '/marina'
+    | '/marketplace-backlinks'
     | '/mentions-legales'
     | '/methodologie'
     | '/modifier-code-wordpress'
@@ -1547,6 +1558,7 @@ export interface FileRouteTypes {
     | '/integration-gtm'
     | '/machine-layer-scanner'
     | '/marina'
+    | '/marketplace-backlinks'
     | '/mentions-legales'
     | '/methodologie'
     | '/modifier-code-wordpress'
@@ -1683,6 +1695,7 @@ export interface RootRouteChildren {
   IntegrationGtmRoute: typeof IntegrationGtmRoute
   MachineLayerScannerRoute: typeof MachineLayerScannerRoute
   MarinaRoute: typeof MarinaRoute
+  MarketplaceBacklinksRoute: typeof MarketplaceBacklinksRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   MethodologieRoute: typeof MethodologieRoute
   ModifierCodeWordpressRoute: typeof ModifierCodeWordpressRoute
@@ -2082,6 +2095,13 @@ declare module '@tanstack/react-router' {
       path: '/marina'
       fullPath: '/marina'
       preLoaderRoute: typeof MarinaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace-backlinks': {
+      id: '/marketplace-backlinks'
+      path: '/marketplace-backlinks'
+      fullPath: '/marketplace-backlinks'
+      preLoaderRoute: typeof MarketplaceBacklinksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mentions-legales': {
@@ -2755,6 +2775,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntegrationGtmRoute: IntegrationGtmRoute,
   MachineLayerScannerRoute: MachineLayerScannerRoute,
   MarinaRoute: MarinaRoute,
+  MarketplaceBacklinksRoute: MarketplaceBacklinksRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
   MethodologieRoute: MethodologieRoute,
   ModifierCodeWordpressRoute: ModifierCodeWordpressRoute,
