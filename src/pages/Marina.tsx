@@ -700,6 +700,14 @@ export default function Marina() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
+  // Quand le rapport est prêt, la carte "Rapport prêt" est remontée sous la barre
+  // d'URL : on recentre la vue dessus même si l'utilisateur a scrollé pendant l'analyse.
+  useEffect(() => {
+    if (!reportUrl) return;
+    const el = document.getElementById('marina-report-ready');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [reportUrl]);
+
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     window.history.replaceState(null, '', `#${value}`);
@@ -952,6 +960,42 @@ export default function Marina() {
                   </Button>
                 </div>
 
+                {/* Rapport prêt : remonté juste sous le champ URL + bouton Analyser */}
+                {reportUrl && (
+                  <div className="mt-4" id="marina-report-ready">
+                    <Card className="max-w-md mx-auto border-primary/20 bg-primary/5">
+                      <CardContent className="p-6 text-center">
+                        <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-3" />
+                        <h3 className="font-semibold text-foreground mb-2">{t.report.ready}</h3>
+                        <Button
+                          onClick={async () => {
+                            if (reportHtml) {
+                              setShowReportModal(true);
+                              return;
+                            }
+                            setLoadingReport(true);
+                            try {
+                              const resp = await fetch(reportUrl);
+                              const html = await resp.text();
+                              setReportHtml(html);
+                              setShowReportModal(true);
+                            } catch {
+                              window.open(reportUrl, '_blank');
+                            } finally {
+                              setLoadingReport(false);
+                            }
+                          }}
+                          disabled={loadingReport}
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                        >
+                          {loadingReport ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
+                          {t.report.view}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
                 {/* Purge de cache : visible uniquement pour les admins */}
                 {isAdmin && (
                   <div className="mt-3 text-left">
@@ -1079,42 +1123,6 @@ export default function Marina() {
               {error && (
                 <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm max-w-md mx-auto">
                   {error}
-                </div>
-              )}
-
-              {/* Result */}
-              {reportUrl && (
-                <div className="mt-8">
-                  <Card className="max-w-md mx-auto border-primary/20 bg-primary/5">
-                    <CardContent className="p-6 text-center">
-                      <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-3" />
-                      <h3 className="font-semibold text-foreground mb-2">{t.report.ready}</h3>
-                      <Button
-                        onClick={async () => {
-                          if (reportHtml) {
-                            setShowReportModal(true);
-                            return;
-                          }
-                          setLoadingReport(true);
-                          try {
-                            const resp = await fetch(reportUrl);
-                            const html = await resp.text();
-                            setReportHtml(html);
-                            setShowReportModal(true);
-                          } catch {
-                            window.open(reportUrl, '_blank');
-                          } finally {
-                            setLoadingReport(false);
-                          }
-                        }}
-                        disabled={loadingReport}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                      >
-                        {loadingReport ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
-                        {t.report.view}
-                      </Button>
-                    </CardContent>
-                  </Card>
                 </div>
               )}
             </div>
