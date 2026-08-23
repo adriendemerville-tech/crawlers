@@ -820,7 +820,7 @@ function normalizeUrl(value: string | null | undefined, base?: string): string |
   }
 }
 
-function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoData: any, domain: string) {
+function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoData: any, domain: string, auditedUrl?: string) {
   const scores = expertSeoData?.scores || {};
   const rawData = expertSeoData?.rawData || {};
   const htmlAnalysis = rawData?.htmlAnalysis || {};
