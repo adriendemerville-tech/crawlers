@@ -656,6 +656,70 @@ function pillarBlock(
   </div>`;
 }
 
+/**
+ * Tableau de décomposition du score GEO : une ligne par pilier, avec les
+ * sous-signaux qui le composent, le poids en points du jour, le score du pilier
+ * et les points effectivement acquis. La dernière ligne totalise à 100 pts et
+ * reconstitue le score GEO affiché, pour qu'aucun chiffre du rapport ne soit
+ * une boîte noire.
+ */
+function pillarTableHTML(report: GeoSubSignalReport, lang?: string): string {
+  const en = lang === 'en';
+  const rows = (['authority', 'accessibility', 'content'] as GeoPillar[]).map((key) => {
+    const f = report[key];
+    const pts = report.pillar_points[key];
+    // Sous-signaux du pilier, du plus lourd au plus léger, avec leur poids en points.
+    const members = report.signals
+      .filter((s) => s.family === key)
+      .sort((a, b) => b.weight - a.weight)
+      .map((s) => `${esc(s.label)} ${s.weight.toFixed(1).replace(/\.0$/, '')} pts${s.value === null ? (en ? ' (not measured)' : ' (non mesuré)') : ''}`)
+      .join(' · ');
+    // Points acquis = score du pilier appliqué à son poids du jour.
+    const earned = f.score === null ? null : Math.round((f.score / 100) * pts * 10) / 10;
+    const scopeLabel = key === 'authority'
+      ? (en ? 'domain (mutualized)' : 'domaine (mutualisé)')
+      : (en ? 'page' : 'page');
+    return `<tr>
+      <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;border-left:3px solid ${PILLAR_ACCENT[key]};vertical-align:top;">
+        <div style="font-size:12px;font-weight:600;color:#111827;">${esc(f.label)} <span style="font-weight:400;color:#6b7280;">— ${esc(scopeLabel)}</span></div>
+        <div style="font-size:10.5px;color:#6b7280;line-height:1.5;margin-top:3px;">${members}</div>
+      </td>
+      <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right;font-size:13px;font-weight:700;color:#111827;white-space:nowrap;vertical-align:top;">${pts} pts</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right;font-size:12px;color:#374151;white-space:nowrap;vertical-align:top;">${f.score === null ? 'n/m' : `${f.score}/100`}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right;font-size:12px;font-weight:600;color:#111827;white-space:nowrap;vertical-align:top;">${earned === null ? '—' : `${earned} pts`}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:10.5px;color:#6b7280;white-space:nowrap;vertical-align:top;">${esc(trendText(key, lang))}</td>
+    </tr>`;
+  }).join('');
+
+  const totalEarned = (['authority', 'accessibility', 'content'] as GeoPillar[])
+    .reduce((acc, key) => {
+      const f = report[key];
+      return f.score === null ? acc : acc + (f.score / 100) * report.pillar_points[key];
+    }, 0);
+
+  return `<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;margin:0 0 14px;background:#ffffff;">
+    <thead>
+      <tr style="background:#f9fafb;">
+        <th style="padding:8px 10px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;">${en ? 'Pillar and its sub-signals' : 'Pilier et ses sous-signaux'}</th>
+        <th style="padding:8px 10px;text-align:right;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Weight' : 'Poids'}</th>
+        <th style="padding:8px 10px;text-align:right;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Score' : 'Score'}</th>
+        <th style="padding:8px 10px;text-align:right;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Earned' : 'Acquis'}</th>
+        <th style="padding:8px 10px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Trend' : 'Tendance'}</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+      <tr style="background:#f9fafb;">
+        <td style="padding:8px 10px;font-size:12px;font-weight:700;color:#111827;">${en ? 'GEO total' : 'Total GEO'}</td>
+        <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;color:#111827;white-space:nowrap;">100 pts</td>
+        <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:700;color:#111827;white-space:nowrap;">${report.geo_score === null ? 'n/m' : `${report.geo_score}/100`}</td>
+        <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:700;color:#111827;white-space:nowrap;">${report.geo_score === null ? '—' : `${Math.round(totalEarned * 10) / 10} pts`}</td>
+        <td style="padding:8px 10px;"></td>
+      </tr>
+    </tbody>
+  </table>`;
+}
+
 export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string): string {
   if (!report || report.signals.every((s) => s.value === null)) return '';
   const accent = report.verdict === 'comprehension_lag' ? VIOLET
@@ -678,6 +742,7 @@ export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string
     <p style="font-size:12px;color:#374151;line-height:1.6;margin:0 0 12px;">${lang === 'en'
       ? 'A single GEO score hides three realities. The ten sub-signals below are split into three pillars: what the machine can read and extract (accessibility), the value of the content worth citing (exploitability), and the credibility of the brand outside the site (domain authority). Each sub-signal carries the status of its data.'
       : 'Un score GEO global masque trois réalités. Les dix sous-signaux ci-dessous sont répartis en trois piliers : ce que la machine peut lire et extraire du site (accessibilité), la valeur du contenu à citer (exploitabilité), et la crédibilité de la marque hors du site (autorité domaine). Chaque sous-signal porte le statut de sa donnée.'}</p>
+    ${pillarTableHTML(report, lang)}
     <div style="display:flex;flex-wrap:wrap;gap:12px;">
       ${pillarBlock('authority', report.authority, report, report.signals, lang === 'en' ? 'Credibility and entity attachment outside the site (mutualized at domain level).' : 'Crédibilité et rattachement de l’entité hors du site (mutualisée au domaine).', lang)}
       ${pillarBlock('accessibility', report.accessibility, report, report.signals, lang === 'en' ? 'Readability and extractability of the site as served.' : 'Lisibilité et extractibilité du site tel qu’il est servi.', lang)}
