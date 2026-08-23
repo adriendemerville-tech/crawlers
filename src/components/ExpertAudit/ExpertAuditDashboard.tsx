@@ -1527,6 +1527,8 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
           {auditMode === 'technical' && (
             <StrategicErrorBoundary onReset={handleNewAudit}>
               <TechnicalResultsSection result={result} url={url} t={t} onReportClick={handleReportButtonClick} />
+              <GeoPillarsCard technicalResult={technicalResult ?? result} strategicResult={strategicResult} />
+
               <NextStepFloatingButton
                 nextStepLabel={language === 'en' ? 'Next: AI Visibility Audit' : language === 'es' ? 'Siguiente: Auditoría GEO' : 'Étape suivante : Audit GEO'}
                 onNextStep={() => handleStrategicAudit()}
