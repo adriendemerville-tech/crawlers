@@ -169,7 +169,7 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
     ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
         <div style="font-size:22px;font-weight:700;color:${t.toxicity_score >= 60 ? '#b91c1c' : t.toxicity_score >= 35 ? '#b45309' : '#15803d'};">${t.toxicity_score}/100</div>
         <div style="font-size:13px;font-weight:600;color:#111827;">${VERDICT_LABEL[t.verdict]}</div>
-        <div style="font-size:11.5px;color:#6b7280;">0-34 sain · 35-59 à surveiller · 60-100 risque</div>
+        <div style="font-size:11.5px;color:#6b7280;">Seuils 35 / 60</div>
       </div>
       ${rows.length
         ? `<table style="width:100%;border-collapse:collapse;font-size:12px;">
