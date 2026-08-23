@@ -698,10 +698,11 @@ export function computeBacklinkToxicity(input: {
     signals.push(`réseau propre sorti du périmètre de toxicité (mesuré à part) : ${ownNetwork.slice(0, 6).join(', ')}`);
   }
   const recommendation = (verdict === 'pollue'
-    ? `Priorité au nettoyage sur les liens tiers : constituez un fichier de désaveu sur les domaines d'annuaire et MFA, et diversifiez les ancres avant tout nouvel achat de liens.${suspiciousNote}`
+    ? `Ordre d'investigation avant toute action : 1) identifier les liens sitewide (footer, en-tête, sidebar, template) et le nombre de pages sources ; 2) vérifier les relations réelles entre domaines (propriété, marque, hébergement) — une racine de marque commune ne suffit pas à conclure ; 3) analyser la typologie des ancres ; 4) qualifier le contexte des liens (éditorial, navigationnel, annuaire). Le désaveu ne se justifie qu'après cette vérification, sur des domaines tiers réellement artificiels ; sur le réseau propre, on corrige à la source.${suspiciousNote}`
     : verdict === 'a_surveiller'
-      ? `Surveillez la répétition d'ancres et la qualité des nouveaux référents tiers ; un désaveu ciblé peut être utile sur les domaines tiers les plus faibles.${suspiciousNote}`
+      ? `Surveillez la répétition d'ancres, l'empreinte sitewide et la qualité des nouveaux référents tiers. Un désaveu ne se justifie qu'après avoir vérifié que les liens visés sont réellement tiers et manifestement construits — ni la faible autorité ni le volume ne suffisent.${suspiciousNote}`
       : "Aucun signal de manipulation sur les liens tiers de l'échantillon : pas de désaveu justifié à ce stade, l'échantillon reste toutefois limité aux principaux référents.")
+
     + ownNote;
 
   return {
