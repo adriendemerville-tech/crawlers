@@ -156,18 +156,24 @@ function extractLocality(slug: string, knownLocalities: string[] = []): { locali
  * Si plus rien ne subsiste, on renvoie '' : l'appelant retombe alors sur le
  * secteur d'activité, ce qui est le comportement voulu.
  */
-function sanitizeServicePhrase(rest: string, brandName?: string | null): string {
+function sanitizeServicePhrase(rest: string, brandName?: string | null, hostname?: string | null): string {
   let low = String(rest || '').toLowerCase();
   low = low.replace(/(^|-)\d{1,2}\s*(er|e|eme|ème|nd|nde)?[- ]?arrondissement(-|$)/g, '$1');
   low = low.replace(/(^|-)arrondissement(-|$)/g, '$1');
+  const deaccent = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // La marque déclarée ET la marque portée par le nom de domaine : sans le
+  // second garde-fou, un slug d'agence reste une requête de marque même quand
+  // l'appelant ne connaît pas le nom commercial.
+  const hostBrand = String(hostname || '')
+    .replace(/^www\./i, '')
+    .replace(/\.[a-z.]{2,10}$/i, '')
+    .replace(/[.]/g, '-');
   const brandTokens = new Set(
-    String(brandName || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
+    deaccent(`${brandName || ''} ${hostBrand}`.toLowerCase())
       .split(/[^a-z0-9]+/)
       .filter((w) => w.length >= 3),
   );
+
   const tokens = low.split('-').filter(Boolean).filter((t) => {
     if (/^\d+$/.test(t)) return false; // « 13 », « 75001 »
     if (/^\d+(er|e|eme|ème|nd|nde)$/.test(t)) return false; // « 1er », « 2eme »
