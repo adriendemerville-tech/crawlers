@@ -416,7 +416,7 @@ export async function findLocalCompetitor(
 
 
   const uniqueQueries = [...new Set(queries.filter(q => q.trim().length > 3))].slice(0, 2);
-  console.log(`🏙️ Recherche concurrents (${businessType || 'auto'}): ${uniqueQueries.map(q => `"${q}"`).join(', ')}`);
+  console.log(`🏙️ Recherche concurrents (${pageLocality ? `page localisée: ${pageLocality}` : businessType || 'auto'}): ${uniqueQueries.map(q => `"${q}"`).join(', ')}`);
 
   // 3. MULTI-QUERY SERP FETCH
   const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
