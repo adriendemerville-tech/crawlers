@@ -853,9 +853,28 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     .sort((a, b) => (pathOf(String(a?.url || ''))?.split('/').length || 99)
       - (pathOf(String(b?.url || ''))?.split('/').length || 99))[0]
     || crawlPages[0] || null;
-  const primaryPage = homeCandidates[0] || fallbackPage;
-  const primaryUrl = String(primaryPage?.url || '') || null;
-  const primaryIsHome = homeCandidates.length > 0;
+  // Une seule page décrite par le bloc de balises : priorité à l'URL réellement
+  // auditée (celle dont on possède H2/H3 et schema via l'analyse expert), puis
+  // la home, puis la page la moins profonde. Mélanger deux pages dans un bloc
+  // « mesuré » est un défaut de fiabilité, pas un détail de présentation.
+  const auditedPath = auditedUrl ? pathOf(auditedUrl) : null;
+  const auditedPage = auditedPath
+    ? crawlPages.find((p) => sameHost(String(p?.url || '')) && pathOf(String(p?.url || '')) === auditedPath) || null
+    : null;
+  const primaryPage = auditedPage || homeCandidates[0] || fallbackPage;
+  const primaryUrl = String(primaryPage?.url || '') || auditedUrl || null;
+  const primaryIsHome = primaryPage ? pathOf(String(primaryPage.url || '')) === '/' : homeCandidates.length > 0;
+  /**
+   * Les champs issus de l'analyse expert (H2/H3, schema, indexabilité) ne
+   * décrivent que l'URL auditée : ils ne servent de repli que si la page
+   * décrite est bien celle-là.
+   */
+  const expertDescribesPrimary = Boolean(
+    primaryPage
+      ? auditedPath && pathOf(String(primaryPage.url || '')) === auditedPath
+      : true,
+  );
+
 
 
   const totalWordCount = crawlPages.reduce((sum, page) => sum + Number(page?.word_count || 0), 0);
