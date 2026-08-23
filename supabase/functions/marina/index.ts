@@ -882,7 +882,12 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
   const h1 = primaryPage?.h1 || htmlAnalysis?.h1Contents?.[0] || '';
 
   return {
+    // URL réellement décrite par les balises ci-dessous : le rapport doit la
+    // nommer au lieu de supposer « page d'accueil ».
+    primaryUrl,
+    primaryIsHome,
     pagesFound: Number(crawl?.crawled_pages || crawlPages.length || 1),
+
     // Alias consommés par la synthèse exécutive et « Portée et limites » :
     // sans eux, « Pages explorées » retombait sur n/d et le rapport se déclarait
     // mono-page alors que le crawl multi-pages avait bien tourné.
