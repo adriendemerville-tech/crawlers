@@ -623,6 +623,8 @@ function unavailable(domain: string, reason: string): AuthorityData {
     referring_main_domains: 0, backlinks_total: 0, dofollow_ratio: 0, broken_backlinks: 0,
     first_seen: null, top_referring_domains: [], top_anchors: [], top_anchors_detail: [],
     toxicity: null, distribution: null, top_linked_pages: [], organic_visibility: null,
+    segmentation: null, own_network_hygiene: null,
+
     referring_domains_sampled: 0, anchors_sampled: 0, anchors_source: 'unavailable',
     confidence: 'low', confidence_reason: reason,
     calibration_version: AUTHORITY_CALIBRATION_VERSION,
