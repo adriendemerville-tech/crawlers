@@ -578,19 +578,22 @@ export function computeBacklinkToxicity(input: {
   const suspiciousNote = suspicious.length > 0
     ? ` Domaines à examiner en priorité : ${suspicious.slice(0, 6).join(', ')}.`
     : '';
-  // Garde anti-désaveu : dès qu'un réseau propre est détecté, le rapport le dit
-  // et interdit d'inclure ces domaines dans un fichier de désaveu.
+  // Le réseau propre n'est pas « sain » par décret : il est mesuré à part
+  // (hygiène du réseau) et sorti du périmètre de désaveu, qui n'a de sens que
+  // sur des domaines tiers.
+  const ownVerified = seg?.own_network_domains.filter((d) => d.source === 'verified').length ?? 0;
+  const ownSuspected = seg?.own_network_domains.filter((d) => d.source === 'suspected').length ?? 0;
   const ownNote = ownNetwork.length > 0
-    ? ` ${ownNetwork.length} domaine${ownNetwork.length > 1 ? 's' : ''} référent${ownNetwork.length > 1 ? 's' : ''} appartien${ownNetwork.length > 1 ? 'nent' : 't'} au même réseau de marque (${ownNetwork.slice(0, 6).join(', ')}) : maillage inter-pays, exclu du calcul de toxicité et à ne jamais désavouer.`
+    ? ` ${ownNetwork.length} domaine${ownNetwork.length > 1 ? 's' : ''} référent${ownNetwork.length > 1 ? 's' : ''} relève${ownNetwork.length > 1 ? 'nt' : ''} de votre réseau propre (${ownNetwork.slice(0, 6).join(', ')}${ownSuspected > 0 ? `, dont ${ownSuspected} rattaché${ownSuspected > 1 ? 's' : ''} par racine de marque, à confirmer` : ''}${ownVerified > 0 ? `, dont ${ownVerified} à propriété prouvée` : ''}) : hors périmètre de désaveu, évalué séparément dans « Hygiène du réseau propre ».`
     : '';
   if (ownNetwork.length > 0) {
-    signals.push(`réseau propre exclu du calcul : ${ownNetwork.slice(0, 6).join(', ')}`);
+    signals.push(`réseau propre sorti du périmètre de toxicité (mesuré à part) : ${ownNetwork.slice(0, 6).join(', ')}`);
   }
   const recommendation = (verdict === 'pollue'
-    ? `Priorité au nettoyage : constituez un fichier de désaveu sur les domaines d'annuaire et MFA, et diversifiez les ancres avant tout nouvel achat de liens.${suspiciousNote}`
+    ? `Priorité au nettoyage sur les liens tiers : constituez un fichier de désaveu sur les domaines d'annuaire et MFA, et diversifiez les ancres avant tout nouvel achat de liens.${suspiciousNote}`
     : verdict === 'a_surveiller'
-      ? `Surveillez la répétition d'ancres et la qualité des nouveaux référents ; un désaveu ciblé peut être utile sur les domaines les plus faibles.${suspiciousNote}`
-      : "Aucun signal de manipulation sur l'échantillon reçu : pas de désaveu justifié à ce stade, l'échantillon reste toutefois limité aux principaux référents.")
+      ? `Surveillez la répétition d'ancres et la qualité des nouveaux référents tiers ; un désaveu ciblé peut être utile sur les domaines tiers les plus faibles.${suspiciousNote}`
+      : "Aucun signal de manipulation sur les liens tiers de l'échantillon : pas de désaveu justifié à ce stade, l'échantillon reste toutefois limité aux principaux référents.")
     + ownNote;
 
   return {
@@ -604,9 +607,14 @@ export function computeBacklinkToxicity(input: {
     broken_ratio: brokenRatio,
     signals,
     recommendation,
+    scope: ownNetwork.length > 0 ? 'third_party_only' : 'all_referrers',
     own_network_domains: ownNetwork,
+    own_network_backlink_share: ownBacklinkShare,
+    links_per_domain_all: linksPerDomainAll,
+    anchor_attribution: anchorDowngraded ? 'all_referrers_downgraded' : 'all_referrers',
   };
 }
+
 
 
 function unavailable(domain: string, reason: string): AuthorityData {
