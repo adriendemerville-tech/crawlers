@@ -1125,42 +1125,6 @@ export default function Marina() {
                   {error}
                 </div>
               )}
-
-              {/* Result */}
-              {reportUrl && (
-                <div className="mt-8">
-                  <Card className="max-w-md mx-auto border-primary/20 bg-primary/5">
-                    <CardContent className="p-6 text-center">
-                      <CheckCircle2 className="w-10 h-10 text-primary mx-auto mb-3" />
-                      <h3 className="font-semibold text-foreground mb-2">{t.report.ready}</h3>
-                      <Button
-                        onClick={async () => {
-                          if (reportHtml) {
-                            setShowReportModal(true);
-                            return;
-                          }
-                          setLoadingReport(true);
-                          try {
-                            const resp = await fetch(reportUrl);
-                            const html = await resp.text();
-                            setReportHtml(html);
-                            setShowReportModal(true);
-                          } catch {
-                            window.open(reportUrl, '_blank');
-                          } finally {
-                            setLoadingReport(false);
-                          }
-                        }}
-                        disabled={loadingReport}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                      >
-                        {loadingReport ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileText className="w-4 h-4 mr-2" />}
-                        {t.report.view}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
             </div>
           </div>
         </section>
