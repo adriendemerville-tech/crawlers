@@ -1062,15 +1062,36 @@ function pillarTableHTML(report: GeoSubSignalReport, lang?: string): string {
     <tbody>
       ${rows}
       <tr style="background:#f9fafb;">
-        <td style="padding:8px 10px;font-size:12px;font-weight:700;color:#111827;">${en ? 'GEO total' : 'Total GEO'}</td>
+        <td style="padding:8px 10px;font-size:12px;font-weight:700;color:#111827;">${cal.applied && cal.factor_pct !== 0 ? (en ? 'Sub-total of measured signals (potential)' : 'Sous-total des signaux mesurés (potentiel)') : (en ? 'GEO total' : 'Total GEO')}</td>
         <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;color:#111827;white-space:nowrap;">100 pts</td>
-        <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:700;color:#111827;white-space:nowrap;">${report.geo_score === null ? 'n/m' : `${report.geo_score}/100`}</td>
+        <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:700;color:#111827;white-space:nowrap;">${prePotential === null ? 'n/m' : `${prePotential}/100`}</td>
         <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:700;color:#111827;white-space:nowrap;">${report.geo_score === null ? '—' : `${Math.round(totalEarned * 10) / 10} pts`}</td>
         <td style="padding:8px 10px;"></td>
       </tr>
+      ${cal.applied && cal.factor_pct !== 0 ? `
+      <tr>
+        <td style="padding:8px 10px;border-top:1px solid #e5e7eb;font-size:12px;color:#374151;">
+          <strong style="color:#111827;">${en ? 'Observed-citation calibration' : 'Calibration par la citation observée'}</strong>
+          <div style="font-size:10.5px;color:#6b7280;margin-top:2px;">${en
+            ? `Observed citation rate ${cal.rate_pct} % over ${cal.observations} observations (neutral target ${GEO_CALIBRATION_NEUTRAL_PCT} %).`
+            : `Taux de citation observé ${cal.rate_pct} % sur ${cal.observations} observations (cible neutre ${GEO_CALIBRATION_NEUTRAL_PCT} %).`}</div>
+        </td>
+        <td style="padding:8px 10px;border-top:1px solid #e5e7eb;text-align:right;font-size:12px;color:#6b7280;white-space:nowrap;">±${GEO_CALIBRATION_MAX_PCT} % max</td>
+        <td style="padding:8px 10px;border-top:1px solid #e5e7eb;text-align:right;font-size:12px;font-weight:600;color:${cal.factor_pct < 0 ? GOLD : '#111827'};white-space:nowrap;">${cal.factor_pct > 0 ? '+' : ''}${cal.factor_pct} %</td>
+        <td style="padding:8px 10px;border-top:1px solid #e5e7eb;text-align:right;font-size:12px;color:#374151;white-space:nowrap;">${cal.pre_score}/100 → ${cal.post_score}/100</td>
+        <td style="padding:8px 10px;border-top:1px solid #e5e7eb;font-size:10.5px;color:#6b7280;white-space:nowrap;">${en ? '0 % citation = −10 %' : '0 % de citation = −10 %'}</td>
+      </tr>
+      <tr style="background:#f9fafb;">
+        <td style="padding:8px 10px;font-size:12px;font-weight:700;color:#111827;">${en ? 'GEO total after calibration' : 'Total GEO après calibration'}</td>
+        <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;color:#111827;white-space:nowrap;">100 pts</td>
+        <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:700;color:#111827;white-space:nowrap;">${report.geo_score === null ? 'n/m' : `${report.geo_score}/100`}</td>
+        <td style="padding:8px 10px;"></td>
+        <td style="padding:8px 10px;"></td>
+      </tr>` : ''}
     </tbody>
   </table>`;
 }
+
 
 export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string): string {
   if (!report || report.signals.every((s) => s.value === null)) return '';
