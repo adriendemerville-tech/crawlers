@@ -177,7 +177,13 @@ const TOXIC_ANCHORS = [
  * - Supprime les espaces et caractères invisibles
  * - Gère les URLs mal formatées
  */
+/** Borne une valeur dans [0, 1] — sévérités et abattements progressifs. */
+function clamp01(n: number): number {
+  return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 0;
+}
+
 function normalizeUrl(url: string): string {
+
   // Nettoyage basique
   let normalized = url
     .trim()
@@ -2267,22 +2273,47 @@ Deno.serve(handleRequest(async (req) => {
 
 
     // Contenu non extractible : le HTML est servi mais le texte visible est
-    // quasi absent (coquille JS). Le score technique ne peut pas rester haut :
-    // les robots ne lisent rien.
+    // quasi absent (coquille JS). Là aussi, pénalité graduée et non score par
+    // défaut : une page à 180 mots et une page à 12 mots ne sont pas le même
+    // dossier, et le même fait mesuré est déjà payé côté GEO
+    // (bot_accessibility + quotability). Un plafond forfaitaire de part et
+    // d'autre sanctionnait trois fois la même cause.
+    //
+    // Sévérité continue (0 → 1), croisement du ratio de texte et du volume :
+    //   ratio  15 % ou plus → 0        ratio  0 %  → 1
+    //   500 mots ou plus    → 0        0 mot       → 1
     const density = htmlAnalysis.insights?.contentDensity;
     const densityKnown = Boolean(density) && density.verdict !== 'unknown';
-    const textStarved = densityKnown && density.ratio < 5 && htmlAnalysis.wordCount < 200;
-    if (textStarved && technicalScore > 25) {
-      scoreGates.push({
-        axis: 'technical',
-        reason: 'Texte visible quasi absent du HTML servi (rendu probablement dépendant du JS)',
-        evidence: `${density.ratio}% de texte et ${htmlAnalysis.wordCount} mots → cible > 15% (score plafonné à 25/50, soit −${technicalScore - 25} points)`,
-        pointsLost: technicalScore - 25,
-        measured: `${density.ratio}%`,
-        target: '> 15%',
-      });
-      technicalScore = 25;
+    const starvationSeverity = (() => {
+      if (!densityKnown) return 0;
+      const ratioSev = clamp01((15 - Number(density.ratio)) / 15);
+      const wordSev = clamp01((500 - Number(htmlAnalysis.wordCount)) / 500);
+      // Le ratio pèse plus : c'est lui qui distingue une page courte assumée
+      // d'une coquille JS (beaucoup de HTML, aucun texte).
+      return clamp01(ratioSev * 0.6 + wordSev * 0.4);
+    })();
+    // En dessous de 0,45, on est sur une page courte, pas sur une coquille.
+    const textStarved = starvationSeverity >= 0.45;
+
+    if (textStarved) {
+      // Abattement de l'axe technique : jusqu'à −55 % à sévérité maximale,
+      // plancher 25/50 (la page garde ses points de robots.txt, HTTPS, etc.).
+      const cut = 0.55 * ((starvationSeverity - 0.45) / 0.55);
+      const penalised = Math.max(25, Math.round(technicalScore * (1 - cut)));
+      if (penalised < technicalScore) {
+        const lost = technicalScore - penalised;
+        scoreGates.push({
+          axis: 'technical',
+          reason: 'Texte visible très insuffisant dans le HTML servi (rendu probablement dépendant du JS)',
+          evidence: `${density.ratio}% de texte et ${htmlAnalysis.wordCount} mots → cible > 15% et ≥ 500 mots (abattement de ${Math.round(cut * 100)} % de l'axe technique, soit −${lost} points sur 50)`,
+          pointsLost: lost,
+          measured: `${density.ratio}%`,
+          target: '> 15%',
+        });
+        technicalScore = penalised;
+      }
     }
+
 
     if (!psiAvailable) {
       console.warn('[Audit-Expert-SEO] ⚠️ PSI indisponible — scores Performance et Technique estimés (fallback 50%)');
@@ -2301,19 +2332,26 @@ Deno.serve(handleRequest(async (req) => {
     if (htmlAnalysis.h1Count === 1) semanticScore += 20;
     if (htmlAnalysis.wordCount >= 500) semanticScore += 20;
 
-    // Une page sans corps de texte lisible ne mérite pas les points de
-    // sémantique : les balises seules ne font pas un contenu.
-    if (textStarved && semanticScore > 20) {
-      scoreGates.push({
-        axis: 'semantic',
-        reason: 'Balises présentes mais aucun corps de texte lisible dans le HTML servi',
-        evidence: `${htmlAnalysis.wordCount} mots extraits → cible ≥ 500 (score plafonné à 20/60, soit −${semanticScore - 20} points)`,
-        pointsLost: semanticScore - 20,
-        measured: `${htmlAnalysis.wordCount} mots`,
-        target: '≥ 500 mots',
-      });
-      semanticScore = 20;
+    // Même logique sur la sémantique : abattement proportionnel à la sévérité
+    // (jusqu'à −65 %), plancher 20/60. Les balises seules ne font pas un
+    // contenu, mais elles ne valent pas zéro non plus.
+    if (textStarved) {
+      const cut = 0.65 * ((starvationSeverity - 0.45) / 0.55);
+      const penalised = Math.max(20, Math.round(semanticScore * (1 - cut)));
+      if (penalised < semanticScore) {
+        const lost = semanticScore - penalised;
+        scoreGates.push({
+          axis: 'semantic',
+          reason: 'Balisage présent mais corps de texte lisible très insuffisant dans le HTML servi',
+          evidence: `${htmlAnalysis.wordCount} mots extraits → cible ≥ 500 (abattement de ${Math.round(cut * 100)} % de l'axe sémantique, soit −${lost} points sur 60)`,
+          pointsLost: lost,
+          measured: `${htmlAnalysis.wordCount} mots`,
+          target: '≥ 500 mots',
+        });
+        semanticScore = penalised;
+      }
     }
+
 
     
     let aiReadyScore = 0;
@@ -2344,29 +2382,41 @@ Deno.serve(handleRequest(async (req) => {
     const rawTotalScore = performanceScore + technicalScore + semanticScore + aiReadyScore + securityScore + brokenLinksBonus;
     let totalScore = Math.round(Math.max(0, rawTotalScore) * smartFetchResult.selfAudit.reliabilityScore);
 
-    // Plafond global — désormais réservé aux défauts réellement bloquants.
+    // Plafond global — plus aucun score par défaut.
     //
-    // Un LCP dégradé est déjà payé sur son axe (abattement progressif ci-dessus) :
-    // le rejouer en plafond global revenait à sanctionner deux fois le même fait
-    // et à écraser toutes les pages lentes sur la même note (130/200 = 65).
-    // Ne subsistent donc que :
-    //   - contenu non extractible (`technical`) : les robots ne lisent rien → 130 ;
-    //   - mesures indisponibles (`estimated`) : la note n'est pas vérifiée → 150 ;
-    //   - LCP « poor » confirmé (> 4 s) : simple interdiction de la zone
-    //     « excellent » (170/200), sans écrasement de la variance.
-    const contentGate = scoreGates.some((g) => g.axis === 'technical');
+    // Chaque fait mesuré est désormais payé une seule fois, sur son axe, par un
+    // abattement proportionnel (LCP sur la performance, texte non extractible
+    // sur le technique et la sémantique). Le plafond global ne sert plus qu'à
+    // interdire la zone « excellent » quand un défaut sérieux est confirmé, et
+    // ce seuil est lui-même graduel : il descend avec la sévérité mesurée, il ne
+    // colle plus toutes les pages sur la même note.
     const estimatedGate = scoreGates.some((g) => g.axis === 'estimated');
     const poorLcp = lcpMsMeasured !== null && lcpMsMeasured > 4000
       && scoreGates.some((g) => g.axis === 'performance');
-    const totalCap = contentGate ? 130 : (estimatedGate ? 150 : (poorLcp ? 170 : null));
+
+    const caps: Array<{ cap: number; reason: string }> = [];
+    if (textStarved) {
+      // 170 à sévérité 0,45 → 150 à sévérité 1. Le contenu non extractible reste
+      // le défaut le plus grave, mais il ne fixe plus la note.
+      const cap = Math.round(170 - 20 * ((starvationSeverity - 0.45) / 0.55));
+      caps.push({
+        cap,
+        reason: 'Texte servi aux robots très insuffisant : la zone « excellent » reste fermée tant que le contenu n’est pas lisible sans JS',
+      });
+    }
+    if (estimatedGate) {
+      caps.push({ cap: 150, reason: 'Mesures de performance indisponibles : la note n’est pas vérifiée, le score global reste hors de la zone « excellent »' });
+    }
+    if (poorLcp) {
+      caps.push({ cap: 170, reason: 'LCP mobile « poor » confirmé : la zone « excellent » reste fermée tant que la cible n’est pas atteinte' });
+    }
+
+    const strictest = caps.length ? caps.reduce((a, b) => (b.cap < a.cap ? b : a)) : null;
+    const totalCap = strictest?.cap ?? null;
     if (totalCap !== null && totalScore > totalCap) {
       scoreGates.push({
         axis: 'total',
-        reason: contentGate
-          ? 'Contenu non extractible : le score global est plafonné hors de la zone « excellent »'
-          : estimatedGate
-            ? 'Mesures de performance indisponibles : le score global reste hors de la zone « excellent »'
-            : 'LCP mobile « poor » confirmé : la zone « excellent » reste fermée tant que la cible n’est pas atteinte',
+        reason: strictest!.reason,
         evidence: `${totalScore}/200 avant plafond → ${totalCap}/200 (soit −${totalScore - totalCap} points)`,
         pointsLost: totalScore - totalCap,
         measured: `${totalScore}/200`,
@@ -2375,6 +2425,7 @@ Deno.serve(handleRequest(async (req) => {
 
       totalScore = totalCap;
     }
+
 
     if (scoreGates.length) {
       console.log(`[Audit-Expert-SEO] 🚧 ${scoreGates.length} plafond(s) de cohérence appliqué(s): ${scoreGates.map((g) => g.axis).join(', ')}`);
