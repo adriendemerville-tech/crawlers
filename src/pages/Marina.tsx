@@ -1105,8 +1105,10 @@ export default function Marina() {
                   </div>
                 )}
 
+                <ClaudeVerdictBlock className="mt-8 relative left-1/2 w-screen max-w-none -translate-x-1/2" />
+
                 {/* API doc link — always visible */}
-                <div className="mt-6">
+                <div className="mt-6 flex justify-center">
                   <button
                     onClick={() => { handleTabChange('api'); document.getElementById('marina-tabs')?.scrollIntoView({ behavior: 'smooth' }); }}
                     className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
@@ -1114,8 +1116,6 @@ export default function Marina() {
                     <Terminal className="w-4 h-4" /> {t.hero.apiDocLink}
                   </button>
                 </div>
-
-                <ClaudeVerdictBlock className="mt-8 relative left-1/2 w-screen max-w-none -translate-x-1/2" />
               </div>
 
 
