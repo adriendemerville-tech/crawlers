@@ -897,9 +897,9 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
     : (rawData?.responseTimeMs || null);
 
-  const title = primaryPage?.title || htmlAnalysis?.titleContent || '';
-  const metaDesc = primaryPage?.meta_description || htmlAnalysis?.metaDescContent || '';
-  const h1 = primaryPage?.h1 || htmlAnalysis?.h1Contents?.[0] || '';
+  const title = primaryPage?.title || (expertDescribesPrimary ? htmlAnalysis?.titleContent : '') || '';
+  const metaDesc = primaryPage?.meta_description || (expertDescribesPrimary ? htmlAnalysis?.metaDescContent : '') || '';
+  const h1 = primaryPage?.h1 || (expertDescribesPrimary ? htmlAnalysis?.h1Contents?.[0] : '') || '';
 
   return {
     // URL réellement décrite par les balises ci-dessous : le rapport doit la
