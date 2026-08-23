@@ -947,10 +947,16 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     titleLength: title.length,
     metaDesc,
     metaDescLength: metaDesc.length,
-    h1Contents: h1 ? [h1] : (htmlAnalysis?.h1Contents || []),
-    h2Contents: primaryPage?.h2_contents || htmlAnalysis?.h2Contents || [],
-    h3Count: primaryPage?.h3_count ?? htmlAnalysis?.h3Count ?? 0,
-    schemaTypes: scores?.aiReady?.schemaTypes || [],
+    h1Contents: h1 ? [h1] : (expertDescribesPrimary ? (htmlAnalysis?.h1Contents || []) : []),
+    // H2/H3 et schema : uniquement s'ils décrivent bien la page nommée ci-dessus.
+    h2Contents: primaryPage?.h2_contents
+      || (expertDescribesPrimary ? (htmlAnalysis?.h2Contents || []) : []),
+    h3Count: primaryPage?.h3_count
+      ?? (expertDescribesPrimary ? (htmlAnalysis?.h3Count ?? 0) : 0),
+    schemaTypes: (Array.isArray(primaryPage?.schema_org_types) && primaryPage.schema_org_types.length
+      ? primaryPage.schema_org_types
+      : (expertDescribesPrimary ? (scores?.aiReady?.schemaTypes || []) : [])),
+
     hasRobotsTxt: scores?.aiReady?.hasRobotsTxt || false,
     robotsPermissive: scores?.aiReady?.robotsPermissive || false,
     isHttps: scores?.technical?.isHttps || false,
