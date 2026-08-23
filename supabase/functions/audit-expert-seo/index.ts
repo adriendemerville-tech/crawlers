@@ -11,7 +11,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { resolveSocialProof, fetchPlacesSocialProof, formatSocialProofForPrompt, type SocialProofResult } from '../_shared/socialProof.ts';
 import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
 import { classifyLink, isFalsePositiveDomain, type LinkVerdict } from '../_shared/linkVerdictShared.ts';
-import { measurePerformance } from '../_shared/perfMeasurement.ts';
+import { measurePerformance, measureTtfbDirect } from '../_shared/perfMeasurement.ts';
 import { geoFactsFromExpertAudit, expertFactsFromAuditPayload } from '../_shared/geoFactsFromExpertAudit.ts';
 import { buildGeoSubSignals } from '../_shared/geoSubSignals.ts';
 
@@ -2169,6 +2169,13 @@ Deno.serve(handleRequest(async (req) => {
     ]);
     const psiData = perf.psiData;
 
+    // TTFB : PageSpeed fait autorité, mais son absence ne doit pas offrir le
+    // plein score d'accessibilité machine au GEO. Repli par mesure directe.
+    const psiTtfb = perf.psiData?.lighthouseResult?.audits?.['server-response-time']?.numericValue;
+    const ttfbMeasurement = (typeof psiTtfb === 'number' && Number.isFinite(psiTtfb) && psiTtfb > 0)
+      ? { ttfbMs: Math.round(psiTtfb), source: 'psi_server_response' as const, note: `Délai serveur mesuré à ${Math.round(psiTtfb)} ms par PageSpeed.` }
+      : await measureTtfbDirect(normalizedUrl);
+
     
     // Step 2b: Check sitemap/robots.txt coherence (depends on robotsAnalysis)
     const sitemapRobotsCoherence = await checkSitemapRobotsCoherence(normalizedUrl, robotsAnalysis.content, robotsAnalysis.exists);
@@ -2389,7 +2396,9 @@ Deno.serve(handleRequest(async (req) => {
         },
         // TTFB : attente d'un robot avant le premier octet. Exposé pour décoter
         // l'accessibilité machine du GEO (cf. geoSubSignals), pas le /200.
-        ttfb: audits['server-response-time']?.numericValue ?? null,
+        ttfb: ttfbMeasurement.ttfbMs,
+        ttfbSource: ttfbMeasurement.source,
+        ttfbNote: ttfbMeasurement.note,
         fcp: audits['first-contentful-paint']?.numericValue || null,
         cls: audits['cumulative-layout-shift']?.numericValue || null,
         tbt: audits['total-blocking-time']?.numericValue || null,

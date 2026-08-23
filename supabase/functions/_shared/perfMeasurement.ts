@@ -296,3 +296,54 @@ export async function measurePerformance(
     methodNote,
   };
 }
+
+/**
+ * Mesure directe du délai avant premier octet (TTFB), en repli quand
+ * PageSpeed n'expose pas `server-response-time`.
+ *
+ * Le GEO décote l'accessibilité machine sur ce signal : sans repli, une page
+ * dont PSI a échoué obtenait le plein score d'accessibilité alors qu'un robot
+ * peut y attendre plusieurs secondes. La mesure est faite depuis l'edge, donc
+ * moins comparable qu'un run Lighthouse : la provenance est toujours exposée.
+ */
+export interface TtfbMeasurement {
+  ttfbMs: number | null;
+  source: 'psi_server_response' | 'direct_fetch' | 'unavailable';
+  note: string;
+}
+
+const TTFB_TIMEOUT_MS = 10_000;
+const TTFB_RUNS = 2;
+
+export async function measureTtfbDirect(url: string): Promise<TtfbMeasurement> {
+  const samples: number[] = [];
+  for (let i = 0; i < TTFB_RUNS; i++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TTFB_TIMEOUT_MS);
+    const started = Date.now();
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        redirect: 'follow',
+        signal: controller.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersBot/1.0; +https://crawlers.fr)' },
+      });
+      // Premier octet = en-têtes disponibles. On ne consomme pas le corps.
+      void res.body?.cancel();
+      samples.push(Date.now() - started);
+    } catch {
+      // run perdu : on garde les autres échantillons
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  if (samples.length === 0) {
+    return { ttfbMs: null, source: 'unavailable', note: 'Délai serveur non mesurable (page injoignable depuis le point de mesure).' };
+  }
+  const ttfbMs = Math.round(Math.min(...samples));
+  return {
+    ttfbMs,
+    source: 'direct_fetch',
+    note: `Délai serveur mesuré à ${ttfbMs} ms par requête directe (meilleur de ${samples.length} essais), PageSpeed n'ayant pas fourni la valeur.`,
+  };
+}
