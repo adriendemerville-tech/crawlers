@@ -742,6 +742,7 @@ export function geoSubSignalsBlockHTML(report: GeoSubSignalReport, lang?: string
     <p style="font-size:12px;color:#374151;line-height:1.6;margin:0 0 12px;">${lang === 'en'
       ? 'A single GEO score hides three realities. The ten sub-signals below are split into three pillars: what the machine can read and extract (accessibility), the value of the content worth citing (exploitability), and the credibility of the brand outside the site (domain authority). Each sub-signal carries the status of its data.'
       : 'Un score GEO global masque trois réalités. Les dix sous-signaux ci-dessous sont répartis en trois piliers : ce que la machine peut lire et extraire du site (accessibilité), la valeur du contenu à citer (exploitabilité), et la crédibilité de la marque hors du site (autorité domaine). Chaque sous-signal porte le statut de sa donnée.'}</p>
+    ${pillarTableHTML(report, lang)}
     <div style="display:flex;flex-wrap:wrap;gap:12px;">
       ${pillarBlock('authority', report.authority, report, report.signals, lang === 'en' ? 'Credibility and entity attachment outside the site (mutualized at domain level).' : 'Crédibilité et rattachement de l’entité hors du site (mutualisée au domaine).', lang)}
       ${pillarBlock('accessibility', report.accessibility, report, report.signals, lang === 'en' ? 'Readability and extractability of the site as served.' : 'Lisibilité et extractibilité du site tel qu’il est servi.', lang)}
