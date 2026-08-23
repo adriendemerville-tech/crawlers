@@ -254,3 +254,52 @@ Deno.test("computeOwnNetworkHygiene : aucun réseau propre = aucun constat inven
   assertEquals(h.verdict, 'non_mesure');
   assertEquals(h.signals.length, 0);
 });
+
+Deno.test('computeBacklinkToxicity : 100 % dofollow sans corroboration n\'ajoute aucun point', () => {
+  const t = computeBacklinkToxicity({
+    anchors: [
+      { anchor: 'renovation lyon', count: 10 },
+      { anchor: 'atelier bois', count: 9 },
+      { anchor: 'menuiserie sur mesure', count: 9 },
+      { anchor: 'entreprise artisanale', count: 8 },
+    ],
+    topReferringDomains: [
+      { domain: 'lemonde.fr', rank: 800, backlinks: 2 },
+      { domain: 'batiactu.com', rank: 620, backlinks: 2 },
+      { domain: 'archdaily.com', rank: 700, backlinks: 2 },
+    ],
+    backlinksTotal: 6,
+    referringDomains: 120,
+    brokenBacklinks: 0,
+    dofollowRatio: 100,
+    auditedDomain: 'exemple.fr',
+  });
+  assertEquals(t.dofollow_context?.level, 'faible');
+  assertEquals(t.dofollow_context?.points, 0);
+});
+
+Deno.test('computeBacklinkToxicity : dofollow devient aggravant sous faisceau d\'indices', () => {
+  const t = computeBacklinkToxicity({
+    anchors: [
+      { anchor: 'France', count: 42 },
+      { anchor: 'renovation', count: 8 },
+    ],
+    topReferringDomains: [
+      { domain: 'exemple-pro.fr', rank: 40, backlinks: 4000 },
+      { domain: 'exemple-shop.fr', rank: 30, backlinks: 4048 },
+      { domain: 'annuaire-x.fr', rank: 30, backlinks: 900 },
+      { domain: 'annuaire-y.fr', rank: 20, backlinks: 800 },
+      { domain: 'annuaire-z.fr', rank: 10, backlinks: 700 },
+    ],
+    backlinksTotal: 20766,
+    referringDomains: 606,
+    brokenBacklinks: 0,
+    dofollowRatio: 100,
+    auditedDomain: 'exemple.fr',
+    verifiedOwnDomains: ['exemple-pro.fr', 'exemple-shop.fr'],
+  });
+  assertEquals(t.dofollow_context?.level, 'aggravant');
+  assertEquals(t.dofollow_context?.points, 8);
+  assertEquals((t.dofollow_context?.corroborating.length ?? 0) >= 2, true);
+  assertEquals(t.independence!.estimated_independent_backlinks < t.independence!.apparent_backlinks, true);
+});
