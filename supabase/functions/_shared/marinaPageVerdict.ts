@@ -428,7 +428,24 @@ export function buildPageVerdictHTML(
     )}</p>` : ''}`
     : '';
 
+  // ── GEO en 3 piliers (autorité domaine / accessibilité / contenu) ──
+  // Rendu sous le score GEO de la fiche pour restaurer la variance entre URLs :
+  // seule l'autorité domaine est mutualisée au domaine ; l'accessibilité et le
+  // contenu varient réellement par page.
+  const pillarsHTML = (ctx.geoPillars || []).length
+    ? `
+    <p style="font-size:12.5px;font-weight:600;color:#111827;margin:14px 0 4px 0;">${t('GEO — les 3 piliers de cette page', 'GEO — the 3 pillars of this page')}</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      ${(ctx.geoPillars || []).map((p) => `
+      <div style="flex:1 1 160px;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;background:#ffffff;">
+        <div style="font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280;margin-bottom:2px;">${esc(p.label)}</div>
+        <div style="font-size:16px;font-weight:700;color:#111827;">${p.score === null ? 'n/m' : `${Math.round(p.score)}/100`}<span style="font-size:11px;font-weight:500;color:#6b7280;"> · ${p.points} pts · ${esc(p.trend)}</span></div>
+      </div>`).join('')}
+    </div>`
+    : '';
+
   // Bloc « Pourquoi c'est prioritaire » : plafonds techniques et GEO fusionnés,
+
   // ordonnés par cause racine, avec la preuve chiffrée (mesuré → cible).
   const gatesHTML = gatesPriorityBlockHTML(
     mergeGates(normalizeGates(ctx.scoreGates, 'technical'), ctx.geoGates || []),
@@ -467,7 +484,7 @@ export function buildPageVerdictHTML(
     <ul style="padding-left:20px;font-size:12.5px;color:#6b7280;line-height:1.65;margin:0;">
       ${inherited.map((a) => `<li style="margin:0 0 4px 0;">${esc(a)}</li>`).join('')}
     </ul>` : ''}
-    ${gatesHTML}
+    ${pillarsHTML}
 
     ${weightsHTML}
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
