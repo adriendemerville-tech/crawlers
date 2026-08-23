@@ -158,8 +158,8 @@ export const GEO_SUB_SIGNALS: GeoSubSignalSpec[] = [
     label: 'Contenu accessible aux robots',
     weight: 14,
     provenance: 'mesure',
-    meaning: 'Le contenu est présent dans le HTML servi, sans exécution de JavaScript.',
-    lever: 'Rendre le contenu au serveur (SSR / prérendu) : sans cela, aucun autre signal de compréhension ne compte.',
+    meaning: 'Le contenu est présent dans le HTML servi, sans exécution de JavaScript, et livré assez vite pour être récupéré par les robots.',
+    lever: 'Rendre le contenu au serveur (SSR / prérendu) et servir le premier octet en moins de 800 ms.',
   },
   {
     key: 'structured_data_quality',
