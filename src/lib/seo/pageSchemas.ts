@@ -11,8 +11,11 @@ import { SITE_URL } from '@/lib/seo/pageHead';
 import { buildVideoObjectSchema } from '@/lib/media/demoVideo';
 import { COCOON_DEMO_VIDEO } from '@/lib/media/demoVideos.registry';
 
-const ORG = { '@type': 'Organization', name: 'Crawlers.fr', url: SITE_URL };
-const SITE = { '@type': 'WebSite', name: 'Crawlers.fr', url: SITE_URL };
+// Références au nœud d'identité canonique (voir src/lib/seo/organization.ts).
+// On référence par @id : le nœud complet (adresse, contacts, SIREN, sameAs)
+// est émis une seule fois, sitewide, depuis le root.
+const ORG = ORGANIZATION_REF;
+const SITE = { '@type': 'WebSite', '@id': `${SITE_URL}/#website`, name: 'Crawlers.fr', url: SITE_URL };
 
 function faqPage(items: Array<{ q: string; a: string }>) {
   return {
