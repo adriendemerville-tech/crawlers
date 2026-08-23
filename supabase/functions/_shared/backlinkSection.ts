@@ -235,7 +235,7 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
         <div style="font-size:12px;color:#6b7280;">${Math.round(dctx.ratio)} % dofollow · ${dctx.points} pt${dctx.points > 1 ? 's' : ''}</div>
       </div>
       ${dctx.corroborating.length
-        ? `<ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.6;">${dctx.corroborating.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>`
+        ? `<ul style="margin:0;padding-left:18px;font-size:12px;color:#374151;line-height:1.6;">${dctx.corroborating.slice(0, 2).map((c) => `<li>${clip(esc(c), 90)}</li>`).join('')}${dctx.corroborating.length > 2 ? `<li>+${dctx.corroborating.length - 2} autres</li>` : ''}</ul>`
         : `<p style="font-size:12px;color:#6b7280;margin:0;">Aucune anomalie corroborante : 0 pt. Un lien dofollow n'est pas toxique en soi.</p>`}`
     : '';
 
