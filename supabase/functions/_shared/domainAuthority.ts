@@ -720,6 +720,9 @@ export function computeBacklinkToxicity(input: {
     own_network_backlink_share: ownBacklinkShare,
     links_per_domain_all: linksPerDomainAll,
     anchor_attribution: anchorDowngraded ? 'all_referrers_downgraded' : 'all_referrers',
+    dofollow_context,
+    independence,
+
   };
 }
 
