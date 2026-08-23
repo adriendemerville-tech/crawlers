@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AProposRouteImport } from './routes/a-propos'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AideRouteImport } from './routes/aide'
 import { Route as AnalyseBotsIaRouteImport } from './routes/analyse-bots-ia'
 import { Route as AnalyseLogsRouteImport } from './routes/analyse-logs'
@@ -153,6 +154,11 @@ const IndexRoute = IndexRouteImport.update({
 const AProposRoute = AProposRouteImport.update({
   id: '/a-propos',
   path: '/a-propos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AideRoute = AideRouteImport.update({
@@ -839,6 +845,7 @@ const ApiPublicHooksMarinaBatchTickRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
+  '/about': typeof AboutRoute
   '/aide': typeof AideRoute
   '/analyse-bots-ia': typeof AnalyseBotsIaRoute
   '/analyse-logs': typeof AnalyseLogsRoute
@@ -976,6 +983,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
+  '/about': typeof AboutRoute
   '/aide': typeof AideRoute
   '/analyse-bots-ia': typeof AnalyseBotsIaRoute
   '/analyse-logs': typeof AnalyseLogsRoute
@@ -1114,6 +1122,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/a-propos': typeof AProposRoute
+  '/about': typeof AboutRoute
   '/aide': typeof AideRoute
   '/analyse-bots-ia': typeof AnalyseBotsIaRoute
   '/analyse-logs': typeof AnalyseLogsRoute
@@ -1253,6 +1262,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/a-propos'
+    | '/about'
     | '/aide'
     | '/analyse-bots-ia'
     | '/analyse-logs'
@@ -1390,6 +1400,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/a-propos'
+    | '/about'
     | '/aide'
     | '/analyse-bots-ia'
     | '/analyse-logs'
@@ -1527,6 +1538,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/a-propos'
+    | '/about'
     | '/aide'
     | '/analyse-bots-ia'
     | '/analyse-logs'
@@ -1665,6 +1677,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AProposRoute: typeof AProposRoute
+  AboutRoute: typeof AboutRoute
   AideRoute: typeof AideRoute
   AnalyseBotsIaRoute: typeof AnalyseBotsIaRoute
   AnalyseLogsRoute: typeof AnalyseLogsRoute
@@ -1814,6 +1827,13 @@ declare module '@tanstack/react-router' {
       path: '/a-propos'
       fullPath: '/a-propos'
       preLoaderRoute: typeof AProposRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/aide': {
@@ -2753,6 +2773,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AProposRoute: AProposRoute,
+  AboutRoute: AboutRoute,
   AideRoute: AideRoute,
   AnalyseBotsIaRoute: AnalyseBotsIaRoute,
   AnalyseLogsRoute: AnalyseLogsRoute,
