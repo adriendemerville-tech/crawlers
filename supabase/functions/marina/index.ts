@@ -2404,6 +2404,21 @@ function buildExecutiveSummaryHTML(
           `${domain} presenta un fallo crítico (${global}/100).`,
         );
 
+  // Calibration du GEO par la citation réellement observée : le lecteur doit
+  // savoir que le score n'est pas qu'un potentiel, et de combien il a bougé.
+  const cal = ctx.geoCalibration || null;
+  const calibrationHTML = cal && cal.applied
+    ? `<p style="font-size:12.5px;line-height:1.7;color:#374151;margin:12px 0 0 0;border-left:3px solid #6d28d9;padding-left:12px;">
+        <strong>${t('Calibration par la citation réelle.', 'Calibration on observed citation.', 'Calibración por citación real.')}</strong>
+        ${t(
+          `Les dix sous-signaux GEO mesurent un potentiel de citation. Le benchmark, lui, mesure le résultat : la marque est-elle citée quand un client potentiel interroge un moteur de réponse ? Citation observée ${Math.round(Number(cal.rate_pct))} % sur ${cal.observations} observations : le score GEO est modulé de ${cal.factor_pct > 0 ? '+' : ''}${cal.factor_pct} % (${cal.pre_score}/100 → ${cal.post_score}/100). Le barème n'est pas modifié : seul l'écart entre potentiel et résultat est corrigé, dans une limite de ±10 %.`,
+          `The ten GEO sub-signals measure citation potential. The benchmark measures the outcome: is the brand cited when a prospect queries an answer engine? Observed citation ${Math.round(Number(cal.rate_pct))}% over ${cal.observations} observations: the GEO score is modulated by ${cal.factor_pct > 0 ? '+' : ''}${cal.factor_pct}% (${cal.pre_score}/100 → ${cal.post_score}/100). The scale is unchanged; only the gap between potential and outcome is corrected, capped at ±10%.`,
+          `Los diez subseñales GEO miden un potencial. El benchmark mide el resultado: citación observada ${Math.round(Number(cal.rate_pct))} % sobre ${cal.observations} observaciones, el GEO se modula ${cal.factor_pct > 0 ? '+' : ''}${cal.factor_pct} % (${cal.pre_score}/100 → ${cal.post_score}/100), con un límite de ±10 %.`,
+        )}
+      </p>`
+    : '';
+
+
   const cell = (label: string, value: string, metric?: string) => `
     <div style="flex:1 1 140px;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;background:#ffffff;">
       <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:4px;">${label}</div>
