@@ -96,11 +96,12 @@ Deno.test('voix experte : founder_authority high + eeat 8 = résolue et corrobor
   assertEquals(personAuthorityFromStrategic(null), { resolved: null, corroborated: null });
 });
 
-Deno.test('projection complète : les 10 sous-signaux sont alimentés et le GEO est calculable', () => {
+Deno.test('projection complète : les 11 sous-signaux sont alimentés et le GEO est calculable', () => {
   const { inputs, sources } = geoFactsFromExpertAudit(healthyExpert, strategic, { now: NOW });
   const report = buildGeoSubSignals(inputs);
 
-  assertEquals(report.signals.length, 10);
+  assertEquals(report.signals.length, 11);
+
   assertEquals(report.signals.filter((s) => s.value === null).length, 0);
   assert(report.geo_score !== null && report.geo_score > 50, `GEO attendu > 50, reçu ${report.geo_score}`);
 
