@@ -97,8 +97,9 @@ const RGPD = () => {
                 {t3(language, '1. Responsable du traitement', '1. Data Controller', '1. Responsable del tratamiento')}
               </h2>
               <div className="bg-muted/50 rounded-lg p-6 text-muted-foreground">
-                <p><strong className="text-foreground">{t3(language, 'Responsable :', 'Controller:', 'Responsable:')}</strong> Adrien de Volontat</p>
-                <p><strong className="text-foreground">{t3(language, 'Qualité :', 'Capacity:', 'Calidad:')}</strong> {t3(language, 'Entrepreneur individuel', 'Sole proprietor', 'Empresario individual')}</p>
+                <p><strong className="text-foreground">{t3(language, 'Société éditrice :', 'Publishing company:', 'Empresa editora:')}</strong> Voluntas Novare — SASU</p>
+                <p><strong className="text-foreground">{t3(language, 'Adresse postale :', 'Postal address:', 'Dirección postal:')}</strong> {t3(language, 'Adresse de la société éditrice', 'Address of the publishing company', 'Dirección de la empresa editora')}</p>
+                <p><strong className="text-foreground">{t3(language, 'Responsable :', 'Controller:', 'Responsable:')}</strong> Voluntas Novare — SASU, représentée par Adrien de Volontat (directeur de la publication)</p>
                 <p><strong className="text-foreground">Email :</strong> <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
                 <p><strong className="text-foreground">{t3(language, 'Site :', 'Website:', 'Sitio web:')}</strong> crawlers.fr</p>
               </div>
