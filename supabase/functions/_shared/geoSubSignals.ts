@@ -702,7 +702,7 @@ function pillarTableHTML(report: GeoSubSignalReport, lang?: string): string {
         <th style="padding:8px 10px;text-align:right;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Weight' : 'Poids'}</th>
         <th style="padding:8px 10px;text-align:right;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Score' : 'Score'}</th>
         <th style="padding:8px 10px;text-align:right;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Earned' : 'Acquis'}</th>
-        <th style="padding:8px 10px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Trend' : 'Tendance'}</th>
+        <th style="padding:8px 10px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;">${en ? 'Scale' : 'Barème'}</th>
       </tr>
     </thead>
     <tbody>
