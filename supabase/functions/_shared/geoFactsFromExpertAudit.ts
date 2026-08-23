@@ -62,6 +62,8 @@ export interface ExpertAuditFacts {
     /** Findings id-based : `no-faq-section`, `faq-content-without-schema`, … */
     findings?: Array<{ id?: string | null }> | null;
   } | null;
+  /** Bloc performance de l'audit expert : seul le TTFB alimente le GEO. */
+  performance?: { ttfb?: number | null } | null;
   meta?: { renderingMode?: string | null } | null;
 }
 
