@@ -2309,13 +2309,28 @@ function sanitizeMarinaHtml(html: string, opts?: { keepColors?: boolean }): stri
 }
 
 /**
+ * Citation réellement observée par le benchmark LLM (agrégat de
+ * calculate-llm-visibility). Renvoie le taux de couverture et le nombre
+ * d'observations, quelle que soit la forme du payload (brut ou enveloppé).
+ */
+function extractObservedCitation(raw: any): { ratePct: number | null; observations: number | null } | null {
+  const agg = raw?.aggregate || raw?.data?.aggregate || null;
+  const cov = agg?.coverage || null;
+  if (!cov) return null;
+  const rate = typeof cov.rate === 'number' && Number.isFinite(cov.rate) ? cov.rate : null;
+  const obs = typeof cov.observations === 'number' && Number.isFinite(cov.observations) ? cov.observations : null;
+  if (rate === null && obs === null) return null;
+  return { ratePct: rate, observations: obs };
+}
+
+/**
  * Synthèse exécutive : un score global et un verdict en une phrase, en tête de
  * rapport. 100 % déterministe (aucun appel LLM, donc aucun coût token).
  */
 function buildExecutiveSummaryHTML(
   lang: string,
   domain: string,
-  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number; roi?: RoiSummary | null; verdictSignals?: VerdictSignals | null; verdictHtml?: string | null },
+  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number; roi?: RoiSummary | null; verdictSignals?: VerdictSignals | null; verdictHtml?: string | null; geoDeterministic?: number | null; geoCalibration?: any },
 
 ): string {
   const isEn = lang === 'en';
@@ -2325,7 +2340,12 @@ function buildExecutiveSummaryHTML(
   const techRaw = Number(ctx.expertData?.totalScore || 0);
   const techMax = Number(ctx.expertData?.maxScore || 220) || 220;
   const tech100 = techRaw > 0 ? Math.round((techRaw / techMax) * 100) : null;
-  const geo100 = ctx.strategicData?.overallScore ? Math.round(Number(ctx.strategicData.overallScore)) : null;
+  // Juge unique du GEO : les 10 sous-signaux (geoSubSignals). La note du
+  // benchmark LLM est un commentaire narratif, jamais un score : elle ne sert
+  // plus qu'en dernier recours si les sous-signaux n'ont rien mesuré.
+  const geo100 = typeof ctx.geoDeterministic === 'number' && Number.isFinite(ctx.geoDeterministic)
+    ? Math.max(0, Math.min(100, Math.round(ctx.geoDeterministic)))
+    : (ctx.strategicData?.overallScore ? Math.round(Number(ctx.strategicData.overallScore)) : null);
   const pages = ctx.crawlSnapshot?.crawled_pages || ctx.crawlSnapshot?.pages?.length || null;
 
   // Coût chiffré des plafonds (performance mobile / LCP en tête) : le lecteur
