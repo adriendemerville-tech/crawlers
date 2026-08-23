@@ -2344,18 +2344,29 @@ Deno.serve(handleRequest(async (req) => {
     const rawTotalScore = performanceScore + technicalScore + semanticScore + aiReadyScore + securityScore + brokenLinksBonus;
     let totalScore = Math.round(Math.max(0, rawTotalScore) * smartFetchResult.selfAudit.reliabilityScore);
 
-    // Plafond global : tant qu'un défaut bloquant mesuré subsiste (LCP « poor »
-    // ou contenu non extractible), le score total ne peut pas franchir la zone
-    // « excellent ». Un audit qui se contredit ne sert à personne.
-    const blockingGate = scoreGates.some((g) => g.axis === 'performance' || g.axis === 'technical');
+    // Plafond global — désormais réservé aux défauts réellement bloquants.
+    //
+    // Un LCP dégradé est déjà payé sur son axe (abattement progressif ci-dessus) :
+    // le rejouer en plafond global revenait à sanctionner deux fois le même fait
+    // et à écraser toutes les pages lentes sur la même note (130/200 = 65).
+    // Ne subsistent donc que :
+    //   - contenu non extractible (`technical`) : les robots ne lisent rien → 130 ;
+    //   - mesures indisponibles (`estimated`) : la note n'est pas vérifiée → 150 ;
+    //   - LCP « poor » confirmé (> 4 s) : simple interdiction de la zone
+    //     « excellent » (170/200), sans écrasement de la variance.
+    const contentGate = scoreGates.some((g) => g.axis === 'technical');
     const estimatedGate = scoreGates.some((g) => g.axis === 'estimated');
-    const totalCap = blockingGate ? 130 : (estimatedGate ? 150 : null);
+    const poorLcp = lcpMsMeasured !== null && lcpMsMeasured > 4000
+      && scoreGates.some((g) => g.axis === 'performance');
+    const totalCap = contentGate ? 130 : (estimatedGate ? 150 : (poorLcp ? 170 : null));
     if (totalCap !== null && totalScore > totalCap) {
       scoreGates.push({
         axis: 'total',
-        reason: blockingGate
-          ? 'Défaut bloquant mesuré : le score global est plafonné hors de la zone « excellent »'
-          : 'Mesures de performance indisponibles : le score global reste hors de la zone « excellent »',
+        reason: contentGate
+          ? 'Contenu non extractible : le score global est plafonné hors de la zone « excellent »'
+          : estimatedGate
+            ? 'Mesures de performance indisponibles : le score global reste hors de la zone « excellent »'
+            : 'LCP mobile « poor » confirmé : la zone « excellent » reste fermée tant que la cible n’est pas atteinte',
         evidence: `${totalScore}/200 avant plafond → ${totalCap}/200 (soit −${totalScore - totalCap} points)`,
         pointsLost: totalScore - totalCap,
         measured: `${totalScore}/200`,
@@ -2364,6 +2375,7 @@ Deno.serve(handleRequest(async (req) => {
 
       totalScore = totalCap;
     }
+
     if (scoreGates.length) {
       console.log(`[Audit-Expert-SEO] 🚧 ${scoreGates.length} plafond(s) de cohérence appliqué(s): ${scoreGates.map((g) => g.axis).join(', ')}`);
     }
