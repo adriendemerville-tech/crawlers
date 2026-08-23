@@ -35,6 +35,7 @@ import { Route as ComparatifCrawlersSemrushRouteImport } from './routes/comparat
 import { Route as ComparatifPlateformeSeoIaRouteImport } from './routes/comparatif-plateforme-seo-ia'
 import { Route as ConditionsUtilisationRouteImport } from './routes/conditions-utilisation'
 import { Route as ConsoleRouteImport } from './routes/console'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ContentArchitectRouteImport } from './routes/content-architect'
 import { Route as ConversionOptimizerRouteImport } from './routes/conversion-optimizer'
 import { Route as CrawlRouteImport } from './routes/crawl'
@@ -277,6 +278,11 @@ const ConditionsUtilisationRoute = ConditionsUtilisationRouteImport.update({
 const ConsoleRoute = ConsoleRouteImport.update({
   id: '/console',
   path: '/console',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContentArchitectRoute = ContentArchitectRouteImport.update({
@@ -857,6 +863,7 @@ export interface FileRoutesByFullPath {
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
   '/console': typeof ConsoleRoute
+  '/contact': typeof ContactRoute
   '/content-architect': typeof ContentArchitectRoute
   '/conversion-optimizer': typeof ConversionOptimizerRoute
   '/crawl': typeof CrawlRoute
@@ -993,6 +1000,7 @@ export interface FileRoutesByTo {
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
   '/console': typeof ConsoleRoute
+  '/contact': typeof ContactRoute
   '/content-architect': typeof ContentArchitectRoute
   '/conversion-optimizer': typeof ConversionOptimizerRoute
   '/crawl': typeof CrawlRoute
@@ -1130,6 +1138,7 @@ export interface FileRoutesById {
   '/comparatif-plateforme-seo-ia': typeof ComparatifPlateformeSeoIaRoute
   '/conditions-utilisation': typeof ConditionsUtilisationRoute
   '/console': typeof ConsoleRoute
+  '/contact': typeof ContactRoute
   '/content-architect': typeof ContentArchitectRoute
   '/conversion-optimizer': typeof ConversionOptimizerRoute
   '/crawl': typeof CrawlRoute
@@ -1268,6 +1277,7 @@ export interface FileRouteTypes {
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
     | '/console'
+    | '/contact'
     | '/content-architect'
     | '/conversion-optimizer'
     | '/crawl'
@@ -1404,6 +1414,7 @@ export interface FileRouteTypes {
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
     | '/console'
+    | '/contact'
     | '/content-architect'
     | '/conversion-optimizer'
     | '/crawl'
@@ -1540,6 +1551,7 @@ export interface FileRouteTypes {
     | '/comparatif-plateforme-seo-ia'
     | '/conditions-utilisation'
     | '/console'
+    | '/contact'
     | '/content-architect'
     | '/conversion-optimizer'
     | '/crawl'
@@ -1677,6 +1689,7 @@ export interface RootRouteChildren {
   ComparatifPlateformeSeoIaRoute: typeof ComparatifPlateformeSeoIaRoute
   ConditionsUtilisationRoute: typeof ConditionsUtilisationRoute
   ConsoleRoute: typeof ConsoleRoute
+  ContactRoute: typeof ContactRoute
   ContentArchitectRoute: typeof ContentArchitectRoute
   ConversionOptimizerRoute: typeof ConversionOptimizerRoute
   CrawlRoute: typeof CrawlRoute
@@ -1969,6 +1982,13 @@ declare module '@tanstack/react-router' {
       path: '/console'
       fullPath: '/console'
       preLoaderRoute: typeof ConsoleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/content-architect': {
@@ -2757,6 +2777,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComparatifPlateformeSeoIaRoute: ComparatifPlateformeSeoIaRoute,
   ConditionsUtilisationRoute: ConditionsUtilisationRoute,
   ConsoleRoute: ConsoleRoute,
+  ContactRoute: ContactRoute,
   ContentArchitectRoute: ContentArchitectRoute,
   ConversionOptimizerRoute: ConversionOptimizerRoute,
   CrawlRoute: CrawlRoute,
