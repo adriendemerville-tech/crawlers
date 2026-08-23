@@ -11,7 +11,7 @@
  *   AUTORITÉ DOMAINE (25 pts, mutualisé au domaine)
  *     — crédibilité de la marque et présence mesurées hors de la page.
  *
- *   ACCESSIBILITÉ MACHINE (22 pts, page)
+ *   ACCESSIBILITÉ MACHINE (22 → 17 pts, page)
  *     — ce qu'une machine peut lire et extraire du site tel qu'il est servi.
  *
  *   EXPLOITABILITÉ CONTENU (53 pts, page)
