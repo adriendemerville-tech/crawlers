@@ -38,11 +38,15 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
   const rows: PenaltyRow[] = [];
 
   if (t.dominant_anchor_ratio >= 0.3) {
+    const full = Math.min(35, Math.round((t.dominant_anchor_ratio - 0.3) * 100) + 15);
+    const downgraded = t.anchor_attribution === 'all_referrers_downgraded';
     rows.push({
       label: 'Ancre dominante',
       measure: `« ${t.dominant_anchor ?? 'n/d'} » sur ${pct(t.dominant_anchor_ratio)} de l'échantillon`,
-      rule: 'au-delà de 30 % : 15 pts + 1 pt par point de pourcentage excédentaire (max 35)',
-      points: Math.min(35, Math.round((t.dominant_anchor_ratio - 0.3) * 100) + 15),
+      rule: downgraded
+        ? `au-delà de 30 % : 15 pts + 1 pt par point excédentaire (max 35), soit ${full} pts — divisé par 2 car ${pct(t.own_network_backlink_share || 0)} des liens viennent du réseau propre et la source ne rattache pas les ancres à leur domaine`
+        : 'au-delà de 30 % : 15 pts + 1 pt par point de pourcentage excédentaire (max 35)',
+      points: downgraded ? Math.round(full / 2) : full,
     });
   }
   if (t.unnatural_anchor_ratio >= 0.25) {
@@ -55,16 +59,16 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
   }
   if (t.avg_referrer_rank > 0 && t.avg_referrer_rank < 15) {
     rows.push({
-      label: 'Autorité des référents',
-      measure: `rank moyen ${t.avg_referrer_rank}/100 sur l'échantillon`,
+      label: 'Autorité des référents tiers',
+      measure: `rank moyen ${t.avg_referrer_rank}/100 sur l'échantillon hors réseau propre`,
       rule: 'rank moyen < 15/100 : 20 pts',
       points: 20,
     });
   }
   if (t.links_per_domain >= 25) {
     rows.push({
-      label: 'Liens par domaine',
-      measure: `${t.links_per_domain} liens par domaine référent`,
+      label: 'Liens par domaine tiers',
+      measure: `${t.links_per_domain} liens par domaine référent hors réseau propre${typeof t.links_per_domain_all === 'number' ? ` (${t.links_per_domain_all} tous référents confondus)` : ''}`,
       rule: 'à partir de 25 liens/domaine : liens ÷ 5 (max 20) — empreinte de type annuaire',
       points: Math.min(20, Math.round(t.links_per_domain / 5)),
     });
@@ -99,6 +103,7 @@ export function toxicityPenaltyRows(t: BacklinkToxicity, refDomains: number, dof
 
   return rows;
 }
+
 
 /**
  * Section HTML autonome. Rien n'est affirmé sans mesure : chaque bloc absent
