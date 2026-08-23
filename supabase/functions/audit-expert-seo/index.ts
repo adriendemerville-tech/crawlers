@@ -11,7 +11,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { resolveSocialProof, fetchPlacesSocialProof, formatSocialProofForPrompt, type SocialProofResult } from '../_shared/socialProof.ts';
 import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
 import { classifyLink, isFalsePositiveDomain, type LinkVerdict } from '../_shared/linkVerdictShared.ts';
-import { measurePerformance } from '../_shared/perfMeasurement.ts';
+import { measurePerformance, measureTtfbDirect } from '../_shared/perfMeasurement.ts';
 import { geoFactsFromExpertAudit, expertFactsFromAuditPayload } from '../_shared/geoFactsFromExpertAudit.ts';
 import { buildGeoSubSignals } from '../_shared/geoSubSignals.ts';
 
