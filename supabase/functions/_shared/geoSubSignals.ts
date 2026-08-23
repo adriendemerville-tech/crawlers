@@ -321,11 +321,38 @@ export interface GeoSubSignalReport {
    * balisage seul n'est pas citable. Chaque plafond porte sa preuve chiffrée.
    */
   gates: AuditGate[];
+  /**
+   * Calibration par la citation réellement observée (benchmark LLM). `applied:
+   * false` quand la mesure manque ou que l'échantillon est trop court : le score
+   * reste alors purement un potentiel.
+   */
+  citation_calibration: GeoCitationCalibration;
+}
+
+export interface GeoCitationCalibration {
+  applied: boolean;
+  /** Taux de citation observé (0-100) ou null si non mesuré. */
+  rate_pct: number | null;
+  /** Nombre d'observations du benchmark (modèles × questions). */
+  observations: number | null;
+  /** Modulation appliquée, en % du score (−10 → +10). */
+  factor_pct: number;
+  /** Score avant / après calibration. */
+  pre_score: number | null;
+  post_score: number | null;
+  /** Phrase d'explication prête à afficher. */
+  note: string;
 }
 
 export interface GeoSignalInputs {
   /** citation_breakdown de citationScorer (8 clés). */
   breakdown?: Record<string, number | null | undefined> | null;
+  /**
+   * Résultat réellement observé du benchmark LLM (agrégat de
+   * calculate-llm-visibility) : taux de couverture et nombre d'observations.
+   * Sert uniquement de facteur de calibration ±10 %, jamais de sous-signal.
+   */
+  observedCitation?: { ratePct?: number | null; observations?: number | null } | null;
   /** true si le HTML servi est une coquille JS (botRenderingShell). */
   isBotShell?: boolean | null;
   /** Nombre de pages où un tag attendu est absent uniquement pour les robots. */
