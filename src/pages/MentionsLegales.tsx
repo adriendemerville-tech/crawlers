@@ -40,12 +40,12 @@ const MentionsLegales = () => {
                 {t3(language, '1. Éditeur du site', '1. Website Publisher', '1. Editor del sitio')}
               </h2>
               <div className="bg-muted/50 rounded-lg p-6 space-y-2 text-muted-foreground">
-                <p><strong className="text-foreground">{t3(language, 'Raison sociale :', 'Company name:', 'Razón social:')}</strong> Adrien de Volontat (Entrepreneur individuel)</p>
-                <p><strong className="text-foreground">{t3(language, 'Nom commercial :', 'Trade name:', 'Nombre comercial:')}</strong> Crawlers</p>
-                <p><strong className="text-foreground">SIRET :</strong> 992 399 667 00011</p>
+                <p><strong className="text-foreground">{t3(language, 'Société éditrice :', 'Publishing company:', 'Empresa editora:')}</strong> Voluntas Novare — SASU</p>
+                <p><strong className="text-foreground">{t3(language, 'Siège social / Adresse postale :', 'Registered office / Postal address:', 'Sede social / Dirección postal:')}</strong> {t3(language, 'Adresse de la société éditrice', 'Address of the publishing company', 'Dirección de la empresa editora')}</p>
+                <p><strong className="text-foreground">SIREN / SIRET :</strong> {t3(language, 'Numéro SIREN de la société éditrice', 'SIREN number of the publishing company', 'Número SIREN de la empresa editora')}</p>
                 <p><strong className="text-foreground">{t3(language, 'Code APE :', 'APE Code:', 'Código APE:')}</strong> 6201Z — Programmation informatique</p>
                 <p><strong className="text-foreground">{t3(language, 'Directeur de la publication :', 'Publication Director:', 'Director de la publicación:')}</strong> Adrien de Volontat</p>
-                <p><strong className="text-foreground">{t3(language, 'Responsable du traitement des données :', 'Data Controller:', 'Responsable del tratamiento de datos:')}</strong> Adrien de Volontat — <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
+                <p><strong className="text-foreground">{t3(language, 'Responsable du traitement des données :', 'Data Controller:', 'Responsable del tratamiento de datos:')}</strong> Voluntas Novare — SASU — <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
                 <p><strong className="text-foreground">{t3(language, 'URL du site :', 'Website URL:', 'URL del sitio:')}</strong> <a href="https://crawlers.fr" className="text-primary hover:underline">https://crawlers.fr</a></p>
                 <p><strong className="text-foreground">Email :</strong> <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
               </div>
