@@ -65,10 +65,15 @@ export function MarketplaceModule() {
           <OrdersTab />
         </TabsContent>
 
+        <TabsContent value="collab" className="pt-6">
+          <CollabTab />
+        </TabsContent>
+
         <TabsContent value="balance" className="pt-6">
           <BalanceTab />
         </TabsContent>
       </Tabs>
+
     </div>
   );
 }
