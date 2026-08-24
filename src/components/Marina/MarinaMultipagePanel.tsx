@@ -121,13 +121,21 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
       if (state.status !== 'running' && !doneNotified.current) {
         doneNotified.current = true;
         refreshCredits();
+        // Lot terminé : on ne le rattache plus aux visites suivantes. La liste
+        // de suivi reste affichée dans la session courante (PDF combiné), mais
+        // un rechargement repart d'une file vide.
+        try {
+          localStorage.removeItem(BATCH_ID_KEY);
+        } catch {
+          /* ignore */
+        }
       }
     } catch {
       /* réseau : nouvelle tentative au tour suivant */
     }
   }, [refreshCredits]);
 
-  /* ── Reprise d'affichage : on retrouve le lot côté serveur ── */
+  /* ── Reprise d'affichage : uniquement si un lot tourne encore ── */
   useEffect(() => {
     if (!isAuthenticated) return;
     let cancelled = false;
@@ -146,12 +154,38 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
         }
       }
       if (!id || cancelled) return;
+
+      // Purge automatique : un lot déjà terminé n'est pas réaffiché comme
+      // « en cours ». Ses rapports restent accessibles dans « Mes audits ».
+      let state: Awaited<ReturnType<typeof getMarinaBatch>> | null = null;
+      try {
+        state = await getMarinaBatch({ data: { batchId: id } });
+      } catch {
+        state = null;
+      }
+      if (cancelled) return;
+      if (!state || state.status !== 'running') {
+        try {
+          localStorage.removeItem(BATCH_ID_KEY);
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+
       setBatchId(id);
       setOpen(true);
-      void refreshBatch(id);
+      setBatchStatus(state.status);
+      setItems(state.items.map(i => ({
+        url: i.url,
+        status: i.status,
+        progress: i.progress,
+        jobId: i.jobId,
+        error: i.error,
+      })));
     })();
     return () => { cancelled = true; };
-  }, [isAuthenticated, refreshBatch]);
+  }, [isAuthenticated]);
 
   /* ── Suivi périodique tant que le lot tourne ── */
   useEffect(() => {
