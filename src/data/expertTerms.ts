@@ -3387,30 +3387,56 @@ interface ObservatoryAlert {
       slug: 'identity-card',
       term: 'Identity Card (Carte d\'Identité Site)',
       category: 'architecture',
-      microDefinition: 'Enrichissement automatique du profil d\'un site via APIs externes.',
-      fullDefinition: 'L\'Identity Card est un système d\'enrichissement automatique qui construit le profil complet d\'un site suivi : secteur d\'activité, taille d\'entreprise, stack technique, présence sociale, budget estimé. Les données sont collectées via les APIs Meta et LinkedIn, puis stockées dans tracked_sites pour personnaliser les audits et recommandations.',
-      deepDive: `## Identity Card : Connaître son client
+      microDefinition: 'Profil résolu d\'un site à partir de preuves collectées sur le site lui-même, sa fiche Google et ses données publiques.',
+      fullDefinition: 'L\'Identity Card est le profil de référence d\'un site suivi : secteur, modèle d\'affaires, cible, zone commerciale, type d\'entité, concurrents. Elle est résolue au début de chaque audit (phase 0) à partir de preuves multi-pages collectées sur le site (contenu, données structurées JSON-LD, mentions légales, gabarits de pages), complétées par la fiche Google Business quand elle existe, puis par les données publiques d\'entreprise. Les réseaux sociaux (Meta, LinkedIn) ne sont plus qu\'une source secondaire de corroboration, pas la source principale. Le résultat est stocké dans tracked_sites et pilote l\'ensemble des audits, prompts GEO et recommandations.',
+      deepDive: `## Identity Card : les preuves avant les déclarations
 
-### Données enrichies
+### Ordre de priorité des sources
 
-- **Secteur** : Classification automatique (SaaS, e-commerce, local, média)
-- **Taille** : Estimation via nombre d\'employés LinkedIn
-- **Stack technique** : CMS, framework, CDN, analytics détectés par crawl
-- **Social** : Pages Facebook, LinkedIn, Instagram avec métriques
-- **SEO baseline** : Domain Authority, backlinks, trafic estimé`,
+1. **Fiche Google Business** — la source la plus fiable quand elle existe (catégorie, zone, adresse du siège)
+2. **Faits structurels du site** — gabarits de pages, présence d'un panier, formulaires de devis, JSON-LD Organization / LocalBusiness
+3. **Déclaratif du site** — pages « à propos », mentions légales, balises méta
+4. **Signaux lexicaux** — vocabulaire dominant du contenu (dernier recours)
+5. **Code NAF / registres publics** — uniquement en corroboration, jamais comme source unique
+6. **Réseaux sociaux** — corroboration de la marque et de la présence, pas de détermination du modèle d'affaires
+
+### Champs résolus
+
+- **Secteur** et **modèle d'affaires** (SaaS B2B, e-commerce B2C, prestataire local, média, marketplace…)
+- **Cible** (particuliers, professionnels, mixte)
+- **Zone commerciale** typée : ville, département, région ou national — jamais inventée sans localité prouvée
+- **Type d'entité** : entreprise, indépendant, association, éditeur
+- **Concurrents** identifiés au bon périmètre (national ou local selon la zone)
+- **Mix de gabarits** attendu, comparé aux fourchettes de référence du secteur
+
+### Pourquoi c'est déterminant
+
+Une activité mixte (prestation + boutique en ligne) reste un prestataire : la dominance est tranchée sur les faits structurels, pas sur une déclaration marketing. Une mauvaise résolution fausse ensuite tout : questions de benchmark GEO, concurrents comparés, priorités du plan d'action.
+
+### Sans preuve, pas d'affirmation
+
+Quand aucune preuve suffisante n'est trouvée pour un champ, il reste vide et l'audit le signale plutôt que de deviner. Aucune localité n'est jamais inventée : sans localité prouvée (page, fiche Google, code postal), aucune question localisée n'est générée.`,
       codeExample: {
         language: 'typescript',
-        code: `// Enrichissement automatique du profil site
-const identity = await supabase.functions.invoke('enrich-identity', {
-  body: { domain: 'example.com' }
+        code: `// Résolution de la carte d'identité (phase 0 de l'audit)
+const card = await resolveIdentityCard({
+  domain: 'example.com',
+  trackedSiteId,
+  pages,           // preuves multi-pages issues du crawl
+  structuredData,  // JSON-LD Organization / LocalBusiness
+  gmb,             // fiche Google Business si détectée
 });
-// Retourne: { sector, companySize, techStack, socialPresence, seoBaseline }`,
-        description: 'Invocation de l\'enrichissement Identity Card pour un domaine'
+
+// card => { sector, businessModel, audience, commercialArea,
+//           entityType, isLocalBusiness, competitors,
+//           pagesUsed, notes }`,
+        description: 'Résolution de l\'Identity Card à partir des preuves collectées, avec traçabilité des pages utilisées'
       },
-      expertOpinion: 'L\'Identity Card permet de passer d\'audits génériques à des recommandations contextualisées. Un site e-commerce ne reçoit pas les mêmes priorités qu\'un blog ou un SaaS.',
+      expertOpinion: 'La carte d\'identité est le point de bascule de tout l\'audit. En la fondant sur des preuves observables plutôt que sur des APIs sociales, on élimine la majorité des faux diagnostics : un artisan local n\'est plus traité comme un e-commerce national, et les questions posées aux moteurs génératifs correspondent enfin à son métier réel.',
       relatedTerms: ['marina-prospection', 'voice-dna'],
-      updatedAt: '2026-04-15'
+      updatedAt: '2026-08-24'
     },
+
     {
       slug: 'fair-use-quotas',
       term: 'Fair Use (Quotas d\'utilisation)',
