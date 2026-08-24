@@ -1,3 +1,5 @@
+// Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import "@/styles.app.css";
 /**
  * MatriceCompare — Sprint 7
  * Compare deux audits matriciels (delta de scores).

@@ -1,3 +1,5 @@
+// Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import "@/styles.app.css";
 import { useEffect } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useAdmin } from "@/hooks/useAdmin";

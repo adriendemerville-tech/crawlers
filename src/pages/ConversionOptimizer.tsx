@@ -1,3 +1,5 @@
+// Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import "@/styles.app.css";
 import { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useSearchParams, useNavigate } from '@/lib/router-compat';

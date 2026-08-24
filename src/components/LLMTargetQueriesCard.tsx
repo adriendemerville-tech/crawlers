@@ -1,3 +1,5 @@
+// Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import "@/styles.app.css";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MethodologyPopover } from '@/components/ExpertAudit/MethodologyPopover';
 import { Badge } from '@/components/ui/badge';
