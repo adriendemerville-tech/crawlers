@@ -133,11 +133,18 @@ export function extractCocoonPageFacts(cocoonData: any, url: string): CocoonPage
     .slice(0, 3)
     .map((e: any) => String(e.target_url));
 
+  // Distinction non mesuré / mesuré à zéro. Sans nœud correspondant, la page
+  // n'était pas dans l'échantillon de crawl : annoncer « 0 lien interne » ou
+  // « page orpheline » est un faux constat (cas dictadevi.io, accueil à 112
+  // liens internes mesurés annoncée à 0).
+  const measured = !!node;
+  const nz = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : null);
+
   return {
     cluster: node?.cluster_id || node?.cluster || null,
-    linksIn: linksIn.length || (node?.internal_links_in ?? null),
-    linksOut: linksOut.length || (node?.internal_links_out ?? null),
-    isOrphan: orphan || (Number(node?.internal_links_in ?? 1) === 0),
+    linksIn: linksIn.length || (measured ? nz(node?.internal_links_in) : null),
+    linksOut: linksOut.length || (measured ? nz(node?.internal_links_out) : null),
+    isOrphan: measured && (orphan || Number(node?.internal_links_in ?? 1) === 0),
     isThin: thin,
     cannibalWith: cannibalWith.slice(0, 4),
     suggestedLinks,
@@ -145,6 +152,7 @@ export function extractCocoonPageFacts(cocoonData: any, url: string): CocoonPage
     geoScore: node?.geo_score != null ? Math.round(Number(node.geo_score)) : null,
   };
 }
+
 
 /**
  * Bloc « Cocon — ce que cette page doit corriger » : périmètre PAGE, recommandations
