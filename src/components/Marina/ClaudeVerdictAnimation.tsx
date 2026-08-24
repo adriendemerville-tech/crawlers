@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import claudeLogo from '@/assets/claude-logo.png.asset.json';
+import claudeLogo from '@/assets/claude-logo-64.png.asset.json';
 
 /**
  * Reproduction typographique (sans capture d'écran) d'un échange réel où
@@ -118,6 +118,10 @@ export function ClaudeVerdictAnimation() {
               <img
                 src={claudeLogo.url}
                 alt="Logo Claude"
+                width={16}
+                height={16}
+                loading="lazy"
+                decoding="async"
                 className={`h-4 w-4 shrink-0 ${
                   phase === 'thinking'
                     ? 'animate-[pulse_0.7s_ease-in-out_infinite]'
