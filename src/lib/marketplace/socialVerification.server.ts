@@ -120,7 +120,7 @@ export async function verifySocialPublication(orderId: string): Promise<SocialCh
 
   let items: MediaItem[] = [];
   try {
-    const media = await graph(`${asset.account_id}/media`, {
+    const media = await graph(`${String(asset.account_id)}/media`, {
       fields: 'id,caption,permalink,media_type,timestamp',
       limit: '25',
       access_token: account.access_token as string,

@@ -21,6 +21,19 @@ import type { PriceTier } from './types';
 
 const GRAPH = 'https://graph.facebook.com/v21.0';
 
+export interface SocialPricingBasis {
+  affinity: number;
+  metrics_days: number;
+  breakdowns: Record<string, {
+    base_cents: number;
+    f_reach: number;
+    g_engagement: number;
+    h_affinity: number;
+    k_creative: number;
+    raw_cents: number;
+  }>;
+}
+
 export interface SocialAssetView {
   id: string;
   platform: 'instagram' | 'linkedin';
@@ -38,7 +51,7 @@ export interface SocialAssetView {
   price_cents: number | null;
   price_tier: PriceTier | null;
   prices_by_format: Record<string, { price_cents: number | null; tier: PriceTier | null; reason: string | null }>;
-  pricing_basis: Record<string, unknown>;
+  pricing_basis: SocialPricingBasis;
   fraud_flags: string[];
   metrics_window_start: string | null;
   metrics_window_end: string | null;
@@ -56,7 +69,7 @@ export function socialConstants(c: MarketplaceConstants): SocialPricingConstants
     curve_g: obj<{ points: [number, number][] }>(c, 'insta_curve_g'),
     curve_h: obj<{ points: [number, number][] }>(c, 'insta_curve_h'),
     curve_k: obj<{ points: [number, number][] }>(c, 'insta_curve_k'),
-    fraud: obj<SocialPricingConstants['fraud']>(c, 'insta_fraud_thresholds'),
+    fraud: obj<Record<string, number>>(c, 'insta_fraud_thresholds') as unknown as SocialPricingConstants['fraud'],
     min_metrics_days: num(c, 'insta_min_metrics_days'),
     floor_cents: num(c, 'price_floor_cents'),
     cap_cents: num(c, 'price_cap_cents'),
@@ -341,7 +354,7 @@ export async function syncSocialAsset(params: {
 
   const { error: upsertError } = await supabaseAdmin
     .from('marketplace_social_assets')
-    .upsert(row, { onConflict: 'user_id,platform,account_id' });
+    .upsert(row as never, { onConflict: 'user_id,platform,account_id' });
   if (upsertError) throw new Error(`Actif Collab non enregistré : ${upsertError.message}`);
 
   const assets = await listSocialAssets(supabaseAdmin as unknown as Sb, params.userId);
