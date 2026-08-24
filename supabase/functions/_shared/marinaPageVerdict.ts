@@ -171,18 +171,20 @@ export function buildCocoonPageFocusHTML(cocoonData: any, url: string, lang = 'f
       `Cette page ne reçoit aucun lien interne : elle est orpheline. Ajoutez au moins deux liens entrants depuis des pages de son cluster.`,
       `This page receives no internal link: add at least two inbound links from pages in its cluster.`,
     ));
-  } else if ((f.linksIn ?? 0) <= 2) {
+  } else if (f.linksIn !== null && f.linksIn <= 2) {
     recos.push(t(
       `Seulement ${f.linksIn} lien(s) interne(s) entrant(s) : renforcez le maillage entrant pour transmettre de l'autorité à cette URL.`,
       `Only ${f.linksIn} inbound internal link(s): reinforce inbound linking to pass authority to this URL.`,
     ));
   }
-  if ((f.linksOut ?? 0) <= 2) {
+  // Jamais de constat de maillage sur une valeur non mesurée.
+  if (f.linksOut !== null && f.linksOut <= 2) {
     recos.push(t(
-      `Peu de liens sortants internes (${f.linksOut ?? 0}) : reliez cette page aux contenus proches pour clarifier son cluster.`,
-      `Few internal outbound links (${f.linksOut ?? 0}): link this page to its closest content to clarify its cluster.`,
+      `Peu de liens sortants internes (${f.linksOut}) : reliez cette page aux contenus proches pour clarifier son cluster.`,
+      `Few internal outbound links (${f.linksOut}): link this page to its closest content to clarify its cluster.`,
     ));
   }
+
   if (f.isThin) {
     recos.push(t(
       `Contenu jugé fin sur cette URL : elle a besoin d'un apport de contenu propre avant tout travail de maillage.`,
