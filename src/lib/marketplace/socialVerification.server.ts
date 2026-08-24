@@ -112,7 +112,7 @@ export async function verifySocialPublication(orderId: string): Promise<SocialCh
   const { data: account } = await supabaseAdmin
     .from('social_accounts')
     .select('access_token, status')
-    .eq('id', asset.social_account_id)
+    .eq('id', String(asset.social_account_id))
     .maybeSingle();
   if (!account?.access_token || account.status !== 'active') {
     return fail('unreadable', 'Compte social déconnecté : vérification impossible');
