@@ -28,7 +28,7 @@ export interface PsPage {
   intent?: string | null;
 }
 
-export type PsVerdict = 'pilier_net' | 'pilier_conteste' | 'sans_pilier' | 'satellites_legitimes';
+export type PsVerdict = 'pilier_net' | 'pilier_conteste' | 'sans_pilier' | 'satellites_legitimes' | 'mesure_incomplete';
 
 export interface PsGroupVerdict {
   theme: string;
