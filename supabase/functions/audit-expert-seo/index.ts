@@ -1192,15 +1192,31 @@ function analyzeSemanticConsistency(title: string, h1: string): SemanticConsiste
   return { titleH1Similarity: similarity, verdict, details };
 }
 
+// Le ratio texte/HTML doit mesurer la densité du *balisage rendu*, pas le poids
+// du bundle : scripts, styles, templates et payloads d'hydratation sont retirés
+// du dénominateur. Sinon une app SSR correctement remplie est sanctionnée pour
+// son architecture (payload d'hydratation) et non pour un manque de contenu.
+function stripNonMarkupPayload(html: string): string {
+  return html
+    .replace(/<script\b[\s\S]*?<\/script>/gi, '')
+    .replace(/<style\b[\s\S]*?<\/style>/gi, '')
+    .replace(/<noscript\b[\s\S]*?<\/noscript>/gi, '')
+    .replace(/<template\b[\s\S]*?<\/template>/gi, '')
+    .replace(/<svg\b[\s\S]*?<\/svg>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '');
+}
+
 function analyzeContentDensity(html: string, visibleText: string): ContentDensity {
-  const htmlSize = html.length;
+  const rawHtmlSize = html.length;
+  const markupHtml = stripNonMarkupPayload(html);
+  const htmlSize = markupHtml.length;
   const textSize = visibleText.length;
   const ratio = htmlSize > 0 ? Math.round((textSize / htmlSize) * 100) : 0;
 
   // Garde-fou : une extraction de texte visible vide ou un HTML tronqué ne
   // signifie pas « 0 % de texte ». Sans mesure fiable, le verdict reste
   // « unknown » et aucune recommandation « ratio code/texte » n'est émise.
-  if (htmlSize < 2000 || textSize === 0) {
+  if (rawHtmlSize < 2000 || htmlSize < 1000 || textSize === 0) {
     return { ratio: 0, verdict: 'unknown', htmlSize, textSize };
   }
 
@@ -1214,7 +1230,7 @@ function analyzeContentDensity(html: string, visibleText: string): ContentDensit
   } else {
     verdict = 'optimal';
   }
-  
+
   return { ratio, verdict, htmlSize, textSize };
 }
 
@@ -1388,41 +1404,76 @@ async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string, userFalsePos
 
 // ==================== ROBOTS.TXT ANALYSIS ====================
 
-async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
-  console.log('[Robots] Vérification robots.txt...');
-  
+async function fetchRobotsBody(robotsUrl: string): Promise<string | null> {
   try {
-    const domain = new URL(url).origin;
-    const robotsUrl = `${domain}/robots.txt`;
-    
     const response = await fetch(robotsUrl, {
+      redirect: 'follow',
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/2.0)' }
     });
-    
-    if (!response.ok) {
-      return { 
-        exists: false, 
-        permissive: true, 
+    if (!response.ok) return null;
+    const body = await response.text();
+    // Un corps vide (redirection non suivie, page HTML de garde) n'est pas un robots.txt
+    if (!body || !body.trim()) return null;
+    if (/^\s*<(!doctype|html)/i.test(body)) return null;
+    return body;
+  } catch {
+    return null;
+  }
+}
+
+async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
+  console.log('[Robots] Vérification robots.txt...');
+
+  try {
+    const parsed = new URL(url);
+    const candidates: string[] = [`${parsed.origin}/robots.txt`];
+    // Fallback apex <-> www : certains hôtes répondent 302 sans corps sur une des variantes
+    if (parsed.hostname.startsWith('www.')) {
+      candidates.push(`${parsed.protocol}//${parsed.hostname.slice(4)}/robots.txt`);
+    } else {
+      candidates.push(`${parsed.protocol}//www.${parsed.hostname}/robots.txt`);
+    }
+
+    let content: string | null = null;
+    for (const candidate of candidates) {
+      content = await fetchRobotsBody(candidate);
+      if (content) {
+        console.log(`[Robots] robots.txt lu depuis ${candidate} (${content.length} caractères)`);
+        break;
+      }
+    }
+
+    if (!content) {
+      return {
+        exists: false,
+        permissive: true,
         content: '',
         allowsAIBots: { gptBot: true, claudeBot: true, perplexityBot: true }
       };
     }
-    
-    const content = await response.text();
+
     const contentLower = content.toLowerCase();
-    
+
     // Check if robots.txt blocks everything
     const hasDisallowAll = /disallow:\s*\/\s*$/m.test(contentLower) && /user-agent:\s*\*/m.test(contentLower);
-    
+
     // Check AI bot permissions
     const blocksGPTBot = /user-agent:\s*gptbot[\s\S]*?disallow:\s*\//mi.test(content);
     const blocksClaudeBot = /user-agent:\s*claude/mi.test(content) && /disallow:\s*\//mi.test(content);
     const blocksPerplexityBot = /user-agent:\s*perplexitybot[\s\S]*?disallow:\s*\//mi.test(content);
-    
+
+    // Les directives Sitemap: sont souvent en fin de fichier — on les préserve
+    // même quand le corps est tronqué pour limiter la taille du rapport.
+    const sitemapLines = (content.match(/^\s*Sitemap:\s*.+$/gmi) || []).join('\n');
+    let storedContent = content.length > 20000 ? content.substring(0, 20000) : content;
+    if (sitemapLines && !/^\s*Sitemap:/mi.test(storedContent)) {
+      storedContent = `${storedContent}\n${sitemapLines}`;
+    }
+
     return {
       exists: true,
       permissive: !hasDisallowAll,
-      content: content.substring(0, 1000),
+      content: storedContent,
       allowsAIBots: {
         gptBot: !blocksGPTBot,
         claudeBot: !blocksClaudeBot,
@@ -1430,9 +1481,9 @@ async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
       }
     };
   } catch {
-    return { 
-      exists: false, 
-      permissive: true, 
+    return {
+      exists: false,
+      permissive: true,
       content: '',
       allowsAIBots: { gptBot: true, claudeBot: true, perplexityBot: true }
     };
