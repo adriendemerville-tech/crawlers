@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getBotIntent, getIntentLabel, getIntentColor, getBotIcon } from './botIntentMap';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 import { Link } from '@/lib/router-compat';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';

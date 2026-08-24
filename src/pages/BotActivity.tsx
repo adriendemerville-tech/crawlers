@@ -13,7 +13,7 @@ import { getBotIntent, getIntentLabel, getIntentColor, BotIntent } from '@/compo
 import { VerificationBadge } from '@/components/BotActivity/VerificationBadge';
 import { ReliabilityWidget } from '@/components/BotActivity/ReliabilityWidget';
 import { formatDistanceToNow, format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 

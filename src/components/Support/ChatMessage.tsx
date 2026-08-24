@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 import { Monitor, Smartphone, Tablet, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';

@@ -9,7 +9,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { fr, es, enUS } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
+import { es } from 'date-fns/locale/es';
+import { enUS } from 'date-fns/locale/en-US';
 
 interface HistoryEntry {
   id: string;

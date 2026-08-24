@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { RefreshCw, AlertTriangle, Info, Flame, Filter } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface SilentError {

@@ -8,7 +8,7 @@ import {
   TrendingUp, Zap, Users, Hash, Link2, ArrowUpRight, BarChart3, Share2
 } from 'lucide-react';
 import { subDays, format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 

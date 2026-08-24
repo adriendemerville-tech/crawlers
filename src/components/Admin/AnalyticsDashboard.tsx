@@ -33,7 +33,7 @@ import {
   Bar
 } from 'recharts';
 import { format, subDays, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 

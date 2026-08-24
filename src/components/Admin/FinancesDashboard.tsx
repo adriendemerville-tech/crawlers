@@ -24,7 +24,7 @@ import {
   ImageIcon,
 } from 'lucide-react';
 import { subDays, format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 

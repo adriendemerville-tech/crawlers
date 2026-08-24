@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import CollabInstagramLanding, { COLLAB_INSTAGRAM_FAQ } from '@/pages/CollabInstagramLanding';
 import { pageHead, SITE_URL } from '@/lib/seo/pageHead';
+import { ORGANIZATION_REF } from '@/lib/seo/organization';
 
 const URL = `${SITE_URL}/collab-instagram`;
 
@@ -14,7 +15,7 @@ const jsonLd = [
     description:
       'Place d’échange de collaborations Instagram où le prix, la durée d’engagement et la mention de partenariat sont calculés à partir de signaux mesurés, avec vérification de diffusion et commission de 15 %.',
     areaServed: 'FR',
-    provider: { '@type': 'Organization', name: 'Crawlers.fr', url: SITE_URL },
+    provider: ORGANIZATION_REF,
   },
   {
     '@context': 'https://schema.org',

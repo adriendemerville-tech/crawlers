@@ -44,12 +44,44 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+const IMMUTABLE_ASSET_RE =
+  /^\/(assets\/|fonts\/|_build\/)|\.(woff2?|css|js|mjs|png|jpe?g|webp|avif|svg|ico)$/i;
+
+/**
+ * public/_headers n'est pas appliqué par l'hébergement Worker : PageSpeed
+ * mesurait 78 Kio de polices resservies sans aucun TTL à chaque visite.
+ * On pose donc le cache et les en-têtes de sécurité ici, au vol.
+ */
+function applyEdgeHeaders(request: Request, response: Response): Response {
+  const { pathname } = new URL(request.url);
+  const isImmutable = IMMUTABLE_ASSET_RE.test(pathname);
+  const hasCacheControl = response.headers.has("cache-control");
+
+  if (!isImmutable && response.headers.has("content-security-policy")) return response;
+  if (isImmutable && hasCacheControl) return response;
+
+  const headers = new Headers(response.headers);
+  if (isImmutable && response.ok) {
+    headers.set("cache-control", "public, max-age=31536000, immutable");
+    headers.set("x-content-type-options", "nosniff");
+  }
+  if (!isImmutable && (response.headers.get("content-type") ?? "").includes("text/html")) {
+    // Anti-clickjacking moderne, en complément de X-Frame-Options.
+    headers.set("content-security-policy", "frame-ancestors 'self'");
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return applyEdgeHeaders(request, await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {

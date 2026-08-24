@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 
 type ImplementationMode = 'dry_run' | 'auto' | 'review' | string;
 type Phase = 'audit' | 'diagnose' | 'prescribe' | 'execute' | 'validate';

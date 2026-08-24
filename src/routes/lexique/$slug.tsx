@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import ExpertTermPage from "@/pages/Lexique/ExpertTermPage";
-import { getExpertTermBySlug } from "@/data/expertTerms";
+import { getExpertTermMeta } from "@/data/expertTermsMeta.generated";
 import { pageHead } from "@/lib/seo/pageHead";
 import { buildBreadcrumbJsonLd, buildDefinedTermJsonLd } from "@/lib/seo/articleSchema";
 
 export const Route = createFileRoute("/lexique/$slug")({
   head: ({ params }) => {
-    const term = getExpertTermBySlug(params.slug, "fr");
+    const term = getExpertTermMeta(params.slug, "fr");
     if (!term) {
       return pageHead({
         title: "Terme introuvable | Crawlers.fr",
@@ -17,13 +17,13 @@ export const Route = createFileRoute("/lexique/$slug")({
     }
     return pageHead({
       title: `${term.term} — Définition Expert | Crawlers.fr`,
-      description: term.fullDefinition.slice(0, 155),
+      description: term.description,
       path: `/lexique/${params.slug}`,
       ogType: "article",
       jsonLd: [
         buildDefinedTermJsonLd({
           term: term.term,
-          definition: term.fullDefinition,
+          definition: term.definition,
           path: `/lexique/${params.slug}`,
         }),
         buildBreadcrumbJsonLd([

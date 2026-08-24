@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Globe, ExternalLink, RefreshCw, Search, Magnet, FileSearch, ScanSearch, Network, ArrowUpDown, User, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 import { Input } from '@/components/ui/input';
 import { Toggle } from '@/components/ui/toggle';
 import { CrawlPagesStatsCard } from './CrawlPagesStatsCard';
