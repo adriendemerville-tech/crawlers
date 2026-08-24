@@ -48,7 +48,7 @@ export const PainPointsSection = () => {
 
         {/* Conclusion */}
         <div className="mx-auto max-w-3xl rounded-xl px-6 py-6 text-center font-medium border-primary/20 dark:border-violet-600 dark:border-dashed bg-popover border-0">
-          <span className="block mb-3 text-sm font-bold text-primary-foreground">L'approche Crawlers</span>
+          <span className="block mb-3 text-sm font-bold text-primary">L'approche Crawlers</span>
           <p className="text-sm leading-relaxed text-muted-foreground">
             <strong className="text-foreground">
               Crawlers base ses recommandations sur les données concrètes de vos sites et de leurs audiences
