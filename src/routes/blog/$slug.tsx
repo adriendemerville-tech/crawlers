@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import ArticlePage, { ARTICLE_SEO_OVERRIDES } from "@/pages/Blog/ArticlePage";
+import ArticlePage from "@/pages/Blog/ArticlePage";
+import { ARTICLE_SEO_OVERRIDES } from "@/pages/Blog/articleSeoOverrides";
 import { getArticleBySlug } from "@/data/blogArticles";
 import { supabase } from "@/integrations/supabase/client";
 import { pageHead } from "@/lib/seo/pageHead";
