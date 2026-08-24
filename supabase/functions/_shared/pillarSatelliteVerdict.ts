@@ -26,7 +26,14 @@ export interface PsPage {
   inbound?: number | null;
   depth?: number | null;
   intent?: string | null;
+  /**
+   * `false` = la page n'a pas été mesurée par le crawl (hors échantillon).
+   * Son autorité vaut alors 0 par défaut d'information, jamais par constat :
+   * on ne peut pas recommander de 301 sur cette base.
+   */
+  measured?: boolean;
 }
+
 
 export type PsVerdict = 'pilier_net' | 'pilier_conteste' | 'sans_pilier' | 'satellites_legitimes' | 'mesure_incomplete';
 
