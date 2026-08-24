@@ -29,6 +29,7 @@ const sections = [
   { id: 'responsabilite', title: '12 bis. Limitation de Responsabilité' },
   { id: 'modification', title: '13. Modification des CGVU' },
   { id: 'social', title: '14. Social Content Hub — Publication & OAuth' },
+  { id: 'place-echange', title: '14 bis. Place d’échange — liens et collaborations sociales' },
   { id: 'litiges', title: '15. Droit Applicable & Litiges' },
 ];
 
