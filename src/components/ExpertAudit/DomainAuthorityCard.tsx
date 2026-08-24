@@ -2,7 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Link } from '@/lib/router-compat';
 import type { DomainAuthority } from '@/types/expertAudit';
+
+/** Seuil d'« autorité forte » de scoreVerdict — sert de référence au déficit affiché. */
+const AUTHORITY_TARGET = 70;
 
 type Props = {
   authority?: DomainAuthority | null;
