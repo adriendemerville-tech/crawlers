@@ -295,6 +295,7 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
     ${sub('Principaux référents', refs)}
     ${sub('Ancres', anchors)}
     ${trendHtml}
+    ${sub("Valeur d'appariement — place d'échange", matchingValueHtml)}
     ${sub('Fiabilité', reliability)}
   </div>`;
 }
