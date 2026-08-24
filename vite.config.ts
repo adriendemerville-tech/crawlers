@@ -16,6 +16,11 @@ export default defineConfig({
   vite: {
     // Project MCP server (kept from the Classic config; not bundled by the wrapper).
     plugins: [mcpPlugin()],
+    build: {
+      // Lighthouse signale l'absence de source maps sur index-*.js : on les
+      // publie en fichiers .map séparés (aucun impact sur le poids servi).
+      sourcemap: true,
+    },
     ssr: {
       // react-helmet-async ships CJS as its node "main"; left external, the SSR
       // module runner can't see its named exports (HelmetProvider). Bundling it
