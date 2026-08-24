@@ -279,6 +279,19 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
         .join(' · ')}</div>`
     : '';
 
+  // Seuil d'autorité forte (70/100) : le déficit affiché est la seule base retenue
+  // par la place d'échange pour justifier un lien transmettant l'autorité.
+  const deficit = 70 - a.authority_score;
+  const matchingValueHtml =
+    a.data_source !== 'unavailable' && deficit > 0
+      ? `<p style="font-size:12px;color:#374151;margin:0;line-height:1.6;">
+          Déficit constaté : <strong>${deficit} points</strong> sous le seuil d'autorité forte (70/100).
+          Sur la place d'échange Crawlers, ce déficit détermine à lui seul le prix, l'attribut du lien et la priorité d'achat — aucune négociation.
+          À l'inverse, les pages les moins stratégiques peuvent être cédées : l'indice de risque de cession écarte d'office les pages piliers, de conversion et en progression.
+        </p>
+        <p style="font-size:11.5px;color:#6b7280;margin:6px 0 0;">Détail des règles : ${esc('https://crawlers.fr/marketplace-backlinks')}</p>`
+      : '';
+
   const reliability = `<p style="font-size:11.5px;color:#6b7280;margin:0;line-height:1.6;">
       ${nf(a.referring_domains_sampled)}/${nf(a.referring_domains)} domaines · ${nf(a.anchors_sampled)} ancres · fiabilité ${CONFIDENCE_LABEL[a.confidence] || a.confidence} · DataForSEO ${esc(a.fetched_at?.slice(0, 10) || 'n/d')} v${a.calibration_version}. Estimation Crawlers, pas une pénalité Google.
     </p>`;
@@ -295,6 +308,7 @@ export function buildBacklinkSectionHTML(a: AuthorityData | null, trendHtml = ''
     ${sub('Principaux référents', refs)}
     ${sub('Ancres', anchors)}
     ${trendHtml}
+    ${sub("Valeur d'appariement — place d'échange", matchingValueHtml)}
     ${sub('Fiabilité', reliability)}
   </div>`;
 }
