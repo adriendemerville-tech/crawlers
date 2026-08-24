@@ -764,10 +764,19 @@ const ip = getClientIp(req);
     const avgIab = nodeData.reduce((s, n) => s + (n.iab_score || 0), 0) / nodeData.length;
     const totalEdges = nodeData.reduce((s, n) => s + (n.similarity_edges?.length || 0), 0);
 
-    // Orphan pages: no inbound links and no semantic edges
+    // Orphan pages: no inbound links and no semantic edges.
+    // Garde-fou : une URL paramétrée (?a=b, artefacts `&amp;` mal décodés,
+    // filtres de listing) est une variante canonicalisée de sa page nue, pas
+    // une page orpheline du site. La signaler produisait un faux positif que
+    // l'éditeur ne peut pas corriger (l'URL n'existe pas dans son maillage).
+    const isParamVariant = (u: string) => {
+      try { return new URL(u).search.length > 0; } catch { return /[?&]/.test(String(u)); }
+    };
     const orphanPages = nodeData
       .filter(n => (n.internal_links_in || 0) === 0 && (!n.similarity_edges || n.similarity_edges.length === 0))
+      .filter(n => !isParamVariant(String(n.url || '')))
       .map(n => ({ url: n.url, title: n.title, word_count: n.word_count }));
+
 
     // Cluster details: group nodes by cluster_id
     const clusterDetailMap = new Map<string, any[]>();
