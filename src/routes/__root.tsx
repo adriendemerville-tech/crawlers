@@ -27,8 +27,8 @@ import { Breadcrumb as BreadcrumbGlobal } from "@/components/SEO/Breadcrumb";
 import { CanonicalHreflangGlobal } from "@/components/SEO/CanonicalHreflangGlobal";
 import { PageViewTracker } from "@/components/Analytics/PageViewTracker";
 import { AISidebarPageWrapper } from "@/components/AISidebarPageWrapper";
-import { FloatingChatBubble } from "@/components/Support/FloatingChatBubble";
-import { SurveyModal } from "@/components/Survey/SurveyModal";
+import { DeferredGlobals } from "@/components/DeferredGlobals";
+
 import NotFound from "@/pages/NotFound";
 import { SITEWIDE_JSONLD } from "@/lib/seo/organization";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
