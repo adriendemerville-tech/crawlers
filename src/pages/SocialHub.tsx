@@ -1,3 +1,5 @@
+// Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import "@/styles.app.css";
 /**
  * Social Content Hub — Main page (/app/social)
  * Tabbed interface: Éditeur, Calendrier, Feed, Stats, Plan d'actions

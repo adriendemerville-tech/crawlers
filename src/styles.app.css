@@ -1,0 +1,30 @@
+/*
+ * Feuille de style des espaces applicatifs (console, audit expert, cocon,
+ * matrice, admin, social, rapports).
+ *
+ * Pourquoi ce second fichier : Tailwind scanne tout `src/` et produisait une
+ * feuille unique de 56 KiB gzip, bloquante au premier rendu de la home
+ * publique — dont un gros tiers d'utilitaires n'existant que dans les écrans
+ * connectés. Ces arbres sont exclus de `styles.css` (`@source not`) et
+ * compilés ici. Le fichier est importé par les modules d'entrée de chaque
+ * espace applicatif, donc chargé en même temps que leur chunk JS, jamais sur
+ * la home.
+ *
+ * `@reference` réutilise le thème, les variantes et les tokens de styles.css
+ * sans réémettre ni le preflight ni les variables : seules les classes
+ * utilitaires manquantes sont générées.
+ */
+@reference "./styles.theme.css";
+
+@import "tailwindcss/utilities" layer(utilities) source(none);
+@plugin "@tailwindcss/typography";
+
+@source "../src/components/Admin";
+@source "../src/components/admin";
+@source "../src/components/Console";
+@source "../src/components/Cocoon";
+@source "../src/components/ExpertAudit";
+@source "../src/components/Matrice";
+@source "../src/components/ConversionOptimizer";
+@source "../src/components/Social";
+@source "../src/components/ReportPreview";

@@ -1,3 +1,5 @@
+// Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import "@/styles.app.css";
 /**
  * @deprecated Sprint 8 — remplacé par ChatWindowUnified (`useFelixV2Flag`).
  * Conservé en filet de sécurité (quiz Crawlers/SEO/Enterprise, archives

@@ -1,3 +1,5 @@
+// Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import "@/styles.app.css";
 import { useState } from 'react';
 import { LLMAnalysisResult, SentimentType } from '@/types/llm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

@@ -1,3 +1,5 @@
+// Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import "@/styles.app.css";
 import { useState, useRef, useEffect, useCallback, lazy, Suspense} from 'react';
 import { useSaveReport } from '@/hooks/useSaveReport';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';

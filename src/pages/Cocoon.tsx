@@ -1,3 +1,5 @@
+// Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import "@/styles.app.css";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { DesktopOnlyGate } from "@/components/DesktopOnlyGate";
 import { useAuth } from "@/contexts/AuthContext";

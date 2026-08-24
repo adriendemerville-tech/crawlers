@@ -1,3 +1,5 @@
+// Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import "@/styles.app.css";
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from '@/lib/router-compat';
 import { Download, Loader2, Mail, Printer, Share2 } from 'lucide-react';
