@@ -1192,15 +1192,31 @@ function analyzeSemanticConsistency(title: string, h1: string): SemanticConsiste
   return { titleH1Similarity: similarity, verdict, details };
 }
 
+// Le ratio texte/HTML doit mesurer la densité du *balisage rendu*, pas le poids
+// du bundle : scripts, styles, templates et payloads d'hydratation sont retirés
+// du dénominateur. Sinon une app SSR correctement remplie est sanctionnée pour
+// son architecture (payload d'hydratation) et non pour un manque de contenu.
+function stripNonMarkupPayload(html: string): string {
+  return html
+    .replace(/<script\b[\s\S]*?<\/script>/gi, '')
+    .replace(/<style\b[\s\S]*?<\/style>/gi, '')
+    .replace(/<noscript\b[\s\S]*?<\/noscript>/gi, '')
+    .replace(/<template\b[\s\S]*?<\/template>/gi, '')
+    .replace(/<svg\b[\s\S]*?<\/svg>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '');
+}
+
 function analyzeContentDensity(html: string, visibleText: string): ContentDensity {
-  const htmlSize = html.length;
+  const rawHtmlSize = html.length;
+  const markupHtml = stripNonMarkupPayload(html);
+  const htmlSize = markupHtml.length;
   const textSize = visibleText.length;
   const ratio = htmlSize > 0 ? Math.round((textSize / htmlSize) * 100) : 0;
 
   // Garde-fou : une extraction de texte visible vide ou un HTML tronqué ne
   // signifie pas « 0 % de texte ». Sans mesure fiable, le verdict reste
   // « unknown » et aucune recommandation « ratio code/texte » n'est émise.
-  if (htmlSize < 2000 || textSize === 0) {
+  if (rawHtmlSize < 2000 || htmlSize < 1000 || textSize === 0) {
     return { ratio: 0, verdict: 'unknown', htmlSize, textSize };
   }
 
@@ -1214,7 +1230,7 @@ function analyzeContentDensity(html: string, visibleText: string): ContentDensit
   } else {
     verdict = 'optimal';
   }
-  
+
   return { ratio, verdict, htmlSize, textSize };
 }
 
