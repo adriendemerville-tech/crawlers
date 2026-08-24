@@ -1,4 +1,4 @@
-import { useState, useEffect, memo, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FileSearch, Search } from 'lucide-react';
@@ -6,12 +6,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Link, useNavigate } from '@/lib/router-compat';
 import { TrustBadge } from '@/components/TrustBadge';
 
-// Lazy load framer-motion - only needed after hydration for animations
-const MotionSpan = lazy(() => 
-  import('framer-motion').then(mod => ({
-    default: memo(({ children, ...props }: any) => <mod.motion.span {...props}>{children}</mod.motion.span>)
-  }))
-);
+// L'animation du mot du titre est en CSS pur : framer-motion coûtait 39 KiB
+// transférés sur le chemin critique du LCP pour un simple fondu montant.
+const HERO_WORD_CLASS =
+  'whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-center sm:text-right';
+
 
 const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 
