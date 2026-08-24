@@ -189,8 +189,8 @@ function RootComponent() {
                             <BreadcrumbGlobal visuallyHidden />
                             <Outlet />
                           </AISidebarPageWrapper>
-                          <FloatingChatBubble />
-                          <SurveyModal />
+                          <DeferredGlobals />
+
                         </TooltipProvider>
                       </AISidebarProvider>
                     </CreditsProvider>
