@@ -386,3 +386,64 @@ export const getMarketplaceBalances = createServerFn({ method: 'GET' })
     const { listSiteBalances } = await import('./balance.server');
     return listSiteBalances(context.supabase as never, context.userId);
   });
+
+// ─── L6 — Collab Instagram / LinkedIn ───────────────────────────────
+
+export const getMarketplaceSocialAssets = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { listSocialAssets, listConnectableAccounts } = await import('./socialAssets.server');
+    const [assets, accounts] = await Promise.all([
+      listSocialAssets(context.supabase as never, context.userId),
+      listConnectableAccounts(context.supabase as never, context.userId),
+    ]);
+    return { assets, accounts };
+  });
+
+export const syncMarketplaceSocialAsset = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        socialAccountId: z.string().uuid(),
+        formats: z.array(z.enum(['feed', 'reel', 'story', 'linkedin_post'])).min(1),
+        affinity: z.number().min(0).max(1).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { syncSocialAsset } = await import('./socialAssets.server');
+    return syncSocialAsset({ userId: context.userId, ...data });
+  });
+
+export const setMarketplaceSocialOptIn = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ assetId: z.string().uuid(), optIn: z.boolean() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { setSocialOptIn } = await import('./socialAssets.server');
+    return setSocialOptIn({ userId: context.userId, ...data });
+  });
+
+export const revokeMarketplaceSocialAsset = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ assetId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { revokeSocialAsset } = await import('./socialAssets.server');
+    return revokeSocialAsset({ userId: context.userId, assetId: data.assetId });
+  });
+
+export const verifyMarketplaceSocialPublication = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ orderId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { verifySocialPublication } = await import('./socialVerification.server');
+    const { data: order, error } = await context.supabase
+      .from('marketplace_orders')
+      .select('id')
+      .eq('id', data.orderId)
+      .maybeSingle();
+    if (error) throw new Error(`Commande illisible : ${error.message}`);
+    if (!order) throw new Error('Commande introuvable ou hors de votre périmètre');
+    return verifySocialPublication(data.orderId);
+  });
+
