@@ -48,6 +48,51 @@ const IMMUTABLE_ASSET_RE =
   /^\/(assets\/|fonts\/|_build\/)|\.(woff2?|css|js|mjs|png|jpe?g|webp|avif|svg|ico)$/i;
 
 /**
+ * Origines tierces réellement utilisées par l'application (GTM, Turnstile,
+ * Paddle, backend Lovable Cloud, images distantes). Toute origine absente est
+ * bloquée par la CSP : c'est la contrepartie de son efficacité.
+ */
+const CSP_SCRIPT_SRC = [
+  "'self'",
+  "'unsafe-inline'", // payload d'hydratation + JSON-LD injectés par le SSR
+  "https://www.googletagmanager.com",
+  "https://challenges.cloudflare.com",
+  "https://cdn.paddle.com",
+  "https://*.paddle.com",
+];
+
+const CSP_CONNECT_SRC = [
+  "'self'",
+  "https://*.supabase.co",
+  "wss://*.supabase.co",
+  "https://www.googletagmanager.com",
+  "https://www.google-analytics.com",
+  "https://*.paddle.com",
+  "https://challenges.cloudflare.com",
+];
+
+const CSP_DIRECTIVES = [
+  "default-src 'self'",
+  `script-src ${CSP_SCRIPT_SRC.join(" ")}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  `connect-src ${CSP_CONNECT_SRC.join(" ")}`,
+  "media-src 'self' blob: https:",
+  "worker-src 'self' blob:",
+  "frame-src 'self' https://challenges.cloudflare.com https://*.paddle.com https://www.youtube-nocookie.com",
+  "frame-ancestors 'self'",
+  "form-action 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "upgrade-insecure-requests",
+].join("; ");
+
+// Trusted Types en observation seule : les sinks DOM restants (rapports HTML,
+// éditeurs d'injection) doivent être migrés avant de passer en mode bloquant.
+const CSP_REPORT_ONLY = "require-trusted-types-for 'script'; trusted-types default dompurify";
+
+/**
  * public/_headers n'est pas appliqué par l'hébergement Worker : PageSpeed
  * mesurait 78 Kio de polices resservies sans aucun TTL à chaque visite.
  * On pose donc le cache et les en-têtes de sécurité ici, au vol.
@@ -66,8 +111,9 @@ function applyEdgeHeaders(request: Request, response: Response): Response {
     headers.set("x-content-type-options", "nosniff");
   }
   if (!isImmutable && (response.headers.get("content-type") ?? "").includes("text/html")) {
-    // Anti-clickjacking moderne, en complément de X-Frame-Options.
-    headers.set("content-security-policy", "frame-ancestors 'self'");
+    headers.set("content-security-policy", CSP_DIRECTIVES);
+    headers.set("content-security-policy-report-only", CSP_REPORT_ONLY);
+    headers.set("x-content-type-options", "nosniff");
   }
   return new Response(response.body, {
     status: response.status,
@@ -75,6 +121,7 @@ function applyEdgeHeaders(request: Request, response: Response): Response {
     headers,
   });
 }
+
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
