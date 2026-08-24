@@ -311,3 +311,27 @@ export async function listBuyQueue(
   if (error) throw new Error(`File d'achat illisible : ${error.message}`);
   return (data ?? []) as QueueEntry[];
 }
+
+export interface SiteBalanceRow extends SiteBalance {
+  computed_at: string | null;
+}
+
+/**
+ * Balances lisibles par leur propriétaire (L5.8) — aucun recalcul ici : on
+ * relit la table persistée par `recomputeSiteBalance`, seule source de vérité.
+ */
+export async function listSiteBalances(
+  sb: { from: (t: string) => any },
+  userId: string,
+): Promise<SiteBalanceRow[]> {
+  const { data, error } = await sb
+    .from('marketplace_site_balances')
+    .select(
+      'site_domain, authority_balance_cents, visibility_balance_cents, authority_given_cents, authority_received_cents, legs_count, can_sell_link, buyer_priority_score, computed_at',
+    )
+    .eq('user_id', userId)
+    .order('authority_balance_cents', { ascending: true })
+    .limit(50);
+  if (error) throw new Error(`Balances illisibles : ${error.message}`);
+  return (data ?? []) as SiteBalanceRow[];
+}

@@ -379,3 +379,10 @@ export const refreshMarketplaceBuyQueue = createServerFn({ method: 'POST' })
     const { refreshBuyQueue } = await import('./balance.server');
     return refreshBuyQueue(context.userId);
   });
+
+export const getMarketplaceBalances = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { listSiteBalances } = await import('./balance.server');
+    return listSiteBalances(context.supabase as never, context.userId);
+  });
