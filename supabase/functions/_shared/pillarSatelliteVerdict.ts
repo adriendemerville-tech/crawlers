@@ -140,6 +140,22 @@ export function classifyPillarSatellite(
   const theme = opts?.theme || String(pilier.title || pilier.path || '').slice(0, 80);
   const shared = opts?.sharedKeywords || [];
 
+  // Aucune redirection ne peut être prescrite si une des pages du groupe n'a
+  // pas été mesurée : son autorité nulle est une absence de donnée, pas un
+  // constat. C'est ce cas qui produisait des 301 recommandées vers un pilier
+  // simplement parce que l'autre page était hors échantillon de crawl.
+  const unmeasured = ranked.filter((p) => p.measured === false);
+  if (unmeasured.length > 0) {
+    return {
+      theme, shared_keywords: shared,
+      verdict: 'mesure_incomplete',
+      label: 'Mesure incomplète — aucune redirection prescrite',
+      action: `${unmeasured.length} page(s) de ce groupe (${unmeasured.map((p) => p.path).join(', ')}) n'ont pas été analysées lors de ce crawl : leur autorité interne est inconnue, pas nulle. Ne pas rediriger. Relancer un crawl couvrant ces URL, puis arbitrer sur des mesures complètes.`,
+      dominance: null, pilier, satellites,
+    };
+  }
+
+
   // Intentions déclarées différentes sur toutes les pages : ce n'est pas un
   // doublon, c'est un maillage insuffisamment différencié.
   if (intents.size >= ranked.length && ranked.length <= 3) {
