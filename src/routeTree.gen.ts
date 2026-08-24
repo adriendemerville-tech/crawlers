@@ -29,6 +29,7 @@ import { Route as BreathingSpiralRouteImport } from './routes/breathing-spiral'
 import { Route as CfShieldRouteImport } from './routes/cf-shield'
 import { Route as CgvuRouteImport } from './routes/cgvu'
 import { Route as CocoonRouteImport } from './routes/cocoon'
+import { Route as CollabInstagramRouteImport } from './routes/collab-instagram'
 import { Route as ComparatifClaudeVsCrawlersRouteImport } from './routes/comparatif-claude-vs-crawlers'
 import { Route as ComparatifCrawlersAhrefsRouteImport } from './routes/comparatif-crawlers-ahrefs'
 import { Route as ComparatifCrawlersScreamingFrogRouteImport } from './routes/comparatif-crawlers-screaming-frog'
@@ -245,6 +246,11 @@ const CgvuRoute = CgvuRouteImport.update({
 const CocoonRoute = CocoonRouteImport.update({
   id: '/cocoon',
   path: '/cocoon',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollabInstagramRoute = CollabInstagramRouteImport.update({
+  id: '/collab-instagram',
+  path: '/collab-instagram',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComparatifClaudeVsCrawlersRoute =
@@ -869,6 +875,7 @@ export interface FileRoutesByFullPath {
   '/cf-shield': typeof CfShieldRoute
   '/cgvu': typeof CgvuRoute
   '/cocoon': typeof CocoonRoute
+  '/collab-instagram': typeof CollabInstagramRoute
   '/comparatif-claude-vs-crawlers': typeof ComparatifClaudeVsCrawlersRoute
   '/comparatif-crawlers-ahrefs': typeof ComparatifCrawlersAhrefsRoute
   '/comparatif-crawlers-screaming-frog': typeof ComparatifCrawlersScreamingFrogRoute
@@ -1008,6 +1015,7 @@ export interface FileRoutesByTo {
   '/cf-shield': typeof CfShieldRoute
   '/cgvu': typeof CgvuRoute
   '/cocoon': typeof CocoonRoute
+  '/collab-instagram': typeof CollabInstagramRoute
   '/comparatif-claude-vs-crawlers': typeof ComparatifClaudeVsCrawlersRoute
   '/comparatif-crawlers-ahrefs': typeof ComparatifCrawlersAhrefsRoute
   '/comparatif-crawlers-screaming-frog': typeof ComparatifCrawlersScreamingFrogRoute
@@ -1148,6 +1156,7 @@ export interface FileRoutesById {
   '/cf-shield': typeof CfShieldRoute
   '/cgvu': typeof CgvuRoute
   '/cocoon': typeof CocoonRoute
+  '/collab-instagram': typeof CollabInstagramRoute
   '/comparatif-claude-vs-crawlers': typeof ComparatifClaudeVsCrawlersRoute
   '/comparatif-crawlers-ahrefs': typeof ComparatifCrawlersAhrefsRoute
   '/comparatif-crawlers-screaming-frog': typeof ComparatifCrawlersScreamingFrogRoute
@@ -1289,6 +1298,7 @@ export interface FileRouteTypes {
     | '/cf-shield'
     | '/cgvu'
     | '/cocoon'
+    | '/collab-instagram'
     | '/comparatif-claude-vs-crawlers'
     | '/comparatif-crawlers-ahrefs'
     | '/comparatif-crawlers-screaming-frog'
@@ -1428,6 +1438,7 @@ export interface FileRouteTypes {
     | '/cf-shield'
     | '/cgvu'
     | '/cocoon'
+    | '/collab-instagram'
     | '/comparatif-claude-vs-crawlers'
     | '/comparatif-crawlers-ahrefs'
     | '/comparatif-crawlers-screaming-frog'
@@ -1567,6 +1578,7 @@ export interface FileRouteTypes {
     | '/cf-shield'
     | '/cgvu'
     | '/cocoon'
+    | '/collab-instagram'
     | '/comparatif-claude-vs-crawlers'
     | '/comparatif-crawlers-ahrefs'
     | '/comparatif-crawlers-screaming-frog'
@@ -1707,6 +1719,7 @@ export interface RootRouteChildren {
   CfShieldRoute: typeof CfShieldRoute
   CgvuRoute: typeof CgvuRoute
   CocoonRoute: typeof CocoonRoute
+  CollabInstagramRoute: typeof CollabInstagramRoute
   ComparatifClaudeVsCrawlersRoute: typeof ComparatifClaudeVsCrawlersRoute
   ComparatifCrawlersAhrefsRoute: typeof ComparatifCrawlersAhrefsRoute
   ComparatifCrawlersScreamingFrogRoute: typeof ComparatifCrawlersScreamingFrogRoute
@@ -1966,6 +1979,13 @@ declare module '@tanstack/react-router' {
       path: '/cocoon'
       fullPath: '/cocoon'
       preLoaderRoute: typeof CocoonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collab-instagram': {
+      id: '/collab-instagram'
+      path: '/collab-instagram'
+      fullPath: '/collab-instagram'
+      preLoaderRoute: typeof CollabInstagramRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comparatif-claude-vs-crawlers': {
@@ -2811,6 +2831,7 @@ const rootRouteChildren: RootRouteChildren = {
   CfShieldRoute: CfShieldRoute,
   CgvuRoute: CgvuRoute,
   CocoonRoute: CocoonRoute,
+  CollabInstagramRoute: CollabInstagramRoute,
   ComparatifClaudeVsCrawlersRoute: ComparatifClaudeVsCrawlersRoute,
   ComparatifCrawlersAhrefsRoute: ComparatifCrawlersAhrefsRoute,
   ComparatifCrawlersScreamingFrogRoute: ComparatifCrawlersScreamingFrogRoute,

@@ -29,6 +29,7 @@ const sections = [
   { id: 'responsabilite', title: '12 bis. Limitation de Responsabilité' },
   { id: 'modification', title: '13. Modification des CGVU' },
   { id: 'social', title: '14. Social Content Hub — Publication & OAuth' },
+  { id: 'place-echange', title: '14 bis. Place d’échange — liens et collaborations sociales' },
   { id: 'litiges', title: '15. Droit Applicable & Litiges' },
 ];
 
@@ -561,6 +562,52 @@ const CGVU = () => {
               <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14.5 Données sociales</h3>
               <p>
                 Les métriques d'engagement (impressions, clics, likes, partages) sont collectées uniquement à des fins d'affichage dans le tableau de bord de l'Utilisateur. Elles ne sont <strong>jamais partagées avec des tiers</strong> ni utilisées pour entraîner des modèles d'intelligence artificielle.
+              </p>
+              </section>
+
+              {/* Article 14 bis */}
+              <section id="place-echange">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">14 bis. Place d'échange — emplacements de liens et collaborations sociales</h2>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14 bis.1 Rôle de la Plateforme</h3>
+              <p>
+                La Place d'échange met en relation un <strong>cédant</strong> (propriétaire d'une page web ou d'un compte social) et un <strong>acquéreur</strong> (annonceur ayant un besoin de visibilité constaté). Crawlers.fr agit comme <strong>opérateur de mise en relation et de séquestre</strong> : la Plateforme n'est ni l'éditeur du contenu inséré, ni le propriétaire des emplacements, ni partie au contrat de publication conclu entre les deux utilisateurs.
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14 bis.2 Prix, attribut et plafonds — caractère déterministe</h3>
+              <p>
+                Le prix d'un emplacement, l'attribut du lien et les plafonds d'insertion sont calculés par la Plateforme à partir de signaux mesurés (autorité, proximité sémantique, trafic de la page, qualité éditoriale, visibilité générative, audience et engagement pour les collaborations sociales). Ces valeurs <strong>ne sont pas négociables</strong>. L'attribut du lien est <strong>sponsored par défaut</strong> ; le dofollow n'est accordé que lorsque les conditions de besoin et de risque le justifient. Les plafonds d'insertion sont opposables : un utilisateur ne peut les contourner par des commandes successives ou des comptes multiples, sous peine des sanctions prévues à l'article 5 ter.
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14 bis.3 Preuve de propriété et déclaration de responsabilité</h3>
+              <p>
+                Aucune mise en vente n'est possible sans vérification préalable de la propriété du domaine (Search Console, enregistrement DNS ou fichier déposé) ou du compte social (connexion officielle au compte professionnel). L'utilisateur déclare détenir les droits nécessaires pour publier le contenu convenu. Une preuve révoquée retire immédiatement l'inventaire correspondant et suspend les commandes en cours.
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14 bis.4 Transparence publicitaire</h3>
+              <p>
+                Toute collaboration sociale rémunérée — en euros, en crédits ou en troc — doit porter une <strong>mention de partenariat explicite</strong>, conformément aux dispositions applicables à l'influence commerciale. L'absence de mention constatée équivaut à une non-exécution et ouvre droit à remboursement. Le cédant conserve la responsabilité éditoriale de la formulation publiée.
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14 bis.5 Commission, facturation et troc</h3>
+              <p>
+                La commission de la Plateforme est de <strong>15 %</strong> du montant de la transaction, retenue sur le flux pour les règlements en euros et due en crédits par chaque jambe dans le cadre d'un troc. Les pièces comptables (facture, auto-facturation pour le compte du cédant, avoir) sont <strong>figées à l'émission</strong> et exigibles à la première preuve de publication. Le cédant est seul responsable de ses obligations déclaratives et fiscales, sur la base du statut qu'il renseigne dans son profil.
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14 bis.6 Engagement de maintien et remboursement</h3>
+              <p>
+                La durée d'engagement est figée à la commande (12 mois par défaut pour un emplacement de lien, durée propre au format pour une collaboration sociale). La publication est contrôlée à J+1, J+7 puis mensuellement. Aucun constat négatif n'est posé sans réitération du contrôle : une page servie en coquille JavaScript, un blocage de crawl ou une indisponibilité temporaire du compte ne valent pas rupture. En cas de retrait confirmé, le remboursement est effectué <strong>au prorata du reliquat d'engagement</strong>, sur le même support de paiement que l'achat.
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14 bis.7 Interdictions propres à la Place d'échange</h3>
+              <p>Sont strictement interdits, et entraînent la suspension immédiate du compte :</p>
+              <ul>
+                <li>La revente d'un emplacement obtenu sur la Plateforme à un tiers hors Plateforme ;</li>
+                <li>La cession d'emplacements sur des sites créés dans le seul but de vendre des liens, sans audience ni activité propre ;</li>
+                <li>L'insertion de liens vers des contenus illicites, trompeurs, contrefaisants ou relevant de secteurs réglementés sans autorisation ;</li>
+                <li>Toute manipulation des signaux mesurés (trafic artificiel, engagement acheté, comptes multiples) destinée à obtenir un palier de prix supérieur ;</li>
+                <li>Le retrait ou la modification unilatérale du lien ou de la mention avant le terme de l'engagement.</li>
+              </ul>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14 bis.8 Litiges entre utilisateurs</h3>
+              <p>
+                En cas de désaccord sur l'exécution d'une commande, la Plateforme met à disposition une procédure de réclamation instruite sur la base des constats techniques enregistrés (captures datées, relevés de contrôle, version des paramètres de calcul). La décision porte uniquement sur l'affectation des fonds séquestrés et des crédits ; elle ne constitue ni une transaction ni un arbitrage au sens du code de procédure civile, et ne prive aucune partie de son droit d'agir en justice.
+              </p>
+              <h3 className="text-lg font-semibold text-foreground mt-4 mb-2">14 bis.9 Absence de garantie de résultat</h3>
+              <p>
+                Conformément à l'article 4, la Plateforme ne garantit aucun gain de positionnement, d'autorité, de citation par un moteur génératif ni de conversion consécutif à une transaction sur la Place d'échange. Les indices de risque, scores d'appariement et valeurs de balance sont des <strong>estimations Crawlers</strong> fondées sur des données mesurées, et non des évaluations émises par Google ou par une plateforme sociale.
               </p>
               </section>
 
