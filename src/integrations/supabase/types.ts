@@ -10556,6 +10556,120 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_social_assets: {
+        Row: {
+          account_id: string
+          account_name: string | null
+          audience_geo: Json
+          audience_topics: Json
+          constants_version: number | null
+          created_at: string
+          creative_quality: number | null
+          engagement_rate: number | null
+          follower_history: Json
+          followers: number | null
+          formats: Json
+          fraud_flags: Json
+          id: string
+          impressions_avg: number | null
+          last_synced_at: string | null
+          metrics_source: string | null
+          metrics_window_end: string | null
+          metrics_window_start: string | null
+          opted_in: boolean
+          ownership_status: Database["public"]["Enums"]["marketplace_ownership_status"]
+          platform: string
+          price_cents: number | null
+          price_tier:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          prices_by_format: Json
+          pricing_basis: Json
+          reach_avg: number | null
+          site_domain: string | null
+          social_account_id: string | null
+          tracked_site_id: string | null
+          unvendable_reason: string | null
+          updated_at: string
+          user_id: string
+          vendable: boolean
+        }
+        Insert: {
+          account_id: string
+          account_name?: string | null
+          audience_geo?: Json
+          audience_topics?: Json
+          constants_version?: number | null
+          created_at?: string
+          creative_quality?: number | null
+          engagement_rate?: number | null
+          follower_history?: Json
+          followers?: number | null
+          formats?: Json
+          fraud_flags?: Json
+          id?: string
+          impressions_avg?: number | null
+          last_synced_at?: string | null
+          metrics_source?: string | null
+          metrics_window_end?: string | null
+          metrics_window_start?: string | null
+          opted_in?: boolean
+          ownership_status?: Database["public"]["Enums"]["marketplace_ownership_status"]
+          platform: string
+          price_cents?: number | null
+          price_tier?:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          prices_by_format?: Json
+          pricing_basis?: Json
+          reach_avg?: number | null
+          site_domain?: string | null
+          social_account_id?: string | null
+          tracked_site_id?: string | null
+          unvendable_reason?: string | null
+          updated_at?: string
+          user_id: string
+          vendable?: boolean
+        }
+        Update: {
+          account_id?: string
+          account_name?: string | null
+          audience_geo?: Json
+          audience_topics?: Json
+          constants_version?: number | null
+          created_at?: string
+          creative_quality?: number | null
+          engagement_rate?: number | null
+          follower_history?: Json
+          followers?: number | null
+          formats?: Json
+          fraud_flags?: Json
+          id?: string
+          impressions_avg?: number | null
+          last_synced_at?: string | null
+          metrics_source?: string | null
+          metrics_window_end?: string | null
+          metrics_window_start?: string | null
+          opted_in?: boolean
+          ownership_status?: Database["public"]["Enums"]["marketplace_ownership_status"]
+          platform?: string
+          price_cents?: number | null
+          price_tier?:
+            | Database["public"]["Enums"]["marketplace_price_tier"]
+            | null
+          prices_by_format?: Json
+          pricing_basis?: Json
+          reach_avg?: number | null
+          site_domain?: string | null
+          social_account_id?: string | null
+          tracked_site_id?: string | null
+          unvendable_reason?: string | null
+          updated_at?: string
+          user_id?: string
+          vendable?: boolean
+        }
+        Relationships: []
+      }
       marketplace_tax_profiles: {
         Row: {
           address: string | null
