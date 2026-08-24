@@ -71,25 +71,11 @@ function HeroSectionComponent() {
             style={{ minWidth: '4.5em', paddingBottom: '0.15em', marginBottom: '-0.15em' }}
           >
             {isHydrated ? (
-              <Suspense fallback={
-                <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-center sm:text-right">
-                  {animatedWords[wordIndex]}
-                </span>
-              }>
-                <MotionSpan
-                  key={wordIndex}
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.4, ease: 'easeInOut' }}
-                  className="relative whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-center sm:text-right w-full"
-                >
-                  {animatedWords[wordIndex]}
-                </MotionSpan>
-              </Suspense>
-            ) : (
-              <span className="whitespace-nowrap leading-tight font-display font-extrabold bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent text-center sm:text-right">
-                {animatedWords[0]}
+              <span key={wordIndex} className={`relative w-full hero-word-enter ${HERO_WORD_CLASS}`}>
+                {animatedWords[wordIndex]}
               </span>
+            ) : (
+              <span className={HERO_WORD_CLASS}>{animatedWords[0]}</span>
             )}
           </span>{' '}
           <span className="font-display bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase leading-tight">
