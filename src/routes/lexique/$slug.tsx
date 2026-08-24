@@ -23,7 +23,7 @@ export const Route = createFileRoute("/lexique/$slug")({
       jsonLd: [
         buildDefinedTermJsonLd({
           term: term.term,
-          definition: term.description,
+          definition: term.definition,
           path: `/lexique/${params.slug}`,
         }),
         buildBreadcrumbJsonLd([

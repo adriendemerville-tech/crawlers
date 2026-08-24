@@ -13,8 +13,10 @@ export function buildExpertTermsMeta(): Record<string, Record<string, ExpertTerm
     for (const term of terms) {
       out[language][term.slug] = {
         term: term.term,
-        // head() ne conserve que 155 caractères de description.
+        // head() ne conserve que 155 caractères de description…
         description: term.fullDefinition.slice(0, 155),
+        // …mais le JSON-LD DefinedTerm a besoin de la définition complète.
+        definition: term.fullDefinition,
       };
     }
   }
@@ -30,6 +32,7 @@ export function serializeExpertTermsMeta(
 export interface ExpertTermMeta {
   term: string;
   description: string;
+  definition: string;
 }
 
 export const expertTermsMeta: Record<string, Record<string, ExpertTermMeta>> =
