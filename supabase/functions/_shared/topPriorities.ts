@@ -22,6 +22,8 @@ import {
   buildAccountability,
   formatAccountability,
   distributeTrafficGains,
+  familyImpactWeight,
+  isDeclarativeFamily,
   type Accountability,
   type TrafficContext,
 } from './actionPlanDiscrimination.ts';
@@ -45,6 +47,13 @@ export interface RawFinding {
   pages_affected?: number;
   /** Lot 5 : écart relatif au seuil mesuré, fourni par severityFromSignal(). */
   gap_ratio?: number;
+  /**
+   * Le constat a-t-il été confirmé par une mesure/requête en direct ?
+   * `false` = déduit d'une lecture partielle → gravité plafonnée à
+   * « important », jamais « critique » (un constat non vérifié en priorité 1
+   * casse la confiance dans tout le rapport).
+   */
+  verified?: boolean;
 }
 
 export interface PriorityAction {
@@ -155,6 +164,25 @@ export function normalizeSeverity(input: unknown): Severity {
   return PRIORITY_ALIASES[k] || 'suggestion';
 }
 
+/**
+ * Plafonne la gravité d'un constat non vérifié ou purement déclaratif.
+ * Règle dure : un audit expert ne place jamais en priorité 1 critique un
+ * constat qui n'a pas été confirmé par une mesure en direct.
+ */
+export function capSeverity(
+  item: { title?: string; description?: string; category?: string; verified?: boolean },
+  severity: Severity,
+): Severity {
+  if (severity !== 'critical') return severity;
+  const declarative = isDeclarativeFamily({
+    title: item.title || '',
+    description: item.description || '',
+    category: item.category,
+  });
+  if (item.verified === false || declarative) return 'important';
+  return severity;
+}
+
 // ─────────────────── Top-3 extraction per section ───────────────────
 
 const SECTION_LABELS: Record<SectionKey, string> = {
@@ -185,14 +213,23 @@ export function extractTopPriorities(
 
   const cleaned = grouped.map((g, idx) => ({
     idx,
-    severity: normalizeSeverity(g.item.priority || g.item.severity),
+    severity: capSeverity(g.item, normalizeSeverity(g.item.priority || g.item.severity)),
+    impact: familyImpactWeight({
+      title: g.item.title || '',
+      description: g.item.description || '',
+      category: g.item.category,
+    }),
     group: g,
   }));
 
   cleaned.sort((a, b) => {
     const w = SEVERITY_WEIGHT[b.severity] - SEVERITY_WEIGHT[a.severity];
     if (w !== 0) return w;
-    // À gravité égale, l'action qui couvre le plus de pages/gabarits passe devant.
+    // À gravité égale, l'impact mesuré de la famille arbitre : un défaut de
+    // performance passe devant une hygiène de découverte.
+    const impact = b.impact - a.impact;
+    if (Math.abs(impact) > 0.005) return impact > 0 ? 1 : -1;
+    // Puis l'action qui couvre le plus de pages/gabarits.
     const scope = (b.group.pages_affected + b.group.templates.length)
       - (a.group.pages_affected + a.group.templates.length);
     if (scope !== 0) return scope;

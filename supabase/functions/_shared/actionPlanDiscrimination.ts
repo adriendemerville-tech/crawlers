@@ -96,6 +96,29 @@ export function fingerprintFinding(item: FingerprintInput): string {
   return tokens.slice(0, 6).sort().slice(0, 4).join('_');
 }
 
+/**
+ * Poids d'impact d'une famille de consignes (part du potentiel réellement
+ * captée). Sert d'arbitre à gravité égale dans le Top 3 : une hygiène de
+ * découverte (déclaration de sitemap) ne doit pas passer devant un défaut de
+ * performance mesuré (LCP mobile).
+ */
+export function familyImpactWeight(item: FingerprintInput | string): number {
+  const family = typeof item === 'string' ? item : fingerprintFinding(item);
+  return UPLIFT_BY_FAMILY[family] ?? 0.04;
+}
+
+/**
+ * Familles purement déclaratives : leur constat n'est valide qu'après
+ * vérification en direct, et leur impact réel est indirect (découverte).
+ * Elles ne peuvent jamais être classées « critique ».
+ */
+const DECLARATIVE_FAMILIES = new Set(['sitemap', 'breadcrumb', 'i18n', 'image_alt']);
+
+export function isDeclarativeFamily(item: FingerprintInput | string): boolean {
+  const family = typeof item === 'string' ? item : fingerprintFinding(item);
+  return DECLARATIVE_FAMILIES.has(family);
+}
+
 export interface DedupedFinding<T> {
   /** Représentant retenu (la variante la plus sévère, puis la plus documentée). */
   item: T;

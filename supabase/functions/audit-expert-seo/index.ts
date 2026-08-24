@@ -92,7 +92,7 @@ interface SitemapRobotsCoherence {
   sitemapExists: boolean;
   sitemapUrls: string[];
   sitemapDeclaredInRobots: boolean;
-  issues: { type: string; description: string; severity: 'critical' | 'important' }[];
+  issues: { type: string; description: string; severity: 'critical' | 'important' | 'suggestion' }[];
   verdict: 'optimal' | 'warning' | 'critical';
 }
 
@@ -1029,14 +1029,15 @@ async function checkSitemapRobotsCoherence(url: string, robotsContent: string, r
   
   const origin = new URL(url).origin;
   const isHttpsSite = url.startsWith('https://');
-  const issues: { type: string; description: string; severity: 'critical' | 'important' }[] = [];
+  const issues: { type: string; description: string; severity: 'critical' | 'important' | 'suggestion' }[] = [];
   let sitemapUrls: string[] = [];
   let sitemapExists = false;
   let sitemapDeclaredInRobots = false;
   
   // 1. Check if sitemap is declared in robots.txt
   if (robotsExists && robotsContent) {
-    const sitemapDeclarations = robotsContent.match(/^Sitemap:\s*(.+)/gmi) || [];
+    // Tolérant : espaces/tabulations en début de ligne, BOM, casse libre.
+    const sitemapDeclarations = robotsContent.match(/^[\s\uFEFF]*Sitemap\s*:\s*(.+)$/gmi) || [];
     sitemapDeclaredInRobots = sitemapDeclarations.length > 0;
     
     // Check for HTTP sitemap URLs on HTTPS site
@@ -1144,12 +1145,26 @@ async function checkSitemapRobotsCoherence(url: string, robotsContent: string, r
       }
       
       // Check if sitemap is not declared in robots.txt
+      // Garde-fou : on ne publie ce constat qu'après une relecture complète et
+      // directe du robots.txt (l'analyse principale peut être tronquée ou avoir
+      // suivi une variante apex/www). Un constat non vérifié ne doit jamais
+      // remonter en tête de plan d'action.
       if (!sitemapDeclaredInRobots) {
-        issues.push({
-          type: 'sitemap_not_in_robots',
-          description: 'Le sitemap.xml existe mais n\'est pas déclaré dans le robots.txt. Les moteurs comptent sur cette déclaration pour le découvrir.',
-          severity: 'important'
-        });
+        const origin = new URL(url).origin;
+        const fresh = await fetchRobotsBody(`${origin}/robots.txt`);
+        const freshDeclared = !!fresh
+          && (fresh.match(/^[\s\uFEFF]*Sitemap\s*:\s*(.+)$/gmi) || []).length > 0;
+
+        if (freshDeclared) {
+          sitemapDeclaredInRobots = true;
+          console.log('[SitemapCoherence] Déclaration Sitemap: retrouvée à la relecture — constat écarté');
+        } else {
+          issues.push({
+            type: 'sitemap_not_in_robots',
+            description: 'Le sitemap.xml répond bien, mais aucune directive `Sitemap:` n\'a été relevée dans le robots.txt (relecture complète effectuée). Impact indirect : la découverte reste assurée par le chemin standard /sitemap.xml et par la Search Console.',
+            severity: 'suggestion',
+          });
+        }
       }
     }
   } catch (e) {
@@ -1975,7 +1990,7 @@ function generateRecommendations(
         id: idMap[issue.type] || `sitemap-${issue.type}`,
         priority: issue.severity,
         category: 'technique',
-        icon: issue.severity === 'critical' ? '🔴' : '🟠',
+        icon: issue.severity === 'critical' ? '🔴' : issue.severity === 'important' ? '🟠' : '🟡',
         title: issue.type === 'noindex_in_sitemap' 
           ? 'Sitemap et robots se contredisent'
           : issue.type === 'blocks_rendering_resources'
@@ -1983,7 +1998,7 @@ function generateRecommendations(
           : issue.type === 'http_urls_in_sitemap'
           ? 'URLs HTTP dans le sitemap d\'un site HTTPS'
           : issue.type === 'sitemap_not_in_robots'
-          ? 'Sitemap non déclaré dans robots.txt'
+          ? 'Déclaration Sitemap absente du robots.txt (vérifiée en direct)'
           : 'Incohérence sitemap/robots.txt',
         description: issue.description,
         fixes: issue.type === 'noindex_in_sitemap' 
