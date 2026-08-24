@@ -258,18 +258,23 @@ export function verdictsFromCocoonRisks(
     const urls: string[] = Array.isArray(risk?.urls) ? risk.urls.filter((u: any) => typeof u === 'string') : [];
     if (urls.length < 2) continue;
     const pages: PsPage[] = urls.map((u) => {
-      const n = byUrl.get(u) || byUrl.get(norm(u)) || {};
+      const n = byUrl.get(u) || byUrl.get(norm(u)) || null;
       return {
         url: u,
         path: norm(u),
-        title: n.title ?? null,
-        seo_score: n.seo_score ?? n.page_authority ?? null,
-        word_count: n.word_count ?? null,
-        inbound: n.internal_links_in ?? null,
-        depth: n.crawl_depth ?? n.depth ?? null,
-        intent: n.intent ?? n.page_intent ?? null,
+        // Une page absente du graphe n'a pas été crawlée : on le déclare pour
+        // que le classificateur refuse de prescrire une 301 sur une autorité
+        // nulle par défaut d'information.
+        measured: !!n && (n.word_count != null || n.seo_score != null),
+        title: n?.title ?? null,
+        seo_score: n?.seo_score ?? n?.page_authority ?? null,
+        word_count: n?.word_count ?? null,
+        inbound: n?.internal_links_in ?? null,
+        depth: n?.crawl_depth ?? n?.depth ?? null,
+        intent: n?.intent ?? n?.page_intent ?? null,
       };
     });
+
     const v = classifyPillarSatellite(pages, {
       theme: Array.isArray(risk?.shared_keywords) ? risk.shared_keywords.slice(0, 3).join(' ') : undefined,
       sharedKeywords: Array.isArray(risk?.shared_keywords) ? risk.shared_keywords : [],
