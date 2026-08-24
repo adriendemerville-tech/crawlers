@@ -40,7 +40,9 @@ export function MarketplaceModule() {
           <TabsTrigger value="opportunities">Demandes reçues</TabsTrigger>
           <TabsTrigger value="buy">Acheter</TabsTrigger>
           <TabsTrigger value="orders">Commandes</TabsTrigger>
+          <TabsTrigger value="collab">Collab</TabsTrigger>
           <TabsTrigger value="balance">Ma balance</TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="sell" className="space-y-6 pt-6">
