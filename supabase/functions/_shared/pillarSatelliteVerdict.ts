@@ -26,9 +26,16 @@ export interface PsPage {
   inbound?: number | null;
   depth?: number | null;
   intent?: string | null;
+  /**
+   * `false` = la page n'a pas été mesurée par le crawl (hors échantillon).
+   * Son autorité vaut alors 0 par défaut d'information, jamais par constat :
+   * on ne peut pas recommander de 301 sur cette base.
+   */
+  measured?: boolean;
 }
 
-export type PsVerdict = 'pilier_net' | 'pilier_conteste' | 'sans_pilier' | 'satellites_legitimes';
+
+export type PsVerdict = 'pilier_net' | 'pilier_conteste' | 'sans_pilier' | 'satellites_legitimes' | 'mesure_incomplete';
 
 export interface PsGroupVerdict {
   theme: string;
@@ -133,6 +140,22 @@ export function classifyPillarSatellite(
   const theme = opts?.theme || String(pilier.title || pilier.path || '').slice(0, 80);
   const shared = opts?.sharedKeywords || [];
 
+  // Aucune redirection ne peut être prescrite si une des pages du groupe n'a
+  // pas été mesurée : son autorité nulle est une absence de donnée, pas un
+  // constat. C'est ce cas qui produisait des 301 recommandées vers un pilier
+  // simplement parce que l'autre page était hors échantillon de crawl.
+  const unmeasured = ranked.filter((p) => p.measured === false);
+  if (unmeasured.length > 0) {
+    return {
+      theme, shared_keywords: shared,
+      verdict: 'mesure_incomplete',
+      label: 'Mesure incomplète — aucune redirection prescrite',
+      action: `${unmeasured.length} page(s) de ce groupe (${unmeasured.map((p) => p.path).join(', ')}) n'ont pas été analysées lors de ce crawl : leur autorité interne est inconnue, pas nulle. Ne pas rediriger. Relancer un crawl couvrant ces URL, puis arbitrer sur des mesures complètes.`,
+      dominance: null, pilier, satellites,
+    };
+  }
+
+
   // Intentions déclarées différentes sur toutes les pages : ce n'est pas un
   // doublon, c'est un maillage insuffisamment différencié.
   if (intents.size >= ranked.length && ranked.length <= 3) {
@@ -194,6 +217,7 @@ const ACCENT: Record<PsVerdict, string> = {
   pilier_conteste: GOLD,
   sans_pilier: '#111827',
   satellites_legitimes: '#6b7280',
+  mesure_incomplete: '#9ca3af',
 };
 
 export function pillarSatelliteBlockHTML(verdicts: PsGroupVerdict[]): string {
@@ -234,18 +258,23 @@ export function verdictsFromCocoonRisks(
     const urls: string[] = Array.isArray(risk?.urls) ? risk.urls.filter((u: any) => typeof u === 'string') : [];
     if (urls.length < 2) continue;
     const pages: PsPage[] = urls.map((u) => {
-      const n = byUrl.get(u) || byUrl.get(norm(u)) || {};
+      const n = byUrl.get(u) || byUrl.get(norm(u)) || null;
       return {
         url: u,
         path: norm(u),
-        title: n.title ?? null,
-        seo_score: n.seo_score ?? n.page_authority ?? null,
-        word_count: n.word_count ?? null,
-        inbound: n.internal_links_in ?? null,
-        depth: n.crawl_depth ?? n.depth ?? null,
-        intent: n.intent ?? n.page_intent ?? null,
+        // Une page absente du graphe n'a pas été crawlée : on le déclare pour
+        // que le classificateur refuse de prescrire une 301 sur une autorité
+        // nulle par défaut d'information.
+        measured: !!n && (n.word_count != null || n.seo_score != null),
+        title: n?.title ?? null,
+        seo_score: n?.seo_score ?? n?.page_authority ?? null,
+        word_count: n?.word_count ?? null,
+        inbound: n?.internal_links_in ?? null,
+        depth: n?.crawl_depth ?? n?.depth ?? null,
+        intent: n?.intent ?? n?.page_intent ?? null,
       };
     });
+
     const v = classifyPillarSatellite(pages, {
       theme: Array.isArray(risk?.shared_keywords) ? risk.shared_keywords.slice(0, 3).join(' ') : undefined,
       sharedKeywords: Array.isArray(risk?.shared_keywords) ? risk.shared_keywords : [],

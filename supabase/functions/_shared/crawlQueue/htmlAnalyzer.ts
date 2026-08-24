@@ -283,9 +283,16 @@ export function analyzeHtml(
   const anchor_texts: { href: string; text: string; type: 'internal' | 'external' }[] = [];
   let linkMatch;
 
+  // Les href du HTML sont encodés (`&amp;` séparant les paramètres). Sans
+  // décodage, on découvre des URL fantômes du type `?a=1&amp%3Bb=2` qui sont
+  // ensuite signalées comme pages orphelines alors qu'elles n'existent pas.
+  const decodeHref = (h: string) =>
+    h.replace(/&amp;/gi, '&').replace(/&#38;/g, '&').replace(/&#x26;/gi, '&');
+
   while ((linkMatch = linkRegex.exec(html)) !== null) {
-    const href = linkMatch[1].trim();
+    const href = decodeHref(linkMatch[1].trim());
     const anchorText = linkMatch[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+
     if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) continue;
     if (href.startsWith('/') || href.includes(domain)) {
       internal_links++;
