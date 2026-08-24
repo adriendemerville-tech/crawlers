@@ -35,6 +35,13 @@ import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { initGlobalErrorListener } from "@/lib/globalErrorListener";
 
 import appCss from "../styles.css?url";
+// Les polices passent par le pipeline Vite (nom haché sous /assets) : servies
+// depuis /public elles arrivaient sans aucun TTL, soit 70 Kio resservis à
+// chaque visite d'après PageSpeed.
+import interFontUrl from "../assets/fonts/inter-latin-wght-normal.woff2?url";
+import spaceGroteskFontUrl from "../assets/fonts/space-grotesk-latin-wght-normal.woff2?url";
+
+const supabaseOrigin = "https://tutlimtasnjabdfhpewu.supabase.co";
 
 // ported from main.tsx — start capturing JS errors before React mounts
 if (typeof window !== "undefined") {
