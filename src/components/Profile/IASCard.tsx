@@ -11,7 +11,9 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { useNavigate } from '@/lib/router-compat';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, subMonths, parseISO, startOfWeek } from 'date-fns';
-import { fr, es, enUS } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
+import { es } from 'date-fns/locale/es';
+import { enUS } from 'date-fns/locale/enUS';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [

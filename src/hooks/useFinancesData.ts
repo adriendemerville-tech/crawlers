@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminAnalytics } from '@/contexts/AdminAnalyticsContext';
 import { subDays, format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 
 // Coûts estimés par million de tokens (input/output) en USD
 export const MODEL_PRICING: Record<string, { input: number; output: number; label: string }> = {

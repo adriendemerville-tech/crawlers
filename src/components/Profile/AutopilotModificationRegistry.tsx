@@ -6,7 +6,7 @@ import { ClipboardList, ExternalLink, CheckCircle2, Undo2, AlertCircle, Eye } fr
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 
 interface ModificationRegistryProps {
   trackedSiteId: string | null;

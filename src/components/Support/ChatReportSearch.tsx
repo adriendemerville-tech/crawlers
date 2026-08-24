@@ -4,7 +4,7 @@ import { FolderSearch, Search, Loader2, X, FileText, Globe, Network, BarChart3, 
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 
 interface ReportResult {
   id: string;

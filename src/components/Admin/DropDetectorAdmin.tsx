@@ -11,7 +11,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { format } from 'date-fns';
-import { fr, enUS, es } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
+import { enUS } from 'date-fns/locale/enUS';
+import { es } from 'date-fns/locale/es';
 
 const translations = {
   fr: {

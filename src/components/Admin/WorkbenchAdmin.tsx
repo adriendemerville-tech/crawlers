@@ -8,7 +8,7 @@ import { Loader2, Trash2, RefreshCw, Search, Archive, Merge, AlertTriangle, Scal
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 
 interface WorkbenchStats {
   total: number;

@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link2, Copy, Check, Plus, RefreshCw, Search, Trash2, ToggleLeft, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
 
 interface AffiliateCode {

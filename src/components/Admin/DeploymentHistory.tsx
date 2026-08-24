@@ -8,7 +8,7 @@ import { History, Undo2, Loader2, ChevronDown, ChevronRight, RefreshCw, CheckCir
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 
 interface Deployment {
   id: string;

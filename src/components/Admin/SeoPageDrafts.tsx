@@ -9,7 +9,7 @@ import { FileText, Check, Trash2, Loader2, ChevronDown, ChevronRight, RefreshCw,
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } from 'date-fns/locale/fr';
 
 interface PageDraft {
   id: string;
