@@ -217,6 +217,7 @@ const ACCENT: Record<PsVerdict, string> = {
   pilier_conteste: GOLD,
   sans_pilier: '#111827',
   satellites_legitimes: '#6b7280',
+  mesure_incomplete: '#9ca3af',
 };
 
 export function pillarSatelliteBlockHTML(verdicts: PsGroupVerdict[]): string {
