@@ -130,8 +130,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         type: "font/woff2",
         crossOrigin: "anonymous",
       },
-      // Non-critical display fonts (Space Grotesk @font-face) — previously deferred from main.tsx
-      { rel: "stylesheet", href: "/fonts-deferred.css" },
+      // Les @font-face d'affichage sont désormais dans src/styles.css :
+      // /fonts-deferred.css bloquait le premier rendu 460 ms pour rien.
     ],
     scripts: [
       {
