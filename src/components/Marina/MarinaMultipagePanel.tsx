@@ -601,7 +601,7 @@ export function MarinaMultipagePanel({ isAuthenticated, credits, unlimitedCredit
               {items.map((item, i) => (
                 <div key={`${item.url}-${i}`} className="rounded-lg border border-border px-3 py-2">
                   <div className="flex items-center justify-between gap-3 text-xs">
-                    <span className="truncate font-mono">{item.url}</span>
+                    <span className="truncate font-mono min-w-0" title={item.url}>{item.url}</span>
                     <span className="shrink-0 text-muted-foreground">
                       {item.status === 'pending' && 'En attente'}
                       {item.status === 'running' && `${item.progress}%`}

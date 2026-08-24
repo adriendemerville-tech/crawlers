@@ -55,8 +55,13 @@ export function MarinaRunningAuditsSection() {
             <Card key={a.id} className="border-primary/30">
               <CardContent className="py-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <span className="font-medium truncate">{a.domain || a.url || '—'}</span>
+                  <div className="min-w-0 flex-1">
+                    <span
+                      className="font-medium block truncate"
+                      title={a.domain || a.url || '—'}
+                    >
+                      {a.domain || a.url || '—'}
+                    </span>
                     <p className="text-xs text-muted-foreground mt-1">
                       Lancé le {new Date(a.createdAt).toLocaleString('fr-FR')}
                       {a.multipage ? ' · multipages' : ''}
