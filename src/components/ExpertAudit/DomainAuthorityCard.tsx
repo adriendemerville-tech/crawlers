@@ -266,6 +266,26 @@ export function DomainAuthorityCard({ authority }: Props) {
                 ancien renforce la crédibilité du domaine.
               </p>
             )}
+
+            {authority.authority_score < AUTHORITY_TARGET && (
+              <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <div className="text-sm font-medium">Valeur d'appariement — place d'échange</div>
+                <p className="text-xs text-muted-foreground">
+                  Déficit constaté : {AUTHORITY_TARGET - authority.authority_score} points sous le
+                  seuil d'autorité forte ({AUTHORITY_TARGET}/100). Ce déficit est la seule base
+                  retenue par la place d'échange pour justifier un lien transmettant l'autorité : le
+                  prix, l'attribut du lien et la priorité d'achat en découlent, sans négociation.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  À l'inverse, vos pages les moins stratégiques peuvent être cédées : l'indice de
+                  risque de cession écarte d'office vos pages piliers, de conversion et en
+                  progression.
+                </p>
+                <Button asChild variant="outline" size="sm" className="mt-1">
+                  <Link to="/marketplace-backlinks">Comprendre la place d'échange</Link>
+                </Button>
+              </div>
+            )}
           </>
         )}
       </CardContent>
