@@ -722,3 +722,17 @@ summary::-webkit-details-marker {
   display: none;
 }
 
+
+/* Animation d'entrée du mot du titre (remplace framer-motion sur le LCP) */
+@keyframes heroWordEnter {
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-word-enter {
+  animation: heroWordEnter 0.4s ease-in-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-word-enter { animation: none; }
+}
