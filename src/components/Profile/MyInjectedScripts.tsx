@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale/fr';
 import { es } from 'date-fns/locale/es';
-import { enUS } from 'date-fns/locale/enUS';
+import { enUS } from 'date-fns/locale/en-US';
 
 interface ScriptRule {
   id: string;

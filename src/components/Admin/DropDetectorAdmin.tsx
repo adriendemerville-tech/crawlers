@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale/fr';
-import { enUS } from 'date-fns/locale/enUS';
+import { enUS } from 'date-fns/locale/en-US';
 import { es } from 'date-fns/locale/es';
 
 const translations = {

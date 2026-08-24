@@ -13,7 +13,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { format, subMonths, parseISO, startOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale/fr';
 import { es } from 'date-fns/locale/es';
-import { enUS } from 'date-fns/locale/enUS';
+import { enUS } from 'date-fns/locale/en-US';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
