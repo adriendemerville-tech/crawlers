@@ -9,15 +9,27 @@
 
 import type { NormalizedPage } from './normalize.ts';
 
-export type PageKind = 'article' | 'product' | 'category' | 'local' | 'landing' | 'other';
+export type PageKind =
+  | 'article'
+  | 'product'
+  | 'category'
+  | 'local'
+  | 'landing'
+  | 'conversion'
+  | 'other';
 
-/** Nombre de mots utiles considéré comme suffisant, par type de page. */
+/**
+ * Nombre de mots utiles considéré comme suffisant, par type de page.
+ * `conversion` = page volontairement courte (contact, devis, démo, essai) :
+ * son objectif est l'action, pas le volume rédactionnel.
+ */
 const IDEAL_WORDS: Record<PageKind, number> = {
   article: 900,
   product: 250,
   category: 200,
   local: 350,
   landing: 500,
+  conversion: 150,
   other: 400,
 };
 
@@ -28,6 +40,7 @@ const THIN_THRESHOLD: Record<PageKind, number> = {
   category: 75,
   local: 65,
   landing: 65,
+  conversion: 85,
   other: 65,
 };
 
@@ -40,6 +53,10 @@ export interface ThinContentInput {
   internalLinks?: number | null;
   crawlDepth?: number | null;
   isIndexable?: boolean | null;
+  /** Formulaire détecté sur la page (signal d'intention de conversion). */
+  hasForm?: boolean | null;
+  /** Nombre d'appels à l'action détectés. */
+  ctaCount?: number | null;
 }
 
 export interface ThinContentResult {
@@ -61,8 +78,16 @@ export function scoreThinContent(
   const ideal = IDEAL_WORDS[input.kind] ?? IDEAL_WORDS.other;
 
   // 1. Manque de mots utiles (0-100) — pondération 50 %
-  const wordDeficit = Math.max(0, Math.min(1, 1 - normalized.usefulWords / ideal));
-  if (normalized.usefulWords < ideal * 0.35) {
+  // Une page de conversion (formulaire + CTA) est courte par intention : son
+  // déficit de mots est minoré, on ne la traite pas comme un contenu pauvre.
+  const conversionIntent =
+    (input.kind === 'conversion' || input.kind === 'landing')
+    && (input.hasForm === true || (input.ctaCount || 0) >= 1);
+  const rawWordDeficit = Math.max(0, Math.min(1, 1 - normalized.usefulWords / ideal));
+  const wordDeficit = conversionIntent ? rawWordDeficit * 0.5 : rawWordDeficit;
+  if (conversionIntent && rawWordDeficit > 0.5) {
+    reasons.push('page d\'intention conversion (formulaire/CTA) — volume rédactionnel court assumé');
+  } else if (normalized.usefulWords < ideal * 0.35) {
     reasons.push(`contenu utile faible (${normalized.usefulWords} mots pour ~${ideal} attendus)`);
   }
 
@@ -116,6 +141,9 @@ export function inferPageKind(page: {
   if (types.some((t) => t.includes('article') || t === 'blogposting')) return 'article';
   if (/\/(blog|article|actualite|news|guide|lexique|ressource)/.test(path)) return 'article';
   if (/\/(categorie|category|collection|tag|rubrique)\//.test(path)) return 'category';
+  if (/\/(contact|devis|demo|démo|essai|rendez-vous|rdv|inscription|signup|demander)/.test(path)) {
+    return 'conversion';
+  }
   if (page.pageIntent === 'buy' || /\/(offre|tarif|pricing|solution)/.test(path)) return 'landing';
   return 'other';
 }
