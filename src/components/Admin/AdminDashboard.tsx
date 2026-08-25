@@ -16,6 +16,7 @@ import { ApiGatewayFallbackAlert } from './ApiGatewayFallbackAlert';
 import { BackendDocumentation } from './BackendDocumentation';
 import { CrawlManagement } from './CrawlManagement';
 import { DemoModeToggle } from './DemoModeToggle';
+import { MaintenanceModeCard } from './MaintenanceModeCard';
 import { GA4OAuthToggle } from './GA4OAuthToggle';
 import { CiTestsDashboard } from './CiTestsDashboard';
 import { AffiliateManagement } from './AffiliateManagement';

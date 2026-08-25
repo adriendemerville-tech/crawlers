@@ -24,6 +24,7 @@ import { Breadcrumb as BreadcrumbGlobal } from "@/components/SEO/Breadcrumb";
 import { CanonicalHreflangGlobal } from "@/components/SEO/CanonicalHreflangGlobal";
 import { AISidebarPageWrapper } from "@/components/AISidebarPageWrapper";
 import { DeferredGlobals } from "@/components/DeferredGlobals";
+import { MaintenanceGate } from "@/components/MaintenanceGate";
 
 import NotFound from "@/pages/NotFound";
 import { SITEWIDE_JSONLD } from "@/lib/seo/organization";
@@ -184,6 +185,7 @@ function RootComponent() {
                         <TooltipProvider>
                           <CanonicalHreflangGlobal />
                           <ScrollToTop />
+                          <MaintenanceGate />
                           <AISidebarPageWrapper>
                             <BreadcrumbGlobal visuallyHidden />
                             <Outlet />
