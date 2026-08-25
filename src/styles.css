@@ -18,6 +18,17 @@
 @source not "../src/components/ConversionOptimizer";
 @source not "../src/components/Social";
 @source not "../src/components/ReportPreview";
+@source not "../src/components/Profile";
+@source not "../src/components/Support";
+@source not "../src/components/Copilot";
+@source not "../src/components/SiteCrawl";
+@source not "../src/components/ContentAdvisor";
+@source not "../src/components/SeaBridge";
+@source not "../src/components/BotActivity";
+@source not "../src/components/observatoire";
+@source not "../src/components/CfShield";
+@source not "../src/components/eeat";
+@source not "../src/components/Marina";
 
 
 @font-face {
