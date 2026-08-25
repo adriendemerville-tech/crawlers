@@ -351,6 +351,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         <BrowserlessAlert />
         <ApiGatewayFallbackAlert />
         {!readOnly && <DemoModeToggle />}
+        {!readOnly && <MaintenanceModeCard />}
 
 
         {isMobile ? (
