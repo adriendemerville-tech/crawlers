@@ -332,17 +332,20 @@ export default function Auth() {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+    if (!isLogin) void trackSignupEvent('signup_oauth_start', 'google', 'auth');
     // If we have a ?next=, pass it explicitly so Google returns via /auth?next=... after OAuth
     const customRedirect = nextPath
       ? `${window.location.origin}/auth?next=${encodeURIComponent(nextPath)}`
       : undefined;
     const { error } = await signInWithGoogle(customRedirect);
     if (error) {
+      if (!isLogin) void trackSignupEvent('signup_oauth_denied', normalizeSignupError(error.message), 'auth');
       toast.error(t.loginError);
       setIsLoading(false);
     }
     // Don't set loading to false here - the redirect will handle that
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">
