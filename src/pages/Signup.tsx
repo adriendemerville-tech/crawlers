@@ -176,9 +176,11 @@ export default function Signup() {
     return () => {
       if (step === 'verify') {
         trackAnalyticsEvent('signup_abandoned' as any);
+        void trackSignupEvent('signup_oauth_abandon', 'verify_step');
       }
     };
   }, [step]);
+
 
   useEffect(() => {
     if (user && step === 'form' && !isSigningUp) {
