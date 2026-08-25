@@ -262,13 +262,19 @@ export default function Auth() {
   const handleSignup = async (data: { email: string; password: string; firstName: string; lastName: string }) => {
     setIsLoading(true);
     setShowExistsBanner(false);
+    void trackSignupEvent('signup_form_submit', 'email', 'auth');
     const verified = await verifyTurnstile();
-    if (!verified) { setIsLoading(false); return; }
+    if (!verified) {
+      void trackSignupEvent('signup_error', 'captcha_failed', 'auth');
+      setIsLoading(false);
+      return;
+    }
 
     let { error } = await signUpWithEmail(data.email, data.password, data.firstName, data.lastName);
     setIsLoading(false);
 
     if (error) {
+      void trackSignupEvent('signup_error', normalizeSignupError(error.message), 'auth');
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
         try {
           const { data: emailCheck, error: emailCheckError } = await supabase.functions.invoke('auth-actions', {
@@ -289,12 +295,14 @@ export default function Auth() {
       resetTurnstile();
     } else {
       trackAnalyticsEvent('signup_complete');
+      void trackSignupEvent('signup_success', 'email', 'auth');
       // Send verification code and show modal
       setVerificationEmail(data.email);
       supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
       setShowVerification(true);
     }
   };
+
 
   const handleForgotPassword = async () => {
     const email = loginForm.getValues('email');
