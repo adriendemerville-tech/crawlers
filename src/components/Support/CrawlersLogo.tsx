@@ -1,3 +1,4 @@
+import "@/styles.app.css";
 /** Inline SVG of the Crawlers robot logo — no external file dependency */
 export function CrawlersLogo({ size = 20, className = '' }: { size?: number; className?: string }) {
   return (

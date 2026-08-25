@@ -1,3 +1,4 @@
+import "@/styles.app.css";
 /**
  * CfShield — Wizard d'activation du Bouclier Cloudflare AI Bots
  *

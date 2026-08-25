@@ -1,3 +1,4 @@
+import "@/styles.app.css";
 /**
  * AgentChatShell — UI réutilisable pour le copilote (Félix / Stratège).
  *

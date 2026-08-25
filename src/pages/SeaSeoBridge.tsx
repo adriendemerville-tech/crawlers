@@ -1,3 +1,4 @@
+import "@/styles.app.css";
 import { memo, Suspense, lazy } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';

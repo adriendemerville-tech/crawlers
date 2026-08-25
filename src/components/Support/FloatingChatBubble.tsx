@@ -1,3 +1,4 @@
+import "@/styles.app.css";
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useLocation } from '@/lib/router-compat';
 import { useIsMobile } from '@/hooks/use-mobile';
