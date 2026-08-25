@@ -138,6 +138,7 @@ import { Route as TemporaryreportShareIdRouteImport } from './routes/temporaryre
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable/oauth/consent'
 import { Route as ApiPublicMarinaReportRouteImport } from './routes/api/public/marina-report'
 import { Route as ApiPublicMarketplaceVerifyRouteImport } from './routes/api/public/marketplace-verify'
+import { Route as ApiPublicSignupTrackingRouteImport } from './routes/api/public/signup-tracking'
 import { Route as AppRapportReportIdRouteImport } from './routes/app/rapport/$reportId'
 import { Route as AppRapportAuditRouteImport } from './routes/app/rapport/audit'
 import { Route as AppRapportCocoonRouteImport } from './routes/app/rapport/cocoon'
@@ -806,6 +807,11 @@ const ApiPublicMarketplaceVerifyRoute =
     path: '/api/public/marketplace-verify',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicSignupTrackingRoute = ApiPublicSignupTrackingRouteImport.update({
+  id: '/api/public/signup-tracking',
+  path: '/api/public/signup-tracking',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRapportReportIdRoute = AppRapportReportIdRouteImport.update({
   id: '/app/rapport/$reportId',
   path: '/app/rapport/$reportId',
@@ -984,6 +990,7 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/marina-report': typeof ApiPublicMarinaReportRoute
   '/api/public/marketplace-verify': typeof ApiPublicMarketplaceVerifyRoute
+  '/api/public/signup-tracking': typeof ApiPublicSignupTrackingRoute
   '/app/rapport/$reportId': typeof AppRapportReportIdRoute
   '/app/rapport/audit': typeof AppRapportAuditRoute
   '/app/rapport/cocoon': typeof AppRapportCocoonRoute
@@ -1124,6 +1131,7 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/marina-report': typeof ApiPublicMarinaReportRoute
   '/api/public/marketplace-verify': typeof ApiPublicMarketplaceVerifyRoute
+  '/api/public/signup-tracking': typeof ApiPublicSignupTrackingRoute
   '/app/rapport/$reportId': typeof AppRapportReportIdRoute
   '/app/rapport/audit': typeof AppRapportAuditRoute
   '/app/rapport/cocoon': typeof AppRapportCocoonRoute
@@ -1265,6 +1273,7 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/marina-report': typeof ApiPublicMarinaReportRoute
   '/api/public/marketplace-verify': typeof ApiPublicMarketplaceVerifyRoute
+  '/api/public/signup-tracking': typeof ApiPublicSignupTrackingRoute
   '/app/rapport/$reportId': typeof AppRapportReportIdRoute
   '/app/rapport/audit': typeof AppRapportAuditRoute
   '/app/rapport/cocoon': typeof AppRapportCocoonRoute
@@ -1407,6 +1416,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/marina-report'
     | '/api/public/marketplace-verify'
+    | '/api/public/signup-tracking'
     | '/app/rapport/$reportId'
     | '/app/rapport/audit'
     | '/app/rapport/cocoon'
@@ -1547,6 +1557,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/marina-report'
     | '/api/public/marketplace-verify'
+    | '/api/public/signup-tracking'
     | '/app/rapport/$reportId'
     | '/app/rapport/audit'
     | '/app/rapport/cocoon'
@@ -1687,6 +1698,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/marina-report'
     | '/api/public/marketplace-verify'
+    | '/api/public/signup-tracking'
     | '/app/rapport/$reportId'
     | '/app/rapport/audit'
     | '/app/rapport/cocoon'
@@ -1828,6 +1840,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicMarinaReportRoute: typeof ApiPublicMarinaReportRoute
   ApiPublicMarketplaceVerifyRoute: typeof ApiPublicMarketplaceVerifyRoute
+  ApiPublicSignupTrackingRoute: typeof ApiPublicSignupTrackingRoute
   AppRapportReportIdRoute: typeof AppRapportReportIdRoute
   AppRapportAuditRoute: typeof AppRapportAuditRoute
   AppRapportCocoonRoute: typeof AppRapportCocoonRoute
@@ -2744,6 +2757,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMarketplaceVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/signup-tracking': {
+      id: '/api/public/signup-tracking'
+      path: '/api/public/signup-tracking'
+      fullPath: '/api/public/signup-tracking'
+      preLoaderRoute: typeof ApiPublicSignupTrackingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/rapport/$reportId': {
       id: '/app/rapport/$reportId'
       path: '/app/rapport/$reportId'
@@ -2942,6 +2962,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicMarinaReportRoute: ApiPublicMarinaReportRoute,
   ApiPublicMarketplaceVerifyRoute: ApiPublicMarketplaceVerifyRoute,
+  ApiPublicSignupTrackingRoute: ApiPublicSignupTrackingRoute,
   AppRapportReportIdRoute: AppRapportReportIdRoute,
   AppRapportAuditRoute: AppRapportAuditRoute,
   AppRapportCocoonRoute: AppRapportCocoonRoute,
