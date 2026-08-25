@@ -28,7 +28,7 @@ import {
   isOnboardingDone,
   markOnboardingDone,
 } from '@/utils/felixOnboarding';
-import { CrawlersLogo } from './CrawlersLogo';
+import { CrawlersLogo } from '@/components/CrawlersLogo';
 import { ChatMicButton } from './ChatMicButton';
 import { ChatAttachmentPicker } from './ChatAttachmentPicker';
 import { importExternalAudit, isAuditImportable, buildConfrontationPrompt } from '@/lib/copilot/externalAuditImport';
