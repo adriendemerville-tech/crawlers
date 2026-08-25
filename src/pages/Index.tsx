@@ -24,7 +24,7 @@ import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Crown, ArrowRight, FileSearch, Search, Globe, Brain, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
+import { ActiveCrawlBanner } from '@/components/ActiveCrawlBanner';
 import { LazyVisible } from '@/components/LazyVisible';
 import { getPublicConfig, isFlagEnabled } from '@/lib/config/publicConfig';
 
