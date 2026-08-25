@@ -29,6 +29,26 @@
 @source not "../src/components/CfShield";
 @source not "../src/components/eeat";
 @source not "../src/components/Marina";
+@source not "../src/pages/AppEeat.tsx";
+@source not "../src/pages/ArchitectureMapPage.tsx";
+@source not "../src/pages/AuditCompare.tsx";
+@source not "../src/pages/BotActivity.tsx";
+@source not "../src/pages/CfShield.tsx";
+@source not "../src/pages/Cocoon.tsx";
+@source not "../src/pages/ConversionOptimizer.tsx";
+@source not "../src/pages/CopilotPage.tsx";
+@source not "../src/pages/EEATPage.tsx";
+@source not "../src/pages/Marina.tsx";
+@source not "../src/pages/MatriceCompare.tsx";
+@source not "../src/pages/MatricePrompt.tsx";
+@source not "../src/pages/Netlinking.tsx";
+@source not "../src/pages/Observatoire.tsx";
+@source not "../src/pages/Profile.tsx";
+@source not "../src/pages/RapportViewer.tsx";
+@source not "../src/pages/ReportViewer.tsx";
+@source not "../src/pages/SeaSeoBridge.tsx";
+@source not "../src/pages/SiteCrawl.tsx";
+@source not "../src/pages/SocialHub.tsx";
 
 
 @font-face {
