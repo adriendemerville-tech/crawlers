@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, type ComponentType } from 'react';
-import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
+import { ActiveCrawlBanner } from '@/components/ActiveCrawlBanner';
 import { AnomalyAlertsBanner } from '@/components/Console/AnomalyAlertsBanner';
 
 import { useIsMobile } from '@/hooks/use-mobile';

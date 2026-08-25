@@ -1,3 +1,4 @@
+import "@/styles.app.css";
 import { useEffect, useState, lazy, Suspense} from 'react';
 import { AiCitationsObservatory } from '@/components/observatoire/AiCitationsObservatory';
 import { Helmet } from 'react-helmet-async';

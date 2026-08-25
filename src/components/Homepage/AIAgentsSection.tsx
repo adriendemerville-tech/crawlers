@@ -3,7 +3,7 @@ import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { CrawlersLogo } from '@/components/Support/CrawlersLogo';
+import { CrawlersLogo } from '@/components/CrawlersLogo';
 import { 
   MessageCircle, Network, ArrowRight, Crown, Sparkles, 
   Search, BarChart3, Globe, Brain, HelpCircle, ScrollText,

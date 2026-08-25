@@ -1,3 +1,4 @@
+import "@/styles.app.css";
 /**
  * /app/copilot — Démo et entrée principale du Copilot unifié.
  *

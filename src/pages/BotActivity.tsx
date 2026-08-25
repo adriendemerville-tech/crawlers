@@ -1,3 +1,4 @@
+import "@/styles.app.css";
 import { useState, useEffect, useCallback } from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Header } from '@/components/Header';
