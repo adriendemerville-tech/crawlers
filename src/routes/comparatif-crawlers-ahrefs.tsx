@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import ComparatifCrawlersAhrefs, { AHREFS_JSONLD } from "@/pages/ComparatifCrawlersAhrefs";
+import ComparatifCrawlersAhrefs from "@/pages/ComparatifCrawlersAhrefs";
+import { AHREFS_JSONLD } from "@/pages/ComparatifCrawlersAhrefs.seo";
 import { pageHead } from "@/lib/seo/pageHead";
 
 // Satellite du silo « Comparatifs » (pilier : /comparatif-crawlers-semrush).

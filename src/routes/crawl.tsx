@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import OutilCrawl, { OUTIL_CRAWL_JSONLD } from "@/pages/OutilCrawl";
+import OutilCrawl from "@/pages/OutilCrawl";
+import { OUTIL_CRAWL_JSONLD } from "@/pages/OutilCrawl.seo";
 import { pageHead } from "@/lib/seo/pageHead";
 
 // Pilier « Outil de crawl » : page produit canonique pour crawl website /
