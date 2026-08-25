@@ -389,12 +389,15 @@ export default function Signup() {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+    void trackSignupEvent('signup_oauth_start', 'google');
     const { error } = await signInWithGoogle();
     if (error) {
+      void trackSignupEvent('signup_oauth_denied', normalizeSignupError(error.message));
       toast.error(t.signupError);
       setIsLoading(false);
     }
   };
+
 
   const signupJsonLd = {
     "@context": "https://schema.org",
