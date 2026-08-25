@@ -36,6 +36,8 @@ import { format, subDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale/fr';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SignupFunnelCard } from '@/components/Admin/SignupFunnelCard';
+
 
 // IPs et user_ids à exclure des statistiques
 const EXCLUDED_IPS = ['5.49.156.158'];
@@ -450,7 +452,11 @@ export function AnalyticsDashboard() {
         </Button>
       </div>
 
+      {/* Tunnel d'inscription détaillé */}
+      <SignupFunnelCard />
+
       {/* Stats Grid */}
+
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
         <StatCard 
           title="Visites totales" 

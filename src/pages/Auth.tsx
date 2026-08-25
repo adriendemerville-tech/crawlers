@@ -19,6 +19,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from '@/lib/router-compat';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
+import { trackSignupEvent, normalizeSignupError } from '@/lib/signup-tracking';
+
 import { useTurnstile } from '@/hooks/useTurnstile';
 import { useLoginRateLimiter } from '@/hooks/useLoginRateLimiter';
 import { useClientInitialState } from '@/hooks/useClientInitialState';
@@ -126,6 +128,12 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const initialMode = searchParams.get('mode');
   const [isLogin, setIsLogin] = useState(initialMode !== 'signup');
+
+  // Funnel: vue du formulaire d'inscription affiché sur /auth
+  useEffect(() => {
+    if (!isLogin) void trackSignupEvent('signup_view', null, 'auth');
+  }, [isLogin]);
+
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useClientInitialState(() => localStorage.getItem('remember_me') === 'true', false);
@@ -262,13 +270,19 @@ export default function Auth() {
   const handleSignup = async (data: { email: string; password: string; firstName: string; lastName: string }) => {
     setIsLoading(true);
     setShowExistsBanner(false);
+    void trackSignupEvent('signup_form_submit', 'email', 'auth');
     const verified = await verifyTurnstile();
-    if (!verified) { setIsLoading(false); return; }
+    if (!verified) {
+      void trackSignupEvent('signup_error', 'captcha_failed', 'auth');
+      setIsLoading(false);
+      return;
+    }
 
     let { error } = await signUpWithEmail(data.email, data.password, data.firstName, data.lastName);
     setIsLoading(false);
 
     if (error) {
+      void trackSignupEvent('signup_error', normalizeSignupError(error.message), 'auth');
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
         try {
           const { data: emailCheck, error: emailCheckError } = await supabase.functions.invoke('auth-actions', {
@@ -289,12 +303,14 @@ export default function Auth() {
       resetTurnstile();
     } else {
       trackAnalyticsEvent('signup_complete');
+      void trackSignupEvent('signup_success', 'email', 'auth');
       // Send verification code and show modal
       setVerificationEmail(data.email);
       supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
       setShowVerification(true);
     }
   };
+
 
   const handleForgotPassword = async () => {
     const email = loginForm.getValues('email');
@@ -324,17 +340,20 @@ export default function Auth() {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+    if (!isLogin) void trackSignupEvent('signup_oauth_start', 'google', 'auth');
     // If we have a ?next=, pass it explicitly so Google returns via /auth?next=... after OAuth
     const customRedirect = nextPath
       ? `${window.location.origin}/auth?next=${encodeURIComponent(nextPath)}`
       : undefined;
     const { error } = await signInWithGoogle(customRedirect);
     if (error) {
+      if (!isLogin) void trackSignupEvent('signup_oauth_denied', normalizeSignupError(error.message), 'auth');
       toast.error(t.loginError);
       setIsLoading(false);
     }
     // Don't set loading to false here - the redirect will handle that
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 p-4">

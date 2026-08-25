@@ -19,6 +19,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from '@/lib/router-compat';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
+import { trackSignupEvent, normalizeSignupError } from '@/lib/signup-tracking';
+
 import { useTurnstile } from '@/hooks/useTurnstile';
 import { PasswordStrengthBar, isPasswordAcceptable } from '@/components/PasswordStrengthBar';
 
@@ -143,6 +145,12 @@ export default function Signup() {
   const t = translations[language] || translations.fr;
   const { containerRef, token, reset: resetTurnstile } = useTurnstile();
 
+  // Funnel: vue de la page d'inscription (dédupliquée par session)
+  useEffect(() => {
+    void trackSignupEvent('signup_view', null, 'signup');
+  }, []);
+
+
   // Handle email link verification (user clicked link in email)
   useEffect(() => {
     const verified = searchParams.get('verified');
@@ -168,9 +176,11 @@ export default function Signup() {
     return () => {
       if (step === 'verify') {
         trackAnalyticsEvent('signup_abandoned' as any);
+        void trackSignupEvent('signup_oauth_abandon', 'verify_step');
       }
     };
   }, [step]);
+
 
   useEffect(() => {
     if (user && step === 'form' && !isSigningUp) {
@@ -273,10 +283,18 @@ export default function Signup() {
     setIsSigningUp(true);
     setIsLoading(true);
     setShowExistsBanner(false);
+    void trackSignupEvent('signup_form_submit', 'email');
     const verified = await verifyTurnstile();
-    if (!verified) { setIsLoading(false); setIsSigningUp(false); return; }
+    if (!verified) {
+      void trackSignupEvent('signup_error', 'captcha_failed');
+      setIsLoading(false);
+      setIsSigningUp(false);
+      return;
+    }
 
     let { error } = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
+
+
 
     if (error && (error.message.includes('already registered') || error.message.includes('already exists'))) {
       try {
@@ -302,6 +320,7 @@ export default function Signup() {
 
     if (error) {
       setIsSigningUp(false);
+      void trackSignupEvent('signup_error', normalizeSignupError(error.message));
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
         try {
           const { data: emailCheck, error: emailCheckError } = await supabase.functions.invoke('auth-actions', {
@@ -323,6 +342,8 @@ export default function Signup() {
     } else {
       trackAnalyticsEvent('signup_complete');
       trackAnalyticsEvent('verification_email_sent' as any);
+      void trackSignupEvent('signup_success', 'email');
+
       setVerificationEmail(data.email);
       supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
       setStep('verify');
@@ -389,12 +410,15 @@ export default function Signup() {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+    void trackSignupEvent('signup_oauth_start', 'google');
     const { error } = await signInWithGoogle();
     if (error) {
+      void trackSignupEvent('signup_oauth_denied', normalizeSignupError(error.message));
       toast.error(t.signupError);
       setIsLoading(false);
     }
   };
+
 
   const signupJsonLd = {
     "@context": "https://schema.org",

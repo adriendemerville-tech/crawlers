@@ -5416,6 +5416,24 @@ export type Database = {
         }
         Relationships: []
       }
+      excluded_ips: {
+        Row: {
+          created_at: string
+          ip_address: string
+          label: string | null
+        }
+        Insert: {
+          created_at?: string
+          ip_address: string
+          label?: string | null
+        }
+        Update: {
+          created_at?: string
+          ip_address?: string
+          label?: string | null
+        }
+        Relationships: []
+      }
       external_audits: {
         Row: {
           char_count: number
@@ -17346,6 +17364,7 @@ export type Database = {
           target_url: string
         }[]
       }
+      get_signup_funnel: { Args: { days_back?: number }; Returns: Json }
       get_site_revenue: {
         Args: {
           p_end_date: string
@@ -17382,6 +17401,7 @@ export type Database = {
         Args: { link_code: string }
         Returns: undefined
       }
+      ip_fingerprint: { Args: { _ip: string }; Returns: string }
       jsonb_object_keys_count: { Args: { j: Json }; Returns: number }
       match_workbench_cluster: {
         Args: { p_text: string; p_tracked_site_id: string }
