@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import ComparatifPlateforme, { PLATEFORME_JSONLD } from "@/pages/ComparatifPlateforme";
+import ComparatifPlateforme from "@/pages/ComparatifPlateforme";
+import { PLATEFORME_JSONLD } from "@/pages/ComparatifPlateforme.seo";
 import { pageHead } from "@/lib/seo/pageHead";
 
 export const Route = createFileRoute("/comparatif-plateforme-seo-ia")({

@@ -26,6 +26,7 @@ import { Crown, ArrowRight, FileSearch, Search, Globe, Brain, ShieldCheck } from
 import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 import { LazyVisible } from '@/components/LazyVisible';
+import { getPublicConfig, isFlagEnabled } from '@/lib/config/publicConfig';
 
 // Lazy load heavy dashboard components
 const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then(m => ({ default: m.ResultsDashboard })));
@@ -158,14 +159,9 @@ const Index = () => {
   useEffect(() => {
     const ctrl = new AbortController();
     const loadConfig = () => {
-      supabase
-        .from('system_config')
-        .select('value')
-        .eq('key', 'hide_home_leadmagnet')
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data?.value === true) setHideLeadmagnet(true);
-        });
+      getPublicConfig().then((config) => {
+        if (isFlagEnabled(config.hide_home_leadmagnet)) setHideLeadmagnet(true);
+      });
     };
     if ('requestIdleCallback' in window) {
       const id = requestIdleCallback(loadConfig, { timeout: 3000 });
