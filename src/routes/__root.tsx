@@ -18,14 +18,10 @@ import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { FreemiumProvider } from "@/contexts/FreemiumContext";
 import { AISidebarProvider } from "@/contexts/AISidebarContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
-import { SessionHeartbeatManager } from "@/components/SessionHeartbeatManager";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { Breadcrumb as BreadcrumbGlobal } from "@/components/SEO/Breadcrumb";
 import { CanonicalHreflangGlobal } from "@/components/SEO/CanonicalHreflangGlobal";
-import { PageViewTracker } from "@/components/Analytics/PageViewTracker";
 import { AISidebarPageWrapper } from "@/components/AISidebarPageWrapper";
 import { DeferredGlobals } from "@/components/DeferredGlobals";
 
@@ -181,17 +177,13 @@ function RootComponent() {
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <LanguageProvider>
               <AuthProvider>
-                <SessionHeartbeatManager />
                 <DemoModeProvider>
                   <FreemiumProvider>
                     <CreditsProvider>
                       <AISidebarProvider>
                         <TooltipProvider>
-                          <Toaster />
-                          <Sonner />
                           <CanonicalHreflangGlobal />
                           <ScrollToTop />
-                          <PageViewTracker />
                           <AISidebarPageWrapper>
                             <BreadcrumbGlobal visuallyHidden />
                             <Outlet />

@@ -10,6 +10,25 @@ const SurveyModal = lazy(() =>
     default: m.SurveyModal,
   })),
 );
+// Les deux toasters, le traceur de pages et le heartbeat de session ne servent
+// jamais au premier rendu : leur JS (radix-toast + sonner + analytics) pesait
+// pour rien dans le chunk d'entrée mesuré par Lighthouse.
+const Toaster = lazy(() =>
+  import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })),
+);
+const Sonner = lazy(() =>
+  import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })),
+);
+const PageViewTracker = lazy(() =>
+  import("@/components/Analytics/PageViewTracker").then((m) => ({
+    default: m.PageViewTracker,
+  })),
+);
+const SessionHeartbeatManager = lazy(() =>
+  import("@/components/SessionHeartbeatManager").then((m) => ({
+    default: m.SessionHeartbeatManager,
+  })),
+);
 
 /**
  * Monte les widgets globaux non critiques (bulle de support, modale d'enquête)
@@ -61,6 +80,10 @@ export function DeferredGlobals() {
 
   return (
     <Suspense fallback={null}>
+      <Toaster />
+      <Sonner />
+      <PageViewTracker />
+      <SessionHeartbeatManager />
       <FloatingChatBubble />
       <SurveyModal />
     </Suspense>
