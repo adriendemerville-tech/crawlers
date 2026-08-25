@@ -128,6 +128,12 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const initialMode = searchParams.get('mode');
   const [isLogin, setIsLogin] = useState(initialMode !== 'signup');
+
+  // Funnel: vue du formulaire d'inscription affiché sur /auth
+  useEffect(() => {
+    if (!isLogin) void trackSignupEvent('signup_view', null, 'auth');
+  }, [isLogin]);
+
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useClientInitialState(() => localStorage.getItem('remember_me') === 'true', false);
