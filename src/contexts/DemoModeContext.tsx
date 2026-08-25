@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getPublicConfig, invalidatePublicConfig, isFlagEnabled } from '@/lib/config/publicConfig';
 
 interface DemoModeContextType {
   isDemoMode: boolean;
@@ -55,14 +56,8 @@ export function DemoModeProvider({ children }: { children: React.ReactNode }) {
 
   const fetchDemoMode = useCallback(async () => {
     try {
-      const { data } = await supabase
-        .from('system_config')
-        .select('value')
-        .eq('key', 'demo_mode')
-        .maybeSingle();
-      
-      const active = data?.value === true || (data?.value as any)?.active === true;
-      setIsDemoMode(active);
+      const config = await getPublicConfig();
+      setIsDemoMode(isFlagEnabled(config.demo_mode, 'active'));
     } catch {
       setIsDemoMode(false);
     } finally {
@@ -89,9 +84,9 @@ export function DemoModeProvider({ children }: { children: React.ReactNode }) {
         table: 'system_config',
         filter: 'key=eq.demo_mode',
       }, (payload: any) => {
+        invalidatePublicConfig();
         const val = payload.new?.value;
-        const active = val === true || val?.active === true;
-        setIsDemoMode(active);
+        setIsDemoMode(isFlagEnabled(val, 'active'));
       })
       .subscribe();
 

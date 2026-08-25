@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { getPublicConfig, isFlagEnabled } from '@/lib/config/publicConfig';
 
 interface FreemiumConfig {
   /** When true, audit expert + code gen are open without login */
@@ -16,12 +16,8 @@ export function FreemiumProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const load = async () => {
       try {
-        const { data } = await supabase
-          .from('system_config')
-          .select('value')
-          .eq('key', 'freemium_open_mode')
-          .maybeSingle();
-        setOpenMode(data?.value === true || (data?.value as any)?.enabled === true);
+        const config = await getPublicConfig();
+        setOpenMode(isFlagEnabled(config.freemium_open_mode, 'enabled'));
       } catch {
         // fail-safe: keep closed
       } finally {
