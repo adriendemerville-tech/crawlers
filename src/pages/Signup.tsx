@@ -310,6 +310,7 @@ export default function Signup() {
 
     if (error) {
       setIsSigningUp(false);
+      void trackSignupEvent('signup_error', normalizeSignupError(error.message));
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
         try {
           const { data: emailCheck, error: emailCheckError } = await supabase.functions.invoke('auth-actions', {
@@ -331,6 +332,8 @@ export default function Signup() {
     } else {
       trackAnalyticsEvent('signup_complete');
       trackAnalyticsEvent('verification_email_sent' as any);
+      void trackSignupEvent('signup_success', 'email');
+
       setVerificationEmail(data.email);
       supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
       setStep('verify');
