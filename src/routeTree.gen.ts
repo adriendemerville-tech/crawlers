@@ -55,6 +55,7 @@ import { Route as GuideAuditSeoRouteImport } from './routes/guide-audit-seo'
 import { Route as IndiceAlignementStrategiqueRouteImport } from './routes/indice-alignement-strategique'
 import { Route as IntegrationGtmRouteImport } from './routes/integration-gtm'
 import { Route as MachineLayerScannerRouteImport } from './routes/machine-layer-scanner'
+import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as MarinaRouteImport } from './routes/marina'
 import { Route as MarketplaceBacklinksRouteImport } from './routes/marketplace-backlinks'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
@@ -384,6 +385,11 @@ const IntegrationGtmRoute = IntegrationGtmRouteImport.update({
 const MachineLayerScannerRoute = MachineLayerScannerRouteImport.update({
   id: '/machine-layer-scanner',
   path: '/machine-layer-scanner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaintenanceRoute = MaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarinaRoute = MarinaRouteImport.update({
@@ -907,6 +913,7 @@ export interface FileRoutesByFullPath {
   '/indice-alignement-strategique': typeof IndiceAlignementStrategiqueRoute
   '/integration-gtm': typeof IntegrationGtmRoute
   '/machine-layer-scanner': typeof MachineLayerScannerRoute
+  '/maintenance': typeof MaintenanceRoute
   '/marina': typeof MarinaRoute
   '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
@@ -1048,6 +1055,7 @@ export interface FileRoutesByTo {
   '/indice-alignement-strategique': typeof IndiceAlignementStrategiqueRoute
   '/integration-gtm': typeof IntegrationGtmRoute
   '/machine-layer-scanner': typeof MachineLayerScannerRoute
+  '/maintenance': typeof MaintenanceRoute
   '/marina': typeof MarinaRoute
   '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
@@ -1190,6 +1198,7 @@ export interface FileRoutesById {
   '/indice-alignement-strategique': typeof IndiceAlignementStrategiqueRoute
   '/integration-gtm': typeof IntegrationGtmRoute
   '/machine-layer-scanner': typeof MachineLayerScannerRoute
+  '/maintenance': typeof MaintenanceRoute
   '/marina': typeof MarinaRoute
   '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
@@ -1333,6 +1342,7 @@ export interface FileRouteTypes {
     | '/indice-alignement-strategique'
     | '/integration-gtm'
     | '/machine-layer-scanner'
+    | '/maintenance'
     | '/marina'
     | '/marketplace-backlinks'
     | '/mentions-legales'
@@ -1474,6 +1484,7 @@ export interface FileRouteTypes {
     | '/indice-alignement-strategique'
     | '/integration-gtm'
     | '/machine-layer-scanner'
+    | '/maintenance'
     | '/marina'
     | '/marketplace-backlinks'
     | '/mentions-legales'
@@ -1615,6 +1626,7 @@ export interface FileRouteTypes {
     | '/indice-alignement-strategique'
     | '/integration-gtm'
     | '/machine-layer-scanner'
+    | '/maintenance'
     | '/marina'
     | '/marketplace-backlinks'
     | '/mentions-legales'
@@ -1757,6 +1769,7 @@ export interface RootRouteChildren {
   IndiceAlignementStrategiqueRoute: typeof IndiceAlignementStrategiqueRoute
   IntegrationGtmRoute: typeof IntegrationGtmRoute
   MachineLayerScannerRoute: typeof MachineLayerScannerRoute
+  MaintenanceRoute: typeof MaintenanceRoute
   MarinaRoute: typeof MarinaRoute
   MarketplaceBacklinksRoute: typeof MarketplaceBacklinksRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
@@ -2174,6 +2187,13 @@ declare module '@tanstack/react-router' {
       path: '/machine-layer-scanner'
       fullPath: '/machine-layer-scanner'
       preLoaderRoute: typeof MachineLayerScannerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maintenance': {
+      id: '/maintenance'
+      path: '/maintenance'
+      fullPath: '/maintenance'
+      preLoaderRoute: typeof MaintenanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/marina': {
@@ -2877,6 +2897,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndiceAlignementStrategiqueRoute: IndiceAlignementStrategiqueRoute,
   IntegrationGtmRoute: IntegrationGtmRoute,
   MachineLayerScannerRoute: MachineLayerScannerRoute,
+  MaintenanceRoute: MaintenanceRoute,
   MarinaRoute: MarinaRoute,
   MarketplaceBacklinksRoute: MarketplaceBacklinksRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,

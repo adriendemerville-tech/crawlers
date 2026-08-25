@@ -14398,6 +14398,33 @@ export type Database = {
           },
         ]
       }
+      site_maintenance: {
+        Row: {
+          active: boolean
+          id: boolean
+          message: string | null
+          paths: string[]
+          scope: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          id?: boolean
+          message?: string | null
+          paths?: string[]
+          scope?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          id?: boolean
+          message?: string | null
+          paths?: string[]
+          scope?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_memory: {
         Row: {
           category: string
