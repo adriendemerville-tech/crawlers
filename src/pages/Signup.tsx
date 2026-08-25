@@ -273,10 +273,18 @@ export default function Signup() {
     setIsSigningUp(true);
     setIsLoading(true);
     setShowExistsBanner(false);
+    void trackSignupEvent('signup_form_submit', 'email');
     const verified = await verifyTurnstile();
-    if (!verified) { setIsLoading(false); setIsSigningUp(false); return; }
+    if (!verified) {
+      void trackSignupEvent('signup_error', 'captcha_failed');
+      setIsLoading(false);
+      setIsSigningUp(false);
+      return;
+    }
 
     let { error } = await signUpWithEmail(data.email, data.password, data.firstName || '', data.lastName || '');
+
+
 
     if (error && (error.message.includes('already registered') || error.message.includes('already exists'))) {
       try {
