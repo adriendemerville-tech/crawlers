@@ -8,22 +8,23 @@ export const CANONICAL = 'https://crawlers.fr/comparatif-crawlers-ahrefs';
 
 export const FAQS = [
   {
+    q: 'Quelle est la meilleure alternative à Ahrefs en 2026 ?',
+    a: "Cela dépend de l'usage. Pour la prospection de backlinks à grande échelle, l'index propriétaire d'Ahrefs reste difficile à remplacer. Pour l'audit technique, l'architecture sémantique et la visibilité dans les moteurs IA, Crawlers.fr couvre le besoin avec un audit complet gratuit et un plan d'action priorisé.",
+  },
+  {
     q: 'Crawlers.fr remplace-t-il Ahrefs ?',
-    a: "Sur le crawl technique, l'architecture sémantique et la visibilité dans les moteurs IA, oui. Sur l'index de backlinks brut, Ahrefs conserve la profondeur d'index la plus large du marché : Crawlers.fr s'appuie sur des données backlinks tierces et les qualifie (réseau propre, annuaires, éditorial tiers) plutôt que d'exposer un index maison.",
+    a: "Sur le crawl, l'architecture et le GEO, oui. Sur l'exploration d'un index de liens de plusieurs milliards d'URL, non : les deux outils sont complémentaires. Beaucoup d'équipes gardent Ahrefs pour le netlinking et pilotent le SEO technique et la visibilité IA avec Crawlers.fr.",
   },
   {
-    q: 'Quelle est la différence de périmètre ?',
-    a: "Ahrefs est un outil d'analyse : il constate. Crawlers.fr va du constat au correctif — plan d'action priorisé, génération du contenu ou du code, déploiement sur le CMS, puis contre-audit d'impact.",
+    q: 'Ahrefs mesure-t-il la citation par ChatGPT ?',
+    a: "Ahrefs a ajouté un suivi des mentions dans les réponses IA, mais il n'interroge pas les modèles avec un jeu de questions calibré sur votre marché. Crawlers.fr pose 9 questions rédigées à partir de la carte d'identité du site, réparties en découverte, comparaison et contexte, et mesure la citation réelle.",
   },
   {
-    q: 'Crawlers.fr mesure-t-il la visibilité dans ChatGPT et Perplexity ?',
-    a: "Oui : benchmarks multi-modèles, détection des citations, passages citables, JSON-LD et politique de crawl des agents IA. C'est le volet GEO, absent des suites SEO classiques.",
-  },
-  {
-    q: 'Le tarif est-il comparable ?',
-    a: "Crawlers.fr démarre à 29 €/mois tout inclus, sans surcoût par projet ni par utilisateur sur les offres agence. Le positionnement tarifaire est nettement sous celui des suites américaines.",
+    q: 'Peut-on tester sans carte bancaire ?',
+    a: 'Oui. Deux rapports complets sont offerts sans compte sur Marina, puis chaque rapport coûte 30 crédits.',
   },
 ];
+
 
 export const AHREFS_JSONLD = [
   {
