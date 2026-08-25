@@ -19,6 +19,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from '@/lib/router-compat';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
+import { trackSignupEvent, normalizeSignupError } from '@/lib/signup-tracking';
+
 import { useTurnstile } from '@/hooks/useTurnstile';
 import { useLoginRateLimiter } from '@/hooks/useLoginRateLimiter';
 import { useClientInitialState } from '@/hooks/useClientInitialState';
