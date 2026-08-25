@@ -145,6 +145,12 @@ export default function Signup() {
   const t = translations[language] || translations.fr;
   const { containerRef, token, reset: resetTurnstile } = useTurnstile();
 
+  // Funnel: vue de la page d'inscription (dédupliquée par session)
+  useEffect(() => {
+    void trackSignupEvent('signup_view', null, 'signup');
+  }, []);
+
+
   // Handle email link verification (user clicked link in email)
   useEffect(() => {
     const verified = searchParams.get('verified');
