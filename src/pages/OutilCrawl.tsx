@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { SiloNav } from '@/components/seo/SiloNav';
-import { FAQS, CANONICAL } from './OutilCrawl.seo';
+import { FAQS } from './OutilCrawl.seo';
 
 const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
 
