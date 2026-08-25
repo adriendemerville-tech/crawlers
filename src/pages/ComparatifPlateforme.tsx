@@ -16,7 +16,6 @@ import { faqItems } from './ComparatifPlateforme.seo';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
-const SITE_URL = 'https://crawlers.fr';
 
 /* ── Anthracite palette (shared with other comparatif pages) ── */
 const A = {
