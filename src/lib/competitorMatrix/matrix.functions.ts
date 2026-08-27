@@ -46,6 +46,26 @@ function normalizeUrl(raw: string): string | null {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 
+/** Vrai si la requête porte un token d'un utilisateur ayant le rôle admin. */
+async function isAdminRequest(): Promise<boolean> {
+  try {
+    const auth = getRequestHeader('authorization') || '';
+    const token = auth.replace(/^Bearer\s+/i, '').trim();
+    if (!token) return false;
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !data?.user) return false;
+    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
+      _user_id: data.user.id,
+      _role: 'admin',
+    });
+    return isAdmin === true;
+  } catch {
+    return false;
+  }
+}
+
+
 function toState(row: any): MatrixJobState {
   return {
     id: row.id,
@@ -64,6 +84,10 @@ function toState(row: any): MatrixJobState {
 }
 
 export const getCompetitorMatrixQuota = createServerFn({ method: 'GET' }).handler(async () => {
+  if (await isAdminRequest()) {
+    return { quota: 9999, used: 0, remaining: 9999, unlimited: true };
+  }
+
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const { count } = await supabaseAdmin
@@ -74,6 +98,7 @@ export const getCompetitorMatrixQuota = createServerFn({ method: 'GET' }).handle
   const used = count ?? 0;
   return { quota: MATRIX_FREE_QUOTA, used, remaining: Math.max(0, MATRIX_FREE_QUOTA - used) };
 });
+
 
 export const startCompetitorMatrix = createServerFn({ method: 'POST' })
   .inputValidator((input: { url: string; competitors?: string[] }) => input)
@@ -86,13 +111,16 @@ export const startCompetitorMatrix = createServerFn({ method: 'POST' })
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const ipHash = await hashIp(clientIp());
 
+    const admin = await isAdminRequest();
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-    const { count } = await supabaseAdmin
-      .from('competitor_matrix_jobs')
-      .select('id', { count: 'exact', head: true })
-      .eq('ip_hash', ipHash)
-      .gte('created_at', since);
-    if ((count ?? 0) >= MATRIX_FREE_QUOTA) {
+    const { count } = admin
+      ? { count: 0 }
+      : await supabaseAdmin
+          .from('competitor_matrix_jobs')
+          .select('id', { count: 'exact', head: true })
+          .eq('ip_hash', ipHash)
+          .gte('created_at', since);
+    if (!admin && (count ?? 0) >= MATRIX_FREE_QUOTA) {
       return {
         error: 'quota_exhausted' as const,
         message: 'Vous avez déjà généré votre matrice gratuite aujourd’hui. Créez un compte pour lancer un audit complet.',

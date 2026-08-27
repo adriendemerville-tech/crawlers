@@ -48,11 +48,17 @@ export default function MatriceConcurrence() {
   const [leadError, setLeadError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
+  const [unlimited, setUnlimited] = useState(false);
+
   useEffect(() => {
     getCompetitorMatrixQuota()
-      .then((q) => setRemaining(q.remaining))
+      .then((q) => {
+        setRemaining(q.remaining);
+        setUnlimited(Boolean((q as { unlimited?: boolean }).unlimited));
+      })
       .catch(() => setRemaining(null));
   }, []);
+
 
   // Chaque appel exécute une étape courte ; on relance tant que l'analyse tourne.
   // Un appel réseau qui échoue (coupure, étape trop longue) est réessayé :
@@ -154,10 +160,12 @@ export default function MatriceConcurrence() {
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
-              <Button onClick={launch} disabled={running || !url.trim() || remaining === 0}>
+              <Button onClick={launch} disabled={running || !url.trim() || (!unlimited && remaining === 0)}>
                 {running ? 'Analyse en cours…' : 'Générer ma matrice'}
               </Button>
-              {remaining !== null && (
+              {unlimited ? (
+                <span className="text-sm text-muted-foreground">Usage illimité (admin)</span>
+              ) : remaining !== null && (
                 <span className="text-sm text-muted-foreground">
                   {remaining > 0 ? `${remaining} matrice gratuite disponible aujourd’hui` : 'Quota du jour atteint'}
                 </span>
