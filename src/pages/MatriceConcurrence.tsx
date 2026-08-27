@@ -133,7 +133,7 @@ export default function MatriceConcurrence() {
           <CardContent className="space-y-4 p-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm">
-                <span className="mb-1 block font-medium">Adresse de votre entreprise</span>
+                <span className="mb-1 block font-medium">URL de votre entreprise</span>
                 <Input
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
