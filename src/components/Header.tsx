@@ -211,7 +211,7 @@ export function Header() {
   return (
     <>
     <header className={`fixed top-3 z-50 rounded-2xl border border-border/50 bg-card/70 backdrop-blur-xl shadow-lg shadow-black/5 transition-transform duration-300 ease-in-out ${isProfilePage ? 'left-3 right-3 md:left-[calc(200px+0.75rem)] md:right-3' : 'left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-6xl'} ${headerHidden ? '-translate-y-[calc(100%+1rem)]' : ''}`} role="banner">
-      <nav className="mx-auto flex h-12 sm:h-14 items-center justify-between px-4 sm:px-6" aria-label="Navigation principale">
+      <nav className="relative mx-auto flex h-12 sm:h-14 items-center justify-between px-4 sm:px-6" aria-label="Navigation principale">
         {/* Left side: Back button OR Logo + Language selector */}
         <div className="flex items-center gap-4">
           {isAuditExpertPage ? (
@@ -267,40 +267,40 @@ export function Header() {
 
         {/* Center: Navigation links - desktop */}
         {!isProfilePage && isHomePage && (
-          <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+          <div className="hidden sm:flex items-center gap-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <Link to="/features">
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
                 Features
               </Button>
             </Link>
             <Link to="/tarifs">
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
                 {language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}
               </Button>
             </Link>
             <Link to="/audit-expert">
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
                 Audit
               </Button>
             </Link>
             <Link to="/eeat">
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
                 E-E-A-T
               </Button>
             </Link>
             <Link to="/app/ranking-serp">
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
                 SERPs
               </Button>
             </Link>
             <Link to={user ? "/developers" : "/developers/login"}>
-              <Button variant="ghost" size="sm" className="text-sm font-medium text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
                 Platform API
               </Button>
             </Link>
           </div>
         )}
-        {!isProfilePage && !isHomePage && <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+        {!isProfilePage && !isHomePage && <div className="hidden sm:flex items-center gap-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           {/* 1. Matrice (gris) — hidden for non-subscribed users */}
           {user && profile?.plan_type && profile.plan_type !== 'free' && (
             <>
