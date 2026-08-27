@@ -74,6 +74,14 @@ Un bloc de synthèse liste les domaines les plus cités en position 0 sur l'ense
 - Front : réutilisation de la famille `MatriceCanvas` avec un nouveau variant `competitor` (heatmap + vue par concurrent + cube 3D), pas de composant heatmap dupliqué.
 - Design : violet / or / noir / blanc, boutons bordure + texte, aucun emoji, aucun bleu IA.
 
+## Points non couverts par la version précédente
+
+- **URL** : `https://crawlers.fr/matrice-concurrence` (page publique, indexable, ajoutée au sitemap ; pas de variante anglaise pour l'instant).
+- **AI Overviews** : la présence des domaines cités dépend de l'endpoint SERP avancé utilisé ; à vérifier avant la phase 4. Si la donnée n'est pas disponible sur une requête, l'état reste « non déclenché / non disponible », jamais reconstitué.
+- **Emails collectés** : table dédiée avec consentement explicite, mention RGPD et lien vers la politique de confidentialité sous le champ.
+- **Coût par matrice** : à borner avant mise en ligne (appels SERP + 10 mots-clés × 2 moteurs × 3 itérations) et à protéger par le circuit breaker existant.
+- **Anti-abus** : quota IP seul est contournable ; ajout d'un jeton de session + limite globale journalière côté fonction.
+
 ## Découpage
 
 1. Schéma + job asynchrone + quota IP.
