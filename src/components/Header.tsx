@@ -267,34 +267,34 @@ export function Header() {
 
         {/* Center: Navigation links - desktop */}
         {!isProfilePage && isHomePage && (
-          <div className="hidden sm:flex items-center gap-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="hidden sm:flex flex-1 items-center justify-center gap-1 lg:gap-2">
             <Link to="/features">
-              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
                 Features
               </Button>
             </Link>
             <Link to="/tarifs">
-              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
                 {language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}
               </Button>
             </Link>
             <Link to="/audit-expert">
-              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
                 Audit
               </Button>
             </Link>
             <Link to="/eeat">
-              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
                 E-E-A-T
               </Button>
             </Link>
             <Link to="/app/ranking-serp">
-              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
                 SERPs
               </Button>
             </Link>
-            <Link to={user ? "/developers" : "/developers/login"}>
-              <Button variant="ghost" size="default" className="px-3 text-[0.95rem] font-medium text-foreground hover:bg-muted/50">
+            <Link to={user ? "/developers" : "/developers/login"} className="hidden lg:block">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
                 Platform API
               </Button>
             </Link>
