@@ -128,6 +128,11 @@ const AuditGeo = () => {
           </p>
         </section>
 
+        {/* Preuve sociale : volume réel de domaines audités */}
+        <AuditedDomainsCounter />
+
+
+
         <section className="mx-auto max-w-3xl px-4 pb-12" aria-labelledby="geo-definition">
           <h2 id="geo-definition" className="text-2xl font-semibold text-foreground mb-4">
             Qu’est-ce qu’un audit GEO ?
