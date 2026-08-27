@@ -1177,33 +1177,40 @@ export default function Marina() {
           </div>
         </section>
 
-        {/* Tabs navigation */}
-        <section id="marina-tabs" className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-xs">
-          <div className="mx-auto max-w-5xl px-4">
-            <Tabs value={activeTab} onValueChange={handleTabChange}>
-              <TabsList className="w-full justify-start bg-transparent h-12 p-0 gap-0 rounded-none">
-                <TabsTrigger value="features" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
-                  <Zap className="w-3.5 h-3.5" /> {t.preview.tabFeatures}
-                </TabsTrigger>
-                <TabsTrigger value="preview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
-                  <Eye className="w-3.5 h-3.5" /> {t.preview.tabPreview}
-                </TabsTrigger>
-                <TabsTrigger value="api" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
-                  <Terminal className="w-3.5 h-3.5" /> {t.preview.tabApi}
-                </TabsTrigger>
-                {user && (
-                  <TabsTrigger value="my-audits" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
-                    <FileText className="w-3.5 h-3.5" /> Mes audits
-                  </TabsTrigger>
-                )}
-                <TabsTrigger value="pricing" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 gap-2">
-                  <Coins className="w-3.5 h-3.5" /> {t.preview.tabPricing}
-                </TabsTrigger>
-
-              </TabsList>
-            </Tabs>
-          </div>
-        </section>
+        {/* Tabs navigation — boutons simples (pas de role=tab : les panneaux ne sont pas
+            des tabpanels ARIA, ce qui rendait aria-controls invalide) */}
+        {(() => {
+          const navTabs: Array<{ value: string; label: string; Icon: typeof Zap }> = [
+            { value: 'features', label: t.preview.tabFeatures, Icon: Zap },
+            { value: 'preview', label: t.preview.tabPreview, Icon: Eye },
+            { value: 'api', label: t.preview.tabApi, Icon: Terminal },
+            ...(user ? [{ value: 'my-audits', label: 'Mes audits', Icon: FileText }] : []),
+            { value: 'pricing', label: t.preview.tabPricing, Icon: Coins },
+          ];
+          return (
+            <section id="marina-tabs" className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-xs">
+              <div className="mx-auto max-w-5xl px-4">
+                <nav aria-label="Sections Marina" className="flex h-12 w-full items-stretch justify-start overflow-x-auto">
+                  {navTabs.map(({ value, label, Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => handleTabChange(value)}
+                      aria-current={activeTab === value ? 'true' : undefined}
+                      className={`inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-4 text-sm font-medium transition-colors ${
+                        activeTab === value
+                          ? 'border-primary text-foreground'
+                          : 'border-transparent text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" /> {label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </section>
+          );
+        })()}
 
         {/* Section: audits Marina en cours (utilisateur connecté) */}
         {user && <MarinaRunningAuditsSection />}
