@@ -464,10 +464,14 @@ const RankingSerp = memo(() => {
           </div>
         </section>
 
+        {/* Preuve sociale : volume réel de domaines audités */}
+        <AuditedDomainsCounter />
+
         {/* Tool Section */}
         <section className="container mx-auto max-w-5xl px-4 mb-16">
           <SerpBenchmarkMini />
         </section>
+
 
         {/* How it works */}
         <section className="container mx-auto max-w-5xl px-4 mb-16">
