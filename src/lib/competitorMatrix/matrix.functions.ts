@@ -110,13 +110,16 @@ export const startCompetitorMatrix = createServerFn({ method: 'POST' })
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const ipHash = await hashIp(clientIp());
 
+    const admin = await isAdminRequest();
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-    const { count } = await supabaseAdmin
-      .from('competitor_matrix_jobs')
-      .select('id', { count: 'exact', head: true })
-      .eq('ip_hash', ipHash)
-      .gte('created_at', since);
-    if ((count ?? 0) >= MATRIX_FREE_QUOTA) {
+    const { count } = admin
+      ? { count: 0 }
+      : await supabaseAdmin
+          .from('competitor_matrix_jobs')
+          .select('id', { count: 'exact', head: true })
+          .eq('ip_hash', ipHash)
+          .gte('created_at', since);
+    if (!admin && (count ?? 0) >= MATRIX_FREE_QUOTA) {
       return {
         error: 'quota_exhausted' as const,
         message: 'Vous avez déjà généré votre matrice gratuite aujourd’hui. Créez un compte pour lancer un audit complet.',
