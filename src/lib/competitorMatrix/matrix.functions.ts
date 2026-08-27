@@ -84,6 +84,9 @@ function toState(row: any): MatrixJobState {
 }
 
 export const getCompetitorMatrixQuota = createServerFn({ method: 'GET' }).handler(async () => {
+  if (await isAdminRequest()) {
+    return { quota: Infinity, used: 0, remaining: Infinity, unlimited: true as const };
+  }
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const { count } = await supabaseAdmin
@@ -94,6 +97,7 @@ export const getCompetitorMatrixQuota = createServerFn({ method: 'GET' }).handle
   const used = count ?? 0;
   return { quota: MATRIX_FREE_QUOTA, used, remaining: Math.max(0, MATRIX_FREE_QUOTA - used) };
 });
+
 
 export const startCompetitorMatrix = createServerFn({ method: 'POST' })
   .inputValidator((input: { url: string; competitors?: string[] }) => input)
