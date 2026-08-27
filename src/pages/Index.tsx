@@ -662,6 +662,11 @@ const Index = () => {
           <div className="cv-auto"><MarinaDeepAuditSection /></div>
         </Suspense>
 
+        {/* Preuve sociale : volume réel de domaines audités, juste sous les lead magnets */}
+        <AuditedDomainsCounter />
+
+
+
 
 
         {/* Pro Agency hero */}
