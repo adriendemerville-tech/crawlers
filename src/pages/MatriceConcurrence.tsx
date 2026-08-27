@@ -160,10 +160,12 @@ export default function MatriceConcurrence() {
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
-              <Button onClick={launch} disabled={running || !url.trim() || remaining === 0}>
+              <Button onClick={launch} disabled={running || !url.trim() || (!unlimited && remaining === 0)}>
                 {running ? 'Analyse en cours…' : 'Générer ma matrice'}
               </Button>
-              {remaining !== null && (
+              {unlimited ? (
+                <span className="text-sm text-muted-foreground">Usage illimité (admin)</span>
+              ) : remaining !== null && (
                 <span className="text-sm text-muted-foreground">
                   {remaining > 0 ? `${remaining} matrice gratuite disponible aujourd’hui` : 'Quota du jour atteint'}
                 </span>
