@@ -300,134 +300,151 @@ export function Header() {
             </Link>
           </div>
         )}
-        {!isProfilePage && !isHomePage && <div className="hidden sm:flex items-center gap-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          {/* 1. Matrice (gris) — hidden for non-subscribed users */}
-          {user && profile?.plan_type && profile.plan_type !== 'free' && (
-            <>
-              <Link to="/matrice">
-                <Button variant="ghost" size="sm" className={`gap-1.5 text-foreground/80 hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
-                  <Grid3X3 className="h-3.5 w-3.5" />
-                  <span className="text-sm font-semibold">Matrice</span>
+        {!isProfilePage && !isHomePage && (
+          <div className="hidden sm:flex flex-1 items-center justify-center gap-1">
+            {location.pathname === '/app/console' ? (
+              <>
+                <Link to="/matrice">
+                  <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3">
+                    <Grid3X3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    Matrice
+                  </Button>
+                </Link>
+                <Link to="/app/site-crawl">
+                  <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-purple-800 dark:text-purple-300 hover:text-purple-700 dark:hover:text-purple-200 hover:bg-purple-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
+                    <Bug className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    Crawl
+                  </Button>
+                </Link>
+                <Link to="/audit-expert">
+                  <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-[#1e3a5f] dark:text-[#60a5fa] hover:bg-[#1e3a5f]/10 sm:text-sm sm:gap-1.5 sm:px-3">
+                    <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    Audit
+                  </Button>
+                </Link>
+                <Link to="/app/ranking-serp">
+                  <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-purple-800 dark:text-purple-300 hover:text-purple-700 dark:hover:text-purple-200 hover:bg-purple-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
+                    <Search className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    SERPs
+                  </Button>
+                </Link>
+                <Link to="/app/cocoon">
+                  <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-amber-800 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 hover:bg-amber-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
+                    Cocoon
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowContentArchitect(true)}
+                  className="gap-1 px-2 text-xs text-green-700 dark:text-green-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-700/10 sm:text-sm sm:gap-1.5 sm:px-3"
+                >
+                  <PenLine className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  Content
                 </Button>
-              </Link>
-              <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-            </>
-          )}
+                <Link to="/app/social">
+                  <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-emerald-700 dark:text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)] sm:text-sm sm:gap-1.5 sm:px-3">
+                    <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    Social Hub
+                    <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-500 ml-0.5">beta</Badge>
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                {/* 1. Matrice (gris) — hidden for non-subscribed users */}
+                {user && profile?.plan_type && profile.plan_type !== 'free' && (
+                  <>
+                    <Link to="/matrice">
+                      <Button variant="ghost" size="sm" className={`gap-1.5 text-foreground/80 hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
+                        <Grid3X3 className="h-3.5 w-3.5" />
+                        <span className="text-sm font-semibold">Matrice</span>
+                      </Button>
+                    </Link>
+                    <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                  </>
+                )}
 
-          {/* 2. Crawl (violet) */}
-          <Link to="/app/site-crawl">
-            <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-800 dark:text-purple-300 hover:text-purple-700 dark:hover:text-purple-200 hover:bg-purple-500/10 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
-              <Bug className="h-3.5 w-3.5" />
-              <span className="text-sm font-semibold">Crawl</span>
-            </Button>
-          </Link>
+                {/* 2. Crawl (violet) */}
+                <Link to="/app/site-crawl">
+                  <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-800 dark:text-purple-300 hover:text-purple-700 dark:hover:text-purple-200 hover:bg-purple-500/10 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
+                    <Bug className="h-3.5 w-3.5" />
+                    <span className="text-sm font-semibold">Crawl</span>
+                  </Button>
+                </Link>
 
-          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
 
-          {/* 3. Audit (bleu foncé) */}
-          {isAuditExpertPage ? (
-            <Button variant="ghost" size="sm" className="gap-1.5 text-[#1e3a5f] dark:text-[#60a5fa] hover:bg-[#1e3a5f]/10 border border-[#1e3a5f] dark:border-[#60a5fa]">
-              <Sparkles className="h-4 w-4" />
-               <span className="text-sm font-normal">Audit</span>
-            </Button>
-          ) : (
-            <Link to="/audit-expert">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-[#1e3a5f] dark:text-[#60a5fa] hover:text-[#1e3a5f] dark:hover:text-[#93c5fd] hover:bg-[#1e3a5f]/10">
-                <Sparkles className="h-4 w-4" />
-                <span className="text-sm font-normal">Audit</span>
-              </Button>
-            </Link>
-          )}
+                {/* 3. Audit (bleu foncé) */}
+                {isAuditExpertPage ? (
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-[#1e3a5f] dark:text-[#60a5fa] hover:bg-[#1e3a5f]/10 border border-[#1e3a5f] dark:border-[#60a5fa]">
+                    <Sparkles className="h-4 w-4" />
+                     <span className="text-sm font-normal">Audit</span>
+                  </Button>
+                ) : (
+                  <Link to="/audit-expert">
+                    <Button variant="ghost" size="sm" className="gap-1.5 text-[#1e3a5f] dark:text-[#60a5fa] hover:text-[#1e3a5f] dark:hover:text-[#93c5fd] hover:bg-[#1e3a5f]/10">
+                      <Sparkles className="h-4 w-4" />
+                      <span className="text-sm font-normal">Audit</span>
+                    </Button>
+                  </Link>
+                )}
 
-          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
 
-          {/* 4. Cocoon (jaune d'or) */}
-          {isAuditExpertPage ? (
-            <a href="/app/cocoon" target="_blank" rel="noopener noreferrer">
-              <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-800 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
-                <span className="text-sm font-semibold">Cocoon</span>
-              </Button>
-            </a>
-          ) : (
-            <Link to="/app/cocoon">
-              <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-800 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
-                <span className="text-sm font-semibold">Cocoon</span>
-              </Button>
-            </Link>
-          )}
+                {/* 4. SERPs (violet) */}
+                <Link to="/app/ranking-serp">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-purple-800 dark:text-purple-300 hover:text-purple-700 dark:hover:text-purple-200 hover:bg-purple-500/10">
+                    <Search className="h-3.5 w-3.5" />
+                    <span className="text-sm font-semibold">SERPs</span>
+                  </Button>
+                </Link>
 
-          <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
 
-          {/* 5. Content Architect (vert foncé) */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowContentArchitect(true)}
-            className="gap-1.5 text-green-700 dark:text-green-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-700/10"
-          >
-            <PenLine className="h-3.5 w-3.5" />
-            <span className="text-sm font-semibold">Content</span>
-          </Button>
+                {/* 5. Cocoon (jaune d'or) */}
+                {isAuditExpertPage ? (
+                  <a href="/app/cocoon" target="_blank" rel="noopener noreferrer">
+                    <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-800 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
+                      <span className="text-sm font-semibold">Cocoon</span>
+                    </Button>
+                  </a>
+                ) : (
+                  <Link to="/app/cocoon">
+                    <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-800 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
+                      <span className="text-sm font-semibold">Cocoon</span>
+                    </Button>
+                  </Link>
+                )}
 
-          {/* 6. Social Hub (vert glow) — hidden for non-subscribed users */}
-          {user && profile?.plan_type && profile.plan_type !== 'free' && (
-            <>
-              <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-              <Link to="/app/social">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-emerald-700 dark:text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)]">
-                  <Share2 className="h-3.5 w-3.5" />
-                  <span className="text-sm font-semibold">Social Hub</span>
-                  <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-500 ml-0.5">beta</Badge>
+                <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+
+                {/* 6. Content Architect (vert foncé) */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowContentArchitect(true)}
+                  className="gap-1.5 text-green-700 dark:text-green-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-700/10"
+                >
+                  <PenLine className="h-3.5 w-3.5" />
+                  <span className="text-sm font-semibold">Content</span>
                 </Button>
-              </Link>
-            </>
-          )}
 
-          {/* Console button moved next to Profile (right side) — duplicate removed */}
-        </div>}
-
-        {/* Console-only centered shortcuts: Matrice, Crawl, Audit, Cocoon, Content, Social Hub */}
-        {location.pathname === '/app/console' && (
-          <div className="hidden sm:flex items-center gap-0.5 absolute left-1/2 -translate-x-1/2">
-            <Link to="/matrice">
-              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-foreground/80 hover:text-foreground hover:bg-muted/60 sm:text-sm sm:gap-1.5 sm:px-3">
-                <Grid3X3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                Matrice
-              </Button>
-            </Link>
-            <Link to="/app/site-crawl">
-              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-purple-800 dark:text-purple-300 hover:text-purple-700 dark:hover:text-purple-200 hover:bg-purple-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
-                <Bug className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                Crawl
-              </Button>
-            </Link>
-            <Link to="/audit-expert">
-              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-[#1e3a5f] dark:text-[#60a5fa] hover:bg-[#1e3a5f]/10 sm:text-sm sm:gap-1.5 sm:px-3">
-                <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                Audit
-              </Button>
-            </Link>
-            <Link to="/app/cocoon">
-              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-amber-800 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 hover:bg-amber-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
-                Cocoon
-              </Button>
-            </Link>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowContentArchitect(true)}
-              className="gap-1 px-2 text-xs text-green-700 dark:text-green-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-700/10 sm:text-sm sm:gap-1.5 sm:px-3"
-            >
-              <PenLine className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-              Content
-            </Button>
-            <Link to="/app/social">
-              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-emerald-700 dark:text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)] sm:text-sm sm:gap-1.5 sm:px-3">
-                <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                Social Hub
-                <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-500 ml-0.5">beta</Badge>
-              </Button>
-            </Link>
+                {/* 7. Social Hub (vert glow) — hidden for non-subscribed users */}
+                {user && profile?.plan_type && profile.plan_type !== 'free' && (
+                  <>
+                    <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                    <Link to="/app/social">
+                      <Button variant="ghost" size="sm" className="gap-1.5 text-emerald-700 dark:text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)]">
+                        <Share2 className="h-3.5 w-3.5" />
+                        <span className="text-sm font-semibold">Social Hub</span>
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-500 ml-0.5">beta</Badge>
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </>
+            )}
           </div>
         )}
 
