@@ -790,11 +790,19 @@ const Index = () => {
                     : 'Measure your E-E-A-T score and boost your credibility'}
                 </h2>
                 <p className="text-muted-foreground leading-relaxed max-w-xl">
-                  {language === 'fr'
-                    ? 'Expérience, Expertise, Autorité, Fiabilité — les 4 piliers que Google utilise pour évaluer la qualité de votre contenu. Notre outil analyse automatiquement vos pages et génère des recommandations actionnables.'
-                    : language === 'es'
-                    ? 'Experiencia, Pericia, Autoridad, Fiabilidad — los 4 pilares que Google usa para evaluar la calidad de su contenido. Nuestra herramienta analiza automáticamente sus páginas y genera recomendaciones accionables.'
-                    : 'Experience, Expertise, Authoritativeness, Trustworthiness — the 4 pillars Google uses to evaluate your content quality. Our tool automatically analyzes your pages and generates actionable recommendations.'}
+                  {language === 'fr' ? (
+                    <>
+                      <strong>Expérience, Expertise, Autorité, Fiabilité</strong> — les 4 piliers que Google utilise pour évaluer la qualité de votre contenu. Notre outil <strong>analyse automatiquement vos pages</strong> et génère des recommandations actionnables.
+                    </>
+                  ) : language === 'es' ? (
+                    <>
+                      <strong>Experiencia, Pericia, Autoridad, Fiabilidad</strong> — los 4 pilares que Google usa para evaluar la calidad de su contenido. Nuestra herramienta <strong>analiza automáticamente sus páginas</strong> y genera recomendaciones accionables.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Experience, Expertise, Authoritativeness, Trustworthiness</strong> — the 4 pillars Google uses to evaluate your content quality. Our tool <strong>automatically analyzes your pages</strong> and generates actionable recommendations.
+                    </>
+                  )}
                 </p>
                 <div className="flex flex-wrap gap-3 pt-2">
                   <Link to="/app/eeat">
