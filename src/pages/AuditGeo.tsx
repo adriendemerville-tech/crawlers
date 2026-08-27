@@ -160,6 +160,76 @@ const AuditGeo = () => {
           </div>
         </section>
 
+        <section className="mx-auto max-w-5xl px-4 pb-12" aria-labelledby="geo-methode">
+          <h2 id="geo-methode" className="text-2xl font-semibold text-foreground mb-4">
+            La méthode Crawlers : la donnée d’abord, l’IA ensuite
+          </h2>
+          <blockquote className="citable-passage border-l-2 border-primary/60 pl-4 text-muted-foreground leading-relaxed mb-6">
+            Confier son audit à une IA, c’est le confier à un outil qui n’a techniquement pas les moyens de
+            crawler une page HTML entière et ses données : il n’exécute pas le JavaScript, n’accède pas aux
+            SERP en temps réel, ne connaît pas le profil de backlinks, ne conserve aucune mémoire d’un audit à
+            l’autre et change d’appréciation à chaque exécution. Le diagnostic est donc imprédictible. La
+            méthode Crawlers.fr inverse l’ordre : on mesure d’abord la donnée réelle du site — rendu servi aux
+            robots, contenu de chaque page, positions, backlinks — on la conserve en mémoire pour croiser les
+            signaux et suivre l’évolution du référencement page par page, et l’IA n’intervient qu’ensuite,
+            pour calculer des probabilités et mettre l’analyse en forme. L’IA est utile pour raisonner sur des
+            faits ; elle n’est pas fiable pour aller chercher les faits.
+          </blockquote>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm border-collapse">
+              <caption className="sr-only">
+                Comparaison entre un audit demandé à un modèle de langage et la méthode Crawlers.fr
+              </caption>
+              <thead>
+                <tr className="border-b border-border">
+                  <th scope="col" className="py-3 pr-4 font-semibold text-foreground">Axe</th>
+                  <th scope="col" className="py-3 pr-4 font-semibold text-foreground">Audit demandé à une IA</th>
+                  <th scope="col" className="py-3 font-semibold text-foreground">Méthode Crawlers.fr</th>
+                </tr>
+              </thead>
+              <tbody>
+                {METHOD_ROWS.map((row) => (
+                  <tr key={row.axis} className="border-b border-border/60 align-top">
+                    <th scope="row" className="py-3 pr-4 font-medium text-foreground whitespace-nowrap">
+                      {row.axis}
+                    </th>
+                    <td className="py-3 pr-4 text-muted-foreground">{row.llm}</td>
+                    <td className="py-3 text-muted-foreground">{row.crawlers}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h3 className="mt-8 text-lg font-semibold text-foreground mb-3">
+            Ce que l’IA fait bien, et ce qu’on ne lui confie pas
+          </h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Card className="border-border">
+              <CardContent className="pt-6">
+                <h4 className="text-base font-semibold text-foreground">Confié à l’IA</h4>
+                <ul className="mt-2 space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                  <li>Calcul de probabilités de citation à partir de faits mesurés.</li>
+                  <li>Hiérarchisation des priorités et rédaction du verdict.</li>
+                  <li>Reformulation d’un contenu existant en passages citables.</li>
+                </ul>
+              </CardContent>
+            </Card>
+            <Card className="border-border">
+              <CardContent className="pt-6">
+                <h4 className="text-base font-semibold text-foreground">Jamais confié à l’IA</h4>
+                <ul className="mt-2 space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                  <li>La collecte du HTML, des balises et du texte réellement servi.</li>
+                  <li>Les positions SERP, volumes et concurrents.</li>
+                  <li>Le profil de backlinks et l’autorité de domaine.</li>
+                  <li>Toute valeur chiffrée affichée dans le rapport.</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
         <section className="mx-auto max-w-3xl px-4 pb-12" aria-labelledby="geo-difference">
           <h2 id="geo-difference" className="text-2xl font-semibold text-foreground mb-4">
             Pourquoi un outil plutôt qu’une prestation manuelle
