@@ -28,8 +28,64 @@ export const Route = createFileRoute("/audit-geo")({
         },
         {
           "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Accueil", item: "https://crawlers.fr/" },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Generative Engine Optimization",
+              item: "https://crawlers.fr/generative-engine-optimization",
+            },
+            { "@type": "ListItem", position: 3, name: "Audit GEO", item: "https://crawlers.fr/audit-geo" },
+          ],
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "HowTo",
+          name: "Méthode d'audit GEO Crawlers.fr : mesurer d'abord, interpréter ensuite",
+          description:
+            "La donnée est collectée par crawl et par sources SERP/backlinks, historisée par URL, puis interprétée par l'IA. Aucun chiffre du rapport ne provient d'un modèle de langage.",
+          tool: [{ "@type": "HowToTool", name: "Crawlers.fr" }],
+          step: [
+            {
+              "@type": "HowToStep",
+              position: 1,
+              name: "Crawl du rendu servi aux robots",
+              text: "La page est récupérée telle qu'un robot la reçoit, JavaScript compris, pour mesurer le texte réellement accessible et détecter une coquille JS.",
+            },
+            {
+              "@type": "HowToStep",
+              position: 2,
+              name: "Collecte des données de marché",
+              text: "Positions SERP, volumes, concurrents réellement identifiés et profil de backlinks segmenté sont récupérés depuis des sources de données, jamais devinés.",
+            },
+            {
+              "@type": "HowToStep",
+              position: 3,
+              name: "Historisation par URL",
+              text: "Chaque mesure est conservée en mémoire par page afin de croiser les signaux et suivre l'évolution du référencement dans le temps.",
+            },
+            {
+              "@type": "HowToStep",
+              position: 4,
+              name: "Interprétation par l'IA",
+              text: "Les modèles calculent des probabilités de citation, hiérarchisent les priorités et rédigent le verdict à partir des faits déjà mesurés.",
+            },
+          ],
+        },
+        {
+          "@context": "https://schema.org",
           "@type": "FAQPage",
           mainEntity: [
+            {
+              "@type": "Question",
+              name: "Pourquoi ne pas demander directement un audit à ChatGPT ou Claude ?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Un modèle de langage ne crawle pas la page entière ni ses ressources, n'accède pas aux SERP en temps réel, ne connaît pas le profil de backlinks, ne garde aucune mémoire d'un audit à l'autre et change d'appréciation à chaque exécution : le diagnostic est imprédictible. Crawlers.fr mesure d'abord la donnée réelle, la conserve, puis n'utilise l'IA que pour calculer des probabilités et rédiger l'analyse.",
+              },
+            },
             {
               "@type": "Question",
               name: "Qui peut faire un audit GEO sérieux ?",
