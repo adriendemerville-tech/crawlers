@@ -88,7 +88,23 @@ const AuditGeo = () => {
       <Header />
 
       <main>
-        <section className="mx-auto max-w-4xl px-4 pt-16 pb-12 text-center">
+        <nav aria-label="Fil d'Ariane" className="mx-auto max-w-5xl px-4 pt-6">
+          <ol className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+            <li>
+              <Link to="/" className="hover:text-foreground">Accueil</Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li>
+              <Link to="/generative-engine-optimization" className="hover:text-foreground">
+                Generative Engine Optimization
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page" className="text-foreground/70 font-medium">Audit GEO</li>
+          </ol>
+        </nav>
+
+        <section className="mx-auto max-w-4xl px-4 pt-10 pb-12 text-center">
           <p className="text-sm uppercase tracking-widest text-primary mb-4">Audit GEO automatisé</p>
           <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-5">
             Audit GEO gratuit : votre visibilité dans les réponses des IA
