@@ -389,7 +389,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                 {h.currentSite && !h.showApiPanel && (
                   <div className="space-y-6">
                     {/* Site header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+                    <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-2 min-w-0">
                         <button
                           onClick={() => h.setShowIdentityModal(true)}
