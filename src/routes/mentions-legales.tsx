@@ -5,7 +5,7 @@ import { pageHead } from "@/lib/seo/pageHead";
 export const Route = createFileRoute("/mentions-legales")({
   head: () => pageHead({
     title: "Mentions légales | Crawlers.fr",
-    description: "Mentions légales de Crawlers.fr — éditeur, hébergement, conditions.",
+    description: "Éditeur : Voluntas Novare (SASU, SIREN 992 399 667), Saint-Rémy-de-Provence. Hébergement dans l'Union européenne, contact et conditions d'utilisation.",
     path: "/mentions-legales",
     noIndex: true,
   }),

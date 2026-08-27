@@ -6,7 +6,7 @@ import { ORGANIZATION_REF } from "@/lib/seo/organization";
 
 const TITLE = "Audit GEO gratuit — 232 points de contrôle | Crawlers.fr";
 const DESC =
-  "Audit GEO automatisé et gratuit : audit technique complet de votre référencement IA sur 232 points et 11 sous-signaux. Citations ChatGPT, Claude, Perplexity mesurées.";
+  "Votre site est-il cité par ChatGPT, Claude et Perplexity ? L'audit GEO le mesure vraiment : 9 questions posées aux modèles, 232 points de contrôle. Gratuit.";
 
 export const Route = createFileRoute("/audit-geo")({
   head: () =>

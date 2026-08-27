@@ -6,7 +6,7 @@ import { aideJsonLd } from "@/lib/seo/pageSchemas";
 export const Route = createFileRoute("/aide")({
   head: () => pageHead({
     title: "Centre d'aide Crawlers.fr — SEO, GEO et visibilité IA",
-    description: "Trouvez toutes les réponses sur les audits SEO, le GEO Score, la visibilité LLM, les crédits et le plan Pro Agency. Documentation complète Crawlers.fr.",
+    description: "Guides pas-à-pas : connecter Search Console, brancher votre CMS, lire un rapport d'audit, gérer vos crédits et déployer les correctifs sur votre site.",
     path: "/aide",
     jsonLd: [aideJsonLd],
   }),

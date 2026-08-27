@@ -5,7 +5,7 @@ import { pageHead } from "@/lib/seo/pageHead";
 export const Route = createFileRoute("/tarifs")({
   head: () => pageHead({
     title: "Tarifs Crawlers.fr — SEO + GEO à 29€/mois | Crawlers.fr",
-    description: "Crawlers.fr à 29€/mois — offre lancement garantie à vie pour les 100 premiers abonnés. SEO + GEO + correctifs actionnables en un seul outil.",
+    description: "SEO et GEO à partir de 29 €/mois, tarif garanti à vie pour les 100 premiers abonnés. Audits illimités, 30 sites, correctifs prêts à déployer. Plan gratuit.",
     path: "/tarifs",
   }),
   component: Tarifs,

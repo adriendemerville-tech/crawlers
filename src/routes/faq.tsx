@@ -6,7 +6,7 @@ import { faqPageJsonLd } from "@/lib/seo/pageSchemas";
 export const Route = createFileRoute("/faq")({
   head: () => pageHead({
     title: "FAQ Crawlers.fr — Questions fréquentes SEO & GEO | Crawlers.fr",
-    description: "FAQ Crawlers.fr — toutes les réponses sur l'audit SEO, le GEO Score, la visibilité LLM, les crédits, le plan Pro Agency et l'intégration technique.",
+    description: "Réponses aux questions fréquentes : ce que mesure l'audit SEO, comment le score GEO est calculé, comment fonctionnent les crédits et ce que couvre Pro Agency.",
     path: "/faq",
     jsonLd: [faqPageJsonLd],
   }),
