@@ -671,11 +671,19 @@ const Index = () => {
                 {language === 'fr' ? 'Gérez 30 clients. Audits illimités.' : language === 'es' ? 'Gestiona 30 clientes. Auditorías ilimitadas.' : 'Manage 30 clients. Unlimited audits.'}
               </h2>
               <p className="mx-auto mb-6 max-w-xl text-muted-foreground">
-                {language === 'fr'
-                  ? 'Rapports marque blanche, correctifs auto-déployés, crawl 5 000 pages/mois et agents IA — tout inclus.'
-                  : language === 'es'
-                  ? 'Informes marca blanca, correcciones auto-desplegadas, crawl 5 000 páginas/mes y agentes IA — todo incluido.'
-                  : 'White-label reports, auto-deployed fixes, 5,000 pages/month crawl & AI agents — all included.'}
+                {language === 'fr' ? (
+                  <>
+                    <strong>Rapports marque blanche</strong>, correctifs auto-déployés, <strong>crawl 5 000 pages/mois</strong> et agents IA — tout inclus.
+                  </>
+                ) : language === 'es' ? (
+                  <>
+                    <strong>Informes marca blanca</strong>, correcciones auto-desplegadas, <strong>crawl 5 000 páginas/mes</strong> y agentes IA — todo incluido.
+                  </>
+                ) : (
+                  <>
+                    <strong>White-label reports</strong>, auto-deployed fixes, <strong>5,000 pages/month crawl</strong> &amp; AI agents — all included.
+                  </>
+                )}
               </p>
               {/* Mini stats */}
               <div className="mx-auto mb-6 grid max-w-lg grid-cols-5 gap-2">
@@ -790,11 +798,19 @@ const Index = () => {
                     : 'Measure your E-E-A-T score and boost your credibility'}
                 </h2>
                 <p className="text-muted-foreground leading-relaxed max-w-xl">
-                  {language === 'fr'
-                    ? 'Expérience, Expertise, Autorité, Fiabilité — les 4 piliers que Google utilise pour évaluer la qualité de votre contenu. Notre outil analyse automatiquement vos pages et génère des recommandations actionnables.'
-                    : language === 'es'
-                    ? 'Experiencia, Pericia, Autoridad, Fiabilidad — los 4 pilares que Google usa para evaluar la calidad de su contenido. Nuestra herramienta analiza automáticamente sus páginas y genera recomendaciones accionables.'
-                    : 'Experience, Expertise, Authoritativeness, Trustworthiness — the 4 pillars Google uses to evaluate your content quality. Our tool automatically analyzes your pages and generates actionable recommendations.'}
+                  {language === 'fr' ? (
+                    <>
+                      <strong>Expérience, Expertise, Autorité, Fiabilité</strong> — les 4 piliers que Google utilise pour évaluer la qualité de votre contenu. Notre outil <strong>analyse automatiquement vos pages</strong> et génère des recommandations actionnables.
+                    </>
+                  ) : language === 'es' ? (
+                    <>
+                      <strong>Experiencia, Pericia, Autoridad, Fiabilidad</strong> — los 4 pilares que Google usa para evaluar la calidad de su contenido. Nuestra herramienta <strong>analiza automáticamente sus páginas</strong> y genera recomendaciones accionables.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Experience, Expertise, Authoritativeness, Trustworthiness</strong> — the 4 pillars Google uses to evaluate your content quality. Our tool <strong>automatically analyzes your pages</strong> and generates actionable recommendations.
+                    </>
+                  )}
                 </p>
                 <div className="flex flex-wrap gap-3 pt-2">
                   <Link to="/app/eeat">
