@@ -3035,6 +3035,122 @@ export type Database = {
         }
         Relationships: []
       }
+      competitor_matrix_jobs: {
+        Row: {
+          ai_citations: Json
+          ai_overviews: Json | null
+          competitors: Json
+          created_at: string
+          domain: string
+          email: string | null
+          error: string | null
+          id: string
+          identity: Json | null
+          ip_hash: string | null
+          keywords: Json
+          lang: string
+          matrix: Json | null
+          out_of_scope: Json
+          progress: number
+          serp: Json
+          share_token: string
+          status: string
+          step: string | null
+          summary: Json | null
+          target_url: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ai_citations?: Json
+          ai_overviews?: Json | null
+          competitors?: Json
+          created_at?: string
+          domain: string
+          email?: string | null
+          error?: string | null
+          id?: string
+          identity?: Json | null
+          ip_hash?: string | null
+          keywords?: Json
+          lang?: string
+          matrix?: Json | null
+          out_of_scope?: Json
+          progress?: number
+          serp?: Json
+          share_token: string
+          status?: string
+          step?: string | null
+          summary?: Json | null
+          target_url: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ai_citations?: Json
+          ai_overviews?: Json | null
+          competitors?: Json
+          created_at?: string
+          domain?: string
+          email?: string | null
+          error?: string | null
+          id?: string
+          identity?: Json | null
+          ip_hash?: string | null
+          keywords?: Json
+          lang?: string
+          matrix?: Json | null
+          out_of_scope?: Json
+          progress?: number
+          serp?: Json
+          share_token?: string
+          status?: string
+          step?: string | null
+          summary?: Json | null
+          target_url?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      competitor_matrix_leads: {
+        Row: {
+          consent: boolean
+          created_at: string
+          domain: string | null
+          email: string
+          id: string
+          ip_hash: string | null
+          job_id: string | null
+        }
+        Insert: {
+          consent?: boolean
+          created_at?: string
+          domain?: string | null
+          email: string
+          id?: string
+          ip_hash?: string | null
+          job_id?: string | null
+        }
+        Update: {
+          consent?: boolean
+          created_at?: string
+          domain?: string | null
+          email?: string
+          id?: string
+          ip_hash?: string | null
+          job_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_matrix_leads_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_matrix_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competitor_tracked_urls: {
         Row: {
           audit_data: Json | null
