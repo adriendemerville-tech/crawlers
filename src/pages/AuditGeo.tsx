@@ -43,7 +43,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Pourquoi ne pas demander directement un audit à ChatGPT ou Claude ?',
-    a: "Parce qu'un modèle de langage n'a pas les moyens techniques de produire un audit : il ne crawle pas la page entière ni ses ressources, n'a pas accès aux SERP en temps réel, ne connaît pas le profil de backlinks, ne garde aucune mémoire d'un audit à l'autre et change d'appréciation d'une exécution à la suivante. Le résultat est imprédictible. Crawlers.fr mesure d'abord la donnée réelle — rendu servi aux robots, positions, liens entrants — la stocke, puis n'utilise l'IA que pour calculer des probabilités et rédiger l'analyse.",
+    a: "Parce qu'un modèle de langage n'a pas les moyens techniques de produire un audit : il ne crawle pas la page entière ni ses ressources, n'a pas accès aux SERP en temps réel, ne connaît pas le profil de backlinks, ne conserve aucune mémoire d'un audit à l'autre et change d'appréciation à chaque exécution. Le résultat est imprédictible. Crawlers.fr mesure d'abord la donnée réelle du site — rendu servi aux robots, contenu de chaque page, positions, backlinks — on la conserve en mémoire pour croiser les signaux et suivre l'évolution du référencement page par page, et l'IA n'intervient qu'ensuite, pour calculer des probabilités et mettre l'analyse en forme. L'IA est utile pour raisonner sur des faits ; elle n'est pas fiable pour aller chercher les faits.",
   },
   {
     q: "Quel est le rôle de l'IA dans un audit Crawlers ?",
@@ -134,11 +134,24 @@ const AuditGeo = () => {
           <blockquote className="citable-passage border-l-2 border-primary/60 pl-4 text-muted-foreground leading-relaxed">
             Un audit GEO (Generative Engine Optimization) mesure la probabilité qu’un moteur génératif —
             ChatGPT, Claude, Gemini, Perplexity — cite votre entreprise dans sa réponse. Il diffère d’un audit
-            SEO : il ne regarde pas seulement le classement dans Google, mais l’accessibilité du contenu aux
-            robots d’IA, la complétude du nœud d’identité, la présence de passages citables et la réalité des
-            citations observées. Crawlers.fr le calcule sur 11 sous-signaux et 232 points de contrôle, chaque
-            valeur étant soit mesurée, soit déclarée non mesurée.
+            SEO : il ne regarde pas seulement le classement dans Google, mais{' '}
+            <strong>l’accessibilité du contenu aux robots d’IA</strong>, la complétude du nœud d’identité,
+            <strong>la présence de passages citables</strong> et la réalité des citations observées. Crawlers.fr
+            le calcule sur 11 sous-signaux et 232 points de contrôle, chaque valeur étant soit mesurée, soit
+            déclarée non mesurée.
           </blockquote>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Source externe :{' '}
+            <a
+              href="https://blog.google/products/search/google-search-ai-overviews/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              comment Google construit ses réponses génératives
+            </a>
+            .
+          </p>
         </section>
 
         <section className="mx-auto max-w-5xl px-4 pb-12" aria-labelledby="geo-signaux">
@@ -168,13 +181,27 @@ const AuditGeo = () => {
             Confier son audit à une IA, c’est le confier à un outil qui n’a techniquement pas les moyens de
             crawler une page HTML entière et ses données : il n’exécute pas le JavaScript, n’accède pas aux
             SERP en temps réel, ne connaît pas le profil de backlinks, ne conserve aucune mémoire d’un audit à
-            l’autre et change d’appréciation à chaque exécution. Le diagnostic est donc imprédictible. La
-            méthode Crawlers.fr inverse l’ordre : on mesure d’abord la donnée réelle du site — rendu servi aux
-            robots, contenu de chaque page, positions, backlinks — on la conserve en mémoire pour croiser les
-            signaux et suivre l’évolution du référencement page par page, et l’IA n’intervient qu’ensuite,
-            pour calculer des probabilités et mettre l’analyse en forme. L’IA est utile pour raisonner sur des
-            faits ; elle n’est pas fiable pour aller chercher les faits.
+            l’autre et change d’appréciation à chaque exécution. Le diagnostic est donc{' '}
+            <strong>imprédictible</strong>. La méthode Crawlers.fr inverse l’ordre : on mesure d’abord la{' '}
+            <strong>donnée réelle</strong> du site — rendu servi aux robots, contenu de chaque page, positions,
+            backlinks — on la conserve en mémoire pour croiser les signaux et suivre l’évolution du référencement
+            page par page, et l’IA n’intervient qu’ensuite, pour calculer des probabilités et mettre l’analyse
+            en forme. L’IA est utile pour raisonner sur des faits ; elle n’est pas fiable pour aller chercher les
+            faits.
           </blockquote>
+
+          <p className="mb-6 text-sm text-muted-foreground">
+            Référence externe :{' '}
+            <a
+              href="https://www.google.com/search/howsearchworks/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              le fonctionnement de l’index, du crawl et du classement Google
+            </a>
+            .
+          </p>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
@@ -236,10 +263,11 @@ const AuditGeo = () => {
           </h2>
           <p className="text-muted-foreground leading-relaxed">
             La majorité des audits GEO vendus aujourd’hui sont des analyses manuelles livrées en plusieurs
-            jours, sans mesure reproductible. Crawlers.fr produit le même diagnostic de façon automatisée :
-            crawl du rendu servi aux robots, contrôle du balisage, interrogation multi-modèles, comparaison
-            aux concurrents réellement identifiés sur votre zone. Le rapport indique la mesure derrière chaque
-            point, et les plafonds de cohérence empêchent tout score flatteur non justifié.
+            jours, sans <strong>mesure reproductible</strong>. Crawlers.fr produit le même diagnostic de façon
+            automatisée : crawl du rendu servi aux robots, contrôle du balisage, interrogation multi-modèles,
+            comparaison aux concurrents réellement identifiés sur votre zone. Le rapport indique la mesure
+            derrière chaque point, et les <strong>plafonds de cohérence</strong> empêchent tout score flatteur
+            non justifié.
           </p>
           <p className="mt-4 text-sm">
             <Link to="/generative-engine-optimization" className="text-primary hover:underline">
