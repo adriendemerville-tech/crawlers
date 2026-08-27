@@ -48,11 +48,17 @@ export default function MatriceConcurrence() {
   const [leadError, setLeadError] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
+  const [unlimited, setUnlimited] = useState(false);
+
   useEffect(() => {
     getCompetitorMatrixQuota()
-      .then((q) => setRemaining(q.remaining))
+      .then((q) => {
+        setRemaining(q.remaining);
+        setUnlimited(Boolean((q as { unlimited?: boolean }).unlimited));
+      })
       .catch(() => setRemaining(null));
   }, []);
+
 
   // Chaque appel exécute une étape courte ; on relance tant que l'analyse tourne.
   // Un appel réseau qui échoue (coupure, étape trop longue) est réessayé :
