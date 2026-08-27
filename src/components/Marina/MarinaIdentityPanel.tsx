@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -165,25 +166,28 @@ export default function MarinaIdentityPanel({ url, isAuthenticated }: Props) {
   const set = (k: keyof Fields, v: string) => setFields((f) => ({ ...f, [k]: v }));
 
   return (
-    <div className="mt-3 flex h-full flex-col rounded-lg border border-border bg-card/50 px-4 py-3 text-left">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-2 text-sm text-foreground"
-      >
-        <span className="flex items-center gap-2">
-          <IdCard className="w-4 h-4 text-primary" />
-          Carte d’identité du site
-          {locked && <Badge variant="outline" className="border-primary/40 text-primary">Verrouillée</Badge>}
-          {card && !locked && (
-            <span className="text-xs text-muted-foreground">confiance {card.confidence}/100</span>
-          )}
-        </span>
-        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
+    <Card className="h-full border-border/60 bg-card/50 text-left">
+      <CardContent className={open ? 'p-5' : 'flex h-full flex-col justify-center p-5'}>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="flex w-full items-start justify-between gap-3 text-left"
+        >
+          <div className="flex items-start gap-3 min-w-0">
+            <IdCard className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+            <div className="min-w-0 flex flex-wrap items-center gap-2">
+              <h3 className="text-sm font-semibold text-foreground">Carte d’identité du site</h3>
+              {locked && <Badge variant="outline" className="border-primary/40 text-primary">Verrouillée</Badge>}
+              {card && !locked && (
+                <span className="text-xs text-muted-foreground">confiance {card.confidence}/100</span>
+              )}
+            </div>
+          </div>
+          <ChevronDown className={`w-4 h-4 mt-0.5 text-muted-foreground shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        </button>
 
       {open && (
-        <div className="mt-3 space-y-4">
+        <div className="mt-4 space-y-4">
           <p className="text-xs text-muted-foreground">
             Le secteur et le modèle d’affaires calibrent les fourchettes de mix de pages du rapport.
             Vérifiez-les avant de lancer le crawl : une carte verrouillée est réputée exacte et n’est plus réinférée.
@@ -326,6 +330,7 @@ export default function MarinaIdentityPanel({ url, isAuthenticated }: Props) {
           )}
         </div>
       )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
