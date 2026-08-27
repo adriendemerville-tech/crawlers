@@ -85,8 +85,9 @@ function toState(row: any): MatrixJobState {
 
 export const getCompetitorMatrixQuota = createServerFn({ method: 'GET' }).handler(async () => {
   if (await isAdminRequest()) {
-    return { quota: Infinity, used: 0, remaining: Infinity, unlimited: true as const };
+    return { quota: 9999, used: 0, remaining: 9999, unlimited: true };
   }
+
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const { count } = await supabaseAdmin
