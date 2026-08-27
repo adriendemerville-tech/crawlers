@@ -251,7 +251,7 @@ function FooterComponent() {
 
       <footer className="border-t border-border bg-card" role="contentinfo">
         <div className="mx-auto max-w-7xl px-4 py-12">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-5">
             
             <div className="space-y-4">
               <div className="flex items-center gap-2">
