@@ -41,6 +41,43 @@ const FAQS: { q: string; a: string }[] = [
     q: 'Combien de points de contrôle ?',
     a: "232 points de contrôle techniques répartis sur 11 sous-signaux GEO, plus le volet SEO technique et sémantique. Chaque point est soit mesuré, soit marqué non mesuré : aucun score n'est estimé silencieusement.",
   },
+  {
+    q: 'Pourquoi ne pas demander directement un audit à ChatGPT ou Claude ?',
+    a: "Parce qu'un modèle de langage n'a pas les moyens techniques de produire un audit : il ne crawle pas la page entière ni ses ressources, n'a pas accès aux SERP en temps réel, ne connaît pas le profil de backlinks, ne garde aucune mémoire d'un audit à l'autre et change d'appréciation d'une exécution à la suivante. Le résultat est imprédictible. Crawlers.fr mesure d'abord la donnée réelle — rendu servi aux robots, positions, liens entrants — la stocke, puis n'utilise l'IA que pour calculer des probabilités et rédiger l'analyse.",
+  },
+  {
+    q: "Quel est le rôle de l'IA dans un audit Crawlers ?",
+    a: "L'IA n'est jamais la source de la donnée. Elle intervient en aval : pondération et probabilités, hiérarchisation des priorités, rédaction du verdict à partir de faits déjà mesurés. Toute valeur numérique du rapport vient d'une mesure tracée, jamais d'une estimation du modèle.",
+  },
+];
+
+/** Ce qu'un LLM seul ne peut pas faire, et ce que Crawlers mesure à la place. */
+const METHOD_ROWS: { axis: string; llm: string; crawlers: string }[] = [
+  {
+    axis: 'Lecture de la page',
+    llm: "Lit un extrait tronqué du HTML, sans exécuter le JavaScript ni charger les ressources.",
+    crawlers: "Crawl complet du rendu réellement servi aux robots, avec détection de coquille JS et densité de texte hors script.",
+  },
+  {
+    axis: 'Positions SERP',
+    llm: "Aucun accès aux résultats de recherche en temps réel ; les positions citées sont inventées.",
+    crawlers: "Positions, volumes et concurrents issus de sources de données SERP, à la date de l'audit.",
+  },
+  {
+    axis: 'Backlinks',
+    llm: "Aucun index de liens ; l'autorité est devinée à partir de la notoriété apparente de la marque.",
+    crawlers: "Authority Score, liens entrants segmentés (réseau propre, annuaires, éditorial tiers) et ancres analysées.",
+  },
+  {
+    axis: 'Mémoire',
+    llm: "Aucune mémoire entre deux audits : impossible de comparer, de suivre une évolution ou de vérifier un correctif.",
+    crawlers: "Chaque audit est historisé par URL : comparaison dans le temps, delta de score, effet réel des corrections appliquées.",
+  },
+  {
+    axis: 'Reproductibilité',
+    llm: "Deux exécutions sur la même page donnent deux verdicts différents. Le diagnostic n'est pas opposable.",
+    crawlers: "Score déterministe, plafonds de cohérence, mention « mesuré » ou « non mesuré » sur chaque point.",
+  },
 ];
 
 const AuditGeo = () => {
