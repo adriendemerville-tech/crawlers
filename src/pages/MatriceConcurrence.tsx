@@ -62,7 +62,7 @@ export default function MatriceConcurrence() {
       try {
         const res = await advanceCompetitorMatrix({ data: { jobId: job.id } });
         if (cancelled) return;
-        if ('error' in res) setError(res.message);
+        if ('error' in res) setError(res.message ?? 'Erreur inattendue.');
         else setJob(res.job);
       } catch {
         if (!cancelled) setError('Analyse interrompue. Réessayez dans quelques minutes.');
@@ -81,7 +81,7 @@ export default function MatriceConcurrence() {
     const competitors = rivals.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 3);
     try {
       const res = await startCompetitorMatrix({ data: { url, competitors } });
-      if ('error' in res) { setError(res.message); return; }
+      if ('error' in res) { setError(res.message ?? 'Erreur inattendue.'); return; }
       setJob(res.job);
       setRemaining((r) => (r === null ? r : Math.max(0, r - 1)));
     } catch {
@@ -94,7 +94,7 @@ export default function MatriceConcurrence() {
     setLeadError(null);
     if (!EMAIL_RE.test(email)) { setLeadError('Adresse email invalide'); return; }
     const res = await saveCompetitorMatrixLead({ data: { jobId: job.id, email, consent: true } });
-    if ('error' in res) setLeadError(res.message);
+    if ('error' in res) setLeadError(res.message ?? 'Erreur inattendue.');
     else setLeadSaved(true);
   }, [job, email]);
 

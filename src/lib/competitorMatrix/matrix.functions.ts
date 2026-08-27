@@ -160,8 +160,8 @@ export const advanceCompetitorMatrix = createServerFn({ method: 'POST' })
         case 'competitors': {
           const { fetchVisibilityCompetitors, proposeCompetitorsWithLlm, mergeCompetitors } =
             await import('./competitors.server');
-          const identity = job.identity as Identity;
-          const existing = (job.competitors ?? []) as Competitor[];
+          const identity = job.identity as unknown as Identity;
+          const existing = (job.competitors ?? []) as unknown as Competitor[];
           const userDomains = existing.filter((c) => c.source === 'user').map((c) => c.domain);
           const [visibility, proposed] = await Promise.all([
             fetchVisibilityCompetitors(job.domain),
@@ -176,9 +176,9 @@ export const advanceCompetitorMatrix = createServerFn({ method: 'POST' })
         }
         case 'keywords': {
           const { selectMarketKeywords } = await import('./keywords.server');
-          const competitors = (job.competitors ?? []) as Competitor[];
+          const competitors = (job.competitors ?? []) as unknown as Competitor[];
           patch.keywords = await selectMarketKeywords(
-            job.identity as Identity,
+            job.identity as unknown as Identity,
             competitors.map((c) => c.domain),
           );
           patch.step = 'serp';
@@ -187,8 +187,8 @@ export const advanceCompetitorMatrix = createServerFn({ method: 'POST' })
         }
         case 'serp': {
           const { readSerp } = await import('./serp.server');
-          const competitors = (job.competitors ?? []) as Competitor[];
-          const keywords = (job.keywords ?? []) as MarketKeyword[];
+          const competitors = (job.competitors ?? []) as unknown as Competitor[];
+          const keywords = (job.keywords ?? []) as unknown as MarketKeyword[];
           patch.serp = await readSerp(
             keywords.map((k) => k.keyword),
             [job.domain, ...competitors.map((c) => c.domain)],
@@ -202,11 +202,11 @@ export const advanceCompetitorMatrix = createServerFn({ method: 'POST' })
           // Un appel = un mot-clé (2 moteurs × 3 itérations), pour rester
           // sous la limite de temps. Coût borné aux mots-clés à plus forte valeur.
           const { measureKeyword } = await import('./aiCitations.server');
-          const competitors = (job.competitors ?? []) as Competitor[];
-          const keywords = (job.keywords ?? []) as MarketKeyword[];
+          const competitors = (job.competitors ?? []) as unknown as Competitor[];
+          const keywords = (job.keywords ?? []) as unknown as MarketKeyword[];
           const domains = [job.domain, ...competitors.map((c) => c.domain)];
           const targets = keywords.slice(0, AI_MEASURED_KEYWORDS);
-          const done = (job.ai_citations ?? []) as AiReadingJson[];
+          const done = (job.ai_citations ?? []) as unknown as AiReadingJson[];
           const next = targets[done.length];
 
           if (next) {
@@ -217,11 +217,11 @@ export const advanceCompetitorMatrix = createServerFn({ method: 'POST' })
           }
 
           const result = buildMatrix(
-            job.identity as Identity,
+            job.identity as unknown as Identity,
             competitors,
-            (job.out_of_scope ?? []) as Competitor[],
+            (job.out_of_scope ?? []) as unknown as Competitor[],
             keywords,
-            (job.serp ?? []) as SerpReadingJson[],
+            (job.serp ?? []) as unknown as SerpReadingJson[],
             done,
           );
           patch.matrix = result;
@@ -244,7 +244,7 @@ export const advanceCompetitorMatrix = createServerFn({ method: 'POST' })
 
     const { data: updated } = await supabaseAdmin
       .from('competitor_matrix_jobs')
-      .update(patch)
+      .update(patch as never)
       .eq('id', job.id)
       .select('*')
       .single();
