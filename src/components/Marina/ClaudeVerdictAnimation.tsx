@@ -114,7 +114,7 @@ export function ClaudeVerdictAnimation() {
 
           {/* Réponse */}
           <div className={showVerdict || phase === 'thinking' ? 'animate-fade-in' : 'opacity-0'}>
-            <p className="mb-3 flex items-center gap-2 text-[13px] text-[#8a8981] dark:text-[#8f8e88]">
+            <p className="mb-3 flex items-center gap-2 text-[13px] text-[#63625c] dark:text-[#a8a7a0]">
               <img
                 src={claudeLogo.url}
                 alt="Logo Claude"
