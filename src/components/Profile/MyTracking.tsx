@@ -419,7 +419,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                           )}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="flex items-center justify-start gap-1.5 flex-wrap shrink-0">
 
                         {/* Connect/Disconnect site button */}
                         {(() => {
