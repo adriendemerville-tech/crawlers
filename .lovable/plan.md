@@ -79,6 +79,7 @@ Un bloc de synthèse liste les domaines les plus cités en position 0 sur l'ense
 1. Schéma + job asynchrone + quota IP.
 2. Résolution des concurrents typés.
 3. Sélection des 20 mots-clés marché.
-4. Relevés SERP puis relevés IA sur le top 10.
-5. Variant `competitor` de la matrice + page publique + SEO.
-6. Export CSV, capture email, partage.
+4. Relevés SERP + extraction des domaines cités par l'AI Overview.
+5. Relevés IA Gemini + ChatGPT, 3 itérations, sur le top 10.
+6. Variant `competitor` de la matrice (ligne position 0 incluse) + page publique + SEO.
+7. Export CSV, capture email, partage.
