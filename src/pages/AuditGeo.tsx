@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Header } from '@/components/Header';
+import { AuditedDomainsCounter } from '@/components/AuditedDomainsCounter';
 import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
