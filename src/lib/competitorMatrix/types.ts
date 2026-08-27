@@ -98,6 +98,11 @@ export interface SerpReadingJson {
 export interface AiReadingJson {
   keyword: string;
   rates: Record<string, number>;
+  // Accumulation par moteur : un appel serveur = un moteur × 3 itérations,
+  // pour rester sous la limite de temps du worker.
+  hits?: Record<string, number>;
+  observations?: number;
+  modelsDone?: string[];
 }
 
 export type MatrixStep = 'pending' | 'identity' | 'competitors' | 'keywords' | 'serp' | 'ai' | 'done';

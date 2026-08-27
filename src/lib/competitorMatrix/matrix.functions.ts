@@ -199,22 +199,36 @@ export const advanceCompetitorMatrix = createServerFn({ method: 'POST' })
           break;
         }
         case 'ai': {
-          // Un appel = un mot-clé (2 moteurs × 3 itérations), pour rester
-          // sous la limite de temps. Coût borné aux mots-clés à plus forte valeur.
-          const { measureKeyword } = await import('./aiCitations.server');
+          // Un appel = un mot-clé × UN moteur (3 itérations). Mesurer les deux
+          // moteurs dans le même appel dépassait la limite de temps du worker
+          // et laissait le job bloqué en « running ».
+          const { measureKeywordForModel } = await import('./aiCitations.server');
+          const { AI_MODELS } = await import('./ai.server');
           const competitors = (job.competitors ?? []) as unknown as Competitor[];
           const keywords = (job.keywords ?? []) as unknown as MarketKeyword[];
           const domains = [job.domain, ...competitors.map((c) => c.domain)];
           const targets = keywords.slice(0, AI_MEASURED_KEYWORDS);
           const done = (job.ai_citations ?? []) as unknown as AiReadingJson[];
-          const next = targets[done.length];
+
+          const modelNames = AI_MODELS.map((m) => m.model);
+          const last = done[done.length - 1];
+          const lastIncomplete = last && (last.modelsDone ?? []).length < modelNames.length;
+          const currentIndex = lastIncomplete ? done.length - 1 : done.length;
+          const next = targets[currentIndex];
 
           if (next) {
-            const reading = await measureKeyword(next.keyword, domains);
-            patch.ai_citations = [...done, reading];
-            patch.progress = 70 + Math.round((25 * (done.length + 1)) / Math.max(1, targets.length));
+            const previous = lastIncomplete ? last : undefined;
+            const model = modelNames.find((m) => !(previous?.modelsDone ?? []).includes(m))!;
+            const reading = await measureKeywordForModel(next.keyword, domains, model, previous);
+            patch.ai_citations = lastIncomplete
+              ? [...done.slice(0, -1), reading]
+              : [...done, reading];
+            const units = Math.max(1, targets.length * modelNames.length);
+            const doneUnits = currentIndex * modelNames.length + (reading.modelsDone?.length ?? 1);
+            patch.progress = 70 + Math.round((25 * doneUnits) / units);
             break;
           }
+
 
           const result = buildMatrix(
             job.identity as unknown as Identity,

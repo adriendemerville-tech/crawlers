@@ -55,19 +55,30 @@ export default function MatriceConcurrence() {
   }, []);
 
   // Chaque appel exécute une étape courte ; on relance tant que l'analyse tourne.
+  // Un appel réseau qui échoue (coupure, étape trop longue) est réessayé :
+  // le job reste valide en base, seule la requête a échoué.
+  const failures = useRef(0);
   useEffect(() => {
     if (!job || job.status !== 'running') return;
     let cancelled = false;
+    const delay = failures.current > 0 ? Math.min(8000, 1500 * failures.current) : 600;
     const timer = setTimeout(async () => {
       try {
         const res = await advanceCompetitorMatrix({ data: { jobId: job.id } });
         if (cancelled) return;
+        failures.current = 0;
         if ('error' in res) setError(res.message ?? 'Erreur inattendue.');
         else setJob(res.job);
       } catch {
-        if (!cancelled) setError('Analyse interrompue. Réessayez dans quelques minutes.');
+        if (cancelled) return;
+        failures.current += 1;
+        if (failures.current >= 5) {
+          setError('Analyse interrompue. Réessayez dans quelques minutes.');
+          return;
+        }
+        setJob({ ...job }); // relance une tentative après backoff
       }
-    }, 600);
+    }, delay);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [job]);
 
