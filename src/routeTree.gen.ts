@@ -59,6 +59,7 @@ import { Route as MachineLayerScannerRouteImport } from './routes/machine-layer-
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as MarinaRouteImport } from './routes/marina'
 import { Route as MarketplaceBacklinksRouteImport } from './routes/marketplace-backlinks'
+import { Route as MatriceConcurrenceRouteImport } from './routes/matrice-concurrence'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MethodologieRouteImport } from './routes/methodologie'
 import { Route as ModifierCodeWordpressRouteImport } from './routes/modifier-code-wordpress'
@@ -406,6 +407,11 @@ const MarinaRoute = MarinaRouteImport.update({
 const MarketplaceBacklinksRoute = MarketplaceBacklinksRouteImport.update({
   id: '/marketplace-backlinks',
   path: '/marketplace-backlinks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatriceConcurrenceRoute = MatriceConcurrenceRouteImport.update({
+  id: '/matrice-concurrence',
+  path: '/matrice-concurrence',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
@@ -923,6 +929,7 @@ export interface FileRoutesByFullPath {
   '/maintenance': typeof MaintenanceRoute
   '/marina': typeof MarinaRoute
   '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
+  '/matrice-concurrence': typeof MatriceConcurrenceRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methodologie': typeof MethodologieRoute
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
@@ -1066,6 +1073,7 @@ export interface FileRoutesByTo {
   '/maintenance': typeof MaintenanceRoute
   '/marina': typeof MarinaRoute
   '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
+  '/matrice-concurrence': typeof MatriceConcurrenceRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methodologie': typeof MethodologieRoute
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
@@ -1210,6 +1218,7 @@ export interface FileRoutesById {
   '/maintenance': typeof MaintenanceRoute
   '/marina': typeof MarinaRoute
   '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
+  '/matrice-concurrence': typeof MatriceConcurrenceRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methodologie': typeof MethodologieRoute
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
@@ -1355,6 +1364,7 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/marina'
     | '/marketplace-backlinks'
+    | '/matrice-concurrence'
     | '/mentions-legales'
     | '/methodologie'
     | '/modifier-code-wordpress'
@@ -1498,6 +1508,7 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/marina'
     | '/marketplace-backlinks'
+    | '/matrice-concurrence'
     | '/mentions-legales'
     | '/methodologie'
     | '/modifier-code-wordpress'
@@ -1641,6 +1652,7 @@ export interface FileRouteTypes {
     | '/maintenance'
     | '/marina'
     | '/marketplace-backlinks'
+    | '/matrice-concurrence'
     | '/mentions-legales'
     | '/methodologie'
     | '/modifier-code-wordpress'
@@ -1785,6 +1797,7 @@ export interface RootRouteChildren {
   MaintenanceRoute: typeof MaintenanceRoute
   MarinaRoute: typeof MarinaRoute
   MarketplaceBacklinksRoute: typeof MarketplaceBacklinksRoute
+  MatriceConcurrenceRoute: typeof MatriceConcurrenceRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   MethodologieRoute: typeof MethodologieRoute
   ModifierCodeWordpressRoute: typeof ModifierCodeWordpressRoute
@@ -2228,6 +2241,13 @@ declare module '@tanstack/react-router' {
       path: '/marketplace-backlinks'
       fullPath: '/marketplace-backlinks'
       preLoaderRoute: typeof MarketplaceBacklinksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matrice-concurrence': {
+      id: '/matrice-concurrence'
+      path: '/matrice-concurrence'
+      fullPath: '/matrice-concurrence'
+      preLoaderRoute: typeof MatriceConcurrenceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mentions-legales': {
@@ -2921,6 +2941,7 @@ const rootRouteChildren: RootRouteChildren = {
   MaintenanceRoute: MaintenanceRoute,
   MarinaRoute: MarinaRoute,
   MarketplaceBacklinksRoute: MarketplaceBacklinksRoute,
+  MatriceConcurrenceRoute: MatriceConcurrenceRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
   MethodologieRoute: MethodologieRoute,
   ModifierCodeWordpressRoute: ModifierCodeWordpressRoute,
