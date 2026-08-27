@@ -4,8 +4,8 @@ import { pageHead } from "@/lib/seo/pageHead";
 
 export const Route = createFileRoute("/indice-alignement-strategique")({
   head: () => pageHead({
-    title: "IAS — Índice de Alineamiento Estratégico SEO & GEO 2026",
-    description: "El Índice de Alineamiento Estratégico (IAS) de Crawlers.fr transforma sus datos de Google Search Console en un diagnóstico multidimensional. 4 sub-scores, detección automática de antigüedad, diagnóstico IA.",
+    title: "IAS — Indice d'Alignement Stratégique SEO & GEO 2026",
+    description: "L'Indice d'Alignement Stratégique transforme vos données Search Console en diagnostic : 4 sous-scores, détection d'ancienneté, causes de la baisse de trafic.",
     path: "/indice-alignement-strategique",
     ogType: "article",
     noIndex: true,

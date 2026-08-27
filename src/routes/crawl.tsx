@@ -11,7 +11,7 @@ export const Route = createFileRoute("/crawl")({
     pageHead({
       title: "Outil de crawl de site web — jusqu'à 10 000 pages | Crawlers.fr",
       description:
-        "Site crawler en ligne : crawl website et crawl WordPress jusqu'à 10 000 URL. Erreurs techniques, liens cassés, architecture, cannibalisation et citabilité IA.",
+        "Crawlez jusqu'à 10 000 URL sans rien installer : liens cassés, erreurs d'indexation, profondeur, pages orphelines et cannibalisation, avec un plan par URL.",
       path: "/crawl",
       ogType: "article",
       jsonLd: OUTIL_CRAWL_JSONLD,

@@ -6,7 +6,7 @@ import { pagespeedJsonLd } from "@/lib/seo/pageSchemas";
 export const Route = createFileRoute("/pagespeed")({
   head: () => pageHead({
     title: "Test vitesse site & Core Web Vitals — PageSpeed gratuit",
-    description: "Testez gratuitement la vitesse de votre site. Analyse LCP, INP, CLS et Core Web Vitals avec recommandations Google PageSpeed.",
+    description: "Testez votre vitesse et vos Core Web Vitals (LCP, INP, CLS), puis obtenez la cause de chaque ralentissement : CSS bloquant, JS inutilisé, images non optimisées.",
     path: "/pagespeed",
     ogType: "article",
     jsonLd: pagespeedJsonLd,

@@ -5,7 +5,7 @@ import { pageHead } from "@/lib/seo/pageHead";
 export const Route = createFileRoute("/")({
   head: () => pageHead({
     title: "Crawlers.fr — La plateforme SEO & GEO française",
-    description: "Crawlers.fr réunit crawl technique, cocon sémantique 3D, analyse de logs et visibilité IA dans une seule plateforme. Conçue en France par un pro du SEO/GEO.",
+    description: "Mesurez votre référencement Google et votre visibilité dans ChatGPT sur des données réelles : crawl complet, positions SERP, backlinks, citations IA. Audit gratuit.",
     path: "/",
   }),
   component: Index,

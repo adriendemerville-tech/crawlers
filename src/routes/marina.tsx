@@ -18,7 +18,7 @@ export const Route = createFileRoute("/marina")({
     pageHead({
       title: "Audit SEO GEO gratuit — 2 rapports offerts | Marina",
       description:
-        "Audit SEO et GEO gratuit : 2 rapports offerts sans carte bancaire. 40+ pages analysées, visibilité mesurée dans ChatGPT, Gemini et Perplexity, plan d'action.",
+        "Lancez un audit SEO et GEO gratuit en 4 minutes : 40 pages de rapport, un score par axe et un plan d'action priorisé. 2 rapports offerts, sans carte bancaire.",
       path: "/marina",
       keywords:
         "audit seo geo gratuit, audit seo gratuit, audit gratuit référencement, audit visibilité IA, audit GEO",
