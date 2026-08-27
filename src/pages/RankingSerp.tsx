@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState, memo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
+import { AuditedDomainsCounter } from '@/components/AuditedDomainsCounter';
 import { Link } from '@/lib/router-compat';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
