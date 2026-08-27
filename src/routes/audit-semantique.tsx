@@ -4,7 +4,7 @@ import { pageHead } from "@/lib/seo/pageHead";
 
 export const Route = createFileRoute("/audit-semantique")({
   head: () => pageHead({
-    title: "Audit sémantique gratuit — profondeur de contenu | Crawlers.fr",
+    title: "Audit sémantique : couverture d'entités et profondeur de contenu",
     description: "Audit sémantique gratuit : profondeur de contenu, couverture de mots-clés, angles manquants et signaux E-E-A-T mesurés page par page.",
     path: "/audit-semantique",
   }),

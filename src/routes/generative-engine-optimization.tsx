@@ -5,7 +5,7 @@ import { marinaMentionJsonLd } from "@/lib/seo/marinaMentions";
 
 // Pilier unique GEO : absorbe /score-geo, /outil-geo-ia, /visibilite-llm,
 // /optimisation-llm-seo et /referencement-ia (301 permanents).
-const TITLE = "Référencement IA et GEO : guide 2026 et audit gratuit";
+const TITLE = "GEO : mesurer sa citabilité par ChatGPT, Claude, Perplexity";
 const DESCRIPTION =
   "Le GEO (référencement IA) consiste à être cité dans les réponses de ChatGPT, Perplexity et Gemini, pas seulement classé sur Google. Définition, mesure et audit.";
 

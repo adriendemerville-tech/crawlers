@@ -16,7 +16,7 @@ const FAQ: Array<[string, string]> = [
 export const Route = createFileRoute("/marina")({
   head: () =>
     pageHead({
-      title: "Audit SEO GEO gratuit — 2 rapports offerts | Marina",
+      title: "Marina — audit SEO & GEO : rapport 40 pages en 4 minutes",
       description:
         "Lancez un audit SEO et GEO gratuit en 4 minutes : 40 pages de rapport, un score par axe et un plan d'action priorisé. 2 rapports offerts, sans carte bancaire.",
       path: "/marina",
