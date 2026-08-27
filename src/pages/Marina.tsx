@@ -1044,6 +1044,11 @@ export default function Marina() {
                   <MarinaIdentityPanel url={url} isAuthenticated={!!user} />
                 </div>
 
+                {/* Preuve sociale : volume réel de domaines audités */}
+                <AuditedDomainsCounter />
+
+
+
                 {/* Détail des modes de scan : pleine largeur sous les deux cartes */}
                 {scanModeOpen && (
                   <div className="mt-3">
