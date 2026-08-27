@@ -31,27 +31,39 @@ Réponds en citant explicitement les entreprises ou marques que tu recommandes, 
   });
 }
 
-/** Mesure un seul mot-clé (un appel serveur = un mot-clé, pour rester dans les temps). */
-export async function measureKeyword(keyword: string, domains: string[]): Promise<AiReadingJson> {
-  const hits = new Map<string, number>();
-  let observations = 0;
+/**
+ * Mesure un mot-clé pour UN SEUL moteur (3 itérations) et fusionne dans le relevé
+ * existant. Un appel serveur = un moteur, sinon la requête dépasse la limite de temps.
+ */
+export async function measureKeywordForModel(
+  keyword: string,
+  domains: string[],
+  model: string,
+  previous?: AiReadingJson,
+): Promise<AiReadingJson> {
+  const hits: Record<string, number> = { ...(previous?.hits ?? {}) };
+  let observations = previous?.observations ?? 0;
 
-  for (const { model } of AI_MODELS) {
-    const answers = await Promise.all(
-      Array.from({ length: AI_ITERATIONS }, () => askOnce(model, keyword)),
-    );
-    for (const answer of answers) {
-      if (!answer) continue;
-      observations++;
-      for (const d of domains) {
-        if (citedIn(answer, d)) hits.set(d, (hits.get(d) || 0) + 1);
-      }
+  const answers = await Promise.all(
+    Array.from({ length: AI_ITERATIONS }, () => askOnce(model, keyword)),
+  );
+  for (const answer of answers) {
+    if (!answer) continue;
+    observations++;
+    for (const d of domains) {
+      if (citedIn(answer, d)) hits[d] = (hits[d] || 0) + 1;
     }
   }
 
   const rates: Record<string, number> = {};
   if (observations > 0) {
-    for (const d of domains) rates[d] = (hits.get(d) || 0) / observations;
+    for (const d of domains) rates[d] = (hits[d] || 0) / observations;
   }
-  return { keyword, rates };
+  return {
+    keyword,
+    rates,
+    hits,
+    observations,
+    modelsDone: [...new Set([...(previous?.modelsDone ?? []), model])],
+  };
 }
