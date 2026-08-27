@@ -671,11 +671,19 @@ const Index = () => {
                 {language === 'fr' ? 'Gérez 30 clients. Audits illimités.' : language === 'es' ? 'Gestiona 30 clientes. Auditorías ilimitadas.' : 'Manage 30 clients. Unlimited audits.'}
               </h2>
               <p className="mx-auto mb-6 max-w-xl text-muted-foreground">
-                {language === 'fr'
-                  ? 'Rapports marque blanche, correctifs auto-déployés, crawl 5 000 pages/mois et agents IA — tout inclus.'
-                  : language === 'es'
-                  ? 'Informes marca blanca, correcciones auto-desplegadas, crawl 5 000 páginas/mes y agentes IA — todo incluido.'
-                  : 'White-label reports, auto-deployed fixes, 5,000 pages/month crawl & AI agents — all included.'}
+                {language === 'fr' ? (
+                  <>
+                    <strong>Rapports marque blanche</strong>, correctifs auto-déployés, <strong>crawl 5 000 pages/mois</strong> et agents IA — tout inclus.
+                  </>
+                ) : language === 'es' ? (
+                  <>
+                    <strong>Informes marca blanca</strong>, correcciones auto-desplegadas, <strong>crawl 5 000 páginas/mes</strong> y agentes IA — todo incluido.
+                  </>
+                ) : (
+                  <>
+                    <strong>White-label reports</strong>, auto-deployed fixes, <strong>5,000 pages/month crawl</strong> &amp; AI agents — all included.
+                  </>
+                )}
               </p>
               {/* Mini stats */}
               <div className="mx-auto mb-6 grid max-w-lg grid-cols-5 gap-2">
