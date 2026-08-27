@@ -233,7 +233,7 @@ export function Header() {
             <>
                <a href="/" className="relative flex flex-col items-start" aria-label="Crawlers.fr - Accueil">
                 <div className="flex items-center gap-2">
-                {!isProfilePage && (
+                {true && (
                   <svg className="h-8 w-8" viewBox="0 0 48 48" aria-hidden="true">
                     <defs>
                       <linearGradient id="headerBgGradient" x1="100%" y1="0%" x2="0%" y2="100%">
