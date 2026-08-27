@@ -21,6 +21,7 @@ import { Route as ArchitecteGeneratifRouteImport } from './routes/architecte-gen
 import { Route as ArchitectureMapRouteImport } from './routes/architecture-map'
 import { Route as AuditCompareRouteImport } from './routes/audit-compare'
 import { Route as AuditExpertRouteImport } from './routes/audit-expert'
+import { Route as AuditGeoRouteImport } from './routes/audit-geo'
 import { Route as AuditSemantiqueRouteImport } from './routes/audit-semantique'
 import { Route as AuditSeoGeoRouteImport } from './routes/audit-seo-geo'
 import { Route as AuditSeoGratuitRouteImport } from './routes/audit-seo-gratuit'
@@ -208,6 +209,11 @@ const AuditCompareRoute = AuditCompareRouteImport.update({
 const AuditExpertRoute = AuditExpertRouteImport.update({
   id: '/audit-expert',
   path: '/audit-expert',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditGeoRoute = AuditGeoRouteImport.update({
+  id: '/audit-geo',
+  path: '/audit-geo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuditSemantiqueRoute = AuditSemantiqueRouteImport.update({
@@ -879,6 +885,7 @@ export interface FileRoutesByFullPath {
   '/architecture-map': typeof ArchitectureMapRoute
   '/audit-compare': typeof AuditCompareRoute
   '/audit-expert': typeof AuditExpertRoute
+  '/audit-geo': typeof AuditGeoRoute
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
@@ -1021,6 +1028,7 @@ export interface FileRoutesByTo {
   '/architecture-map': typeof ArchitectureMapRoute
   '/audit-compare': typeof AuditCompareRoute
   '/audit-expert': typeof AuditExpertRoute
+  '/audit-geo': typeof AuditGeoRoute
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
@@ -1164,6 +1172,7 @@ export interface FileRoutesById {
   '/architecture-map': typeof ArchitectureMapRoute
   '/audit-compare': typeof AuditCompareRoute
   '/audit-expert': typeof AuditExpertRoute
+  '/audit-geo': typeof AuditGeoRoute
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
@@ -1308,6 +1317,7 @@ export interface FileRouteTypes {
     | '/architecture-map'
     | '/audit-compare'
     | '/audit-expert'
+    | '/audit-geo'
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
@@ -1450,6 +1460,7 @@ export interface FileRouteTypes {
     | '/architecture-map'
     | '/audit-compare'
     | '/audit-expert'
+    | '/audit-geo'
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
@@ -1592,6 +1603,7 @@ export interface FileRouteTypes {
     | '/architecture-map'
     | '/audit-compare'
     | '/audit-expert'
+    | '/audit-geo'
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
@@ -1735,6 +1747,7 @@ export interface RootRouteChildren {
   ArchitectureMapRoute: typeof ArchitectureMapRoute
   AuditCompareRoute: typeof AuditCompareRoute
   AuditExpertRoute: typeof AuditExpertRoute
+  AuditGeoRoute: typeof AuditGeoRoute
   AuditSemantiqueRoute: typeof AuditSemantiqueRoute
   AuditSeoGeoRoute: typeof AuditSeoGeoRoute
   AuditSeoGratuitRoute: typeof AuditSeoGratuitRoute
@@ -1949,6 +1962,13 @@ declare module '@tanstack/react-router' {
       path: '/audit-expert'
       fullPath: '/audit-expert'
       preLoaderRoute: typeof AuditExpertRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit-geo': {
+      id: '/audit-geo'
+      path: '/audit-geo'
+      fullPath: '/audit-geo'
+      preLoaderRoute: typeof AuditGeoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/audit-semantique': {
@@ -2863,6 +2883,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArchitectureMapRoute: ArchitectureMapRoute,
   AuditCompareRoute: AuditCompareRoute,
   AuditExpertRoute: AuditExpertRoute,
+  AuditGeoRoute: AuditGeoRoute,
   AuditSemantiqueRoute: AuditSemantiqueRoute,
   AuditSeoGeoRoute: AuditSeoGeoRoute,
   AuditSeoGratuitRoute: AuditSeoGratuitRoute,

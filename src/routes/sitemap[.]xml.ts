@@ -11,6 +11,7 @@ const FALLBACK_PATHS = [
   "/blog",
   "/guides",
   "/observatoire",
+  "/audit-geo",
   "/audit-seo-geo",
   "/generative-engine-optimization",
   "/a-propos",

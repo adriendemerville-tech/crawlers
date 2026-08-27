@@ -44,6 +44,7 @@ export const SILOS: Record<Silo['id'], Silo> = {
       note: 'Absorbe score GEO, outil GEO IA, visibilité LLM, optimisation LLM SEO',
     },
     satellites: [
+      { label: 'Audit GEO gratuit (232 points)', to: '/audit-geo' },
       { label: 'Méthode d’audit SEO GEO', to: '/audit-seo-geo' },
       { label: 'E-E-A-T : autorité et citations IA', to: '/eeat' },
       { label: 'Place d’échange de backlinks', to: '/marketplace-backlinks' },
