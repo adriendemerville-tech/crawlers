@@ -316,7 +316,7 @@ export function Header() {
 
           {/* 2. Crawl (violet) */}
           <Link to="/app/site-crawl">
-            <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-700 dark:text-purple-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-500/10 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
+            <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-800 dark:text-purple-300 hover:text-purple-700 dark:hover:text-purple-200 hover:bg-purple-500/10 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
               <Bug className="h-3.5 w-3.5" />
               <span className="text-sm font-semibold">Crawl</span>
             </Button>
@@ -344,13 +344,13 @@ export function Header() {
           {/* 4. Cocoon (jaune d'or) */}
           {isAuditExpertPage ? (
             <a href="/app/cocoon" target="_blank" rel="noopener noreferrer">
-              <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-700 dark:text-amber-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
+              <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-800 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
                 <span className="text-sm font-semibold">Cocoon</span>
               </Button>
             </a>
           ) : (
             <Link to="/app/cocoon">
-              <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-700 dark:text-amber-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
+              <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-800 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
                 <span className="text-sm font-semibold">Cocoon</span>
               </Button>
             </Link>
@@ -396,7 +396,7 @@ export function Header() {
               </Button>
             </Link>
             <Link to="/app/site-crawl">
-              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-purple-700 dark:text-purple-500 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
+              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-purple-800 dark:text-purple-300 hover:text-purple-700 dark:hover:text-purple-200 hover:bg-purple-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
                 <Bug className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Crawl
               </Button>
@@ -408,7 +408,7 @@ export function Header() {
               </Button>
             </Link>
             <Link to="/app/cocoon">
-              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-amber-700 dark:text-amber-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
+              <Button variant="ghost" size="sm" className="gap-1 px-2 text-xs text-amber-800 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 hover:bg-amber-500/10 sm:text-sm sm:gap-1.5 sm:px-3">
                 Cocoon
               </Button>
             </Link>
@@ -474,13 +474,13 @@ export function Header() {
                     </Button>
                   </Link>
                   <Link to="/app/site-crawl">
-                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-semibold ${isCrawlPage ? 'text-purple-700 dark:text-purple-500 bg-purple-500/10' : 'text-purple-700 dark:text-purple-500'}`}>
+                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-semibold ${isCrawlPage ? 'text-purple-800 dark:text-purple-300 bg-purple-500/10' : 'text-purple-800 dark:text-purple-300'}`}>
                       <Bug className="h-3 w-3" />
                       Crawl
                     </Button>
                   </Link>
                   <Link to="/app/cocoon">
-                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-500 ${isCocoonPage ? 'bg-amber-500/10' : ''}`}>
+                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300 ${isCocoonPage ? 'bg-amber-500/10' : ''}`}>
                       Cocoon
                     </Button>
                   </Link>
