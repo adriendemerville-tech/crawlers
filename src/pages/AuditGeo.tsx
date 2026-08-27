@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Header } from '@/components/Header';
+import { AuditedDomainsCounter } from '@/components/AuditedDomainsCounter';
 import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -126,6 +127,11 @@ const AuditGeo = () => {
             Résultat en quelques minutes, sans compte pour le rapport d’exemple. 2 rapports offerts.
           </p>
         </section>
+
+        {/* Preuve sociale : volume réel de domaines audités */}
+        <AuditedDomainsCounter />
+
+
 
         <section className="mx-auto max-w-3xl px-4 pb-12" aria-labelledby="geo-definition">
           <h2 id="geo-definition" className="text-2xl font-semibold text-foreground mb-4">

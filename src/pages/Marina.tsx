@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, lazy, Suspense} from 'react';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
+import { AuditedDomainsCounter } from '@/components/AuditedDomainsCounter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -1042,6 +1043,11 @@ export default function Marina() {
                   />
                   <MarinaIdentityPanel url={url} isAuthenticated={!!user} />
                 </div>
+
+                {/* Preuve sociale : volume réel de domaines audités */}
+                <AuditedDomainsCounter />
+
+
 
                 {/* Détail des modes de scan : pleine largeur sous les deux cartes */}
                 {scanModeOpen && (

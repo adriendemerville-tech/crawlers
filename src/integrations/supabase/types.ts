@@ -17462,6 +17462,7 @@ export type Database = {
           scope: string
         }[]
       }
+      get_audited_domains_count: { Args: never; Returns: number }
       get_bot_log_summary: {
         Args: { p_tracked_site_id: string }
         Returns: Json

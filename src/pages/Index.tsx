@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { useToast } from '@/hooks/use-toast';
 import { SiloHub } from '@/components/seo/SiloHub';
 import { Header } from '@/components/Header';
+import { AuditedDomainsCounter } from '@/components/AuditedDomainsCounter';
 import { HeroSection } from '@/components/HeroSection';
 import { ToolTabs, ToolTab } from '@/components/ToolTabs';
 import { MobileLexiqueButton } from '@/components/MobileLexiqueButton';
@@ -660,6 +661,11 @@ const Index = () => {
         <Suspense fallback={<SectionSkeleton />}>
           <div className="cv-auto"><MarinaDeepAuditSection /></div>
         </Suspense>
+
+        {/* Preuve sociale : volume réel de domaines audités, juste sous les lead magnets */}
+        <AuditedDomainsCounter />
+
+
 
 
 

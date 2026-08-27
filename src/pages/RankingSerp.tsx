@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState, memo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
+import { AuditedDomainsCounter } from '@/components/AuditedDomainsCounter';
 import { Link } from '@/lib/router-compat';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -464,10 +465,14 @@ const RankingSerp = memo(() => {
           </div>
         </section>
 
+        {/* Preuve sociale : volume réel de domaines audités */}
+        <AuditedDomainsCounter />
+
         {/* Tool Section */}
         <section className="container mx-auto max-w-5xl px-4 mb-16">
           <SerpBenchmarkMini />
         </section>
+
 
         {/* How it works */}
         <section className="container mx-auto max-w-5xl px-4 mb-16">
