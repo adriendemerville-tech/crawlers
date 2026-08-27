@@ -39,7 +39,20 @@ Filtrage : intention commerciale ou informationnelle utile, volume > seuil, déd
 
 ## Mesure IA
 
-Contrainte de coût assumée : on ne teste pas 20 mots-clés × N moteurs. On mesure les **10 mots-clés à plus forte valeur** sur les moteurs déjà branchés, et on extrapole visuellement les 10 restants comme « non mesuré » (état explicite, jamais inventé). La méthodologie est affichée dans le rapport.
+Deux moteurs seulement, les deux qui pèsent : **Gemini** et **ChatGPT**. Chaque mot-clé est posé en **3 itérations** (même protocole que le benchmark GEO existant), et la cellule retient le taux de citation sur les 3 passages, pas un tirage unique — c'est ce qui distingue une citation stable d'un hasard.
+
+Contrainte de coût assumée : 3 itérations × 2 moteurs, ce n'est pas gratuit. On mesure donc les **10 mots-clés à plus forte valeur** ; les 10 autres restent marqués « non mesuré » (état explicite, jamais inventé). Cache 24 h par couple mot-clé/moteur, mutualisé avec le pool existant.
+
+## Ligne « AI Overviews — position 0 »
+
+Ligne dédiée en haut de la matrice, avant même le site cible : pour chaque mot-clé, les noms de domaine cités par l'AI Overview de Google. C'est le vrai occupant de la position 0, souvent invisible dans un rapport de gap classique.
+
+- Domaine cible cité → cellule mise en avant en or.
+- Concurrent cité → son nom apparaît dans la cellule, et sa ligne est marquée « présent en position 0 ».
+- Aucun AI Overview déclenché sur la requête → état explicite, distinct de « personne cité ».
+
+Un bloc de synthèse liste les domaines les plus cités en position 0 sur l'ensemble des 20 mots-clés : c'est la carte des vrais gagnants du marché dans la recherche générative.
+
 
 ## Garde-fous produit
 
@@ -66,6 +79,7 @@ Contrainte de coût assumée : on ne teste pas 20 mots-clés × N moteurs. On me
 1. Schéma + job asynchrone + quota IP.
 2. Résolution des concurrents typés.
 3. Sélection des 20 mots-clés marché.
-4. Relevés SERP puis relevés IA sur le top 10.
-5. Variant `competitor` de la matrice + page publique + SEO.
-6. Export CSV, capture email, partage.
+4. Relevés SERP + extraction des domaines cités par l'AI Overview.
+5. Relevés IA Gemini + ChatGPT, 3 itérations, sur le top 10.
+6. Variant `competitor` de la matrice (ligne position 0 incluse) + page publique + SEO.
+7. Export CSV, capture email, partage.
