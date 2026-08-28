@@ -87,16 +87,28 @@ JSON strict : {"competitors":[{"domain":"exemple.fr","name":"Exemple","type":"me
   return out;
 }
 
+/** Quotas de lignes par type, pour garder une matrice lisible. */
+const ROW_QUOTA: Record<string, number> = {
+  leader: 2, metier: 3, visibilite: 2, silencieux: 1,
+};
+const ROW_ORDER: Record<string, number> = {
+  leader: 0, metier: 1, visibilite: 2, silencieux: 3,
+};
+
 /**
  * Fusionne les sources, déduplique par domaine et borne la matrice.
  * Priorité quand un domaine remonte deux fois :
- * fourni par l'utilisateur > métier > visibilité > silencieux.
+ * utilisateur > leader mesuré en SERP > métier > visibilité > silencieux.
+ * Un « goliath » proposé par le LLM et réellement vu dans la SERP d'amorçage
+ * est requalifié en leader : il entre dans la matrice au lieu d'en sortir.
  */
 export function mergeCompetitors(
   userProvided: string[],
   proposed: Competitor[],
   visibility: Competitor[],
   self: string,
+  leaders: Competitor[] = [],
+  serpDomains: Set<string> = new Set(),
 ): { matrix: Competitor[]; outOfScope: Competitor[] } {
   const byDomain = new Map<string, Competitor>();
 
@@ -108,15 +120,31 @@ export function mergeCompetitors(
       reason: 'Concurrent désigné par l’utilisateur', source: 'user',
     });
   }
-  for (const c of proposed) if (!byDomain.has(c.domain)) byDomain.set(c.domain, c);
+  for (const c of leaders) if (!byDomain.has(c.domain)) byDomain.set(c.domain, c);
+  for (const c of proposed) {
+    if (byDomain.has(c.domain)) continue;
+    const confirmed = serpDomains.has(c.domain);
+    if (c.type === 'goliath' && confirmed) {
+      byDomain.set(c.domain, {
+        ...c, type: 'leader',
+        reason: `${c.reason || 'Plateforme dominante'} — présent dans la SERP du marché`,
+      });
+      continue;
+    }
+    byDomain.set(c.domain, c);
+  }
   for (const c of visibility) if (!byDomain.has(c.domain)) byDomain.set(c.domain, c);
 
   const all = [...byDomain.values()];
-  const order: Record<string, number> = { metier: 0, visibilite: 1, silencieux: 2 };
+  const used: Record<string, number> = {};
   const matrix = all
-    .filter((c) => c.type in order)
-    .sort((a, b) => order[a.type] - order[b.type])
-    .slice(0, 6);
+    .filter((c) => c.type in ROW_ORDER)
+    .sort((a, b) => ROW_ORDER[a.type] - ROW_ORDER[b.type])
+    .filter((c) => {
+      const n = (used[c.type] = (used[c.type] || 0) + 1);
+      return n <= (ROW_QUOTA[c.type] ?? 1);
+    })
+    .slice(0, 8);
   const outOfScope = all.filter((c) => c.type === 'substitut' || c.type === 'goliath').slice(0, 4);
   return { matrix, outOfScope };
 }

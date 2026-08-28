@@ -3,13 +3,15 @@
 // l'état `not_measured`, jamais `absent`.
 
 export type CompetitorType =
+  | 'leader'      // domine les positions 1-5 / les AI Overviews du marché
   | 'metier'      // même produit/service, même marché
   | 'visibilite'  // rank Google/IA sur nos mots-clés, offre différente
   | 'silencieux'  // même offre, aucune visibilité
   | 'substitut'   // besoin identique, moyen différent (hors matrice)
-  | 'goliath';    // plateforme dominante (hors matrice)
+  | 'goliath';    // plateforme dominante non confirmée en SERP (hors matrice)
 
 export const COMPETITOR_TYPE_LABEL: Record<CompetitorType, string> = {
+  leader: 'Leader du marché',
   metier: 'Concurrent métier',
   visibilite: 'Concurrent de visibilité',
   silencieux: 'Concurrent silencieux',
@@ -22,7 +24,7 @@ export interface Competitor {
   name: string;
   type: CompetitorType;
   reason: string;
-  source: 'dataforseo' | 'llm' | 'user';
+  source: 'dataforseo' | 'llm' | 'user' | 'serp';
 }
 
 export interface MarketKeyword {
@@ -31,6 +33,16 @@ export interface MarketKeyword {
   difficulty: number;
   value: number;
   origin: 'target' | 'gap' | 'ia';
+  /** Cible en 11-30 alors qu'un leader occupe le top 5 : test de position rentable. */
+  quickWin?: boolean;
+}
+
+/** Relevé SERP d'amorçage : sert à découvrir les acteurs, pas à remplir la matrice. */
+export interface SeedSerpReading {
+  keyword: string;
+  top: { domain: string; rank: number }[];
+  aiDomains: string[];
+  targetPosition: number | null;
 }
 
 export type CoverageState = 'covered' | 'weak' | 'absent' | 'not_applicable' | 'not_measured';
@@ -105,12 +117,16 @@ export interface AiReadingJson {
   modelsDone?: string[];
 }
 
-export type MatrixStep = 'pending' | 'identity' | 'competitors' | 'keywords' | 'serp' | 'ai' | 'done';
+export type MatrixStep =
+  | 'pending' | 'identity' | 'seed_keywords' | 'seed_serp'
+  | 'competitors' | 'keywords' | 'serp' | 'ai' | 'done';
 
 export const STEP_LABEL: Record<MatrixStep, string> = {
   pending: 'En file',
   identity: 'Identité de l’entreprise',
-  competitors: 'Détection des concurrents',
+  seed_keywords: 'Mots-clés d’amorçage',
+  seed_serp: 'Lecture du marché dans Google',
+  competitors: 'Leaders et concurrents',
   keywords: 'Mots-clés du marché',
   serp: 'Relevés Google et AI Overviews',
   ai: 'Citations Gemini, ChatGPT et Claude',
@@ -133,6 +149,10 @@ export interface MatrixJobState {
 }
 
 export const MATRIX_KEYWORDS = 20;
+/** Requêtes du relevé d'amorçage servant à découvrir les leaders. */
+export const SEED_SERP_KEYWORDS = 10;
+/** Occurrences minimales en top 5 (ou en AI Overview) pour être qualifié leader. */
+export const LEADER_MIN_HITS = 3;
 export const AI_MEASURED_KEYWORDS = 10;
 export const AI_ITERATIONS = 3;
 export const LOCATION_FR = 2250;

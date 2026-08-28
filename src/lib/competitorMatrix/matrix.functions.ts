@@ -9,8 +9,8 @@ import { getRequestHeader } from '@tanstack/react-start/server';
 import { buildMatrix } from './build';
 import {
   AI_MEASURED_KEYWORDS,
-  type AiReadingJson, type Competitor, type Identity,
-  type MarketKeyword, type MatrixJobState, type MatrixStep, type SerpReadingJson,
+  type AiReadingJson, type Competitor, type Identity, type MarketKeyword,
+  type MatrixJobState, type MatrixStep, type SeedSerpReading, type SerpReadingJson,
 } from './types';
 
 export const MATRIX_FREE_QUOTA = 1; // 1 matrice par IP et par jour
@@ -181,33 +181,63 @@ export const advanceCompetitorMatrix = createServerFn({ method: 'POST' })
         case 'identity': {
           const { resolveIdentity } = await import('./identity.server');
           patch.identity = await resolveIdentity(job.target_url, job.domain);
+          patch.step = 'seed_keywords';
+          patch.progress = 15;
+          break;
+        }
+        // Amorçage : les mots-clés de la cible et des IA servent de sonde de marché.
+        case 'seed_keywords': {
+          const { buildSeedKeywordPool } = await import('./keywords.server');
+          patch.keywords = await buildSeedKeywordPool(job.identity as unknown as Identity);
+          patch.step = 'seed_serp';
+          patch.progress = 25;
+          break;
+        }
+        // Passe 1 : on lit la SERP AVANT d'arrêter la liste des concurrents,
+        // sinon aucun leader des positions 1-5 ne peut entrer dans la matrice.
+        case 'seed_serp': {
+          const { seedSerp } = await import('./serp.server');
+          const seedPool = (job.keywords ?? []) as unknown as MarketKeyword[];
+          patch.seed_serp = await seedSerp(seedPool.map((k) => k.keyword), job.domain);
           patch.step = 'competitors';
-          patch.progress = 20;
+          patch.progress = 35;
           break;
         }
         case 'competitors': {
           const { fetchVisibilityCompetitors, proposeCompetitorsWithLlm, mergeCompetitors } =
             await import('./competitors.server');
+          const { detectLeaders, detectQuickWins, seedSerpDomains } = await import('./leaders.server');
           const identity = job.identity as unknown as Identity;
           const existing = (job.competitors ?? []) as unknown as Competitor[];
           const userDomains = existing.filter((c) => c.source === 'user').map((c) => c.domain);
+          const seed = (job.seed_serp ?? []) as unknown as SeedSerpReading[];
+          const leaders = detectLeaders(seed, job.domain);
           const [visibility, proposed] = await Promise.all([
             fetchVisibilityCompetitors(job.domain),
             proposeCompetitorsWithLlm(identity),
           ]);
-          const { matrix, outOfScope } = mergeCompetitors(userDomains, proposed, visibility, job.domain);
+          const { matrix, outOfScope } = mergeCompetitors(
+            userDomains, proposed, visibility, job.domain, leaders, seedSerpDomains(seed),
+          );
           patch.competitors = matrix;
           patch.out_of_scope = outOfScope;
+          patch.quick_wins = detectQuickWins(seed, leaders.map((l) => l.domain));
           patch.step = 'keywords';
-          patch.progress = 40;
+          patch.progress = 45;
           break;
         }
         case 'keywords': {
-          const { selectMarketKeywords } = await import('./keywords.server');
+          const { expandMarketKeywords } = await import('./keywords.server');
           const competitors = (job.competitors ?? []) as unknown as Competitor[];
-          patch.keywords = await selectMarketKeywords(
-            job.identity as unknown as Identity,
-            competitors.map((c) => c.domain),
+          const seedPool = (job.keywords ?? []) as unknown as MarketKeyword[];
+          // Les leaders passent d'abord : ce sont eux qui définissent le marché.
+          const ordered = [...competitors].sort(
+            (a, b) => (a.type === 'leader' ? 0 : 1) - (b.type === 'leader' ? 0 : 1),
+          );
+          patch.keywords = await expandMarketKeywords(
+            seedPool,
+            ordered.map((c) => c.domain),
+            (job.quick_wins ?? []) as unknown as string[],
           );
           patch.step = 'serp';
           patch.progress = 55;

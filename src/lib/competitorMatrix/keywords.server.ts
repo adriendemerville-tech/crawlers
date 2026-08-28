@@ -83,17 +83,32 @@ JSON strict : {"questions":["...","..."]}`,
     .slice(0, 8);
 }
 
-export async function selectMarketKeywords(
-  identity: Identity,
-  competitorDomains: string[],
-): Promise<MarketKeyword[]> {
-  const targetKws = await fetchRankedFor(identity.domain, 60, 'target');
+function scored(k: RawKw, weight: number): MarketKeyword {
+  const difficulty = Math.min(Math.max(k.difficulty || 30, 5), 100);
+  // Valeur = volume × pertinence ÷ difficulté.
+  const value = Math.round(((k.volume + 5) * weight * 100) / difficulty);
+  return { keyword: k.keyword.slice(0, 90), volume: k.volume, difficulty, value, origin: k.origin };
+}
 
-  const competitorKws: RawKw[] = [];
-  for (const d of competitorDomains.slice(0, 2)) {
-    competitorKws.push(...(await fetchRankedFor(d, 40, 'gap')));
+function dedupe(items: MarketKeyword[]): MarketKeyword[] {
+  const seen = new Set<string>();
+  const out: MarketKeyword[] = [];
+  for (const k of items) {
+    const fp = fingerprint(k.keyword);
+    if (!fp || seen.has(fp)) continue;
+    seen.add(fp);
+    out.push(k);
   }
+  return out;
+}
 
+/**
+ * Étape 2 — pool d'amorçage : ce que la cible adresse déjà + ce que les clients
+ * demandent réellement aux IA. Sert à lancer le relevé SERP de découverte,
+ * avant que les concurrents ne soient connus.
+ */
+export async function buildSeedKeywordPool(identity: Identity): Promise<MarketKeyword[]> {
+  const targetKws = await fetchRankedFor(identity.domain, 60, 'target');
   const aiQueries = await generateAiQueries(identity);
   const aiVolumes = await fetchVolumes(aiQueries);
   const aiKws: RawKw[] = aiQueries.map((q) => {
@@ -101,25 +116,42 @@ export async function selectMarketKeywords(
     return { keyword: q, volume: v?.volume ?? 0, difficulty: v?.difficulty ?? 35, origin: 'ia' as const };
   });
 
-  const targetFingerprints = new Set(targetKws.map((k) => fingerprint(k.keyword)));
-  const seen = new Set<string>();
-  const pool: MarketKeyword[] = [];
+  const pool = dedupe([
+    ...targetKws.map((k) => scored(k, 1)),
+    // Une requête réellement posée aux IA prime sur une requête purement SEO.
+    ...aiKws.map((k) => scored(k, 1.6)),
+  ]);
+  return pool.sort((a, b) => b.value - a.value).slice(0, 60);
+}
 
-  const push = (k: RawKw, weight: number) => {
-    const fp = fingerprint(k.keyword);
-    if (!fp || seen.has(fp)) return;
-    seen.add(fp);
-    const difficulty = Math.min(Math.max(k.difficulty || 30, 5), 100);
-    // Valeur = volume × pertinence ÷ difficulté.
-    const value = Math.round(((k.volume + 5) * weight * 100) / difficulty);
-    pool.push({ keyword: k.keyword.slice(0, 90), volume: k.volume, difficulty, value, origin: k.origin });
-  };
+/**
+ * Étape 5 — colonnes finales : pool d'amorçage + mots-clés des leaders et
+ * concurrents que la cible n'adresse pas, avec priorité aux quick wins.
+ */
+export async function expandMarketKeywords(
+  seedPool: MarketKeyword[],
+  competitorDomains: string[],
+  quickWinKeywords: string[] = [],
+): Promise<MarketKeyword[]> {
+  const gap: RawKw[] = [];
+  for (const d of competitorDomains.slice(0, 2)) {
+    gap.push(...(await fetchRankedFor(d, 40, 'gap')));
+  }
 
-  for (const k of targetKws) push(k, 1);
-  // Le gap (mot-clé d'un concurrent que la cible n'a pas) vaut plus cher.
-  for (const k of competitorKws) push(k, targetFingerprints.has(fingerprint(k.keyword)) ? 1 : 1.4);
-  // Une requête réellement posée aux IA prime sur une requête purement SEO.
-  for (const k of aiKws) push(k, 1.6);
+  const targetFingerprints = new Set(
+    seedPool.filter((k) => k.origin === 'target').map((k) => fingerprint(k.keyword)),
+  );
+  const quickWins = new Set(quickWinKeywords.map(fingerprint));
+
+  const pool = dedupe([
+    ...seedPool,
+    // Le gap (mot-clé d'un concurrent que la cible n'a pas) vaut plus cher.
+    ...gap.map((k) => scored(k, targetFingerprints.has(fingerprint(k.keyword)) ? 1 : 1.4)),
+  ]).map((k) =>
+    quickWins.has(fingerprint(k.keyword))
+      ? { ...k, quickWin: true, value: Math.round(k.value * 1.8) }
+      : k,
+  );
 
   return pool.sort((a, b) => b.value - a.value).slice(0, MATRIX_KEYWORDS);
 }

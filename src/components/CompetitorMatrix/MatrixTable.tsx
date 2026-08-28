@@ -44,11 +44,15 @@ export function MatrixTable({ matrix, keywords }: Props) {
               {keywords.map((kw) => (
                 <th key={kw.keyword} scope="col" className="p-2 align-bottom">
                   <span
-                    className="block h-32 w-6 whitespace-nowrap text-left text-xs font-normal text-muted-foreground"
+                    className={`block h-32 w-6 whitespace-nowrap text-left text-xs font-normal ${
+                      kw.quickWin ? 'font-medium text-primary' : 'text-muted-foreground'
+                    }`}
                     style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-                    title={`${kw.keyword} — ${kw.volume} recherches/mois, difficulté ${kw.difficulty}`}
+                    title={`${kw.keyword} — ${kw.volume} recherches/mois, difficulté ${kw.difficulty}${
+                      kw.quickWin ? ' — quick win : position 11-30 face à un leader du top 5' : ''
+                    }`}
                   >
-                    {kw.keyword}
+                    {kw.quickWin ? `${kw.keyword} ·` : kw.keyword}
                   </span>
                 </th>
               ))}
