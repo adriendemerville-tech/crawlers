@@ -335,6 +335,7 @@ export function buildMatrixReport(job: MatrixJobState): MatrixReport | null {
   if (criticalCount >= 2 && level === 'ok') level = 'weak';
 
   const leaderboard = buildLeaderboard(matrix);
+  const coverageGaps = buildCoverageGaps(job, matrix);
   const leader = leaderboard.find((e) => !e.isTarget);
   const lostVolume = volumeOf(job.keywords, [...s.missing, ...s.weak]);
 
