@@ -46,7 +46,7 @@ export const COVERAGE_LABEL: Record<CoverageState, string> = {
 export interface MatrixCell {
   keyword: string;
   position: number | null;
-  aiCitationRate: number | null; // 0..1 sur 3 itérations × 4 moteurs ; null = non mesuré
+  aiCitationRate: number | null; // 0..1 sur 3 itérations × 3 moteurs ; null = non mesuré
   state: CoverageState;
 }
 
@@ -113,7 +113,7 @@ export const STEP_LABEL: Record<MatrixStep, string> = {
   competitors: 'Détection des concurrents',
   keywords: 'Mots-clés du marché',
   serp: 'Relevés Google et AI Overviews',
-  ai: 'Citations Gemini, ChatGPT, Claude et Perplexity',
+  ai: 'Citations Gemini, ChatGPT et Claude',
   done: 'Terminé',
 };
 
