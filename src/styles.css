@@ -710,3 +710,28 @@ summary::-webkit-details-marker {
 /* Home publique : densité accrue — zoom global 0.8 (-20 % sur les textes,
    images et espacements) pour réduire la hauteur totale de scroll. */
 .home-root { zoom: 0.8; }
+
+/* Home desktop : pleine largeur d'écran (plus de colonnes de marge) et
+   sections volontairement décentrées à gauche/droite pour rythmer la page. */
+@media (min-width: 1024px) {
+  .home-root .container,
+  .home-root .max-w-4xl,
+  .home-root .max-w-5xl,
+  .home-root .max-w-6xl,
+  .home-root .max-w-7xl {
+    max-width: 100%;
+    width: 100%;
+    padding-inline: clamp(1.5rem, 4vw, 5rem);
+  }
+
+  .home-root .home-bias-left > * {
+    max-width: 84%;
+    margin-inline: 0 auto;
+  }
+
+  .home-root .home-bias-right > * {
+    max-width: 84%;
+    margin-inline: auto 0;
+  }
+}
+
