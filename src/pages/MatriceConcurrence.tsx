@@ -130,8 +130,8 @@ export default function MatriceConcurrence() {
             Entrez une adresse. L’outil identifie vos concurrents <strong>métier</strong>, de{' '}
             <strong>visibilité</strong> et <strong>silencieux</strong>, retient les 20 requêtes qui structurent
             votre marché, puis mesure qui les couvre — position Google, sources citées par les{' '}
-            <strong>AI Overviews</strong> et taux de citation dans <strong>ChatGPT et Gemini</strong> sur trois
-            itérations par moteur. Gratuit, une matrice par jour.
+            <strong>AI Overviews</strong> et taux de citation dans <strong>ChatGPT, Gemini, Claude et
+            Perplexity</strong> sur trois itérations par moteur. Gratuit, une matrice par jour.
           </p>
         </header>
 
