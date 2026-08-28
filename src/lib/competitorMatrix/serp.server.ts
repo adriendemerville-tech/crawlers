@@ -3,7 +3,51 @@
 // Si la donnée manque, l'état reste explicitement nul, jamais reconstitué.
 
 import { dfsPost, cleanDomain } from './dfs.server';
-import { LOCATION_FR, type SerpReadingJson } from './types';
+import { LOCATION_FR, SEED_SERP_KEYWORDS, type SeedSerpReading, type SerpReadingJson } from './types';
+
+/**
+ * Passe 1 — relevé d'amorçage. Objectif : découvrir QUI occupe le marché,
+ * donc on lit tous les domaines du top 10 (et l'AI Overview) au lieu de
+ * chercher une liste de domaines déjà connue.
+ */
+export async function seedSerp(keywords: string[], targetDomain: string): Promise<SeedSerpReading[]> {
+  const target = cleanDomain(targetDomain);
+  const tasks = keywords.slice(0, SEED_SERP_KEYWORDS).map((keyword) => ({
+    keyword,
+    location_code: LOCATION_FR,
+    language_code: 'fr',
+    se_domain: 'google.fr',
+    depth: 30,
+    people_also_ask_click_depth: 0,
+  }));
+  if (tasks.length === 0) return [];
+
+  const data = await dfsPost('serp/google/organic/live/advanced', tasks, 90000);
+
+  return tasks.map((task, i) => {
+    const result = data?.tasks?.[i]?.result?.[0];
+    const top: { domain: string; rank: number }[] = [];
+    const aiDomains = new Set<string>();
+    let targetPosition: number | null = null;
+
+    for (const item of result?.items || []) {
+      if (item.type === 'ai_overview') {
+        collectAiOverviewDomains(item, aiDomains);
+        continue;
+      }
+      if (item.type !== 'organic') continue;
+      const d = cleanDomain(item.domain || item.url || '');
+      const rank = item.rank_group || item.rank_absolute;
+      if (!d || !rank) continue;
+      if (rank <= 10 && !top.some((t) => t.domain === d)) top.push({ domain: d, rank });
+      if ((d === target || d.endsWith(`.${target}`)) && (targetPosition === null || rank < targetPosition)) {
+        targetPosition = rank;
+      }
+    }
+
+    return { keyword: task.keyword, top, aiDomains: [...aiDomains].slice(0, 10), targetPosition };
+  });
+}
 
 function collectAiOverviewDomains(item: any, acc: Set<string>) {
   const push = (u?: string) => {
