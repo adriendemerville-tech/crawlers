@@ -81,16 +81,6 @@ const faqItems = [
   },
 ];
 
-const faqSD = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [...faqItems, ...coverageFaqItems].map(({ q, a }) => ({
-    "@type": "Question",
-    "name": q,
-    "acceptedAnswer": { "@type": "Answer", "text": a },
-  })),
-};
-
 const coverageFaqItems = [
   {
     q: "Le crawler Semrush Enterprise analyse-t-il le rendu JavaScript ?",
@@ -105,6 +95,16 @@ const coverageFaqItems = [
     a: "Screaming Frog est un crawler desktop payant par licence (199 £/an) limité à 500 URLs en version gratuite, puissant pour l'audit technique ponctuel mais sans suivi continu ni GEO. Semrush intègre le crawl dans une suite complète. Crawlers.fr combine les deux usages : crawl multi-bots en continu, score GEO et patch de code déployable via connecteurs CMS.",
   },
 ];
+const faqSD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [...faqItems, ...coverageFaqItems].map(({ q, a }) => ({
+    "@type": "Question",
+    "name": q,
+    "acceptedAnswer": { "@type": "Answer", "text": a },
+  })),
+};
+
 
 
 /* ─── Comparison table data ─── */
