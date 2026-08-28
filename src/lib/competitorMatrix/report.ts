@@ -141,6 +141,79 @@ function buildLeaderboard(matrix: MatrixResult): LeaderboardEntry[] {
   return entries.sort((a, b) => (b.covered - a.covered) || (b.weak - a.weak) || (b.aiOverviewHits - a.aiOverviewHits));
 }
 
+/** Pondération de proximité : plus la position est proche du top 10, plus le gain est rapide. */
+const GAP_WEIGHT: Record<GapKind, number> = {
+  quick_win: 1,
+  contested: 0.6,
+  behind: 0.5,
+  ai_only: 0.4,
+};
+
+/**
+ * Écarts de couverture face aux leaders du marché.
+ * Ne compare que des cases mesurées : une requête non relevée n'est jamais un gap.
+ */
+export function buildCoverageGaps(job: MatrixJobState, matrix: MatrixResult, limit = 12): CoverageGap[] {
+  const target = matrix.rows.find((r) => r.type === 'target');
+  if (!target) return [];
+
+  // Les leaders donnent la référence ; à défaut, tous les concurrents suivis.
+  const leaderRows = matrix.rows.filter((r) => r.type === 'leader');
+  const refRows = leaderRows.length > 0 ? leaderRows : matrix.rows.filter((r) => r.type !== 'target');
+  if (refRows.length === 0) return [];
+
+  const gaps: CoverageGap[] = [];
+
+  job.keywords.forEach((kw, i) => {
+    const cell = target.cells[i];
+    if (!cell || cell.state === 'not_measured' || cell.state === 'not_applicable') return;
+    if (cell.state === 'covered') return;
+
+    const holders = refRows
+      .map((r) => ({ row: r, c: r.cells[i] }))
+      .filter(({ c }) => c && c.state === 'covered')
+      .map(({ row, c }) => ({ name: row.name, position: c.position }));
+
+    const positions = holders.map((h) => h.position).filter((p): p is number => p !== null);
+    const bestLeaderPosition = positions.length > 0 ? Math.min(...positions) : null;
+
+    let kind: GapKind | null = null;
+    if (cell.position !== null && cell.position > 10 && cell.position <= 30 && holders.length > 0) kind = 'quick_win';
+    else if (cell.state === 'absent' && holders.length > 0) kind = 'contested';
+    else if (cell.position !== null && cell.position > 10) kind = 'behind';
+    else if (cell.aiCitationRate !== null && cell.aiCitationRate === 0 && holders.length > 0) kind = 'ai_only';
+    if (!kind) return;
+
+    // Difficulté élevée = gain plus lent, donc moins rentable à volume égal.
+    const value = Math.round((kw.volume * GAP_WEIGHT[kind]) / (1 + kw.difficulty / 100));
+
+    const reason =
+      kind === 'quick_win'
+        ? `Vous êtes en position ${cell.position} quand ${holders[0].name} tient le top 10 : la page existe déjà, il manque une remise à niveau.`
+        : kind === 'contested'
+          ? `${holders.length} leader(s) couvrent cette requête, vous n’y êtes pas : la demande est prouvée et captée ailleurs.`
+          : kind === 'behind'
+            ? `Position ${cell.position} sans leader identifié dans le top 10 : la place est prenable sans affrontement direct.`
+            : `Aucune citation de votre domaine dans les réponses d’IA alors que ${holders[0].name} y est cité.`;
+
+    gaps.push({
+      keyword: kw.keyword,
+      volume: kw.volume,
+      difficulty: kw.difficulty,
+      kind,
+      targetPosition: cell.position,
+      targetState: cell.state,
+      leaders: holders.slice(0, 3),
+      bestLeaderPosition,
+      targetAiRate: cell.aiCitationRate === null ? null : round1(cell.aiCitationRate * 100),
+      value,
+      reason,
+    });
+  });
+
+  return gaps.sort((a, b) => b.value - a.value).slice(0, limit);
+}
+
 function buildActions(job: MatrixJobState, matrix: MatrixResult): ReportAction[] {
   const { keywords } = job;
   const target = matrix.rows.find((r) => r.type === 'target');
