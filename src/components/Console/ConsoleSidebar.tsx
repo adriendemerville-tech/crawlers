@@ -209,6 +209,31 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
     if (error) toast.error('Ordre non enregistré', { description: error.message });
   };
 
+  // Pastille « rapport de concurrence prêt » : jobs terminés non encore consultés.
+  const [readyMatrices, setReadyMatrices] = useState(0);
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    const load = () => {
+      supabase
+        .from('competitor_matrix_jobs')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'done')
+        .is('seen_at', null)
+        .then(({ count }) => { if (alive) setReadyMatrices(count ?? 0); });
+    };
+    load();
+    const timer = setInterval(load, 30000);
+    const onSeen = () => setReadyMatrices(0);
+    window.addEventListener('competition-seen', onSeen);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+      window.removeEventListener('competition-seen', onSeen);
+    };
+  }, [user]);
+
 
 
   // Liste des onglets cachés en vue simplifiée — doit rester synchro avec advancedOnly ci-dessous.
