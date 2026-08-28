@@ -238,7 +238,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
 
     { value: 'tracking', label: t.tracking, icon: Search },
     { value: 'geo', label: t.geo, icon: Sparkles },
-    { value: 'competition', label: 'Concurrence', icon: Swords, hideOnMobile: true },
+    { value: 'competition', label: 'Concurrence', icon: Swords, hideOnMobile: true, badge: readyMatrices },
     { value: 'crawls', label: 'Crawls', icon: Bug, proOnly: true, hideOnMobile: true, advancedOnly: true },
     { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true, advancedOnly: true },
     ...(!isProUser ? [
