@@ -228,6 +228,15 @@ export default function APropos() {
               </h3>
               <p className="text-sm text-primary font-medium">{t.founderRole}</p>
               <p className="text-muted-foreground leading-relaxed">{t.founderBio}</p>
+              <p className="text-muted-foreground leading-relaxed">
+                {language === 'en' ? (
+                  <>Adrien is also the founder of <a href="https://dictadevi.io" target="_blank" rel="noopener" className="text-primary hover:underline">DictaDevi</a>, an AI-assisted content creation tool.</>
+                ) : language === 'es' ? (
+                  <>Adrien también es el fundador de <a href="https://dictadevi.io" target="_blank" rel="noopener" className="text-primary hover:underline">DictaDevi</a>, una herramienta de creación de contenido asistida por IA.</>
+                ) : (
+                  <>Adrien est également le fondateur de <a href="https://dictadevi.io" target="_blank" rel="noopener" className="text-primary hover:underline">DictaDevi</a>, un outil de création de contenu assisté par IA.</>
+                )}
+              </p>
               <Link
                 to="/auteur/adrien-de-volontat"
                 className="inline-flex items-center text-sm font-medium text-primary hover:underline"
