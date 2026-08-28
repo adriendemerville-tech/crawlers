@@ -3,13 +3,15 @@
 // l'état `not_measured`, jamais `absent`.
 
 export type CompetitorType =
+  | 'leader'      // domine les positions 1-5 / les AI Overviews du marché
   | 'metier'      // même produit/service, même marché
   | 'visibilite'  // rank Google/IA sur nos mots-clés, offre différente
   | 'silencieux'  // même offre, aucune visibilité
   | 'substitut'   // besoin identique, moyen différent (hors matrice)
-  | 'goliath';    // plateforme dominante (hors matrice)
+  | 'goliath';    // plateforme dominante non confirmée en SERP (hors matrice)
 
 export const COMPETITOR_TYPE_LABEL: Record<CompetitorType, string> = {
+  leader: 'Leader du marché',
   metier: 'Concurrent métier',
   visibilite: 'Concurrent de visibilité',
   silencieux: 'Concurrent silencieux',
@@ -22,7 +24,7 @@ export interface Competitor {
   name: string;
   type: CompetitorType;
   reason: string;
-  source: 'dataforseo' | 'llm' | 'user';
+  source: 'dataforseo' | 'llm' | 'user' | 'serp';
 }
 
 export interface MarketKeyword {
@@ -31,6 +33,16 @@ export interface MarketKeyword {
   difficulty: number;
   value: number;
   origin: 'target' | 'gap' | 'ia';
+  /** Cible en 11-30 alors qu'un leader occupe le top 5 : test de position rentable. */
+  quickWin?: boolean;
+}
+
+/** Relevé SERP d'amorçage : sert à découvrir les acteurs, pas à remplir la matrice. */
+export interface SeedSerpReading {
+  keyword: string;
+  top: { domain: string; rank: number }[];
+  aiDomains: string[];
+  targetPosition: number | null;
 }
 
 export type CoverageState = 'covered' | 'weak' | 'absent' | 'not_applicable' | 'not_measured';
