@@ -75,7 +75,7 @@ export default function ApiSeoPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <SiloNav activeSilo="outil-crawl" />
+      <SiloNav silo="outil-crawl" />
 
       <main className="container mx-auto max-w-4xl px-4 py-12 md:py-16">
         <Badge variant="outline" className="mb-4">API · REST async · v1</Badge>
