@@ -126,8 +126,9 @@ function SerpBenchmarkMini() {
 
   return (
     <Card className="border-primary/30 bg-card/80 backdrop-blur-xs">
-      <CardHeader>
-        <div className="flex items-center justify-between flex-wrap gap-4">
+      <CardHeader className="py-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
               <Search className="h-4 w-4 text-primary" />
