@@ -589,7 +589,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-dashed border-border/50 transition-colors"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  <span>{t.addSite}</span>
+                  <span>URL</span>
                 </button>
                 <button
                   onClick={() => { h.setShowApiPanel(!h.showApiPanel); if (!h.showApiPanel) h.setSelectedSite(null); }}
