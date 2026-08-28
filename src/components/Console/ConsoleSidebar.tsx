@@ -11,7 +11,7 @@ import {
   Settings, FileText, CheckSquare, Wallet, Lock, Crown, Bug,
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
   Shield, Code2, ChevronDown, Search, Sparkles, Database, Link2,
-  Plus, Loader2, Check, X, GripVertical, PanelLeftClose, PanelLeft,
+  Plus, Loader2, Check, X, GripVertical, PanelLeftClose, PanelLeft, Swords,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConsoleViewMode } from '@/contexts/ConsoleViewModeContext';
@@ -248,6 +248,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
     ] : []),
     { value: 'gmb', label: 'GMB', icon: Store },
     { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true, advancedOnly: true },
+    { value: 'competition', label: 'Concurrence', icon: Swords, hideOnMobile: true },
     { value: 'netlinking', label: 'Netlinking', icon: Link2, hideOnMobile: true, advancedOnly: true },
     { value: 'marketplace', label: 'Place d\'échange', icon: Store, hideOnMobile: true, beta: true, advancedOnly: true },
     ...(!isProUser ? [
