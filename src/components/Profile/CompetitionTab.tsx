@@ -48,7 +48,20 @@ export function CompetitionTab({ externalDomain }: { externalDomain: string | nu
     setLoading(true);
     try {
       const res = await listConsoleMatrices({ data: { domain: externalDomain } });
-      setRows(res.rows as Row[]);
+      const list = res.rows as Row[];
+      setRows(list);
+      // Le moteur avance une étape par appel client : si l'onglet a été fermé,
+      // le job reste figé. On reprend automatiquement le pilotage ici.
+      const stuck = list.find((r) => r.status === 'running');
+      if (stuck) {
+        setJob((current) => {
+          if (current && current.status === 'running') return current;
+          void getConsoleMatrix({ data: { jobId: stuck.id } }).then((r) => {
+            if (!('error' in r)) setJob(r.job);
+          });
+          return current;
+        });
+      }
     } catch {
       toast.error('Chargement des analyses impossible');
     } finally {
@@ -57,6 +70,7 @@ export function CompetitionTab({ externalDomain }: { externalDomain: string | nu
   }, [externalDomain]);
 
   useEffect(() => { void refresh(); setJob(null); setOpenJob(null); setUrl(''); }, [refresh]);
+
 
   // Une étape par appel : on relance tant que l'analyse tourne.
   useEffect(() => {
