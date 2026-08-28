@@ -191,6 +191,9 @@ export async function advanceRunningMatrices(maxJobs = 2) {
     .from('competitor_matrix_jobs')
     .select('id, lock_until')
     .eq('status', 'running')
+    // Les jobs pilotés depuis un onglet ouvert se mettent à jour en continu :
+    // on ne reprend que ceux inactifs depuis plus de 45 s, sans double travail.
+    .lt('updated_at', new Date(now.getTime() - 45_000).toISOString())
     .or(`lock_until.is.null,lock_until.lt.${now.toISOString()}`)
     .order('updated_at', { ascending: true })
     .limit(maxJobs);
