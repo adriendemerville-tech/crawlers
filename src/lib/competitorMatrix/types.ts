@@ -149,6 +149,10 @@ export interface MatrixJobState {
 }
 
 export const MATRIX_KEYWORDS = 20;
+/** Requêtes du relevé d'amorçage servant à découvrir les leaders. */
+export const SEED_SERP_KEYWORDS = 10;
+/** Occurrences minimales en top 5 (ou en AI Overview) pour être qualifié leader. */
+export const LEADER_MIN_HITS = 3;
 export const AI_MEASURED_KEYWORDS = 10;
 export const AI_ITERATIONS = 3;
 export const LOCATION_FR = 2250;
