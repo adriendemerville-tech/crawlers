@@ -117,7 +117,7 @@ export default function MatriceConcurrence() {
   }, [job, email]);
 
   const running = job?.status === 'running';
-  const summary = job?.matrix?.summary;
+  
 
   return (
     <div className="min-h-screen bg-background">
