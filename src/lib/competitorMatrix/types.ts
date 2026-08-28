@@ -129,7 +129,7 @@ export interface AiReadingJson {
 
 export type MatrixStep =
   | 'pending' | 'identity' | 'seed_keywords' | 'seed_serp'
-  | 'competitors' | 'keywords' | 'serp' | 'ai' | 'done';
+  | 'competitors' | 'keywords' | 'serp' | 'authority' | 'ai' | 'done';
 
 export const STEP_LABEL: Record<MatrixStep, string> = {
   pending: 'En file',
@@ -139,6 +139,7 @@ export const STEP_LABEL: Record<MatrixStep, string> = {
   competitors: 'Leaders et concurrents',
   keywords: 'Mots-clés du marché',
   serp: 'Relevés Google et AI Overviews',
+  authority: 'Autorité, backlinks et signaux E-E-A-T',
   ai: 'Citations Gemini, ChatGPT et Claude',
   done: 'Terminé',
 };
@@ -154,6 +155,7 @@ export interface MatrixJobState {
   competitors: Competitor[];
   keywords: MarketKeyword[];
   matrix: MatrixResult | null;
+  authority: AuthorityReading | null;
   error: string | null;
   shareToken: string;
 }
