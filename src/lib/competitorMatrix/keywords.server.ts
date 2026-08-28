@@ -4,7 +4,9 @@
 
 import { aiChat, parseJsonLoose } from './ai.server';
 import { dfsPost } from './dfs.server';
+import { makeRelevanceFilter } from './relevance.server';
 import { LOCATION_FR, MATRIX_KEYWORDS, type Identity, type MarketKeyword } from './types';
+
 
 interface RawKw { keyword: string; volume: number; difficulty: number; origin: MarketKeyword['origin'] }
 
