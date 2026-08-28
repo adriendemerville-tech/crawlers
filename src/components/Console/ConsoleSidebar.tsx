@@ -332,7 +332,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
     );
 
     const className = cn(
-      'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-normal transition-colors text-left',
+      'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-normal transition-colors text-left',
       collapsed && 'justify-center px-2',
       isActive
         ? 'bg-accent/60 text-foreground font-medium'
@@ -404,7 +404,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
         // Desktop : fixed pleine hauteur — fond opaque pour ne pas laisser transparaître le footer dessous
         : cn(
             'fixed top-0 left-0 h-screen border-r overflow-y-auto z-30 bg-background',
-            collapsed ? 'w-14' : 'w-[200px]',
+            collapsed ? 'w-14' : 'w-[260px]',
           ),
     )}>
       {/* Collapse toggle — toujours visible en haut */}
