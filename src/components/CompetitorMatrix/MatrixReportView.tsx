@@ -225,18 +225,46 @@ export function MatrixReportView({ job }: { job: MatrixJobState }) {
                         : 'aucun leader dans le top 10'}
                     </td>
                     <td className="p-3 whitespace-nowrap">{g.volume.toLocaleString('fr-FR')}</td>
-                    <td className="p-3">{g.difficulty}</td>
-                    <td className="p-3 font-semibold text-primary">{g.value.toLocaleString('fr-FR')}</td>
+                    <td className="p-3">
+                      {g.difficulty}
+                      <span className="block text-xs text-muted-foreground">
+                        ÷ {g.valueFactors.difficultyDivisor.toLocaleString('fr-FR')}
+                      </span>
+                    </td>
+                    <td className="p-3 font-semibold text-primary">
+                      {g.value.toLocaleString('fr-FR')}
+                      <span className="mt-1 block font-normal text-xs text-muted-foreground">
+                        {g.valueFactors.formula}
+                      </span>
+                      <span className="block font-normal text-xs text-muted-foreground">
+                        proximité {g.valueFactors.proximity.toLocaleString('fr-FR')} — {g.valueFactors.proximityLabel}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            {report.coverageGaps.length} opportunités retenues, soit{' '}
-            {report.gapVolume.toLocaleString('fr-FR')} recherches mensuelles hors de votre couverture actuelle. La
-            colonne rentabilité est un indice de comparaison interne, pas une prévision de trafic.
-          </p>
+          <div className="mt-3 rounded-lg border border-border p-4 text-xs text-muted-foreground">
+            <p className="font-medium text-foreground">Comment lire l’indice de rentabilité</p>
+            <p className="mt-2">{GAP_VALUE_EXPLAINER}</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li><strong>Volume</strong> : recherches mensuelles mesurées sur la requête.</li>
+              <li>
+                <strong>Proximité</strong> : distance au top 10 — 1 (11-30), 0,6 (captée par un leader), 0,5 (au-delà du
+                top 10 sans leader), 0,4 (position acquise, citations IA absentes).
+              </li>
+              <li>
+                <strong>Difficulté</strong> : diviseur 1 + difficulté / 100, donc 1,0 à 2,0 selon la concurrence de la
+                requête.
+              </li>
+            </ul>
+            <p className="mt-2">
+              {report.coverageGaps.length} opportunités retenues, soit {report.gapVolume.toLocaleString('fr-FR')}{' '}
+              recherches mensuelles hors de votre couverture actuelle. L’indice sert à comparer les requêtes entre elles,
+              ce n’est pas une prévision de trafic.
+            </p>
+          </div>
         </section>
       )}
 
