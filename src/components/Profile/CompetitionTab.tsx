@@ -201,11 +201,18 @@ export function CompetitionTab({ externalDomain }: { externalDomain: string | nu
 
       <Card>
         <CardContent className="p-0">
+          <div className="border-b p-4">
+            <h3 className="text-sm font-semibold">Analyses passées</h3>
+            <p className="text-xs text-muted-foreground">
+              Toutes les matrices générées pour ce domaine, y compris depuis l’outil public.
+            </p>
+          </div>
           {rows.length === 0 ? (
             <p className="p-5 text-sm text-muted-foreground">
               Aucune URL suivie pour ce domaine. Lancez une première matrice ci-dessus.
             </p>
           ) : (
+
             <ul className="divide-y">
               {rows.map((r) => (
                 <li key={r.id} className="flex flex-wrap items-center gap-3 p-4">
