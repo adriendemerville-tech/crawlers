@@ -256,6 +256,7 @@ export default function Netlinking() {
 
   return (
     <div className="container max-w-6xl mx-auto pb-8 pt-28 px-4">
+      <Header />
       <div className="mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-3">
           <Link2 className="h-8 w-8 text-primary" />

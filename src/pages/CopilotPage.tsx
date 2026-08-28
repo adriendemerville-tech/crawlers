@@ -57,6 +57,7 @@ export default function CopilotPage() {
 
   return (
     <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-5xl flex-col gap-4 p-4 pt-28">
+      <Header />
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Copilot</h1>
         <p className="text-sm text-muted-foreground">

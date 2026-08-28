@@ -96,6 +96,7 @@ export default function AuthorPage() {
 
       <main className="min-h-screen bg-background text-foreground">
         <article className="container max-w-3xl mx-auto px-4 pb-16 pt-28">
+          <Header />
           <header className="flex flex-col sm:flex-row gap-8 items-start mb-12">
             <img
               src={adrienPhoto}

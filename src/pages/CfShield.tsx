@@ -207,6 +207,7 @@ export default function CfShield() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 pb-10 pt-28">
+      <Header />
       {/* Header */}
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>

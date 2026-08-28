@@ -129,6 +129,7 @@ export default function DiagnosticWaf() {
   return (
     <div className="min-h-screen bg-background">
       <main className="container max-w-5xl mx-auto px-4 pb-12 pt-28">
+        <Header />
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 text-primary text-xs font-medium mb-4">
