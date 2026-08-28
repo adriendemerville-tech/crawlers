@@ -5,7 +5,6 @@
 @plugin "@tailwindcss/typography";
 
 @source "../src";
-@source "../src/components/Header.tsx";
 
 /* Les espaces applicatifs (console, audit expert, cocon, matrice, admin,
    social, rapports) sont compilés à part dans styles.app.css : leurs
