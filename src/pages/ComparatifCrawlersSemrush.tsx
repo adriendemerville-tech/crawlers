@@ -91,6 +91,22 @@ const faqSD = {
   })),
 };
 
+const coverageFaqItems = [
+  {
+    q: "Le crawler Semrush Enterprise analyse-t-il le rendu JavaScript ?",
+    a: "Le Site Audit de Semrush, y compris en offre Enterprise, explore jusqu'à 100 000 URLs par campagne avec un rendu JavaScript limité aux configurations prises en charge. Crawlers.fr émule simultanément Googlebot, GPTBot, ClaudeBot, PerplexityBot et Applebot-Extended, et mesure la parité de rendu entre lecture humaine et lecture bot sur chaque page.",
+  },
+  {
+    q: "Quelles sont les limites du crawl Semrush ?",
+    a: "Le crawl Semrush est plafonné par votre abonnement (de 100 000 à 100 000+ URLs selon le plan), avec une fréquence de recrawl hebdomadaire sur les sites configurés. Les quotas sont partagés avec les autres outils de la suite. L'API SEO de Crawlers.fr fonctionne en pay-as-you-go : 100 jobs gratuits par mois puis environ 0,05 € par job, sans plafond d'engagement.",
+  },
+  {
+    q: "Semrush vs Screaming Frog : quel crawler choisir ?",
+    a: "Screaming Frog est un crawler desktop payant par licence (199 £/an) limité à 500 URLs en version gratuite, puissant pour l'audit technique ponctuel mais sans suivi continu ni GEO. Semrush intègre le crawl dans une suite complète. Crawlers.fr combine les deux usages : crawl multi-bots en continu, score GEO et patch de code déployable via connecteurs CMS.",
+  },
+];
+
+
 /* ─── Comparison table data ─── */
 
 type Row = {
