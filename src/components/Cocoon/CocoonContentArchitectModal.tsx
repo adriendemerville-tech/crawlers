@@ -746,7 +746,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               <ResizableHandle withHandle />
 
               {/* Preview panel */}
-              <ResizablePanel defaultSize={70} minSize={40}>
+              <ResizablePanel defaultSize={result ? 52 : 70} minSize={30}>
                 <ContentArchitectProvider value={{
                   result, setResult, loading, url,
                   isEdited, onResetEdits: handleResetEdits,
@@ -760,22 +760,45 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
                   <ContentArchitectPreview />
                 </ContentArchitectProvider>
               </ResizablePanel>
+
+              {/* Score panel (droite) */}
+              {result && (
+                <>
+                  <ResizableHandle withHandle />
+                  <ResizablePanel defaultSize={18} minSize={14} maxSize={30} className="bg-[#1e293b]">
+                    <ContentArchitectScorePanel result={result} pageType={pageType} />
+                  </ResizablePanel>
+                </>
+              )}
             </ResizablePanelGroup>
           ) : (
-            /* No panel open — full preview */
-            <ContentArchitectProvider value={{
-              result, setResult, loading, url,
-              isEdited, onResetEdits: handleResetEdits,
-              showGuide, setShowGuide, language, counters,
-              onSaveDraft: handleSaveDraft, onPublish: handlePublish,
-              publishing, savingDraft,
-              hasCmsConnection, isExistingPage,
-              creditsCost: !isAgencyPro ? 5 : null,
-              colorTheme,
-            }}>
-              <ContentArchitectPreview />
-            </ContentArchitectProvider>
+            /* No panel open — full preview + score */
+            <ResizablePanelGroup orientation="horizontal" className="flex-1" id="content-architect-preview-score">
+              <ResizablePanel defaultSize={result ? 82 : 100} minSize={40}>
+                <ContentArchitectProvider value={{
+                  result, setResult, loading, url,
+                  isEdited, onResetEdits: handleResetEdits,
+                  showGuide, setShowGuide, language, counters,
+                  onSaveDraft: handleSaveDraft, onPublish: handlePublish,
+                  publishing, savingDraft,
+                  hasCmsConnection, isExistingPage,
+                  creditsCost: !isAgencyPro ? 5 : null,
+                  colorTheme,
+                }}>
+                  <ContentArchitectPreview />
+                </ContentArchitectProvider>
+              </ResizablePanel>
+              {result && (
+                <>
+                  <ResizableHandle withHandle />
+                  <ResizablePanel defaultSize={18} minSize={14} maxSize={30} className="bg-[#1e293b]">
+                    <ContentArchitectScorePanel result={result} pageType={pageType} />
+                  </ResizablePanel>
+                </>
+              )}
+            </ResizablePanelGroup>
           )}
+
         </div>
       </div>
     </div>
