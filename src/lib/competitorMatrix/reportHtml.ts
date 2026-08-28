@@ -100,6 +100,26 @@ function leaderboardHtml(r: MatrixReport): string {
   </div>`;
 }
 
+function gapsHtml(r: MatrixReport): string {
+  if (r.coverageGaps.length === 0) return '';
+  return `<div class="section" data-pdf-section="gaps">
+    <h2>Gaps de couverture face aux leaders</h2>
+    <p class="lead">${esc(SECTION_LEADS.gaps)}</p>
+    <table><thead><tr>
+      <th>Requête</th><th>Type d’écart</th><th>Vous</th><th>Leaders qui la couvrent</th><th>Volume/mois</th><th>Difficulté</th><th>Rentabilité</th>
+    </tr></thead><tbody>
+      ${r.coverageGaps.map((g) => `<tr>
+        <td><strong>${esc(g.keyword)}</strong><div class="kw">${esc(g.reason)}</div></td>
+        <td>${esc(GAP_KIND_LABEL[g.kind])}</td>
+        <td>${g.targetPosition !== null ? `position ${g.targetPosition}` : 'hors top 30'}${g.targetAiRate !== null ? `<div class="kw">IA : ${g.targetAiRate} %</div>` : ''}</td>
+        <td>${g.leaders.length > 0 ? esc(g.leaders.map((l) => `${l.name}${l.position !== null ? ` (${l.position})` : ''}`).join(', ')) : 'aucun leader dans le top 10'}</td>
+        <td>${g.volume.toLocaleString('fr-FR')}</td><td>${g.difficulty}</td><td><strong>${g.value.toLocaleString('fr-FR')}</strong></td>
+      </tr>`).join('')}
+    </tbody></table>
+    <p class="kw">${r.coverageGaps.length} opportunités retenues, soit ${r.gapVolume.toLocaleString('fr-FR')} recherches mensuelles hors de votre couverture actuelle. La rentabilité est un indice de comparaison interne, pas une prévision de trafic.</p>
+  </div>`;
+}
+
 function aiHtml(r: MatrixReport): string {
   if (r.aiOverviewGaps.length === 0) return '';
   return `<div class="section" data-pdf-section="ai-overviews">
