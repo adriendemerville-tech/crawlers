@@ -209,23 +209,33 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
     if (error) toast.error('Ordre non enregistré', { description: error.message });
   };
 
-  // Pastille « rapport de concurrence prêt » : jobs terminés non encore consultés.
-  const [readyMatrices, setReadyMatrices] = useState(0);
+  // Pastille « rapport de concurrence prêt » : jobs terminés non encore consultés, par domaine.
+  const [readyByDomain, setReadyByDomain] = useState<Record<string, number>>({});
+  const readyMatrices = Object.values(readyByDomain).reduce((a, b) => a + b, 0);
   useEffect(() => {
     if (!user) return;
     let alive = true;
     const load = () => {
       supabase
         .from('competitor_matrix_jobs')
-        .select('id', { count: 'exact', head: true })
+        .select('domain')
         .eq('user_id', user.id)
         .eq('status', 'done')
         .is('seen_at', null)
-        .then(({ count }) => { if (alive) setReadyMatrices(count ?? 0); });
+        .then(({ data }) => {
+          if (!alive) return;
+          const map: Record<string, number> = {};
+          for (const row of (data as { domain: string | null }[]) || []) {
+            const d = (row.domain || '').replace(/^www\./, '').toLowerCase();
+            if (!d) continue;
+            map[d] = (map[d] ?? 0) + 1;
+          }
+          setReadyByDomain(map);
+        });
     };
     load();
     const timer = setInterval(load, 30000);
-    const onSeen = () => setReadyMatrices(0);
+    const onSeen = () => setReadyByDomain({});
     window.addEventListener('competition-seen', onSeen);
     return () => {
       alive = false;
@@ -233,6 +243,15 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
       window.removeEventListener('competition-seen', onSeen);
     };
   }, [user]);
+
+  /** Domaines (normalisés) porteurs d'une notification, par module. */
+  const notifiedDomainsFor = (tab: string): string[] =>
+    tab === 'competition' ? Object.keys(readyByDomain) : [];
+
+  /** Nombre de notifications, tous modules confondus, pour un domaine donné. */
+  const notifCountForDomain = (domain: string) =>
+    readyByDomain[domain.replace(/^www\./, '').toLowerCase()] ?? 0;
+
 
 
 
@@ -425,7 +444,14 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
             // Custom href items navigate natively via the anchor
             if (item.href) return;
             e.preventDefault();
+            // Si le module porte une notification, on bascule sur le domaine concerné.
+            const notified = notifiedDomainsFor(item.value);
+            if (notified.length > 0) {
+              const target = sites.find(s => notified.includes(s.domain.replace(/^www\./, '').toLowerCase()));
+              if (target && target.id !== selectedSiteId) handleSiteChange(target.id, target.domain);
+            }
             onTabChange(item.value);
+
           }}
           className={className}
         >
@@ -479,7 +505,16 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
               <span className="flex-1 truncate text-xs font-medium">
                 {selectedSite ? selectedSite.domain.replace(/^www\./, '') : t.allSites}
               </span>
+              {(selectedSite ? notifCountForDomain(selectedSite.domain) : readyMatrices) > 0 && (
+                <span
+                  className="shrink-0 rounded-full bg-yellow-500 text-black text-[10px] font-semibold leading-none px-1.5 py-0.5"
+                  title="Rapport prêt"
+                >
+                  {selectedSite ? notifCountForDomain(selectedSite.domain) : readyMatrices}
+                </span>
+              )}
               <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', selectorOpen && 'rotate-180')} />
+
             </button>
 
             {selectorOpen && (
@@ -504,7 +539,16 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
                         selectedSiteId === site.id ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
                       )}
                     >
-                      <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
+                      <span className="flex-1 truncate">{site.domain.replace(/^www\./, '')}</span>
+                      {notifCountForDomain(site.domain) > 0 && (
+                        <span
+                          className="shrink-0 rounded-full bg-yellow-500 text-black text-[10px] font-semibold leading-none px-1.5 py-0.5"
+                          title="Rapport prêt"
+                        >
+                          {notifCountForDomain(site.domain)}
+                        </span>
+                      )}
+
                     </button>
                   ))}
                 </div>
