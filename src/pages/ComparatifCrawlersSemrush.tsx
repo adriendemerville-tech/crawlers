@@ -313,7 +313,7 @@ const ComparatifCrawlersSemrush = () => {
 
                 <h3 className="text-lg font-semibold text-primary">Quand choisir le crawl Crawlers.fr ?</h3>
                 <p>
-                  Choisissez Crawlers.fr si votre priorité est la <strong>visibilité dans les moteurs IA</strong>, si vous voulez sortir de l'audit avec le patch prêt à déployer, ou si vous avez besoin d'un crawl multi-bots pour valider votre <Link to="/blog/crawler-definition-seo-geo" className="text-primary hover:underline font-medium">stratégie GEO</Link>. La complémentarité avec Semrush reste possible — beaucoup d'utilisateurs Pro combinent les deux.
+                  Choisissez Crawlers.fr si votre priorité est la <strong>visibilité dans les moteurs IA</strong>, si vous voulez sortir de l'audit avec le patch prêt à déployer, ou si vous avez besoin d'un crawl multi-bots pour valider votre <Link to="/blog/crawler-definition-seo-geo" className="text-primary hover:underline font-medium">stratégie GEO</Link>. L'<Link to="/api-seo" className="text-primary hover:underline font-medium">API SEO REST</Link> permet en outre d'intégrer ces audits dans vos propres applications. La complémentarité avec Semrush reste possible — beaucoup d'utilisateurs Pro combinent les deux.
                 </p>
 
                 {/* ═══ H2 : Tarifs ═══ */}

@@ -64,6 +64,7 @@ export const SILOS: Record<Silo['id'], Silo> = {
     satellites: [
       { label: 'Audit expert 200+ critères', to: '/audit-expert' },
       { label: 'Cocon sémantique 3D', to: '/features/cocoon' },
+      { label: 'API SEO REST : endpoints et tarifs', to: '/api-seo' },
       { label: 'Modifier le code WordPress', to: '/modifier-code-wordpress' },
     ],
   },
