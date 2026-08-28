@@ -161,6 +161,111 @@ function aiHtml(r: MatrixReport): string {
   </div>`;
 }
 
+function eeatHtml(r: MatrixReport): string {
+  const e = r.eeat;
+  const measured = e.signals.filter((s) => s.status !== 'not_measured');
+  if (measured.length === 0 && e.target === null) return '';
+
+  const num = (n: number | null) => (n === null ? 'non mesuré' : n.toLocaleString('fr-FR'));
+  const profiles = [e.target, ...e.rivals].filter(Boolean) as NonNullable<MatrixReport['eeat']['target']>[];
+
+  return `<div class="section" data-pdf-section="eeat">
+    <h2>Autorité, profil de liens et E-E-A-T</h2>
+    <p class="lead">Ce bloc explique pourquoi certaines requêtes sont classées « atteignables » et d’autres non : à contenu égal, c’est l’autorité et les preuves d’identité qui décident.</p>
+    <p><span class="badge">${esc(e.backlinkVerdict.headline)}${e.score !== null ? ` · E-E-A-T ${e.score}/100` : ''}</span></p>
+    <p>${esc(e.backlinkVerdict.detail)}</p>
+    ${
+      profiles.length > 0
+        ? `<table><thead><tr><th>Domaine</th><th>Authority Score</th><th>Domaines référents</th><th>Backlinks</th><th>Liens / domaine</th><th>Dofollow</th></tr></thead><tbody>
+      ${profiles
+        .map(
+          (p) => `<tr>
+        <td>${p.isTarget ? `<strong>${esc(p.domain)}</strong>` : esc(p.domain)}</td>
+        <td>${num(p.authorityScore)}</td><td>${num(p.referringDomains)}</td><td>${num(p.backlinks)}</td>
+        <td>${num(p.linksPerDomain)}</td>
+        <td>${p.dofollowRatio === null ? 'non mesuré' : `${Math.round(p.dofollowRatio * 100)} %`}</td>
+      </tr>`,
+        )
+        .join('')}
+    </tbody></table>`
+        : ''
+    }
+    <h3>Les quatre piliers</h3>
+    <table><thead><tr><th>Pilier</th><th>Score</th><th>Lecture</th></tr></thead><tbody>
+      ${e.pillars
+        .map(
+          (p) =>
+            `<tr><td>${esc(p.label)}</td><td>${p.score === null ? 'non mesuré' : `${p.score}/100`}</td><td>${esc(p.comment)}</td></tr>`,
+        )
+        .join('')}
+    </tbody></table>
+    ${
+      measured.length > 0
+        ? `<h3>Signaux relevés</h3>
+    <table><thead><tr><th>Signal</th><th>État</th><th>Ce qui a été trouvé</th></tr></thead><tbody>
+      ${measured
+        .map(
+          (s) =>
+            `<tr><td>${esc(s.label)}</td><td>${s.status === 'ok' ? 'présent' : 'absent'}</td><td>${esc(s.evidence)}</td></tr>`,
+        )
+        .join('')}
+    </tbody></table>`
+        : ''
+    }
+  </div>`;
+}
+
+function quickWinsHtml(r: MatrixReport): string {
+  if (r.plan.quickWins.length === 0) return '';
+  return `<div class="section" data-pdf-section="quick-wins">
+    <h2>Quick wins</h2>
+    <p class="lead">Gains obtenables sans production de contenu neuf ni gain d’autorité : à traiter avant toute nouvelle page.</p>
+    ${r.plan.quickWins
+      .map(
+        (w) => `<div class="action p1" style="margin-bottom:8px;">
+      <h3>${esc(w.title)}</h3>
+      <p class="kw">Effort ${esc(w.effort)}${w.volume > 0 ? ` · ${w.volume.toLocaleString('fr-FR')} recherches/mois concernées` : ''}</p>
+      <dl>
+        <dt>Constat mesuré</dt><dd>${esc(w.finding)}</dd>
+        <dt>Ce qu’il faut faire</dt><dd>${esc(w.action)}</dd>
+        <dt>Gain attendu</dt><dd>${esc(w.gain)}</dd>
+      </dl>
+    </div>`,
+      )
+      .join('')}
+  </div>`;
+}
+
+function phasesHtml(r: MatrixReport): string {
+  return `<div class="section" data-pdf-section="plan-phases">
+      <h2>Plan en quatre phases</h2>
+      <p class="lead">Chaque requête du marché est classée une seule fois, selon sa difficulté confrontée à votre autorité réellement mesurée.</p>
+      <p class="kw"><strong>Base de faisabilité :</strong> ${esc(r.plan.reach.basis)}</p>
+    </div>
+    ${r.plan.phases
+      .map(
+        (p) => `<div class="section" data-pdf-section="plan-${p.key}">
+      <h2>${esc(p.title)}</h2>
+      <p class="kw">${esc(p.horizon)} · ${p.items.length} requête(s) · ${p.volume.toLocaleString('fr-FR')} recherches/mois</p>
+      <p class="kw"><strong>Règle appliquée :</strong> ${esc(p.rule)}</p>
+      <p>${esc(p.rationale)}</p>
+      ${
+        p.items.length === 0
+          ? '<p class="kw">Aucune requête du marché ne tombe dans cette phase.</p>'
+          : `<table><thead><tr><th>Requête</th><th>Vol./mois</th><th>Difficulté</th><th>Votre position</th><th>Motif du classement</th></tr></thead><tbody>
+        ${p.items
+          .map(
+            (i) => `<tr><td><strong>${esc(i.keyword)}</strong></td><td>${i.volume.toLocaleString('fr-FR')}</td><td>${i.difficulty}</td>
+          <td>${i.targetPosition === null ? 'hors top 30' : `position ${i.targetPosition}`}</td><td class="kw">${esc(i.note)}</td></tr>`,
+          )
+          .join('')}
+      </tbody></table>`
+      }
+    </div>`,
+      )
+      .join('')}`;
+}
+
 function matrixHtml(matrix: MatrixResult, keywords: MarketKeyword[]): string {
   return `<div class="section" data-pdf-section="matrix">
     <h2>Annexe — matrice détaillée</h2>
