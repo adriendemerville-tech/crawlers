@@ -456,6 +456,7 @@ export function buildMatrixReport(job: MatrixJobState): MatrixReport | null {
 
   const leaderboard = buildLeaderboard(matrix);
   const coverageGaps = buildCoverageGaps(job, matrix);
+  const eeat = buildEeatAnalysis(job.authority);
   const leader = leaderboard.find((e) => !e.isTarget);
   const lostVolume = volumeOf(job.keywords, [...s.missing, ...s.weak]);
 
