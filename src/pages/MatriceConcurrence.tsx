@@ -20,8 +20,8 @@ export const MATRIX_FAQS: { q: string; a: string }[] = [
     a: "Trois familles cohabitent et l'outil les distingue. Le concurrent métier vend le même produit ou le même service sur le même marché, qu'il soit visible ou non. Le concurrent de visibilité occupe la SERP et les réponses d'IA sur vos requêtes sans forcément proposer la même offre. Le concurrent silencieux propose la même offre mais n'apparaît nulle part : il ne vous prend pas de trafic aujourd'hui, il vous prend des clients hors ligne. Les substituts fonctionnels et les grandes plateformes dominantes sont listés à part, car ils faussent la lecture d'une matrice de mots-clés.",
   },
   {
-    q: 'Comment la citation dans ChatGPT et Gemini est-elle mesurée ?',
-    a: "Chaque mot-clé retenu est posé trois fois à Gemini et trois fois à ChatGPT, soit six réponses. L'outil compte dans combien de ces réponses chaque domaine est cité, et affiche un taux, pas un tirage unique. Une marque citée une fois sur six n'est pas une marque visible : la répétition sépare la citation stable du hasard.",
+    q: 'Comment la citation dans ChatGPT, Gemini, Claude et Perplexity est-elle mesurée ?',
+    a: "Chaque mot-clé est posé 3 fois à chaque moteur (ChatGPT, Gemini, Claude, Perplexity), soit 12 réponses par mot-clé. L'outil compte dans combien de ces réponses chaque domaine est cité, et affiche un taux, pas un tirage unique. Exemple pour le mot-clé « meilleur outil marketing référencement » : itération 1 — ChatGPT cite concurrentA.fr, Gemini cite concurrentB.fr, Claude ne cite personne, Perplexity cite votre-site.fr ; itération 2 — ChatGPT cite concurrentA.fr, Gemini ne cite personne, Claude cite votre-site.fr, Perplexity cite concurrentA.fr ; itération 3 — ChatGPT ne cite personne, Gemini cite concurrentB.fr, Claude cite votre-site.fr, Perplexity cite votre-site.fr. Votre domaine est cité 3 fois sur 12 : taux de citation IA = 25 %. Une marque citée une seule fois n'est pas une marque visible : la répétition sépare la citation stable du hasard.",
   },
   {
     q: 'Que signifie la ligne AI Overviews position 0 ?',
