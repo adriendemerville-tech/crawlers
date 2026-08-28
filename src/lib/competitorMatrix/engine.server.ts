@@ -103,7 +103,14 @@ export async function runMatrixStep(job: Job): Promise<Record<string, unknown>> 
       case 'authority': {
         const { readAuthority } = await import('./authority.server');
         const competitors = (job.competitors ?? []) as unknown as Competitor[];
-        patch.authority = await readAuthority(job.target_url, job.domain, competitors);
+        try {
+          patch.authority = await readAuthority(job.target_url, job.domain, competitors);
+        } catch (e) {
+          // Une mesure d'autorité manquante n'invalide pas l'analyse : le rapport
+          // exclut alors ces signaux au lieu de les compter comme des échecs.
+          console.error('[competitor-matrix] authority step degraded', e instanceof Error ? e.message : e);
+          patch.authority = null;
+        }
         patch.step = 'ai';
         patch.progress = 70;
         break;
