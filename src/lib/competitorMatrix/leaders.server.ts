@@ -3,6 +3,7 @@
 // plusieurs requêtes d'amorçage. C'est un fait mesuré, jamais une hypothèse.
 
 import { cleanDomain } from './dfs.server';
+import { isNoiseDomain } from './relevance.server';
 import { LEADER_MIN_HITS, type Competitor, type SeedSerpReading } from './types';
 
 const BLOCKLIST = new Set([
@@ -17,6 +18,8 @@ function usable(domain: string, self: string): boolean {
   const d = cleanDomain(domain);
   if (!d || !d.includes('.') || d.length > 80) return false;
   if (d === self || d.endsWith(`.${self}`) || self.endsWith(`.${d}`)) return false;
+  // Fait constaté : sans ce garde, service-public.gouv.fr devenait « leader ».
+  if (isNoiseDomain(d)) return false;
   return !BLOCKLIST.has(d);
 }
 

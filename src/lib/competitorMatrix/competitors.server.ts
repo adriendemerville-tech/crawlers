@@ -5,6 +5,7 @@
 
 import { aiChat, parseJsonLoose } from './ai.server';
 import { dfsPost, cleanDomain } from './dfs.server';
+import { isNoiseDomain } from './relevance.server';
 import { LOCATION_FR, type Competitor, type Identity } from './types';
 
 const BLOCKLIST = new Set([
@@ -18,6 +19,8 @@ function acceptable(domain: string, self: string): boolean {
   const d = cleanDomain(domain);
   if (!d || !d.includes('.') || d.length > 80) return false;
   if (d === self || d.endsWith(`.${self}`) || self.endsWith(`.${d}`)) return false;
+  // Un portail institutionnel ou un média n'est pas un concurrent de marché.
+  if (isNoiseDomain(d)) return false;
   return !BLOCKLIST.has(d);
 }
 
@@ -57,11 +60,12 @@ Entreprise : ${identity.name}
 Domaine : ${identity.domain}
 Activité : ${identity.activity}
 Zone : ${identity.locality || 'nationale'}
+Requêtes du marché : ${(identity.lexicon?.marketTerms ?? []).slice(0, 12).join(', ') || 'non déterminées'}
 
 Donne des entreprises réelles et vérifiables, avec leur nom de domaine exact, réparties en 4 catégories :
-- "metier" : même produit ou service, même marché (4 maximum)
+- "metier" : même produit ou service, même marché (6 maximum) — cite en priorité les acteurs les plus connus et les plus utilisés en France, y compris les solutions généralistes dont ce produit n'est qu'un module
 - "silencieux" : même offre mais très peu visible en ligne (2 maximum)
-- "substitut" : répond au même besoin par un moyen différent (2 maximum)
+- "substitut" : répond au même besoin par un moyen différent (3 maximum)
 - "goliath" : grande plateforme dominante qui pourrait absorber ce marché (2 maximum)
 
 N'invente aucun domaine : si tu n'es pas certain de son existence, ne le cite pas.
@@ -88,11 +92,13 @@ JSON strict : {"competitors":[{"domain":"exemple.fr","name":"Exemple","type":"me
 }
 
 /** Quotas de lignes par type, pour garder une matrice lisible. */
+// Les concurrents métier sont l'information la plus attendue : ils passent
+// devant les concurrents de visibilité, qui n'ont souvent pas la même offre.
 const ROW_QUOTA: Record<string, number> = {
-  leader: 3, metier: 2, visibilite: 2, silencieux: 1,
+  leader: 3, metier: 6, visibilite: 2, substitut: 2, silencieux: 1,
 };
 const ROW_ORDER: Record<string, number> = {
-  leader: 0, metier: 1, visibilite: 2, silencieux: 3,
+  leader: 0, metier: 1, visibilite: 2, substitut: 3, silencieux: 4,
 };
 
 /**
@@ -144,7 +150,10 @@ export function mergeCompetitors(
       const n = (used[c.type] = (used[c.type] || 0) + 1);
       return n <= (ROW_QUOTA[c.type] ?? 1);
     })
-    .slice(0, 8);
-  const outOfScope = all.filter((c) => c.type === 'substitut' || c.type === 'goliath').slice(0, 4);
+    .slice(0, 11);
+  const inMatrix = new Set(matrix.map((c) => c.domain));
+  const outOfScope = all
+    .filter((c) => !inMatrix.has(c.domain) && (c.type === 'substitut' || c.type === 'goliath'))
+    .slice(0, 4);
   return { matrix, outOfScope };
 }
