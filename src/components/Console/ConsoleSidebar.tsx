@@ -235,29 +235,29 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
 
     { value: 'tracking', label: t.tracking, icon: Search },
     { value: 'geo', label: t.geo, icon: Sparkles },
-    { value: 'action-plans', label: t.actionPlans, icon: CheckSquare, hideOnMobile: true },
-    { value: 'corrective-codes', label: t.correctiveCodes, icon: Code2, hideOnMobile: true, advancedOnly: true },
-    { value: 'crawls', label: 'Crawls', icon: Bug, proOnly: true, hideOnMobile: true, advancedOnly: true },
-    { value: 'drafts', label: 'Content', icon: FileEdit, hideOnMobile: true, beta: true },
-    ...(isProUser ? [
-      { value: 'sea-seo', label: 'SEA→SEO', icon: Target, hideOnMobile: true, advancedOnly: true },
-    ] : []),
-    { value: 'indexation', label: 'Indexation', icon: Globe, hideOnMobile: true, advancedOnly: true },
-    ...(isProUser && (!gscBigQueryHidden || isAdmin) ? [
-      { value: 'gsc-bigquery', label: 'GSC BQ', icon: Database, hideOnMobile: true, beta: true, advancedOnly: true },
-    ] : []),
-    { value: 'gmb', label: 'GMB', icon: Store },
-    { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true, advancedOnly: true },
     { value: 'competition', label: 'Concurrence', icon: Swords, hideOnMobile: true },
-    { value: 'netlinking', label: 'Netlinking', icon: Link2, hideOnMobile: true, advancedOnly: true },
-    { value: 'marketplace', label: 'Place d\'échange', icon: Store, hideOnMobile: true, beta: true, advancedOnly: true },
+    { value: 'crawls', label: 'Crawls', icon: Bug, proOnly: true, hideOnMobile: true, advancedOnly: true },
+    { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true, advancedOnly: true },
     ...(!isProUser ? [
       { value: 'reports', label: t.reports, icon: FileText, hideOnMobile: true },
     ] : []),
     ...(isProUser ? [
       { value: 'reports-tab', label: t.reports, icon: FileBox, hideOnMobile: true },
     ] : []),
+    { value: 'action-plans', label: t.actionPlans, icon: CheckSquare, hideOnMobile: true },
+    { value: 'corrective-codes', label: t.correctiveCodes, icon: Code2, hideOnMobile: true, advancedOnly: true },
+    { value: 'gmb', label: 'GMB', icon: Store },
+    { value: 'drafts', label: 'Content', icon: FileEdit, hideOnMobile: true, beta: true },
+    ...(isProUser ? [
+      { value: 'sea-seo', label: 'SEA→SEO', icon: Target, hideOnMobile: true, advancedOnly: true },
+    ] : []),
+    { value: 'indexation', label: 'Indexation', icon: Globe, hideOnMobile: true, advancedOnly: true },
+    { value: 'netlinking', label: 'Netlinking', icon: Link2, hideOnMobile: true, advancedOnly: true },
     { value: 'tracking-api', label: 'API', icon: Network, hideOnMobile: true, advancedOnly: true },
+    ...(isProUser && (!gscBigQueryHidden || isAdmin) ? [
+      { value: 'gsc-bigquery', label: 'GSC BQ', icon: Database, hideOnMobile: true, beta: true, advancedOnly: true },
+    ] : []),
+    { value: 'marketplace', label: 'Place d\'échange', icon: Store, hideOnMobile: true, beta: true, advancedOnly: true },
   ];
 
   // Applique l'ordre personnalisé : items connus d'abord (dans l'ordre choisi), nouveaux modules à la suite.
