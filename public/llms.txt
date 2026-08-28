@@ -275,6 +275,11 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - **Cocoon 3D** : https://crawlers.fr/cocoon
 - **Landing Cocoon** : https://crawlers.fr/features/cocoon
 - **Matrice d'Audit** : https://crawlers.fr/matrice
+- **Matrice Concurrence** : https://crawlers.fr/matrice-concurrence
+- **API développeurs** : https://crawlers.fr/developers
+- **Doc Crawlers API** : https://crawlers.fr/docs/api/crawlers
+- **Doc Marina API** : https://crawlers.fr/docs/api/marina
+- **Doc Parménion API** : https://crawlers.fr/docs/api/parmenion
 - **Intégration GTM** : https://crawlers.fr/integration-gtm
 - **Pro Agency** : https://crawlers.fr/pro-agency
 - **Marina** : https://crawlers.fr/marina
@@ -344,6 +349,11 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - [API & Intégrations](/api-integrations): Connecteurs CMS, GSC, GA4, MCP.
 - [Marina](/marina): Audit SEO GEO gratuit — 2 rapports offerts sans carte bancaire, 40+ pages, ~20 sous-audits, visibilite mesuree dans ChatGPT, Gemini, Perplexity, Claude et Mistral. Point d'entree officiel de l'audit gratuit Crawlers.
 - [Matrice d'audit](/matrice): Benchmark multi-critères public.
+- [Matrice Concurrence](/matrice-concurrence): Outil gratuit — matrice concurrents x 20 mots-clés du marché, positions SERP, AI Overviews et citations ChatGPT/Gemini/Claude, gaps de couverture et indice de rentabilité.
+- [API développeurs](/developers): Trois API REST asynchrones sur un seul compte — Crawlers API (18 modules SEO/GEO/IA, cle crw_live_), Marina API (audits en marque blanche, cle mk_live_), Parmenion API (taches de contenu, cle prm_live_), SDK TypeScript officiels.
+- [Doc Crawlers API](/docs/api/crawlers): Reference des 18 modules exposes en jobs asynchrones.
+- [Doc Marina API](/docs/api/marina): Lancer et recuperer un audit Marina depuis un systeme tiers.
+- [Doc Parmenion API](/docs/api/parmenion): Pull worker pour les taches de contenu de l'autopilote.
 - [Observatoire](/observatoire): Indicateurs sectoriels SEO et GEO.
 - [Pro Agency](/pro-agency): Console multi-sites et outils Pro.
 - [Comparatif Crawlers vs Semrush](/comparatif-crawlers-semrush): Comparaison fonctionnelle.
