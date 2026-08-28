@@ -96,8 +96,8 @@ function HeroSectionComponent() {
 
 
         {/* URL input + CTA Audit Expert */}
-        <div className="mt-2 mx-auto w-full flex items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(90%, 24rem)' }}>
-          <div className="flex-1 basis-0 min-w-0 relative">
+        <div className="mt-2 mx-auto w-full flex items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 40rem)' }}>
+          <div className="flex-[2] basis-0 min-w-0 relative">
             <Input
               type="text"
               placeholder="url : crawlers.fr"
@@ -109,7 +109,7 @@ function HeroSectionComponent() {
                   navigate(`/audit-expert?url=${encodeURIComponent(target)}&autolaunch=1`);
                 }
               }}
-              className="h-12 sm:h-14 rounded-xl pl-3 pr-10 text-base placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
+              className="h-12 sm:h-14 rounded-xl pl-3 pr-10 text-base border-4 border-foreground dark:border-white placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
               aria-label="URL du site web"
             />
             <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
