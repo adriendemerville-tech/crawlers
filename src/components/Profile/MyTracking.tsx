@@ -177,9 +177,9 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip 
   };
 
   return (
-    <div className="relative group rounded-lg border bg-card p-3 flex flex-col justify-between min-h-[68px]">
-      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <Icon className="h-3.5 w-3.5 shrink-0" />
+    <div className="relative group rounded-lg border bg-card p-2 flex flex-col justify-between min-h-[52px]">
+      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+        <Icon className="h-3 w-3 shrink-0" />
         <span className="leading-tight">{label}</span>
         {tooltip && (
           <Popover open={showTooltip} onOpenChange={setShowTooltip}>
@@ -200,12 +200,12 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip 
           </Popover>
         )}
       </div>
-      <p className={`text-base font-semibold mt-1 ${valueClassName || ''}`}>{value}</p>
+      <p className={`text-sm font-semibold mt-0.5 ${valueClassName || ''}`}>{value}</p>
       {onRefresh && (
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="absolute bottom-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted disabled:opacity-50"
+          className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted disabled:opacity-50"
           aria-label="Actualiser"
         >
           <RefreshCw className={cn("h-3 w-3 text-muted-foreground", refreshing && "animate-spin")} />
