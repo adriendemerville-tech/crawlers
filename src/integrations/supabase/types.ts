@@ -3052,6 +3052,8 @@ export type Database = {
           matrix: Json | null
           out_of_scope: Json
           progress: number
+          quick_wins: Json
+          seed_serp: Json
           serp: Json
           share_token: string
           status: string
@@ -3077,6 +3079,8 @@ export type Database = {
           matrix?: Json | null
           out_of_scope?: Json
           progress?: number
+          quick_wins?: Json
+          seed_serp?: Json
           serp?: Json
           share_token: string
           status?: string
@@ -3102,6 +3106,8 @@ export type Database = {
           matrix?: Json | null
           out_of_scope?: Json
           progress?: number
+          quick_wins?: Json
+          seed_serp?: Json
           serp?: Json
           share_token?: string
           status?: string
