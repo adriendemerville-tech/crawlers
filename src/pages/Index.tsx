@@ -25,6 +25,8 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { Crown, ArrowRight, FileSearch, Search, Globe, Brain, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/ActiveCrawlBanner';
+import { PageEditorial } from '@/components/seo/PageEditorial';
+import { CitablePassage } from '@/components/seo/CitablePassage';
 import { LazyVisible } from '@/components/LazyVisible';
 import { getPublicConfig, isFlagEnabled } from '@/lib/config/publicConfig';
 
@@ -606,7 +608,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="home-root flex min-h-screen flex-col bg-background">
       <Helmet>
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
@@ -917,6 +919,94 @@ const Index = () => {
 
 
 
+
+        {/* Contenu éditorial SSR : matière indexable + passages citables (GEO) */}
+        <PageEditorial
+          heading={language === 'fr'
+            ? "Crawlers.fr, c'est quoi exactement ?"
+            : language === 'es'
+            ? '¿Qué es Crawlers.fr exactamente?'
+            : 'What exactly is Crawlers.fr?'}
+          intro={language === 'fr'
+            ? "Crawlers.fr est né d'un constat simple : un site ne se référence plus seulement sur Google, il doit aussi être cité par les IA. La plateforme réunit dans un même audit le crawl technique classique et la mesure de visibilité dans les moteurs génératifs."
+            : language === 'es'
+            ? 'Crawlers.fr nació de una constatación simple: un sitio ya no se posiciona solo en Google, también debe ser citado por las IA. La plataforma reúne en una misma auditoría el rastreo técnico clásico y la medición de visibilidad en los motores generativos.'
+            : 'Crawlers.fr was born from a simple observation: a site no longer ranks only on Google, it must also be cited by AI. The platform combines classic technical crawling and generative-engine visibility measurement in a single audit.'}
+          citable={language === 'fr'
+            ? "Crawlers.fr est un outil de crawl SEO et GEO qui audite un site web sur 168 critères techniques, mesure sa visibilité dans ChatGPT, Gemini et Perplexity, puis génère un plan d'action correctif prêt à déployer."
+            : language === 'es'
+            ? 'Crawlers.fr es una herramienta de rastreo SEO y GEO que audita un sitio web sobre 168 criterios técnicos, mide su visibilidad en ChatGPT, Gemini y Perplexity, y genera un plan de acción correctivo listo para implementar.'
+            : 'Crawlers.fr is an SEO and GEO crawl tool that audits a website across 168 technical criteria, measures its visibility in ChatGPT, Gemini and Perplexity, then generates a corrective action plan ready to deploy.'}
+          sections={language === 'fr' ? [
+            {
+              title: 'Pourquoi auditer à la fois le SEO et le GEO ?',
+              paragraphs: [
+                "Le SEO classique optimise un site pour les résultats de Google. Le GEO (Generative Engine Optimization) optimise le même site pour être compris, extrait et cité par les réponses générées par les IA. Les deux disciplines partagent le même socle technique — crawlabilité, données structurées, performance — mais divergent sur la forme du contenu : les IA privilégient les passages autoportants, factuels et correctement balisés.",
+                "Traiter les deux séparément coûte deux audits, deux outils et deux plans d'action. Crawlers.fr les fusionne : chaque critère technique est évalué sous l'angle Google et sous l'angle des moteurs génératifs, avec une priorisation unique.",
+              ],
+            },
+            {
+              title: "Ce que l'audit mesure concrètement",
+              paragraphs: [
+                "L'audit couvre 168 critères répartis en cinq familles : performance (Core Web Vitals mobile et desktop), crawlabilité (robots.txt, sitemap, statuts HTTP), données structurées (JSON-LD, Open Graph), contenu (titres, hiérarchie, densité) et visibilité IA.",
+              ],
+              bullets: [
+                'Compatibilité avec GPTBot, ClaudeBot, PerplexityBot et Google-Extended, vérifiée sur robots.txt, llms.txt et en-têtes.',
+                'Score GEO sur 100 mesurant la capacité du contenu à être cité par ChatGPT, Gemini et Perplexity.',
+                'Core Web Vitals réels (LCP, INP, CLS) mesurés sur mobile et desktop.',
+                "Plan d'action hiérarchisé par impact, avec le code correctif prêt à déployer pour les critères techniques.",
+              ],
+            },
+            {
+              title: 'Pour qui ?',
+              paragraphs: [
+                "Freelances et agences qui gèrent plusieurs sites : la console centralise audits, suivi de positions, backlinks et citations IA par domaine, avec rapports en marque blanche. Dirigeants et responsables marketing : l'audit expert produit un diagnostic priorisé et chiffré, sans jargon, prêt à déléguer à un développeur ou à un rédacteur.",
+              ],
+            },
+          ] : language === 'es' ? [
+            {
+              title: '¿Por qué auditar SEO y GEO a la vez?',
+              paragraphs: [
+                'El SEO clásico optimiza un sitio para los resultados de Google. El GEO (Generative Engine Optimization) optimiza el mismo sitio para ser comprendido, extraído y citado por las respuestas generadas por las IA. Ambas disciplinas comparten la misma base técnica, pero divergen en la forma del contenido.',
+              ],
+            },
+            {
+              title: 'Qué mide concretamente la auditoría',
+              paragraphs: [
+                'La auditoría cubre 168 criterios: rendimiento (Core Web Vitals), rastreabilidad (robots.txt, sitemap), datos estructurados (JSON-LD), contenido y visibilidad IA.',
+              ],
+            },
+          ] : [
+            {
+              title: 'Why audit SEO and GEO together?',
+              paragraphs: [
+                'Classic SEO optimizes a site for Google results. GEO (Generative Engine Optimization) optimizes the same site to be understood, extracted and cited by AI-generated answers. Both share the same technical foundation but diverge on content form: AI favors self-contained, factual, properly marked-up passages.',
+              ],
+            },
+            {
+              title: 'What the audit actually measures',
+              paragraphs: [
+                'The audit covers 168 criteria: performance (Core Web Vitals), crawlability (robots.txt, sitemap), structured data (JSON-LD), content and AI visibility.',
+              ],
+            },
+          ]}
+        />
+        <div className="mx-auto max-w-3xl px-4 pb-10 space-y-4">
+          <CitablePassage source="Crawlers.fr">
+            {language === 'fr'
+              ? "Crawlers.fr analyse la compatibilité d'un site avec GPTBot, ClaudeBot, PerplexityBot et Google-Extended à partir de son robots.txt, de son fichier llms.txt et de ses données structurées JSON-LD."
+              : language === 'es'
+              ? 'Crawlers.fr analiza la compatibilidad de un sitio con GPTBot, ClaudeBot, PerplexityBot y Google-Extended a partir de su robots.txt, su archivo llms.txt y sus datos estructurados JSON-LD.'
+              : 'Crawlers.fr checks a site\'s compatibility with GPTBot, ClaudeBot, PerplexityBot and Google-Extended from its robots.txt, its llms.txt file and its JSON-LD structured data.'}
+          </CitablePassage>
+          <CitablePassage source="Crawlers.fr">
+            {language === 'fr'
+              ? "L'audit gratuit de Crawlers.fr s'exécute en environ 30 secondes, sans inscription ni carte bancaire, et produit un score GEO sur 100 accompagné d'un plan d'action hiérarchisé."
+              : language === 'es'
+              ? 'La auditoría gratuita de Crawlers.fr se ejecuta en unos 30 segundos, sin registro ni tarjeta bancaria, y produce un score GEO sobre 100 con un plan de acción jerarquizado.'
+              : 'Crawlers.fr\'s free audit runs in about 30 seconds, with no sign-up or credit card, and produces a GEO score out of 100 with a prioritized action plan.'}
+          </CitablePassage>
+        </div>
 
         <LazyVisible minHeight="500px">
           <Suspense fallback={<SectionSkeleton />}>

@@ -706,3 +706,7 @@ summary::-webkit-details-marker {
 @media (prefers-reduced-motion: reduce) {
   .hero-word-enter { animation: none; }
 }
+
+/* Home publique : densité accrue — zoom global 0.8 (-20 % sur les textes,
+   images et espacements) pour réduire la hauteur totale de scroll. */
+.home-root { zoom: 0.8; }
