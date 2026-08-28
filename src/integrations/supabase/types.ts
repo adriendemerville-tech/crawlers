@@ -3049,11 +3049,13 @@ export type Database = {
           ip_hash: string | null
           keywords: Json
           lang: string
+          lock_until: string | null
           matrix: Json | null
           out_of_scope: Json
           progress: number
           quick_wins: Json
           seed_serp: Json
+          seen_at: string | null
           serp: Json
           share_token: string
           status: string
@@ -3076,11 +3078,13 @@ export type Database = {
           ip_hash?: string | null
           keywords?: Json
           lang?: string
+          lock_until?: string | null
           matrix?: Json | null
           out_of_scope?: Json
           progress?: number
           quick_wins?: Json
           seed_serp?: Json
+          seen_at?: string | null
           serp?: Json
           share_token: string
           status?: string
@@ -3103,11 +3107,13 @@ export type Database = {
           ip_hash?: string | null
           keywords?: Json
           lang?: string
+          lock_until?: string | null
           matrix?: Json | null
           out_of_scope?: Json
           progress?: number
           quick_wins?: Json
           seed_serp?: Json
+          seen_at?: string | null
           serp?: Json
           share_token?: string
           status?: string

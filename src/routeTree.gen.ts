@@ -149,6 +149,7 @@ import { Route as AppRapportMatriceRouteImport } from './routes/app/rapport/matr
 import { Route as DocsApiCrawlersRouteImport } from './routes/docs/api/crawlers'
 import { Route as DocsApiMarinaRouteImport } from './routes/docs/api/marina'
 import { Route as DocsApiParmenionRouteImport } from './routes/docs/api/parmenion'
+import { Route as ApiPublicHooksCompetitorMatrixTickRouteImport } from './routes/api/public/hooks/competitor-matrix-tick'
 import { Route as ApiPublicHooksLinkHealthScanRouteImport } from './routes/api/public/hooks/link-health-scan'
 import { Route as ApiPublicHooksMarinaBatchTickRouteImport } from './routes/api/public/hooks/marina-batch-tick'
 
@@ -865,6 +866,12 @@ const DocsApiParmenionRoute = DocsApiParmenionRouteImport.update({
   path: '/docs/api/parmenion',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksCompetitorMatrixTickRoute =
+  ApiPublicHooksCompetitorMatrixTickRouteImport.update({
+    id: '/api/public/hooks/competitor-matrix-tick',
+    path: '/api/public/hooks/competitor-matrix-tick',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksLinkHealthScanRoute =
   ApiPublicHooksLinkHealthScanRouteImport.update({
     id: '/api/public/hooks/link-health-scan',
@@ -1019,6 +1026,7 @@ export interface FileRoutesByFullPath {
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
   '/docs/api/parmenion': typeof DocsApiParmenionRoute
+  '/api/public/hooks/competitor-matrix-tick': typeof ApiPublicHooksCompetitorMatrixTickRoute
   '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
 }
@@ -1163,6 +1171,7 @@ export interface FileRoutesByTo {
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
   '/docs/api/parmenion': typeof DocsApiParmenionRoute
+  '/api/public/hooks/competitor-matrix-tick': typeof ApiPublicHooksCompetitorMatrixTickRoute
   '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
 }
@@ -1308,6 +1317,7 @@ export interface FileRoutesById {
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
   '/docs/api/parmenion': typeof DocsApiParmenionRoute
+  '/api/public/hooks/competitor-matrix-tick': typeof ApiPublicHooksCompetitorMatrixTickRoute
   '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
 }
@@ -1454,6 +1464,7 @@ export interface FileRouteTypes {
     | '/docs/api/crawlers'
     | '/docs/api/marina'
     | '/docs/api/parmenion'
+    | '/api/public/hooks/competitor-matrix-tick'
     | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
   fileRoutesByTo: FileRoutesByTo
@@ -1598,6 +1609,7 @@ export interface FileRouteTypes {
     | '/docs/api/crawlers'
     | '/docs/api/marina'
     | '/docs/api/parmenion'
+    | '/api/public/hooks/competitor-matrix-tick'
     | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
   id:
@@ -1742,6 +1754,7 @@ export interface FileRouteTypes {
     | '/docs/api/crawlers'
     | '/docs/api/marina'
     | '/docs/api/parmenion'
+    | '/api/public/hooks/competitor-matrix-tick'
     | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
   fileRoutesById: FileRoutesById
@@ -1887,6 +1900,7 @@ export interface RootRouteChildren {
   DocsApiCrawlersRoute: typeof DocsApiCrawlersRoute
   DocsApiMarinaRoute: typeof DocsApiMarinaRoute
   DocsApiParmenionRoute: typeof DocsApiParmenionRoute
+  ApiPublicHooksCompetitorMatrixTickRoute: typeof ApiPublicHooksCompetitorMatrixTickRoute
   ApiPublicHooksLinkHealthScanRoute: typeof ApiPublicHooksLinkHealthScanRoute
   ApiPublicHooksMarinaBatchTickRoute: typeof ApiPublicHooksMarinaBatchTickRoute
 }
@@ -2873,6 +2887,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsApiParmenionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/competitor-matrix-tick': {
+      id: '/api/public/hooks/competitor-matrix-tick'
+      path: '/api/public/hooks/competitor-matrix-tick'
+      fullPath: '/api/public/hooks/competitor-matrix-tick'
+      preLoaderRoute: typeof ApiPublicHooksCompetitorMatrixTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/link-health-scan': {
       id: '/api/public/hooks/link-health-scan'
       path: '/api/public/hooks/link-health-scan'
@@ -3033,6 +3054,8 @@ const rootRouteChildren: RootRouteChildren = {
   DocsApiCrawlersRoute: DocsApiCrawlersRoute,
   DocsApiMarinaRoute: DocsApiMarinaRoute,
   DocsApiParmenionRoute: DocsApiParmenionRoute,
+  ApiPublicHooksCompetitorMatrixTickRoute:
+    ApiPublicHooksCompetitorMatrixTickRoute,
   ApiPublicHooksLinkHealthScanRoute: ApiPublicHooksLinkHealthScanRoute,
   ApiPublicHooksMarinaBatchTickRoute: ApiPublicHooksMarinaBatchTickRoute,
 }
