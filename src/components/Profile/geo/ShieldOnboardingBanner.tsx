@@ -39,20 +39,18 @@ export function ShieldOnboardingBanner({ trackedSiteId, domain }: Props) {
 
   return (
     <Card className="border-warning/40 bg-warning/5">
-      <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-warning/50 text-warning">
-            <ShieldAlert className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">
-              Bouclier Cloudflare non déployé sur <span className="font-mono">{domain}</span>
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Sans le Worker, aucun hit bot IA n'est journalisé : les KPIs Crawl, Attribution, CTR référent et
-              Mix LLM resteront vides. Les cartes Visibilité LLM (Benchmark, Profondeur) restent fonctionnelles.
-            </p>
-          </div>
+      <CardContent className="flex items-start gap-3 p-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-warning/50 text-warning">
+          <ShieldAlert className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-foreground">
+            Bouclier Cloudflare non déployé sur <span className="font-mono">{domain}</span>
+          </p>
+          <p className="mt-1 text-xs leading-snug text-muted-foreground">
+            Sans le Worker, aucun hit bot IA n'est journalisé : les KPIs Crawl, Attribution, CTR référent et Mix LLM
+            resteront vides. Les cartes Visibilité LLM (Benchmark, Profondeur) restent fonctionnelles.
+          </p>
         </div>
         <div className="flex shrink-0 gap-2">
           <Button asChild variant="outline" size="sm">
