@@ -408,7 +408,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                               ? (h.language === 'fr' ? 'CMS désynchronisé — cliquez pour reconnecter' : h.language === 'es' ? 'CMS desincronizado — clic para reconectar' : 'CMS out of sync — click to reconnect')
                               : (h.language === 'fr' ? 'Brancher votre CMS (WordPress, Shopify, GTM…)' : h.language === 'es' ? 'Conectar su CMS (WordPress, Shopify, GTM…)' : 'Connect your CMS (WordPress, Shopify, GTM…)');
                           const ctaLabel = isConnected && !isStale
-                            ? (h.language === 'fr' ? 'CMS branché' : h.language === 'es' ? 'CMS conectado' : 'CMS connected')
+                            ? (h.language === 'fr' ? 'Site branché' : h.language === 'es' ? 'Sitio conectado' : 'Site connected')
                             : isStale
                               ? (h.language === 'fr' ? 'Reconnecter CMS' : h.language === 'es' ? 'Reconectar CMS' : 'Reconnect CMS')
                               : (h.language === 'fr' ? 'Brancher CMS' : h.language === 'es' ? 'Conectar CMS' : 'Connect CMS');
