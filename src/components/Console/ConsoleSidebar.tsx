@@ -34,7 +34,10 @@ interface SidebarItem {
   advancedOnly?: boolean;
   /** Override href — when set, item navigates to this route instead of switching tab. */
   href?: string;
+  /** Nombre de nouveautés non consultées (pastille). */
+  badge?: number;
 }
+
 
 const translations = {
   fr: {
