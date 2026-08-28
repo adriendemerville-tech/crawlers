@@ -104,6 +104,9 @@ export interface MatrixReport {
   kpis: ReportKpi[];
   actions: ReportAction[];
   leaderboard: LeaderboardEntry[];
+  /** Concurrents primaires (même offre + goliaths du marché) et secondaires (offre différente). */
+  rivalPanel: { primary: RivalEntry[]; secondary: RivalEntry[] };
+
   /** Écarts de couverture face aux leaders, triés par rentabilité. */
   coverageGaps: CoverageGap[];
   /** Volume mensuel cumulé des gaps retenus. */
@@ -156,6 +159,83 @@ function buildLeaderboard(matrix: MatrixResult): LeaderboardEntry[] {
   });
   return entries.sort((a, b) => (b.covered - a.covered) || (b.weak - a.weak) || (b.aiOverviewHits - a.aiOverviewHits));
 }
+
+/** Positionnement relatif d'un concurrent face au domaine cible dans la SERP. */
+export type RivalStanding = 'devant' | 'derriere' | 'meme_niveau' | 'non_mesure';
+
+export const RIVAL_STANDING_LABEL: Record<RivalStanding, string> = {
+  devant: 'Devant vous',
+  derriere: 'Derrière vous',
+  meme_niveau: 'Au même niveau',
+  non_mesure: 'Position non mesurée',
+};
+
+export interface RivalEntry {
+  domain: string;
+  name: string;
+  typeLabel: string;
+  /** Vend le même produit ou service (ou goliath du marché) → concurrent primaire. */
+  sameOffer: boolean;
+  standing: RivalStanding;
+  avgPosition: number | null;
+  covered: number;
+  aiOverviewHits: number;
+  reason: string;
+}
+
+/**
+ * Panorama des concurrents en tête de synthèse.
+ * Primaires : même produit/service (métier, silencieux, désigné) + leaders et
+ * goliaths qui dominent la SERP du marché, qu'ils soient devant ou derrière.
+ * Secondaires : positionnés au même niveau ou au-dessus sans vendre la même
+ * offre (visibilité, substitut fonctionnel).
+ */
+function buildRivalPanel(matrix: MatrixResult): { primary: RivalEntry[]; secondary: RivalEntry[] } {
+  const target = matrix.rows.find((r) => r.type === 'target');
+  const targetAvg = target ? avgPosition(target) : null;
+  const PRIMARY = new Set(['metier', 'silencieux', 'leader', 'goliath']);
+
+  const entries: RivalEntry[] = matrix.rows
+    .filter((r) => r.type !== 'target')
+    .map((row) => {
+      const counts = countStates(row);
+      const avg = avgPosition(row);
+      const standing: RivalStanding =
+        avg === null
+          ? 'non_mesure'
+          : targetAvg === null
+            ? 'devant'
+            : avg < targetAvg - 0.5
+              ? 'devant'
+              : avg > targetAvg + 0.5
+                ? 'derriere'
+                : 'meme_niveau';
+      return {
+        domain: row.domain,
+        name: row.name,
+        typeLabel: COMPETITOR_TYPE_LABEL[row.type as Exclude<MatrixRow['type'], 'target'>],
+        sameOffer: PRIMARY.has(row.type),
+        standing,
+        avgPosition: avg,
+        covered: counts.covered,
+        aiOverviewHits: matrix.aiOverviewRow.filter((c) => c.domains.includes(row.domain)).length,
+        reason:
+          avg === null
+            ? `${counts.covered} requête(s) du marché couvertes, position moyenne non relevée.`
+            : `Position moyenne ${avg} sur les requêtes relevées, ${counts.covered} requête(s) couvertes.`,
+      };
+    });
+
+  const rank = (e: RivalEntry) => (e.standing === 'devant' ? 0 : e.standing === 'meme_niveau' ? 1 : e.standing === 'derriere' ? 2 : 3);
+  const sort = (a: RivalEntry, b: RivalEntry) => rank(a) - rank(b) || b.covered - a.covered;
+
+  return {
+    primary: entries.filter((e) => e.sameOffer).sort(sort),
+    // Un concurrent d'offre différente ne compte que s'il est au moins à notre niveau.
+    secondary: entries.filter((e) => !e.sameOffer && (e.standing === 'devant' || e.standing === 'meme_niveau')).sort(sort),
+  };
+}
+
 
 /** Pondération de proximité : plus la position est proche du top 10, plus le gain est rapide. */
 const GAP_WEIGHT: Record<GapKind, number> = {
@@ -443,6 +523,8 @@ export function buildMatrixReport(job: MatrixJobState): MatrixReport | null {
     kpis,
     actions,
     leaderboard,
+    rivalPanel: buildRivalPanel(matrix),
+
     coverageGaps,
     gapVolume: coverageGaps.reduce((n, g) => n + g.volume, 0),
     aiOverviewGaps,

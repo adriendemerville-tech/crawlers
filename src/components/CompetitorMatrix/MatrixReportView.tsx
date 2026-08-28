@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { MatrixTable } from './MatrixTable';
-import { buildMatrixReport, GAP_KIND_LABEL, GAP_VALUE_EXPLAINER, VERDICT_LABEL, type ActionPriority } from '@/lib/competitorMatrix/report';
+import { buildMatrixReport, GAP_KIND_LABEL, GAP_VALUE_EXPLAINER, RIVAL_STANDING_LABEL, VERDICT_LABEL, type ActionPriority, type RivalEntry } from '@/lib/competitorMatrix/report';
 import { SECTION_LEADS, VERDICT_HINT } from '@/lib/competitorMatrix/reportCopy';
 import { generateMatrixReportHTML } from '@/lib/competitorMatrix/reportHtml';
 import { COMPETITOR_TYPE_LABEL, type MatrixJobState } from '@/lib/competitorMatrix/types';
@@ -25,6 +25,33 @@ function SectionTitle({ title, lead }: { title: string; lead: string }) {
     </div>
   );
 }
+
+function RivalList({ title, hint, entries }: { title: string; hint: string; entries: RivalEntry[] }) {
+  return (
+    <div className="rounded-lg border border-border p-4">
+      <p className="text-sm font-semibold">{title}</p>
+      <p className="mb-3 text-xs text-muted-foreground">{hint}</p>
+      {entries.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Aucun concurrent mesuré dans cette catégorie.</p>
+      ) : (
+        <ul className="space-y-2">
+          {entries.map((e) => (
+            <li key={e.domain} className="text-sm">
+              <span className="font-medium">{e.name}</span>{' '}
+              <span className="text-xs text-muted-foreground">({e.domain})</span>
+              <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-[11px]">
+                {RIVAL_STANDING_LABEL[e.standing]}
+              </span>
+              <span className="ml-2 text-[11px] uppercase tracking-wide text-muted-foreground">{e.typeLabel}</span>
+              <p className="text-xs text-muted-foreground">{e.reason}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 
 export function MatrixReportView({ job }: { job: MatrixJobState }) {
   const report = useMemo(() => buildMatrixReport(job), [job]);
@@ -54,6 +81,19 @@ export function MatrixReportView({ job }: { job: MatrixJobState }) {
         <SectionTitle title="Synthèse exécutive" lead={SECTION_LEADS.verdict} />
         <Card>
           <CardContent className="space-y-4 p-6">
+            <div className="grid gap-3 md:grid-cols-2">
+              <RivalList
+                title="Concurrents primaires"
+                hint="Même produit ou service que vous, devant ou derrière vous dans Google, plus les leaders et goliaths du marché."
+                entries={report.rivalPanel.primary}
+              />
+              <RivalList
+                title="Concurrents secondaires"
+                hint="Positionnés à votre niveau ou au-dessus sans vendre la même offre."
+                entries={report.rivalPanel.secondary}
+              />
+            </div>
+
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full border border-primary px-3 py-1 text-sm font-medium text-primary">
                 {VERDICT_LABEL[report.verdict.level]}
