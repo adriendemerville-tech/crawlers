@@ -129,11 +129,11 @@ function SerpBenchmarkMini() {
       <CardHeader>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Search className="h-5 w-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Search className="h-4 w-4 text-primary" />
               {t3(language, 'Benchmark SERP', 'SERP Benchmark', 'Benchmark SERP')}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs">
               {t3(language,
                 'Comparez les positions Google renvoyées par plusieurs providers SERP simultanément.',
                 'Compare Google positions returned by multiple SERP providers simultaneously.',
@@ -141,6 +141,7 @@ function SerpBenchmarkMini() {
               )}
             </CardDescription>
           </div>
+
           {results.length > 0 && (
             <Button size="sm" variant="outline" onClick={copyResults} className="gap-1">
               <Copy className="h-3.5 w-3.5" /> Copy {results.length}
