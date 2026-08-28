@@ -408,6 +408,8 @@ export function buildMatrixReport(job: MatrixJobState): MatrixReport | null {
     kpis,
     actions,
     leaderboard,
+    coverageGaps,
+    gapVolume: coverageGaps.reduce((n, g) => n + g.volume, 0),
     aiOverviewGaps,
     measured: {
       serpKeywords: s.measuredKeywords,
