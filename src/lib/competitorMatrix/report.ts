@@ -165,6 +165,13 @@ const GAP_WEIGHT: Record<GapKind, number> = {
   ai_only: 0.4,
 };
 
+const GAP_PROXIMITY_LABEL: Record<GapKind, string> = {
+  quick_win: 'déjà en 11-30, top 10 à portée',
+  contested: 'requête captée par un leader, à conquérir',
+  behind: 'au-delà du top 10, place libre',
+  ai_only: 'position acquise, citations IA absentes',
+};
+
 /**
  * Écarts de couverture face aux leaders du marché.
  * Ne compare que des cases mesurées : une requête non relevée n'est jamais un gap.
