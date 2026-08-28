@@ -5,6 +5,8 @@
 @plugin "@tailwindcss/typography";
 
 @source "../src";
+/* Bulle Félix : globale sur les pages publiques, doit rester dans le CSS critique */
+@source "../src/components/Support/FloatingChatBubble.tsx";
 
 /* Les espaces applicatifs (console, audit expert, cocon, matrice, admin,
    social, rapports) sont compilés à part dans styles.app.css : leurs
