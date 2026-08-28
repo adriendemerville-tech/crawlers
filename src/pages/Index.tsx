@@ -606,7 +606,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="home-root flex min-h-screen flex-col bg-background">
       <Helmet>
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
