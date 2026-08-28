@@ -74,6 +74,7 @@ function toState(row: any): MatrixJobState {
     competitors: row.competitors ?? [],
     keywords: row.keywords ?? [],
     matrix: row.matrix ?? null,
+    authority: row.authority ?? null,
     error: row.error ?? null,
     shareToken: row.share_token,
   };
