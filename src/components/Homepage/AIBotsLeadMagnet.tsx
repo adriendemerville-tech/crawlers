@@ -241,7 +241,7 @@ export function AIBotsLeadMagnet() {
   const citedCount = llmResults?.filter(r => r.cited).length || 0;
 
   return (
-    <div className="mt-10 max-w-3xl mx-auto">
+    <div className="mt-10 max-w-[80rem] mx-auto">
       {/* Tabs */}
       <div className="flex justify-center gap-2 mb-6">
         <button
