@@ -233,6 +233,14 @@ export function buildCoverageGaps(job: MatrixJobState, matrix: MatrixResult, lim
       bestLeaderPosition,
       targetAiRate: cell.aiCitationRate === null ? null : round1(cell.aiCitationRate * 100),
       value,
+      valueFactors: {
+        volume: kw.volume,
+        proximity,
+        proximityLabel: GAP_PROXIMITY_LABEL[kind],
+        difficulty: kw.difficulty,
+        difficultyDivisor,
+        formula: `${fmt(kw.volume)} × ${proximity.toLocaleString('fr-FR')} ÷ ${difficultyDivisor.toLocaleString('fr-FR')} = ${fmt(value)}`,
+      },
       reason,
     });
   });
