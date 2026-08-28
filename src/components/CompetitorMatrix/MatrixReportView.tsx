@@ -26,6 +26,33 @@ function SectionTitle({ title, lead }: { title: string; lead: string }) {
   );
 }
 
+function RivalList({ title, hint, entries }: { title: string; hint: string; entries: RivalEntry[] }) {
+  return (
+    <div className="rounded-lg border border-border p-4">
+      <p className="text-sm font-semibold">{title}</p>
+      <p className="mb-3 text-xs text-muted-foreground">{hint}</p>
+      {entries.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Aucun concurrent mesuré dans cette catégorie.</p>
+      ) : (
+        <ul className="space-y-2">
+          {entries.map((e) => (
+            <li key={e.domain} className="text-sm">
+              <span className="font-medium">{e.name}</span>{' '}
+              <span className="text-xs text-muted-foreground">({e.domain})</span>
+              <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-[11px]">
+                {RIVAL_STANDING_LABEL[e.standing]}
+              </span>
+              <span className="ml-2 text-[11px] uppercase tracking-wide text-muted-foreground">{e.typeLabel}</span>
+              <p className="text-xs text-muted-foreground">{e.reason}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+
 export function MatrixReportView({ job }: { job: MatrixJobState }) {
   const report = useMemo(() => buildMatrixReport(job), [job]);
   const [exporting, setExporting] = useState(false);
