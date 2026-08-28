@@ -1,4 +1,4 @@
-// Étape 5 — citations IA : Gemini et ChatGPT, 3 itérations par mot-clé.
+// Étape 5 — citations IA : Gemini, ChatGPT, Claude et Perplexity, 3 itérations par mot-clé.
 // On retient un TAUX de citation sur les passages réussis, jamais un tirage
 // unique : c'est ce qui distingue une citation stable d'un hasard.
 // Coût borné : seuls les mots-clés à plus forte valeur sont mesurés, les autres
