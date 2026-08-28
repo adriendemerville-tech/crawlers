@@ -2,14 +2,25 @@
 // Tout appel payant passe par `dfsPost`, qui renvoie `null` plutôt que de lever :
 // une donnée manquante reste une donnée manquante, jamais une valeur inventée.
 
+// Sous-domaines de localisation / d'appoint : `fr.semrush.com` et
+// `semrush.com` sont le même acteur. Sans ce regroupement, les occurrences se
+// dispersent et aucun leader n'atteint le seuil de détection.
+const SUBDOMAIN_NOISE =
+  /^(www|fr|en|es|de|it|pt|nl|us|uk|ca|be|ch|blog|help|support|docs|app|academy|www2)\./;
+
 export function cleanDomain(raw: string): string {
-  return String(raw || '')
+  let d = String(raw || '')
     .trim()
     .toLowerCase()
     .replace(/^https?:\/\//, '')
-    .replace(/^www\./, '')
     .split('/')[0];
+  // Répété : `fr.blog.exemple.com` doit se réduire à `exemple.com`.
+  for (let i = 0; i < 3 && SUBDOMAIN_NOISE.test(d) && d.split('.').length > 2; i++) {
+    d = d.replace(SUBDOMAIN_NOISE, '');
+  }
+  return d;
 }
+
 
 export async function dfsPost(
   path: string,
