@@ -163,6 +163,15 @@ export const Route = createFileRoute("/blog/$slug")({
           { name: "Blog", path: "/blog" },
           { name: loaderData.title.replace(/\s*\|\s*Crawlers\.fr$/i, ""), path },
         ]),
+        ...(DEFINITION_ARTICLES[params.slug]
+          ? [
+              buildDefinedTermJsonLd({
+                term: DEFINITION_ARTICLES[params.slug].term,
+                definition: DEFINITION_ARTICLES[params.slug].definition,
+                path,
+              }),
+            ]
+          : []),
       ],
     });
   },
