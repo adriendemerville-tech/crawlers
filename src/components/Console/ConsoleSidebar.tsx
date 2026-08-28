@@ -444,7 +444,14 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
             // Custom href items navigate natively via the anchor
             if (item.href) return;
             e.preventDefault();
+            // Si le module porte une notification, on bascule sur le domaine concerné.
+            const notified = notifiedDomainsFor(item.value);
+            if (notified.length > 0) {
+              const target = sites.find(s => notified.includes(s.domain.replace(/^www\./, '').toLowerCase()));
+              if (target && target.id !== selectedSiteId) handleSiteChange(target.id, target.domain);
+            }
             onTabChange(item.value);
+
           }}
           className={className}
         >
