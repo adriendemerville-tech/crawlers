@@ -571,12 +571,12 @@ const Index = () => {
 
         {/* Pain Points — before Pro Agency */}
         <Suspense fallback={<SectionSkeleton />}>
-          <div className="cv-auto"><PainPointsSection /></div>
+          <div className="cv-auto home-bias-left"><PainPointsSection /></div>
         </Suspense>
 
         {/* Audit profond gratuit (Marina) — juste après les pain points */}
         <Suspense fallback={<SectionSkeleton />}>
-          <div className="cv-auto"><MarinaDeepAuditSection /></div>
+          <div className="cv-auto home-bias-right"><MarinaDeepAuditSection /></div>
         </Suspense>
 
         {/* Preuve sociale : volume réel de domaines audités, juste sous les lead magnets */}
@@ -691,14 +691,14 @@ const Index = () => {
         {/* AI Agents — Félix & Stratège Cocoon */}
         <LazyVisible minHeight="500px">
           <Suspense fallback={<SectionSkeleton />}>
-            <div className="cv-auto-lg"><AIAgentsSection /></div>
+            <div className="cv-auto-lg home-bias-left"><AIAgentsSection /></div>
           </Suspense>
         </LazyVisible>
 
         {/* Content Architect */}
         <LazyVisible minHeight="500px">
           <Suspense fallback={<SectionSkeleton />}>
-            <div className="cv-auto-lg"><ContentArchitectSection /></div>
+            <div className="cv-auto-lg home-bias-right"><ContentArchitectSection /></div>
           </Suspense>
         </LazyVisible>
 
@@ -773,7 +773,7 @@ const Index = () => {
 
         <LazyVisible minHeight="500px">
           <Suspense fallback={<SectionSkeleton />}>
-            <div className="cv-auto"><HybridSection /></div>
+            <div className="cv-auto home-bias-left"><HybridSection /></div>
           </Suspense>
         </LazyVisible>
 
@@ -781,7 +781,7 @@ const Index = () => {
         {/* Chrome Extension — short teaser */}
         <LazyVisible minHeight="400px">
           <Suspense fallback={<SectionSkeleton />}>
-            <div className="cv-auto"><ExtensionSection /></div>
+            <div className="cv-auto home-bias-right"><ExtensionSection /></div>
           </Suspense>
         </LazyVisible>
 
