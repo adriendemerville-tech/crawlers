@@ -209,23 +209,33 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
     if (error) toast.error('Ordre non enregistré', { description: error.message });
   };
 
-  // Pastille « rapport de concurrence prêt » : jobs terminés non encore consultés.
-  const [readyMatrices, setReadyMatrices] = useState(0);
+  // Pastille « rapport de concurrence prêt » : jobs terminés non encore consultés, par domaine.
+  const [readyByDomain, setReadyByDomain] = useState<Record<string, number>>({});
+  const readyMatrices = Object.values(readyByDomain).reduce((a, b) => a + b, 0);
   useEffect(() => {
     if (!user) return;
     let alive = true;
     const load = () => {
       supabase
         .from('competitor_matrix_jobs')
-        .select('id', { count: 'exact', head: true })
+        .select('domain')
         .eq('user_id', user.id)
         .eq('status', 'done')
         .is('seen_at', null)
-        .then(({ count }) => { if (alive) setReadyMatrices(count ?? 0); });
+        .then(({ data }) => {
+          if (!alive) return;
+          const map: Record<string, number> = {};
+          for (const row of (data as { domain: string | null }[]) || []) {
+            const d = (row.domain || '').replace(/^www\./, '').toLowerCase();
+            if (!d) continue;
+            map[d] = (map[d] ?? 0) + 1;
+          }
+          setReadyByDomain(map);
+        });
     };
     load();
     const timer = setInterval(load, 30000);
-    const onSeen = () => setReadyMatrices(0);
+    const onSeen = () => setReadyByDomain({});
     window.addEventListener('competition-seen', onSeen);
     return () => {
       alive = false;
@@ -233,6 +243,15 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
       window.removeEventListener('competition-seen', onSeen);
     };
   }, [user]);
+
+  /** Domaines (normalisés) porteurs d'une notification, par module. */
+  const notifiedDomainsFor = (tab: string): string[] =>
+    tab === 'competition' ? Object.keys(readyByDomain) : [];
+
+  /** Nombre de notifications, tous modules confondus, pour un domaine donné. */
+  const notifCountForDomain = (domain: string) =>
+    readyByDomain[domain.replace(/^www\./, '').toLowerCase()] ?? 0;
+
 
 
 
