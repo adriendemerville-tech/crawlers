@@ -318,6 +318,9 @@ export function generateMatrixReportHTML(
   ${leaderboardHtml(report)}
   ${gapsHtml(report)}
   ${aiHtml(report)}
+  ${eeatHtml(report)}
+  ${quickWinsHtml(report)}
+  ${phasesHtml(report)}
   ${matrixHtml(matrix, keywords)}
   ${scopeHtml(matrix)}
   <div class="foot" data-pdf-section="footer">Rapport produit par Crawlers.fr — matrice de concurrence Google et moteurs de réponse IA.</div>
