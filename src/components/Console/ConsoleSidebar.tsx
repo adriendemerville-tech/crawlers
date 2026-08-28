@@ -34,7 +34,10 @@ interface SidebarItem {
   advancedOnly?: boolean;
   /** Override href — when set, item navigates to this route instead of switching tab. */
   href?: string;
+  /** Nombre de nouveautés non consultées (pastille). */
+  badge?: number;
 }
+
 
 const translations = {
   fr: {
@@ -206,6 +209,31 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
     if (error) toast.error('Ordre non enregistré', { description: error.message });
   };
 
+  // Pastille « rapport de concurrence prêt » : jobs terminés non encore consultés.
+  const [readyMatrices, setReadyMatrices] = useState(0);
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    const load = () => {
+      supabase
+        .from('competitor_matrix_jobs')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'done')
+        .is('seen_at', null)
+        .then(({ count }) => { if (alive) setReadyMatrices(count ?? 0); });
+    };
+    load();
+    const timer = setInterval(load, 30000);
+    const onSeen = () => setReadyMatrices(0);
+    window.addEventListener('competition-seen', onSeen);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+      window.removeEventListener('competition-seen', onSeen);
+    };
+  }, [user]);
+
 
 
   // Liste des onglets cachés en vue simplifiée — doit rester synchro avec advancedOnly ci-dessous.
@@ -235,7 +263,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
 
     { value: 'tracking', label: t.tracking, icon: Search },
     { value: 'geo', label: t.geo, icon: Sparkles },
-    { value: 'competition', label: 'Concurrence', icon: Swords, hideOnMobile: true },
+    { value: 'competition', label: 'Concurrence', icon: Swords, hideOnMobile: true, badge: readyMatrices },
     { value: 'crawls', label: 'Crawls', icon: Bug, proOnly: true, hideOnMobile: true, advancedOnly: true },
     { value: 'marina', label: 'Marina', icon: Anchor, hideOnMobile: true, advancedOnly: true },
     ...(!isProUser ? [
@@ -324,7 +352,19 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
             ) : item.label}
           </span>
         )}
+        {!!item.badge && (
+          <span
+            className={cn(
+              'shrink-0 rounded-full bg-yellow-500 text-black text-[10px] font-semibold leading-none',
+              collapsed ? 'absolute top-1 right-1 h-2 w-2 p-0' : 'px-1.5 py-0.5',
+            )}
+            title="Rapport prêt"
+          >
+            {collapsed ? '' : item.badge}
+          </span>
+        )}
         {!collapsed && isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
+
         {canDrag && !isLocked && (
           <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors" />
         )}
@@ -332,7 +372,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
     );
 
     const className = cn(
-      'w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] font-normal transition-colors text-left',
+      'relative w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] font-normal transition-colors text-left',
       collapsed && 'justify-center px-2',
       isActive
         ? 'bg-accent/60 text-foreground font-medium'
