@@ -301,7 +301,7 @@ export function Header() {
             </Link>
           </div>
         )}
-        {!isProfilePage && !isHomePage && (
+        {!isHomePage && (
           <div className="header-nav-desktop gap-1">
             {location.pathname === '/app/console' ? (
               <>
