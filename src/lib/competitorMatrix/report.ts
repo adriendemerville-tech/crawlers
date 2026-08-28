@@ -208,7 +208,10 @@ export function buildCoverageGaps(job: MatrixJobState, matrix: MatrixResult, lim
     if (!kind) return;
 
     // Difficulté élevée = gain plus lent, donc moins rentable à volume égal.
-    const value = Math.round((kw.volume * GAP_WEIGHT[kind]) / (1 + kw.difficulty / 100));
+    const proximity = GAP_WEIGHT[kind];
+    const difficultyDivisor = round1(1 + kw.difficulty / 100);
+    const value = Math.round((kw.volume * proximity) / (1 + kw.difficulty / 100));
+    const fmt = (n: number) => n.toLocaleString('fr-FR');
 
     const reason =
       kind === 'quick_win'
