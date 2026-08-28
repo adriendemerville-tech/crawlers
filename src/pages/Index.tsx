@@ -897,7 +897,7 @@ const Index = () => {
                   ? 'Diagnóstico SEO & GEO profundo, plan de acción personalizado y código correctivo listo para implementar.'
                   : 'In-depth SEO & GEO diagnosis, personalized action plan & corrective code ready to deploy.'}
               </p>
-              <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}` : '/audit-expert'}>
+              <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}&autolaunch=1` : '/audit-expert'}>
                 <Button
                   variant="default"
                   size="lg"

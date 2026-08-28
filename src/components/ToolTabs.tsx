@@ -88,7 +88,7 @@ export function ToolTabs({
 
       {/* Lien Audit Expert (anciennement Score SEO 200) */}
       <div className="flex justify-center" data-tour="audit-expert">
-        <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}` : '/audit-expert'}>
+        <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}&autolaunch=1` : '/audit-expert'}>
           <Button
             variant="outline"
             size="lg"

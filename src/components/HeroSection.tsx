@@ -105,7 +105,8 @@ function HeroSectionComponent() {
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && url.trim()) {
-                  navigate(`/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}`);
+                  const target = url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim();
+                  navigate(`/audit-expert?url=${encodeURIComponent(target)}&autolaunch=1`);
                 }
               }}
               className="h-12 sm:h-16 rounded-xl pl-4 pr-12 text-base sm:text-lg placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
@@ -113,7 +114,7 @@ function HeroSectionComponent() {
             />
             <Search className="absolute right-5 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
           </div>
-          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}` : '/audit-expert'}>
+          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'}>
             <Button
               variant="outline"
               size="lg"
