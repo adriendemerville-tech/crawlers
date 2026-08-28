@@ -471,6 +471,8 @@ const RankingSerp = memo(() => {
 
         {/* Tool Section (visible sans scroll) */}
         <section className="container mx-auto max-w-5xl px-4 mb-6">
+          <SerpBenchmarkMini />
+        </section>
 
         {/* Preuve sociale : volume réel de domaines audités */}
         <AuditedDomainsCounter />
