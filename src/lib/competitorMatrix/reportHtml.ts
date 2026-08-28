@@ -181,6 +181,7 @@ export function generateMatrixReportHTML(
   ${kpiHtml(report)}
   ${actionsHtml(report)}
   ${leaderboardHtml(report)}
+  ${gapsHtml(report)}
   ${aiHtml(report)}
   ${matrixHtml(matrix, keywords)}
   ${scopeHtml(matrix)}
