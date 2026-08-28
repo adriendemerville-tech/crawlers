@@ -505,7 +505,16 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
               <span className="flex-1 truncate text-xs font-medium">
                 {selectedSite ? selectedSite.domain.replace(/^www\./, '') : t.allSites}
               </span>
+              {(selectedSite ? notifCountForDomain(selectedSite.domain) : readyMatrices) > 0 && (
+                <span
+                  className="shrink-0 rounded-full bg-yellow-500 text-black text-[10px] font-semibold leading-none px-1.5 py-0.5"
+                  title="Rapport prêt"
+                >
+                  {selectedSite ? notifCountForDomain(selectedSite.domain) : readyMatrices}
+                </span>
+              )}
               <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', selectorOpen && 'rotate-180')} />
+
             </button>
 
             {selectorOpen && (
