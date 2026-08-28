@@ -1,4 +1,5 @@
 // Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import { Header } from "@/components/Header";
 import "@/styles.app.css";
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "@/lib/router-compat";
@@ -254,7 +255,7 @@ export default function Netlinking() {
 
 
   return (
-    <div className="container max-w-6xl mx-auto py-8 px-4">
+    <div className="container max-w-6xl mx-auto pb-8 pt-28 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-3">
           <Link2 className="h-8 w-8 text-primary" />

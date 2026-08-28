@@ -1,3 +1,4 @@
+import { Header } from "@/components/Header";
 import { Helmet } from "react-helmet-async";
 import { Link } from "@/lib/router-compat";
 import { Linkedin, Globe, MapPin, Mail, ArrowRight, Target, FileSearch, Cpu, Users } from "lucide-react";
@@ -94,7 +95,7 @@ export default function AuthorPage() {
       </Helmet>
 
       <main className="min-h-screen bg-background text-foreground">
-        <article className="container max-w-3xl mx-auto px-4 py-16">
+        <article className="container max-w-3xl mx-auto px-4 pb-16 pt-28">
           <header className="flex flex-col sm:flex-row gap-8 items-start mb-12">
             <img
               src={adrienPhoto}

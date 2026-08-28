@@ -1,3 +1,4 @@
+import { Header } from "@/components/Header";
 import "@/styles.app.css";
 /**
  * CfShield — Wizard d'activation du Bouclier Cloudflare AI Bots
@@ -205,7 +206,7 @@ export default function CfShield() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-10">
+    <div className="container mx-auto max-w-4xl px-4 pb-10 pt-28">
       {/* Header */}
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
