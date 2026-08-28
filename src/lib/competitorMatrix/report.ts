@@ -523,6 +523,8 @@ export function buildMatrixReport(job: MatrixJobState): MatrixReport | null {
     kpis,
     actions,
     leaderboard,
+    rivalPanel: buildRivalPanel(matrix),
+
     coverageGaps,
     gapVolume: coverageGaps.reduce((n, g) => n + g.volume, 0),
     aiOverviewGaps,
