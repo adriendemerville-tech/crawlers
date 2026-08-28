@@ -46,7 +46,7 @@ export const COVERAGE_LABEL: Record<CoverageState, string> = {
 export interface MatrixCell {
   keyword: string;
   position: number | null;
-  aiCitationRate: number | null; // 0..1 sur 3 itérations × 2 moteurs ; null = non mesuré
+  aiCitationRate: number | null; // 0..1 sur 3 itérations × 4 moteurs ; null = non mesuré
   state: CoverageState;
 }
 
