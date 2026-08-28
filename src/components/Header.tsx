@@ -301,7 +301,7 @@ export function Header() {
             </Link>
           </div>
         )}
-        {!isProfilePage && !isHomePage && (
+        {!isHomePage && (
           <div className="header-nav-desktop gap-1">
             {location.pathname === '/app/console' ? (
               <>
@@ -451,7 +451,7 @@ export function Header() {
         <div className="flex items-center gap-1.5 sm:gap-3">
 
           {/* Mobile-only: contextual nav buttons */}
-          {!isProfilePage && (
+          {(
             <div className="header-nav-mobile gap-0.5">
               {isHomePage ? (
                 <>
