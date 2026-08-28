@@ -2,6 +2,7 @@
 // Aucune localité n'est inventée : sans mention explicite, `locality` reste null.
 
 import { aiChat, parseJsonLoose } from './ai.server';
+import { buildMarketLexicon } from './relevance.server';
 import type { Identity } from './types';
 
 async function fetchPageContext(url: string): Promise<string> {
@@ -43,7 +44,7 @@ export async function resolveIdentity(url: string, domain: string): Promise<Iden
     activity: context.slice(0, 300) || domain,
     locality: localityFromUrl(url),
   };
-  if (!context) return fallback;
+  if (!context) return { ...fallback, lexicon: await buildMarketLexicon(fallback) };
 
   const raw = await aiChat({
     model: 'google/gemini-3.1-flash-lite',
@@ -55,12 +56,16 @@ Déduis l'identité de l'entreprise. Ne devine jamais une ville : "locality" vau
 JSON strict : {"name":"...","activity":"l'offre en une phrase, sans jargon web","locality":null}`,
   });
   const parsed = parseJsonLoose(raw);
-  if (!parsed) return fallback;
+  const identity: Identity = parsed
+    ? {
+        domain,
+        name: String(parsed.name || fallback.name).slice(0, 80),
+        activity: String(parsed.activity || fallback.activity).slice(0, 300),
+        locality: parsed.locality ? String(parsed.locality).slice(0, 60) : fallback.locality,
+      }
+    : fallback;
 
-  return {
-    domain,
-    name: String(parsed.name || fallback.name).slice(0, 80),
-    activity: String(parsed.activity || fallback.activity).slice(0, 300),
-    locality: parsed.locality ? String(parsed.locality).slice(0, 60) : fallback.locality,
-  };
+  // Le lexique est calculé ici une seule fois : toutes les étapes suivantes
+  // l'utilisent comme filtre de pertinence, sans nouvel appel LLM.
+  return { ...identity, lexicon: await buildMarketLexicon(identity) };
 }
