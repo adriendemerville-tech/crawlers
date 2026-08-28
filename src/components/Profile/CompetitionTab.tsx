@@ -9,10 +9,11 @@ import { Loader2, Play, RefreshCw, Trash2, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { MatrixReportView } from '@/components/CompetitorMatrix/MatrixReportView';
 import { STEP_LABEL, type MatrixJobState } from '@/lib/competitorMatrix/types';
-import { advanceCompetitorMatrix } from '@/lib/competitorMatrix/matrix.functions';
 import {
-  deleteConsoleMatrix, getConsoleMatrix, listConsoleMatrices, startConsoleMatrix,
+  deleteConsoleMatrix, getConsoleMatrix, listConsoleMatrices, markConsoleMatricesSeen,
+  startConsoleMatrix,
 } from '@/lib/competitorMatrix/console.functions';
+
 
 interface Row {
   id: string;
