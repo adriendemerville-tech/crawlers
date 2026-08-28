@@ -1,11 +1,10 @@
 // Appels LLM de la matrice concurrence, via la passerelle IA Lovable.
-// Quatre moteurs de citation : Gemini, ChatGPT, Claude et Perplexity.
+// Trois moteurs de citation : Gemini, ChatGPT et Claude.
 
 export const AI_MODELS = [
   { id: 'gemini', label: 'Gemini', model: 'google/gemini-3.7-flash' },
   { id: 'chatgpt', label: 'ChatGPT', model: 'openai/gpt-5.4-mini' },
   { id: 'claude', label: 'Claude', model: 'anthropic/claude-3-5-sonnet-20241022' },
-  { id: 'perplexity', label: 'Perplexity', model: 'perplexity/sonar-pro' },
 ];
 
 interface ChatOptions {
