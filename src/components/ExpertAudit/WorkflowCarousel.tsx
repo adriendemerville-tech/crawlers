@@ -591,9 +591,10 @@ export function WorkflowCarousel({
                                 "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
                                 isCompleted && "bg-success hover:bg-success/90",
                                 isLocked && "cursor-not-allowed",
-                                // Dark slate grey button for step 2 - same as border (both locked and active)
-                                step.id === 2 && !isCompleted && "bg-slate-500 hover:bg-slate-600 text-white border-0",
-                                step.id === 2 && isLocked && "bg-slate-500/50 hover:bg-slate-500/50",
+                                // Step 2 : bouton contour lisible (pas de fond), y compris désactivé
+                                step.id === 2 && !isCompleted && "bg-transparent border border-foreground/60 text-foreground hover:bg-foreground/10 hover:text-foreground disabled:opacity-100",
+                                step.id === 2 && isLocked && "border-foreground/30 text-muted-foreground",
+
                                 // Gradient button for step 3 - purple to gold premium SaaS style (both locked and active)
                                 step.id === 3 && !isCompleted && "bg-gradient-to-r from-violet-600 via-violet-500 to-amber-500 hover:from-violet-700 hover:via-violet-600 hover:to-amber-600 text-white border-0 shadow-[2px_4px_16px_rgba(139,92,246,0.25)]",
                                 step.id === 3 && isLocked && "from-violet-600/50 via-violet-500/50 to-amber-500/50 hover:from-violet-600/50 hover:via-violet-500/50 hover:to-amber-500/50"
