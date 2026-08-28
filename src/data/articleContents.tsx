@@ -1846,7 +1846,7 @@ Allow: /`}</pre>
           Les crawlers ne sont plus de simples robots d'indexation. Ils sont devenus les arbitres de votre existence numérique. Comprendre leur fonctionnement, leurs préférences et leurs limitations est désormais une compétence stratégique pour toute entreprise qui souhaite rester visible dans l'écosystème digital de 2026.
         </p>
         <p>
-          La bonne nouvelle ? Optimiser votre site pour les crawlers améliore souvent l'expérience utilisateur humaine : contenu clair, structure logique, chargement rapide. C'est un cercle vertueux où robots et humains sont finalement alignés sur les mêmes exigences de qualité.
+          La bonne nouvelle ? Optimiser votre site pour les crawlers améliore souvent l'expérience utilisateur humaine : contenu clair, structure logique, chargement rapide. C'est un cercle vertueux où robots et humains sont finalement alignés sur les mêmes exigences de qualité. Pour passer de la théorie à l'audit, <a href="/" className="text-primary hover:underline">Crawlers.fr</a> crawle votre site comme le feraient Googlebot, GPTBot et ClaudeBot, et mesure l'écart entre les deux lectures.
         </p>
 
         <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">

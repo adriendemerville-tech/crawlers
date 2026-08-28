@@ -88,11 +88,12 @@ function HeroSectionComponent() {
         {/* Tagline */}
         <h2 className="mb-10 text-base font-medium font-display text-foreground sm:mb-12 sm:text-3xl leading-relaxed px-2 sm:px-0">
           {language === 'es'
-            ? 'Audite su sitio. Afine la estrategia. Automatice la solución.'
+            ? 'La herramienta de rastreo SEO y GEO. Audite su sitio. Afine la estrategia. Automatice la solución.'
             : language === 'en'
-              ? 'Audit your site. Refine the strategy. Automate the solution.'
-              : 'Auditez votre site. Affinez la stratégie. Automatisez la solution.'}
+              ? 'The SEO & GEO crawl tool. Audit your site. Refine the strategy. Automate the solution.'
+              : 'L\'outil de crawl SEO & GEO. Auditez votre site. Affinez la stratégie. Automatisez la solution.'}
         </h2>
+
 
         {/* URL input + CTA Audit Expert */}
         <div className="mt-2 mx-auto w-full flex items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(90%, 24rem)' }}>

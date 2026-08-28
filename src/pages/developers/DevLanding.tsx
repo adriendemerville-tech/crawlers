@@ -135,7 +135,10 @@ export default function DevLanding() {
             Créer un compte développeur
           </Link>
           <Link to="/developers/docs" className="px-6 py-3 border border-border rounded text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
-            Lire la documentation API
+            Documentation
+          </Link>
+          <Link to="/api-seo" className="px-6 py-3 border border-border rounded text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
+            API SEO : guide et endpoints
           </Link>
         </div>
       </section>
