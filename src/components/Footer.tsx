@@ -374,26 +374,6 @@ function FooterComponent() {
           </div>
         </div>
 
-        <script type="application/ld+json" dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            "name": "Crawlers",
-            "url": "https://crawlers.fr",
-            "logo": "https://crawlers.fr/favicon.svg",
-            "description": t3(language,
-              "Outils d'analyse SEO et GEO pour optimiser la visibilité de votre site web auprès des moteurs de recherche IA et des LLM.",
-              "SEO and GEO analysis tools to optimize your website visibility for AI search engines and LLMs.",
-              "Herramientas de análisis SEO y GEO para optimizar la visibilidad de su sitio web en motores de búsqueda IA y LLM."
-            ),
-            "contactPoint": {
-              "@type": "ContactPoint",
-              "email": "contact@crawlers.fr",
-              "contactType": "customer service"
-            },
-            "sameAs": []
-          })
-        }} />
       </footer>
     </>
   );
