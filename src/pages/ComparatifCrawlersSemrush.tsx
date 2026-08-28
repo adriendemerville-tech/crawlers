@@ -562,7 +562,7 @@ const ComparatifCrawlersSemrush = () => {
               </div>
 
               <Accordion type="single" collapsible className="space-y-3">
-                {faqItems.map((item, i) => (
+                {[...faqItems, ...coverageFaqItems].map((item, i) => (
                   <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg bg-card px-6 data-[state=open]:bg-card/80">
                     <AccordionTrigger className="text-left font-medium hover:no-underline py-4">
                       <h3 className="text-sm md:text-base font-medium">{item.q}</h3>
@@ -700,6 +700,7 @@ const ComparatifCrawlersSemrush = () => {
               <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {[
                   { to: "/audit-expert", label: "Audit Expert SEO+GEO", desc: "168 critères analysés gratuitement" },
+                  { to: "/api-seo", label: "API SEO REST", desc: "Endpoints, JSON, quotas et tarifs" },
                   { to: "/methodologie", label: "Notre méthodologie", desc: "Comment nous auditons votre site" },
                   { to: "/guide-audit-seo", label: "Guide Audit SEO 2026", desc: "Guide complet pour auditer votre site" },
                   { to: "/content-architect", label: "Content Architect", desc: "Créez du contenu IA optimisé" },
