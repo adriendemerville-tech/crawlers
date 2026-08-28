@@ -442,13 +442,15 @@ const RankingSerp = memo(() => {
 
       <main className="min-h-screen bg-background pb-20">
         {/* Hero compact */}
-        <section className="relative pt-6 pb-3 sm:pt-8 sm:pb-4 overflow-hidden">
+        <section className="relative pt-2 pb-2 sm:pt-3 sm:pb-2 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
           <div className="container mx-auto max-w-5xl px-4 relative">
-            <div className="text-center space-y-1.5">
-              <Badge variant="outline" className="border-primary/40 text-primary text-[11px] py-0">
-                {t3(language, 'Outil gratuit', 'Free tool', 'Herramienta gratuita')}
-              </Badge>
+            <div className="text-center space-y-1">
+              <div className="flex justify-end">
+                <Badge variant="outline" className="border-primary/40 text-primary text-[11px] py-0">
+                  {t3(language, 'Outil gratuit', 'Free tool', 'Herramienta gratuita')}
+                </Badge>
+              </div>
               <h1 className="text-xl sm:text-2xl font-extrabold text-foreground leading-tight">
                 {t3(language,
                   'Benchmark Rank SERP',
@@ -468,7 +470,7 @@ const RankingSerp = memo(() => {
         </section>
 
         {/* Tool Section (visible sans scroll) */}
-        <section className="container mx-auto max-w-5xl px-4 mb-10">
+        <section className="container mx-auto max-w-5xl px-4 mb-6">
           <SerpBenchmarkMini />
         </section>
 
