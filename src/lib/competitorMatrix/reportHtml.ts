@@ -113,10 +113,19 @@ function gapsHtml(r: MatrixReport): string {
         <td>${esc(GAP_KIND_LABEL[g.kind])}</td>
         <td>${g.targetPosition !== null ? `position ${g.targetPosition}` : 'hors top 30'}${g.targetAiRate !== null ? `<div class="kw">IA : ${g.targetAiRate} %</div>` : ''}</td>
         <td>${g.leaders.length > 0 ? esc(g.leaders.map((l) => `${l.name}${l.position !== null ? ` (${l.position})` : ''}`).join(', ')) : 'aucun leader dans le top 10'}</td>
-        <td>${g.volume.toLocaleString('fr-FR')}</td><td>${g.difficulty}</td><td><strong>${g.value.toLocaleString('fr-FR')}</strong></td>
+        <td>${g.volume.toLocaleString('fr-FR')}</td>
+        <td>${g.difficulty}<div class="kw">÷ ${g.valueFactors.difficultyDivisor.toLocaleString('fr-FR')}</div></td>
+        <td><strong>${g.value.toLocaleString('fr-FR')}</strong><div class="kw">${esc(g.valueFactors.formula)}</div><div class="kw">proximité ${g.valueFactors.proximity.toLocaleString('fr-FR')} — ${esc(g.valueFactors.proximityLabel)}</div></td>
       </tr>`).join('')}
     </tbody></table>
-    <p class="kw">${r.coverageGaps.length} opportunités retenues, soit ${r.gapVolume.toLocaleString('fr-FR')} recherches mensuelles hors de votre couverture actuelle. La rentabilité est un indice de comparaison interne, pas une prévision de trafic.</p>
+    <h3>Comment lire l’indice de rentabilité</h3>
+    <p class="kw">${esc(GAP_VALUE_EXPLAINER)}</p>
+    <ul class="kw">
+      <li><strong>Volume</strong> : recherches mensuelles mesurées sur la requête.</li>
+      <li><strong>Proximité</strong> : distance au top 10 — 1 (11-30), 0,6 (captée par un leader), 0,5 (au-delà du top 10 sans leader), 0,4 (position acquise, citations IA absentes).</li>
+      <li><strong>Difficulté</strong> : diviseur 1 + difficulté / 100, soit 1,0 à 2,0 selon la concurrence de la requête.</li>
+    </ul>
+    <p class="kw">${r.coverageGaps.length} opportunités retenues, soit ${r.gapVolume.toLocaleString('fr-FR')} recherches mensuelles hors de votre couverture actuelle. L’indice sert à comparer les requêtes entre elles, ce n’est pas une prévision de trafic.</p>
   </div>`;
 }
 
