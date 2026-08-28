@@ -50,17 +50,23 @@ export function CompetitionTab({ externalDomain }: { externalDomain: string | nu
       const res = await listConsoleMatrices({ data: { domain: externalDomain } });
       const list = res.rows as Row[];
       setRows(list);
-      // Le moteur avance une étape par appel client : si l'onglet a été fermé,
-      // le job reste figé. On reprend automatiquement le pilotage ici.
-      const stuck = list.find((r) => r.status === 'running');
-      if (stuck) {
+      // Le cron `competitor-matrix-tick` fait avancer les analyses en arrière-plan :
+      // ici on ne fait que suivre l'état du job en cours.
+      const running = list.find((r) => r.status === 'running');
+      if (running) {
         setJob((current) => {
-          if (current && current.status === 'running') return current;
-          void getConsoleMatrix({ data: { jobId: stuck.id } }).then((r) => {
+          if (current && current.id === running.id) return current;
+          void getConsoleMatrix({ data: { jobId: running.id } }).then((r) => {
             if (!('error' in r)) setJob(r.job);
           });
           return current;
         });
+      }
+      // Les rapports terminés sont consultés : on éteint la pastille de la sidebar.
+      if (list.some((r) => r.status === 'done')) {
+        void markConsoleMatricesSeen({ data: { domain: externalDomain } })
+          .then(() => window.dispatchEvent(new Event('competition-seen')))
+          .catch(() => undefined);
       }
     } catch {
       toast.error('Chargement des analyses impossible');
@@ -72,17 +78,16 @@ export function CompetitionTab({ externalDomain }: { externalDomain: string | nu
   useEffect(() => { void refresh(); setJob(null); setOpenJob(null); setUrl(''); }, [refresh]);
 
 
-  // Une étape par appel : on relance tant que l'analyse tourne.
+  // L'analyse tourne côté serveur (cron) : on se contente de rafraîchir l'état.
   useEffect(() => {
     if (!job || job.status !== 'running') return;
     let cancelled = false;
-    const delay = failures.current > 0 ? Math.min(8000, 1500 * failures.current) : 800;
     const timer = setTimeout(async () => {
       try {
-        const res = await advanceCompetitorMatrix({ data: { jobId: job.id } });
+        const res = await getConsoleMatrix({ data: { jobId: job.id } });
         if (cancelled) return;
         failures.current = 0;
-        if ('error' in res) { toast.error(res.message ?? 'Erreur inattendue'); setJob(null); void refresh(); }
+        if ('error' in res) { setJob(null); void refresh(); }
         else {
           setJob(res.job);
           if (res.job.status !== 'running') void refresh();
@@ -90,16 +95,13 @@ export function CompetitionTab({ externalDomain }: { externalDomain: string | nu
       } catch {
         if (cancelled) return;
         failures.current += 1;
-        if (failures.current >= 5) {
-          toast.error('Analyse interrompue. Réessayez dans quelques minutes.');
-          setJob(null);
-          return;
-        }
+        if (failures.current >= 8) { setJob(null); return; }
         setJob({ ...job });
       }
-    }, delay);
+    }, 5000);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [job, refresh]);
+
 
   const launch = useCallback(async (targetUrl: string) => {
     if (!externalDomain) return;
