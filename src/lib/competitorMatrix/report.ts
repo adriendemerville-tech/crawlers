@@ -53,6 +53,33 @@ export interface LeaderboardEntry {
   aiOverviewHits: number;
 }
 
+export type GapKind = 'quick_win' | 'contested' | 'behind' | 'ai_only';
+
+export const GAP_KIND_LABEL: Record<GapKind, string> = {
+  quick_win: 'Quick win',
+  contested: 'Captée par un leader',
+  behind: 'Retard de position',
+  ai_only: 'Absent des réponses IA',
+};
+
+export interface CoverageGap {
+  keyword: string;
+  volume: number;
+  difficulty: number;
+  kind: GapKind;
+  /** Position du domaine cible (null = hors top 30 mesuré). */
+  targetPosition: number | null;
+  targetState: string;
+  /** Leaders (ou concurrents à défaut) qui couvrent la requête. */
+  leaders: { name: string; position: number | null }[];
+  bestLeaderPosition: number | null;
+  /** Taux de citation IA de la cible, null si non mesuré. */
+  targetAiRate: number | null;
+  /** Score de rentabilité : volume pondéré par la proximité et la difficulté. */
+  value: number;
+  reason: string;
+}
+
 export interface MatrixReport {
   domain: string;
   name: string;
@@ -61,11 +88,16 @@ export interface MatrixReport {
   kpis: ReportKpi[];
   actions: ReportAction[];
   leaderboard: LeaderboardEntry[];
+  /** Écarts de couverture face aux leaders, triés par rentabilité. */
+  coverageGaps: CoverageGap[];
+  /** Volume mensuel cumulé des gaps retenus. */
+  gapVolume: number;
   /** Requêtes où un AI Overview se déclenche sans citer le domaine. */
   aiOverviewGaps: { keyword: string; domains: string[] }[];
   measured: { serpKeywords: number; aiKeywords: number; totalKeywords: number; competitors: number };
   lostVolume: number;
 }
+
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
