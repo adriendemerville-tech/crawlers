@@ -33,6 +33,7 @@ const GscBigQueryPanel = lazy(() => import('@/components/Console/GscBigQueryPane
 const AdminDashboard = lazy(() => import('@/components/Admin').then(m => ({ default: m.AdminDashboard })));
 const ProfileSettings = lazy(() => import('@/components/Profile/ProfileSettings').then(m => ({ default: m.ProfileSettings })));
 const Netlinking = lazy(() => import('@/pages/Netlinking'));
+const CompetitionTab = lazy(() => import('@/components/Profile/CompetitionTab').then(m => ({ default: m.CompetitionTab })));
 import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
@@ -195,6 +196,7 @@ function ProfileContent() {
       case 'gmb': return <GMBDashboard isGated={!isProUser} simulatedDataEnabled={simulatedDataEnabled || isDemoMode} />;
       case 'reports-tab': return isProUser ? <MyReportsTab /> : null;
       case 'bundle': return isAdmin ? <BundleOptionTab /> : null;
+      case 'competition': return <CompetitionTab externalDomain={selectedDomain} />;
       case 'netlinking': return <Netlinking />;
       case 'marketplace': return <MarketplaceModule />;
       case 'admin': return hasAdminAccess ? (
