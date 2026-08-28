@@ -530,7 +530,16 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
                         selectedSiteId === site.id ? 'bg-accent text-foreground font-medium' : 'text-muted-foreground hover:bg-accent/40',
                       )}
                     >
-                      <span className="truncate">{site.domain.replace(/^www\./, '')}</span>
+                      <span className="flex-1 truncate">{site.domain.replace(/^www\./, '')}</span>
+                      {notifCountForDomain(site.domain) > 0 && (
+                        <span
+                          className="shrink-0 rounded-full bg-yellow-500 text-black text-[10px] font-semibold leading-none px-1.5 py-0.5"
+                          title="Rapport prêt"
+                        >
+                          {notifCountForDomain(site.domain)}
+                        </span>
+                      )}
+
                     </button>
                   ))}
                 </div>
