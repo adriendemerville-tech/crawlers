@@ -167,6 +167,7 @@ export function Header() {
   const isCrawlPage = location.pathname === '/app/site-crawl' || location.pathname === '/crawl';
   const isMatricePage = location.pathname === '/matrice';
   const isCocoonPage = location.pathname === '/app/cocoon';
+  const isRankingSerpPage = location.pathname === '/app/ranking-serp';
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -417,8 +418,6 @@ export function Header() {
                   </Link>
                 )}
 
-                <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-
                 {/* 6. Content Architect (vert foncé) */}
                 <Button
                   variant="ghost"
@@ -494,6 +493,12 @@ export function Header() {
                     <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-semibold ${isCrawlPage ? 'text-purple-800 dark:text-purple-300 bg-purple-500/10' : 'text-purple-800 dark:text-purple-300'}`}>
                       <Bug className="h-3 w-3" />
                       Crawl
+                    </Button>
+                  </Link>
+                  <Link to="/app/ranking-serp">
+                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-semibold ${isRankingSerpPage ? 'text-purple-800 dark:text-purple-300 bg-purple-500/10' : 'text-purple-800 dark:text-purple-300'}`}>
+                      <Search className="h-3 w-3" />
+                      SERPs
                     </Button>
                   </Link>
                   <Link to="/app/cocoon">
