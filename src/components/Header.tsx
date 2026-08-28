@@ -494,6 +494,12 @@ export function Header() {
                       Crawl
                     </Button>
                   </Link>
+                  <Link to="/app/ranking-serp">
+                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-semibold ${isRankingSerpPage ? 'text-purple-800 dark:text-purple-300 bg-purple-500/10' : 'text-purple-800 dark:text-purple-300'}`}>
+                      <Search className="h-3 w-3" />
+                      SERPs
+                    </Button>
+                  </Link>
                   <Link to="/app/cocoon">
                     <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300 ${isCocoonPage ? 'bg-amber-500/10' : ''}`}>
                       Cocoon
