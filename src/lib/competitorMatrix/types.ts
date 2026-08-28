@@ -117,12 +117,16 @@ export interface AiReadingJson {
   modelsDone?: string[];
 }
 
-export type MatrixStep = 'pending' | 'identity' | 'competitors' | 'keywords' | 'serp' | 'ai' | 'done';
+export type MatrixStep =
+  | 'pending' | 'identity' | 'seed_keywords' | 'seed_serp'
+  | 'competitors' | 'keywords' | 'serp' | 'ai' | 'done';
 
 export const STEP_LABEL: Record<MatrixStep, string> = {
   pending: 'En file',
   identity: 'Identité de l’entreprise',
-  competitors: 'Détection des concurrents',
+  seed_keywords: 'Mots-clés d’amorçage',
+  seed_serp: 'Lecture du marché dans Google',
+  competitors: 'Leaders et concurrents',
   keywords: 'Mots-clés du marché',
   serp: 'Relevés Google et AI Overviews',
   ai: 'Citations Gemini, ChatGPT et Claude',
