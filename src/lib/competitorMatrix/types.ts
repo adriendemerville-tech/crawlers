@@ -94,12 +94,22 @@ export interface MatrixResult {
   summary: MatrixSummary;
 }
 
+/** Lexique de marché dérivé de l'activité : sert de filtre de pertinence. */
+export interface MarketLexicon {
+  marketTerms: string[];
+  requiredTokens: string[];
+  excludeTokens: string[];
+}
+
 export interface Identity {
   domain: string;
   name: string;
   activity: string;
   locality: string | null;
+  /** Calculé à l'étape identité, réutilisé à chaque étape comme filtre. */
+  lexicon?: MarketLexicon;
 }
+
 
 export interface SerpReadingJson {
   keyword: string;
