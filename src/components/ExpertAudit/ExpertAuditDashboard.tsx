@@ -279,6 +279,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
   const [cocoonDomain, setCocoonDomain] = useState<string>('');
   const [completedAuditsCount, setCompletedAuditsCount] = useState(0);
   const [showContentArchitectFromDiag, setShowContentArchitectFromDiag] = useState(false);
+  const autoLaunchedRef = useRef(false);
 
   // Listen for hallucination fix routing from Félix chat
   useEffect(() => {
@@ -485,8 +486,9 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
     // Priority: URL from Felix/Mes sites (highest) > URL from query params > cached URL from home > saved session
     if (urlFromParams) {
       setUrl(urlFromParams);
-      // When coming from "Mes sites" or Felix, override localStorage and auto-launch
-      if (fromSites || isFromFelix) {
+      const shouldAutoLaunch = searchParams.get('autolaunch') === '1' || searchParams.get('autolaunch') === 'true';
+      // When coming from "Mes sites", Felix, or home auto-launch, override localStorage and auto-launch
+      if (fromSites || isFromFelix || shouldAutoLaunch) {
         localStorage.setItem('crawlers_last_url', urlFromParams);
         // Reset any prior audit session for a clean start
         sessionStorage.removeItem('audit_url');
@@ -500,7 +502,10 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
         setCompletedSteps([]);
         sessionStorage.setItem('audit_url', urlFromParams);
         // Auto-launch technical audit without URL validation (trusted source)
-        setTimeout(() => runTechnicalAudit(urlFromParams), 100);
+        if (!autoLaunchedRef.current) {
+          autoLaunchedRef.current = true;
+          setTimeout(() => runTechnicalAudit(urlFromParams), 100);
+        }
       }
       // Clear the URL param from browser history
       navigate('/audit-expert', { replace: true });
