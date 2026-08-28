@@ -117,6 +117,10 @@ export interface MatrixReport {
   aiOverviewGaps: { keyword: string; domains: string[] }[];
   measured: { serpKeywords: number; aiKeywords: number; totalKeywords: number; competitors: number };
   lostVolume: number;
+  /** Analyse E-E-A-T et profil de backlinks, null si l'étape n'a pas été relevée. */
+  eeat: EeatAnalysis;
+  /** Quick wins et plan en 4 phases dérivés de l'ensemble des constats. */
+  plan: ActionablePlan;
 }
 
 
