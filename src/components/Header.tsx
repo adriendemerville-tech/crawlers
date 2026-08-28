@@ -268,7 +268,7 @@ export function Header() {
 
         {/* Center: Navigation links - desktop */}
         {!isProfilePage && isHomePage && (
-          <div className="hidden sm:flex flex-1 items-center justify-center gap-1 lg:gap-2">
+          <div className="header-nav-desktop gap-1 lg:gap-2">
             <Link to="/features">
               <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
                 Features
@@ -302,7 +302,7 @@ export function Header() {
           </div>
         )}
         {!isProfilePage && !isHomePage && (
-          <div className="hidden sm:flex flex-1 items-center justify-center gap-1">
+          <div className="header-nav-desktop gap-1">
             {location.pathname === '/app/console' ? (
               <>
                 <Link to="/matrice">
@@ -452,7 +452,7 @@ export function Header() {
 
           {/* Mobile-only: contextual nav buttons */}
           {!isProfilePage && (
-            <div className="flex sm:hidden items-center gap-0.5">
+            <div className="header-nav-mobile gap-0.5">
               {isHomePage ? (
                 <>
                   <Link to="/features">
