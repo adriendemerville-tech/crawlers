@@ -332,7 +332,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
     );
 
     const className = cn(
-      'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-normal transition-colors text-left',
+      'w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] font-normal transition-colors text-left',
       collapsed && 'justify-center px-2',
       isActive
         ? 'bg-accent/60 text-foreground font-medium'
@@ -429,7 +429,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
 
       {/* Domain selector */}
       {!isMobile && !collapsed && sites.length > 0 && (
-        <div className="px-2 pt-2 pb-1 space-y-1">
+        <div className="px-2 pt-[47px] pb-1 space-y-1">
           <div className="relative">
             <button
               onClick={() => setSelectorOpen(!selectorOpen)}
@@ -581,7 +581,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
             {items.map(item => renderItem(item, true))}
             {/* Pro Agency, Paramètres, Administration : remontés directement sous API,
                 séparés par un mince filet pour rester visuellement distincts */}
-            <div className="my-1 border-t border-border/40" />
+            <div className="my-0.5 border-t border-border/40" />
             {bottomItems.map(item => renderItem(item))}
           </>
         )}
