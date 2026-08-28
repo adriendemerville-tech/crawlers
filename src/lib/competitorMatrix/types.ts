@@ -32,7 +32,7 @@ export interface MarketKeyword {
   volume: number;
   difficulty: number;
   value: number;
-  origin: 'target' | 'gap' | 'ia';
+  origin: 'target' | 'gap' | 'ia' | 'market';
   /** Cible en 11-30 alors qu'un leader occupe le top 5 : test de position rentable. */
   quickWin?: boolean;
 }
