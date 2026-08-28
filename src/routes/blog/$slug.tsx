@@ -4,8 +4,24 @@ import { ARTICLE_SEO_OVERRIDES } from "@/pages/Blog/articleSeoOverrides";
 import { getArticleBySlug } from "@/data/blogArticles";
 import { supabase } from "@/integrations/supabase/client";
 import { pageHead } from "@/lib/seo/pageHead";
-import { buildArticleJsonLd, buildBreadcrumbJsonLd } from "@/lib/seo/articleSchema";
+import {
+  buildArticleJsonLd,
+  buildBreadcrumbJsonLd,
+  buildDefinedTermJsonLd,
+} from "@/lib/seo/articleSchema";
 import { resolveLastUpdated } from "@/lib/blog/lastUpdated";
+
+/**
+ * Articles de définition : on ajoute un DefinedTerm rattaché au lexique pour
+ * que le terme soit identifié comme entité définie (SEO + citations IA).
+ */
+const DEFINITION_ARTICLES: Record<string, { term: string; definition: string }> = {
+  "crawler-definition-seo-geo": {
+    term: "Crawler",
+    definition:
+      "Un crawler est un programme automatisé, aussi appelé robot d'indexation ou araignée du web, qui parcourt les pages d'un site en suivant les liens pour en collecter le contenu. Les crawlers SEO (Googlebot, Bingbot) alimentent les moteurs de recherche ; les crawlers IA (GPTBot, ClaudeBot, Google-Extended) alimentent les réponses des moteurs génératifs.",
+  },
+};
 
 export interface BlogArticleLoaderData {
   found: boolean;
