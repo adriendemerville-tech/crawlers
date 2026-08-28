@@ -27,3 +27,11 @@ positions 1-5 ne pourrait entrer dans la matrice.
 ## Quick wins
 
 Cible en 11-30 alors qu'un leader occupe le top 5 → `quickWin: true`, valeur × 1,8, colonne mise en avant. Une cible non mesurée n'est jamais un quick win.
+
+## Contraintes DataForSEO (relevés SERP)
+
+- Les endpoints `live` n'acceptent **qu'une seule tâche par requête** ; un batch renvoie `40000 You can set only one task at a time` et donc zéro leader. `serp.server.ts` envoie une requête par mot-clé, en lots parallèles de 5.
+- `people_also_ask_click_depth` est **invalide** sur `serp/google/organic/live/advanced` (`40501`). Ne pas le renvoyer.
+- Requêtes d'amorçage : les formulations courtes (≤ 60 car.) passent d'abord ; une question conversationnelle longue ne produit pas de SERP marché exploitable.
+- `cleanDomain()` regroupe les sous-domaines de localisation (`fr.semrush.com` → `semrush.com`), sinon les occurrences se dispersent et aucun acteur n'atteint `LEADER_MIN_HITS`.
+- Quotas de lignes : leader 3, métier 2, visibilité 2, silencieux 1.
