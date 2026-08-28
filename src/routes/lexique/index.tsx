@@ -4,10 +4,10 @@ import { pageHead } from "@/lib/seo/pageHead";
 
 export const Route = createFileRoute("/lexique/")({
   head: () => pageHead({
-    title: "Lexique SEO, GEO et IA 2026 | Crawlers.fr",
-    description: "Lexique SEO, GEO et IA 2026 — définitions complètes : GEO, AEO, E-E-A-T, LLM, IAS, cocon sémantique, Part de Voix, Triangle Prédictif.",
+    title: "Glossaire SEO : lexique GEO, IA et performance web | Crawlers.fr",
+    description: "Glossaire SEO et lexique GEO : définitions claires de GEO, AEO, E-E-A-T, LLM, IAS, cocon sémantique, Part de Voix, LCP et CLS, classées par ordre alphabétique.",
     path: "/lexique",
-    keywords: "lexique SEO, glossaire GEO, définitions performance web, LCP, CLS, LLM, SGE, E-E-A-T, Core Web Vitals, 2026",
+    keywords: "glossaire SEO, lexique SEO, glossaire GEO, définitions SEO, LCP, CLS, LLM, SGE, E-E-A-T, Core Web Vitals",
   }),
   component: Lexique,
 });
