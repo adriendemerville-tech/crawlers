@@ -408,7 +408,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                               ? (h.language === 'fr' ? 'CMS désynchronisé — cliquez pour reconnecter' : h.language === 'es' ? 'CMS desincronizado — clic para reconectar' : 'CMS out of sync — click to reconnect')
                               : (h.language === 'fr' ? 'Brancher votre CMS (WordPress, Shopify, GTM…)' : h.language === 'es' ? 'Conectar su CMS (WordPress, Shopify, GTM…)' : 'Connect your CMS (WordPress, Shopify, GTM…)');
                           const ctaLabel = isConnected && !isStale
-                            ? (h.language === 'fr' ? 'CMS branché' : h.language === 'es' ? 'CMS conectado' : 'CMS connected')
+                            ? (h.language === 'fr' ? 'Site branché' : h.language === 'es' ? 'Sitio conectado' : 'Site connected')
                             : isStale
                               ? (h.language === 'fr' ? 'Reconnecter CMS' : h.language === 'es' ? 'Reconectar CMS' : 'Reconnect CMS')
                               : (h.language === 'fr' ? 'Brancher CMS' : h.language === 'es' ? 'Conectar CMS' : 'Connect CMS');
@@ -440,15 +440,15 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                                   {isConnected && !isStale ? (
                                     <Unplug className="h-3.5 w-3.5" />
                                   ) : (
-                                    <>
-                                      <Plug className="h-3.5 w-3.5" />
-                                      <span className={cn(
-                                        "absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border-2 border-background",
-                                        isStale ? "bg-amber-500 animate-pulse" : "bg-orange-500"
-                                      )} />
-                                    </>
+                                    <Plug className="h-3.5 w-3.5" />
                                   )}
                                   <span className="text-xs font-medium">{ctaLabel}</span>
+                                  {isConnected && !isStale && (
+                                    <span className="ml-0.5 h-2 w-2 rounded-full bg-emerald-500" />
+                                  )}
+                                  {isStale && (
+                                    <span className="ml-0.5 h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+                                  )}
                                   <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                                     {tooltipText}
                                   </span>
@@ -589,7 +589,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-dashed border-border/50 transition-colors"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  <span>{t.addSite}</span>
+                  <span>URL</span>
                 </button>
                 <button
                   onClick={() => { h.setShowApiPanel(!h.showApiPanel); if (!h.showApiPanel) h.setSelectedSite(null); }}
