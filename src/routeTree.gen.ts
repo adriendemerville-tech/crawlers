@@ -17,6 +17,7 @@ import { Route as AnalyseBotsIaRouteImport } from './routes/analyse-bots-ia'
 import { Route as AnalyseLogsRouteImport } from './routes/analyse-logs'
 import { Route as AnalyseSiteWebGratuitRouteImport } from './routes/analyse-site-web-gratuit'
 import { Route as ApiIntegrationsRouteImport } from './routes/api-integrations'
+import { Route as ApiSeoRouteImport } from './routes/api-seo'
 import { Route as ArchitecteGeneratifRouteImport } from './routes/architecte-generatif'
 import { Route as ArchitectureMapRouteImport } from './routes/architecture-map'
 import { Route as AuditCompareRouteImport } from './routes/audit-compare'
@@ -191,6 +192,11 @@ const AnalyseSiteWebGratuitRoute = AnalyseSiteWebGratuitRouteImport.update({
 const ApiIntegrationsRoute = ApiIntegrationsRouteImport.update({
   id: '/api-integrations',
   path: '/api-integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSeoRoute = ApiSeoRouteImport.update({
+  id: '/api-seo',
+  path: '/api-seo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArchitecteGeneratifRoute = ArchitecteGeneratifRouteImport.update({
@@ -894,6 +900,7 @@ export interface FileRoutesByFullPath {
   '/analyse-logs': typeof AnalyseLogsRoute
   '/analyse-site-web-gratuit': typeof AnalyseSiteWebGratuitRoute
   '/api-integrations': typeof ApiIntegrationsRoute
+  '/api-seo': typeof ApiSeoRoute
   '/architecte-generatif': typeof ArchitecteGeneratifRoute
   '/architecture-map': typeof ArchitectureMapRoute
   '/audit-compare': typeof AuditCompareRoute
@@ -1039,6 +1046,7 @@ export interface FileRoutesByTo {
   '/analyse-logs': typeof AnalyseLogsRoute
   '/analyse-site-web-gratuit': typeof AnalyseSiteWebGratuitRoute
   '/api-integrations': typeof ApiIntegrationsRoute
+  '/api-seo': typeof ApiSeoRoute
   '/architecte-generatif': typeof ArchitecteGeneratifRoute
   '/architecture-map': typeof ArchitectureMapRoute
   '/audit-compare': typeof AuditCompareRoute
@@ -1185,6 +1193,7 @@ export interface FileRoutesById {
   '/analyse-logs': typeof AnalyseLogsRoute
   '/analyse-site-web-gratuit': typeof AnalyseSiteWebGratuitRoute
   '/api-integrations': typeof ApiIntegrationsRoute
+  '/api-seo': typeof ApiSeoRoute
   '/architecte-generatif': typeof ArchitecteGeneratifRoute
   '/architecture-map': typeof ArchitectureMapRoute
   '/audit-compare': typeof AuditCompareRoute
@@ -1332,6 +1341,7 @@ export interface FileRouteTypes {
     | '/analyse-logs'
     | '/analyse-site-web-gratuit'
     | '/api-integrations'
+    | '/api-seo'
     | '/architecte-generatif'
     | '/architecture-map'
     | '/audit-compare'
@@ -1477,6 +1487,7 @@ export interface FileRouteTypes {
     | '/analyse-logs'
     | '/analyse-site-web-gratuit'
     | '/api-integrations'
+    | '/api-seo'
     | '/architecte-generatif'
     | '/architecture-map'
     | '/audit-compare'
@@ -1622,6 +1633,7 @@ export interface FileRouteTypes {
     | '/analyse-logs'
     | '/analyse-site-web-gratuit'
     | '/api-integrations'
+    | '/api-seo'
     | '/architecte-generatif'
     | '/architecture-map'
     | '/audit-compare'
@@ -1768,6 +1780,7 @@ export interface RootRouteChildren {
   AnalyseLogsRoute: typeof AnalyseLogsRoute
   AnalyseSiteWebGratuitRoute: typeof AnalyseSiteWebGratuitRoute
   ApiIntegrationsRoute: typeof ApiIntegrationsRoute
+  ApiSeoRoute: typeof ApiSeoRoute
   ArchitecteGeneratifRoute: typeof ArchitecteGeneratifRoute
   ArchitectureMapRoute: typeof ArchitectureMapRoute
   AuditCompareRoute: typeof AuditCompareRoute
@@ -1961,6 +1974,13 @@ declare module '@tanstack/react-router' {
       path: '/api-integrations'
       fullPath: '/api-integrations'
       preLoaderRoute: typeof ApiIntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api-seo': {
+      id: '/api-seo'
+      path: '/api-seo'
+      fullPath: '/api-seo'
+      preLoaderRoute: typeof ApiSeoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/architecte-generatif': {
@@ -2920,6 +2940,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyseLogsRoute: AnalyseLogsRoute,
   AnalyseSiteWebGratuitRoute: AnalyseSiteWebGratuitRoute,
   ApiIntegrationsRoute: ApiIntegrationsRoute,
+  ApiSeoRoute: ApiSeoRoute,
   ArchitecteGeneratifRoute: ArchitecteGeneratifRoute,
   ArchitectureMapRoute: ArchitectureMapRoute,
   AuditCompareRoute: AuditCompareRoute,
