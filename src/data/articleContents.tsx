@@ -1670,6 +1670,11 @@ Allow: /`}</pre>
           ]}
         />
 
+        {/* Réponse directe extractible : premier bloc de contenu, format privilégié par les moteurs génératifs */}
+        <blockquote className="citable-passage border-l-4 border-primary bg-muted/30 py-3 px-4 my-6 rounded-r-lg text-foreground not-italic leading-relaxed">
+          Un crawler est un programme automatisé, aussi appelé robot d'indexation ou araignée du web, qui parcourt les pages d'un site en suivant les liens pour en collecter le contenu. En SEO, les crawlers des moteurs de recherche (Googlebot, Bingbot) découvrent et indexent les pages afin de les classer dans les résultats. En GEO, les crawlers d'IA (GPTBot, ClaudeBot, Google-Extended) collectent les contenus qui alimentent et citent les réponses des modèles génératifs. Un site que les crawlers ne peuvent pas lire n'existe ni dans Google ni dans ChatGPT.
+        </blockquote>
+
         <p className="text-xl font-semibold text-foreground mb-4 italic">
           Les crawlers sont les émissaires invisibles qui décident si votre site existe dans l'écosystème numérique. Comprendre leur fonctionnement, c'est maîtriser votre destin digital.
         </p>

@@ -11,18 +11,40 @@ import {
 import type { GuideData } from "@/components/Guide/GuideTemplate";
 import { resolveArticleDates } from "@/lib/blog/lastUpdated";
 
-export const Route = createFileRoute("/guide/$slug")({
-  loader: async ({ params }): Promise<{ guide: GuideData | null }> => {
-    const { data } = await supabase
-      .from("seo_page_drafts" as never)
-      .select("*")
-      .eq("slug", params.slug)
-      .eq("status", "published")
-      .eq("page_type", "guide")
-      .maybeSingle();
+export interface SiblingGuide {
+  slug: string;
+  title: string;
+}
 
-    if (!data) return { guide: null };
-    return { guide: parseGuideFromDb(data) };
+export const Route = createFileRoute("/guide/$slug")({
+  // Maillage croisé : la liste des autres guides métiers est chargée côté
+  // serveur pour figurer dans le HTML initial (crawlers SEO et IA).
+  loader: async ({
+    params,
+  }): Promise<{ guide: GuideData | null; siblings: SiblingGuide[] }> => {
+    const [{ data }, { data: others }] = await Promise.all([
+      supabase
+        .from("seo_page_drafts" as never)
+        .select("*")
+        .eq("slug", params.slug)
+        .eq("status", "published")
+        .eq("page_type", "guide")
+        .maybeSingle(),
+      supabase
+        .from("seo_page_drafts" as never)
+        .select("slug, title")
+        .eq("status", "published")
+        .eq("page_type", "guide")
+        .neq("slug", params.slug)
+        .order("slug", { ascending: true }),
+    ]);
+
+    const siblings = ((others as unknown as SiblingGuide[]) ?? []).filter(
+      (g) => g.slug && g.title,
+    );
+
+    if (!data) return { guide: null, siblings };
+    return { guide: parseGuideFromDb(data), siblings };
   },
   head: ({ params, loaderData }) => {
     const path = `/guide/${params.slug}`;
