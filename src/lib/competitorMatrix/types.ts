@@ -166,3 +166,71 @@ export const LEADER_MIN_HITS = 3;
 export const AI_MEASURED_KEYWORDS = 10;
 export const AI_ITERATIONS = 3;
 export const LOCATION_FR = 2250;
+
+// ============ Autorité, backlinks et E-E-A-T ============
+
+/** Profil de liens d'un domaine, tel que mesuré (jamais estimé). */
+export interface BacklinkProfile {
+  domain: string;
+  isTarget: boolean;
+  /** rank brut DataForSEO, échelle 0-1000 logarithmique. */
+  rankRaw: number | null;
+  /** rank normalisé 0-100. */
+  domainRank: number | null;
+  /** Authority Score maison 0-92 (rank + diversité des référents). */
+  authorityScore: number | null;
+  referringDomains: number | null;
+  backlinks: number | null;
+  dofollowRatio: number | null;
+  brokenBacklinks: number | null;
+  /** backlinks / domaines référents : un ratio élevé signe une empreinte d'annuaire. */
+  linksPerDomain: number | null;
+  dominantAnchor: string | null;
+  dominantAnchorRatio: number | null;
+}
+
+export type EeatPillar = 'experience' | 'expertise' | 'authoritativeness' | 'trust';
+
+export const EEAT_PILLAR_LABEL: Record<EeatPillar, string> = {
+  experience: 'Expérience — preuves vécues',
+  expertise: 'Expertise — auteur identifiable',
+  authoritativeness: 'Autorité — reconnaissance externe',
+  trust: 'Confiance — transparence vérifiable',
+};
+
+export interface EeatSignal {
+  key: string;
+  pillar: EeatPillar;
+  label: string;
+  status: 'ok' | 'missing' | 'not_measured';
+  /** Ce qui a été trouvé (ou non) dans les pages servies / le profil de liens. */
+  evidence: string;
+  /** Poids du signal dans le pilier. */
+  weight: number;
+}
+
+/** Relevé brut des pages servies, utilisé pour dériver les signaux E-E-A-T. */
+export interface OnPageEeatReading {
+  url: string;
+  fetched: boolean;
+  hasOrganizationSchema: boolean;
+  hasPersonSchema: boolean;
+  hasAuthorMention: boolean;
+  hasAboutLink: boolean;
+  hasContactLink: boolean;
+  hasLegalLink: boolean;
+  hasCompanyIdentifier: boolean;
+  hasPhoneOrAddress: boolean;
+  hasProof: boolean;
+  hasDate: boolean;
+  https: boolean;
+  aboutUrl: string | null;
+  aboutWordCount: number | null;
+}
+
+export interface AuthorityReading {
+  measuredAt: string;
+  target: BacklinkProfile | null;
+  rivals: BacklinkProfile[];
+  onPage: OnPageEeatReading | null;
+}
