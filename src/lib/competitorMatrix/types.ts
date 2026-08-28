@@ -113,7 +113,7 @@ export const STEP_LABEL: Record<MatrixStep, string> = {
   competitors: 'Détection des concurrents',
   keywords: 'Mots-clés du marché',
   serp: 'Relevés Google et AI Overviews',
-  ai: 'Citations Gemini et ChatGPT',
+  ai: 'Citations Gemini, ChatGPT, Claude et Perplexity',
   done: 'Terminé',
 };
 
