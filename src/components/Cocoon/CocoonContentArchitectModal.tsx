@@ -28,6 +28,8 @@ import { ContentArchitectQuickWinsPanel } from './ContentArchitectQuickWinsPanel
 import { ContentArchitectPreview } from './ContentArchitectPreview';
 import { ContentArchitectProvider } from '@/contexts/ContentArchitectContext';
 import { VoiceDNAEditor } from './VoiceDNAEditor';
+import { ContentArchitectScorePanel } from './ContentArchitectScorePanel';
+
 
 interface CocoonContentArchitectModalProps {
   isOpen: boolean;
