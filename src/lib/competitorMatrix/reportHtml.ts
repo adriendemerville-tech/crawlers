@@ -3,7 +3,7 @@
 
 import type { MarketKeyword, MatrixResult } from './types';
 import { COVERAGE_LABEL, COMPETITOR_TYPE_LABEL } from './types';
-import { VERDICT_LABEL, type MatrixReport } from './report';
+import { GAP_KIND_LABEL, VERDICT_LABEL, type MatrixReport } from './report';
 import { SECTION_LEADS } from './reportCopy';
 
 const esc = (s: string) =>
