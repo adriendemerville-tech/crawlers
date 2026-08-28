@@ -8,8 +8,12 @@ const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.
 
 const routeApi = getRouteApi('/guide/$slug');
 
-function GuideLandingPageComponent() {
-  const { guide, siblings } = routeApi.useLoaderData();
+function GuideLandingPageComponent(): React.ReactElement {
+  const data = routeApi.useLoaderData() as {
+    guide: GuideData | null;
+    siblings: { slug: string; title: string }[];
+  };
+  const { guide, siblings } = data;
 
   if (!guide) {
     return <Navigate to="/404" replace />;
