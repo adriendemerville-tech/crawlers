@@ -439,22 +439,22 @@ const RankingSerp = memo(() => {
       <Header />
 
       <main className="min-h-screen bg-background pb-20">
-        {/* Hero */}
-        <section className="relative pt-16 pb-12 sm:pt-24 sm:pb-16 overflow-hidden">
+        {/* Hero compact */}
+        <section className="relative pt-6 pb-3 sm:pt-8 sm:pb-4 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
           <div className="container mx-auto max-w-5xl px-4 relative">
-            <div className="text-center space-y-4">
-              <Badge variant="outline" className="border-primary/40 text-primary">
+            <div className="text-center space-y-1.5">
+              <Badge variant="outline" className="border-primary/40 text-primary text-[11px] py-0">
                 {t3(language, 'Outil gratuit', 'Free tool', 'Herramienta gratuita')}
               </Badge>
-              <h1 className="text-3xl sm:text-5xl font-extrabold text-foreground leading-tight">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-foreground leading-tight">
                 {t3(language,
                   'Benchmark Rank SERP',
                   'SERP Rank Benchmark',
                   'Benchmark Rank SERP'
                 )}
               </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto">
                 {t3(language,
                   'Comparez les positions Google renvoyées par 4 providers SERP en une seule requête. Classement croisé, pénalité anti-faux-positif, résultats fiables.',
                   'Compare Google positions returned by 4 SERP providers in a single query. Cross-referenced ranking, anti-false-positive penalty, reliable results.',
@@ -465,13 +465,15 @@ const RankingSerp = memo(() => {
           </div>
         </section>
 
+        {/* Tool Section (visible sans scroll) */}
+        <section className="container mx-auto max-w-5xl px-4 mb-10">
+          <SerpBenchmarkMini />
+        </section>
+
         {/* Preuve sociale : volume réel de domaines audités */}
         <AuditedDomainsCounter />
 
-        {/* Tool Section */}
-        <section className="container mx-auto max-w-5xl px-4 mb-16">
-          <SerpBenchmarkMini />
-        </section>
+
 
 
         {/* How it works */}
