@@ -417,8 +417,6 @@ export function Header() {
                   </Link>
                 )}
 
-                <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-
                 {/* 6. Content Architect (vert foncé) */}
                 <Button
                   variant="ghost"
