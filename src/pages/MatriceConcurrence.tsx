@@ -189,60 +189,9 @@ export default function MatriceConcurrence() {
 
         <div ref={resultRef}>
           {job?.status === 'done' && job.matrix && (
-            <section className="space-y-8">
-              <h2 className="text-2xl font-bold">Votre matrice de concurrence</h2>
+            <section className="space-y-12">
+              <MatrixReportView job={job} />
 
-              <MatrixTable matrix={job.matrix} keywords={job.keywords} />
-
-              {summary && (
-                <div className="grid gap-4 md:grid-cols-3">
-                  <Card>
-                    <CardContent className="p-5">
-                      <h3 className="mb-2 font-semibold">Ce que vous couvrez</h3>
-                      <p className="text-sm text-muted-foreground">
-                        <strong>{summary.covered.length}</strong> mots-clés bien couverts,{' '}
-                        <strong>{summary.weak.length}</strong> en couverture faible,{' '}
-                        <strong>{summary.missing.length}</strong> absents.
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-5">
-                      <h3 className="mb-2 font-semibold">Terrain libre</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {summary.noMansLand.length > 0
-                          ? `${summary.noMansLand.length} requêtes que personne ne couvre : ${summary.noMansLand.slice(0, 3).join(', ')}.`
-                          : 'Aucune requête totalement inoccupée sur ce marché.'}
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-5">
-                      <h3 className="mb-2 font-semibold">Sources des AI Overviews</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {summary.aiOverviewLeaders.length > 0
-                          ? summary.aiOverviewLeaders.slice(0, 4).map((l) => `${l.domain} (${l.count})`).join(', ')
-                          : 'Aucun AI Overview relevé sur ces requêtes.'}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {job.matrix.outOfScope.length > 0 && (
-                <Card>
-                  <CardContent className="p-5">
-                    <h3 className="mb-2 font-semibold">Hors matrice : substituts et plateformes dominantes</h3>
-                    <ul className="space-y-1 text-sm text-muted-foreground">
-                      {job.matrix.outOfScope.map((c) => (
-                        <li key={c.domain}>
-                          <strong>{c.name}</strong> — {COMPETITOR_TYPE_LABEL[c.type]}. {c.reason}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              )}
 
               <Card>
                 <CardContent className="space-y-3 p-5">
