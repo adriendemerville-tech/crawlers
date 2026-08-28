@@ -5,6 +5,8 @@
 
 import type { MarketKeyword, MatrixJobState, MatrixResult, MatrixRow } from './types';
 import { COMPETITOR_TYPE_LABEL } from './types';
+import { buildEeatAnalysis, type EeatAnalysis } from './eeat';
+import { buildActionablePlan, type ActionablePlan } from './plan';
 
 export type VerdictLevel = 'critical' | 'weak' | 'ok' | 'strong';
 
