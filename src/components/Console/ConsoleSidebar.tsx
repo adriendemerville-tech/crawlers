@@ -352,7 +352,19 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
             ) : item.label}
           </span>
         )}
+        {!!item.badge && (
+          <span
+            className={cn(
+              'shrink-0 rounded-full bg-yellow-500 text-black text-[10px] font-semibold leading-none',
+              collapsed ? 'absolute top-1 right-1 h-2 w-2 p-0' : 'px-1.5 py-0.5',
+            )}
+            title="Rapport prêt"
+          >
+            {collapsed ? '' : item.badge}
+          </span>
+        )}
         {!collapsed && isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
+
         {canDrag && !isLocked && (
           <GripVertical className="h-3 w-3 shrink-0 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors" />
         )}
