@@ -5,8 +5,8 @@ import { homeJsonLd } from "@/lib/seo/homeSchemas";
 
 export const Route = createFileRoute("/")({
   head: () => pageHead({
-    title: "Audit SEO & GEO : positions SERP, backlinks, citations IA",
-    description: "Mesurez votre référencement Google et votre visibilité dans ChatGPT sur des données réelles : crawl complet, positions SERP, backlinks, citations IA. Audit gratuit.",
+    title: "Crawlers.fr — outil de crawl SEO & GEO : audit, positions, IA",
+    description: "Crawlers.fr, l'outil de crawl SEO & GEO : audit technique complet, positions SERP, backlinks et citations IA. Démarrez votre audit gratuit, sans engagement.",
     path: "/",
     jsonLd: homeJsonLd,
   }),
