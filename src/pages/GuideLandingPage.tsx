@@ -1,7 +1,7 @@
 import { memo, lazy, Suspense } from 'react';
 import { getRouteApi } from '@tanstack/react-router';
 import { Link, Navigate } from '@/lib/router-compat';
-import { GuideTemplate } from '@/components/Guide/GuideTemplate';
+import { GuideTemplate, type GuideData } from '@/components/Guide/GuideTemplate';
 import { Header } from '@/components/Header';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -34,7 +34,7 @@ function GuideLandingPageComponent(): React.ReactElement {
             Autres guides SEO &amp; GEO par métier
           </h2>
           <ul className="grid gap-2 sm:grid-cols-2">
-            {siblings.map((s) => (
+            {siblings.map((s: { slug: string; title: string }) => (
               <li key={s.slug}>
                 <Link
                   to={`/guide/${s.slug}`}
