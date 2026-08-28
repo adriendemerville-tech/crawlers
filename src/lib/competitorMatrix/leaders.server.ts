@@ -30,7 +30,7 @@ export function seedSerpDomains(seed: SeedSerpReading[]): Set<string> {
   return out;
 }
 
-export function detectLeaders(seed: SeedSerpReading[], self: string, limit = 3): Competitor[] {
+export function detectLeaders(seed: SeedSerpReading[], self: string, limit = 4): Competitor[] {
   const topHits = new Map<string, number>();
   const aiHits = new Map<string, number>();
   const bestRank = new Map<string, number>();

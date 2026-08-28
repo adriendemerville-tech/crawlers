@@ -89,7 +89,7 @@ JSON strict : {"competitors":[{"domain":"exemple.fr","name":"Exemple","type":"me
 
 /** Quotas de lignes par type, pour garder une matrice lisible. */
 const ROW_QUOTA: Record<string, number> = {
-  leader: 2, metier: 3, visibilite: 2, silencieux: 1,
+  leader: 3, metier: 2, visibilite: 2, silencieux: 1,
 };
 const ROW_ORDER: Record<string, number> = {
   leader: 0, metier: 1, visibilite: 2, silencieux: 3,
