@@ -301,14 +301,14 @@ export function AIBotsLeadMagnet() {
 
       {/* Input */}
       <div className="flex gap-3">
-        <div className="flex-1 relative">
+        <div className="flex-[2] relative">
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t.placeholder}
-            className="w-full h-16 px-6 text-lg bg-background border-2 border-brand-violet/40 rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-hidden focus:border-brand-violet transition-colors"
+            className="w-full h-16 px-6 text-lg bg-background border-4 border-white rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-hidden focus:border-brand-violet transition-colors"
           />
         </div>
         <button
