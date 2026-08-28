@@ -84,7 +84,7 @@ const faqItems = [
 const faqSD = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  "mainEntity": faqItems.map(({ q, a }) => ({
+  "mainEntity": [...faqItems, ...coverageFaqItems].map(({ q, a }) => ({
     "@type": "Question",
     "name": q,
     "acceptedAnswer": { "@type": "Answer", "text": a },
@@ -573,6 +573,121 @@ const ComparatifCrawlersSemrush = () => {
                   </AccordionItem>
                 ))}
               </Accordion>
+            </div>
+          </section>
+
+          {/* ═══ Crawl Semrush Enterprise : rendu JS ═══ */}
+          <section className="py-8 md:py-10">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h2 className="text-xl md:text-2xl font-bold mb-4 text-foreground">
+                Le crawler Semrush Enterprise : rendu JavaScript et plafonds
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                L'offre Semrush Enterprise augmente le volume de crawl du Site Audit et autorise
+                le rendu JavaScript sur les projets configurés pour cela. En pratique, l'exploration
+                reste pilotée par la suite Semrush : le bot unique analyse la page comme le ferait
+                un moteur de recherche classique, sans émuler les crawlers IA.
+              </p>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                Crawlers.fr prend le contre-pied : chaque crawl émule plusieurs robots en parallèle
+                (Googlebot, GPTBot, ClaudeBot, PerplexityBot, Applebot-Extended) et compare la
+                lecture humaine à la lecture machine. L'écart constaté — contenu non servi en SSR,
+                JSON-LD absent en rendu bot — alimente directement le Score GEO de chaque page.
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                À noter : l'<Link to="/api-seo" className="text-primary hover:underline font-medium">API SEO REST</Link> de
+                Crawlers.fr permet de déclencher ces crawls depuis vos propres outils (scripts CI/CD,
+                dashboards clients, agents IA), avec 100 jobs gratuits par mois.
+              </p>
+            </div>
+          </section>
+
+          {/* ═══ Semrush vs Screaming Frog ═══ */}
+          <section className="py-8 md:py-10 bg-muted/20">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h2 className="text-xl md:text-2xl font-bold mb-6 text-foreground">
+                Semrush vs Screaming Frog : quel crawler pour quel usage ?
+              </h2>
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/50 text-left">
+                      <th className="px-4 py-3 font-semibold">Critère</th>
+                      <th className="px-4 py-3 font-semibold">Semrush</th>
+                      <th className="px-4 py-3 font-semibold">Screaming Frog</th>
+                      <th className="px-4 py-3 font-semibold">Crawlers.fr</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-muted-foreground">
+                    <tr className="border-b border-border">
+                      <td className="px-4 py-3 font-medium text-foreground">Type</td>
+                      <td className="px-4 py-3">Suite cloud</td>
+                      <td className="px-4 py-3">Logiciel desktop</td>
+                      <td className="px-4 py-3">Plateforme cloud + API</td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="px-4 py-3 font-medium text-foreground">Volume d'URLs</td>
+                      <td className="px-4 py-3">Jusqu'à 100 000 / campagne</td>
+                      <td className="px-4 py-3">500 gratuites, illimité payant</td>
+                      <td className="px-4 py-3">Jusqu'à 10 000 pages / audit</td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="px-4 py-3 font-medium text-foreground">Rendu JS</td>
+                      <td className="px-4 py-3">Limité, selon configuration</td>
+                      <td className="px-4 py-3">Oui (Chrome embarqué)</td>
+                      <td className="px-4 py-3">Multi-bots : Googlebot + GPTBot + ClaudeBot + PerplexityBot</td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="px-4 py-3 font-medium text-foreground">Fréquence</td>
+                      <td className="px-4 py-3">Hebdomadaire par projet</td>
+                      <td className="px-4 py-3">Manuelle</td>
+                      <td className="px-4 py-3">À la demande, planifiable par cron</td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="px-4 py-3 font-medium text-foreground">Prix</td>
+                      <td className="px-4 py-3">À partir de 139,95 $/mois</td>
+                      <td className="px-4 py-3">199 £/an par licence</td>
+                      <td className="px-4 py-3">Audits gratuits, crédits dès 5 €, Pro dès 29 €/mois</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-3 font-medium text-foreground">GEO / visibilité IA</td>
+                      <td className="px-4 py-3">Non</td>
+                      <td className="px-4 py-3">Non</td>
+                      <td className="px-4 py-3">Score GEO + Benchmark LLM</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          {/* ═══ Crawl Semrush : limites et quotas ═══ */}
+          <section className="py-8 md:py-10">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h2 className="text-xl md:text-2xl font-bold mb-4 text-foreground">
+                Crawl Semrush : limites et quotas en pratique
+              </h2>
+              <ul className="space-y-3 text-muted-foreground leading-relaxed list-disc pl-5">
+                <li>
+                  <strong className="text-foreground">Volume</strong> : le nombre d'URLs explorées
+                  dépend du plan (Site Audit plafonné par abonnement, quotas partagés avec les autres
+                  outils de la suite). Les sites volumineux doivent activer l'offre Enterprise.
+                </li>
+                <li>
+                  <strong className="text-foreground">Fréquence</strong> : un recrawl hebdomadaire par
+                  projet configuré, pas de planification multi-bots ni de jobs à la demande via API.
+                </li>
+                <li>
+                  <strong className="text-foreground">Perspective</strong> : un seul bot par crawl,
+                  sans comparaison entre lecture humaine et lecture bot IA — la parité de rendu n'est
+                  pas mesurée.
+                </li>
+                <li>
+                  <strong className="text-foreground">Automatisation</strong> : pas d'API de crawl
+                  publique ; les données sont consultables dans l'interface ou exportables en CSV.
+                  Crawlers.fr expose le même périmètre via son <Link to="/api-seo" className="text-primary hover:underline font-medium">API SEO REST</Link> en pay-as-you-go.
+                </li>
+              </ul>
             </div>
           </section>
 
