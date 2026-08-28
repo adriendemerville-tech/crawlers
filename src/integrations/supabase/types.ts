@@ -3039,6 +3039,7 @@ export type Database = {
         Row: {
           ai_citations: Json
           ai_overviews: Json | null
+          authority: Json | null
           competitors: Json
           created_at: string
           domain: string
@@ -3068,6 +3069,7 @@ export type Database = {
         Insert: {
           ai_citations?: Json
           ai_overviews?: Json | null
+          authority?: Json | null
           competitors?: Json
           created_at?: string
           domain: string
@@ -3097,6 +3099,7 @@ export type Database = {
         Update: {
           ai_citations?: Json
           ai_overviews?: Json | null
+          authority?: Json | null
           competitors?: Json
           created_at?: string
           domain?: string
