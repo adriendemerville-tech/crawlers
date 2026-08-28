@@ -440,15 +440,15 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                                   {isConnected && !isStale ? (
                                     <Unplug className="h-3.5 w-3.5" />
                                   ) : (
-                                    <>
-                                      <Plug className="h-3.5 w-3.5" />
-                                      <span className={cn(
-                                        "absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border-2 border-background",
-                                        isStale ? "bg-amber-500 animate-pulse" : "bg-orange-500"
-                                      )} />
-                                    </>
+                                    <Plug className="h-3.5 w-3.5" />
                                   )}
                                   <span className="text-xs font-medium">{ctaLabel}</span>
+                                  {isConnected && !isStale && (
+                                    <span className="ml-0.5 h-2 w-2 rounded-full bg-emerald-500" />
+                                  )}
+                                  {isStale && (
+                                    <span className="ml-0.5 h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+                                  )}
                                   <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                                     {tooltipText}
                                   </span>
