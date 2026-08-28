@@ -5,6 +5,8 @@
 
 import type { MarketKeyword, MatrixJobState, MatrixResult, MatrixRow } from './types';
 import { COMPETITOR_TYPE_LABEL } from './types';
+import { buildEeatAnalysis, type EeatAnalysis } from './eeat';
+import { buildActionablePlan, type ActionablePlan } from './plan';
 
 export type VerdictLevel = 'critical' | 'weak' | 'ok' | 'strong';
 
@@ -115,6 +117,10 @@ export interface MatrixReport {
   aiOverviewGaps: { keyword: string; domains: string[] }[];
   measured: { serpKeywords: number; aiKeywords: number; totalKeywords: number; competitors: number };
   lostVolume: number;
+  /** Analyse E-E-A-T et profil de backlinks, null si l'étape n'a pas été relevée. */
+  eeat: EeatAnalysis;
+  /** Quick wins et plan en 4 phases dérivés de l'ensemble des constats. */
+  plan: ActionablePlan;
 }
 
 
@@ -450,6 +456,7 @@ export function buildMatrixReport(job: MatrixJobState): MatrixReport | null {
 
   const leaderboard = buildLeaderboard(matrix);
   const coverageGaps = buildCoverageGaps(job, matrix);
+  const eeat = buildEeatAnalysis(job.authority);
   const leader = leaderboard.find((e) => !e.isTarget);
   const lostVolume = volumeOf(job.keywords, [...s.missing, ...s.weak]);
 
@@ -535,5 +542,7 @@ export function buildMatrixReport(job: MatrixJobState): MatrixReport | null {
       competitors: matrix.rows.length - 1,
     },
     lostVolume,
+    eeat,
+    plan: buildActionablePlan(job, matrix, coverageGaps, eeat),
   };
 }

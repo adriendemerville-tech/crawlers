@@ -337,7 +337,187 @@ export function MatrixReportView({ job }: { job: MatrixJobState }) {
         </section>
       )}
 
-      {/* 6. Annexe : matrice */}
+      {/* 6. Autorité, backlinks et E-E-A-T */}
+      {(report.eeat.target !== null || report.eeat.signals.some((s) => s.status !== 'not_measured')) && (
+        <section>
+          <SectionTitle
+            title="Autorité, profil de liens et E-E-A-T"
+            lead="À contenu égal, l’autorité et les preuves d’identité décident de ce qui est atteignable. Ce bloc justifie le classement des phases ci-dessous."
+          />
+          <Card>
+            <CardContent className="space-y-4 p-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-border px-3 py-1 text-xs">
+                  {report.eeat.backlinkVerdict.headline}
+                </span>
+                {report.eeat.score !== null && (
+                  <span className="rounded-full border border-border px-3 py-1 text-xs">
+                    E-E-A-T {report.eeat.score}/100
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">{report.eeat.backlinkVerdict.detail}</p>
+
+              {(report.eeat.target ? [report.eeat.target, ...report.eeat.rivals] : report.eeat.rivals).length > 0 && (
+                <div className="overflow-x-auto rounded-lg border border-border">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/40 text-left">
+                        <th className="p-3">Domaine</th>
+                        <th className="p-3">Authority Score</th>
+                        <th className="p-3">Domaines référents</th>
+                        <th className="p-3">Backlinks</th>
+                        <th className="p-3">Liens / domaine</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(report.eeat.target ? [report.eeat.target, ...report.eeat.rivals] : report.eeat.rivals).map((p) => (
+                        <tr key={p.domain} className="border-b border-border last:border-0">
+                          <td className={`p-3 ${p.isTarget ? 'font-semibold' : ''}`}>{p.domain}</td>
+                          <td className="p-3">{p.authorityScore ?? 'non mesuré'}</td>
+                          <td className="p-3">{p.referringDomains?.toLocaleString('fr-FR') ?? 'non mesuré'}</td>
+                          <td className="p-3">{p.backlinks?.toLocaleString('fr-FR') ?? 'non mesuré'}</td>
+                          <td className="p-3">{p.linksPerDomain?.toLocaleString('fr-FR') ?? 'non mesuré'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {report.eeat.pillars.map((p) => (
+                  <div key={p.pillar} className="rounded-lg border border-border p-4">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="text-sm font-semibold">{p.label}</p>
+                      <span className="text-sm">{p.score === null ? 'non mesuré' : `${p.score}/100`}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">{p.comment}</p>
+                  </div>
+                ))}
+              </div>
+
+              <ul className="space-y-2 text-xs">
+                {report.eeat.signals
+                  .filter((s) => s.status !== 'not_measured')
+                  .map((s) => (
+                    <li key={s.key} className="rounded-lg border border-border p-3">
+                      <span className="font-medium">{s.label}</span>
+                      <span className="ml-2 rounded-full border border-border px-2 py-0.5">
+                        {s.status === 'ok' ? 'présent' : 'absent'}
+                      </span>
+                      <p className="mt-1 text-muted-foreground">{s.evidence}</p>
+                    </li>
+                  ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      {/* 7. Quick wins */}
+      {report.plan.quickWins.length > 0 && (
+        <section>
+          <SectionTitle
+            title="Quick wins"
+            lead="Gains obtenables sans page neuve ni nouvelle autorité : à traiter avant tout le reste."
+          />
+          <div className="space-y-3">
+            {report.plan.quickWins.map((w) => (
+              <Card key={w.id}>
+                <CardContent className="p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="font-semibold">{w.title}</h4>
+                    <span className="rounded-full border border-border px-3 py-1 text-xs">
+                      Effort {w.effort}
+                      {w.volume > 0 ? ` · ${w.volume.toLocaleString('fr-FR')} rech./mois` : ''}
+                    </span>
+                  </div>
+                  <dl className="mt-3 space-y-2 text-sm">
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground">Constat mesuré</dt>
+                      <dd>{w.finding}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground">Ce qu’il faut faire</dt>
+                      <dd>{w.action}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground">Gain attendu</dt>
+                      <dd className="text-muted-foreground">{w.gain}</dd>
+                    </div>
+                  </dl>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 8. Plan en 4 phases */}
+      <section>
+        <SectionTitle
+          title="Plan en quatre phases"
+          lead="Chaque requête du marché est classée une seule fois, en confrontant sa difficulté à votre autorité réellement mesurée."
+        />
+        <p className="mb-4 rounded-lg border border-border p-4 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Base de faisabilité : </span>
+          {report.plan.reach.basis}
+        </p>
+        <div className="space-y-4">
+          {report.plan.phases.map((p) => (
+            <Card key={p.key}>
+              <CardContent className="p-6">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h4 className="font-semibold">{p.title}</h4>
+                  <span className="text-xs text-muted-foreground">
+                    {p.horizon} · {p.items.length} requête(s) · {p.volume.toLocaleString('fr-FR')} rech./mois
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">Règle appliquée : </span>
+                  {p.rule}
+                </p>
+                <p className="mt-2 text-sm">{p.rationale}</p>
+                {p.items.length === 0 ? (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Aucune requête du marché ne tombe dans cette phase.
+                  </p>
+                ) : (
+                  <div className="mt-3 overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/40 text-left">
+                          <th className="p-3">Requête</th>
+                          <th className="p-3">Vol./mois</th>
+                          <th className="p-3">Difficulté</th>
+                          <th className="p-3">Votre position</th>
+                          <th className="p-3">Motif du classement</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {p.items.map((i) => (
+                          <tr key={i.keyword} className="border-b border-border last:border-0">
+                            <td className="p-3 font-medium">{i.keyword}</td>
+                            <td className="p-3">{i.volume.toLocaleString('fr-FR')}</td>
+                            <td className="p-3">{i.difficulty}</td>
+                            <td className="p-3">
+                              {i.targetPosition === null ? 'hors top 30' : `position ${i.targetPosition}`}
+                            </td>
+                            <td className="p-3 text-xs text-muted-foreground">{i.note}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* 9. Annexe : matrice */}
       <section>
         <SectionTitle title="Annexe — matrice détaillée" lead={SECTION_LEADS.matrix} />
         <MatrixTable matrix={matrix} keywords={job.keywords} />
