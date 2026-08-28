@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { MatrixTable } from './MatrixTable';
-import { buildMatrixReport, VERDICT_LABEL, type ActionPriority } from '@/lib/competitorMatrix/report';
+import { buildMatrixReport, GAP_KIND_LABEL, VERDICT_LABEL, type ActionPriority } from '@/lib/competitorMatrix/report';
 import { SECTION_LEADS, VERDICT_HINT } from '@/lib/competitorMatrix/reportCopy';
 import { generateMatrixReportHTML } from '@/lib/competitorMatrix/reportHtml';
 import { COMPETITOR_TYPE_LABEL, type MatrixJobState } from '@/lib/competitorMatrix/types';
