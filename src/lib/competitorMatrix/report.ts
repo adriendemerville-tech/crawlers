@@ -77,8 +77,24 @@ export interface CoverageGap {
   targetAiRate: number | null;
   /** Score de rentabilité : volume pondéré par la proximité et la difficulté. */
   value: number;
+  /** Détail du calcul, facteur par facteur, pour affichage dans le rapport. */
+  valueFactors: {
+    volume: number;
+    /** Pondération de proximité liée au type de gap (0,4 à 1). */
+    proximity: number;
+    proximityLabel: string;
+    difficulty: number;
+    /** Diviseur de difficulté : 1 + difficulté / 100. */
+    difficultyDivisor: number;
+    /** Formule lisible, chiffres réels substitués. */
+    formula: string;
+  };
   reason: string;
 }
+
+/** Explication unique du calcul, réutilisée dans le rapport et le PDF. */
+export const GAP_VALUE_EXPLAINER =
+  'Rentabilité = volume mensuel × proximité ÷ (1 + difficulté / 100). Le volume est la demande réelle mesurée sur la requête. La proximité traduit la distance qui vous sépare du top 10 : 1 quand vous êtes déjà en 11-30 (quick win), 0,6 quand un leader capte la requête sans vous, 0,5 quand vous êtes au-delà du top 10 sans leader en face, 0,4 quand seul le terrain IA manque. La difficulté divise le résultat : une requête notée 80 rapporte 1,8 fois moins qu’une requête équivalente notée 0, à volume égal.';
 
 export interface MatrixReport {
   domain: string;
@@ -149,6 +165,13 @@ const GAP_WEIGHT: Record<GapKind, number> = {
   ai_only: 0.4,
 };
 
+const GAP_PROXIMITY_LABEL: Record<GapKind, string> = {
+  quick_win: 'déjà en 11-30, top 10 à portée',
+  contested: 'requête captée par un leader, à conquérir',
+  behind: 'au-delà du top 10, place libre',
+  ai_only: 'position acquise, citations IA absentes',
+};
+
 /**
  * Écarts de couverture face aux leaders du marché.
  * Ne compare que des cases mesurées : une requête non relevée n'est jamais un gap.
@@ -185,7 +208,10 @@ export function buildCoverageGaps(job: MatrixJobState, matrix: MatrixResult, lim
     if (!kind) return;
 
     // Difficulté élevée = gain plus lent, donc moins rentable à volume égal.
-    const value = Math.round((kw.volume * GAP_WEIGHT[kind]) / (1 + kw.difficulty / 100));
+    const proximity = GAP_WEIGHT[kind];
+    const difficultyDivisor = round1(1 + kw.difficulty / 100);
+    const value = Math.round((kw.volume * proximity) / (1 + kw.difficulty / 100));
+    const fmt = (n: number) => n.toLocaleString('fr-FR');
 
     const reason =
       kind === 'quick_win'
@@ -207,6 +233,14 @@ export function buildCoverageGaps(job: MatrixJobState, matrix: MatrixResult, lim
       bestLeaderPosition,
       targetAiRate: cell.aiCitationRate === null ? null : round1(cell.aiCitationRate * 100),
       value,
+      valueFactors: {
+        volume: kw.volume,
+        proximity,
+        proximityLabel: GAP_PROXIMITY_LABEL[kind],
+        difficulty: kw.difficulty,
+        difficultyDivisor,
+        formula: `${fmt(kw.volume)} × ${proximity.toLocaleString('fr-FR')} ÷ ${difficultyDivisor.toLocaleString('fr-FR')} = ${fmt(value)}`,
+      },
       reason,
     });
   });
