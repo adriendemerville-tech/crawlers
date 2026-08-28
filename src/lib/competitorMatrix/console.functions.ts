@@ -128,3 +128,24 @@ export const deleteConsoleMatrix = createServerFn({ method: 'POST' })
     if (error) return { error: 'server_error' as const, message: error.message };
     return { ok: true as const };
   });
+
+/** Marque comme vus les rapports terminés du domaine (extinction de la pastille). */
+export const markConsoleMatricesSeen = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { domain?: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    let q = supabaseAdmin
+      .from('competitor_matrix_jobs')
+      .update({ seen_at: new Date().toISOString() } as never)
+      .eq('user_id', context.userId)
+      .eq('status', 'done')
+      .is('seen_at', null);
+    if (data.domain) {
+      const { cleanDomain } = await import('./dfs.server');
+      const domain = cleanDomain(String(data.domain));
+      if (domain) q = q.eq('domain', domain);
+    }
+    await q;
+    return { ok: true as const };
+  });
