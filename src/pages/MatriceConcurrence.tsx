@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { MatrixTable } from '@/components/CompetitorMatrix/MatrixTable';
+import { MatrixReportView } from '@/components/CompetitorMatrix/MatrixReportView';
 import {
   advanceCompetitorMatrix, getCompetitorMatrixQuota,
   saveCompetitorMatrixLead, startCompetitorMatrix,
 } from '@/lib/competitorMatrix/matrix.functions';
-import { COMPETITOR_TYPE_LABEL, STEP_LABEL, type MatrixJobState } from '@/lib/competitorMatrix/types';
+import { STEP_LABEL, type MatrixJobState } from '@/lib/competitorMatrix/types';
+
 
 const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
 
