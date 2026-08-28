@@ -4,7 +4,9 @@
 
 import { aiChat, parseJsonLoose } from './ai.server';
 import { dfsPost } from './dfs.server';
+import { makeRelevanceFilter } from './relevance.server';
 import { LOCATION_FR, MATRIX_KEYWORDS, type Identity, type MarketKeyword } from './types';
+
 
 interface RawKw { keyword: string; volume: number; difficulty: number; origin: MarketKeyword['origin'] }
 
@@ -103,23 +105,39 @@ function dedupe(items: MarketKeyword[]): MarketKeyword[] {
 }
 
 /**
- * Étape 2 — pool d'amorçage : ce que la cible adresse déjà + ce que les clients
- * demandent réellement aux IA. Sert à lancer le relevé SERP de découverte,
- * avant que les concurrents ne soient connus.
+ * Étape 2 — pool d'amorçage.
+ *
+ * Ordre de confiance : termes du marché dérivés de l'activité (lexique) >
+ * requêtes réellement posées aux IA > mots-clés déjà tenus par la cible.
+ * Un site jeune ne tient presque rien : sans les termes de marché, le pool se
+ * remplissait de mégavolumes hors sujet et faussait tout l'aval.
  */
 export async function buildSeedKeywordPool(identity: Identity): Promise<MarketKeyword[]> {
-  const targetKws = await fetchRankedFor(identity.domain, 60, 'target');
-  const aiQueries = await generateAiQueries(identity);
-  const aiVolumes = await fetchVolumes(aiQueries);
-  const aiKws: RawKw[] = aiQueries.map((q) => {
-    const v = aiVolumes.get(normalize(q));
-    return { keyword: q, volume: v?.volume ?? 0, difficulty: v?.difficulty ?? 35, origin: 'ia' as const };
-  });
+  const relevant = makeRelevanceFilter(identity.lexicon);
+  const marketTerms = (identity.lexicon?.marketTerms ?? []).filter((t) => t.length > 2);
+
+  const [targetKws, aiQueries] = await Promise.all([
+    fetchRankedFor(identity.domain, 60, 'target'),
+    generateAiQueries(identity),
+  ]);
+
+  // Un seul appel volumes pour les termes de marché ET les questions IA.
+  const volumes = await fetchVolumes([...marketTerms, ...aiQueries]);
+  const withVolume = (kw: string, origin: MarketKeyword['origin'], fallbackDiff: number): RawKw => {
+    const v = volumes.get(normalize(kw));
+    return { keyword: kw, volume: v?.volume ?? 0, difficulty: v?.difficulty ?? fallbackDiff, origin };
+  };
+
+  const marketKws = marketTerms.map((t) => withVolume(t, 'market', 40));
+  const aiKws = aiQueries.filter(relevant).map((q) => withVolume(q, 'ia', 35));
 
   const pool = dedupe([
-    ...targetKws.map((k) => scored(k, 1)),
+    // Le marché de l'entreprise prime : c'est la seule source ancrée sur l'activité.
+    ...marketKws.map((k) => scored(k, 1.8)),
     // Une requête réellement posée aux IA prime sur une requête purement SEO.
     ...aiKws.map((k) => scored(k, 1.6)),
+    // La couverture existante n'entre que si elle appartient bien au marché.
+    ...targetKws.filter((k) => relevant(k.keyword)).map((k) => scored(k, 1)),
   ]);
   return pool.sort((a, b) => b.value - a.value).slice(0, 60);
 }
@@ -127,12 +145,16 @@ export async function buildSeedKeywordPool(identity: Identity): Promise<MarketKe
 /**
  * Étape 5 — colonnes finales : pool d'amorçage + mots-clés des leaders et
  * concurrents que la cible n'adresse pas, avec priorité aux quick wins.
+ * Le gap est filtré par le lexique : un leader généraliste ne doit pas imposer
+ * ses requêtes hors marché comme colonnes de la matrice.
  */
 export async function expandMarketKeywords(
   seedPool: MarketKeyword[],
   competitorDomains: string[],
   quickWinKeywords: string[] = [],
+  identity?: Identity,
 ): Promise<MarketKeyword[]> {
+  const relevant = makeRelevanceFilter(identity?.lexicon);
   const gap: RawKw[] = [];
   for (const d of competitorDomains.slice(0, 2)) {
     gap.push(...(await fetchRankedFor(d, 40, 'gap')));
@@ -144,9 +166,11 @@ export async function expandMarketKeywords(
   const quickWins = new Set(quickWinKeywords.map(fingerprint));
 
   const pool = dedupe([
-    ...seedPool,
+    ...seedPool.filter((k) => k.origin === 'market' || relevant(k.keyword)),
     // Le gap (mot-clé d'un concurrent que la cible n'a pas) vaut plus cher.
-    ...gap.map((k) => scored(k, targetFingerprints.has(fingerprint(k.keyword)) ? 1 : 1.4)),
+    ...gap
+      .filter((k) => relevant(k.keyword))
+      .map((k) => scored(k, targetFingerprints.has(fingerprint(k.keyword)) ? 1 : 1.4)),
   ]).map((k) =>
     quickWins.has(fingerprint(k.keyword))
       ? { ...k, quickWin: true, value: Math.round(k.value * 1.8) }
@@ -155,3 +179,4 @@ export async function expandMarketKeywords(
 
   return pool.sort((a, b) => b.value - a.value).slice(0, MATRIX_KEYWORDS);
 }
+
