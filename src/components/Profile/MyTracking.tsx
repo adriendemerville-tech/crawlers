@@ -356,70 +356,9 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
           ) : (
             <div>
               {/* Add site + API buttons */}
-              <div className="flex items-center justify-end gap-2 mb-4">
-                <button
-                  onClick={() => h.setShowAddModal(true)}
-                  aria-label={t.addSite}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-dashed border-border/50 transition-colors"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>{t.addSite}</span>
-                </button>
-                <button
-                  onClick={() => { h.setShowApiPanel(!h.showApiPanel); if (!h.showApiPanel) h.setSelectedSite(null); }}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors",
-                    h.showApiPanel
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  <Cable className="h-3.5 w-3.5" />
-                  <span>API</span>
-                  {hasAnyApiConnected && (
-                    <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500" />
-                  )}
-                </button>
-              </div>
-
-              {/* Main content */}
-              <div className="flex-1 min-w-0">
-                {h.showApiPanel && <ExternalApisTab onConnectionChange={setHasAnyApiConnected} />}
-
+              <div className="flex items-center justify-end gap-2 mb-4 flex-wrap">
                 {h.currentSite && !h.showApiPanel && (
-                  <div className="space-y-6">
-                    {/* Site header */}
-                    <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <button
-                          onClick={() => h.setShowIdentityModal(true)}
-                          className="flex items-center justify-center w-9 h-9 rounded-lg border border-muted-foreground/25 text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors bg-transparent"
-                          title="Carte d'identité"
-                        >
-                          <IdCard className="h-4 w-4" />
-                        </button>
-                        <a
-                          href={`https://${h.currentSite.domain}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                          title={h.currentSite.domain}
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                        <p className="text-xs text-muted-foreground/70">
-                          {t.lastAudit} : {h.currentSite.last_audit_at
-                            ? new Date(h.currentSite.last_audit_at).toLocaleDateString(h.language === 'fr' ? 'fr-FR' : h.language === 'es' ? 'es-ES' : 'en-US')
-                            : t.never}
-                          {h.refreshingSites.has(h.currentSite.id) && (
-                            <Badge variant="outline" className="ml-2 text-xs">
-                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                              {t.refreshing}
-                            </Badge>
-                          )}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-start sm:justify-end gap-1.5 flex-wrap shrink-0 sm:ml-auto">
+                  <div className="flex items-center justify-end gap-1.5 flex-wrap">
 
                         {/* Connect/Disconnect site button */}
                         {(() => {
@@ -643,6 +582,70 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                           </Button>
                         )}
                       </div>
+                )}
+                <button
+                  onClick={() => h.setShowAddModal(true)}
+                  aria-label={t.addSite}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-dashed border-border/50 transition-colors"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>{t.addSite}</span>
+                </button>
+                <button
+                  onClick={() => { h.setShowApiPanel(!h.showApiPanel); if (!h.showApiPanel) h.setSelectedSite(null); }}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors",
+                    h.showApiPanel
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <Cable className="h-3.5 w-3.5" />
+                  <span>API</span>
+                  {hasAnyApiConnected && (
+                    <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500" />
+                  )}
+                </button>
+              </div>
+
+              {/* Main content */}
+              <div className="flex-1 min-w-0">
+                {h.showApiPanel && <ExternalApisTab onConnectionChange={setHasAnyApiConnected} />}
+
+                {h.currentSite && !h.showApiPanel && (
+                  <div className="space-y-6">
+                    {/* Site header */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <button
+                          onClick={() => h.setShowIdentityModal(true)}
+                          className="flex items-center justify-center w-9 h-9 rounded-lg border border-muted-foreground/25 text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors bg-transparent"
+                          title="Carte d'identité"
+                        >
+                          <IdCard className="h-4 w-4" />
+                        </button>
+                        <a
+                          href={`https://${h.currentSite.domain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                          title={h.currentSite.domain}
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                        <p className="text-xs text-muted-foreground/70">
+                          {t.lastAudit} : {h.currentSite.last_audit_at
+                            ? new Date(h.currentSite.last_audit_at).toLocaleDateString(h.language === 'fr' ? 'fr-FR' : h.language === 'es' ? 'es-ES' : 'en-US')
+                            : t.never}
+                          {h.refreshingSites.has(h.currentSite.id) && (
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                              {t.refreshing}
+                            </Badge>
+                          )}
+                        </p>
+                      </div>
+
                     </div>
 
                     {/* KPI Cards */}
