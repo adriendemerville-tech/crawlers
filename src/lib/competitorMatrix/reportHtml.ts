@@ -47,13 +47,34 @@ function coverHtml(r: MatrixReport, date: string): string {
 }
 
 function verdictHtml(r: MatrixReport): string {
+  const rivals = (title: string, hint: string, list: MatrixReport['rivalPanel']['primary']) =>
+    `<div style="border:1px solid #ddd8e6;border-radius:8px;padding:10px;width:48%;">
+      <div style="font-weight:700;">${esc(title)}</div>
+      <div class="kw" style="margin-bottom:6px;">${esc(hint)}</div>
+      ${
+        list.length === 0
+          ? '<div class="kw">Aucun concurrent mesuré dans cette catégorie.</div>'
+          : `<ul style="margin:0;padding-left:14px;">${list
+              .map(
+                (e) =>
+                  `<li><strong>${esc(e.name)}</strong> (${esc(e.domain)}) — ${esc(RIVAL_STANDING_LABEL[e.standing])} · ${esc(e.typeLabel)}<div class="kw">${esc(e.reason)}</div></li>`,
+              )
+              .join('')}</ul>`
+      }
+    </div>`;
+
   return `<div class="section" data-pdf-section="verdict">
     <h2>Synthèse exécutive</h2>
     <p class="lead">${esc(SECTION_LEADS.verdict)}</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+      ${rivals('Concurrents primaires', 'Même produit ou service, devant ou derrière vous, plus les leaders et goliaths du marché.', r.rivalPanel.primary)}
+      ${rivals('Concurrents secondaires', 'À votre niveau ou au-dessus, sans vendre la même offre.', r.rivalPanel.secondary)}
+    </div>
     <p><span class="badge">${esc(VERDICT_LABEL[r.verdict.level])} · indice de présence ${r.verdict.score}/100</span></p>
     <p>${esc(r.verdict.explanation)}</p>
   </div>`;
 }
+
 
 function kpiHtml(r: MatrixReport): string {
   return `<div class="section" data-pdf-section="kpis">
