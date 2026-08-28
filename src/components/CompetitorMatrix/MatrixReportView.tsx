@@ -81,6 +81,19 @@ export function MatrixReportView({ job }: { job: MatrixJobState }) {
         <SectionTitle title="Synthèse exécutive" lead={SECTION_LEADS.verdict} />
         <Card>
           <CardContent className="space-y-4 p-6">
+            <div className="grid gap-3 md:grid-cols-2">
+              <RivalList
+                title="Concurrents primaires"
+                hint="Même produit ou service que vous, devant ou derrière vous dans Google, plus les leaders et goliaths du marché."
+                entries={report.rivalPanel.primary}
+              />
+              <RivalList
+                title="Concurrents secondaires"
+                hint="Positionnés à votre niveau ou au-dessus sans vendre la même offre."
+                entries={report.rivalPanel.secondary}
+              />
+            </div>
+
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full border border-primary px-3 py-1 text-sm font-medium text-primary">
                 {VERDICT_LABEL[report.verdict.level]}
