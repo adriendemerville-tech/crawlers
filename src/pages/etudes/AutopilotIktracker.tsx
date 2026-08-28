@@ -241,7 +241,7 @@ export default function AutopilotIktracker() {
         <section className="mb-12">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Le point de départ</h2>
           <p className="leading-relaxed text-foreground/85 mb-4">
-            iktracker.fr est un outil de suivi des indemnités kilométriques. Avant l'Autopilot,
+            <a href="https://iktracker.fr" target="_blank" rel="noopener" className="text-primary hover:underline">iktracker.fr</a> est un outil de suivi des indemnités kilométriques. Avant l'Autopilot,
             le site tournait à <strong>84,5 clics par semaine en moyenne</strong> (fenêtre de
             référence du 9 au 30 mars 2026) pour environ 6 995 impressions hebdomadaires et une
             position moyenne de 8,9. La thématique est claire mais férocement saisonnière : la
