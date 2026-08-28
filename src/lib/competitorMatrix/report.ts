@@ -104,6 +104,9 @@ export interface MatrixReport {
   kpis: ReportKpi[];
   actions: ReportAction[];
   leaderboard: LeaderboardEntry[];
+  /** Concurrents primaires (même offre + goliaths du marché) et secondaires (offre différente). */
+  rivalPanel: { primary: RivalEntry[]; secondary: RivalEntry[] };
+
   /** Écarts de couverture face aux leaders, triés par rentabilité. */
   coverageGaps: CoverageGap[];
   /** Volume mensuel cumulé des gaps retenus. */
