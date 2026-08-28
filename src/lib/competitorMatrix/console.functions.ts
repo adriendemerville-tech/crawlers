@@ -13,6 +13,23 @@ export const listConsoleMatrices = createServerFn({ method: 'POST' })
     const domain = cleanDomain(String(data.domain || ''));
     if (!domain) return { rows: [] };
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+
+    // Rattachement des analyses lancées depuis /matrice-concurrence (anonymes) :
+    // uniquement si l'utilisateur suit réellement ce domaine dans sa console.
+    const { data: owned } = await supabaseAdmin
+      .from('tracked_sites')
+      .select('id')
+      .eq('user_id', context.userId)
+      .eq('domain', domain)
+      .limit(1);
+    if ((owned?.length ?? 0) > 0) {
+      await supabaseAdmin
+        .from('competitor_matrix_jobs')
+        .update({ user_id: context.userId } as never)
+        .eq('domain', domain)
+        .is('user_id', null);
+    }
+
     const { data: rows } = await supabaseAdmin
       .from('competitor_matrix_jobs')
       .select('id, target_url, domain, status, step, progress, created_at, updated_at, competitors, error, matrix')
@@ -22,6 +39,7 @@ export const listConsoleMatrices = createServerFn({ method: 'POST' })
       .limit(50);
     return { rows: (rows ?? []).map(toConsoleRow) };
   });
+
 
 export const startConsoleMatrix = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
