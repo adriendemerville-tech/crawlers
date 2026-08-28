@@ -1,64 +1,68 @@
-# Plan séquencé — 6 pages en top 6
+# Plan réécrit — positions, par ordre d'effet réel
 
-Objectif : convertir les positions 10-25 déjà acquises en top 6, sans créer de nouvelle cannibalisation. Ordre par rapport gain/effort, chaque lot est livrable indépendamment.
+Périmètre : contenu, intention, métadonnées, maillage interne. Aucune action d'acquisition de liens. Les lots sont classés par effet démontrable sur le classement, puis par hygiène.
 
-## Lot 1 — Nouvelle page ressource `/api-seo`
-Le plus gros gisement : ~700 impressions déjà acquises sur `/developers` (page produit), difficulté 11-13/100.
+## Phase A — Les trois leviers qui déplacent réellement un rang
 
-- Nouvelle route `/api-seo` : guide « API SEO REST : endpoints, formats JSON, quotas, tarifs ».
-- Cible : api seo, seo api, api seo rest, api seo développeur.
-- Structure : réponse directe < 40 mots, tableau des endpoints, exemples de requête/réponse JSON, section tarifs, FAQ.
-- 2-3 blocs `blockquote.citable-passage` (extraction IA), schema `TechArticle` + `FAQPage`.
-- `/developers` reste la page produit : lien descendant depuis `/api-seo` (CTA « Obtenir une clé API ») et lien montant depuis `/developers` en ancre « API SEO ».
-- Ajout au sitemap et au hub concerné.
+### Lot 1 — Nouvelle page `/api-seo` (effet fort)
+Gisement le plus net : ~700 impressions déjà captées par `/developers`, une page produit qui ne répond pas à l'intention informationnelle.
 
-## Lot 2 — Dé-cannibalisation « crawlers » (home ↔ article définition)
-La home (pos. 8,2) et `/blog/crawler-definition-seo-geo` (pos. 24,5) se disputent la même requête.
+- Nouvelle route `/api-seo` : « API SEO REST : endpoints, formats JSON, quotas, tarifs ».
+- Cibles : api seo, seo api, api seo rest, api seo développeur.
+- Structure : réponse directe < 40 mots, tableau des endpoints, exemples requête/réponse JSON, quotas, tarifs, FAQ.
+- `/developers` reste la page produit : lien descendant depuis `/api-seo` (CTA « Obtenir une clé API »), lien montant depuis `/developers` en ancre « API SEO ».
+- Schema `TechArticle` + `FAQPage`, ajout au sitemap et au hub.
+- Gain attendu : entrée directe top 10 sous 4-6 semaines, top 6 plausible (difficulté 11-13). ~40-70 clics/mois si atteint.
 
-- Home : title/H1/intro recentrés sur la marque + « outil de crawl SEO & GEO ». Retrait des formulations définitionnelles.
-- Article : recentré strictement sur le champ définitionnel (définition, traduction, def, en français). Retrait des occurrences « seo crawlers ».
-- Lien montant explicite de l'article vers la home, ancre « Crawlers ».
-- Vérification qu'aucune autre page ne porte un title concurrent sur la même intention.
+### Lot 2 — Dé-cannibalisation « crawlers » (effet d'arbitrage)
+La home (pos. 8,2) et `/blog/crawler-definition-seo-geo` (pos. 24,5) se disputent la même requête. L'effet est un transfert, pas un gain net : la home monte, l'article reste.
 
-## Lot 3 — Enrichissement `/comparatif-crawlers-semrush`
-Deux requêtes à difficulté 0/100 en position 10-13 : gain quasi gratuit.
+- Home : title/H1/intro recentrés sur la marque + « outil de crawl SEO & GEO », retrait des formulations définitionnelles.
+- Article : recentré strictement sur le champ définitionnel (définition, traduction, def, en français), retrait des occurrences « seo crawlers ».
+- Lien montant de l'article vers la home, ancre « Crawlers ».
+- Contrôle qu'aucune autre page ne porte un title concurrent sur cette intention.
+- Gain attendu : home de 8,2 vers 4-6. Pas de gain sur l'article.
 
-- Sections dédiées : « Semrush Enterprise crawler », « Semrush vs Screaming Frog », « Crawl Semrush : limites et quotas ».
-- Tableau comparatif chiffré (volume d'URLs, JS rendering, fréquence, prix).
-- Un bloc `citable-passage` par variante, FAQ, schema `FAQPage`.
-- Maillage vers `/crawl` et `/api-seo`.
+### Lot 3 — Enrichissement `/comparatif-crawlers-semrush` (effet de couverture)
+Deux requêtes en position 10-13 avec un top 5 faible : gain de couverture réel, pas décoratif.
 
-## Lot 4 — Cluster définition (`/blog/crawler-definition-seo-geo`)
-~180 impressions en positions 8-13, plus gros volume (crawler traduction : 590/mois).
+- Sections : « Semrush Enterprise crawler », « Semrush vs Screaming Frog », « Crawl Semrush : limites et quotas ».
+- Tableau comparatif chiffré (volume d'URLs, rendu JS, fréquence, prix).
+- FAQ + schema `FAQPage`, maillage vers `/crawl` et `/api-seo`.
+- Gain attendu : top 5 sur les variantes ajoutées. ~20-40 clics/mois.
 
-- Intro réécrite en réponse directe extractible (< 40 mots).
-- H2 « Crawler en français : traduction et équivalents » + tableau des équivalents (robot, spider, indexeur).
-- Schema `DefinedTerm` sur la définition principale.
-- Objectif Featured Snippet.
+## Phase B — Point de contrôle (6 semaines après le lot 1)
 
-## Lot 5 — `/lexique` sur « glossaire seo »
-140 vol./mois, difficulté 17, position 10,6.
+Relevé Search Console sur les requêtes cibles des lots 1 à 3.
 
-- Title/H1 alignés sur « glossaire SEO » (sans millésime dans le H1).
-- Intro définitionnelle, index alphabétique visible côté serveur (SSR), maillage vers les fiches `/lexique/$slug`.
-- Schema `DefinedTermSet`.
+- Si `/api-seo` est en top 10 : la mécanique intention/contenu fonctionne, on enchaîne la phase C.
+- Si `/api-seo` stagne au-delà de la position 10 malgré une difficulté faible : le facteur limitant n'est pas le contenu. Écrire davantage sur ces clusters n'apportera rien de plus, et la phase C reste de l'hygiène.
 
-## Lot 6 — Guides métiers (artisan / BTP / avocat)
-Trois requêtes à 0-7/100 en positions 10-14, pénalisées par l'absence de maillage.
+## Phase C — Hygiène et couverture (aucune promesse de position)
 
-- Hub `/guides` renforcé : liste complète, descriptions courtes, liens directs.
-- Maillage croisé entre guides métiers (bloc « Autres métiers »).
-- Bloc FAQ propre à chaque métier + schema `FAQPage`.
-- « seo cabinet avocat » (volume 0) : conservé, non prioritaire.
+Regroupe les anciens lots 4 à 7. À exécuter comme maintenance, pas comme levier de rang.
 
-## Lot 7 — `/visibilite-llm`
-Difficulté 0, position 13,5. Renforcement de contenu : sections méthodologiques, blocs `citable-passage`, maillage depuis le hub GEO.
+- `/blog/crawler-definition-seo-geo` : intro en réponse directe extractible, H2 « Crawler en français : traduction et équivalents » + tableau des équivalents, schema `DefinedTerm`. Cible Featured Snippet — gain possible en affichage, pas en position.
+- `/lexique` : title/H1 alignés sur « glossaire SEO » (sans millésime dans le H1), intro définitionnelle, index alphabétique en SSR, maillage vers `/lexique/$slug`, schema `DefinedTermSet`.
+- Guides métiers (artisan / BTP / avocat) : hub `/guides` renforcé, maillage croisé « Autres métiers », FAQ par métier + `FAQPage`. Effet marginal assumé.
+- `/visibilite-llm` : sections méthodologiques, blocs `citable-passage`, maillage depuis le hub GEO. Volume ~30/mois — bruit statistique, traité en dernier.
+- Les blocs `citable-passage` et les schemas servent la citation IA et l'affichage, pas le classement Google.
+
+## Plafond de gain, chiffré
+
+L'ensemble des cibles totalise ~1 800 recherches/mois, dont « crawler traduction » (~590) qui est définitionnelle et ne convertit pas.
+
+- Phase A seule, si atteinte : ~60-110 clics/mois qualifiés.
+- Phase A + C en top 3 partout : ~200-350 clics/mois, majoritairement non commerciaux.
+- Conclusion : ce plan gagne des positions et de la couverture, pas nécessairement des clients.
 
 ## Détails techniques
+
 - Métadonnées via `head()` TanStack + `src/lib/seo/pageHead.ts` ; titles < 60 caractères marque incluse.
 - Nouvelles URLs ajoutées à `sitemap_entries` (source du `sitemap.xml`).
-- Contenu rendu côté serveur (pas de section clé derrière un état client) pour rester lisible par les bots.
-- Aucun changement de logique métier : uniquement contenu, métadonnées, maillage et JSON-LD.
+- Contenu rendu côté serveur, aucune section clé derrière un état client.
+- Aucun changement de logique métier : contenu, métadonnées, maillage, JSON-LD uniquement.
 
 ## Vérification après chaque lot
-Contrôle des titles/H1 en production, absence de doublon d'intention, présence du JSON-LD, puis suivi des positions sur les requêtes cibles dans Search Console.
+
+Titles/H1 en production, absence de doublon d'intention, présence du JSON-LD, puis suivi des positions cibles dans Search Console.
