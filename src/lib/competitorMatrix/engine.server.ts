@@ -78,7 +78,9 @@ export async function runMatrixStep(job: Job): Promise<Record<string, unknown>> 
           seedPool,
           ordered.map((c) => c.domain),
           (job.quick_wins ?? []) as unknown as string[],
+          job.identity as unknown as Identity,
         );
+
         patch.step = 'serp';
         patch.progress = 55;
         break;
