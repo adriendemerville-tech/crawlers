@@ -51,6 +51,31 @@
 @source not "../src/pages/SocialHub.tsx";
 
 
+/* Navigation du header : classes dédiées hors Tailwind. Le stylesheet
+   applicatif (styles.app.css, chargé par route APRÈS styles.css) ré-émet
+   l'utilitaire `.hidden` dans la même couche `utilities` ; comme une media
+   query n'ajoute pas de spécificité, ce `.hidden` tardif écrasait le
+   `sm:flex` de la nav desktop (qui disparaissait) et le `sm:hidden` de la
+   nav mobile (qui restait visible à droite). CSS non layéré = prioritaire
+   sur toute couche @layer, quel que soit l'ordre de chargement. */
+.header-nav-desktop {
+  display: none;
+  flex: 1 1 0%;
+  align-items: center;
+  justify-content: center;
+}
+.header-nav-mobile {
+  display: flex;
+  align-items: center;
+}
+@media (width >= 40rem) {
+  .header-nav-desktop {
+    display: flex;
+  }
+  .header-nav-mobile {
+    display: none;
+  }
+}
 @font-face {
   font-family: 'Inter Variable';
   font-style: normal;
