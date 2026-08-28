@@ -41,15 +41,26 @@ const CONSOLIDATED_SLUGS: Record<string, string> = {
     "front-loading-title-mot-cle-premier-mot",
   "le-dilemme-du-premier-mot-optimiser-la-position-des-mots-cles-dans-la-balise-tit":
     "front-loading-title-mot-cle-premier-mot",
+  // Trio « mise aux normes IA » : pilier = le guide stratégique (le plus complet)
+  "mise-aux-normes-ia-positionner-votre-offre-d-accompagnement-au-c-ur-de-la-strate":
+    "la-mise-aux-normes-ia-le-guide-strategique-pour-vendre-cette-nouvelle-offre-aux-",
+  "mission-mise-aux-normes-ia":
+    "la-mise-aux-normes-ia-le-guide-strategique-pour-vendre-cette-nouvelle-offre-aux-",
+  // Doublon d'intention « seo vs geo » : pilier = comprendre-geo-vs-seo
+  "tableau-comparatif-seo-geo-2026": "comprendre-geo-vs-seo",
+  // Article mince qui cannibalisait la page outil /audit-seo-gratuit et le comparatif
+  "audit-seo-gratuit-vs-semrush": "/comparatif-crawlers-semrush",
 };
 
 export const Route = createFileRoute("/blog/$slug")({
   beforeLoad: ({ params }) => {
     const target = CONSOLIDATED_SLUGS[params.slug];
     if (target && target !== params.slug) {
-      throw redirect({ href: `/blog/${target}`, statusCode: 301, replace: true });
+      const href = target.startsWith("/") ? target : `/blog/${target}`;
+      throw redirect({ href, statusCode: 301, replace: true });
     }
   },
+
   loader: async ({ params }): Promise<BlogArticleLoaderData> => {
     const slug = params.slug;
     const staticArticle = getArticleBySlug(slug);
