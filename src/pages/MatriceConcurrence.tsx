@@ -168,7 +168,15 @@ export default function MatriceConcurrence() {
                 <span className="text-sm text-muted-foreground">Usage illimité (admin)</span>
               ) : remaining !== null && (
                 <span className="text-sm text-muted-foreground">
-                  {remaining > 0 ? `${remaining} matrice gratuite disponible aujourd’hui` : 'Quota du jour atteint'}
+                  {remaining > 0
+                    ? `${remaining} matrice gratuite disponible aujourd’hui`
+                    : (
+                      <>
+                        Quota du jour atteint —{' '}
+                        <Link to="/auth" className="underline">connectez-vous</Link>
+                        {' '}pour continuer.
+                      </>
+                    )}
                 </span>
               )}
             </div>
