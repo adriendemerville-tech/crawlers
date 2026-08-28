@@ -9,8 +9,8 @@ import { getRequestHeader } from '@tanstack/react-start/server';
 import { buildMatrix } from './build';
 import {
   AI_MEASURED_KEYWORDS,
-  type AiReadingJson, type Competitor, type Identity,
-  type MarketKeyword, type MatrixJobState, type MatrixStep, type SerpReadingJson,
+  type AiReadingJson, type Competitor, type Identity, type MarketKeyword,
+  type MatrixJobState, type MatrixStep, type SeedSerpReading, type SerpReadingJson,
 } from './types';
 
 export const MATRIX_FREE_QUOTA = 1; // 1 matrice par IP et par jour
