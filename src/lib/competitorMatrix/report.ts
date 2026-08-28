@@ -541,5 +541,7 @@ export function buildMatrixReport(job: MatrixJobState): MatrixReport | null {
       competitors: matrix.rows.length - 1,
     },
     lostVolume,
+    eeat,
+    plan: buildActionablePlan(job, matrix, coverageGaps, eeat),
   };
 }
