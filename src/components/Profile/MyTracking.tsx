@@ -177,9 +177,9 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip 
   };
 
   return (
-    <div className="relative group rounded-lg border bg-card p-3 flex flex-col justify-between min-h-[68px]">
-      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <Icon className="h-3.5 w-3.5 shrink-0" />
+    <div className="relative group rounded-lg border bg-card p-2 flex flex-col justify-between min-h-[52px]">
+      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+        <Icon className="h-3 w-3 shrink-0" />
         <span className="leading-tight">{label}</span>
         {tooltip && (
           <Popover open={showTooltip} onOpenChange={setShowTooltip}>
@@ -200,12 +200,12 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip 
           </Popover>
         )}
       </div>
-      <p className={`text-base font-semibold mt-1 ${valueClassName || ''}`}>{value}</p>
+      <p className={`text-sm font-semibold mt-0.5 ${valueClassName || ''}`}>{value}</p>
       {onRefresh && (
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="absolute bottom-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted disabled:opacity-50"
+          className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted disabled:opacity-50"
           aria-label="Actualiser"
         >
           <RefreshCw className={cn("h-3 w-3 text-muted-foreground", refreshing && "animate-spin")} />
@@ -225,7 +225,7 @@ function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: 
   return (
     <Card className="border-0 shadow-none bg-transparent">
       <CardContent className="p-0">
-        <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-2.5 xl:gap-3 2xl:gap-4 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
           {defaultOrder.map(id => {
             const def = kpiDefinitions[id];
             if (!def) return null;
@@ -356,7 +356,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
           ) : (
             <div>
               {/* Add site + API buttons */}
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center justify-end gap-2 mb-4">
                 <button
                   onClick={() => h.setShowAddModal(true)}
                   aria-label={t.addSite}
