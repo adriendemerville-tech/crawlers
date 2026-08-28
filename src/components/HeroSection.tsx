@@ -96,8 +96,8 @@ function HeroSectionComponent() {
 
 
         {/* URL input + CTA Audit Expert */}
-        <div className="mt-2 mx-auto w-full flex items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(90%, 24rem)' }}>
-          <div className="flex-1 basis-0 min-w-0 relative">
+        <div className="mt-2 mx-auto w-full flex items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 40rem)' }}>
+          <div className="flex-[2] basis-0 min-w-0 relative">
             <Input
               type="text"
               placeholder="url : crawlers.fr"
