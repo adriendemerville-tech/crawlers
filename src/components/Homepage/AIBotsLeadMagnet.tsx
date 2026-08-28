@@ -132,16 +132,16 @@ function getStatusColor(status: string) {
 }
 
 function ScoreRing({ score }: { score: number }) {
-  const radius = 38;
+  const radius = 76;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="relative w-24 h-24 mx-auto">
-      <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
-        <circle cx="48" cy="48" r={radius} fill="none" strokeWidth="6" className="stroke-muted/20" />
+    <div className="relative w-48 h-48 mx-auto">
+      <svg className="w-48 h-48 -rotate-90" viewBox="0 0 192 192">
+        <circle cx="96" cy="96" r={radius} fill="none" strokeWidth="12" className="stroke-muted/20" />
         <circle
-          cx="48" cy="48" r={radius} fill="none" strokeWidth="6"
+          cx="96" cy="96" r={radius} fill="none" strokeWidth="12"
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
@@ -149,7 +149,7 @@ function ScoreRing({ score }: { score: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className={cn('text-2xl font-bold', getScoreColor(score))}>{score}</span>
+        <span className={cn('text-5xl font-bold', getScoreColor(score))}>{score}</span>
       </div>
     </div>
   );
@@ -241,66 +241,66 @@ export function AIBotsLeadMagnet() {
   const citedCount = llmResults?.filter(r => r.cited).length || 0;
 
   return (
-    <div className="mt-10 max-w-xl mx-auto">
+    <div className="mt-10 max-w-3xl mx-auto">
       {/* Tabs */}
-      <div className="flex justify-center gap-1 mb-4">
+      <div className="flex justify-center gap-2 mb-6">
         <button
           onClick={() => handleTabSwitch('geo')}
           className={cn(
-            'flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors',
+            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors',
             tab === 'geo'
               ? 'bg-brand-violet/15 text-brand-violet border border-brand-violet/30'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
           )}
         >
-          <Gauge className="h-3.5 w-3.5" />
+          <Gauge className="h-6 w-6" />
           {t.tabGeo}
         </button>
         <button
           onClick={() => handleTabSwitch('bots')}
           className={cn(
-            'flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors',
+            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors',
             tab === 'bots'
               ? 'bg-brand-violet/15 text-brand-violet border border-brand-violet/30'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
           )}
         >
-          <Shield className="h-3.5 w-3.5" />
+          <Shield className="h-6 w-6" />
           {t.tabBots}
         </button>
         <button
           onClick={() => handleTabSwitch('llm')}
           className={cn(
-            'flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors',
+            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors',
             tab === 'llm'
               ? 'bg-brand-violet/15 text-brand-violet border border-brand-violet/30'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
           )}
         >
-          <Eye className="h-3.5 w-3.5" />
+          <Eye className="h-6 w-6" />
           {t.tabLlm}
         </button>
       </div>
 
       {/* Title */}
-      <div className="text-center mb-4">
-        <h3 className="text-sm font-semibold text-foreground flex items-center justify-center gap-2">
+      <div className="text-center mb-6">
+        <h3 className="text-2xl font-semibold text-foreground flex items-center justify-center gap-3">
           {tab === 'geo' ? (
-            <Gauge className="h-4 w-4 text-brand-violet" />
+            <Gauge className="h-7 w-7 text-brand-violet" />
           ) : tab === 'bots' ? (
-            <Bot className="h-4 w-4 text-brand-violet" />
+            <Bot className="h-7 w-7 text-brand-violet" />
           ) : (
-            <Eye className="h-4 w-4 text-brand-violet" />
+            <Eye className="h-7 w-7 text-brand-violet" />
           )}
           {tab === 'geo' ? t.titleGeo : tab === 'bots' ? t.titleBots : t.titleLlm}
         </h3>
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-base text-muted-foreground mt-2">
           {tab === 'geo' ? t.subtitleGeo : tab === 'bots' ? t.subtitleBots : t.subtitleLlm}
         </p>
       </div>
 
       {/* Input */}
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         <div className="flex-1 relative">
           <input
             type="url"
@@ -308,56 +308,56 @@ export function AIBotsLeadMagnet() {
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t.placeholder}
-            className="w-full h-10 px-4 text-sm bg-background border-2 border-brand-violet/40 rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-hidden focus:border-brand-violet transition-colors"
+            className="w-full h-16 px-6 text-lg bg-background border-2 border-brand-violet/40 rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-hidden focus:border-brand-violet transition-colors"
           />
         </div>
         <button
           type="button"
           onClick={handleAnalyze}
           disabled={loading || !url.trim()}
-          className="h-10 px-5 rounded-lg text-sm font-semibold bg-brand-violet text-white hover:opacity-90 disabled:opacity-40 transition-colors flex items-center gap-2 shrink-0"
+          className="h-16 px-8 rounded-lg text-lg font-semibold bg-brand-violet text-white hover:opacity-90 disabled:opacity-40 transition-colors flex items-center gap-2 shrink-0"
         >
-          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRight className="h-3.5 w-3.5" />}
+          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
           {t.cta}
         </button>
       </div>
 
       {/* Error */}
       {error && (
-        <p className="text-xs text-destructive mt-2 text-center">{error}</p>
+        <p className="text-base text-destructive mt-3 text-center">{error}</p>
       )}
 
       {/* Results: Bots */}
       {tab === 'bots' && bots && (
-        <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className={cn(
-            "text-center text-xs font-medium mb-3 py-1.5 px-3 rounded-full inline-flex items-center gap-1.5 mx-auto",
+            "text-center text-base font-medium mb-4 py-2 px-4 rounded-full inline-flex items-center gap-2 mx-auto",
             blockedCount === 0
               ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
               : "bg-destructive/10 text-destructive"
           )}>
             {blockedCount === 0 ? (
-              <><CheckCircle2 className="h-3 w-3" />{t.summary_all}</>
+              <><CheckCircle2 className="h-5 w-5" />{t.summary_all}</>
             ) : (
-              <><XCircle className="h-3 w-3" />{blockedCount} {t.summary_some}</>
+              <><XCircle className="h-5 w-5" />{blockedCount} {t.summary_some}</>
             )}
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
             {bots.map((bot) => (
               <div
                 key={bot.name}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-lg border text-xs",
+                  "flex items-center gap-2.5 px-4 py-3 rounded-lg border text-base",
                   isAllowed(bot)
                     ? "border-emerald-500/20 bg-emerald-500/5"
                     : "border-destructive/20 bg-destructive/5"
                 )}
               >
                 {isAllowed(bot) ? (
-                  <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
                 ) : (
-                  <XCircle className="h-3 w-3 text-destructive shrink-0" />
+                  <XCircle className="h-5 w-5 text-destructive shrink-0" />
                 )}
                 <span className="text-foreground font-medium truncate">{bot.name}</span>
               </div>
@@ -368,19 +368,19 @@ export function AIBotsLeadMagnet() {
 
       {/* Results: GEO Score */}
       {tab === 'geo' && geoScore !== null && geoFactors && (
-        <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <ScoreRing score={geoScore} />
-          <p className="text-center text-xs text-muted-foreground mt-1">
-            {t.geoScoreLabel} <span className={cn('font-bold text-sm', getScoreColor(geoScore))}>{geoScore}</span> {t.geoOut}
+          <p className="text-center text-base text-muted-foreground mt-2">
+            {t.geoScoreLabel} <span className={cn('font-bold text-xl', getScoreColor(geoScore))}>{geoScore}</span> {t.geoOut}
           </p>
 
           {/* Top factors */}
-          <div className="grid grid-cols-2 gap-1.5 mt-4">
+          <div className="grid grid-cols-2 gap-3 mt-6">
             {geoFactors.slice(0, 6).map((f) => (
               <div
                 key={f.id}
                 className={cn(
-                  "flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-xs",
+                  "flex items-center justify-between gap-3 px-4 py-3 rounded-lg border text-base",
                   getStatusColor(f.status)
                 )}
               >
@@ -394,49 +394,49 @@ export function AIBotsLeadMagnet() {
 
       {/* Results: LLM Visibility */}
       {tab === 'llm' && llmResults && (
-        <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {/* Summary badge */}
           <div className={cn(
-            "text-center text-xs font-medium mb-3 py-1.5 px-3 rounded-full inline-flex items-center gap-1.5 mx-auto",
+            "text-center text-base font-medium mb-4 py-2 px-4 rounded-full inline-flex items-center gap-2 mx-auto",
             citedCount > 0
               ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
               : "bg-destructive/10 text-destructive"
           )}>
             {citedCount > 0 ? (
-              <><CheckCircle2 className="h-3 w-3" />{citedCount}/{llmResults.length} {t.llmSummary}</>
+              <><CheckCircle2 className="h-5 w-5" />{citedCount}/{llmResults.length} {t.llmSummary}</>
             ) : (
-              <><XCircle className="h-3 w-3" />{t.llmNone}</>
+              <><XCircle className="h-5 w-5" />{t.llmNone}</>
             )}
           </div>
           {llmBrand && (
-            <p className="text-center text-[10px] text-muted-foreground mb-3">
+            <p className="text-center text-sm text-muted-foreground mb-4">
               Marque détectée : <span className="font-semibold text-foreground">{llmBrand}</span>
             </p>
           )}
 
           {/* 6 cards, 2 rows of 3 */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {llmResults.map((r) => (
               <div
                 key={r.llm_name}
                 className={cn(
-                  "rounded-xl border p-3 text-center space-y-1.5 transition-colors",
+                  "rounded-xl border p-5 text-center space-y-2 transition-colors",
                   r.cited
                     ? "border-emerald-500/30 bg-emerald-500/5"
                     : "border-destructive/30 bg-destructive/5"
                 )}
               >
                 
-                <div className="text-xs font-semibold text-foreground">{r.llm_name}</div>
+                <div className="text-lg font-semibold text-foreground">{r.llm_name}</div>
                 <div className={cn(
-                  "text-[10px] font-bold uppercase tracking-wider",
+                  "text-xs font-bold uppercase tracking-wider",
                   r.cited ? "text-emerald-500" : "text-destructive"
                 )}>
                   {r.cited ? t.cited : t.notCited}
                 </div>
                 {r.cited && (
                   <div className={cn(
-                    "text-[10px] px-2 py-0.5 rounded-full inline-block",
+                    "text-sm px-3 py-1 rounded-full inline-block",
                     r.sentiment === 'positive' ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                       : r.sentiment === 'negative' ? "bg-destructive/15 text-destructive"
                       : "bg-muted text-muted-foreground"
@@ -445,7 +445,7 @@ export function AIBotsLeadMagnet() {
                   </div>
                 )}
                 {r.error && (
-                  <div className="text-[10px] text-muted-foreground">Timeout</div>
+                  <div className="text-sm text-muted-foreground">Timeout</div>
                 )}
               </div>
             ))}
@@ -455,13 +455,13 @@ export function AIBotsLeadMagnet() {
 
       {/* CTA deeper audit */}
       {(bots || geoScore !== null || llmResults) && (
-        <div className="text-center mt-4">
+        <div className="text-center mt-6">
           <a
             href="/audit"
-            className="text-xs text-brand-violet hover:underline inline-flex items-center gap-1"
+            className="text-base text-brand-violet hover:underline inline-flex items-center gap-1.5"
           >
             {t.deepAudit}
-            <ArrowRight className="h-3 w-3" />
+            <ArrowRight className="h-4 w-4" />
           </a>
         </div>
       )}
