@@ -95,9 +95,8 @@ function HeroSectionComponent() {
         </h2>
 
         {/* URL input + CTA Audit Expert */}
-        <div className="mt-2 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-4" style={{ maxWidth: 'min(90%, 44rem)' }}>
-          <span className="hidden sm:inline-flex shrink-0 items-center text-sm font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Étape 1</span>
-          <div className="flex-1 relative">
+        <div className="mt-2 mx-auto w-full flex items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(90%, 24rem)' }}>
+          <div className="flex-1 basis-0 min-w-0 relative">
             <Input
               type="text"
               placeholder="url : crawlers.fr"
@@ -109,22 +108,22 @@ function HeroSectionComponent() {
                   navigate(`/audit-expert?url=${encodeURIComponent(target)}&autolaunch=1`);
                 }
               }}
-              className="h-12 sm:h-16 rounded-xl pl-4 pr-12 text-base sm:text-lg placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
+              className="h-12 sm:h-14 rounded-xl pl-3 pr-10 text-base placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
               aria-label="URL du site web"
             />
-            <Search className="absolute right-5 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           </div>
-          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'}>
+          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="flex-1 basis-0 min-w-0">
             <Button
               variant="outline"
               size="lg"
-              className="h-12 sm:h-16 gap-2 rounded-xl border-amber-500 dark:border-amber-400 border-2 px-6 sm:px-10 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 whitespace-nowrap w-full sm:w-auto"
+              className="h-12 sm:h-14 gap-1 rounded-xl border-amber-500 dark:border-amber-400 border-2 px-3 text-sm shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 w-full justify-center"
             >
-              <div className="flex flex-col items-start leading-tight">
-                <span className="font-bold text-amber-700 dark:text-amber-400 text-lg">
+              <div className="flex flex-col items-center leading-tight min-w-0">
+                <span className="font-bold text-amber-700 dark:text-amber-400 text-sm sm:text-base truncate">
                   {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
                 </span>
-                <span className="text-xs font-normal text-muted-foreground">
+                <span className="text-[11px] font-normal text-muted-foreground truncate">
                   {language === 'fr' ? '20 crédits offerts' : language === 'es' ? '20 créditos gratis' : '20 free credits'}
                 </span>
               </div>
