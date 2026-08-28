@@ -178,23 +178,9 @@ const faqPage = {
   })),
 };
 
-const webSite = {
-  '@type': 'WebSite',
-  '@id': `${SITE_URL}/#website`,
-  name: 'Crawlers.fr',
-  url: SITE_URL,
-  publisher: ORG,
-  inLanguage: ['fr', 'en', 'es'],
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/?url={search_term_string}` },
-    'query-input': 'required name=search_term_string',
-  },
-};
-
 export const homeJsonLd = [
   {
     '@context': 'https://schema.org',
-    '@graph': [webSite, softwareApplication, toolsItemList, audiencesItemList, faqPage],
+    '@graph': [softwareApplication, toolsItemList, audiencesItemList, faqPage],
   },
 ];
