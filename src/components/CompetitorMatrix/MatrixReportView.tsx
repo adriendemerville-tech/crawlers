@@ -178,6 +178,69 @@ export function MatrixReportView({ job }: { job: MatrixJobState }) {
         </div>
       </section>
 
+      {/* 4 bis. Gaps de couverture face aux leaders */}
+      {report.coverageGaps.length > 0 && (
+        <section>
+          <SectionTitle title="Gaps de couverture face aux leaders" lead={SECTION_LEADS.gaps} />
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full min-w-[820px] border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/40 text-left">
+                  <th className="p-3">Requête</th>
+                  <th className="p-3">Type d’écart</th>
+                  <th className="p-3">Vous</th>
+                  <th className="p-3">Leaders qui la couvrent</th>
+                  <th className="p-3">Volume/mois</th>
+                  <th className="p-3">Difficulté</th>
+                  <th className="p-3">Rentabilité</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.coverageGaps.map((g) => (
+                  <tr key={g.keyword} className="border-b border-border align-top last:border-0">
+                    <td className="p-3">
+                      <span className="font-medium">{g.keyword}</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">{g.reason}</span>
+                    </td>
+                    <td className="p-3">
+                      <span
+                        className={`whitespace-nowrap rounded-full border px-2 py-0.5 text-xs ${
+                          g.kind === 'quick_win' ? 'border-primary text-primary' : 'border-border text-muted-foreground'
+                        }`}
+                      >
+                        {GAP_KIND_LABEL[g.kind]}
+                      </span>
+                    </td>
+                    <td className="p-3 whitespace-nowrap">
+                      {g.targetPosition !== null ? `position ${g.targetPosition}` : 'hors top 30'}
+                      {g.targetAiRate !== null && (
+                        <span className="block text-xs text-muted-foreground">IA : {g.targetAiRate} %</span>
+                      )}
+                    </td>
+                    <td className="p-3 text-xs text-muted-foreground">
+                      {g.leaders.length > 0
+                        ? g.leaders
+                            .map((l) => `${l.name}${l.position !== null ? ` (${l.position})` : ''}`)
+                            .join(', ')
+                        : 'aucun leader dans le top 10'}
+                    </td>
+                    <td className="p-3 whitespace-nowrap">{g.volume.toLocaleString('fr-FR')}</td>
+                    <td className="p-3">{g.difficulty}</td>
+                    <td className="p-3 font-semibold text-primary">{g.value.toLocaleString('fr-FR')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            {report.coverageGaps.length} opportunités retenues, soit{' '}
+            {report.gapVolume.toLocaleString('fr-FR')} recherches mensuelles hors de votre couverture actuelle. La
+            colonne rentabilité est un indice de comparaison interne, pas une prévision de trafic.
+          </p>
+        </section>
+      )}
+
+
       {/* 5. AI Overviews sans vous */}
       {report.aiOverviewGaps.length > 0 && (
         <section>
