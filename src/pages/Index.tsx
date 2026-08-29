@@ -671,16 +671,6 @@ const Index = () => {
           </Suspense>
         </LazyVisible>
 
-
-
-        {/* Breathing Spiral — Canvas + framer-motion (gros chunk) */}
-        <LazyVisible minHeight="600px">
-          <Suspense fallback={<SectionSkeleton />}>
-            <div className="cv-auto-lg"><BreathingSpiralSection /></div>
-          </Suspense>
-        </LazyVisible>
-
-
         {/* Google Cross Data — SEA→SEO Bridge */}
         <LazyVisible minHeight="500px">
           <Suspense fallback={<SectionSkeleton />}>
