@@ -111,15 +111,23 @@ const CSP_REPORT_ONLY = "require-trusted-types-for 'script'; trusted-types defau
  */
 function applyEdgeHeaders(request: Request, response: Response): Response {
   const { pathname } = new URL(request.url);
-  const isImmutable = IMMUTABLE_ASSET_RE.test(pathname);
+  const isImmutable = isImmutableAsset(pathname);
+  const isStatic = isImmutable || STATIC_EXT_RE.test(pathname);
   const hasCacheControl = response.headers.has("cache-control");
 
-  if (!isImmutable && response.headers.has("content-security-policy")) return response;
-  if (isImmutable && hasCacheControl) return response;
+  if (!isStatic && response.headers.has("content-security-policy")) return response;
+  if (isStatic && hasCacheControl) return response;
 
   const headers = new Headers(response.headers);
   if (isImmutable && response.ok) {
     headers.set("cache-control", "public, max-age=31536000, immutable");
+    headers.set("x-content-type-options", "nosniff");
+  } else if (isStatic && response.ok) {
+    // Statique non fingerprinté : cache long mais revalidation possible.
+    headers.set(
+      "cache-control",
+      "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+    );
     headers.set("x-content-type-options", "nosniff");
   }
   if (!isImmutable && (response.headers.get("content-type") ?? "").includes("text/html")) {
