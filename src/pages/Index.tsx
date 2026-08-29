@@ -777,19 +777,12 @@ const Index = () => {
         </section>
 
 
-        <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton height={500} />}>
-            <div className="cv-auto home-bias-left"><HybridSection /></div>
-          </Suspense>
-        </LazyVisible>
+        <div className="cv-auto home-bias-left"><HybridSection /></div>
 
 
         {/* Chrome Extension — short teaser */}
-        <LazyVisible minHeight="400px">
-          <Suspense fallback={<SectionSkeleton height={400} />}>
-            <div className="cv-auto home-bias-right"><ExtensionSection /></div>
-          </Suspense>
-        </LazyVisible>
+        <div className="cv-auto home-bias-right"><ExtensionSection /></div>
+
 
 
         {/* Active crawl notification banner */}
