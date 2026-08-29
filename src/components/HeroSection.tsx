@@ -97,7 +97,7 @@ function HeroSectionComponent() {
 
         {/* URL input + CTA Audit Expert + note — tout sur une seule ligne */}
         <div className="mt-2 mx-auto w-full flex flex-nowrap items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 46rem)' }}>
-          <TrustBadge layout="column" className="hidden sm:flex sm:shrink-0 gap-0.5 py-0 [&_.text-sm]:text-[11px] [&_.text-sm]:whitespace-nowrap [&>div[role=img]]:justify-start [&_.text-sm]:text-left" />
+          <TrustBadge layout="column" className="max-sm:hidden flex sm:shrink-0 gap-0.5 py-0 [&_.text-sm]:text-[11px] [&_.text-sm]:whitespace-nowrap [&_.text-sm]:text-left" />
           <div className="flex-1 basis-0 min-w-0 relative rounded-xl p-[2px] bg-gradient-to-b from-gray-300 via-gray-200 to-gray-400 dark:p-0 dark:bg-transparent">
             <Input
               type="text"
