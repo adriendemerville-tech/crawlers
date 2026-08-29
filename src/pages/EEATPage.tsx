@@ -187,7 +187,7 @@ export default function EEATPage() {
               <span className="text-xs text-muted-foreground">Mis à jour le 25 mai 2026</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-6 leading-tight">
               E-E-A-T, SEO et GEO 2026 : la plateforme des freelances et agences de référencement
             </h1>
 
@@ -231,7 +231,7 @@ export default function EEATPage() {
         {/* Pour qui : freelances + agences */}
         <section className="py-12 sm:py-16 px-4 bg-muted/30">
           <div className="mx-auto max-w-5xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3">
+            <h2 className="text-lg sm:text-xl font-bold text-foreground text-center mb-3">
               L'outil SEO et GEO conçu pour les freelances et les agences de référencement
             </h2>
             <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
@@ -289,7 +289,7 @@ export default function EEATPage() {
         {/* Définition E-E-A-T */}
         <section className="py-12 sm:py-16 px-4">
           <div className="mx-auto max-w-4xl space-y-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+            <h2 className="text-lg sm:text-xl font-bold text-foreground">
               Qu'est-ce que l'E-E-A-T en SEO et pourquoi est-il devenu central pour le GEO ?
             </h2>
             <p className="text-muted-foreground leading-relaxed">
@@ -332,7 +332,7 @@ export default function EEATPage() {
         {/* 4 piliers */}
         <section className="py-12 sm:py-16 px-4 bg-muted/30">
           <div className="mx-auto max-w-5xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3">
+            <h2 className="text-lg sm:text-xl font-bold text-foreground text-center mb-3">
               Les 4 piliers de l'E-E-A-T mesurés automatiquement
             </h2>
             <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
@@ -377,7 +377,7 @@ export default function EEATPage() {
             <div className="mx-auto max-w-4xl space-y-8">
               <div className="text-center">
                 <Badge variant="outline" className="mb-3 text-xs uppercase">Méthodologie Crawlers.fr</Badge>
-                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground mb-3">
                   Un scoring E-E-A-T algorithmique, reproductible, défendable devant un client
                 </h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -441,7 +441,7 @@ export default function EEATPage() {
         <LazyVisible minHeight="400px">
           <section className="py-12 sm:py-16 px-4 bg-muted/30">
             <div className="mx-auto max-w-5xl">
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-3">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground text-center mb-3">
                 Comment améliorer son référencement naturel : 6 actions E-E-A-T concrètes
               </h2>
               <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">
@@ -466,7 +466,7 @@ export default function EEATPage() {
         <LazyVisible minHeight="400px">
           <section className="py-12 sm:py-16 px-4">
             <div className="mx-auto max-w-4xl">
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground text-center mb-8">
                 Ressources SEO et GEO complémentaires
               </h2>
               <div className="grid sm:grid-cols-2 gap-3">
@@ -496,7 +496,7 @@ export default function EEATPage() {
         <LazyVisible minHeight="600px">
           <section className="py-12 sm:py-16 px-4 bg-muted/30">
             <div className="mx-auto max-w-4xl">
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center mb-8">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground text-center mb-8">
                 Questions fréquentes — E-E-A-T, SEO et choix d'un consultant
               </h2>
               <div className="space-y-4">
@@ -516,7 +516,7 @@ export default function EEATPage() {
         {/* CTA final */}
         <section className="py-12 sm:py-16 px-4">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+            <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4">
               Prêt à industrialiser vos audits SEO et GEO ?
             </h2>
             <p className="text-muted-foreground mb-8">
