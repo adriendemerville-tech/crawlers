@@ -3,7 +3,7 @@ import { lazy, Suspense } from 'react';
 import { Header } from '@/components/Header';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { ArrowRight, PenLine } from 'lucide-react';
-import adrienPhoto from '@/assets/adrien-de-volontat.jpg';
+import adrienPhoto from '@/assets/adrien-de-volontat.webp';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 const SITE_URL = 'https://crawlers.fr';

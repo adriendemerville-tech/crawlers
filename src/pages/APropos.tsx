@@ -5,7 +5,7 @@ import { useEffect, lazy, Suspense} from 'react';
 import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Target, Brain, Shield, Zap, Code2, BarChart3, Globe } from 'lucide-react';
-import adrienPhoto from '@/assets/adrien-de-volontat.jpg';
+import adrienPhoto from '@/assets/adrien-de-volontat.webp';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 

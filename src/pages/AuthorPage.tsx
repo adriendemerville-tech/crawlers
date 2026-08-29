@@ -2,7 +2,7 @@ import { Header } from "@/components/Header";
 import { Helmet } from "react-helmet-async";
 import { Link } from "@/lib/router-compat";
 import { Linkedin, Globe, MapPin, Mail, ArrowRight, Target, FileSearch, Cpu, Users } from "lucide-react";
-import adrienPhoto from "@/assets/adrien-de-volontat.jpg";
+import adrienPhoto from "@/assets/adrien-de-volontat.webp";
 
 const FOUNDER = {
   name: "Adrien de Volontat",
