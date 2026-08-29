@@ -130,7 +130,7 @@ function applyEdgeHeaders(request: Request, response: Response): Response {
     );
     headers.set("x-content-type-options", "nosniff");
   }
-  if (!isImmutable && (response.headers.get("content-type") ?? "").includes("text/html")) {
+  if (!isStatic && (response.headers.get("content-type") ?? "").includes("text/html")) {
     headers.set("content-security-policy", CSP_DIRECTIVES);
     headers.set("content-security-policy-report-only", CSP_REPORT_ONLY);
     headers.set("x-content-type-options", "nosniff");
