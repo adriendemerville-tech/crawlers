@@ -3039,6 +3039,7 @@ export type Database = {
         Row: {
           ai_citations: Json
           ai_overviews: Json | null
+          attempts: number
           authority: Json | null
           competitors: Json
           created_at: string
@@ -3069,6 +3070,7 @@ export type Database = {
         Insert: {
           ai_citations?: Json
           ai_overviews?: Json | null
+          attempts?: number
           authority?: Json | null
           competitors?: Json
           created_at?: string
@@ -3099,6 +3101,7 @@ export type Database = {
         Update: {
           ai_citations?: Json
           ai_overviews?: Json | null
+          attempts?: number
           authority?: Json | null
           competitors?: Json
           created_at?: string
@@ -11047,6 +11050,30 @@ export type Database = {
           },
         ]
       }
+      matrix_ai_answer_cache: {
+        Row: {
+          answer: string
+          cache_key: string
+          created_at: string
+          keyword: string
+          model: string
+        }
+        Insert: {
+          answer: string
+          cache_key: string
+          created_at?: string
+          keyword: string
+          model: string
+        }
+        Update: {
+          answer?: string
+          cache_key?: string
+          created_at?: string
+          keyword?: string
+          model?: string
+        }
+        Relationships: []
+      }
       matrix_audit_results: {
         Row: {
           axe: string
@@ -12777,6 +12804,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      public_metrics_cache: {
+        Row: {
+          metric: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          metric: string
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          metric?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
       }
       quiz_questions: {
         Row: {

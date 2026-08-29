@@ -8,6 +8,13 @@
       "when": 1787942421240,
       "tag": "0000_matrix_authority_column",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788010888233,
+      "tag": "0001_matrix_locks_ai_cache_metrics",
+      "breakpoints": true
     }
   ]
 }
