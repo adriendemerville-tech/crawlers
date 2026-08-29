@@ -57,7 +57,7 @@ const ProductShowcaseSection = lazy(() => import('@/components/Homepage/ProductS
 const MarketplaceTeaserSection = lazy(() => import('@/components/Homepage/MarketplaceTeaserSection').then(m => ({ default: m.MarketplaceTeaserSection })));
 
 const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
-const BreathingSpiralSection = lazy(() => import('@/components/Homepage/BreathingSpiralSection').then(m => ({ default: m.BreathingSpiralSection })));
+
 const PainPointsSection = lazy(() => import('@/components/Homepage/PainPointsSection').then(m => ({ default: m.PainPointsSection })));
 const MarinaDeepAuditSection = lazy(() => import('@/components/Homepage/MarinaDeepAuditSection').then(m => ({ default: m.MarinaDeepAuditSection })));
 
