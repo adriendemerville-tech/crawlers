@@ -681,10 +681,10 @@ const Index = () => {
               </div>
               <p className="mx-auto mb-6 max-w-2xl text-xs text-muted-foreground">
                 {language === 'fr'
-                  ? 'Hors abonnement : les audits ponctuels se paient en crédits (Pay-As-You-Go), sans engagement. Les abonnements incluent un quota mensuel de pages ; au-delà, vous complétez avec des packs de crédits.'
+                  ? 'Tous les audits sont intégrés aux abonnements. Agent d\u2019analyse Marina disponible par API.'
                   : language === 'es'
-                    ? 'Sin suscripción: las auditorías puntuales se pagan con créditos (Pay-As-You-Go), sin compromiso. Las suscripciones incluyen una cuota mensual de páginas; más allá, se completa con packs de créditos.'
-                    : 'Without a subscription, one-off audits are paid in credits (Pay-As-You-Go), no commitment. Subscriptions include a monthly page quota; beyond it, top up with credit packs.'}
+                    ? 'Todas las auditorías están incluidas en las suscripciones. Agente de análisis Marina disponible por API.'
+                    : 'All audits are included in subscriptions. Marina analysis agent available via API.'}
               </p>
               <div className="flex flex-col items-center gap-4 mb-6">
                 <Link to="/pro-agency">
