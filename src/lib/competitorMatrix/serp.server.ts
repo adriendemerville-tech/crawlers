@@ -25,26 +25,41 @@ function serpTask(keyword: string, aiOverview: boolean) {
   };
 }
 
+type SerpRead = { result: any | null; failure: string | null };
+
 /** Un appel = une tâche. Lots parallèles bornés pour rester sous le timeout. */
-async function readOne(keyword: string, aiOverview: boolean): Promise<any | null> {
-  const data = await dfsPost('serp/google/organic/live/advanced', [serpTask(keyword, aiOverview)], 45000);
+async function readOne(keyword: string, aiOverview: boolean): Promise<SerpRead> {
+  const { data, failure } = await dfsPostResult(
+    'serp/google/organic/live/advanced',
+    [serpTask(keyword, aiOverview)],
+    45000,
+  );
+  if (failure) return { result: null, failure };
   const task = data?.tasks?.[0];
-  if (!task) return null;
+  if (!task) return { result: null, failure: 'empty_response' };
   if (task.status_code !== 20000) {
     console.error(`[competitor-matrix] SERP "${keyword}" status ${task.status_code} ${task.status_message}`);
-    return null;
+    return { result: null, failure: `task_${task.status_code}` };
   }
-  return task.result?.[0] ?? null;
+  return { result: task.result?.[0] ?? null, failure: task.result?.[0] ? null : 'no_result' };
 }
 
-async function readMany(keywords: string[], aiOverview: boolean): Promise<(any | null)[]> {
-  const out: (any | null)[] = [];
+async function readMany(keywords: string[], aiOverview: boolean): Promise<SerpRead[]> {
+  const out: SerpRead[] = [];
   for (let i = 0; i < keywords.length; i += SERP_CONCURRENCY) {
     const chunk = keywords.slice(i, i + SERP_CONCURRENCY);
-    out.push(...(await Promise.all(chunk.map((k) => readOne(k, aiOverview)))));
+    const batch = await Promise.all(chunk.map((k) => readOne(k, aiOverview)));
+    out.push(...batch);
+    // Un quota épuisé ou une authentification refusée ne se répare pas en
+    // insistant : on arrête les lots suivants au lieu de brûler des appels.
+    if (batch.some((r) => r.failure === 'quota' || r.failure === 'auth' || r.failure === 'missing_credentials')) {
+      while (out.length < keywords.length) out.push({ result: null, failure: batch.find((r) => r.failure)!.failure });
+      break;
+    }
   }
   return out;
 }
+
 
 /**
  * Sélection des requêtes d'amorçage : une question conversationnelle de 100
