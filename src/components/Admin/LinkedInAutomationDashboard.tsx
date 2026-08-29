@@ -188,6 +188,24 @@ export function LinkedInAutomationDashboard() {
 
 
 
+  // Génère le média du post (carrousel WaveSpeed / screencast Pagebolt-Browserless).
+  const generateMedia = async (p: Post) => {
+    setMediaGenId(p.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('linkedin-media-generator', {
+        body: { post_id: p.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).details || (data as any).error);
+      toast.success('Contenu média généré');
+      await loadAll();
+    } catch (e: any) {
+      toast.error(`Échec génération média : ${e.message}`);
+    } finally {
+      setMediaGenId(null);
+    }
+  };
+
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
       .from('linkedin_scheduled_posts')
