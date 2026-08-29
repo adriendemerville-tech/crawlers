@@ -9,7 +9,7 @@
 // leader ne pouvait être mesuré. On envoie donc une requête par mot-clé, par
 // lots parallèles bornés.
 
-import { dfsPost, cleanDomain } from './dfs.server';
+import { dfsPostResult, cleanDomain } from './dfs.server';
 import { LOCATION_FR, SEED_SERP_KEYWORDS, type SeedSerpReading, type SerpReadingJson } from './types';
 
 const SERP_CONCURRENCY = 5;
