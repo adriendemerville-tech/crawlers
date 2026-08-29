@@ -207,6 +207,31 @@ export function LinkedInAutomationDashboard() {
     }
   };
 
+  // Publication manuelle immédiate : bypasse le cron et l'anti-spam 1 post / 7 jours.
+  const publishNow = async (p: Post) => {
+    if (!confirm('Publier ce post sur LinkedIn maintenant ? (contourne la limite d\'un post par semaine)')) return;
+    setPublishingId(p.id);
+    try {
+      const text = (drafts[p.id] ?? '').trim();
+      if (text && text !== (p.edited_text ?? p.generated_text ?? '')) {
+        await supabase.from('linkedin_scheduled_posts').update({ edited_text: text }).eq('id', p.id);
+      }
+      const { data, error } = await supabase.functions.invoke('linkedin-publisher', {
+        body: { post_id: p.id, force: true },
+      });
+      if (error) throw error;
+      const res = data as any;
+      if (res?.error) throw new Error(res.details || res.error);
+      if (res?.skipped) toast.warning(`Publication ignorée : ${res.reason}`);
+      else toast.success('Post publié sur LinkedIn');
+      await loadAll();
+    } catch (e: any) {
+      toast.error(`Échec publication : ${e.message}`);
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
       .from('linkedin_scheduled_posts')
