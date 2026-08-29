@@ -1868,10 +1868,10 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
                   key="linking"
                   onClick={handleOptimizeLinking}
                   disabled={isLoading || nodes.length < 3}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                     linkingFirst
-                      ? 'bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border-emerald-500/30 text-emerald-300 hover:from-emerald-500/30 hover:to-cyan-500/30 hover:shadow-lg hover:shadow-emerald-500/10'
-                      : 'border-white/15 text-white/50 bg-transparent hover:bg-white/5 hover:text-white/70'
+                      ? 'bg-gradient-to-r from-emerald-500/30 to-cyan-500/30 border-emerald-400/50 text-emerald-100 hover:from-emerald-500/40 hover:to-cyan-500/40 hover:shadow-lg hover:shadow-emerald-500/10'
+                      : 'border-white/25 text-white/80 bg-transparent hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   <Network className="w-3.5 h-3.5" />

@@ -740,23 +740,18 @@ function CocoonContent() {
                   Cocoon <span className="text-[#fbbf24]">·</span> <span className="hidden xs:inline">{t.organism}</span>
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none px-1 sm:px-1.5 py-0.5 rounded border text-white/30 bg-white/5 border-white/10">beta</span>
+                {/* Site selector — compact, right of the BETA badge */}
+                <div className="w-[120px] sm:w-[150px] shrink-0">
+                  <CocoonSiteSelector
+                    userId={user?.id || ""}
+                    trackedSites={trackedSites}
+                    selectedSiteId={selectedSiteId}
+                    onSelect={setSelectedSiteId}
+                    onSiteCreated={(site) => setTrackedSites(prev => [site, ...prev])}
+                    placeholder={t.selectSite}
+                  />
+                </div>
               </div>
-            </div>
-
-            {/* Site selector — centered on desktop only when the AI sidebar is closed; otherwise inline to avoid overlap with right-side controls */}
-            <div className={
-              cocoonExpanded
-                ? "order-last sm:order-none w-full sm:w-auto sm:flex-1 sm:min-w-[160px] sm:max-w-[280px]"
-                : "order-last sm:order-none w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2"
-            }>
-              <CocoonSiteSelector
-                userId={user?.id || ""}
-                trackedSites={trackedSites}
-                selectedSiteId={selectedSiteId}
-                onSelect={setSelectedSiteId}
-                onSiteCreated={(site) => setTrackedSites(prev => [site, ...prev])}
-                placeholder={t.selectSite}
-              />
             </div>
 
             {/* Controls */}
@@ -912,21 +907,21 @@ function CocoonContent() {
               <div className="absolute top-3 left-3 z-20 flex items-center gap-0.5 px-1.5 py-1 rounded-md backdrop-blur-md border bg-black/50 border-white/10">
                 <button
                   onClick={() => setViewMode('force')}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${viewMode === 'force' ? 'text-white/70 font-semibold bg-white/5' : 'text-white/25 hover:text-white/50'}`}
+                  className={`px-2 py-1 rounded text-[11px] font-mono transition-colors ${viewMode === 'force' ? 'text-white font-semibold bg-white/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
                 >
                   Force
                 </button>
-                <span className="text-white/15">·</span>
+                <span className="text-white/20">·</span>
                 <button
                   onClick={() => setViewMode('radial')}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${viewMode === 'radial' ? 'text-white/70 font-semibold bg-white/5' : 'text-white/25 hover:text-white/50'}`}
+                  className={`px-2 py-1 rounded text-[11px] font-mono transition-colors ${viewMode === 'radial' ? 'text-white font-semibold bg-white/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
                 >
                   Radial
                 </button>
-                <span className="text-white/15">·</span>
+                <span className="text-white/20">·</span>
                 <button
                   onClick={() => setViewMode('3d')}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${viewMode === '3d' ? 'text-white/70 font-semibold bg-white/5' : 'text-white/25 hover:text-white/50'}`}
+                  className={`px-2 py-1 rounded text-[11px] font-mono transition-colors ${viewMode === '3d' ? 'text-white font-semibold bg-white/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
                 >
                   3D
                 </button>
