@@ -237,6 +237,12 @@ export function LinkedInAutomationDashboard() {
     else await loadAll();
   };
 
+  const draftPosts = posts.filter((p) => !p.published_at && p.status !== 'published');
+  const publishedPosts = posts
+    .filter((p) => p.published_at || p.status === 'published')
+    .sort((a, b) => new Date(b.published_at ?? b.created_at).getTime() - new Date(a.published_at ?? a.created_at).getTime());
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
