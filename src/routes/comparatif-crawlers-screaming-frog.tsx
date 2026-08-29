@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import ComparatifCrawlersScreamingFrog, {
-  SCREAMING_FROG_JSONLD,
-} from "@/pages/ComparatifCrawlersScreamingFrog";
+import ComparatifCrawlersScreamingFrog from "@/pages/ComparatifCrawlersScreamingFrog";
+import { SCREAMING_FROG_JSONLD } from "@/pages/ComparatifCrawlersScreamingFrog.seo";
 import { pageHead } from "@/lib/seo/pageHead";
 
 // Satellite du silo « Comparatifs » (pilier : /comparatif-crawlers-semrush).
