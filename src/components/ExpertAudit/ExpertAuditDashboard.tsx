@@ -53,7 +53,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from '@/lib/router-compat';
 import { useSaveReport } from '@/hooks/useSaveReport';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
-import { summarizeStrategicResult } from './expertReportExport';
+// Chargé à la demande : évite d'embarquer l'export PDF/HTML dans le premier écran
+const summarizeStrategicResult = (...args: any[]) =>
+  import('./expertReportExport').then(m => (m.summarizeStrategicResult as any)(...args));
 import { useAuditState } from './hooks/useAuditState';
 import { mapStrategicData } from './hooks/useStrategicDataMapper';
 
