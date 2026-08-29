@@ -404,7 +404,7 @@ export function AnalyticsDashboard() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-9 md:grid-cols-18 gap-4">
           {[...Array(8)].map((_, i) => (
             <Card key={i}>
               <CardContent className="p-3">
