@@ -32,6 +32,10 @@ import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { initGlobalErrorListener } from "@/lib/globalErrorListener";
 
 import appCss from "../styles.css?url";
+// CSS critique (au-dessus de la ligne de flottaison) inliné dans le <head> :
+// le premier rendu ne dépend plus du téléchargement de styles.css, qui bloquait
+// ~600 ms sur mobile. Régénéré par scripts/gen-critical-css.mjs après un build.
+import criticalCss from "../styles.critical.css?raw";
 // Les polices passent par le pipeline Vite (nom haché sous /assets) : servies
 // depuis /public elles arrivaient sans aucun TTL, soit 70 Kio resservis à
 // chaque visite d'après PageSpeed.
@@ -49,6 +53,10 @@ const SITE_TITLE = "Audit SEO et GEO : visibilité Google et IA | Crawlers";
 const SITE_DESCRIPTION =
   "Auditez votre site en SEO et GEO, corrigez vos pages automatiquement et suivez votre visibilité dans Google comme dans les réponses des IA.";
 
+
+// styles.css est servi en media="print" (donc non bloquant) : on le repasse en
+// "all" dès qu'il est chargé, le premier rendu étant peint par le CSS critique inline.
+const CSS_SWAP = `(function(){function s(){var l=document.getElementById('main-css');if(!l){document.addEventListener('DOMContentLoaded',s);return;}var go=function(){l.media='all';};if(l.sheet){go();}else{l.addEventListener('load',go);window.addEventListener('load',go);}}s();})();`;
 
 // ported from index.html — gtag bootstrap (gtag.js itself is loaded by GTM below)
 const GTAG_BOOTSTRAP = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-0S0D56VSWQ', { send_page_view: false });`;
@@ -104,7 +112,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "msapplication-TileColor", content: "#7c3aed" },
     ],
     links: [
-      { rel: "stylesheet", href: appCss },
+      // media="print" => la feuille est téléchargée sans bloquer le rendu ;
+      // le script CSS_SWAP la repasse en "all" dès qu'elle est chargée.
+      { rel: "stylesheet", href: appCss, media: "print", id: "main-css" },
       {
         rel: "alternate",
         type: "application/rss+xml",
@@ -137,11 +147,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // Les @font-face d'affichage sont désormais dans src/styles.css :
       // /fonts-deferred.css bloquait le premier rendu 460 ms pour rien.
     ],
+    styles: [{ children: criticalCss }],
     scripts: [
       {
         type: "application/ld+json",
         children: JSON.stringify(SITEWIDE_JSONLD),
       },
+      { children: CSS_SWAP },
       { children: GTAG_BOOTSTRAP },
       { children: DOMAIN_CANONICALIZATION },
       { children: TEXT_SIZE_BOOTSTRAP },
