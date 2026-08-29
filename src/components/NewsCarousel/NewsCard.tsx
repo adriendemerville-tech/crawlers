@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { storageImage, storageImageSrcSet } from '@/lib/images/storageImage';
 
 interface NewsCardProps {
   article: NewsArticle;
@@ -116,7 +117,9 @@ Saludos`,
       <div className="relative group">
         <AspectRatio ratio={16 / 9}>
           <img
-            src={article.imageUrl}
+            src={storageImage(article.imageUrl, 600)}
+            srcSet={storageImageSrcSet(article.imageUrl, 340)}
+            sizes="(max-width: 640px) 240px, (max-width: 768px) 300px, 340px"
             alt={article.title}
             className="object-cover w-full h-full"
             loading="lazy"
