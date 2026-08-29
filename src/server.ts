@@ -272,15 +272,25 @@ async function renderAndStore(
     request,
     await normalizeCatastrophicSsrResponse(await handler.fetch(request, env, ctx)),
   );
-  if (!cache || !isStorableHtml(fresh)) return fresh;
+  if (!isStorableHtml(fresh)) return fresh;
 
-  const entry = toCacheEntry(fresh.clone());
-  const put = cache.put(key, entry).catch((error) => {
-    console.error("html cache put failed", error);
+  // Cache mémoire : lecture du corps une fois, resservie sans re-render.
+  const body = await fresh.clone().text();
+  const headers: [string, string][] = [];
+  fresh.headers.forEach((value, name) => {
+    if (name.toLowerCase() === "set-cookie") return;
+    headers.push([name, value]);
   });
-  const waitUntil = (ctx as WaitUntilCtx | undefined)?.waitUntil;
-  if (waitUntil) waitUntil(put);
-  else await put;
+  memorySet(key.url, { body, headers, ts: Date.now() });
+
+  if (cache) {
+    const entry = toCacheEntry(fresh.clone());
+    const put = cache.put(key, entry).catch((error) => {
+      console.error("html cache put failed", error);
+    });
+    const waitUntil = (ctx as WaitUntilCtx | undefined)?.waitUntil;
+    if (waitUntil) waitUntil(put);
+  }
   return fresh;
 }
 
@@ -295,30 +305,43 @@ export default {
       }
 
       const cache = getHtmlCache();
-      if (url && cache && isHtmlCacheEligible(request, url)) {
+      if (url && isHtmlCacheEligible(request, url)) {
         const key = htmlCacheKey(url);
-        const hit = await cache.match(key).catch(() => undefined);
+        const waitUntil = (ctx as WaitUntilCtx | undefined)?.waitUntil;
+        const revalidate = () => {
+          const task = renderAndStore(request, env, ctx, cache, key)
+            .then(async (response) => {
+              await response.arrayBuffer().catch(() => undefined);
+            })
+            .catch((error) => {
+              console.error("html cache revalidate failed", error);
+            });
+          if (waitUntil) waitUntil(task);
+        };
+
+        const mem = memoryGet(key.url);
+        if (mem) {
+          const age = (Date.now() - mem.ts) / 1000;
+          if (age > HTML_CACHE_FRESH_S) revalidate();
+          return withCacheStatus(
+            memoryResponse(mem),
+            age <= HTML_CACHE_FRESH_S ? "HIT" : "STALE",
+          );
+        }
+
+        const hit = cache ? await cache.match(key).catch(() => undefined) : undefined;
         if (hit) {
           const age = cachedAgeSeconds(hit);
           if (age <= HTML_CACHE_FRESH_S) return withCacheStatus(hit, "HIT");
           if (age <= HTML_CACHE_FRESH_S + HTML_CACHE_STALE_S) {
-            // Périmé mais utilisable : on répond tout de suite et on
-            // reconstruit l'entrée en arrière-plan.
-            const revalidate = renderAndStore(request, env, ctx, cache, key)
-              .then(async (response) => {
-                await response.arrayBuffer().catch(() => undefined);
-              })
-              .catch((error) => {
-                console.error("html cache revalidate failed", error);
-              });
-            const waitUntil = (ctx as WaitUntilCtx | undefined)?.waitUntil;
-            if (waitUntil) waitUntil(revalidate);
+            revalidate();
             return withCacheStatus(hit, "STALE");
           }
         }
         const rendered = await renderAndStore(request, env, ctx, cache, key);
         return isStorableHtml(rendered) ? withCacheStatus(rendered, "MISS") : rendered;
       }
+
 
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
