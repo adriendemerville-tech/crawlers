@@ -78,7 +78,7 @@ function HeroSectionComponent() {
               <span className={HERO_WORD_CLASS}>{animatedWords[0]}</span>
             )}
           </span>{' '}
-          <span className="font-display bg-gradient-to-r from-primary via-amber-400 to-primary bg-clip-text text-transparent lowercase leading-tight">
+          <span className="font-display text-foreground lowercase leading-tight">
             {getIgnoreText()} {getSiteText()}
           </span>
           {' '}
