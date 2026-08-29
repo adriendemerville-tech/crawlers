@@ -7,22 +7,22 @@
 
 import type { GuideData, GuideSection, GuideFaq } from '@/components/Guide/GuideTemplate';
 
-import heroArtisan from '@/assets/guides/guide-artisan-seo.jpg';
-import heroBtp from '@/assets/guides/guide-btp-seo.jpg';
-import heroRestaurant from '@/assets/guides/guide-restaurant-seo.jpg';
-import heroAvocat from '@/assets/guides/guide-avocat-seo.jpg';
-import heroMedecin from '@/assets/guides/guide-medecin-seo.jpg';
-import heroImmobilier from '@/assets/guides/guide-immobilier-seo.jpg';
-import heroEcommerce from '@/assets/guides/guide-ecommerce-seo.jpg';
-import heroCoach from '@/assets/guides/guide-coach-seo.jpg';
-import heroPhotographe from '@/assets/guides/guide-photographe-seo.jpg';
-import heroPme from '@/assets/guides/guide-pme-seo.jpg';
-import heroAgence from '@/assets/guides/guide-agence-seo.jpg';
-import heroConsultant from '@/assets/guides/guide-consultant-seo.jpg';
-import heroSaas from '@/assets/guides/guide-saas-seo.jpg';
-import heroStartup from '@/assets/guides/guide-startup-seo.jpg';
-import heroFreelance from '@/assets/guides/guide-freelance-seo.jpg';
-import heroMarketplace from '@/assets/guides/guide-marketplace-seo.jpg';
+import heroArtisan from '@/assets/guides/guide-artisan-seo.webp';
+import heroBtp from '@/assets/guides/guide-btp-seo.webp';
+import heroRestaurant from '@/assets/guides/guide-restaurant-seo.webp';
+import heroAvocat from '@/assets/guides/guide-avocat-seo.webp';
+import heroMedecin from '@/assets/guides/guide-medecin-seo.webp';
+import heroImmobilier from '@/assets/guides/guide-immobilier-seo.webp';
+import heroEcommerce from '@/assets/guides/guide-ecommerce-seo.webp';
+import heroCoach from '@/assets/guides/guide-coach-seo.webp';
+import heroPhotographe from '@/assets/guides/guide-photographe-seo.webp';
+import heroPme from '@/assets/guides/guide-pme-seo.webp';
+import heroAgence from '@/assets/guides/guide-agence-seo.webp';
+import heroConsultant from '@/assets/guides/guide-consultant-seo.webp';
+import heroSaas from '@/assets/guides/guide-saas-seo.webp';
+import heroStartup from '@/assets/guides/guide-startup-seo.webp';
+import heroFreelance from '@/assets/guides/guide-freelance-seo.webp';
+import heroMarketplace from '@/assets/guides/guide-marketplace-seo.webp';
 
 export const HERO_IMAGES: Record<string, string> = {
   'artisan-seo': heroArtisan,

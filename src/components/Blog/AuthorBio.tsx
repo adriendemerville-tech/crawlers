@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Link } from '@/lib/router-compat';
 import { Linkedin, Globe, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import adrienPhoto from '@/assets/adrien-de-volontat.jpg';
+import adrienPhoto from '@/assets/adrien-de-volontat.webp';
 
 interface AuthorBioProps {
   author?: string;
