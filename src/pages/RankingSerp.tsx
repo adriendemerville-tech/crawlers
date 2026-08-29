@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, memo } from 'react';
-import { Helmet } from 'react-helmet-async';
+
 import { Header } from '@/components/Header';
 import { AuditedDomainsCounter } from '@/components/AuditedDomainsCounter';
 import { Link } from '@/lib/router-compat';
@@ -409,6 +409,11 @@ const RankingSerp = memo(() => {
                   'Compara las posiciones de Google devueltas por 4 proveedores SERP en una sola consulta. Ranking cruzado, penalización anti-falso-positivo, resultados fiables.'
                 )}
               </p>
+              {language === 'fr' && (
+                <blockquote className="citable-passage text-left text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto mt-2 border-l-2 border-primary/40 pl-3">
+                  Le Benchmark Rank SERP de Crawlers.fr interroge simultanément quatre providers SERP (DataForSEO, SerpApi, Serper et Bright Data) pour un même mot-clé, croise les positions Google renvoyées et applique une pénalité de +20 points aux résultats détectés par un seul provider. Ce classement croisé gratuit élimine les biais de géolocalisation et les faux positifs liés aux protections anti-scraping de Google, et donne une position fiable exploitable pour le suivi SEO.
+                </blockquote>
+              )}
             </div>
           </div>
         </section>
