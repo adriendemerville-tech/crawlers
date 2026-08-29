@@ -300,9 +300,9 @@ export function Header() {
                 SERPs
               </Button>
             </Link>
-            <Link to={user ? "/developers" : "/developers/login"} className="hidden lg:block">
+            <Link to="/developers">
               <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
-                API Developer
+                API Developers
               </Button>
             </Link>
           </div>
