@@ -932,9 +932,8 @@ const Index = () => {
         <div className="cv-auto"><SiloHub /></div>
 
       </main>
-      <Suspense fallback={<div className="h-48 bg-muted/10" />}>
-        <Footer />
-      </Suspense>
+      <Footer />
+
       
     </div>
   );
