@@ -85,6 +85,7 @@ export function LinkedInAutomationDashboard() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [auditingId, setAuditingId] = useState<string | null>(null);
+  const [mediaGenId, setMediaGenId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const loadAll = async () => {
