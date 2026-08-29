@@ -26,3 +26,8 @@ Méthode : `lighthouse <url> --form-factor=mobile --screenEmulation.mobile --onl
 ## Historique
 
 _(ajouter une ligne par run : date, page, TTFB, LCP, TBT, changement testé)_
+
+| Date | Page | Perf | TTFB | LCP | FCP | TBT | Changement testé |
+|---|---|---|---|---|---|---|---|
+| 2026-08-29 17:29 | `/` | 51 | 1 370 ms (isolate froid, MISS) | 4,1 s | 3,4 s | 1 870 ms | Cache mémoire isolate en place, run sur MISS |
+| 2026-08-29 17:32 | `/` | 49 | **190 ms (HIT)** | 5,9 s | 3,7 s | 720 ms | Cache mémoire isolate — le TTFB est réglé ; reste FCP (CSS bloquant) et TBT (JS) = lots 2 et 3 du plan |
