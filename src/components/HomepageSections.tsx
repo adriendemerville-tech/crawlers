@@ -217,7 +217,10 @@ const MomentumSection = memo(() => {
   return (
     <section className="py-12 md:py-16">
       <div className="container mx-auto px-4 max-w-4xl">
-        <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl mb-4">{t.momentumTitle}</h2>
+        {/* AI Bots Lead Magnet placé au-dessus du titre */}
+        <AIBotsLeadMagnet />
+
+        <h2 className="text-center text-xl font-bold text-foreground sm:text-2xl mb-4 mt-16">{t.momentumTitle}</h2>
         <p className="text-center text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto mb-8 leading-relaxed">{t.momentumText}</p>
 
         {/* LLM logos */}
