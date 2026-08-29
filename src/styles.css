@@ -1,5 +1,13 @@
 /* Critical font — Inter (latin subset) served from /public so it can be preloaded */
 @import "tailwindcss" source(none);
+
+/* audit-expert : rangée « 5 piliers » élargie d'environ 20% (full-bleed maîtrisé) */
+@media (min-width: 1024px) {
+  .pillars-wide {
+    width: calc(100vw - 2rem);
+    margin-left: calc(50% - 50vw + 1rem);
+  }
+}
 @import "./styles.theme.css";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
