@@ -99,7 +99,7 @@ export function LinkedInAutomationDashboard() {
         .from('linkedin_scheduled_posts')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(30),
+        .limit(80),
     ]);
     setFeatures(feats || []);
     setPosts(p || []);
