@@ -445,8 +445,9 @@ export function LinkedInAutomationDashboard() {
               </Card>
             );
           })}
-        </CardContent>
-      </Card>
+        </TabsContent>
+        ))}
+      </Tabs>
 
       {/* Catalogue features */}
       <Card>
