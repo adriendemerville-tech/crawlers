@@ -1,7 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Header } from '@/components/Header';
 import { PageEditorial } from '@/components/seo/PageEditorial';
-import { ExpertAuditDashboard, ExpertAuditContent, ExpertAuditFAQ } from '@/components/ExpertAudit';
+import { ExpertAuditDashboard } from '@/components/ExpertAudit/ExpertAuditDashboard';
+import { ExpertAuditContent } from '@/components/ExpertAudit/ExpertAuditContent';
+import { ExpertAuditFAQ } from '@/components/ExpertAudit/ExpertAuditFAQ';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 
