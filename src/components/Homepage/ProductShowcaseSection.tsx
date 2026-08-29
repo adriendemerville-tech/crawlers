@@ -162,7 +162,7 @@ const ProductShowcaseSection = memo(() => {
                         alt={`Capture d'écran de l'interface Crawlers.fr : ${slide.title}`}
                         width={960}
                         height={600}
-                        className="w-full h-auto block min-h-[200px] object-cover"
+                        className="w-full h-auto block object-contain sm:min-h-[200px] sm:object-cover"
                         loading="eager"
                         decoding="async"
                       />
