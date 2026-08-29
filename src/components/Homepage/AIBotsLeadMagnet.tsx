@@ -300,7 +300,7 @@ export function AIBotsLeadMagnet() {
       </div>
 
       {/* Input */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-wrap sm:flex-nowrap gap-3">
         <div className="sm:flex-[2] min-w-0 relative">
           <input
             type="url"
