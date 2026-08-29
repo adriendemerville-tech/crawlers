@@ -712,15 +712,6 @@ const Index = () => {
           <div className="cv-auto"><TrustBanner /></div>
         </Suspense>
 
-        {/* Product Showcase — Screenshots */}
-        <div id="features">
-          <LazyVisible minHeight="600px">
-            <Suspense fallback={<SectionSkeleton />}>
-              <div className="cv-auto-lg"><ProductShowcaseSection /></div>
-            </Suspense>
-          </LazyVisible>
-        </div>
-
         {/* Place d'échange de backlinks */}
         <LazyVisible minHeight="420px">
           <Suspense fallback={<SectionSkeleton />}>
