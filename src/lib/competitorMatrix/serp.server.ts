@@ -86,7 +86,7 @@ export async function seedSerp(keywords: string[], targetDomain: string): Promis
   const results = await readMany(picked, true);
 
   return picked.map((keyword, i) => {
-    const result = results[i];
+    const result = results[i]?.result ?? null;
     const top: { domain: string; rank: number }[] = [];
     const aiDomains = new Set<string>();
     let targetPosition: number | null = null;
@@ -130,7 +130,8 @@ export async function readSerp(keywords: string[], domains: string[]): Promise<S
   const results = await readMany(picked, true);
 
   return picked.map((keyword, i) => {
-    const result = results[i];
+    const read = results[i];
+    const result = read?.result ?? null;
     const positions: Record<string, number> = {};
     const aiDomains = new Set<string>();
     let triggered: boolean | null = result ? false : null;
@@ -156,6 +157,7 @@ export async function readSerp(keywords: string[], domains: string[]): Promise<S
       keyword,
       positions,
       aiOverview: { keyword, triggered, domains: [...aiDomains].slice(0, 8) },
+      failure: read?.failure ?? null,
     };
   });
 }
