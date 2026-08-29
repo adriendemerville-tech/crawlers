@@ -301,7 +301,7 @@ export function AIBotsLeadMagnet() {
 
       {/* Input */}
       <div className="flex flex-wrap sm:flex-nowrap gap-3">
-        <div className="sm:flex-[2] min-w-0 relative">
+        <div className="basis-full sm:basis-0 sm:flex-[2] min-w-0 relative">
           <input
             type="url"
             value={url}
