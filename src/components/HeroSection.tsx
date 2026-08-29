@@ -96,9 +96,9 @@ function HeroSectionComponent() {
 
 
         {/* URL input + CTA Audit Expert + note */}
-        <div className="mt-2 mx-auto w-full flex items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 40rem)' }}>
-          <TrustBadge layout="row" className="shrink-0" />
-          <div className="flex-[2] basis-0 min-w-0 relative">
+        <div className="mt-2 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 40rem)' }}>
+          <TrustBadge layout="row" className="order-3 sm:order-1 sm:shrink-0 justify-start sm:justify-center" />
+          <div className="order-1 sm:order-2 flex-[2] basis-0 min-w-0 relative">
             <Input
               type="text"
               placeholder="url : crawlers.fr"
@@ -115,7 +115,7 @@ function HeroSectionComponent() {
             />
             <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           </div>
-          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="flex-1 basis-0 min-w-0">
+          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="order-2 sm:order-3 flex-1 basis-0 min-w-0">
             <Button
               variant="outline"
               size="lg"
