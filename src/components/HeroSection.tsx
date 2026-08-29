@@ -65,7 +65,7 @@ function HeroSectionComponent() {
             : 'SEO crawl tool for Google + GEO for AI · one single audit'}
         </p>
         {/* Animated headline */}
-        <h1 className="mb-6 t-display font-extrabold font-display text-center sm:whitespace-nowrap max-sm:hidden!">
+        <h1 className="mb-6 t-display font-extrabold font-display text-center sm:whitespace-nowrap max-sm:text-2xl max-sm:mb-4">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
             style={{ minWidth: '3.9em', paddingBottom: '0.15em', marginBottom: '-0.15em', marginRight: '0.08em' }}
@@ -78,7 +78,7 @@ function HeroSectionComponent() {
               <span className={HERO_WORD_CLASS}>{animatedWords[0]}</span>
             )}
           </span>{' '}
-          <span className="font-display bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase leading-tight">
+          <span className="font-display bg-gradient-to-r from-primary via-amber-400 to-primary bg-clip-text text-transparent lowercase leading-tight">
             {getIgnoreText()} {getSiteText()}
           </span>
           {' '}

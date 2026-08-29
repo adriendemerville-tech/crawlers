@@ -156,12 +156,12 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 const LLM_ICONS: Record<string, string> = {
-  ChatGPT: '🤖',
-  Gemini: '✨',
-  Perplexity: '🔍',
-  Claude: '🧠',
-  Mistral: '🌊',
-  'Meta Llama': '🦙',
+  ChatGPT: 'GPT',
+  Gemini: 'GEM',
+  Perplexity: 'PPX',
+  Claude: 'CLD',
+  Mistral: 'MST',
+  'Meta Llama': 'LLA',
 };
 
 export function AIBotsLeadMagnet() {

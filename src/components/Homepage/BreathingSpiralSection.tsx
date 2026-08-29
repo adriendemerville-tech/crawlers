@@ -15,14 +15,14 @@ const SpiralCanvas = memo(() => {
   const eventTimerRef = useRef(0);
 
   const EVENT_TYPES = [
-    { label: 'GSC +12%', icon: '📊' },
-    { label: 'GA4 bounce ↑', icon: '📈' },
-    { label: 'Saisonnalité', icon: '🗓️' },
-    { label: 'Météo 32°C', icon: '☀️' },
-    { label: 'Actualité SEO', icon: '📰' },
-    { label: 'Concurrent ↑', icon: '⚡' },
-    { label: 'CWV alert', icon: '🔴' },
-    { label: 'Backlink lost', icon: '🔗' },
+    { label: 'GSC +12%', icon: '' },
+    { label: 'GA4 bounce ↑', icon: '' },
+    { label: 'Saisonnalité', icon: '' },
+    { label: 'Météo 32°C', icon: '' },
+    { label: 'Actualité SEO', icon: '' },
+    { label: 'Concurrent ↑', icon: '' },
+    { label: 'CWV alert', icon: '' },
+    { label: 'Backlink lost', icon: '' },
   ];
 
   const draw = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => {
@@ -105,7 +105,7 @@ const SpiralCanvas = memo(() => {
 
       ctx.font = '14px system-ui';
       ctx.fillStyle = `rgba(255,255,255,${fadeOut * 0.9})`;
-      ctx.fillText(ev.icon + ' ' + ev.label, ev.x, ev.y - moveUp);
+      ctx.fillText(ev.label, ev.x, ev.y - moveUp);
     });
   }, [events]);
 
@@ -293,9 +293,9 @@ export const BreathingSpiralSection = memo(() => {
             >
               <p className="text-sm text-foreground font-medium">
                 {t3(language,
-                  '🌀 Les plateformes classiques vous donnent un score et une liste de tâches. La Breathing Spiral transforme ces données en un organisme vivant qui s\'adapte à votre réalité business, et gère en direct la transformation de vos pages.',
-                  '🌀 Traditional platforms give you a score and a task list. The Breathing Spiral transforms that data into a living organism that adapts to your business reality, and manages your page transformations in real-time.',
-                  '🌀 Las plataformas clásicas le dan un score y una lista de tareas. La Breathing Spiral transforma esos datos en un organismo vivo que se adapta a su realidad empresarial, y gestiona en directo la transformación de sus páginas.'
+                  'Les plateformes classiques vous donnent un score et une liste de tâches. La Breathing Spiral transforme ces données en un organisme vivant qui s\'adapte à votre réalité business, et gère en direct la transformation de vos pages.',
+                  'Traditional platforms give you a score and a task list. The Breathing Spiral transforms that data into a living organism that adapts to your business reality, and manages your page transformations in real-time.',
+                  'Las plataformas clásicas le dan un score y una lista de tareas. La Breathing Spiral transforma esos datos en un organismo vivo que se adapta a su realidad empresarial, y gestiona en directo la transformación de sus páginas.'
                 )}
               </p>
               <p className="text-sm text-muted-foreground">

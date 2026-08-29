@@ -97,7 +97,8 @@ function ClaudeVsCrawlersSectionComponent() {
             <Link to="/comparatif-claude-vs-crawlers">
               <Button
                 size="lg"
-                className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold px-8 shadow-lg"
+                variant="outline"
+                className="gap-2 border-2 border-primary/60 bg-transparent text-foreground hover:bg-primary/10 font-semibold px-8"
               >
                 {language === 'fr' ? 'Voir le comparatif complet' : language === 'es' ? 'Ver el comparativo completo' : 'See full comparison'}
                 <ArrowRight className="h-4 w-4" />
