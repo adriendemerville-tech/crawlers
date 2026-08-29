@@ -13,7 +13,7 @@ import {
   BarChart3, Target, BookOpen, Globe, FileText, Zap,
   AlertTriangle, TrendingUp, Search, Users, Briefcase, Building2
 } from 'lucide-react';
-import heroImage from '@/assets/landing/eeat-hero.webp';
+
 import { QuickEEATTest } from '@/components/eeat/QuickEEATTest';
 import { LazyVisible } from '@/components/LazyVisible';
 import { ClusterMesh } from '@/components/seo/ClusterMesh';
@@ -222,13 +222,6 @@ export default function EEATPage() {
                 </Button>
               </Link>
             </div>
-
-            <img
-              src={heroImage}
-              alt="Plateforme E-E-A-T, SEO et GEO Crawlers.fr pour freelances et agences de référencement naturel"
-              className="w-full rounded-2xl shadow-lg border border-border/50"
-              width={960} height={540} loading="eager" fetchPriority="high"
-            />
           </div>
         </section>
 
