@@ -44,8 +44,17 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
-const IMMUTABLE_ASSET_RE =
-  /^\/(assets\/|fonts\/|_build\/)|\.(woff2?|css|js|mjs|png|jpe?g|webp|avif|svg|ico)$/i;
+// immutable uniquement sur les fichiers fingerprintés (hash dans le nom ou
+// répertoires de build Vite) — une URL immutable qui changerait de contenu
+// resterait périmée 1 an chez le client.
+const FINGERPRINTED_RE = /-[A-Za-z0-9_-]{8,}\.(js|mjs|css|woff2?|png|jpe?g|webp|avif|svg)$/i;
+const STATIC_EXT_RE = /\.(woff2?|css|js|mjs|png|jpe?g|webp|avif|svg|ico|gif|mp4|webm)$/i;
+
+function isImmutableAsset(pathname: string): boolean {
+  return (
+    /^\/(_build\/|assets\/)/i.test(pathname) && FINGERPRINTED_RE.test(pathname)
+  ) || (/^\/fonts\//i.test(pathname) && STATIC_EXT_RE.test(pathname));
+}
 
 /**
  * Origines tierces réellement utilisées par l'application (GTM, Turnstile,
