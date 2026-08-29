@@ -79,7 +79,7 @@ export function LeadMagnetAudit({ type, placeholder = 'https://example.com', cta
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !loading && handleAnalyze()}
-            className="pl-10 h-12 text-base"
+            className="pl-10 h-12 text-base bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/10 dark:to-white/[0.04] backdrop-blur-sm"
             disabled={loading}
           />
         </div>
@@ -87,7 +87,7 @@ export function LeadMagnetAudit({ type, placeholder = 'https://example.com', cta
           onClick={handleAnalyze}
           disabled={loading || !url.trim()}
           size="lg"
-          className={`h-12 px-8 text-base bg-gradient-to-r from-${accentColor} to-${accentColor}/80 hover:from-${accentColor}/90 hover:to-${accentColor}/70`}
+          className="h-12 px-8 text-base border-2 border-foreground text-foreground hover:bg-foreground/5 bg-gradient-to-b from-muted/80 to-muted/40 dark:from-white/15 dark:to-white/[0.06] backdrop-blur-sm"
         >
           {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
           {loading ? 'Analyse en cours…' : ctaLabel}

@@ -308,7 +308,7 @@ export function AIBotsLeadMagnet() {
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t.placeholder}
-            className="w-full h-16 px-6 text-lg bg-background border-4 border-white rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-hidden focus:border-brand-violet transition-colors"
+            className="w-full h-16 px-6 text-lg bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/10 dark:to-white/[0.04] backdrop-blur-sm border-4 border-white rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-hidden focus:border-brand-violet transition-colors"
           />
         </div>
         <button
