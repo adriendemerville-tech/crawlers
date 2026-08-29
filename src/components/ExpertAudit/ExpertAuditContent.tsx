@@ -202,7 +202,8 @@ export function ExpertAuditContent() {
         <h2 className="text-2xl font-bold text-foreground text-center mb-8">
           {content.pillarsTitle}
         </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Full-bleed maîtrisé : grille élargie d'environ 20% par rapport au conteneur max-w-6xl */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 lg:relative lg:left-1/2 lg:-translate-x-1/2 lg:w-[min(calc(100vw-4rem),1382px)]">
           {content.pillars.map((pillar, index) => (
             <Card key={index} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
