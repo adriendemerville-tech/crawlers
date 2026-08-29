@@ -693,35 +693,20 @@ const Index = () => {
 
 
         {/* Comparatif Agence SEO vs Crawlers */}
-        <Suspense fallback={<SectionSkeleton height={600} />}>
-          <div className="cv-auto"><AgencyComparisonSection /></div>
-        </Suspense>
+        <div className="cv-auto"><AgencyComparisonSection /></div>
 
         {/* Trust Banner — right after Pro Agency */}
-        <Suspense fallback={<SectionSkeleton height={600} />}>
-          <div className="cv-auto"><TrustBanner /></div>
-        </Suspense>
+        <div className="cv-auto"><TrustBanner /></div>
 
         {/* Place d'échange de backlinks */}
-        <LazyVisible minHeight="420px">
-          <Suspense fallback={<SectionSkeleton height={420} />}>
-            <div className="cv-auto"><MarketplaceTeaserSection /></div>
-          </Suspense>
-        </LazyVisible>
+        <div className="cv-auto"><MarketplaceTeaserSection /></div>
 
         {/* Google Cross Data — SEA→SEO Bridge */}
-        <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton height={500} />}>
-            <div className="cv-auto"><GoogleCrossDataSection /></div>
-          </Suspense>
-        </LazyVisible>
+        <div className="cv-auto"><GoogleCrossDataSection /></div>
 
         {/* Content Architect */}
-        <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton height={500} />}>
-            <div className="cv-auto-lg home-bias-right"><ContentArchitectSection /></div>
-          </Suspense>
-        </LazyVisible>
+        <div className="cv-auto-lg home-bias-right"><ContentArchitectSection /></div>
+
 
         {/* E-E-A-T Section */}
         <section className="py-20 relative overflow-hidden cv-auto">
