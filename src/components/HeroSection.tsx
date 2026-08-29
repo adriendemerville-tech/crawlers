@@ -49,7 +49,7 @@ function HeroSectionComponent() {
   };
 
   return (
-    <section className="relative flex min-h-[70vh] sm:min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 sm:px-6">
+    <section className="relative flex min-h-[64vh] sm:min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 sm:px-6 pt-2">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-60 -top-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
         <div className="absolute -bottom-60 -right-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
@@ -68,7 +68,7 @@ function HeroSectionComponent() {
         <h1 className="mb-6 t-display font-extrabold font-display text-center sm:whitespace-nowrap">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
-            style={{ minWidth: '4.5em', paddingBottom: '0.15em', marginBottom: '-0.15em' }}
+            style={{ minWidth: '3.2em', paddingBottom: '0.15em', marginBottom: '-0.15em', marginRight: '0.1em' }}
           >
             {isHydrated ? (
               <span key={wordIndex} className={`relative w-full hero-word-enter ${HERO_WORD_CLASS}`}>
