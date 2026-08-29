@@ -20,6 +20,13 @@ export default defineConfig({
       // Lighthouse signale l'absence de source maps sur index-*.js : on les
       // publie en fichiers .map séparés (aucun impact sur le poids servi).
       sourcemap: true,
+      rollupOptions: {
+        output: {
+          // Anti sur-fragmentation : fusionne les micro-chunks (<24 ko) pour
+          // réduire le nombre de requêtes JS, coûteuses en latence mobile.
+          experimentalMinChunkSize: 24_000,
+        },
+      },
     },
     ssr: {
       // react-helmet-async ships CJS as its node "main"; left external, the SSR
