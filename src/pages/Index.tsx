@@ -28,6 +28,7 @@ import { Crown, ArrowRight, FileSearch, Search, Globe, Brain, ShieldCheck } from
 import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/ActiveCrawlBanner';
 import { PageEditorial } from '@/components/seo/PageEditorial';
+import { LazyHydrate } from '@/components/perf/LazyHydrate';
 import { CitablePassage } from '@/components/seo/CitablePassage';
 
 import { getPublicConfig, isFlagEnabled } from '@/lib/config/publicConfig';
@@ -572,13 +573,13 @@ const Index = () => {
         </Suspense>
 
         {/* AI Agents — Félix & Stratège Cocoon — remonté après la preuve sociale */}
-        <div className="cv-auto-lg home-bias-left"><AIAgentsSection /></div>
+        <LazyHydrate className="cv-auto-lg home-bias-left"><AIAgentsSection /></LazyHydrate>
 
         {/* Pain Points — before Pro Agency */}
-        <div className="cv-auto home-bias-left"><PainPointsSection /></div>
+        <LazyHydrate className="cv-auto home-bias-left"><PainPointsSection /></LazyHydrate>
 
         {/* Audit profond gratuit (Marina) — juste après les pain points */}
-        <div className="cv-auto home-bias-right"><MarinaDeepAuditSection /></div>
+        <LazyHydrate className="cv-auto home-bias-right"><MarinaDeepAuditSection /></LazyHydrate>
 
 
         {/* Preuve sociale : volume réel de domaines audités, juste sous les lead magnets */}
@@ -693,19 +694,19 @@ const Index = () => {
 
 
         {/* Comparatif Agence SEO vs Crawlers */}
-        <div className="cv-auto"><AgencyComparisonSection /></div>
+        <LazyHydrate className="cv-auto"><AgencyComparisonSection /></LazyHydrate>
 
         {/* Trust Banner — right after Pro Agency */}
-        <div className="cv-auto"><TrustBanner /></div>
+        <LazyHydrate className="cv-auto"><TrustBanner /></LazyHydrate>
 
         {/* Place d'échange de backlinks */}
-        <div className="cv-auto"><MarketplaceTeaserSection /></div>
+        <LazyHydrate className="cv-auto"><MarketplaceTeaserSection /></LazyHydrate>
 
         {/* Google Cross Data — SEA→SEO Bridge */}
-        <div className="cv-auto"><GoogleCrossDataSection /></div>
+        <LazyHydrate className="cv-auto"><GoogleCrossDataSection /></LazyHydrate>
 
         {/* Content Architect */}
-        <div className="cv-auto-lg home-bias-right"><ContentArchitectSection /></div>
+        <LazyHydrate className="cv-auto-lg home-bias-right"><ContentArchitectSection /></LazyHydrate>
 
 
         {/* E-E-A-T Section */}
@@ -777,11 +778,11 @@ const Index = () => {
         </section>
 
 
-        <div className="cv-auto home-bias-left"><HybridSection /></div>
+        <LazyHydrate className="cv-auto home-bias-left"><HybridSection /></LazyHydrate>
 
 
         {/* Chrome Extension — short teaser */}
-        <div className="cv-auto home-bias-right"><ExtensionSection /></div>
+        <LazyHydrate className="cv-auto home-bias-right"><ExtensionSection /></LazyHydrate>
 
 
 
@@ -926,10 +927,10 @@ const Index = () => {
 
         {/* FAQ + hub de silos : rendus en SSR, pour que les bots (et les moteurs
             génératifs) trouvent le texte et les liens internes dans le HTML servi. */}
-        <div className="cv-auto"><FAQSection /></div>
+        <LazyHydrate className="cv-auto"><FAQSection /></LazyHydrate>
 
         {/* Hub des 4 silos : la home transmet l'autorité aux piliers */}
-        <div className="cv-auto"><SiloHub /></div>
+        <LazyHydrate className="cv-auto"><SiloHub /></LazyHydrate>
 
       </main>
       <Footer />
