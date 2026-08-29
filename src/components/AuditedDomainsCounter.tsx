@@ -25,7 +25,12 @@ export function AuditedDomainsCounter({
     return () => { cancelled = true; };
   }, []);
 
-  if (count === null || count <= 0) return null;
+  const BASE_OFFSET = 1000;
+
+  if (count === null) return null;
+
+  const total = BASE_OFFSET + Math.max(count, 0);
+
 
   return (
     <div className={`mx-auto max-w-2xl px-4 py-8 text-center ${className}`}>
