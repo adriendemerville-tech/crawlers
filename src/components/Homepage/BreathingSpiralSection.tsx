@@ -300,16 +300,16 @@ export const BreathingSpiralSection = memo(() => {
               </p>
               <p className="text-sm text-muted-foreground">
                 {t3(language,
-                  '🪪 Identity-First : avant d\'optimiser, la spirale cartographie l\'ADN de votre site — positionnement, ton éditorial, personas cibles — pour que chaque action renforce votre identité de marque plutôt que de la diluer.',
-                  '🪪 Identity-First: before optimizing, the spiral maps your site\'s DNA — positioning, editorial tone, target personas — so every action strengthens your brand identity rather than diluting it.',
-                  '🪪 Identity-First: antes de optimizar, la espiral mapea el ADN de su sitio — posicionamiento, tono editorial, personas objetivo — para que cada acción refuerce su identidad de marca en lugar de diluirla.'
+                  'Identity-First : avant d\'optimiser, la spirale cartographie l\'ADN de votre site — positionnement, ton éditorial, personas cibles — pour que chaque action renforce votre identité de marque plutôt que de la diluer.',
+                  'Identity-First: before optimizing, the spiral maps your site\'s DNA — positioning, editorial tone, target personas — so every action strengthens your brand identity rather than diluting it.',
+                  'Identity-First: antes de optimizar, la espiral mapea el ADN de su sitio — posicionamiento, tono editorial, personas objetivo — para que cada acción refuerce su identidad de marca en lugar de diluirla.'
                 )}
               </p>
               <p className="text-sm text-muted-foreground">
                 {t3(language,
-                  '🔒 Vos données structurelles et sémantiques alimentent un référentiel unique qui garantit la cohérence entre SEO technique, contenu et image de marque à chaque cycle.',
-                  '🔒 Your structural and semantic data feeds a unique referential that ensures consistency between technical SEO, content, and brand image at every cycle.',
-                  '🔒 Sus datos estructurales y semánticos alimentan un referencial único que garantiza la coherencia entre SEO técnico, contenido e imagen de marca en cada ciclo.'
+                  'Vos données structurelles et sémantiques alimentent un référentiel unique qui garantit la cohérence entre SEO technique, contenu et image de marque à chaque cycle.',
+                  'Your structural and semantic data feeds a unique referential that ensures consistency between technical SEO, content, and brand image at every cycle.',
+                  'Sus datos estructurales y semánticos alimentan un referencial único que garantiza la coherencia entre SEO técnico, contenido e imagen de marca en cada ciclo.'
                 )}
               </p>
             </motion.div>
