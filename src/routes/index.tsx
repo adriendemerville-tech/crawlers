@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import Index from "@/pages/Index";
 import { pageHead } from "@/lib/seo/pageHead";
 import { homeJsonLd } from "@/lib/seo/homeSchemas";
-import heroScreenshot from "@/assets/screenshots/console-pilotage.png.asset.json";
+import heroScreenshot from "@/assets/screenshots/console-pilotage.webp.asset.json";
 
 const homeHead = pageHead({
   title: "Crawlers.fr — outil de crawl SEO & GEO : audit, positions, IA",

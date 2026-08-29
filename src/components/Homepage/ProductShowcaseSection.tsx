@@ -6,11 +6,11 @@ import {
   BarChart3, Network, Code2, PenTool, Eye, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
-import consoleDashboard from '@/assets/screenshots/console-pilotage.png.asset.json';
-import indexationSerp from '@/assets/screenshots/indexation-serp.png.asset.json';
-import integrationsApi from '@/assets/screenshots/integrations-api.png.asset.json';
-import cocoonGraph from '@/assets/screenshots/cocon-3d.png.asset.json';
-import architectCode from '@/assets/screenshots/code-architect.png.asset.json';
+import consoleDashboard from '@/assets/screenshots/console-pilotage.webp.asset.json';
+import indexationSerp from '@/assets/screenshots/indexation-serp.webp.asset.json';
+import integrationsApi from '@/assets/screenshots/integrations-api.webp.asset.json';
+import cocoonGraph from '@/assets/screenshots/cocon-3d.webp.asset.json';
+import architectCode from '@/assets/screenshots/code-architect.webp.asset.json';
 
 const ProductShowcaseSection = memo(() => {
   const { language } = useLanguage();
