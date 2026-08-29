@@ -199,10 +199,14 @@ export const saveCompetitorMatrixLead = createServerFn({ method: 'POST' })
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const { data: job } = await supabaseAdmin
       .from('competitor_matrix_jobs')
-      .select('id, domain, share_token')
+      .select('id, domain, share_token, ip_hash')
       .eq('id', String(data.jobId))
       .maybeSingle();
     if (!job) return { error: 'not_found' as const, message: 'Analyse introuvable.' };
+    if (job.ip_hash !== (await hashIp(clientIp())) && !(await isAdminRequest())) {
+      return { error: 'forbidden' as const, message: 'Accès refusé à cette analyse.' };
+    }
+
 
     await supabaseAdmin.from('competitor_matrix_leads').insert({
       job_id: job.id,
