@@ -619,7 +619,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           {activePanel ? (
             <ResizablePanelGroup orientation="horizontal" className="flex-1" id="content-architect-panels">
               {/* Left panel */}
-              <ResizablePanel defaultSize={30} minSize={20} maxSize={45} className="flex flex-col bg-[#1e293b]">
+              <ResizablePanel defaultSize="30" minSize="20" maxSize="45" className="flex flex-col bg-[#1e293b]">
                 {/* Panel content area */}
                 <div className="flex-1 overflow-y-auto min-h-0">
                   {activePanel === 'prompt' && (
@@ -748,7 +748,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               <ResizableHandle withHandle />
 
               {/* Preview panel */}
-              <ResizablePanel defaultSize={result ? 52 : 70} minSize={30}>
+              <ResizablePanel defaultSize={result ? "52" : "70"} minSize="30">
                 <ContentArchitectProvider value={{
                   result, setResult, loading, url,
                   isEdited, onResetEdits: handleResetEdits,
@@ -767,7 +767,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               {result && (
                 <>
                   <ResizableHandle withHandle />
-                  <ResizablePanel defaultSize={18} minSize={14} maxSize={30} className="bg-[#1e293b]">
+                  <ResizablePanel defaultSize="18" minSize="14" maxSize="30" className="bg-[#1e293b]">
                     <ContentArchitectScorePanel result={result} pageType={pageType} />
                   </ResizablePanel>
                 </>
@@ -776,7 +776,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
           ) : (
             /* No panel open — full preview + score */
             <ResizablePanelGroup orientation="horizontal" className="flex-1" id="content-architect-preview-score">
-              <ResizablePanel defaultSize={result ? 82 : 100} minSize={40}>
+              <ResizablePanel defaultSize={result ? "82" : "100"} minSize="40">
                 <ContentArchitectProvider value={{
                   result, setResult, loading, url,
                   isEdited, onResetEdits: handleResetEdits,
@@ -793,7 +793,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
               {result && (
                 <>
                   <ResizableHandle withHandle />
-                  <ResizablePanel defaultSize={18} minSize={14} maxSize={30} className="bg-[#1e293b]">
+                  <ResizablePanel defaultSize="18" minSize="14" maxSize="30" className="bg-[#1e293b]">
                     <ContentArchitectScorePanel result={result} pageType={pageType} />
                   </ResizablePanel>
                 </>
