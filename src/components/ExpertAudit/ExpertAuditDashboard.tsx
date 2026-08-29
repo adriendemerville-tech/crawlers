@@ -1609,56 +1609,70 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
       })()}
 
       {/* Report Preview Modal */}
-      {result && auditMode && (
-        <ExpertReportPreviewModal
-          isOpen={isReportModalOpen}
-          onClose={handleReportModalClose}
-          result={result}
-          auditMode={auditMode}
-          preSummarizedResult={auditMode === 'strategic' ? preSummarizedResult : undefined}
-        />
+      {result && auditMode && isReportModalOpen && (
+        <Suspense fallback={null}>
+          <ExpertReportPreviewModal
+            isOpen={isReportModalOpen}
+            onClose={handleReportModalClose}
+            result={result}
+            auditMode={auditMode}
+            preSummarizedResult={auditMode === 'strategic' ? preSummarizedResult : undefined}
+          />
+        </Suspense>
       )}
 
       {/* Report Auth Gate */}
-      <ReportAuthGate
-        isOpen={isReportAuthGateOpen}
-        onClose={() => setIsReportAuthGateOpen(false)}
-        onAuthenticated={handleReportAuthSuccess}
-        returnPath="/audit-expert"
-      />
+      {isReportAuthGateOpen && (
+        <Suspense fallback={null}>
+          <ReportAuthGate
+            isOpen={isReportAuthGateOpen}
+            onClose={() => setIsReportAuthGateOpen(false)}
+            onAuthenticated={handleReportAuthSuccess}
+            returnPath="/audit-expert"
+          />
+        </Suspense>
+      )}
 
       {/* Payment Modal (legacy) */}
-      <PaymentModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        siteUrl={result?.url || url}
-        siteName={result?.domain || url}
-      />
+      {isPaymentModalOpen && (
+        <Suspense fallback={null}>
+          <PaymentModal
+            isOpen={isPaymentModalOpen}
+            onClose={() => setIsPaymentModalOpen(false)}
+            siteUrl={result?.url || url}
+            siteName={result?.domain || url}
+          />
+        </Suspense>
+      )}
 
       {/* Corrective Code Editor */}
-      <CorrectiveCodeEditor
-        isOpen={isCodeEditorOpen}
-        onClose={() => {
-          setIsCodeEditorOpen(false);
-          // Reset payment state when closing
-          if (hasVerifiedPayment) {
-            setPaidScriptCode('');
-            setPaidFixesMetadata([]);
-            setHasVerifiedPayment(false);
-          }
-        }}
-        technicalResult={technicalResult}
-        strategicResult={strategicResult}
-        siteUrl={result?.url || url}
-        siteName={result?.domain || url}
-        hallucinationData={hallucinationDiagnosis}
-        initialCode={paidScriptCode}
-        initialHasPaid={hasVerifiedPayment}
-        initialFixesMetadata={paidFixesMetadata}
-        onPaymentVerified={() => {
-          console.log('✅ Payment verified, buttons unlocked');
-        }}
-      />
+      {isCodeEditorOpen && (
+        <Suspense fallback={null}>
+          <CorrectiveCodeEditor
+            isOpen={isCodeEditorOpen}
+            onClose={() => {
+              setIsCodeEditorOpen(false);
+              // Reset payment state when closing
+              if (hasVerifiedPayment) {
+                setPaidScriptCode('');
+                setPaidFixesMetadata([]);
+                setHasVerifiedPayment(false);
+              }
+            }}
+            technicalResult={technicalResult}
+            strategicResult={strategicResult}
+            siteUrl={result?.url || url}
+            siteName={result?.domain || url}
+            hallucinationData={hallucinationDiagnosis}
+            initialCode={paidScriptCode}
+            initialHasPaid={hasVerifiedPayment}
+            initialFixesMetadata={paidFixesMetadata}
+            onPaymentVerified={() => {
+              console.log('✅ Payment verified, buttons unlocked');
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Content Architect from hallucination diagnosis */}
       {showContentArchitectFromDiag && (
