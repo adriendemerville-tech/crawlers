@@ -728,6 +728,27 @@ summary::-webkit-details-marker {
 .t-meta    { font-size: 0.8125rem;                        line-height: 1.45; }
 
 
+/* Hero : bouton à droite du champ URL sur desktop, empilé sur mobile.
+   Classes dédiées (non utilitaires) pour éviter la collision avec la copie
+   <style> inline obsolète qui écrase flex-col / sm:flex-row en layer utilities. */
+.hero-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.hero-actions .hero-input-wrap { flex-basis: 100%; width: 100%; }
+@media (min-width: 640px) {
+  .hero-actions {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .hero-actions .hero-input-wrap { flex: 1.8 1 0%; flex-basis: 0%; width: auto; }
+  .hero-actions .hero-cta { flex: 0.8 0 auto; }
+}
+
 /* Home desktop : pleine largeur d'écran (plus de colonnes de marge) et
    sections volontairement décentrées à gauche/droite pour rythmer la page. */
 @media (min-width: 1024px) {
