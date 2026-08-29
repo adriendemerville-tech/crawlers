@@ -49,7 +49,7 @@ function HeroSectionComponent() {
   };
 
   return (
-    <section className="relative flex min-h-[52vh] sm:min-h-[64vh] items-center justify-center overflow-hidden px-4 sm:px-6 pt-2">
+    <section className="relative flex min-h-[40vh] sm:min-h-[48vh] items-center justify-center overflow-hidden px-4 sm:px-6 pt-2">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-60 -top-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
         <div className="absolute -bottom-60 -right-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
@@ -97,7 +97,7 @@ function HeroSectionComponent() {
 
         {/* URL input + CTA Audit Expert + note */}
         <div className="mt-2 mx-auto w-full flex items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 40rem)' }}>
-          <TrustBadge layout="row" className="shrink-0 hidden sm:flex" />
+          <TrustBadge layout="row" className="shrink-0" />
           <div className="flex-[2] basis-0 min-w-0 relative">
             <Input
               type="text"
@@ -132,9 +132,6 @@ function HeroSectionComponent() {
             </Button>
           </Link>
         </div>
-
-        {/* Trust badge (mobile) — preuve sociale immédiate */}
-        <TrustBadge layout="row" className="mt-4 sm:hidden" />
 
         {/* Secondary CTAs */}
         <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
