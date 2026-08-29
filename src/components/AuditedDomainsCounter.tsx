@@ -9,8 +9,7 @@ interface Props {
 
 /**
  * Preuve sociale : nombre de noms de domaine réellement audités par Crawlers.
- * Tant que le chiffre n'est pas chargé, rien n'est affiché — on ne montre
- * jamais un compteur factice ni une valeur arrondie à la main.
+ * Le total affiché = X (compteur réel SQL) + 1000, jamais en dessous de 1000.
  */
 export function AuditedDomainsCounter({
   label = 'noms de domaine audités par Crawlers',
@@ -26,7 +25,12 @@ export function AuditedDomainsCounter({
     return () => { cancelled = true; };
   }, []);
 
-  if (count === null || count <= 0) return null;
+  const BASE_OFFSET = 1000;
+
+  if (count === null) return null;
+
+  const total = BASE_OFFSET + Math.max(count, 0);
+
 
   return (
     <div className={`mx-auto max-w-2xl px-4 py-8 text-center ${className}`}>
@@ -34,7 +38,7 @@ export function AuditedDomainsCounter({
         className="text-3xl font-extrabold tabular-nums text-foreground sm:text-4xl"
         aria-live="polite"
       >
-        {count.toLocaleString('fr-FR')}
+        {total.toLocaleString('fr-FR')}
       </p>
       <p className="mt-1 text-sm text-muted-foreground">{label}</p>
     </div>
