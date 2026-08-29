@@ -168,7 +168,7 @@ export function CocoonSiteSelector({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full sm:w-[260px] justify-between bg-white/5 border-[hsl(263,70%,20%)] text-white text-xs h-8 hover:bg-white/10"
+          className="w-full justify-between bg-white/5 border-[hsl(263,70%,20%)] text-white text-xs h-8 hover:bg-white/10"
         >
           <span className="truncate">{selectedLabel}</span>
           <ChevronDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />

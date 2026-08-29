@@ -1034,7 +1034,7 @@ export function CocoonForceGraph({
       />
 
       {/* Zoom controls — minimal HUD style */}
-      <div className="absolute bottom-14 left-4 flex flex-col gap-1.5 z-10">
+      <div className="absolute left-4 flex flex-col gap-1.5 z-10" style={{ bottom: 56 }}>
         <Button
           variant="outline"
           size="icon"
