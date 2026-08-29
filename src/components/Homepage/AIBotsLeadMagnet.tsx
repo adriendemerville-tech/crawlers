@@ -243,41 +243,41 @@ export function AIBotsLeadMagnet() {
   return (
     <div className="mt-10 max-w-[80rem] mx-auto">
       {/* Tabs */}
-      <div className="flex justify-center gap-2 mb-6">
+      <div className="flex justify-center gap-2 mb-6 max-sm:gap-1.5">
         <button
           onClick={() => handleTabSwitch('geo')}
           className={cn(
-            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors',
+            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors max-sm:gap-1 max-sm:px-2.5 max-sm:py-2 max-sm:text-[9px] whitespace-nowrap',
             tab === 'geo'
               ? 'bg-brand-violet/15 text-brand-violet border border-brand-violet/30'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
           )}
         >
-          <Gauge className="h-6 w-6" />
+          <Gauge className="h-6 w-6 max-sm:h-3 max-sm:w-3" />
           {t.tabGeo}
         </button>
         <button
           onClick={() => handleTabSwitch('bots')}
           className={cn(
-            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors',
+            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors max-sm:gap-1 max-sm:px-2.5 max-sm:py-2 max-sm:text-[9px] whitespace-nowrap',
             tab === 'bots'
               ? 'bg-brand-violet/15 text-brand-violet border border-brand-violet/30'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
           )}
         >
-          <Shield className="h-6 w-6" />
+          <Shield className="h-6 w-6 max-sm:h-3 max-sm:w-3" />
           {t.tabBots}
         </button>
         <button
           onClick={() => handleTabSwitch('llm')}
           className={cn(
-            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors',
+            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors max-sm:gap-1 max-sm:px-2.5 max-sm:py-2 max-sm:text-[9px] whitespace-nowrap',
             tab === 'llm'
               ? 'bg-brand-violet/15 text-brand-violet border border-brand-violet/30'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
           )}
         >
-          <Eye className="h-6 w-6" />
+          <Eye className="h-6 w-6 max-sm:h-3 max-sm:w-3" />
           {t.tabLlm}
         </button>
       </div>
