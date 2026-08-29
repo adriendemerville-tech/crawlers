@@ -565,6 +565,11 @@ const Index = () => {
 
         {/* ─── Homepage marketing sections ─── */}
 
+        {/* Témoignages — preuve sociale immédiate après le hero */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <div className="cv-auto-sm"><TestimonialsCarousel /></div>
+        </Suspense>
+
         {/* Product Showcase — Screenshots : le produit visible dès la 3e position */}
         <div id="features">
           <LazyVisible minHeight="600px">
@@ -573,6 +578,8 @@ const Index = () => {
             </Suspense>
           </LazyVisible>
         </div>
+
+
 
         {/* Pain Points — before Pro Agency */}
         <Suspense fallback={<SectionSkeleton />}>
