@@ -186,7 +186,7 @@ export function ExpertAuditContent() {
   const content = contentData[language] || contentData.fr;
 
   return (
-    <section className="container mx-auto px-4 py-12 max-w-6xl space-y-16">
+    <section className="container mx-auto px-4 py-12 max-w-6xl space-y-16 overflow-x-clip">
       {/* Introduction */}
       <div className="text-center max-w-3xl mx-auto">
         <h2 className="text-2xl font-bold text-foreground mb-4">
