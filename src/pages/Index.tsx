@@ -591,7 +591,7 @@ const Index = () => {
         <section className="relative overflow-hidden py-14 sm:py-20 cv-auto">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--brand-violet)/0.06),transparent_60%)]" />
             <div className="relative mx-auto max-w-4xl px-4 text-center">
-              <h2 className="mb-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+              <h2 className="mb-4 t-h1 font-extrabold text-foreground">
                 {language === 'fr' ? 'Gérez 30 clients. Audits illimités.' : language === 'es' ? 'Gestiona 30 clientes. Auditorías ilimitadas.' : 'Manage 30 clients. Unlimited audits.'}
               </h2>
               <p className="mx-auto mb-6 max-w-xl text-muted-foreground">
@@ -627,7 +627,7 @@ const Index = () => {
               <div className="flex flex-col items-center gap-4 mb-6">
                 <div className="flex items-baseline gap-1">
                   <span className="text-sm text-muted-foreground mr-1">{language === 'fr' ? 'à partir de' : language === 'es' ? 'desde' : 'from'}</span>
-                  <span className="text-4xl font-extrabold text-foreground">29€</span>
+                  <span className="t-h1 font-extrabold text-foreground">29€</span>
                   <span className="text-lg text-muted-foreground">/mois</span>
                 </div>
                 <Link to="/pro-agency">
@@ -709,7 +709,7 @@ const Index = () => {
                   <ShieldCheck className="h-3.5 w-3.5" />
                   {language === 'fr' ? 'E-E-A-T · Confiance Google' : language === 'es' ? 'E-E-A-T · Confianza Google' : 'E-E-A-T · Google Trust'}
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+                <h2 className="t-h1 font-bold">
                   {language === 'fr'
                     ? 'Mesurez votre score E-E-A-T et renforcez votre crédibilité'
                     : language === 'es'
@@ -800,7 +800,7 @@ const Index = () => {
                 <Crown className="h-3.5 w-3.5" />
                 {language === 'fr' ? 'Aller plus loin' : language === 'es' ? 'Ir más allá' : 'Go further'}
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2 font-display">
+              <h3 className="t-h2 font-bold text-foreground mb-2 font-display">
                 {language === 'fr' ? 'Obtenez votre audit complet sur 168 critères' : language === 'es' ? 'Obtenga su auditoría completa con 168 criterios' : 'Get your full audit across 168 criteria'}
               </h3>
               <p className="text-sm text-muted-foreground mb-5 max-w-lg mx-auto">
