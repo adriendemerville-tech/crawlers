@@ -17,7 +17,7 @@ export const FAQS = [
   },
 ];
 
-const CANONICAL = 'https://crawlers.fr/comparatif-crawlers-screaming-frog';
+export const CANONICAL = 'https://crawlers.fr/comparatif-crawlers-screaming-frog';
 
 export const SCREAMING_FROG_JSONLD = [
   {
