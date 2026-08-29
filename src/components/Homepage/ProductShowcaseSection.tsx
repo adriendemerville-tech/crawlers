@@ -205,8 +205,8 @@ const ProductShowcaseSection = memo(() => {
             <button
               key={i}
               onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === current ? 'w-6 bg-primary' : 'w-1.5 bg-muted-foreground/25 hover:bg-muted-foreground/40'
+              className={`rounded-full transition-all duration-300 w-[3px] h-[3px] sm:w-1.5 sm:h-1.5 ${
+                i === current ? 'w-6 bg-primary sm:w-6 sm:h-1.5' : 'bg-muted-foreground/25 hover:bg-muted-foreground/40'
               }`}
               aria-label={`Slide ${i + 1}`}
             />
