@@ -98,7 +98,7 @@ function HeroSectionComponent() {
         {/* URL input + CTA Audit Expert + note — tout sur une seule ligne */}
         <div className="mt-2 mx-auto w-full flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-between gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 46rem)' }}>
           <TrustBadge layout="column" className="flex shrink-0 gap-0.5 py-0 justify-center max-sm:items-center [&_.text-sm]:text-[11px] [&_.text-sm]:whitespace-nowrap [&_.text-sm]:text-center sm:[&_.text-sm]:text-left" />
-          <div className="w-full sm:flex-[1.8] min-w-0 relative rounded-xl p-[2px] bg-gradient-to-b from-gray-300 via-gray-200 to-gray-400 dark:p-0 dark:bg-none">
+          <div className="basis-full sm:basis-0 sm:flex-[1.8] min-w-0 relative rounded-xl p-[2px] bg-gradient-to-b from-gray-300 via-gray-200 to-gray-400 dark:p-0 dark:bg-none">
             <Input
               type="text"
               placeholder="url : crawlers.fr"
