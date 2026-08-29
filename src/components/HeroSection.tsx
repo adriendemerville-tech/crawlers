@@ -49,7 +49,7 @@ function HeroSectionComponent() {
   };
 
   return (
-    <section className="relative flex min-h-[70vh] sm:min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-4 sm:px-6">
+    <section className="relative flex min-h-[40vh] sm:min-h-[48vh] items-center justify-center overflow-hidden px-4 sm:px-6 pt-2">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-60 -top-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
         <div className="absolute -bottom-60 -right-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
@@ -68,7 +68,7 @@ function HeroSectionComponent() {
         <h1 className="mb-6 t-display font-extrabold font-display text-center sm:whitespace-nowrap">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
-            style={{ minWidth: '4.5em', paddingBottom: '0.15em', marginBottom: '-0.15em' }}
+            style={{ minWidth: '3.9em', paddingBottom: '0.15em', marginBottom: '-0.15em', marginRight: '0.08em' }}
           >
             {isHydrated ? (
               <span key={wordIndex} className={`relative w-full hero-word-enter ${HERO_WORD_CLASS}`}>
@@ -95,9 +95,10 @@ function HeroSectionComponent() {
         </h2>
 
 
-        {/* URL input + CTA Audit Expert */}
-        <div className="mt-2 mx-auto w-full flex items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 40rem)' }}>
-          <div className="flex-[2] basis-0 min-w-0 relative">
+        {/* URL input + CTA Audit Expert + note */}
+        <div className="mt-2 mx-auto w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 40rem)' }}>
+          <TrustBadge layout="row" className="order-3 sm:order-1 sm:shrink-0 justify-start sm:justify-center" />
+          <div className="order-1 sm:order-2 flex-[2] basis-0 min-w-0 relative">
             <Input
               type="text"
               placeholder="url : crawlers.fr"
@@ -114,7 +115,7 @@ function HeroSectionComponent() {
             />
             <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           </div>
-          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="flex-1 basis-0 min-w-0">
+          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="order-2 sm:order-3 flex-1 basis-0 min-w-0">
             <Button
               variant="outline"
               size="lg"
@@ -132,15 +133,12 @@ function HeroSectionComponent() {
           </Link>
         </div>
 
-        {/* Trust badge — preuve sociale immédiate */}
-        <TrustBadge className="mt-4" />
-
         {/* Secondary CTAs */}
-        <div className="mt-2 sm:mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+        <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
           <Link to="/auth" className="text-sm font-medium underline underline-offset-4 transition-colors text-foreground dark:text-primary-foreground">
             {language === 'fr' ? 'Créer un compte gratuit →' : language === 'es' ? 'Crear una cuenta gratis →' : 'Create a free account →'}
           </Link>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-[13px] text-muted-foreground">
             {language === 'fr' ? 'Essai gratuit, sans carte bancaire' : language === 'es' ? 'Prueba gratis, sin tarjeta bancaria' : 'Free trial, no credit card'}
           </span>
         </div>
