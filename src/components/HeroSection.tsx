@@ -115,7 +115,7 @@ function HeroSectionComponent() {
             />
             <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           </div>
-          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="shrink-0 basis-0 min-w-0 flex-[0.8]">
+          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="basis-full sm:basis-0 sm:shrink-0 min-w-0 sm:flex-[0.8]">
             <Button
               variant="outline"
               size="lg"
