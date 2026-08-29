@@ -111,8 +111,67 @@ const notFoundSeoMiddleware = createMiddleware().server(async ({ next, handlerTy
   });
 });
 
+// Performance : le HTML SSR des pages marketing est identique pour tous les
+// visiteurs anonymes. On l'autorise en cache partagé (CDN edge) avec
+// revalidation en arrière-plan : le TTFB tombe au coût réseau, sans toucher au
+// contenu servi (donc indexation inchangée). Toute requête portant une session
+// (cookie Supabase) ou des paramètres reste privée et non mise en cache.
+const EDGE_CACHEABLE_PATHS = new Set<string>([
+  "/",
+  "/tarifs",
+  "/a-propos",
+  "/contact",
+  "/confidentialite",
+  "/lexique",
+  "/api-seo",
+  "/generative-engine-optimization",
+]);
+
+const edgeCacheMiddleware = createMiddleware().server(async ({ next, request, handlerType }) => {
+  const result = await next();
+  if (handlerType !== "router") return result;
+  if (request.method !== "GET" && request.method !== "HEAD") return result;
+
+  let url: URL;
+  try {
+    url = new URL(request.url);
+  } catch {
+    return result;
+  }
+
+  const path = url.pathname.replace(/(.)\/+$/, "$1");
+  if (!EDGE_CACHEABLE_PATHS.has(path) || url.search) return result;
+
+  const cookie = request.headers.get("cookie") ?? "";
+  if (/(^|;\s*)sb-[^=]*auth-token/.test(cookie)) return result;
+
+  const response = result.response;
+  if (response.status !== 200) return result;
+  if (!(response.headers.get("content-type") ?? "").includes("text/html")) return result;
+  if (response.headers.has("set-cookie")) return result;
+
+  const headers = new Headers(response.headers);
+  headers.set(
+    "cache-control",
+    "public, max-age=0, must-revalidate, s-maxage=300, stale-while-revalidate=86400",
+  );
+  headers.append("vary", "Cookie");
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+});
+
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
-  requestMiddleware: [errorMiddleware, csrfMiddleware, langVariantSeoMiddleware, notFoundSeoMiddleware],
+  requestMiddleware: [
+    errorMiddleware,
+    csrfMiddleware,
+    langVariantSeoMiddleware,
+    notFoundSeoMiddleware,
+    edgeCacheMiddleware,
+  ],
 }));
 
