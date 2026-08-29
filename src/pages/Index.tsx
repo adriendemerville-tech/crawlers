@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/ActiveCrawlBanner';
 import { PageEditorial } from '@/components/seo/PageEditorial';
 import { CitablePassage } from '@/components/seo/CitablePassage';
-import { LazyVisible } from '@/components/LazyVisible';
+
 import { getPublicConfig, isFlagEnabled } from '@/lib/config/publicConfig';
 
 // Lazy load heavy dashboard components
