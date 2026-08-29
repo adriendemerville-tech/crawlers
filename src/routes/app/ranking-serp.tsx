@@ -7,7 +7,7 @@ export const Route = createFileRoute("/app/ranking-serp")({
     title: "Benchmark Rank SERP — Classement Google multi-providers gratuit | Crawlers.fr",
     description: "Comparez les positions Google de n'importe quel mot-clé via 4 providers SERP simultanément (DataForSEO, SerpApi, Serper, Bright Data). Outil gratuit, classement croisé fiable.",
     path: "/app/ranking-serp",
-    noIndex: true,
+
   }),
   component: RankingSerp,
 });

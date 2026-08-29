@@ -59,6 +59,7 @@ const CSP_SCRIPT_SRC = [
   "https://challenges.cloudflare.com",
   "https://cdn.paddle.com",
   "https://*.paddle.com",
+  "https://open.spotify.com", // API iframe du lecteur Spotify (écran d'attente audit)
 ];
 
 const CSP_CONNECT_SRC = [
@@ -69,6 +70,8 @@ const CSP_CONNECT_SRC = [
   "https://www.google-analytics.com",
   "https://*.paddle.com",
   "https://challenges.cloudflare.com",
+  "https://open.spotify.com",
+  "https://*.spotify.com",
 ];
 
 const CSP_DIRECTIVES = [
@@ -80,7 +83,7 @@ const CSP_DIRECTIVES = [
   `connect-src ${CSP_CONNECT_SRC.join(" ")}`,
   "media-src 'self' blob: https:",
   "worker-src 'self' blob:",
-  "frame-src 'self' https://challenges.cloudflare.com https://*.paddle.com https://www.youtube-nocookie.com",
+  "frame-src 'self' https://challenges.cloudflare.com https://*.paddle.com https://www.youtube-nocookie.com https://open.spotify.com https://*.spotify.com",
   "frame-ancestors 'self'",
   "form-action 'self'",
   "base-uri 'self'",
