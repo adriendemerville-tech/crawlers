@@ -109,7 +109,7 @@ function HeroSectionComponent() {
                   navigate(`/audit-expert?url=${encodeURIComponent(target)}&autolaunch=1`);
                 }
               }}
-              className="h-12 sm:h-14 rounded-xl pl-3 pr-10 text-base border-2 border-foreground dark:border-4 dark:border-white placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
+              className="h-12 sm:h-14 rounded-xl pl-3 pr-10 text-base border-2 border-foreground dark:border-2 dark:border-white placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50"
               aria-label="URL du site web"
             />
             <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
