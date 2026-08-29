@@ -453,14 +453,40 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const resumeAttemptedRef = useRef<string | null>(null);
   const [bugReportMode, setBugReportMode] = useState<'idle' | 'prompt' | 'waiting' | 'sent'>('idle');
   const [isExpanded, setIsExpanded] = useClientInitialState(() => localStorage.getItem('cocoon_sidebar_expanded') === '1', false);
-  const { setCocoonExpanded } = useAISidebar();
+  const { setCocoonExpanded, setCocoonWidth } = useAISidebar();
+  const [sidebarWidth, setSidebarWidth] = useClientInitialState(() => {
+    const w = parseInt(localStorage.getItem('cocoon_sidebar_width') || '432', 10);
+    return Number.isFinite(w) ? Math.min(720, Math.max(320, w)) : 432;
+  }, 432);
+  const resizingRef = useRef(false);
+
+  const startResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    resizingRef.current = true;
+    const startX = e.clientX;
+    const startW = sidebarWidth;
+    const onMove = (ev: MouseEvent) => {
+      if (!resizingRef.current) return;
+      const next = Math.min(720, Math.max(320, startW + (ev.clientX - startX)));
+      setSidebarWidth(next);
+    };
+    const onUp = () => {
+      resizingRef.current = false;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      setSidebarWidth((w) => { localStorage.setItem('cocoon_sidebar_width', String(w)); return w; });
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, [sidebarWidth, setSidebarWidth]);
 
   useEffect(() => {
     setCocoonExpanded(isExpanded && isOpen);
+    setCocoonWidth(sidebarWidth);
     localStorage.setItem('cocoon_sidebar_expanded', isExpanded ? '1' : '0');
     localStorage.setItem('cocoon_chat_open', isOpen ? '1' : '0');
     return () => setCocoonExpanded(false);
-  }, [isExpanded, isOpen, setCocoonExpanded]);
+  }, [isExpanded, isOpen, sidebarWidth, setCocoonExpanded, setCocoonWidth]);
   const [resolvedBugCount, setResolvedBugCount] = useState(0);
   const [quizData, setQuizData] = useState<{ questions: any[]; answerKey: Record<string, any> } | null>(null);
   const [quizLoading, setQuizLoading] = useState(false);
@@ -1729,11 +1755,19 @@ Después del resumen, ofrece 3 direcciones estratégicas posibles como opciones 
       {isOpen && (
         <div className={
           isExpanded
-            ? "fixed top-0 left-0 h-full w-[27rem] max-w-[90vw] border-r border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50 transition-all duration-300 ease-in-out"
+            ? "fixed top-0 left-0 h-full max-w-[90vw] border-r border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50"
             : "fixed bottom-20 left-0 w-[459px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50 transition-all duration-300 ease-in-out"
         }
-          style={isExpanded ? undefined : { maxHeight: 'min(600px, 72vh)' }}
+          style={isExpanded ? { width: sidebarWidth } : { maxHeight: 'min(600px, 72vh)' }}
         >
+          {/* Drag handle — resize width by pulling the right edge */}
+          {isExpanded && (
+            <div
+              onMouseDown={startResize}
+              className="absolute top-0 right-0 h-full w-1.5 cursor-ew-resize z-10 hover:bg-[#fbbf24]/30 transition-colors"
+              title={language === 'en' ? 'Drag to resize' : 'Étirer pour redimensionner'}
+            />
+          )}
           {/* Header — compact */}
           <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
             <div className="flex items-center gap-2">

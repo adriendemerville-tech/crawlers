@@ -193,7 +193,7 @@ function CocoonContent() {
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
   const { saveReport } = useSaveReport();
-  const { cocoonExpanded } = useAISidebar();
+  const { cocoonExpanded, cocoonWidth } = useAISidebar();
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
@@ -719,7 +719,10 @@ function CocoonContent() {
         </div>
       )}
 
-      <div className="dark h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden bg-[#0f0a1e] transition-all duration-300 ease-in-out">
+      <div
+        className="dark h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden bg-[#0f0a1e] transition-all duration-300 ease-in-out"
+        style={{ paddingLeft: cocoonExpanded ? cocoonWidth : 0 }}
+      >
 
         {/* Top Bar */}
         {!isFullscreen && (
@@ -1052,9 +1055,7 @@ function CocoonContent() {
 
           {/* Links legend — centered below preview */}
           {nodes.length > 0 && (
-            <div className="shrink-0 flex flex-col items-center px-3 sm:px-6 py-2 sm:py-3 opacity-0 animate-fade-in gap-1.5"
-              style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
-            >
+            <div className="shrink-0 flex flex-col items-center px-3 sm:px-6 py-2 sm:py-3 gap-1.5">
               <div className="flex items-center gap-2 sm:gap-3">
                 <span className="text-[10px] sm:text-xs text-white/70 font-semibold">{language === 'en' ? 'Links:' : 'Liens :'}</span>
                 <div className="flex items-center gap-1.5">
@@ -1085,7 +1086,7 @@ function CocoonContent() {
 
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
         {!isFullscreen && (
-        <div className="shrink-0 px-3 sm:px-4 md:px-6 py-9 flex items-end gap-2 sm:gap-4 flex-wrap">
+        <div className="shrink-0 px-3 sm:px-4 md:px-6 pt-2 pb-10 flex items-end gap-2 sm:gap-4 flex-wrap">
           {/* AI Chat — bottom left, flush */}
           {hasAccess && (
             <div className="relative">
