@@ -456,6 +456,21 @@ export function LinkedInAutomationDashboard() {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => generateMedia(p)}
+                      disabled={mediaGenId === p.id}
+                      title="Génère le média du post : carrousel WaveSpeed ou capture vidéo de l'outil"
+                    >
+                      {mediaGenId === p.id ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Film className="h-4 w-4 mr-2" />
+                      )}
+                      Générer contenu
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => deletePost(p.id)}
                       disabled={savingId === p.id}
                     >
