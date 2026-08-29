@@ -98,13 +98,13 @@ export function WordPressScanner() {
             placeholder="https://exemple.com"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="flex-1 caret-auto"
+            className="flex-1 caret-auto bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/10 dark:to-white/[0.04] backdrop-blur-sm"
             disabled={isLoading}
           />
           <Button
             type="submit"
             disabled={isLoading || !url.trim()}
-            className="gap-2 bg-violet-600 hover:bg-violet-700 text-white shrink-0"
+            className="gap-2 border-2 border-foreground text-foreground bg-gradient-to-b from-muted/80 to-muted/40 dark:from-white/15 dark:to-white/[0.06] backdrop-blur-sm hover:bg-foreground/5 shrink-0"
           >
             {isLoading ? (
               <>
