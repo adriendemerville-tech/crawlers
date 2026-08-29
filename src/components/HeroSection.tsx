@@ -65,7 +65,7 @@ function HeroSectionComponent() {
             : 'SEO crawl tool for Google + GEO for AI · one single audit'}
         </p>
         {/* Animated headline */}
-        <h1 className="mb-6 t-display font-extrabold font-display text-center sm:whitespace-nowrap">
+        <h1 className="mb-6 t-display font-extrabold font-display text-center sm:whitespace-nowrap max-sm:hidden!">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
             style={{ minWidth: '3.9em', paddingBottom: '0.15em', marginBottom: '-0.15em', marginRight: '0.08em' }}
