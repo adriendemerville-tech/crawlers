@@ -501,6 +501,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
             </div>
           </div>
         )}
+        {!readOnly && <MaintenanceModeCard />}
       </div>
       </AdminAnalyticsProvider>
     </AdminProvider>
