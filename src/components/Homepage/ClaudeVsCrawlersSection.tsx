@@ -32,7 +32,7 @@ function ClaudeVsCrawlersSectionComponent() {
           <span className="inline-flex items-center gap-2 bg-violet-500/10 text-violet-600 dark:text-violet-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
             {language === 'fr' ? 'Comparatif' : language === 'es' ? 'Comparativo' : 'Comparison'}
           </span>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+          <h2 className="t-h2 font-bold tracking-tight text-foreground">
             {language === 'fr'
               ? <>Claude Code + Cowork <span className="text-primary-foreground">vs</span> Crawlers.fr</>
               : language === 'es'

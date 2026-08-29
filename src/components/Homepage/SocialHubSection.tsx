@@ -157,7 +157,7 @@ export const SocialHubSection = memo(() => {
             <Sparkles className="h-3 w-3" />
             {t.badge}
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground mb-4">
+          <h2 className="t-h1 font-extrabold tracking-tight text-foreground mb-4">
             {t.title}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">

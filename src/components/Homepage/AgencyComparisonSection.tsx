@@ -55,7 +55,7 @@ const AgencyComparisonSection = () => (
     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--brand-violet)/0.05),transparent_65%)]" />
     <div className="relative mx-auto max-w-4xl px-4">
       <header className="mb-8 text-center">
-        <h2 id="vs-agence-title" className="mb-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+        <h2 id="vs-agence-title" className="mb-3 t-h2 font-extrabold tracking-tight text-foreground">
           Agence SEO ou Crawlers : le comparatif
         </h2>
         <p className="mx-auto max-w-2xl text-muted-foreground">

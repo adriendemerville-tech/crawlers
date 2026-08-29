@@ -28,7 +28,7 @@ export const PainPointsSection = () => {
           <span className="mb-3 inline-block rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider border-primary/20 text-destructive bg-inherit">
             Freelances / Agences
           </span>
-          <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+          <h2 className="t-h2 font-extrabold tracking-tight text-foreground">
             On le sait : les outils SEO classiques galèrent
           </h2>
         </div>

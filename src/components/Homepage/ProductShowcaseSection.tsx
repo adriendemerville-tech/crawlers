@@ -110,7 +110,7 @@ const ProductShowcaseSection = memo(() => {
             <Eye className="w-3.5 h-3.5 mr-1.5" />
             {language === 'fr' ? 'Découvrir la plateforme' : 'Discover the platform'}
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground font-display">
+          <h2 className="t-h1 font-bold tracking-tight text-foreground font-display">
             {language === 'fr' ? 'Tout ce dont vous avez besoin,' : 'Everything you need,'}
             <br />
             <span className="text-violet-500 font-extrabold">

@@ -74,7 +74,7 @@ const AIAgentsSection = memo(() => {
             <Brain className="w-3.5 h-3.5 mr-1.5" />
             {language === 'fr' ? 'Intelligence Artificielle Embarquée' : language === 'es' ? 'Inteligencia Artificial Integrada' : 'Built-in Artificial Intelligence'}
           </Badge>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground font-display">
+          <h2 className="t-h1 font-bold tracking-tight text-foreground font-display">
             {language === 'fr' ? '2 agents IA, 2 atouts pour vous accompagner' : language === 'es' ? '2 agentes IA, 2 ventajas para acompañarle' : '2 AI agents, 2 assets to support you'}
           </h2>
           <p className="mt-3 text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg">
