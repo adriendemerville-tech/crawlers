@@ -593,7 +593,7 @@ export function CocoonContentArchitectModal({ isOpen, onClose, nodes, domain, tr
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-xs" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className={`w-[98vw] max-w-[1600px] h-[92vh] border border-slate-700/60 rounded-2xl flex flex-col overflow-hidden shadow-2xl bg-[#0f172a]`}>
+      <div className={`dark w-[98vw] max-w-[1600px] h-[92vh] border border-slate-700/60 rounded-2xl flex flex-col overflow-hidden shadow-2xl bg-[#0f172a] text-white`}>
         {/* Header — compact, no publish here */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-slate-700/60 bg-gradient-to-r from-[#1e293b] to-[#0f172a]">
           <div className="flex items-center gap-3">
