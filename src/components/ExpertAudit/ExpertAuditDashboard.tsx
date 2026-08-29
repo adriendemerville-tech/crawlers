@@ -1534,7 +1534,9 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
           {/* === STEP 1: TECHNICAL AUDIT SECTION === */}
           {auditMode === 'technical' && (
             <StrategicErrorBoundary onReset={handleNewAudit}>
-              <TechnicalResultsSection result={result} url={url} t={t} onReportClick={handleReportButtonClick} />
+              <Suspense fallback={<div className="h-64 rounded-xl border border-border animate-pulse" />}>
+                <TechnicalResultsSection result={result} url={url} t={t} onReportClick={handleReportButtonClick} />
+              </Suspense>
               <GeoPillarsCard technicalResult={technicalResult ?? result} strategicResult={strategicResult} />
 
               <NextStepFloatingButton
