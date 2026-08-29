@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from '@/lib/router-compat';
 import { Download, FileSpreadsheet, Printer, Loader2, Check, Share2, FileText, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { MatricePivotView, MatriceCube3D, MatriceVoxelDetail } from '@/components/Matrice';
+import { MatricePivotView } from '@/components/Matrice/MatricePivotView';
+import { MatriceVoxelDetail } from '@/components/Matrice/MatriceVoxelDetail';
+const MatriceCube3D = lazy(() => import('@/components/Matrice/MatriceCube3D').then((m) => ({ default: m.MatriceCube3D })));
 import { legacyToMatrixResults } from '@/utils/matrice/legacyToMatrixResult';
 import { buildCubeLayout, type Voxel } from '@/utils/matrice/cubeLayout';
 import type { MatrixResult } from '@/utils/matrice/matrixOrchestrator';
@@ -303,12 +305,14 @@ export default function RapportMatrice() {
                 />
               </section>
               <section className="lg:col-span-3 border-2 border-brand-violet rounded-md p-4 bg-transparent">
+                <Suspense fallback={<div className="h-[420px] flex items-center justify-center text-xs text-muted-foreground">Chargement de la vue 3D...</div>}>
                 <MatriceCube3D
                   results={matrixResults}
                   selectedFamilyId={selectedFamilyId}
                   selectedVoxelKey={selectedVoxelKey}
                   onVoxelClick={handleVoxelSelect}
                 />
+                </Suspense>
               </section>
               {(selectedVoxel || selectedFamilyId) && drillResults.length > 0 && (
                 <section className="lg:col-span-6">

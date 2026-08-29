@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Layers, Grid3X3, Box, Trophy, Medal, Award, Check, X } from 'lucide-react';
-import { BenchmarkCube3D } from './BenchmarkCube3D';
+const BenchmarkCube3D = lazy(() => import('./BenchmarkCube3D').then((m) => ({ default: m.BenchmarkCube3D })));
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 
@@ -147,7 +147,9 @@ export default function BenchmarkHeatmap({ results, themes, engines, heatmap, gl
 
       {/* ── VIEW: Cube 3D (Thème × Moteur × Famille) ────────────────────── */}
       {viewMode === 'cube' && (
-        <BenchmarkCube3D results={results} themes={themes} engines={engines} />
+        <Suspense fallback={<div className="h-[420px] flex items-center justify-center text-xs text-muted-foreground">Chargement de la vue 3D...</div>}>
+          <BenchmarkCube3D results={results} themes={themes} engines={engines} />
+        </Suspense>
       )}
 
 
