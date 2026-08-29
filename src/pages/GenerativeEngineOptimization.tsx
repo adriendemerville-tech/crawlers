@@ -6,7 +6,6 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
   ArrowRight, CheckCircle2, Globe, Brain, Search,
@@ -159,10 +158,9 @@ const GenerativeEngineOptimization = () => {
         <section className="py-12 px-4 bg-gradient-to-b from-primary/5 to-background">
           <div className="mx-auto max-w-4xl">
             <div className="flex items-center gap-2 mb-4">
-              <Badge variant="outline" className="text-xs uppercase">Page Pilier</Badge>
               <span className="text-xs text-muted-foreground">Mis à jour le 9 mars 2026</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
+            <h1 className="text-lg sm:text-xl lg:text-lg font-bold text-foreground mb-6 leading-tight">
               Référencement IA (GEO) : définition, score, visibilité LLM et guide complet 2026
             </h1>
             <p className="text-lg text-muted-foreground mb-4">
@@ -208,7 +206,7 @@ const GenerativeEngineOptimization = () => {
 
             {/* 1. Définition */}
             <section id="definition">
-              <h2 className="text-2xl font-bold text-foreground mb-4">1. Qu'est-ce que le GEO (Generative Engine Optimization) ?</h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">1. Qu'est-ce que le GEO (Generative Engine Optimization) ?</h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 Le <strong>GEO (Generative Engine Optimization)</strong> est la discipline du marketing digital qui vise 
                 à optimiser un contenu web pour être cité comme source fiable par les <strong>moteurs de recherche génératifs</strong> — 
@@ -229,7 +227,7 @@ const GenerativeEngineOptimization = () => {
 
             {/* 2. SEO vs GEO */}
             <section id="seo-vs-geo">
-              <h2 className="text-2xl font-bold text-foreground mb-4">2. SEO vs GEO : quelles différences ?</h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">2. SEO vs GEO : quelles différences ?</h2>
               <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
@@ -262,7 +260,7 @@ const GenerativeEngineOptimization = () => {
 
             {/* 3. Les 5 piliers */}
             <section id="piliers">
-              <h2 className="text-2xl font-bold text-foreground mb-6">3. Les 5 piliers du Generative Engine Optimization</h2>
+              <h2 className="text-lg font-bold text-foreground mb-6">3. Les 5 piliers du Generative Engine Optimization</h2>
               <div className="space-y-4">
                 {pillars.map((p, i) => (
                   <Card key={i} className="hover:shadow-md transition-shadow">
@@ -337,7 +335,7 @@ const GenerativeEngineOptimization = () => {
 
             {/* 4. Mesurer */}
             <section id="mesurer">
-              <h2 className="text-2xl font-bold text-foreground mb-4">4. Comment mesurer son score GEO ?</h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">4. Comment mesurer son score GEO ?</h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 Le score GEO de Crawlers.fr évalue votre site sur plusieurs dimensions : accessibilité aux robots IA 
                 (GPTBot, ClaudeBot, PerplexityBot autorisés dans robots.txt), présence et qualité des données structurées 
@@ -353,7 +351,7 @@ const GenerativeEngineOptimization = () => {
 
             {/* 5. Stratégie */}
             <section id="strategie">
-              <h2 className="text-2xl font-bold text-foreground mb-4">5. Stratégie GEO actionnable en 2026</h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">5. Stratégie GEO actionnable en 2026</h2>
               <div className="space-y-3">
                 {[
                   "Auditer votre accessibilité IA avec Crawlers.fr (robots.txt, temps de réponse, JSON-LD)",
@@ -374,7 +372,7 @@ const GenerativeEngineOptimization = () => {
 
             {/* Conclusion */}
             <section>
-              <h2 className="text-2xl font-bold text-foreground mb-4">Conclusion</h2>
+              <h2 className="text-lg font-bold text-foreground mb-4">Conclusion</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Le Generative Engine Optimization n'est pas un buzzword : c'est la réponse stratégique à la transformation 
                 des moteurs de recherche. En 2026, être invisible pour les IA signifie perdre 45% de votre audience potentielle. 
