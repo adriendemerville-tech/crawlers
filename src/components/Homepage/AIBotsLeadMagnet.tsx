@@ -308,14 +308,14 @@ export function AIBotsLeadMagnet() {
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t.placeholder}
-            className="w-full h-16 px-6 text-lg bg-background border-4 border-white rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-hidden focus:border-brand-violet transition-colors"
+            className="w-full h-16 px-6 text-lg bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/10 dark:to-white/[0.04] backdrop-blur-sm border-4 border-white rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-hidden focus:border-brand-violet transition-colors"
           />
         </div>
         <button
           type="button"
           onClick={handleAnalyze}
           disabled={loading || !url.trim()}
-          className="h-16 px-8 rounded-lg text-lg font-semibold bg-brand-violet text-white hover:opacity-90 disabled:opacity-40 transition-colors flex items-center gap-2 shrink-0"
+          className="h-16 px-8 rounded-lg text-lg font-semibold bg-gradient-to-b from-muted/80 to-muted/40 dark:from-white/15 dark:to-white/[0.06] backdrop-blur-sm border-2 border-foreground text-foreground hover:bg-foreground/5 disabled:opacity-40 transition-colors flex items-center gap-2 shrink-0"
         >
           {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
           {t.cta}

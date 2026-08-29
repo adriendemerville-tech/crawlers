@@ -128,13 +128,13 @@ export function QuickEEATTest() {
                 onChange={e => setUrl(e.target.value)}
                 disabled={scanning}
                 required
-                className="flex-1"
+                className="flex-1 bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/10 dark:to-white/[0.04] backdrop-blur-sm"
               />
               <Button
                 type="submit"
                 size="lg"
                 disabled={scanning || !url.trim()}
-                className="gap-2 border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5 disabled:opacity-40"
+                className="gap-2 border-2 border-foreground bg-gradient-to-b from-muted/80 to-muted/40 dark:from-white/15 dark:to-white/[0.06] backdrop-blur-sm text-foreground hover:bg-foreground/5 disabled:opacity-40"
               >
                 {scanning ? (
                   <>

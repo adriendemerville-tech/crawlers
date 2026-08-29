@@ -327,7 +327,7 @@ export function WorkflowCarousel({
                       else if (activeStep === 2) onStartStrategic();
                     }
                   }}
-                  className="pl-4 pr-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-xs"
+                  className="pl-4 pr-12 h-14 text-lg bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/10 dark:to-white/[0.04] backdrop-blur-sm border-border/60 focus:border-primary/50 shadow-xs"
                   disabled={isLoading || isStrategicLoading}
                 />
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -349,7 +349,7 @@ export function WorkflowCarousel({
                   size="sm"
                   disabled={isLoading || !url.trim()}
                   onClick={onStartTechnical}
-                  className="h-10 px-5 border border-border text-muted-foreground bg-transparent hover:bg-muted hover:text-foreground font-medium shrink-0 hidden sm:flex items-center text-sm ml-2 rounded-md"
+                  className="h-10 px-5 border border-border text-muted-foreground bg-gradient-to-b from-muted/80 to-muted/40 dark:from-white/15 dark:to-white/[0.06] backdrop-blur-sm hover:bg-muted hover:text-foreground font-medium shrink-0 hidden sm:flex items-center text-sm ml-2 rounded-md"
                 >
                   {t.start}
                 </Button>

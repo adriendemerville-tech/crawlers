@@ -964,14 +964,14 @@ export default function Marina() {
                     value={url}
                     onChange={e => setUrl(e.target.value)}
                     placeholder={t.hero.placeholder}
-                    className="h-12 text-base bg-card border-border"
+                    className="h-12 text-base border-border bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/10 dark:to-white/[0.04] backdrop-blur-sm"
                     disabled={loading}
                     onKeyDown={e => e.key === 'Enter' && handleGenerate()}
                   />
                   <Button
                     onClick={handleGenerate}
                     disabled={loading}
-                    className="h-12 px-6 bg-transparent border border-foreground text-foreground hover:bg-foreground/10 font-semibold"
+                    className="h-12 px-6 bg-gradient-to-b from-muted/80 to-muted/40 dark:from-white/15 dark:to-white/[0.06] backdrop-blur-sm border-2 border-foreground text-foreground hover:bg-foreground/10 font-semibold"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                     <span className="ml-2">{loading ? t.hero.btnAnalyzing : t.hero.btnAnalyze}</span>
