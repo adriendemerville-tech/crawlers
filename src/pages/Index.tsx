@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/ActiveCrawlBanner';
 import { PageEditorial } from '@/components/seo/PageEditorial';
 import { CitablePassage } from '@/components/seo/CitablePassage';
-import { LazyVisible } from '@/components/LazyVisible';
+
 import { getPublicConfig, isFlagEnabled } from '@/lib/config/publicConfig';
 
 // Lazy load heavy dashboard components
@@ -38,33 +38,25 @@ const PageSpeedDashboard = lazy(() => import('@/components/PageSpeedDashboard').
 const GeoDashboard = lazy(() => import('@/components/GeoDashboard').then(m => ({ default: m.GeoDashboard })));
 const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({ default: m.LLMDashboard })));
 
-// Lazy load below-the-fold components with higher priority grouping
-const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
+// Carrousel témoignages : interactif et lourd (embla) → différé
 const TestimonialsCarousel = lazy(() => import('@/components/TestimonialsCarousel').then(m => ({ default: m.TestimonialsCarousel })));
 
-// Lazy load individual homepage sections
+// ─── Sections marketing en imports STATIQUES ───
+// Elles portent le contenu textuel indexable de la home : elles doivent être
+// présentes dans le HTML initial servi aux bots (Googlebot, GPTBot, ClaudeBot…),
+// pas injectées après hydratation.
+import { MomentumSection, HybridSection, TrustBanner } from '@/components/HomepageSections';
+import AgencyComparisonSection from '@/components/Homepage/AgencyComparisonSection';
+import { AIAgentsSection } from '@/components/Homepage/AIAgentsSection';
+import { ContentArchitectSection } from '@/components/Homepage/ContentArchitectSection';
+import { ProductShowcaseSection } from '@/components/Homepage/ProductShowcaseSection';
+import { MarketplaceTeaserSection } from '@/components/Homepage/MarketplaceTeaserSection';
+import { GoogleCrossDataSection } from '@/components/Homepage/GoogleCrossDataSection';
+import { PainPointsSection } from '@/components/Homepage/PainPointsSection';
+import { MarinaDeepAuditSection } from '@/components/Homepage/MarinaDeepAuditSection';
+import { ExtensionSection } from '@/components/Homepage/ExtensionSection';
+import { Footer } from '@/components/Footer';
 
-// Lazy load individual homepage sections
-const MomentumSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.MomentumSection })));
-const FeatureShowcase = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.FeatureShowcase })));
-
-const HybridSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.HybridSection })));
-const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.TrustBanner })));
-const AgencyComparisonSection = lazy(() => import('@/components/Homepage/AgencyComparisonSection'));
-const AIAgentsSection = lazy(() => import('@/components/Homepage/AIAgentsSection').then(m => ({ default: m.AIAgentsSection })));
-const ContentArchitectSection = lazy(() => import('@/components/Homepage/ContentArchitectSection').then(m => ({ default: m.ContentArchitectSection })));
-
-const ProductShowcaseSection = lazy(() => import('@/components/Homepage/ProductShowcaseSection').then(m => ({ default: m.ProductShowcaseSection })));
-const MarketplaceTeaserSection = lazy(() => import('@/components/Homepage/MarketplaceTeaserSection').then(m => ({ default: m.MarketplaceTeaserSection })));
-
-const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
-
-const PainPointsSection = lazy(() => import('@/components/Homepage/PainPointsSection').then(m => ({ default: m.PainPointsSection })));
-const MarinaDeepAuditSection = lazy(() => import('@/components/Homepage/MarinaDeepAuditSection').then(m => ({ default: m.MarinaDeepAuditSection })));
-
-const ExtensionSection = lazy(() => import('@/components/Homepage/ExtensionSection').then(m => ({ default: m.ExtensionSection })));
-
-const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 // Lightweight skeleton for dashboards
 const DashboardSkeleton = memo(() => (
@@ -568,17 +560,11 @@ const Index = () => {
 
         {/* Product Showcase — Screenshots : le produit visible dès la 2e position */}
         <div id="features">
-          <LazyVisible minHeight="600px">
-            <Suspense fallback={<SectionSkeleton height={600} />}>
-              <div className="cv-auto-lg"><ProductShowcaseSection /></div>
-            </Suspense>
-          </LazyVisible>
+          <div className="cv-auto-lg"><ProductShowcaseSection /></div>
         </div>
 
         {/* Vision IA 2028 + lead magnet — remonté pour capter tôt */}
-        <Suspense fallback={<SectionSkeleton height={900} />}>
-          <div className="cv-auto-lg"><MomentumSection /></div>
-        </Suspense>
+        <div className="cv-auto-lg"><MomentumSection /></div>
 
         {/* Témoignages — preuve sociale après le produit */}
         <Suspense fallback={<SectionSkeleton height={320} />}>
@@ -586,24 +572,14 @@ const Index = () => {
         </Suspense>
 
         {/* AI Agents — Félix & Stratège Cocoon — remonté après la preuve sociale */}
-        <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton height={500} />}>
-            <div className="cv-auto-lg home-bias-left"><AIAgentsSection /></div>
-          </Suspense>
-        </LazyVisible>
-
-
-
+        <div className="cv-auto-lg home-bias-left"><AIAgentsSection /></div>
 
         {/* Pain Points — before Pro Agency */}
-        <Suspense fallback={<SectionSkeleton height={600} />}>
-          <div className="cv-auto home-bias-left"><PainPointsSection /></div>
-        </Suspense>
+        <div className="cv-auto home-bias-left"><PainPointsSection /></div>
 
         {/* Audit profond gratuit (Marina) — juste après les pain points */}
-        <Suspense fallback={<SectionSkeleton height={600} />}>
-          <div className="cv-auto home-bias-right"><MarinaDeepAuditSection /></div>
-        </Suspense>
+        <div className="cv-auto home-bias-right"><MarinaDeepAuditSection /></div>
+
 
         {/* Preuve sociale : volume réel de domaines audités, juste sous les lead magnets */}
         <AuditedDomainsCounter />
@@ -717,35 +693,20 @@ const Index = () => {
 
 
         {/* Comparatif Agence SEO vs Crawlers */}
-        <Suspense fallback={<SectionSkeleton height={600} />}>
-          <div className="cv-auto"><AgencyComparisonSection /></div>
-        </Suspense>
+        <div className="cv-auto"><AgencyComparisonSection /></div>
 
         {/* Trust Banner — right after Pro Agency */}
-        <Suspense fallback={<SectionSkeleton height={600} />}>
-          <div className="cv-auto"><TrustBanner /></div>
-        </Suspense>
+        <div className="cv-auto"><TrustBanner /></div>
 
         {/* Place d'échange de backlinks */}
-        <LazyVisible minHeight="420px">
-          <Suspense fallback={<SectionSkeleton height={420} />}>
-            <div className="cv-auto"><MarketplaceTeaserSection /></div>
-          </Suspense>
-        </LazyVisible>
+        <div className="cv-auto"><MarketplaceTeaserSection /></div>
 
         {/* Google Cross Data — SEA→SEO Bridge */}
-        <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton height={500} />}>
-            <div className="cv-auto"><GoogleCrossDataSection /></div>
-          </Suspense>
-        </LazyVisible>
+        <div className="cv-auto"><GoogleCrossDataSection /></div>
 
         {/* Content Architect */}
-        <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton height={500} />}>
-            <div className="cv-auto-lg home-bias-right"><ContentArchitectSection /></div>
-          </Suspense>
-        </LazyVisible>
+        <div className="cv-auto-lg home-bias-right"><ContentArchitectSection /></div>
+
 
         {/* E-E-A-T Section */}
         <section className="py-20 relative overflow-hidden cv-auto">
@@ -816,19 +777,12 @@ const Index = () => {
         </section>
 
 
-        <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton height={500} />}>
-            <div className="cv-auto home-bias-left"><HybridSection /></div>
-          </Suspense>
-        </LazyVisible>
+        <div className="cv-auto home-bias-left"><HybridSection /></div>
 
 
         {/* Chrome Extension — short teaser */}
-        <LazyVisible minHeight="400px">
-          <Suspense fallback={<SectionSkeleton height={400} />}>
-            <div className="cv-auto home-bias-right"><ExtensionSection /></div>
-          </Suspense>
-        </LazyVisible>
+        <div className="cv-auto home-bias-right"><ExtensionSection /></div>
+
 
 
         {/* Active crawl notification banner */}
@@ -978,9 +932,8 @@ const Index = () => {
         <div className="cv-auto"><SiloHub /></div>
 
       </main>
-      <Suspense fallback={<div className="h-48 bg-muted/10" />}>
-        <Footer />
-      </Suspense>
+      <Footer />
+
       
     </div>
   );
