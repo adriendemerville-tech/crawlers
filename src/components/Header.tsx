@@ -302,7 +302,7 @@ export function Header() {
             </Link>
             <Link to={user ? "/developers" : "/developers/login"} className="hidden lg:block">
               <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
-                Platform API
+                API Developer
               </Button>
             </Link>
           </div>
