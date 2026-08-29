@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, RefreshCw, Trash2, Sparkles, ExternalLink, Pencil, ShieldCheck } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, RefreshCw, Trash2, Sparkles, ExternalLink, Pencil, ShieldCheck, Film, CalendarClock } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Feature = {
@@ -39,6 +40,8 @@ type Post = {
   linkedin_post_url: string | null;
   linkedin_post_urn: string | null;
   publish_error: string | null;
+  scheduled_for: string | null;
+  published_at: string | null;
   created_at: string;
   llm_tokens_used: number | null;
   audit_status: string | null;
@@ -46,6 +49,20 @@ type Post = {
   audited_at: string | null;
   audit_report: unknown;
 };
+
+// Vérification de l'état réel de publication, dérivée des données enregistrées.
+type PublishHealth = { color: string; label: string };
+
+function publishHealth(p: Post): PublishHealth {
+  if (p.published_at && (p.linkedin_post_urn || p.linkedin_post_url)) {
+    return { color: 'bg-emerald-500', label: `Publication vérifiée le ${new Date(p.published_at).toLocaleString('fr-FR')}` };
+  }
+  if (p.publish_error || p.status === 'failed' || (p.status === 'published' && !p.linkedin_post_urn)) {
+    return { color: 'bg-amber-500', label: `Publication tentée mais échouée${p.publish_error ? ` : ${p.publish_error}` : ''}` };
+  }
+  return { color: 'bg-red-500', label: 'Jamais poussé vers la publication LinkedIn' };
+}
+
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   draft: 'outline',
@@ -68,6 +85,7 @@ export function LinkedInAutomationDashboard() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [auditingId, setAuditingId] = useState<string | null>(null);
+  const [mediaGenId, setMediaGenId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const loadAll = async () => {
@@ -81,7 +99,7 @@ export function LinkedInAutomationDashboard() {
         .from('linkedin_scheduled_posts')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(30),
+        .limit(80),
     ]);
     setFeatures(feats || []);
     setPosts(p || []);
@@ -170,6 +188,24 @@ export function LinkedInAutomationDashboard() {
 
 
 
+  // Génère le média du post (carrousel WaveSpeed / screencast Pagebolt-Browserless).
+  const generateMedia = async (p: Post) => {
+    setMediaGenId(p.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('linkedin-media-generator', {
+        body: { post_id: p.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).details || (data as any).error);
+      toast.success('Contenu média généré');
+      await loadAll();
+    } catch (e: any) {
+      toast.error(`Échec génération média : ${e.message}`);
+    } finally {
+      setMediaGenId(null);
+    }
+  };
+
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
       .from('linkedin_scheduled_posts')
@@ -200,6 +236,12 @@ export function LinkedInAutomationDashboard() {
     if (error) toast.error(error.message);
     else await loadAll();
   };
+
+  const draftPosts = posts.filter((p) => !p.published_at && p.status !== 'published');
+  const publishedPosts = posts
+    .filter((p) => p.published_at || p.status === 'published')
+    .sort((a, b) => new Date(b.published_at ?? b.created_at).getTime() - new Date(a.published_at ?? a.created_at).getTime());
+
 
   if (loading) {
     return (
@@ -270,27 +312,43 @@ export function LinkedInAutomationDashboard() {
       </Card>
 
       {/* Posts */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Brouillons & posts ({posts.length})</CardTitle>
+      <Tabs defaultValue="drafts">
+        <div className="flex items-center justify-between gap-2">
+          <TabsList>
+            <TabsTrigger value="drafts">Brouillons & posts ({draftPosts.length})</TabsTrigger>
+            <TabsTrigger value="history">Historique publié ({publishedPosts.length})</TabsTrigger>
+          </TabsList>
           <Button variant="outline" size="sm" onClick={loadAll}>
             <RefreshCw className="h-4 w-4 mr-2" /> Rafraîchir
           </Button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {posts.length === 0 && (
-            <p className="text-muted-foreground text-sm">Aucun brouillon pour le moment.</p>
+        </div>
+        {(['drafts', 'history'] as const).map((tab) => (
+        <TabsContent key={tab} value={tab} className="space-y-4">
+          {(tab === 'drafts' ? draftPosts : publishedPosts).length === 0 && (
+            <p className="text-muted-foreground text-sm">
+              {tab === 'drafts' ? 'Aucun brouillon pour le moment.' : 'Aucun post publié pour le moment.'}
+            </p>
           )}
-          {posts.map((p) => {
+          {(tab === 'drafts' ? draftPosts : publishedPosts).map((p) => {
             const feature = features.find((f) => f.id === p.feature_id);
             const currentText = p.edited_text ?? p.generated_text;
+            const health = publishHealth(p);
             return (
               <Card key={p.id} className="border-2">
                 <CardHeader className="pb-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`inline-block h-3 w-3 rounded-full ${health.color}`}
+                        title={health.label}
+                        aria-label={health.label}
+                      />
                       <Badge variant={statusVariant[p.status] || 'outline'}>{p.status}</Badge>
                       <Badge variant="outline">{p.media_type}</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        Média : {p.media_generation_status || 'none'}
+                        {p.media_urls?.length ? ` (${p.media_urls.length})` : ''}
+                      </Badge>
                       {feature && <span className="text-sm font-medium">{feature.title}</span>}
                       {p.audit_status && (
                         <Badge
@@ -302,9 +360,20 @@ export function LinkedInAutomationDashboard() {
                         </Badge>
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(p.created_at).toLocaleString('fr-FR')}
-                      {p.llm_tokens_used && ` · ${p.llm_tokens_used} tokens`}
+                    <div className="text-xs text-muted-foreground text-right space-y-0.5">
+                      <div>
+                        {new Date(p.created_at).toLocaleString('fr-FR')}
+                        {p.llm_tokens_used && ` · ${p.llm_tokens_used} tokens`}
+                      </div>
+                      <div className="flex items-center gap-1 justify-end">
+                        <CalendarClock className="h-3 w-3" />
+                        {p.published_at
+                          ? `Publié le ${new Date(p.published_at).toLocaleString('fr-FR')}`
+                          : p.scheduled_for
+                            ? `Programmé le ${new Date(p.scheduled_for).toLocaleString('fr-FR')}`
+                            : 'Aucune date de programmation'}
+                      </div>
+                      <div>{health.label}</div>
                     </div>
                   </div>
                 </CardHeader>
@@ -393,6 +462,21 @@ export function LinkedInAutomationDashboard() {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => generateMedia(p)}
+                      disabled={mediaGenId === p.id}
+                      title="Génère le média du post : carrousel WaveSpeed ou capture vidéo de l'outil"
+                    >
+                      {mediaGenId === p.id ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Film className="h-4 w-4 mr-2" />
+                      )}
+                      Générer contenu
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => deletePost(p.id)}
                       disabled={savingId === p.id}
                     >
@@ -403,8 +487,9 @@ export function LinkedInAutomationDashboard() {
               </Card>
             );
           })}
-        </CardContent>
-      </Card>
+        </TabsContent>
+        ))}
+      </Tabs>
 
       {/* Catalogue features */}
       <Card>
