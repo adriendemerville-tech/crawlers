@@ -969,18 +969,13 @@ const Index = () => {
           </CitablePassage>
         </div>
 
-        <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton height={500} />}>
-            <div className="cv-auto"><FAQSection /></div>
-          </Suspense>
-        </LazyVisible>
+        {/* FAQ + hub de silos : rendus en SSR, pour que les bots (et les moteurs
+            génératifs) trouvent le texte et les liens internes dans le HTML servi. */}
+        <div className="cv-auto"><FAQSection /></div>
 
         {/* Hub des 4 silos : la home transmet l'autorité aux piliers */}
-        <LazyVisible minHeight="400px">
-          <Suspense fallback={<SectionSkeleton height={400} />}>
-            <div className="cv-auto"><SiloHub /></div>
-          </Suspense>
-        </LazyVisible>
+        <div className="cv-auto"><SiloHub /></div>
+
       </main>
       <Suspense fallback={<div className="h-48 bg-muted/10" />}>
         <Footer />
