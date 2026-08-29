@@ -306,18 +306,24 @@ export function LinkedInAutomationDashboard() {
       </Card>
 
       {/* Posts */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Brouillons & posts ({posts.length})</CardTitle>
+      <Tabs defaultValue="drafts">
+        <div className="flex items-center justify-between gap-2">
+          <TabsList>
+            <TabsTrigger value="drafts">Brouillons & posts ({draftPosts.length})</TabsTrigger>
+            <TabsTrigger value="history">Historique publié ({publishedPosts.length})</TabsTrigger>
+          </TabsList>
           <Button variant="outline" size="sm" onClick={loadAll}>
             <RefreshCw className="h-4 w-4 mr-2" /> Rafraîchir
           </Button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {posts.length === 0 && (
-            <p className="text-muted-foreground text-sm">Aucun brouillon pour le moment.</p>
+        </div>
+        {(['drafts', 'history'] as const).map((tab) => (
+        <TabsContent key={tab} value={tab} className="space-y-4">
+          {(tab === 'drafts' ? draftPosts : publishedPosts).length === 0 && (
+            <p className="text-muted-foreground text-sm">
+              {tab === 'drafts' ? 'Aucun brouillon pour le moment.' : 'Aucun post publié pour le moment.'}
+            </p>
           )}
-          {posts.map((p) => {
+          {(tab === 'drafts' ? draftPosts : publishedPosts).map((p) => {
             const feature = features.find((f) => f.id === p.feature_id);
             const currentText = p.edited_text ?? p.generated_text;
             return (
