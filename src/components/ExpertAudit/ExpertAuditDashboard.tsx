@@ -1549,6 +1549,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
           {/* === STEP 2: STRATEGIC AUDIT SECTION === */}
           {auditMode === 'strategic' && (
             <>
+              <Suspense fallback={<div className="h-64 rounded-xl border border-border animate-pulse" />}>
               <StrategicResultsSection
                 result={result}
                 url={url}
@@ -1573,6 +1574,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
                   setTimeout(() => runStrategicAudit(normalizedUrl), 100);
                 }}
               />
+              </Suspense>
               <GeoPillarsCard technicalResult={technicalResult ?? result} strategicResult={strategicResult} />
               <NextStepFloatingButton
                 nextStepLabel={language === 'en' ? 'Next: Corrective Code' : language === 'es' ? 'Siguiente: Código Correctivo' : 'Étape suivante : Code Correctif'}
