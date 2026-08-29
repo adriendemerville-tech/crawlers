@@ -21,14 +21,48 @@ export function citedIn(text: string, domain: string): boolean {
   return brandTokens(domain).some((t) => haystack.includes(t.toLowerCase()));
 }
 
-async function askOnce(model: string, question: string): Promise<string> {
-  return aiChat({
+/** TTL du cache de réponses LLM : la SERP générative bouge lentement. */
+const AI_CACHE_TTL_MS = 7 * 24 * 3600 * 1000;
+
+async function cacheKey(model: string, keyword: string, iteration: number): Promise<string> {
+  const bytes = new TextEncoder().encode(`${model}|${keyword.toLowerCase().trim()}|${iteration}`);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Une réponse LLM par (moteur, mot-clé, itération), mutualisée entre tous les
+ * jobs pendant 7 jours : sans ce cache, une matrice consommait jusqu'à 90 appels
+ * facturés, y compris pour des mots-clés déjà mesurés la veille.
+ */
+async function askOnce(model: string, question: string, iteration: number): Promise<string> {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+  const key = await cacheKey(model, question, iteration);
+  const since = new Date(Date.now() - AI_CACHE_TTL_MS).toISOString();
+
+  const { data: cached } = await supabaseAdmin
+    .from('matrix_ai_answer_cache')
+    .select('answer, created_at')
+    .eq('cache_key', key)
+    .gte('created_at', since)
+    .maybeSingle();
+  if (cached?.answer) return cached.answer;
+
+  const answer = await aiChat({
     model,
     timeoutMs: 30000,
     prompt: `${question}
 
 Réponds en citant explicitement les entreprises ou marques que tu recommandes, avec leur nom de domaine quand tu le connais.`,
   });
+
+  // Un échec (chaîne vide) n'est pas mis en cache : il serait figé 7 jours.
+  if (answer) {
+    await supabaseAdmin
+      .from('matrix_ai_answer_cache')
+      .upsert({ cache_key: key, model, keyword: question.slice(0, 300), answer, created_at: new Date().toISOString() } as never);
+  }
+  return answer;
 }
 
 /**
@@ -45,9 +79,10 @@ export async function measureKeywordForModel(
   let observations = previous?.observations ?? 0;
 
   const answers = await Promise.all(
-    Array.from({ length: AI_ITERATIONS }, () => askOnce(model, keyword)),
+    Array.from({ length: AI_ITERATIONS }, (_, i) => askOnce(model, keyword, i)),
   );
   for (const answer of answers) {
+
     if (!answer) continue;
     observations++;
     for (const d of domains) {

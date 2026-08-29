@@ -115,7 +115,10 @@ export interface SerpReadingJson {
   keyword: string;
   positions: Record<string, number>;
   aiOverview: AiOverviewCell;
+  /** Cause explicite d'une lecture manquante (quota, auth, timeout…) — jamais reconstituée. */
+  failure?: string | null;
 }
+
 
 export interface AiReadingJson {
   keyword: string;

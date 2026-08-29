@@ -22,16 +22,41 @@ export function cleanDomain(raw: string): string {
 }
 
 
-export async function dfsPost(
+/** Cause d'échec explicite : un quota épuisé ne se soigne pas comme un timeout. */
+export type DfsFailure =
+  | 'missing_credentials'
+  | 'auth'
+  | 'quota'
+  | 'rate_limited'
+  | 'http_error'
+  | 'api_error'
+  | 'timeout'
+  | 'network';
+
+export interface DfsResult {
+  data: any | null;
+  failure: DfsFailure | null;
+  detail?: string;
+}
+
+function classifyApiStatus(status: number, http: number): DfsFailure {
+  if (http === 401 || http === 403 || status === 40100 || status === 40200) return 'auth';
+  if (http === 402 || status === 40202 || status === 20210) return 'quota';
+  if (http === 429 || status === 40202) return 'rate_limited';
+  return 'api_error';
+}
+
+/** Variante détaillée : conserve la cause de l'échec pour les appelants. */
+export async function dfsPostResult(
   path: string,
   payload: unknown[],
   timeoutMs = 30000,
-): Promise<any | null> {
+): Promise<DfsResult> {
   const login = process.env['DATAFORSEO_LOGIN'];
   const password = process.env['DATAFORSEO_PASSWORD'];
   if (!login || !password) {
     console.error('[competitor-matrix] DataForSEO credentials missing');
-    return null;
+    return { data: null, failure: 'missing_credentials' };
   }
   try {
     const res = await fetch(`https://api.dataforseo.com/v3/${path}`, {
@@ -44,17 +69,32 @@ export async function dfsPost(
       signal: AbortSignal.timeout(timeoutMs),
     });
     if (!res.ok) {
-      console.error(`[competitor-matrix] DataForSEO ${path} HTTP ${res.status}`);
-      return null;
+      const failure = classifyApiStatus(0, res.status);
+      console.error(`[competitor-matrix] DataForSEO ${path} HTTP ${res.status} (${failure})`);
+      return { data: null, failure, detail: `HTTP ${res.status}` };
     }
     const data = await res.json();
     if (data.status_code !== 20000) {
-      console.error(`[competitor-matrix] DataForSEO ${path} status ${data.status_code}`);
-      return null;
+      const failure = classifyApiStatus(Number(data.status_code), 200);
+      console.error(
+        `[competitor-matrix] DataForSEO ${path} status ${data.status_code} ${data.status_message ?? ''} (${failure})`,
+      );
+      return { data: null, failure, detail: `${data.status_code} ${data.status_message ?? ''}`.trim() };
     }
-    return data;
+    return { data, failure: null };
   } catch (e) {
-    console.error(`[competitor-matrix] DataForSEO ${path} error`, e instanceof Error ? e.message : e);
-    return null;
+    const message = e instanceof Error ? e.message : String(e);
+    const failure: DfsFailure = /timeout|abort/i.test(message) ? 'timeout' : 'network';
+    console.error(`[competitor-matrix] DataForSEO ${path} ${failure}`, message);
+    return { data: null, failure, detail: message };
   }
 }
+
+export async function dfsPost(
+  path: string,
+  payload: unknown[],
+  timeoutMs = 30000,
+): Promise<any | null> {
+  return (await dfsPostResult(path, payload, timeoutMs)).data;
+}
+
