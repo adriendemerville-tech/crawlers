@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback, lazy, Suspense, memo } from '
 
 import { useToast } from '@/hooks/use-toast';
 import { SiloHub } from '@/components/seo/SiloHub';
+// FAQ rendue en SSR (texte + FAQPage visibles par les bots) : import statique.
+import { FAQSection } from '@/components/FAQSection';
 import { Header } from '@/components/Header';
 import { AuditedDomainsCounter } from '@/components/AuditedDomainsCounter';
 import { HeroSection } from '@/components/HeroSection';
@@ -37,7 +39,6 @@ const GeoDashboard = lazy(() => import('@/components/GeoDashboard').then(m => ({
 const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({ default: m.LLMDashboard })));
 
 // Lazy load below-the-fold components with higher priority grouping
-const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
 const TestimonialsCarousel = lazy(() => import('@/components/TestimonialsCarousel').then(m => ({ default: m.TestimonialsCarousel })));
 
