@@ -276,32 +276,32 @@ export function Header() {
         {!isProfilePage && isHomePage && (
           <div className="header-nav-desktop gap-1 lg:gap-2">
             <Link to="/features">
-              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-normal text-foreground hover:bg-muted/50">
                 Features
               </Button>
             </Link>
             <Link to="/tarifs">
-              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-normal text-foreground hover:bg-muted/50">
                 {language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}
               </Button>
             </Link>
             <Link to="/audit-expert">
-              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-normal text-foreground hover:bg-muted/50">
                 Audit
               </Button>
             </Link>
             <Link to="/marina">
-              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-normal text-foreground hover:bg-muted/50">
                 Marina
               </Button>
             </Link>
             <Link to="/app/ranking-serp">
-              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-normal text-foreground hover:bg-muted/50">
                 SERPs
               </Button>
             </Link>
             <Link to="/developers">
-              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
+              <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-normal text-foreground hover:bg-muted/50">
                 API Developers
               </Button>
             </Link>
@@ -365,7 +365,7 @@ export function Header() {
                     <Link to="/matrice">
                       <Button variant="ghost" size="sm" className={`gap-1.5 text-foreground/80 hover:text-foreground hover:bg-muted/60 ${isMatricePage ? 'border border-muted-foreground' : ''}`}>
                         <Grid3X3 className="h-3.5 w-3.5" />
-                        <span className="text-sm font-semibold">Matrice</span>
+                        <span className="text-sm font-normal">Matrice</span>
                       </Button>
                     </Link>
                     <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
@@ -376,7 +376,7 @@ export function Header() {
                 <Link to="/app/site-crawl">
                   <Button variant="ghost" size="sm" className={`gap-1.5 text-purple-800 dark:text-purple-300 hover:text-purple-700 dark:hover:text-purple-200 hover:bg-purple-500/10 ${isCrawlPage ? 'border border-purple-500' : ''}`}>
                     <Bug className="h-3.5 w-3.5" />
-                    <span className="text-sm font-semibold">Crawl</span>
+                    <span className="text-sm font-normal">Crawl</span>
                   </Button>
                 </Link>
 
@@ -403,7 +403,7 @@ export function Header() {
                 <Link to="/app/ranking-serp">
                   <Button variant="ghost" size="sm" className="gap-1.5 text-purple-800 dark:text-purple-300 hover:text-purple-700 dark:hover:text-purple-200 hover:bg-purple-500/10">
                     <Search className="h-3.5 w-3.5" />
-                    <span className="text-sm font-semibold">SERPs</span>
+                    <span className="text-sm font-normal">SERPs</span>
                   </Button>
                 </Link>
 
@@ -413,13 +413,13 @@ export function Header() {
                 {isAuditExpertPage ? (
                   <a href="/app/cocoon" target="_blank" rel="noopener noreferrer">
                     <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-800 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
-                      <span className="text-sm font-semibold">Cocoon</span>
+                      <span className="text-sm font-normal">Cocoon</span>
                     </Button>
                   </a>
                 ) : (
                   <Link to="/app/cocoon">
                     <Button variant="ghost" size="sm" className={`gap-1.5 text-amber-800 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 hover:bg-amber-500/10 ${isCocoonPage ? 'border border-amber-500' : ''}`}>
-                      <span className="text-sm font-semibold">Cocoon</span>
+                      <span className="text-sm font-normal">Cocoon</span>
                     </Button>
                   </Link>
                 )}
@@ -432,7 +432,7 @@ export function Header() {
                   className="gap-1.5 text-green-700 dark:text-green-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-700/10"
                 >
                   <PenLine className="h-3.5 w-3.5" />
-                  <span className="text-sm font-semibold">Content</span>
+                  <span className="text-sm font-normal">Content</span>
                 </Button>
 
                 {/* 7. Social Hub (vert glow) — hidden for non-subscribed users */}
@@ -442,7 +442,7 @@ export function Header() {
                     <Link to="/app/social">
                       <Button variant="ghost" size="sm" className="gap-1.5 text-emerald-700 dark:text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-500/10 [text-shadow:0_0_8px_rgba(16,185,129,0.4)]">
                         <Share2 className="h-3.5 w-3.5" />
-                        <span className="text-sm font-semibold">Social Hub</span>
+                        <span className="text-sm font-normal">Social Hub</span>
                         <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-500 ml-0.5">beta</Badge>
                       </Button>
                     </Link>
@@ -490,25 +490,25 @@ export function Header() {
               ) : (
                 <>
                   <Link to="/audit-expert">
-                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-semibold ${isAuditExpertPage ? 'text-primary bg-primary/10' : 'text-[#1e3a5f] dark:text-[#60a5fa]'}`}>
+                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-normal ${isAuditExpertPage ? 'text-primary bg-primary/10' : 'text-[#1e3a5f] dark:text-[#60a5fa]'}`}>
                       <Sparkles className="h-3 w-3" />
                       Audit
                     </Button>
                   </Link>
                   <Link to="/app/site-crawl">
-                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-semibold ${isCrawlPage ? 'text-purple-800 dark:text-purple-300 bg-purple-500/10' : 'text-purple-800 dark:text-purple-300'}`}>
+                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-normal ${isCrawlPage ? 'text-purple-800 dark:text-purple-300 bg-purple-500/10' : 'text-purple-800 dark:text-purple-300'}`}>
                       <Bug className="h-3 w-3" />
                       Crawl
                     </Button>
                   </Link>
                   <Link to="/app/ranking-serp">
-                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-semibold ${isRankingSerpPage ? 'text-purple-800 dark:text-purple-300 bg-purple-500/10' : 'text-purple-800 dark:text-purple-300'}`}>
+                    <Button variant="ghost" size="sm" className={`gap-0.5 px-1.5 text-[11px] font-normal ${isRankingSerpPage ? 'text-purple-800 dark:text-purple-300 bg-purple-500/10' : 'text-purple-800 dark:text-purple-300'}`}>
                       <Search className="h-3 w-3" />
                       SERPs
                     </Button>
                   </Link>
                   <Link to="/app/cocoon">
-                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300 ${isCocoonPage ? 'bg-amber-500/10' : ''}`}>
+                    <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-normal text-amber-800 dark:text-amber-300 ${isCocoonPage ? 'bg-amber-500/10' : ''}`}>
                       Cocoon
                     </Button>
                   </Link>
