@@ -25,7 +25,7 @@ export const LogAnalysisSection = memo(function LogAnalysisSection() {
               <Terminal className="h-3.5 w-3.5" />
               {language === 'fr' ? 'Analyse de Logs' : language === 'es' ? 'Análisis de Logs' : 'Log Analysis'}
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+            <h2 className="t-h1 font-bold tracking-tight">
               {language === 'fr'
                 ? 'Vos logs serveur révèlent ce que la Search Console cache'
                 : language === 'es'

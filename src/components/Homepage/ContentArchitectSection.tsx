@@ -88,7 +88,7 @@ export const ContentArchitectSection = memo(() => {
             <Rocket className="h-3 w-3" />
             {t.badge}
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4">
+          <h2 className="t-h1 font-bold tracking-tight text-foreground mb-4">
             <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
               {t.title}
             </span>

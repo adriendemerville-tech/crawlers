@@ -65,7 +65,7 @@ export function MarinaDeepAuditSection() {
             {t.badge}
           </span>
 
-          <h2 id="marina-free-audit-title" className="mt-4 text-balance text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+          <h2 id="marina-free-audit-title" className="mt-4 text-balance t-h2 font-extrabold tracking-tight text-foreground">
             {t.title}
           </h2>
 

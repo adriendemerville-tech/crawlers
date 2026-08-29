@@ -11,7 +11,7 @@ export function MarketplaceTeaserSection() {
   return (
     <section className="container mx-auto max-w-5xl px-4 py-16">
       <div className="mb-8 text-center">
-        <h2 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">
+        <h2 className="mb-3 t-h2 font-bold tracking-tight">
           Place d’échange de backlinks : un prix calculé, pas négocié
         </h2>
         <p className="mx-auto max-w-2xl text-muted-foreground">

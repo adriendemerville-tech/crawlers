@@ -114,7 +114,7 @@ export const HowItWorksSection = memo(() => {
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-4">
             {t.badge}
           </span>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+          <h2 className="t-h2 font-bold tracking-tight text-foreground">
             {t.title}
           </h2>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">{t.subtitle}</p>

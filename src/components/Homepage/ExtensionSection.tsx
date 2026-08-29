@@ -38,7 +38,7 @@ export function ExtensionSection() {
           <Chrome className="h-3.5 w-3.5 text-[hsl(var(--brand-violet))]" />
           {t.eyebrow}
         </div>
-        <h2 className="mb-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+        <h2 className="mb-3 t-h2 font-extrabold tracking-tight text-foreground">
           {t.title}
         </h2>
         <p className="mx-auto mb-6 max-w-xl text-muted-foreground">{t.desc}</p>
