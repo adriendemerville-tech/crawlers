@@ -57,7 +57,7 @@ function HeroSectionComponent() {
 
       <div className="relative mx-auto w-full max-w-5xl text-center">
         {/* Sur-titre SEO + GEO */}
-        <p className="mb-3 text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-400">
+        <p className="mb-3 t-meta font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-400">
           {language === 'fr'
             ? 'Outil de crawl SEO Google + GEO pour les IA · un seul audit'
             : language === 'es'
@@ -65,7 +65,7 @@ function HeroSectionComponent() {
             : 'SEO crawl tool for Google + GEO for AI · one single audit'}
         </p>
         {/* Animated headline */}
-        <h1 className="mb-6 text-xl font-extrabold tracking-tight leading-[1.15] sm:text-5xl lg:text-[4rem] xl:text-7xl font-display text-center sm:whitespace-nowrap">
+        <h1 className="mb-6 t-display font-extrabold font-display text-center sm:whitespace-nowrap">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
             style={{ minWidth: '4.5em', paddingBottom: '0.15em', marginBottom: '-0.15em' }}
@@ -86,7 +86,7 @@ function HeroSectionComponent() {
         </h1>
 
         {/* Tagline */}
-        <h2 className="mb-10 text-base font-medium font-display text-foreground sm:mb-12 sm:text-3xl leading-relaxed px-2 sm:px-0">
+        <h2 className="mb-10 t-h2 font-medium font-display text-foreground sm:mb-12 px-2 sm:px-0">
           {language === 'es'
             ? 'La herramienta de rastreo SEO y GEO. Audite su sitio. Afine la estrategia. Automatice la solución.'
             : language === 'en'

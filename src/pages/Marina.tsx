@@ -949,7 +949,7 @@ export default function Marina() {
               <Badge className="mb-3 bg-primary/10 text-primary border-primary/20">
                 <Anchor className="w-3 h-3 mr-1" /> {t.hero.badge}
               </Badge>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
+              <h1 className="t-h1 font-bold text-foreground mb-3">
                 {t.hero.title}
                 <span className="block text-primary">{t.hero.titleAccent}</span>
               </h1>
@@ -1226,7 +1226,7 @@ export default function Marina() {
         {activeTab === 'features' && (
         <section className="py-10 border-b border-border">
           <div className="mx-auto max-w-6xl px-4">
-            <h2 className="text-2xl font-bold text-foreground text-center mb-6">{t.featuresTitle}</h2>
+            <h2 className="t-h2 font-bold text-foreground text-center mb-6">{t.featuresTitle}</h2>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {t.features.map((f, i) => {
                 const Icon = featureIcons[i];
@@ -1336,7 +1336,7 @@ export default function Marina() {
               <Badge className="mb-3 bg-accent/10 text-accent-foreground border-accent/20">
                 <Terminal className="w-3 h-3 mr-1" /> {t.api.badge}
               </Badge>
-              <h2 className="text-2xl font-bold text-foreground mb-3">
+              <h2 className="t-h2 font-bold text-foreground mb-3">
                 {t.api.title}
               </h2>
               <p className="text-muted-foreground max-w-xl mx-auto">
@@ -1537,7 +1537,7 @@ async function generateReport(url) {
 
             {/* API Reference section — full width */}
             <div className="mt-12 space-y-6">
-              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <h3 className="t-h3 font-bold text-foreground flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary" /> {t.api.refTitle}
               </h3>
 
@@ -1770,7 +1770,7 @@ async function generateReport(url) {
         {activeTab === 'pricing' && (
         <section className="py-12">
           <div className="mx-auto max-w-3xl px-4 text-center">
-            <h2 className="text-xl font-bold text-foreground mb-4">{t.pricing.title}</h2>
+            <h2 className="t-h2 font-bold text-foreground mb-4">{t.pricing.title}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <Card className="border-border/50">
                 <CardContent className="p-6">

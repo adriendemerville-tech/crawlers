@@ -707,9 +707,18 @@ summary::-webkit-details-marker {
   .hero-word-enter { animation: none; }
 }
 
-/* Home publique : densité accrue — zoom global 0.8 (-20 % sur les textes,
-   images et espacements) pour réduire la hauteur totale de scroll. */
-.home-root { zoom: 0.8; }
+/* ---------------------------------------------------------------------------
+   Échelle typographique publique — 6 crans (remplace le hack `zoom: 0.8`
+   et les tailles ad hoc). Classes CSS simples (toujours émises, y compris
+   sur les surfaces exclues du scan Tailwind comme Marina).
+   --------------------------------------------------------------------------- */
+.t-display { font-size: clamp(1.875rem, 4.4vw, 3.25rem); line-height: 1.08; letter-spacing: -0.02em; }
+.t-h1      { font-size: clamp(1.5rem, 3.2vw, 2.25rem);   line-height: 1.15; letter-spacing: -0.015em; }
+.t-h2      { font-size: clamp(1.25rem, 2.2vw, 1.625rem); line-height: 1.2;  letter-spacing: -0.01em; }
+.t-h3      { font-size: 1.0625rem;                        line-height: 1.35; }
+.t-body    { font-size: 0.9375rem;                        line-height: 1.6; }
+.t-meta    { font-size: 0.8125rem;                        line-height: 1.45; }
+
 
 /* Home desktop : pleine largeur d'écran (plus de colonnes de marge) et
    sections volontairement décentrées à gauche/droite pour rythmer la page. */
