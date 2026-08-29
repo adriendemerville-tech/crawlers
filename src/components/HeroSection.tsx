@@ -95,8 +95,9 @@ function HeroSectionComponent() {
         </h2>
 
 
-        {/* URL input + CTA Audit Expert */}
+        {/* URL input + CTA Audit Expert + note */}
         <div className="mt-2 mx-auto w-full flex items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 40rem)' }}>
+          <TrustBadge layout="row" className="shrink-0 hidden sm:flex" />
           <div className="flex-[2] basis-0 min-w-0 relative">
             <Input
               type="text"

@@ -7,27 +7,43 @@ interface TrustBadgeProps {
   className?: string;
 }
 
-export function TrustBadge({ className = '' }: TrustBadgeProps) {
+export function TrustBadge({ className = '', layout = 'column' }: { className?: string; layout?: 'column' | 'row' }) {
   // Generate stars based on rating
   const fullStars = Math.floor(RATING_VALUE);
   const hasHalfStar = RATING_VALUE % 1 >= 0.5;
-  
-  return (
-    <div className={`flex items-center justify-center gap-2 py-4 ${className}`}>
-      <div className="flex items-center gap-0.5" role="img" aria-label={`Note : ${RATING_VALUE} sur 5`}>
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className="h-4 w-4"
-            fill={i < fullStars || (i === fullStars && hasHalfStar) ? '#FFD700' : 'transparent'}
-            stroke={i < fullStars || (i === fullStars && hasHalfStar) ? '#FFD700' : '#9ca3af'}
-            strokeWidth={1.5}
-          />
-        ))}
+
+  const stars = (
+    <div className="flex items-center gap-0.5" role="img" aria-label={`Note : ${RATING_VALUE} sur 5`}>
+      {[...Array(5)].map((_, i) => (
+        <Star
+          key={i}
+          className="h-4 w-4"
+          fill={i < fullStars || (i === fullStars && hasHalfStar) ? '#FFD700' : 'transparent'}
+          stroke={i < fullStars || (i === fullStars && hasHalfStar) ? '#FFD700' : '#9ca3af'}
+          strokeWidth={1.5}
+        />
+      ))}
+    </div>
+  );
+  const rating = (
+    <span className="text-sm text-muted-foreground font-medium">
+      {RATING_VALUE}/5 ({REVIEW_COUNT} avis d'experts)
+    </span>
+  );
+
+  if (layout === 'row') {
+    return (
+      <div className={`flex items-center justify-center gap-2 ${className}`}>
+        {stars}
+        {rating}
       </div>
-      <span className="text-sm text-muted-foreground font-medium">
-        {RATING_VALUE}/5 ({REVIEW_COUNT} avis d'experts)
-      </span>
+    );
+  }
+
+  return (
+    <div className={`flex flex-col items-center justify-center gap-1 py-2 ${className}`}>
+      {stars}
+      {rating}
     </div>
   );
 }
