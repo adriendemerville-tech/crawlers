@@ -497,8 +497,26 @@ export function LinkedInAutomationDashboard() {
                       ) : (
                         <Film className="h-4 w-4 mr-2" />
                       )}
-                      Générer contenu
+                      Générer le média
                     </Button>
+
+                    {!p.published_at && p.status !== 'published' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => publishNow(p)}
+                        disabled={publishingId === p.id}
+                        title="Publie immédiatement sur LinkedIn, sans attendre le cron ni la limite d'un post par semaine"
+                      >
+                        {publishingId === p.id ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4 mr-2" />
+                        )}
+                        Publier maintenant
+                      </Button>
+                    )}
+
 
                     <Button
                       variant="outline"
