@@ -570,6 +570,17 @@ const Index = () => {
           <div className="cv-auto-sm"><TestimonialsCarousel /></div>
         </Suspense>
 
+        {/* Product Showcase — Screenshots : le produit visible dès la 3e position */}
+        <div id="features">
+          <LazyVisible minHeight="600px">
+            <Suspense fallback={<SectionSkeleton />}>
+              <div className="cv-auto-lg"><ProductShowcaseSection /></div>
+            </Suspense>
+          </LazyVisible>
+        </div>
+
+
+
         {/* Pain Points — before Pro Agency */}
         <Suspense fallback={<SectionSkeleton />}>
           <div className="cv-auto home-bias-left"><PainPointsSection /></div>
@@ -700,15 +711,6 @@ const Index = () => {
         <Suspense fallback={<SectionSkeleton />}>
           <div className="cv-auto"><TrustBanner /></div>
         </Suspense>
-
-        {/* Product Showcase — Screenshots */}
-        <div id="features">
-          <LazyVisible minHeight="600px">
-            <Suspense fallback={<SectionSkeleton />}>
-              <div className="cv-auto-lg"><ProductShowcaseSection /></div>
-            </Suspense>
-          </LazyVisible>
-        </div>
 
         {/* Place d'échange de backlinks */}
         <LazyVisible minHeight="420px">
