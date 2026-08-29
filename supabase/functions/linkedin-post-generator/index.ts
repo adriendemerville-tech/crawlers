@@ -631,14 +631,23 @@ Retourne UNIQUEMENT un JSON strict :
       .eq('id', feature.id);
 
     // Déclenche systématiquement la génération média (carousel/video) : jamais de post sans visuel.
-    fetch(`${SUPABASE_URL}/functions/v1/linkedin-media-generator`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
-      },
-      body: JSON.stringify({ post_id: post.id }),
-    }).catch((err) => console.warn('media-generator trigger failed', err));
+    // IMPORTANT : awaité (un fetch fire-and-forget est tué avec l'isolate → média jamais généré).
+    try {
+      const mediaRes = await fetch(`${SUPABASE_URL}/functions/v1/linkedin-media-generator`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        },
+        body: JSON.stringify({ post_id: post.id }),
+      });
+      if (!mediaRes.ok) {
+        console.warn('media-generator failed', mediaRes.status, (await mediaRes.text()).slice(0, 300));
+      }
+    } catch (err) {
+      console.warn('media-generator trigger failed', err);
+    }
+
 
     return json({
       success: true,
