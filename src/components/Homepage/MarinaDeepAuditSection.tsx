@@ -59,8 +59,8 @@ export function MarinaDeepAuditSection() {
   return (
     <section className="relative overflow-hidden py-14 sm:py-20" aria-labelledby="marina-free-audit-title">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_0%,hsl(var(--brand-violet)/0.10),transparent_65%)]" />
-      <div className="relative mx-auto grid max-w-6xl items-start gap-8 px-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border/60 bg-card/40 p-6 sm:p-10 backdrop-blur-sm">
+      <div className="relative mx-auto grid max-w-6xl items-start gap-8 px-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="min-w-0 rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-10 backdrop-blur-sm">
           <span className="inline-flex items-center rounded-full border border-amber-500/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-500">
             {t.badge}
           </span>
@@ -86,8 +86,8 @@ export function MarinaDeepAuditSection() {
           </ul>
 
           <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-            <Link to="/marina">
-              <Button size="lg" variant="outline" className="gap-2 font-semibold">
+            <Link to="/marina" className="w-full min-w-0 sm:w-auto">
+              <Button size="lg" variant="outline" className="h-auto w-full gap-2 whitespace-normal py-3 text-left font-semibold sm:w-auto">
                 {t.cta}
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -103,7 +103,7 @@ export function MarinaDeepAuditSection() {
           </div>
         </div>
 
-        <ClaudeVerdictBlock className="mt-0" showSubtitle={false} />
+        <ClaudeVerdictBlock className="mt-0 min-w-0" showSubtitle={false} />
       </div>
     </section>
   );

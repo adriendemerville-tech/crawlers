@@ -461,11 +461,7 @@ export function Header() {
             <div className="header-nav-mobile gap-0.5">
               {isHomePage ? (
                 <>
-                  <Link to="/features">
-                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground hover:bg-muted/50">
-                      Features
-                    </Button>
-                  </Link>
+                  {/* Mobile : seuls les 2 liens de conversion tiennent sans déborder */}
                   <Link to="/tarifs">
                     <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground hover:bg-muted/50">
                       {language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing'}
@@ -474,16 +470,6 @@ export function Header() {
                   <Link to="/audit-expert">
                     <Button variant="ghost" size="sm" className={`px-1.5 text-[11px] font-medium hover:bg-muted/50 ${isAuditExpertPage ? 'text-primary bg-primary/10' : 'text-foreground'}`}>
                       Audit
-                    </Button>
-                  </Link>
-                  <Link to="/eeat">
-                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground hover:bg-muted/50">
-                      E-E-A-T
-                    </Button>
-                  </Link>
-                  <Link to="/app/ranking-serp">
-                    <Button variant="ghost" size="sm" className="px-1.5 text-[11px] font-medium text-foreground hover:bg-muted/50">
-                      SERPs
                     </Button>
                   </Link>
                 </>

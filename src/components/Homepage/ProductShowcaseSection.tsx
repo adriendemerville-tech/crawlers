@@ -129,7 +129,7 @@ const ProductShowcaseSection = memo(() => {
             <ChevronLeft className="h-5 w-5" />
           </button>
 
-          <div className="flex-1 overflow-hidden rounded-2xl bg-card/50 border border-border/30 p-4 sm:p-6">
+          <div className="flex-1 min-w-0 overflow-hidden rounded-2xl bg-card/50 border border-border/30 p-3 sm:p-6">
             <div
               className="transition-all duration-300 ease-out"
               style={{
@@ -170,15 +170,15 @@ const ProductShowcaseSection = memo(() => {
                   </div>
 
                   {/* Text */}
-                  <div className="space-y-4">
+                  <div className="min-w-0 space-y-3 sm:space-y-4">
                     <Badge className={`${slide.badgeColor} border-current/20 text-xs font-semibold px-3 py-1`}>
                       <Icon className="w-3.5 h-3.5 mr-1.5" />
                       {slide.title}
                     </Badge>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-foreground font-display leading-tight">
+                    <h3 className="t-h2 sm:text-3xl font-bold text-foreground font-display leading-tight break-words">
                       {slide.title}
                     </h3>
-                    <p className="text-muted-foreground leading-relaxed text-base sm:text-lg">
+                    <p className="text-muted-foreground leading-relaxed text-sm sm:text-lg">
                       {slide.desc}
                     </p>
                     <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary group-hover:underline">
