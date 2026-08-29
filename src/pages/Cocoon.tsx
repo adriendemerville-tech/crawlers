@@ -747,7 +747,7 @@ function CocoonContent() {
             </div>
 
             {/* Site selector — centered in the top bar, double width */}
-            <div className="absolute left-1/2 -translate-x-1/2 w-[240px] sm:w-[300px] z-10">
+            <div className="w-[240px] sm:w-[300px] sm:absolute sm:left-1/2 sm:-translate-x-1/2 z-10">
               <CocoonSiteSelector
                 userId={user?.id || ""}
                 trackedSites={trackedSites}
