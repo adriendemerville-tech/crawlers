@@ -175,40 +175,108 @@ export async function runMatrixStep(job: Job): Promise<Record<string, unknown>> 
   return patch;
 }
 
-/** Charge le job, exécute une étape, écrit le résultat et renvoie la ligne à jour. */
-export async function advanceJobOnce(jobId: string): Promise<Job | null> {
-  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-  const { data: job } = await supabaseAdmin
-    .from('competitor_matrix_jobs')
-    .select('*')
-    .eq('id', jobId)
-    .maybeSingle();
-  if (!job) return null;
-  if ((job as Job).status !== 'running') return job as Job;
-
-  const patch = await runMatrixStep(job as Job);
-  const { data: updated } = await supabaseAdmin
-    .from('competitor_matrix_jobs')
-    .update(patch as never)
-    .eq('id', (job as Job).id)
-    .select('*')
-    .single();
-  return (updated ?? { ...(job as Job), ...patch }) as Job;
-}
-
 const LEASE_MS = 3 * 60 * 1000;
 const BUDGET_MS = 45_000;
+const MAX_ATTEMPTS = 12;
+
+/**
+ * Prise de bail atomique sur un job : l'UPDATE conditionnel ne peut réussir que
+ * pour un seul appelant, ce qui empêche le cron et l'onglet client d'exécuter la
+ * même étape deux fois (donc de facturer deux fois les appels LLM / DataForSEO).
+ * Renvoie la ligne verrouillée, ou null si un autre traitement la détient.
+ */
+async function claimJob(jobId: string): Promise<Job | null> {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+  const nowIso = new Date().toISOString();
+  const lease = new Date(Date.now() + LEASE_MS).toISOString();
+
+  const { data: claimed } = await supabaseAdmin
+    .from('competitor_matrix_jobs')
+    .update({ lock_until: lease } as never)
+    .eq('id', jobId)
+    .eq('status', 'running')
+    .or(`lock_until.is.null,lock_until.lt.${nowIso}`)
+    .select('*')
+    .maybeSingle();
+
+  return (claimed as Job | null) ?? null;
+}
+
+async function releaseJob(jobId: string, patch: Record<string, unknown>): Promise<Job | null> {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+  const { data: updated } = await supabaseAdmin
+    .from('competitor_matrix_jobs')
+    .update({ ...patch, lock_until: null } as never)
+    .eq('id', jobId)
+    .select('*')
+    .maybeSingle();
+  return (updated as Job | null) ?? null;
+}
+
+/**
+ * Charge le job, prend le verrou, exécute UNE étape, écrit le résultat et libère.
+ * Si le job est déjà verrouillé (cron en cours), on renvoie son état courant sans
+ * refaire l'étape : l'appel est idempotent côté coût.
+ */
+export async function advanceJobOnce(jobId: string, opts?: { alreadyLeased?: boolean }): Promise<Job | null> {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+
+  if (opts?.alreadyLeased) {
+    const { data: leased } = await supabaseAdmin
+      .from('competitor_matrix_jobs')
+      .select('*')
+      .eq('id', jobId)
+      .maybeSingle();
+    if (!leased) return null;
+    if ((leased as Job).status !== 'running') return leased as Job;
+    const patch = await runMatrixStep(leased as Job);
+    const { data: updated } = await supabaseAdmin
+      .from('competitor_matrix_jobs')
+      .update(patch as never)
+      .eq('id', jobId)
+      .select('*')
+      .maybeSingle();
+    return (updated ?? { ...(leased as Job), ...patch }) as Job;
+  }
+
+  const claimed = await claimJob(jobId);
+  if (!claimed) {
+    // Soit le job n'est plus « running », soit un autre traitement le détient :
+    // on rend l'état lu, jamais une seconde exécution de l'étape.
+    const { data: current } = await supabaseAdmin
+      .from('competitor_matrix_jobs')
+      .select('*')
+      .eq('id', jobId)
+      .maybeSingle();
+    return (current as Job | null) ?? null;
+  }
+
+  const attempts = Number((claimed as Record<string, unknown>)['attempts'] ?? 0) + 1;
+  if (attempts > MAX_ATTEMPTS) {
+    return await releaseJob(jobId, {
+      attempts,
+      status: 'error',
+      error: 'Analyse interrompue après trop de tentatives. Relancez une nouvelle matrice.',
+      updated_at: new Date().toISOString(),
+    });
+  }
+
+  const patch = await runMatrixStep(claimed);
+  const updated = await releaseJob(jobId, { ...patch, attempts });
+  return (updated ?? ({ ...claimed, ...patch } as Job));
+}
 
 /**
  * Fait avancer les analyses en cours sans navigateur ouvert.
- * Un bail `lock_until` évite que deux exécutions travaillent sur le même job.
+ * Le verrou est pris par `advanceJobOnce` lui-même : le cron ne fait que
+ * sélectionner les candidats inactifs et boucler dans son budget de temps.
  */
 export async function advanceRunningMatrices(maxJobs = 2) {
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const now = new Date();
   const { data: candidates } = await supabaseAdmin
     .from('competitor_matrix_jobs')
-    .select('id, lock_until')
+    .select('id, lock_until, attempts')
     .eq('status', 'running')
     // Les jobs pilotés depuis un onglet ouvert se mettent à jour en continu :
     // on ne reprend que ceux inactifs depuis plus de 45 s, sans double travail.
@@ -221,20 +289,6 @@ export async function advanceRunningMatrices(maxJobs = 2) {
   const startedAt = Date.now();
 
   for (const candidate of candidates ?? []) {
-    // Prise de bail atomique : si une autre exécution l'a pris entre-temps,
-    // la condition sur `lock_until` ne matche plus et on passe.
-    const lease = new Date(Date.now() + LEASE_MS).toISOString();
-    const claim = supabaseAdmin
-      .from('competitor_matrix_jobs')
-      .update({ lock_until: lease } as never)
-      .eq('id', candidate.id)
-      .eq('status', 'running');
-    const { data: claimed } = await (candidate.lock_until
-      ? claim.lt('lock_until', now.toISOString())
-      : claim.is('lock_until', null)
-    ).select('id');
-    if (!claimed?.length) continue;
-
     let steps = 0;
     let status = 'running';
     while (Date.now() - startedAt < BUDGET_MS) {
@@ -242,15 +296,13 @@ export async function advanceRunningMatrices(maxJobs = 2) {
       steps += 1;
       status = job?.status ?? 'error';
       if (status !== 'running') break;
+      // Le verrou a été refusé (autre traitement en cours) : on ne boucle pas.
+      if (!job) break;
     }
-    // Libération du bail pour que le tick suivant puisse reprendre.
-    await supabaseAdmin
-      .from('competitor_matrix_jobs')
-      .update({ lock_until: null } as never)
-      .eq('id', candidate.id);
     results.push({ jobId: candidate.id, steps, status });
     if (Date.now() - startedAt >= BUDGET_MS) break;
   }
 
   return results;
 }
+
