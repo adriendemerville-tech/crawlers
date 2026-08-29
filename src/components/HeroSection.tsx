@@ -118,7 +118,7 @@ function HeroSectionComponent() {
             <Button
               variant="outline"
               size="lg"
-              className="h-12 sm:h-14 gap-1 rounded-xl border-amber-500 dark:border-amber-400 border-2 px-3 text-sm shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 w-full justify-center"
+              className="h-12 sm:h-14 gap-1 rounded-xl border-amber-500 dark:border-amber-400 border-2 px-3 text-sm shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-amber-400/10 bg-gradient-to-b from-muted/80 to-muted/40 dark:from-white/15 dark:to-white/[0.06] backdrop-blur-sm w-full justify-center"
             >
               <div className="flex flex-col items-center leading-tight min-w-0">
                 <span className="font-bold text-amber-700 dark:text-amber-400 text-sm sm:text-base truncate">
