@@ -457,7 +457,7 @@ export function AIBotsLeadMagnet() {
       {(bots || geoScore !== null || llmResults) && (
         <div className="text-center mt-6">
           <a
-            href="/audit"
+            href="/marina"
             className="text-base text-brand-violet hover:underline inline-flex items-center gap-1.5"
           >
             {t.deepAudit}
