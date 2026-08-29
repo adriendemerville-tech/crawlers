@@ -300,8 +300,8 @@ export function AIBotsLeadMagnet() {
       </div>
 
       {/* Input */}
-      <div className="flex flex-wrap sm:flex-nowrap gap-3">
-        <div className="basis-full sm:basis-0 sm:flex-[2] min-w-0 relative">
+      <div className="magnet-actions gap-3">
+        <div className="magnet-input relative">
           <input
             type="url"
             value={url}
@@ -315,7 +315,7 @@ export function AIBotsLeadMagnet() {
           type="button"
           onClick={handleAnalyze}
           disabled={loading || !url.trim()}
-          className="h-14 sm:h-16 w-full sm:w-auto sm:shrink-0 px-8 rounded-lg text-base sm:text-lg font-semibold bg-gradient-to-b from-muted/80 to-muted/40 dark:from-white/15 dark:to-white/[0.06] backdrop-blur-sm border-2 border-foreground text-foreground hover:bg-foreground/5 disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
+          className="magnet-cta h-14 sm:h-16 px-8 rounded-lg text-base sm:text-lg font-semibold bg-gradient-to-b from-muted/80 to-muted/40 dark:from-white/15 dark:to-white/[0.06] backdrop-blur-sm border-2 border-foreground text-foreground hover:bg-foreground/5 disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
         >
           {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
           {t.cta}

@@ -728,6 +728,16 @@ summary::-webkit-details-marker {
 .t-meta    { font-size: 0.8125rem;                        line-height: 1.45; }
 
 
+/* Lead magnet GEO : champ + bouton sur une ligne en desktop, empilés en mobile. */
+.magnet-actions { display: flex; flex-direction: column; gap: 0.75rem; }
+.magnet-actions .magnet-input { width: 100%; }
+.magnet-actions .magnet-cta { width: 100%; }
+@media (min-width: 640px) {
+  .magnet-actions { flex-direction: row; flex-wrap: nowrap; }
+  .magnet-actions .magnet-input { flex: 2 1 0%; width: auto; min-width: 0; }
+  .magnet-actions .magnet-cta { flex: 0 0 auto; width: auto; white-space: nowrap; }
+}
+
 /* Hero : bouton à droite du champ URL sur desktop, empilé sur mobile.
    Classes dédiées (non utilitaires) pour éviter la collision avec la copie
    <style> inline obsolète qui écrase flex-col / sm:flex-row en layer utilities. */
