@@ -624,12 +624,58 @@ const Index = () => {
                   </div>
                 ))}
               </div>
-              <div className="flex flex-col items-center gap-4 mb-6">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-sm text-muted-foreground mr-1">{language === 'fr' ? 'à partir de' : language === 'es' ? 'desde' : 'from'}</span>
-                  <span className="t-h1 font-extrabold text-foreground">29€</span>
-                  <span className="text-lg text-muted-foreground">/mois</span>
+              {/* Tarification explicite — 3 plans */}
+              <div className="mx-auto mb-6 grid max-w-3xl gap-3 sm:grid-cols-3">
+                {/* Pro Agency */}
+                <div className="rounded-xl border border-violet-500/40 bg-card/50 p-4 text-left">
+                  <div className="text-sm font-bold text-foreground">Pro Agency</div>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="text-2xl font-extrabold text-foreground">29€</span>
+                    <span className="text-xs text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'mo'}</span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-muted-foreground">
+                    {language === 'fr' ? 'ou 26,10€/mois en annuel (-10%)' : language === 'es' ? 'o 26,10€/mes anual (-10%)' : 'or €26.10/mo billed annually (-10%)'}
+                  </div>
+                  <div className="mt-2 text-[11px] text-muted-foreground">
+                    {language === 'fr' ? 'Freelances & petites agences · 5 000 pages/mois · sans engagement' : language === 'es' ? 'Freelances y pequeñas agencias · 5 000 páginas/mes · sin compromiso' : 'Freelancers & small agencies · 5,000 pages/mo · no commitment'}
+                  </div>
                 </div>
+                {/* Pro Agency + */}
+                <div className="rounded-xl border border-amber-400/50 bg-card/50 p-4 text-left">
+                  <div className="text-sm font-bold text-foreground">Pro Agency +</div>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="text-2xl font-extrabold text-foreground">79€</span>
+                    <span className="text-xs text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'mo'}</span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-muted-foreground">
+                    {language === 'fr' ? 'ou 71,10€/mois en annuel (-10%)' : language === 'es' ? 'o 71,10€/mes anual (-10%)' : 'or €71.10/mo billed annually (-10%)'}
+                  </div>
+                  <div className="mt-2 text-[11px] text-muted-foreground">
+                    {language === 'fr' ? 'Agences 10+ clients · 50 000 pages/mois · API Marina incluse' : language === 'es' ? 'Agencias 10+ clientes · 50 000 páginas/mes · API Marina incluida' : 'Agencies 10+ clients · 50,000 pages/mo · Marina API included'}
+                  </div>
+                </div>
+                {/* Enterprise */}
+                <div className="rounded-xl border border-border bg-card/50 p-4 text-left">
+                  <div className="text-sm font-bold text-foreground">Enterprise</div>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="text-2xl font-extrabold text-foreground">{language === 'fr' ? 'Sur devis' : language === 'es' ? 'A medida' : 'Custom'}</span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-muted-foreground">
+                    {language === 'fr' ? 'Tout illimité · SSO SAML · serveur dédié' : language === 'es' ? 'Todo ilimitado · SSO SAML · servidor dedicado' : 'Everything unlimited · SAML SSO · dedicated server'}
+                  </div>
+                  <div className="mt-2 text-[11px] text-muted-foreground">
+                    {language === 'fr' ? 'Grands comptes & équipes 20+' : language === 'es' ? 'Grandes cuentas y equipos 20+' : 'Large accounts & 20+ teams'}
+                  </div>
+                </div>
+              </div>
+              <p className="mx-auto mb-6 max-w-2xl text-xs text-muted-foreground">
+                {language === 'fr'
+                  ? 'Hors abonnement : les audits ponctuels se paient en crédits (Pay-As-You-Go), sans engagement. Les abonnements incluent un quota mensuel de pages ; au-delà, vous complétez avec des packs de crédits.'
+                  : language === 'es'
+                    ? 'Sin suscripción: las auditorías puntuales se pagan con créditos (Pay-As-You-Go), sin compromiso. Las suscripciones incluyen una cuota mensual de páginas; más allá, se completa con packs de créditos.'
+                    : 'Without a subscription, one-off audits are paid in credits (Pay-As-You-Go), no commitment. Subscriptions include a monthly page quota; beyond it, top up with credit packs.'}
+              </p>
+              <div className="flex flex-col items-center gap-4 mb-6">
                 <Link to="/pro-agency">
                   <Button
                     size="lg"
