@@ -1215,16 +1215,16 @@ export function CocoonForceGraph3D({
       </div>
 
       {/* Scale slider */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[5] flex items-center gap-2.5 opacity-50 hover:opacity-80 transition-opacity duration-500">
+      <div className={`absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 px-3 py-1.5 rounded-full backdrop-blur-md border ${isDayMode ? 'bg-white/70 border-black/10' : 'bg-black/50 border-white/15'}`}>
         <Slider
           min={0.3}
           max={3}
           step={0.05}
           value={[spreadScale]}
           onValueChange={([v]) => setSpreadScale(v)}
-          className="w-40 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/50 [&_[data-orientation=horizontal]]:h-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/20"
+          className={`w-40 [&_[role=slider]]:h-3.5 [&_[role=slider]]:w-3.5 [&_[role=slider]]:border-0 [&_[data-orientation=horizontal]]:h-[3px] ${isDayMode ? '[&_[role=slider]]:bg-black/60 [&_.relative]:bg-black/15 [&_[data-orientation=horizontal]>span:first-child]:bg-black/40' : '[&_[role=slider]]:bg-white/80 [&_.relative]:bg-white/20 [&_[data-orientation=horizontal]>span:first-child]:bg-white/50'}`}
         />
-        <span className="text-[9px] text-white/30 font-mono select-none">{spreadScale.toFixed(1)}×</span>
+        <span className={`text-[10px] font-mono select-none ${isDayMode ? 'text-black/60' : 'text-white/70'}`}>{spreadScale.toFixed(1)}×</span>
       </div>
 
       {/* Stats overlay */}
