@@ -574,10 +574,22 @@ const Index = () => {
           </LazyVisible>
         </div>
 
+        {/* Vision IA 2028 + lead magnet — remonté pour capter tôt */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <div className="cv-auto-lg"><MomentumSection /></div>
+        </Suspense>
+
         {/* Témoignages — preuve sociale après le produit */}
         <Suspense fallback={<SectionSkeleton />}>
           <div className="cv-auto-sm"><TestimonialsCarousel /></div>
         </Suspense>
+
+        {/* AI Agents — Félix & Stratège Cocoon — remonté après la preuve sociale */}
+        <LazyVisible minHeight="500px">
+          <Suspense fallback={<SectionSkeleton />}>
+            <div className="cv-auto-lg home-bias-left"><AIAgentsSection /></div>
+          </Suspense>
+        </LazyVisible>
 
 
 
@@ -724,19 +736,6 @@ const Index = () => {
         <LazyVisible minHeight="500px">
           <Suspense fallback={<SectionSkeleton />}>
             <div className="cv-auto"><GoogleCrossDataSection /></div>
-          </Suspense>
-        </LazyVisible>
-
-        <LazyVisible minHeight="400px">
-          <Suspense fallback={<SectionSkeleton />}>
-            <div className="cv-auto"><MomentumSection /></div>
-          </Suspense>
-        </LazyVisible>
-
-        {/* AI Agents — Félix & Stratège Cocoon */}
-        <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton />}>
-            <div className="cv-auto-lg home-bias-left"><AIAgentsSection /></div>
           </Suspense>
         </LazyVisible>
 
