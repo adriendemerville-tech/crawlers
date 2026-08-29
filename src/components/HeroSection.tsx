@@ -110,7 +110,7 @@ function HeroSectionComponent() {
                   navigate(`/audit-expert?url=${encodeURIComponent(target)}&autolaunch=1`);
                 }
               }}
-              className="h-12 sm:h-14 rounded-[10px] dark:rounded-xl pl-3 pr-10 text-base border-0 dark:border-2 dark:border-white placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50 bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/[0.04] dark:to-white/[0.02] backdrop-blur-sm"
+              className="h-12 sm:h-14 rounded-[10px] dark:rounded-xl pl-3 pr-10 text-base border-0 dark:border-2 dark:border-white placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50 bg-transparent! bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/[0.04] dark:to-white/[0.02] backdrop-blur-sm"
               aria-label="URL du site web"
             />
             <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
