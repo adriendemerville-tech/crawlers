@@ -595,12 +595,12 @@ const Index = () => {
 
 
         {/* Pain Points — before Pro Agency */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<SectionSkeleton height={600} />}>
           <div className="cv-auto home-bias-left"><PainPointsSection /></div>
         </Suspense>
 
         {/* Audit profond gratuit (Marina) — juste après les pain points */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<SectionSkeleton height={600} />}>
           <div className="cv-auto home-bias-right"><MarinaDeepAuditSection /></div>
         </Suspense>
 
@@ -716,12 +716,12 @@ const Index = () => {
 
 
         {/* Comparatif Agence SEO vs Crawlers */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<SectionSkeleton height={600} />}>
           <div className="cv-auto"><AgencyComparisonSection /></div>
         </Suspense>
 
         {/* Trust Banner — right after Pro Agency */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<SectionSkeleton height={600} />}>
           <div className="cv-auto"><TrustBanner /></div>
         </Suspense>
 
