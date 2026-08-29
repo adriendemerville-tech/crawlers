@@ -560,17 +560,11 @@ const Index = () => {
 
         {/* Product Showcase — Screenshots : le produit visible dès la 2e position */}
         <div id="features">
-          <LazyVisible minHeight="600px">
-            <Suspense fallback={<SectionSkeleton height={600} />}>
-              <div className="cv-auto-lg"><ProductShowcaseSection /></div>
-            </Suspense>
-          </LazyVisible>
+          <div className="cv-auto-lg"><ProductShowcaseSection /></div>
         </div>
 
         {/* Vision IA 2028 + lead magnet — remonté pour capter tôt */}
-        <Suspense fallback={<SectionSkeleton height={900} />}>
-          <div className="cv-auto-lg"><MomentumSection /></div>
-        </Suspense>
+        <div className="cv-auto-lg"><MomentumSection /></div>
 
         {/* Témoignages — preuve sociale après le produit */}
         <Suspense fallback={<SectionSkeleton height={320} />}>
@@ -578,24 +572,14 @@ const Index = () => {
         </Suspense>
 
         {/* AI Agents — Félix & Stratège Cocoon — remonté après la preuve sociale */}
-        <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton height={500} />}>
-            <div className="cv-auto-lg home-bias-left"><AIAgentsSection /></div>
-          </Suspense>
-        </LazyVisible>
-
-
-
+        <div className="cv-auto-lg home-bias-left"><AIAgentsSection /></div>
 
         {/* Pain Points — before Pro Agency */}
-        <Suspense fallback={<SectionSkeleton height={600} />}>
-          <div className="cv-auto home-bias-left"><PainPointsSection /></div>
-        </Suspense>
+        <div className="cv-auto home-bias-left"><PainPointsSection /></div>
 
         {/* Audit profond gratuit (Marina) — juste après les pain points */}
-        <Suspense fallback={<SectionSkeleton height={600} />}>
-          <div className="cv-auto home-bias-right"><MarinaDeepAuditSection /></div>
-        </Suspense>
+        <div className="cv-auto home-bias-right"><MarinaDeepAuditSection /></div>
+
 
         {/* Preuve sociale : volume réel de domaines audités, juste sous les lead magnets */}
         <AuditedDomainsCounter />
