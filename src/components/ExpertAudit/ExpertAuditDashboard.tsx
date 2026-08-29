@@ -20,11 +20,11 @@ import { SPADetectionAlert } from './SPADetectionAlert';
 import { ExpertInsightsCard } from './ExpertInsightsCard';
 import { BrokenLinksCard } from './BrokenLinksCard';
 import { TechnicalNarrativeSection } from './TechnicalNarrativeSection';
-import { ExpertReportPreviewModal } from './ExpertReportPreviewModal';
+const ExpertReportPreviewModal = lazy(() => import('./ExpertReportPreviewModal').then(m => ({ default: m.ExpertReportPreviewModal })));
 import { RegistrationGate } from './RegistrationGate';
-import { ReportAuthGate } from './ReportAuthGate';
-import { PaymentModal } from './PaymentModal';
-import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
+const ReportAuthGate = lazy(() => import('./ReportAuthGate').then(m => ({ default: m.ReportAuthGate })));
+const PaymentModal = lazy(() => import('./PaymentModal').then(m => ({ default: m.PaymentModal })));
+const CorrectiveCodeEditor = lazy(() => import('./CorrectiveCodeEditor').then(m => ({ default: m.CorrectiveCodeEditor })));
 import { WorkflowCarousel } from './WorkflowCarousel';
 import { PatienceCards } from './PatienceCards';
 import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
@@ -39,8 +39,8 @@ import { FreshnessSignalsCard } from './FreshnessSignalsCard';
 import { ConversionFrictionCard } from './ConversionFrictionCard';
 import { AEOScoreCard } from './AEOScoreCard';
 import { StrategicErrorBoundary } from './StrategicErrorBoundary';
-import { TechnicalResultsSection } from './TechnicalResultsSection';
-import { StrategicResultsSection } from './StrategicResultsSection';
+const TechnicalResultsSection = lazy(() => import('./TechnicalResultsSection').then(m => ({ default: m.TechnicalResultsSection })));
+const StrategicResultsSection = lazy(() => import('./StrategicResultsSection').then(m => ({ default: m.StrategicResultsSection })));
 import { GeoPillarsCard } from './GeoPillarsCard';
 import { NextStepFloatingButton } from './NextStepFloatingButton';
 import { ExpertAuditResult } from '@/types/expertAudit';
@@ -53,7 +53,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from '@/lib/router-compat';
 import { useSaveReport } from '@/hooks/useSaveReport';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
-import { summarizeStrategicResult } from './expertReportExport';
+// Chargé à la demande : évite d'embarquer l'export PDF/HTML dans le premier écran
+const summarizeStrategicResult = (...args: any[]) =>
+  import('./expertReportExport').then(m => (m.summarizeStrategicResult as any)(...args));
 import { useAuditState } from './hooks/useAuditState';
 import { mapStrategicData } from './hooks/useStrategicDataMapper';
 
@@ -1532,7 +1534,9 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
           {/* === STEP 1: TECHNICAL AUDIT SECTION === */}
           {auditMode === 'technical' && (
             <StrategicErrorBoundary onReset={handleNewAudit}>
-              <TechnicalResultsSection result={result} url={url} t={t} onReportClick={handleReportButtonClick} />
+              <Suspense fallback={<div className="h-64 rounded-xl border border-border animate-pulse" />}>
+                <TechnicalResultsSection result={result} url={url} t={t} onReportClick={handleReportButtonClick} />
+              </Suspense>
               <GeoPillarsCard technicalResult={technicalResult ?? result} strategicResult={strategicResult} />
 
               <NextStepFloatingButton
@@ -1545,6 +1549,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
           {/* === STEP 2: STRATEGIC AUDIT SECTION === */}
           {auditMode === 'strategic' && (
             <>
+              <Suspense fallback={<div className="h-64 rounded-xl border border-border animate-pulse" />}>
               <StrategicResultsSection
                 result={result}
                 url={url}
@@ -1569,6 +1574,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
                   setTimeout(() => runStrategicAudit(normalizedUrl), 100);
                 }}
               />
+              </Suspense>
               <GeoPillarsCard technicalResult={technicalResult ?? result} strategicResult={strategicResult} />
               <NextStepFloatingButton
                 nextStepLabel={language === 'en' ? 'Next: Corrective Code' : language === 'es' ? 'Siguiente: Código Correctivo' : 'Étape suivante : Code Correctif'}
@@ -1603,56 +1609,70 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
       })()}
 
       {/* Report Preview Modal */}
-      {result && auditMode && (
-        <ExpertReportPreviewModal
-          isOpen={isReportModalOpen}
-          onClose={handleReportModalClose}
-          result={result}
-          auditMode={auditMode}
-          preSummarizedResult={auditMode === 'strategic' ? preSummarizedResult : undefined}
-        />
+      {result && auditMode && isReportModalOpen && (
+        <Suspense fallback={null}>
+          <ExpertReportPreviewModal
+            isOpen={isReportModalOpen}
+            onClose={handleReportModalClose}
+            result={result}
+            auditMode={auditMode}
+            preSummarizedResult={auditMode === 'strategic' ? preSummarizedResult : undefined}
+          />
+        </Suspense>
       )}
 
       {/* Report Auth Gate */}
-      <ReportAuthGate
-        isOpen={isReportAuthGateOpen}
-        onClose={() => setIsReportAuthGateOpen(false)}
-        onAuthenticated={handleReportAuthSuccess}
-        returnPath="/audit-expert"
-      />
+      {isReportAuthGateOpen && (
+        <Suspense fallback={null}>
+          <ReportAuthGate
+            isOpen={isReportAuthGateOpen}
+            onClose={() => setIsReportAuthGateOpen(false)}
+            onAuthenticated={handleReportAuthSuccess}
+            returnPath="/audit-expert"
+          />
+        </Suspense>
+      )}
 
       {/* Payment Modal (legacy) */}
-      <PaymentModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        siteUrl={result?.url || url}
-        siteName={result?.domain || url}
-      />
+      {isPaymentModalOpen && (
+        <Suspense fallback={null}>
+          <PaymentModal
+            isOpen={isPaymentModalOpen}
+            onClose={() => setIsPaymentModalOpen(false)}
+            siteUrl={result?.url || url}
+            siteName={result?.domain || url}
+          />
+        </Suspense>
+      )}
 
       {/* Corrective Code Editor */}
-      <CorrectiveCodeEditor
-        isOpen={isCodeEditorOpen}
-        onClose={() => {
-          setIsCodeEditorOpen(false);
-          // Reset payment state when closing
-          if (hasVerifiedPayment) {
-            setPaidScriptCode('');
-            setPaidFixesMetadata([]);
-            setHasVerifiedPayment(false);
-          }
-        }}
-        technicalResult={technicalResult}
-        strategicResult={strategicResult}
-        siteUrl={result?.url || url}
-        siteName={result?.domain || url}
-        hallucinationData={hallucinationDiagnosis}
-        initialCode={paidScriptCode}
-        initialHasPaid={hasVerifiedPayment}
-        initialFixesMetadata={paidFixesMetadata}
-        onPaymentVerified={() => {
-          console.log('✅ Payment verified, buttons unlocked');
-        }}
-      />
+      {isCodeEditorOpen && (
+        <Suspense fallback={null}>
+          <CorrectiveCodeEditor
+            isOpen={isCodeEditorOpen}
+            onClose={() => {
+              setIsCodeEditorOpen(false);
+              // Reset payment state when closing
+              if (hasVerifiedPayment) {
+                setPaidScriptCode('');
+                setPaidFixesMetadata([]);
+                setHasVerifiedPayment(false);
+              }
+            }}
+            technicalResult={technicalResult}
+            strategicResult={strategicResult}
+            siteUrl={result?.url || url}
+            siteName={result?.domain || url}
+            hallucinationData={hallucinationDiagnosis}
+            initialCode={paidScriptCode}
+            initialHasPaid={hasVerifiedPayment}
+            initialFixesMetadata={paidFixesMetadata}
+            onPaymentVerified={() => {
+              console.log('✅ Payment verified, buttons unlocked');
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Content Architect from hallucination diagnosis */}
       {showContentArchitectFromDiag && (
