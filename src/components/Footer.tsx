@@ -209,9 +209,9 @@ function FooterComponent() {
               className="flex items-center justify-center gap-2 mb-3 w-full group"
             >
               <BookOpen className="h-5 w-5 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+              <p className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 {t3(language, 'Blog', 'Blog', 'Blog')}
-              </h3>
+              </p>
               {!isPublicPage && (
                 <ChevronUp className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${resourcesOpen ? '' : 'rotate-180'}`} />
               )}
@@ -273,9 +273,9 @@ function FooterComponent() {
             </div>
 
             <div className="sm:col-span-2 space-y-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+              <p className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 {t3(language, 'Nos Outils', 'Our Tools', 'Herramientas')}
-              </h3>
+              </p>
               <nav aria-label="Outils d'analyse">
                 <ul className="grid grid-cols-2 gap-x-6 gap-y-2">
                   {toolsLinks.map((link) => (
@@ -294,9 +294,9 @@ function FooterComponent() {
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+              <p className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 {t3(language, 'Ressources', 'Resources', 'Recursos')}
-              </h3>
+              </p>
               <nav aria-label="Ressources">
                 <ul className="space-y-2">
                   {resourcesLinks.map((link) => (
@@ -318,9 +318,9 @@ function FooterComponent() {
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+              <p className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 {t3(language, 'Technique', 'Technical', 'Técnico')}
-              </h3>
+              </p>
               <nav aria-label="Technique">
                 <ul className="space-y-2">
                   {technicalLinks.map((link) => (
