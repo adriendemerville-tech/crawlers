@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, RefreshCw, Trash2, Sparkles, ExternalLink, Pencil, ShieldCheck, Film, CalendarClock } from 'lucide-react';
+import { Loader2, RefreshCw, Trash2, Sparkles, ExternalLink, Pencil, ShieldCheck, Film, CalendarClock, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Feature = {
@@ -86,6 +86,7 @@ export function LinkedInAutomationDashboard() {
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [auditingId, setAuditingId] = useState<string | null>(null);
   const [mediaGenId, setMediaGenId] = useState<string | null>(null);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const loadAll = async () => {
@@ -203,6 +204,31 @@ export function LinkedInAutomationDashboard() {
       toast.error(`Échec génération média : ${e.message}`);
     } finally {
       setMediaGenId(null);
+    }
+  };
+
+  // Publication manuelle immédiate : bypasse le cron et l'anti-spam 1 post / 7 jours.
+  const publishNow = async (p: Post) => {
+    if (!confirm('Publier ce post sur LinkedIn maintenant ? (contourne la limite d\'un post par semaine)')) return;
+    setPublishingId(p.id);
+    try {
+      const text = (drafts[p.id] ?? '').trim();
+      if (text && text !== (p.edited_text ?? p.generated_text ?? '')) {
+        await supabase.from('linkedin_scheduled_posts').update({ edited_text: text }).eq('id', p.id);
+      }
+      const { data, error } = await supabase.functions.invoke('linkedin-publisher', {
+        body: { post_id: p.id, force: true },
+      });
+      if (error) throw error;
+      const res = data as any;
+      if (res?.error) throw new Error(res.details || res.error);
+      if (res?.skipped) toast.warning(`Publication ignorée : ${res.reason}`);
+      else toast.success('Post publié sur LinkedIn');
+      await loadAll();
+    } catch (e: any) {
+      toast.error(`Échec publication : ${e.message}`);
+    } finally {
+      setPublishingId(null);
     }
   };
 
@@ -471,8 +497,26 @@ export function LinkedInAutomationDashboard() {
                       ) : (
                         <Film className="h-4 w-4 mr-2" />
                       )}
-                      Générer contenu
+                      Générer le média
                     </Button>
+
+                    {!p.published_at && p.status !== 'published' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => publishNow(p)}
+                        disabled={publishingId === p.id}
+                        title="Publie immédiatement sur LinkedIn, sans attendre le cron ni la limite d'un post par semaine"
+                      >
+                        {publishingId === p.id ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4 mr-2" />
+                        )}
+                        Publier maintenant
+                      </Button>
+                    )}
+
 
                     <Button
                       variant="outline"
