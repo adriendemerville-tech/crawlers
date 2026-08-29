@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import claudeLogo from '@/assets/claude-logo-64.png.asset.json';
+import claudeLogo from '@/assets/claude-logo-64.webp.asset.json';
 
 /**
  * Reproduction typographique (sans capture d'écran) d'un échange réel où
