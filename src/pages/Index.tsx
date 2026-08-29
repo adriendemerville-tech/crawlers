@@ -38,33 +38,25 @@ const PageSpeedDashboard = lazy(() => import('@/components/PageSpeedDashboard').
 const GeoDashboard = lazy(() => import('@/components/GeoDashboard').then(m => ({ default: m.GeoDashboard })));
 const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({ default: m.LLMDashboard })));
 
-// Lazy load below-the-fold components with higher priority grouping
-const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
+// Carrousel témoignages : interactif et lourd (embla) → différé
 const TestimonialsCarousel = lazy(() => import('@/components/TestimonialsCarousel').then(m => ({ default: m.TestimonialsCarousel })));
 
-// Lazy load individual homepage sections
+// ─── Sections marketing en imports STATIQUES ───
+// Elles portent le contenu textuel indexable de la home : elles doivent être
+// présentes dans le HTML initial servi aux bots (Googlebot, GPTBot, ClaudeBot…),
+// pas injectées après hydratation.
+import { MomentumSection, HybridSection, TrustBanner } from '@/components/HomepageSections';
+import AgencyComparisonSection from '@/components/Homepage/AgencyComparisonSection';
+import { AIAgentsSection } from '@/components/Homepage/AIAgentsSection';
+import { ContentArchitectSection } from '@/components/Homepage/ContentArchitectSection';
+import { ProductShowcaseSection } from '@/components/Homepage/ProductShowcaseSection';
+import { MarketplaceTeaserSection } from '@/components/Homepage/MarketplaceTeaserSection';
+import { GoogleCrossDataSection } from '@/components/Homepage/GoogleCrossDataSection';
+import { PainPointsSection } from '@/components/Homepage/PainPointsSection';
+import { MarinaDeepAuditSection } from '@/components/Homepage/MarinaDeepAuditSection';
+import { ExtensionSection } from '@/components/Homepage/ExtensionSection';
+import { Footer } from '@/components/Footer';
 
-// Lazy load individual homepage sections
-const MomentumSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.MomentumSection })));
-const FeatureShowcase = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.FeatureShowcase })));
-
-const HybridSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.HybridSection })));
-const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.TrustBanner })));
-const AgencyComparisonSection = lazy(() => import('@/components/Homepage/AgencyComparisonSection'));
-const AIAgentsSection = lazy(() => import('@/components/Homepage/AIAgentsSection').then(m => ({ default: m.AIAgentsSection })));
-const ContentArchitectSection = lazy(() => import('@/components/Homepage/ContentArchitectSection').then(m => ({ default: m.ContentArchitectSection })));
-
-const ProductShowcaseSection = lazy(() => import('@/components/Homepage/ProductShowcaseSection').then(m => ({ default: m.ProductShowcaseSection })));
-const MarketplaceTeaserSection = lazy(() => import('@/components/Homepage/MarketplaceTeaserSection').then(m => ({ default: m.MarketplaceTeaserSection })));
-
-const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
-
-const PainPointsSection = lazy(() => import('@/components/Homepage/PainPointsSection').then(m => ({ default: m.PainPointsSection })));
-const MarinaDeepAuditSection = lazy(() => import('@/components/Homepage/MarinaDeepAuditSection').then(m => ({ default: m.MarinaDeepAuditSection })));
-
-const ExtensionSection = lazy(() => import('@/components/Homepage/ExtensionSection').then(m => ({ default: m.ExtensionSection })));
-
-const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 // Lightweight skeleton for dashboards
 const DashboardSkeleton = memo(() => (
