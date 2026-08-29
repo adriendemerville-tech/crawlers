@@ -65,7 +65,7 @@ const AgencyComparisonSection = () => (
       </header>
 
       <div className="overflow-x-auto rounded-xl border border-border/60 bg-card/40 shadow-lg">
-        <table className="w-full min-w-[34rem] border-collapse text-left text-[13px] sm:text-base">
+        <table className="w-full min-w-[28rem] border-collapse text-left text-[13px] sm:text-base">
           <thead>
             <tr className="border-b border-border/60 bg-muted/40">
               <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground">Critère</th>
