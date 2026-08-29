@@ -165,7 +165,7 @@ function SortableSiteButton({ id, label, isActive, isRefreshing, onClick }: {
 }
 
 // ─── KPI Card ───
-function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip }: { label: string; value: string; icon: ComponentType<{ className?: string }>; valueClassName?: string; onRefresh?: () => Promise<void>; tooltip?: string }) {
+function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip, compact }: { label: string; value: string; icon: ComponentType<{ className?: string }>; valueClassName?: string; onRefresh?: () => Promise<void>; tooltip?: string; compact?: boolean }) {
   const [refreshing, setRefreshing] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -177,7 +177,7 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip 
   };
 
   return (
-    <div className="relative group rounded-lg border bg-card p-2 flex flex-col justify-between min-h-[52px]">
+    <div className={cn('relative group rounded-lg border bg-card p-2 flex flex-col justify-between min-h-[52px]', compact ? 'col-span-1' : 'col-span-2')}>
       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
         <Icon className="h-3 w-3 shrink-0" />
         <span className="leading-tight">{label}</span>
@@ -225,10 +225,11 @@ function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: 
   return (
     <Card className="border-0 shadow-none bg-transparent">
       <CardContent className="p-0">
-        <div className={`grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+        <div className={cn('grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2', disabled && 'opacity-40 pointer-events-none')}>
           {defaultOrder.map(id => {
             const def = kpiDefinitions[id];
             if (!def) return null;
+            const compact = id === 'performanceMobile' || id === 'voiceShare';
             return (
               <KPICard
                 key={id}
@@ -238,6 +239,7 @@ function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: 
                 valueClassName={def.valueClassName}
                 onRefresh={onRefresh?.[id]}
                 tooltip={def.tooltip}
+                compact={compact}
               />
             );
           })}
