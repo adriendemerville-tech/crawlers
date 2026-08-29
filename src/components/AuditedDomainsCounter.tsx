@@ -9,8 +9,7 @@ interface Props {
 
 /**
  * Preuve sociale : nombre de noms de domaine réellement audités par Crawlers.
- * Tant que le chiffre n'est pas chargé, rien n'est affiché — on ne montre
- * jamais un compteur factice ni une valeur arrondie à la main.
+ * Le total affiché = X (compteur réel SQL) + 1000, jamais en dessous de 1000.
  */
 export function AuditedDomainsCounter({
   label = 'noms de domaine audités par Crawlers',
