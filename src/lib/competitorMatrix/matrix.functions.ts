@@ -162,11 +162,29 @@ export const startCompetitorMatrix = createServerFn({ method: 'POST' })
 export const advanceCompetitorMatrix = createServerFn({ method: 'POST' })
   .inputValidator((input: { jobId: string }) => input)
   .handler(async ({ data }) => {
+    const jobId = String(data.jobId);
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+
+    // Contrôle de propriété : seul le demandeur (même empreinte IP) ou un admin
+    // peut faire avancer le job — sinon un tiers déclencherait des coûts LLM.
+    const { data: owner } = await supabaseAdmin
+      .from('competitor_matrix_jobs')
+      .select('id, ip_hash')
+      .eq('id', jobId)
+      .maybeSingle();
+    if (!owner) return { error: 'not_found' as const, message: 'Analyse introuvable.' };
+
+    const sameIp = owner.ip_hash === (await hashIp(clientIp()));
+    if (!sameIp && !(await isAdminRequest())) {
+      return { error: 'forbidden' as const, message: 'Accès refusé à cette analyse.' };
+    }
+
     const { advanceJobOnce } = await import('./engine.server');
-    const job = await advanceJobOnce(String(data.jobId));
+    const job = await advanceJobOnce(jobId);
     if (!job) return { error: 'not_found' as const, message: 'Analyse introuvable.' };
     return { job: toState(job) };
   });
+
 
 
 export const saveCompetitorMatrixLead = createServerFn({ method: 'POST' })
