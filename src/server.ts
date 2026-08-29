@@ -143,9 +143,139 @@ function applyEdgeHeaders(request: Request, response: Response): Response {
 }
 
 
+/**
+ * Cache HTML interne au Worker.
+ *
+ * La couche Cloudflare ne mettra jamais ce HTML en cache (elle pose un
+ * `set-cookie: __cf_bm` sur chaque réponse et réécrit notre `cache-control`).
+ * On gère donc nous-mêmes le stockage via la Cache API du runtime : réponse
+ * fraîche servie directement, réponse périmée servie immédiatement puis
+ * revalidée en arrière-plan (stale-while-revalidate).
+ *
+ * Seules les requêtes strictement anonymes et sans paramètre sont concernées :
+ * le HTML servi est alors identique pour tout le monde, donc l'indexation et le
+ * contenu ne changent pas.
+ */
+const HTML_CACHE_PATHS = new Set<string>(["/", "/audit-expert"]);
+const HTML_CACHE_FRESH_S = 300;
+const HTML_CACHE_STALE_S = 3600;
+const CACHE_TS_HEADER = "x-html-cache-ts";
+
+type WaitUntilCtx = { waitUntil?: (promise: Promise<unknown>) => void };
+
+function getHtmlCache(): Cache | undefined {
+  const store = (globalThis as { caches?: { default?: Cache } }).caches;
+  return store?.default;
+}
+
+function htmlCacheKey(url: URL): Request {
+  // Clé normalisée : pas de query (on ne met en cache que les URL nues),
+  // insensible au fragment et aux en-têtes de la requête entrante.
+  return new Request(`${url.origin}${url.pathname}`, { method: "GET" });
+}
+
+function isHtmlCacheEligible(request: Request, url: URL): boolean {
+  if (request.method !== "GET") return false;
+  if (url.search) return false;
+  if (!HTML_CACHE_PATHS.has(url.pathname.replace(/(.)\/+$/, "$1"))) return false;
+  const cookie = request.headers.get("cookie") ?? "";
+  // Une session authentifiée peut faire varier le rendu : jamais de cache.
+  if (/(^|;\s*)sb-[^=]*auth-token/.test(cookie)) return false;
+  return true;
+}
+
+function isStorableHtml(response: Response): boolean {
+  if (response.status !== 200) return false;
+  if (!(response.headers.get("content-type") ?? "").includes("text/html")) return false;
+  // Une réponse qui pose un cookie est propre au visiteur : on ne la stocke pas.
+  if (response.headers.has("set-cookie")) return false;
+  return true;
+}
+
+function toCacheEntry(response: Response): Response {
+  const headers = new Headers(response.headers);
+  headers.set(CACHE_TS_HEADER, String(Date.now()));
+  headers.set("cache-control", `public, max-age=${HTML_CACHE_FRESH_S + HTML_CACHE_STALE_S}`);
+  headers.delete("set-cookie");
+  return new Response(response.body, { status: 200, headers });
+}
+
+function withCacheStatus(response: Response, status: "HIT" | "STALE" | "MISS"): Response {
+  const headers = new Headers(response.headers);
+  headers.set("x-html-cache", status);
+  headers.delete(CACHE_TS_HEADER);
+  // Le HTML reste privé pour les caches intermédiaires : la fraîcheur est
+  // gérée ici, pas en aval (où notre cache-control est de toute façon réécrit).
+  headers.set("cache-control", "public, max-age=0, must-revalidate");
+  return new Response(response.body, { status: response.status, headers });
+}
+
+function cachedAgeSeconds(response: Response): number {
+  const raw = Number(response.headers.get(CACHE_TS_HEADER));
+  if (!Number.isFinite(raw) || raw <= 0) return Number.POSITIVE_INFINITY;
+  return (Date.now() - raw) / 1000;
+}
+
+async function renderAndStore(
+  request: Request,
+  env: unknown,
+  ctx: unknown,
+  cache: Cache | undefined,
+  key: Request,
+): Promise<Response> {
+  const handler = await getServerEntry();
+  const fresh = applyEdgeHeaders(
+    request,
+    await normalizeCatastrophicSsrResponse(await handler.fetch(request, env, ctx)),
+  );
+  if (!cache || !isStorableHtml(fresh)) return fresh;
+
+  const entry = toCacheEntry(fresh.clone());
+  const put = cache.put(key, entry).catch((error) => {
+    console.error("html cache put failed", error);
+  });
+  const waitUntil = (ctx as WaitUntilCtx | undefined)?.waitUntil;
+  if (waitUntil) waitUntil(put);
+  else await put;
+  return fresh;
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      let url: URL | undefined;
+      try {
+        url = new URL(request.url);
+      } catch {
+        url = undefined;
+      }
+
+      const cache = getHtmlCache();
+      if (url && cache && isHtmlCacheEligible(request, url)) {
+        const key = htmlCacheKey(url);
+        const hit = await cache.match(key).catch(() => undefined);
+        if (hit) {
+          const age = cachedAgeSeconds(hit);
+          if (age <= HTML_CACHE_FRESH_S) return withCacheStatus(hit, "HIT");
+          if (age <= HTML_CACHE_FRESH_S + HTML_CACHE_STALE_S) {
+            // Périmé mais utilisable : on répond tout de suite et on
+            // reconstruit l'entrée en arrière-plan.
+            const revalidate = renderAndStore(request, env, ctx, cache, key)
+              .then(async (response) => {
+                await response.arrayBuffer().catch(() => undefined);
+              })
+              .catch((error) => {
+                console.error("html cache revalidate failed", error);
+              });
+            const waitUntil = (ctx as WaitUntilCtx | undefined)?.waitUntil;
+            if (waitUntil) waitUntil(revalidate);
+            return withCacheStatus(hit, "STALE");
+          }
+        }
+        const rendered = await renderAndStore(request, env, ctx, cache, key);
+        return isStorableHtml(rendered) ? withCacheStatus(rendered, "MISS") : rendered;
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return applyEdgeHeaders(request, await normalizeCatastrophicSsrResponse(response));
@@ -158,3 +288,4 @@ export default {
     }
   },
 };
+
