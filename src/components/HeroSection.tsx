@@ -98,7 +98,7 @@ function HeroSectionComponent() {
         {/* URL input + CTA Audit Expert + note — tout sur une seule ligne */}
         <div className="hero-actions mt-2 mx-auto w-full" style={{ maxWidth: 'min(96%, 46rem)' }}>
           <TrustBadge layout="column" className="flex shrink-0 gap-0.5 py-0 justify-center max-sm:items-center [&_.text-sm]:text-[11px] [&_.text-sm]:whitespace-nowrap [&_.text-sm]:text-center sm:[&_.text-sm]:text-left" />
-          <div className="hero-input-wrap min-w-0 relative rounded-xl p-[2px] bg-gradient-to-b from-gray-300 via-gray-200 to-gray-400 dark:p-0 dark:bg-none">
+          <div className="hero-input-wrap min-w-0 relative">
             <Input
               type="text"
               placeholder="url : crawlers.fr"
@@ -110,10 +110,10 @@ function HeroSectionComponent() {
                   navigate(`/audit-expert?url=${encodeURIComponent(target)}&autolaunch=1`);
                 }
               }}
-              className="h-12 sm:h-14 rounded-[10px] dark:rounded-xl pl-3 pr-10 text-base border-0 dark:border-2 dark:border-white placeholder:text-sm placeholder:font-light placeholder:text-muted-foreground/50 bg-transparent! bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/[0.04] dark:to-white/[0.02] backdrop-blur-sm"
+              className="h-12 sm:h-14"
               aria-label="URL du site web"
             />
-            <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           </div>
           <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="hero-cta w-full sm:w-auto shrink-0 min-w-0">
             <Button
