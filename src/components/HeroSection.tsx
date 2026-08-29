@@ -133,15 +133,15 @@ function HeroSectionComponent() {
           </Link>
         </div>
 
-        {/* Trust badge — preuve sociale immédiate */}
-        <TrustBadge className="mt-4" />
+        {/* Trust badge (mobile) — preuve sociale immédiate */}
+        <TrustBadge layout="row" className="mt-4 sm:hidden" />
 
         {/* Secondary CTAs */}
-        <div className="mt-2 sm:mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+        <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
           <Link to="/auth" className="text-sm font-medium underline underline-offset-4 transition-colors text-foreground dark:text-primary-foreground">
             {language === 'fr' ? 'Créer un compte gratuit →' : language === 'es' ? 'Crear una cuenta gratis →' : 'Create a free account →'}
           </Link>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-[13px] text-muted-foreground">
             {language === 'fr' ? 'Essai gratuit, sans carte bancaire' : language === 'es' ? 'Prueba gratis, sin tarjeta bancaria' : 'Free trial, no credit card'}
           </span>
         </div>
