@@ -44,7 +44,7 @@ function LazyVisibleComponent({
   }, [visible, rootMargin]);
 
   return (
-    <div ref={ref} style={!visible ? { minHeight } : undefined}>
+    <div ref={ref} style={{ minHeight }}>
       {visible ? children : (fallback ?? null)}
     </div>
   );

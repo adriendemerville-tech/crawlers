@@ -80,8 +80,8 @@ const DashboardSkeleton = memo(() => (
 ));
 
 // Minimal skeleton for below-fold sections — hauteur réservée pour éviter le CLS
-const SectionSkeleton = memo(() => (
-  <div className="min-h-[400px] animate-pulse bg-muted/20" aria-hidden="true" />
+const SectionSkeleton = memo(({ height = 600 }: { height?: number }) => (
+  <div style={{ minHeight: `${height}px` }} className="animate-pulse bg-muted/10" aria-hidden="true" />
 ));
 
 
@@ -568,25 +568,25 @@ const Index = () => {
         {/* Product Showcase — Screenshots : le produit visible dès la 2e position */}
         <div id="features">
           <LazyVisible minHeight="600px">
-            <Suspense fallback={<SectionSkeleton />}>
+            <Suspense fallback={<SectionSkeleton height={600} />}>
               <div className="cv-auto-lg"><ProductShowcaseSection /></div>
             </Suspense>
           </LazyVisible>
         </div>
 
         {/* Vision IA 2028 + lead magnet — remonté pour capter tôt */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<SectionSkeleton height={900} />}>
           <div className="cv-auto-lg"><MomentumSection /></div>
         </Suspense>
 
         {/* Témoignages — preuve sociale après le produit */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<SectionSkeleton height={320} />}>
           <div className="cv-auto-sm"><TestimonialsCarousel /></div>
         </Suspense>
 
         {/* AI Agents — Félix & Stratège Cocoon — remonté après la preuve sociale */}
         <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton />}>
+          <Suspense fallback={<SectionSkeleton height={500} />}>
             <div className="cv-auto-lg home-bias-left"><AIAgentsSection /></div>
           </Suspense>
         </LazyVisible>
@@ -595,12 +595,12 @@ const Index = () => {
 
 
         {/* Pain Points — before Pro Agency */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<SectionSkeleton height={600} />}>
           <div className="cv-auto home-bias-left"><PainPointsSection /></div>
         </Suspense>
 
         {/* Audit profond gratuit (Marina) — juste après les pain points */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<SectionSkeleton height={600} />}>
           <div className="cv-auto home-bias-right"><MarinaDeepAuditSection /></div>
         </Suspense>
 
@@ -716,32 +716,32 @@ const Index = () => {
 
 
         {/* Comparatif Agence SEO vs Crawlers */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<SectionSkeleton height={600} />}>
           <div className="cv-auto"><AgencyComparisonSection /></div>
         </Suspense>
 
         {/* Trust Banner — right after Pro Agency */}
-        <Suspense fallback={<SectionSkeleton />}>
+        <Suspense fallback={<SectionSkeleton height={600} />}>
           <div className="cv-auto"><TrustBanner /></div>
         </Suspense>
 
         {/* Place d'échange de backlinks */}
         <LazyVisible minHeight="420px">
-          <Suspense fallback={<SectionSkeleton />}>
+          <Suspense fallback={<SectionSkeleton height={420} />}>
             <div className="cv-auto"><MarketplaceTeaserSection /></div>
           </Suspense>
         </LazyVisible>
 
         {/* Google Cross Data — SEA→SEO Bridge */}
         <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton />}>
+          <Suspense fallback={<SectionSkeleton height={500} />}>
             <div className="cv-auto"><GoogleCrossDataSection /></div>
           </Suspense>
         </LazyVisible>
 
         {/* Content Architect */}
         <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton />}>
+          <Suspense fallback={<SectionSkeleton height={500} />}>
             <div className="cv-auto-lg home-bias-right"><ContentArchitectSection /></div>
           </Suspense>
         </LazyVisible>
@@ -816,7 +816,7 @@ const Index = () => {
 
 
         <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton />}>
+          <Suspense fallback={<SectionSkeleton height={500} />}>
             <div className="cv-auto home-bias-left"><HybridSection /></div>
           </Suspense>
         </LazyVisible>
@@ -824,7 +824,7 @@ const Index = () => {
 
         {/* Chrome Extension — short teaser */}
         <LazyVisible minHeight="400px">
-          <Suspense fallback={<SectionSkeleton />}>
+          <Suspense fallback={<SectionSkeleton height={400} />}>
             <div className="cv-auto home-bias-right"><ExtensionSection /></div>
           </Suspense>
         </LazyVisible>
@@ -970,14 +970,14 @@ const Index = () => {
         </div>
 
         <LazyVisible minHeight="500px">
-          <Suspense fallback={<SectionSkeleton />}>
+          <Suspense fallback={<SectionSkeleton height={500} />}>
             <div className="cv-auto"><FAQSection /></div>
           </Suspense>
         </LazyVisible>
 
         {/* Hub des 4 silos : la home transmet l'autorité aux piliers */}
         <LazyVisible minHeight="400px">
-          <Suspense fallback={<SectionSkeleton />}>
+          <Suspense fallback={<SectionSkeleton height={400} />}>
             <div className="cv-auto"><SiloHub /></div>
           </Suspense>
         </LazyVisible>

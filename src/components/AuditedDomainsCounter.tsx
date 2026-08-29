@@ -27,9 +27,9 @@ export function AuditedDomainsCounter({
 
   const BASE_OFFSET = 1000;
 
-  if (count === null) return null;
-
-  const total = BASE_OFFSET + Math.max(count, 0);
+  // Le bloc est toujours rendu (hauteur réservée) : seul le chiffre s'actualise,
+  // ce qui évite tout décalage visuel après l'hydratation.
+  const total = BASE_OFFSET + Math.max(count ?? 0, 0);
 
 
   return (
@@ -38,7 +38,7 @@ export function AuditedDomainsCounter({
         className="text-3xl font-extrabold tabular-nums text-foreground sm:text-4xl"
         aria-live="polite"
       >
-        {total.toLocaleString('fr-FR')}
+        {total.toLocaleString('fr-FR')}{count === null ? '+' : ''}
       </p>
       <p className="mt-1 text-sm text-muted-foreground">{label}</p>
     </div>
