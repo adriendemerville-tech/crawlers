@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense, memo } from 'react';
 
 import { useToast } from '@/hooks/use-toast';
-import { SiloHub } from '@/components/seo/SiloHub';
 // FAQ rendue en SSR (texte + FAQPage visibles par les bots) : import statique.
-import { FAQSection } from '@/components/FAQSection';
 import { Header } from '@/components/Header';
 import { AuditedDomainsCounter } from '@/components/AuditedDomainsCounter';
 import { HeroSection } from '@/components/HeroSection';
@@ -28,7 +26,6 @@ import { Crown, ArrowRight, FileSearch, Search, Globe, Brain, ShieldCheck } from
 import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/ActiveCrawlBanner';
 import { PageEditorial } from '@/components/seo/PageEditorial';
-import { LazyHydrate } from '@/components/perf/LazyHydrate';
 import { CitablePassage } from '@/components/seo/CitablePassage';
 
 import { getPublicConfig, isFlagEnabled } from '@/lib/config/publicConfig';
@@ -46,17 +43,28 @@ const TestimonialsCarousel = lazy(() => import('@/components/TestimonialsCarouse
 // Elles portent le contenu textuel indexable de la home : elles doivent être
 // présentes dans le HTML initial servi aux bots (Googlebot, GPTBot, ClaudeBot…),
 // pas injectées après hydratation.
-import { MomentumSection, HybridSection, TrustBanner } from '@/components/HomepageSections';
-import AgencyComparisonSection from '@/components/Homepage/AgencyComparisonSection';
-import { AIAgentsSection } from '@/components/Homepage/AIAgentsSection';
-import { ContentArchitectSection } from '@/components/Homepage/ContentArchitectSection';
 import { ProductShowcaseSection } from '@/components/Homepage/ProductShowcaseSection';
-import { MarketplaceTeaserSection } from '@/components/Homepage/MarketplaceTeaserSection';
-import { GoogleCrossDataSection } from '@/components/Homepage/GoogleCrossDataSection';
-import { PainPointsSection } from '@/components/Homepage/PainPointsSection';
-import { MarinaDeepAuditSection } from '@/components/Homepage/MarinaDeepAuditSection';
-import { ExtensionSection } from '@/components/Homepage/ExtensionSection';
 import { Footer } from '@/components/Footer';
+
+// ─── Sections différées côté CLIENT uniquement ───
+// React.lazy est résolu pendant le SSR : le HTML initial contient donc tout le
+// texte indexable (bots), mais le JS de ces sections est servi dans des chunks
+// séparés, chargés après le rendu critique → moins de JS à parser, LCP mobile
+// et TTI allégés sans perte d'indexation.
+const MomentumSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.MomentumSection })));
+const HybridSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.HybridSection })));
+const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.TrustBanner })));
+const AgencyComparisonSection = lazy(() => import('@/components/Homepage/AgencyComparisonSection'));
+const AIAgentsSection = lazy(() => import('@/components/Homepage/AIAgentsSection').then(m => ({ default: m.AIAgentsSection })));
+const ContentArchitectSection = lazy(() => import('@/components/Homepage/ContentArchitectSection').then(m => ({ default: m.ContentArchitectSection })));
+const MarketplaceTeaserSection = lazy(() => import('@/components/Homepage/MarketplaceTeaserSection').then(m => ({ default: m.MarketplaceTeaserSection })));
+const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
+const PainPointsSection = lazy(() => import('@/components/Homepage/PainPointsSection').then(m => ({ default: m.PainPointsSection })));
+const MarinaDeepAuditSection = lazy(() => import('@/components/Homepage/MarinaDeepAuditSection').then(m => ({ default: m.MarinaDeepAuditSection })));
+const ExtensionSection = lazy(() => import('@/components/Homepage/ExtensionSection').then(m => ({ default: m.ExtensionSection })));
+const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
+const SiloHub = lazy(() => import('@/components/seo/SiloHub').then(m => ({ default: m.SiloHub })));
+
 
 
 // Lightweight skeleton for dashboards
@@ -565,7 +573,7 @@ const Index = () => {
         </div>
 
         {/* Vision IA 2028 + lead magnet — remonté pour capter tôt */}
-        <div className="cv-auto-lg"><MomentumSection /></div>
+        <div className="cv-auto-lg"><Suspense fallback={null}><MomentumSection /></Suspense></div>
 
         {/* Témoignages — preuve sociale après le produit */}
         <Suspense fallback={<SectionSkeleton height={320} />}>
@@ -573,13 +581,13 @@ const Index = () => {
         </Suspense>
 
         {/* AI Agents — Félix & Stratège Cocoon — remonté après la preuve sociale */}
-        <LazyHydrate className="cv-auto-lg home-bias-left"><AIAgentsSection /></LazyHydrate>
+        <div className="cv-auto-lg home-bias-left"><Suspense fallback={null}><AIAgentsSection /></Suspense></div>
 
         {/* Pain Points — before Pro Agency */}
-        <LazyHydrate className="cv-auto home-bias-left"><PainPointsSection /></LazyHydrate>
+        <div className="cv-auto home-bias-left"><Suspense fallback={null}><PainPointsSection /></Suspense></div>
 
         {/* Audit profond gratuit (Marina) — juste après les pain points */}
-        <LazyHydrate className="cv-auto home-bias-right"><MarinaDeepAuditSection /></LazyHydrate>
+        <div className="cv-auto home-bias-right"><Suspense fallback={null}><MarinaDeepAuditSection /></Suspense></div>
 
 
         {/* Preuve sociale : volume réel de domaines audités, juste sous les lead magnets */}
@@ -694,19 +702,19 @@ const Index = () => {
 
 
         {/* Comparatif Agence SEO vs Crawlers */}
-        <LazyHydrate className="cv-auto"><AgencyComparisonSection /></LazyHydrate>
+        <div className="cv-auto"><Suspense fallback={null}><AgencyComparisonSection /></Suspense></div>
 
         {/* Trust Banner — right after Pro Agency */}
-        <LazyHydrate className="cv-auto"><TrustBanner /></LazyHydrate>
+        <div className="cv-auto"><Suspense fallback={null}><TrustBanner /></Suspense></div>
 
         {/* Place d'échange de backlinks */}
-        <LazyHydrate className="cv-auto"><MarketplaceTeaserSection /></LazyHydrate>
+        <div className="cv-auto"><Suspense fallback={null}><MarketplaceTeaserSection /></Suspense></div>
 
         {/* Google Cross Data — SEA→SEO Bridge */}
-        <LazyHydrate className="cv-auto"><GoogleCrossDataSection /></LazyHydrate>
+        <div className="cv-auto"><Suspense fallback={null}><GoogleCrossDataSection /></Suspense></div>
 
         {/* Content Architect */}
-        <LazyHydrate className="cv-auto-lg home-bias-right"><ContentArchitectSection /></LazyHydrate>
+        <div className="cv-auto-lg home-bias-right"><Suspense fallback={null}><ContentArchitectSection /></Suspense></div>
 
 
         {/* E-E-A-T Section */}
@@ -778,11 +786,11 @@ const Index = () => {
         </section>
 
 
-        <LazyHydrate className="cv-auto home-bias-left"><HybridSection /></LazyHydrate>
+        <div className="cv-auto home-bias-left"><Suspense fallback={null}><HybridSection /></Suspense></div>
 
 
         {/* Chrome Extension — short teaser */}
-        <LazyHydrate className="cv-auto home-bias-right"><ExtensionSection /></LazyHydrate>
+        <div className="cv-auto home-bias-right"><Suspense fallback={null}><ExtensionSection /></Suspense></div>
 
 
 
@@ -927,10 +935,10 @@ const Index = () => {
 
         {/* FAQ + hub de silos : rendus en SSR, pour que les bots (et les moteurs
             génératifs) trouvent le texte et les liens internes dans le HTML servi. */}
-        <LazyHydrate className="cv-auto"><FAQSection /></LazyHydrate>
+        <div className="cv-auto"><Suspense fallback={null}><FAQSection /></Suspense></div>
 
         {/* Hub des 4 silos : la home transmet l'autorité aux piliers */}
-        <LazyHydrate className="cv-auto"><SiloHub /></LazyHydrate>
+        <div className="cv-auto"><Suspense fallback={null}><SiloHub /></Suspense></div>
 
       </main>
       <Footer />
