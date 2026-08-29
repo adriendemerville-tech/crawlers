@@ -49,6 +49,7 @@ const FeatureShowcase = lazy(() => import('@/components/HomepageSections').then(
 
 const HybridSection = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.HybridSection })));
 const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m => ({ default: m.TrustBanner })));
+const AgencyComparisonSection = lazy(() => import('@/components/Homepage/AgencyComparisonSection'));
 const AIAgentsSection = lazy(() => import('@/components/Homepage/AIAgentsSection').then(m => ({ default: m.AIAgentsSection })));
 const ContentArchitectSection = lazy(() => import('@/components/Homepage/ContentArchitectSection').then(m => ({ default: m.ContentArchitectSection })));
 
@@ -643,6 +644,11 @@ const Index = () => {
             </div>
           </section>
 
+
+        {/* Comparatif Agence SEO vs Crawlers */}
+        <Suspense fallback={<SectionSkeleton />}>
+          <div className="cv-auto"><AgencyComparisonSection /></div>
+        </Suspense>
 
         {/* Trust Banner — right after Pro Agency */}
         <Suspense fallback={<SectionSkeleton />}>
