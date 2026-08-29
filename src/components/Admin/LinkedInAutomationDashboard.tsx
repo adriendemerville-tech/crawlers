@@ -326,13 +326,23 @@ export function LinkedInAutomationDashboard() {
           {(tab === 'drafts' ? draftPosts : publishedPosts).map((p) => {
             const feature = features.find((f) => f.id === p.feature_id);
             const currentText = p.edited_text ?? p.generated_text;
+            const health = publishHealth(p);
             return (
               <Card key={p.id} className="border-2">
                 <CardHeader className="pb-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`inline-block h-3 w-3 rounded-full ${health.color}`}
+                        title={health.label}
+                        aria-label={health.label}
+                      />
                       <Badge variant={statusVariant[p.status] || 'outline'}>{p.status}</Badge>
                       <Badge variant="outline">{p.media_type}</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        Média : {p.media_generation_status || 'none'}
+                        {p.media_urls?.length ? ` (${p.media_urls.length})` : ''}
+                      </Badge>
                       {feature && <span className="text-sm font-medium">{feature.title}</span>}
                       {p.audit_status && (
                         <Badge
@@ -344,9 +354,20 @@ export function LinkedInAutomationDashboard() {
                         </Badge>
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(p.created_at).toLocaleString('fr-FR')}
-                      {p.llm_tokens_used && ` · ${p.llm_tokens_used} tokens`}
+                    <div className="text-xs text-muted-foreground text-right space-y-0.5">
+                      <div>
+                        {new Date(p.created_at).toLocaleString('fr-FR')}
+                        {p.llm_tokens_used && ` · ${p.llm_tokens_used} tokens`}
+                      </div>
+                      <div className="flex items-center gap-1 justify-end">
+                        <CalendarClock className="h-3 w-3" />
+                        {p.published_at
+                          ? `Publié le ${new Date(p.published_at).toLocaleString('fr-FR')}`
+                          : p.scheduled_for
+                            ? `Programmé le ${new Date(p.scheduled_for).toLocaleString('fr-FR')}`
+                            : 'Aucune date de programmation'}
+                      </div>
+                      <div>{health.label}</div>
                     </div>
                   </div>
                 </CardHeader>
