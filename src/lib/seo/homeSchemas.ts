@@ -178,9 +178,22 @@ const faqPage = {
   })),
 };
 
+const breadcrumbList = {
+  '@type': 'BreadcrumbList',
+  '@id': `${SITE_URL}/#breadcrumb`,
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Accueil',
+      item: SITE_URL,
+    },
+  ],
+};
+
 export const homeJsonLd = [
   {
     '@context': 'https://schema.org',
-    '@graph': [softwareApplication, toolsItemList, audiencesItemList, faqPage],
+    '@graph': [softwareApplication, toolsItemList, audiencesItemList, faqPage, breadcrumbList],
   },
 ];
