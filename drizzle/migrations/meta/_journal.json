@@ -15,6 +15,13 @@
       "when": 1788010888233,
       "tag": "0001_matrix_locks_ai_cache_metrics",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788015037900,
+      "tag": "0002_sitemap_add_missing_public_pages",
+      "breakpoints": true
     }
   ]
 }
