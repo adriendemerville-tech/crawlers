@@ -86,7 +86,7 @@ function HeroSectionComponent() {
         </h1>
 
         {/* Tagline */}
-        <h2 className="mb-10 t-h2 font-medium font-display text-foreground sm:mb-12 px-2 sm:px-0">
+        <h2 className="mb-10 t-h2 font-medium font-display text-foreground sm:mb-12 px-2 sm:px-0 max-sm:hidden!">
           {language === 'es'
             ? 'La herramienta de rastreo SEO y GEO. Audite su sitio. Afine la estrategia. Automatice la solución.'
             : language === 'en'
