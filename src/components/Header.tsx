@@ -290,9 +290,9 @@ export function Header() {
                 Audit
               </Button>
             </Link>
-            <Link to="/eeat">
+            <Link to="/marina">
               <Button variant="ghost" size="default" className="px-3 lg:px-4 text-base font-semibold text-foreground hover:bg-muted/50">
-                E-E-A-T
+                Marina
               </Button>
             </Link>
             <Link to="/app/ranking-serp">
