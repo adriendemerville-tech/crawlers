@@ -98,7 +98,7 @@ function HeroSectionComponent() {
         {/* URL input + CTA Audit Expert + note — tout sur une seule ligne */}
         <div className="mt-2 mx-auto w-full flex flex-nowrap items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 46rem)' }}>
           <TrustBadge layout="column" className="max-sm:hidden! flex sm:shrink-0 gap-0.5 py-0 [&_.text-sm]:text-[11px] [&_.text-sm]:whitespace-nowrap [&_.text-sm]:text-left" />
-          <div className="flex-1 basis-0 min-w-0 relative rounded-xl p-[2px] bg-gradient-to-b from-gray-300 via-gray-200 to-gray-400 dark:p-0 dark:bg-transparent">
+          <div className="flex-[1.8] basis-0 min-w-0 relative rounded-xl p-[2px] bg-gradient-to-b from-gray-300 via-gray-200 to-gray-400 dark:p-0 dark:bg-transparent">
             <Input
               type="text"
               placeholder="url : crawlers.fr"
@@ -115,7 +115,7 @@ function HeroSectionComponent() {
             />
             <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           </div>
-          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="shrink-0 basis-0 min-w-0 flex-[1.2]">
+          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="shrink-0 basis-0 min-w-0 flex-[0.8]">
             <Button
               variant="outline"
               size="lg"
