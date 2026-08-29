@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { storageImage, storageImageSrcSet } from '@/lib/images/storageImage';
 
 interface NewsCardProps {
   article: NewsArticle;
