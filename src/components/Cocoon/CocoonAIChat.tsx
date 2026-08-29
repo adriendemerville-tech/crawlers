@@ -970,7 +970,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       if (!blob) throw new Error('Capture impossible.');
       if (blob.size > 3 * 1024 * 1024) throw new Error('Capture trop lourde (>3 Mo).');
       const filename = `capture-${Date.now()}.png`;
-      const path = `cocoon-captures/${user.id}/${filename}`;
+      const path = `${user.id}/cocoon-captures/${filename}`;
       const { data: uploadData, error: uploadErr } = await supabase.storage
         .from('user-reports').upload(path, blob, { contentType: 'image/png', upsert: false });
       if (uploadErr) throw uploadErr;
@@ -1209,7 +1209,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
                   const blob = await new Promise<Blob | null>(resolve => (canvas as HTMLCanvasElement).toBlob(resolve, 'image/png'));
                   if (blob) {
                     const filename = `cocoon-error-${Date.now()}.png`;
-                    const { data: uploadData } = await supabase.storage.from('user-reports').upload(`cocoon-errors/${user.id}/${filename}`, blob, { contentType: 'image/png' });
+                    const { data: uploadData } = await supabase.storage.from('user-reports').upload(`${user.id}/cocoon-errors/${filename}`, blob, { contentType: 'image/png' });
                     if (uploadData?.path) {
                       const { data: urlData } = supabase.storage.from('user-reports').getPublicUrl(uploadData.path);
                       screenshotUrl = urlData?.publicUrl || null;
