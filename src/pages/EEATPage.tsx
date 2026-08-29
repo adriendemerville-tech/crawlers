@@ -182,7 +182,6 @@ export default function EEATPage() {
             </nav>
 
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <Badge variant="outline" className="text-xs uppercase">Page Pilier</Badge>
               <Badge variant="outline" className="text-xs">Freelances &amp; agences SEO / GEO</Badge>
               <span className="text-xs text-muted-foreground">Mis à jour le 25 mai 2026</span>
             </div>

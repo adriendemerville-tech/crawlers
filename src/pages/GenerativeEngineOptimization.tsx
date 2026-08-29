@@ -159,7 +159,6 @@ const GenerativeEngineOptimization = () => {
         <section className="py-12 px-4 bg-gradient-to-b from-primary/5 to-background">
           <div className="mx-auto max-w-4xl">
             <div className="flex items-center gap-2 mb-4">
-              <Badge variant="outline" className="text-xs uppercase">Page Pilier</Badge>
               <span className="text-xs text-muted-foreground">Mis à jour le 9 mars 2026</span>
             </div>
             <h1 className="text-lg sm:text-xl lg:text-lg font-bold text-foreground mb-6 leading-tight">
