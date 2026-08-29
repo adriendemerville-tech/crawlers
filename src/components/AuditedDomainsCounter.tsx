@@ -38,7 +38,7 @@ export function AuditedDomainsCounter({
         className="text-3xl font-extrabold tabular-nums text-foreground sm:text-4xl"
         aria-live="polite"
       >
-        {count.toLocaleString('fr-FR')}
+        {total.toLocaleString('fr-FR')}
       </p>
       <p className="mt-1 text-sm text-muted-foreground">{label}</p>
     </div>
