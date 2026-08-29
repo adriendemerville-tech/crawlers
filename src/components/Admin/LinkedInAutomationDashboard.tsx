@@ -40,6 +40,8 @@ type Post = {
   linkedin_post_url: string | null;
   linkedin_post_urn: string | null;
   publish_error: string | null;
+  scheduled_for: string | null;
+  published_at: string | null;
   created_at: string;
   llm_tokens_used: number | null;
   audit_status: string | null;
@@ -47,6 +49,20 @@ type Post = {
   audited_at: string | null;
   audit_report: unknown;
 };
+
+// Vérification de l'état réel de publication, dérivée des données enregistrées.
+type PublishHealth = { color: string; label: string };
+
+function publishHealth(p: Post): PublishHealth {
+  if (p.published_at && (p.linkedin_post_urn || p.linkedin_post_url)) {
+    return { color: 'bg-emerald-500', label: `Publication vérifiée le ${new Date(p.published_at).toLocaleString('fr-FR')}` };
+  }
+  if (p.publish_error || p.status === 'failed' || (p.status === 'published' && !p.linkedin_post_urn)) {
+    return { color: 'bg-amber-500', label: `Publication tentée mais échouée${p.publish_error ? ` : ${p.publish_error}` : ''}` };
+  }
+  return { color: 'bg-red-500', label: 'Jamais poussé vers la publication LinkedIn' };
+}
+
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   draft: 'outline',
