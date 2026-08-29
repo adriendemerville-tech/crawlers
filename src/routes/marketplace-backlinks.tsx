@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import MarketplaceBacklinksLanding, { MARKETPLACE_FAQ } from '@/pages/MarketplaceBacklinksLanding';
+import MarketplaceBacklinksLanding from '@/pages/MarketplaceBacklinksLanding';
+import { MARKETPLACE_FAQ } from '@/pages/MarketplaceBacklinksLanding.faq';
 import { pageHead, SITE_URL } from '@/lib/seo/pageHead';
 
 const URL = `${SITE_URL}/marketplace-backlinks`;

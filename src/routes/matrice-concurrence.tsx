@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import MatriceConcurrence, { MATRIX_FAQS } from "@/pages/MatriceConcurrence";
+import MatriceConcurrence from "@/pages/MatriceConcurrence";
+import { MATRIX_FAQS } from "@/pages/MatriceConcurrence.faq";
 import { pageHead } from "@/lib/seo/pageHead";
 import { ORGANIZATION_REF } from "@/lib/seo/organization";
 
