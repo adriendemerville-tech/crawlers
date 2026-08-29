@@ -292,7 +292,31 @@ Deno.serve(async (req) => {
     }
 
 
-    const mediaUrls: string[] = Array.isArray(post.media_urls) ? post.media_urls.filter(Boolean) : [];
+    let mediaUrls: string[] = Array.isArray(post.media_urls) ? post.media_urls.filter(Boolean) : [];
+    // Rattrapage : si le visuel n'a jamais été généré, on le génère ici (sinon le post
+    // reste bloqué en 'approved' indéfiniment) puis on relit le post.
+    if (mediaUrls.length === 0 && post.media_generation_status !== 'generating') {
+      try {
+        const gen = await fetch(`${SUPABASE_URL}/functions/v1/linkedin-media-generator`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+          body: JSON.stringify({ post_id: post.id }),
+        });
+        if (!gen.ok) console.error('media-generator retry failed', gen.status, (await gen.text()).slice(0, 300));
+      } catch (e) {
+        console.error('media-generator retry error', e);
+      }
+      const { data: refreshed } = await admin
+        .from('linkedin_scheduled_posts')
+        .select('media_urls, media_generation_status, media_type')
+        .eq('id', post.id)
+        .maybeSingle();
+      if (refreshed) {
+        post.media_urls = refreshed.media_urls;
+        post.media_generation_status = refreshed.media_generation_status;
+        mediaUrls = Array.isArray(refreshed.media_urls) ? refreshed.media_urls.filter(Boolean) : [];
+      }
+    }
     // Garde-fou : aucun post LinkedIn ne doit partir sans visuel.
     if (mediaUrls.length === 0) {
       return json({
@@ -300,6 +324,7 @@ Deno.serve(async (req) => {
         details: `Aucun média attaché (media_type=${post.media_type}, media_generation_status=${post.media_generation_status}). Un post LinkedIn Crawlers ne peut jamais être publié en texte seul : relance la génération média avant de publier.`,
       }, 400);
     }
+
     const authorUrn = await getAuthorUrn();
     const isVideo = post.media_type === 'video' && mediaUrls.length > 0;
 
