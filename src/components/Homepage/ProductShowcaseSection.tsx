@@ -37,7 +37,7 @@ const ProductShowcaseSection = memo(() => {
         ? 'Positions réelles consolidées sur plusieurs fournisseurs de SERP.'
         : 'Real positions consolidated across multiple SERP providers.',
       icon: Eye,
-      badgeColor: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
+      badgeColor: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
       link: '/app/console',
     },
     {
@@ -204,12 +204,19 @@ const ProductShowcaseSection = memo(() => {
           {slides.map((_, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
-              className={`rounded-full transition-all duration-300 w-[3px] h-[3px] sm:w-1.5 sm:h-1.5 ${
-                i === current ? 'w-6 bg-primary sm:w-6 sm:h-1.5' : 'bg-muted-foreground/25 hover:bg-muted-foreground/40'
-              }`}
+              className="flex items-center justify-center p-3 sm:p-2 -m-1 shrink-0"
               aria-label={`Slide ${i + 1}`}
-            />
+              aria-current={i === current}
+            >
+              {/* Point visuel volontairement discret ; la zone tactile fait >= 24 px (WCAG 2.5.8). */}
+              <span
+                className={`block rounded-full transition-all duration-300 h-[3px] sm:h-1.5 ${
+                  i === current ? 'w-6 bg-primary' : 'w-[3px] sm:w-1.5 bg-muted-foreground/25'
+                }`}
+              />
+            </button>
           ))}
         </div>
       </div>

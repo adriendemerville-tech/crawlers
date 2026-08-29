@@ -3,84 +3,13 @@
 // UNE étape et rend la main, ce qui garde chaque requête sous la limite de temps
 // du worker (pas de `EdgeRuntime.waitUntil` disponible ici).
 // Toute la logique de quota et d'accès est serveur.
+// Les helpers vivent dans `matrixRequest.server.ts` : le module scope d'un
+// fichier de server functions est effacé par le découpage côté client.
 
 import { createServerFn } from '@tanstack/react-start';
-import { getRequestHeader } from '@tanstack/react-start/server';
-import { type MatrixJobState } from './types';
-
-
-export const MATRIX_FREE_QUOTA = 1; // 1 matrice par IP et par jour
-
-function clientIp(): string {
-  const fwd = getRequestHeader('x-forwarded-for') || '';
-  return (
-    fwd.split(',')[0]?.trim() ||
-    getRequestHeader('cf-connecting-ip') ||
-    getRequestHeader('x-real-ip') ||
-    'unknown'
-  );
-}
-
-async function hashIp(ip: string): Promise<string> {
-  const pepper = (process.env['SUPABASE_SERVICE_ROLE_KEY'] || 'matrice').slice(0, 24);
-  const bytes = new TextEncoder().encode(`competitor-matrix:${pepper}:${ip}`);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-function normalizeUrl(raw: string): string | null {
-  const s = String(raw || '').trim();
-  if (!s) return null;
-  try {
-    const u = new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`);
-    if (!['http:', 'https:'].includes(u.protocol) || !u.hostname.includes('.')) return null;
-    return u.toString();
-  } catch {
-    return null;
-  }
-}
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
-
-/** Vrai si la requête porte un token d'un utilisateur ayant le rôle admin. */
-async function isAdminRequest(): Promise<boolean> {
-  try {
-    const auth = getRequestHeader('authorization') || '';
-    const token = auth.replace(/^Bearer\s+/i, '').trim();
-    if (!token) return false;
-    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-    const { data, error } = await supabaseAdmin.auth.getUser(token);
-    if (error || !data?.user) return false;
-    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
-      _user_id: data.user.id,
-      _role: 'admin',
-    });
-    return isAdmin === true;
-  } catch {
-    return false;
-  }
-}
-
-
-function toState(row: any): MatrixJobState {
-  return {
-    id: row.id,
-    status: row.status,
-    step: row.step || 'pending',
-    progress: row.progress || 0,
-    domain: row.domain,
-    targetUrl: row.target_url,
-    identity: row.identity ?? null,
-    competitors: row.competitors ?? [],
-    keywords: row.keywords ?? [],
-    matrix: row.matrix ?? null,
-    authority: row.authority ?? null,
-    error: row.error ?? null,
-    shareToken: row.share_token,
-  };
-}
 
 export const getCompetitorMatrixQuota = createServerFn({ method: 'GET' }).handler(async () => {
+  const { isAdminRequest, hashIp, clientIp, MATRIX_FREE_QUOTA } = await import('./matrixRequest.server');
   if (await isAdminRequest()) {
     return { quota: 9999, used: 0, remaining: 9999, unlimited: true };
   }
@@ -100,6 +29,8 @@ export const getCompetitorMatrixQuota = createServerFn({ method: 'GET' }).handle
 export const startCompetitorMatrix = createServerFn({ method: 'POST' })
   .inputValidator((input: { url: string; competitors?: string[] }) => input)
   .handler(async ({ data }) => {
+    const { normalizeUrl, isAdminRequest, hashIp, clientIp, toState, MATRIX_FREE_QUOTA } =
+      await import('./matrixRequest.server');
     const targetUrl = normalizeUrl(data.url);
     if (!targetUrl) return { error: 'invalid_url' as const, message: 'URL invalide' };
 
@@ -163,6 +94,7 @@ export const advanceCompetitorMatrix = createServerFn({ method: 'POST' })
   .inputValidator((input: { jobId: string }) => input)
   .handler(async ({ data }) => {
     const jobId = String(data.jobId);
+    const { hashIp, clientIp, isAdminRequest, toState } = await import('./matrixRequest.server');
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
 
     // Contrôle de propriété : seul le demandeur (même empreinte IP) ou un admin
@@ -190,8 +122,9 @@ export const advanceCompetitorMatrix = createServerFn({ method: 'POST' })
 export const saveCompetitorMatrixLead = createServerFn({ method: 'POST' })
   .inputValidator((input: { jobId: string; email: string; consent: boolean }) => input)
   .handler(async ({ data }) => {
+    const { hashIp, clientIp, isAdminRequest, MATRIX_EMAIL_RE } = await import('./matrixRequest.server');
     const email = String(data.email || '').trim().toLowerCase();
-    if (!EMAIL_RE.test(email) || email.length > 160) {
+    if (!MATRIX_EMAIL_RE.test(email) || email.length > 160) {
       return { error: 'invalid_email' as const, message: 'Adresse email invalide' };
     }
     if (!data.consent) return { error: 'consent_required' as const, message: 'Consentement requis' };
@@ -223,6 +156,7 @@ export const saveCompetitorMatrixLead = createServerFn({ method: 'POST' })
 export const getCompetitorMatrixByToken = createServerFn({ method: 'GET' })
   .inputValidator((input: { token: string }) => input)
   .handler(async ({ data }) => {
+    const { toState } = await import('./matrixRequest.server');
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const { data: job } = await supabaseAdmin
       .from('competitor_matrix_jobs')

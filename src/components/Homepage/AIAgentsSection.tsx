@@ -124,7 +124,7 @@ const AIAgentsSection = memo(() => {
                 { 
                   icon: HelpCircle, 
                   text: language === 'fr' ? 'Explication des scores SEO, GEO et E-E-A-T' : 'SEO, GEO & E-E-A-T score explanations',
-                  color: 'text-blue-500'
+                  color: 'text-amber-500'
                 },
                 { 
                   icon: Search, 
@@ -203,7 +203,7 @@ const AIAgentsSection = memo(() => {
                 { 
                   icon: BarChart3, 
                   text: language === 'fr' ? 'Suivi d\'impact T+30 / T+60 / T+90 via GSC & GA4' : 'Impact tracking at T+30/60/90 via GSC & GA4',
-                  color: 'text-blue-500'
+                  color: 'text-amber-500'
                 },
               ].map((feat, i) => (
                 <div key={i} className="flex items-start gap-3">

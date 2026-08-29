@@ -44,7 +44,7 @@ const i18n = {
     subtitleLlm: 'Découvrez si les IA vous citent quand on parle de votre secteur.',
     allowed: 'Autorisé',
     blocked: 'Bloqué',
-    summary_all: 'Tous les bots IA peuvent accéder à votre site ✓',
+    summary_all: 'Tous les bots IA peuvent accéder à votre site',
     summary_some: 'bots IA bloqués sur votre site',
     geoScoreLabel: 'Score GEO',
     geoOut: '/ 100',
@@ -71,7 +71,7 @@ const i18n = {
     subtitleLlm: 'Discover if AIs mention you when discussing your industry.',
     allowed: 'Allowed',
     blocked: 'Blocked',
-    summary_all: 'All AI bots can access your site ✓',
+    summary_all: 'All AI bots can access your site',
     summary_some: 'AI bots blocked on your site',
     geoScoreLabel: 'GEO Score',
     geoOut: '/ 100',
@@ -98,7 +98,7 @@ const i18n = {
     subtitleLlm: 'Descubre si las IAs te mencionan cuando hablan de tu sector.',
     allowed: 'Permitido',
     blocked: 'Bloqueado',
-    summary_all: 'Todos los bots IA pueden acceder a tu sitio ✓',
+    summary_all: 'Todos los bots IA pueden acceder a tu sitio',
     summary_some: 'bots IA bloqueados en tu sitio',
     geoScoreLabel: 'Score GEO',
     geoOut: '/ 100',
@@ -156,12 +156,12 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 const LLM_ICONS: Record<string, string> = {
-  ChatGPT: '🤖',
-  Gemini: '✨',
-  Perplexity: '🔍',
-  Claude: '🧠',
-  Mistral: '🌊',
-  'Meta Llama': '🦙',
+  ChatGPT: 'GPT',
+  Gemini: 'GEM',
+  Perplexity: 'PPX',
+  Claude: 'CLD',
+  Mistral: 'MST',
+  'Meta Llama': 'LLA',
 };
 
 export function AIBotsLeadMagnet() {
