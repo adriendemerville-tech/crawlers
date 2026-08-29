@@ -727,7 +727,7 @@ function CocoonContent() {
         {/* Top Bar */}
         {!isFullscreen && (
         <header className="shrink-0 overflow-visible backdrop-blur-xl px-2 sm:px-4 md:px-6 py-2 bg-[#0f0a1e]/80 relative z-30">
-          <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 gap-x-2">
+          <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 gap-x-2 relative">
             {/* Back + Title */}
             <div className="flex items-center gap-2 shrink-0">
               <button
@@ -743,18 +743,19 @@ function CocoonContent() {
                   Cocoon <span className="text-[#fbbf24]">·</span> <span className="hidden xs:inline">{t.organism}</span>
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none px-1 sm:px-1.5 py-0.5 rounded border text-white/30 bg-white/5 border-white/10">beta</span>
-                {/* Site selector — compact, right of the BETA badge */}
-                <div className="w-[120px] sm:w-[150px] shrink-0">
-                  <CocoonSiteSelector
-                    userId={user?.id || ""}
-                    trackedSites={trackedSites}
-                    selectedSiteId={selectedSiteId}
-                    onSelect={setSelectedSiteId}
-                    onSiteCreated={(site) => setTrackedSites(prev => [site, ...prev])}
-                    placeholder={t.selectSite}
-                  />
-                </div>
               </div>
+            </div>
+
+            {/* Site selector — centered in the top bar, double width */}
+            <div className="absolute left-1/2 -translate-x-1/2 w-[240px] sm:w-[300px] z-10">
+              <CocoonSiteSelector
+                userId={user?.id || ""}
+                trackedSites={trackedSites}
+                selectedSiteId={selectedSiteId}
+                onSelect={setSelectedSiteId}
+                onSiteCreated={(site) => setTrackedSites(prev => [site, ...prev])}
+                placeholder={t.selectSite}
+              />
             </div>
 
             {/* Controls */}
