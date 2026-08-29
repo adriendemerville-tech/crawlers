@@ -300,22 +300,22 @@ export function AIBotsLeadMagnet() {
       </div>
 
       {/* Input */}
-      <div className="flex gap-3">
-        <div className="flex-[2] relative">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="sm:flex-[2] min-w-0 relative">
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t.placeholder}
-            className="w-full h-16 px-6 text-lg bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/10 dark:to-white/[0.04] backdrop-blur-sm border-2 border-white rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-hidden focus:border-brand-violet transition-colors"
+            className="w-full h-14 sm:h-16 px-6 text-base sm:text-lg bg-gradient-to-b from-muted/60 to-muted/30 dark:from-white/10 dark:to-white/[0.04] backdrop-blur-sm border-2 border-white rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-hidden focus:border-brand-violet transition-colors"
           />
         </div>
         <button
           type="button"
           onClick={handleAnalyze}
           disabled={loading || !url.trim()}
-          className="h-16 px-8 rounded-lg text-lg font-semibold bg-gradient-to-b from-muted/80 to-muted/40 dark:from-white/15 dark:to-white/[0.06] backdrop-blur-sm border-2 border-foreground text-foreground hover:bg-foreground/5 disabled:opacity-40 transition-colors flex items-center gap-2 shrink-0"
+          className="h-14 sm:h-16 w-full sm:w-auto sm:shrink-0 px-8 rounded-lg text-base sm:text-lg font-semibold bg-gradient-to-b from-muted/80 to-muted/40 dark:from-white/15 dark:to-white/[0.06] backdrop-blur-sm border-2 border-foreground text-foreground hover:bg-foreground/5 disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
         >
           {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
           {t.cta}
