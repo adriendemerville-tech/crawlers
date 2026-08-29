@@ -49,7 +49,7 @@ function HeroSectionComponent() {
   };
 
   return (
-    <section className="relative flex min-h-[40vh] sm:min-h-[48vh] items-center justify-center overflow-hidden px-4 sm:px-6 pt-2">
+    <section className="relative flex min-h-0 sm:min-h-[48vh] items-center justify-center overflow-hidden px-4 sm:px-6 py-6 sm:py-2 sm:pt-2">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-60 -top-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
         <div className="absolute -bottom-60 -right-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
@@ -96,9 +96,9 @@ function HeroSectionComponent() {
 
 
         {/* URL input + CTA Audit Expert + note — tout sur une seule ligne */}
-        <div className="mt-2 mx-auto w-full flex flex-nowrap items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 46rem)' }}>
+        <div className="mt-2 mx-auto w-full flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3" style={{ maxWidth: 'min(96%, 46rem)' }}>
           <TrustBadge layout="column" className="max-sm:hidden! flex sm:shrink-0 gap-0.5 py-0 [&_.text-sm]:text-[11px] [&_.text-sm]:whitespace-nowrap [&_.text-sm]:text-left" />
-          <div className="flex-[1.8] basis-0 min-w-0 relative rounded-xl p-[2px] bg-gradient-to-b from-gray-300 via-gray-200 to-gray-400 dark:p-0 dark:bg-none">
+          <div className="basis-full sm:basis-0 sm:flex-[1.8] min-w-0 relative rounded-xl p-[2px] bg-gradient-to-b from-gray-300 via-gray-200 to-gray-400 dark:p-0 dark:bg-none">
             <Input
               type="text"
               placeholder="url : crawlers.fr"
@@ -115,7 +115,7 @@ function HeroSectionComponent() {
             />
             <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           </div>
-          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="shrink-0 basis-0 min-w-0 flex-[0.8]">
+          <Link to={url.trim() ? `/audit-expert?url=${encodeURIComponent(url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim())}&autolaunch=1` : '/audit-expert'} className="basis-full sm:basis-0 sm:shrink-0 min-w-0 sm:flex-[0.8]">
             <Button
               variant="outline"
               size="lg"

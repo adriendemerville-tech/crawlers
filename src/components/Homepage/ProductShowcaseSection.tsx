@@ -123,13 +123,13 @@ const ProductShowcaseSection = memo(() => {
         <div className="relative flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="shrink-0 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors active:scale-95 z-10"
+            className="hidden sm:block shrink-0 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors active:scale-95 z-10"
             aria-label="Previous"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
 
-          <div className="flex-1 overflow-hidden rounded-2xl bg-card/50 border border-border/30 p-4 sm:p-6">
+          <div className="flex-1 min-w-0 overflow-hidden rounded-2xl bg-card/50 border border-border/30 p-3 sm:p-6">
             <div
               className="transition-all duration-300 ease-out"
               style={{
@@ -140,18 +140,18 @@ const ProductShowcaseSection = memo(() => {
               }}
             >
               <Link to={slide.link} className="block group cursor-pointer">
-                <div className="grid gap-8 lg:grid-cols-2 items-center">
+                <div className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center">
                   {/* Screenshot */}
-                  <div className="relative transition-transform duration-500 ease-out group-hover:scale-[1.02]" style={{ perspective: '1200px' }}>
+                  <div className="relative min-w-0 transition-transform duration-500 ease-out group-hover:scale-[1.02]" style={{ perspective: '1200px' }}>
                     <div className={`absolute -inset-4 rounded-3xl bg-gradient-to-br ${slide.badgeColor} opacity-[0.07] blur-2xl group-hover:opacity-[0.12] transition-opacity duration-500`} />
-                    <div className="relative rounded-2xl overflow-hidden border-2 border-border shadow-2xl shadow-black/10 dark:shadow-black/30 group-hover:border-primary/30 transition-colors duration-300 bg-muted/30">
+                    <div className="relative min-w-0 rounded-2xl overflow-hidden border-2 border-border shadow-2xl shadow-black/10 dark:shadow-black/30 group-hover:border-primary/30 transition-colors duration-300 bg-muted/30">
                       <div className="bg-muted/80 dark:bg-muted/40 border-b border-border/50 px-4 py-2.5 flex items-center gap-2">
                         <div className="flex gap-1.5">
                           <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
                           <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
                           <div className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
                         </div>
-                        <div className="flex-1 mx-8">
+                        <div className="min-w-0 flex-1 mx-2 sm:mx-8">
                           <div className="bg-background/60 rounded-md px-3 py-1 text-[10px] text-muted-foreground font-mono text-center truncate">
                             crawlers.fr
                           </div>
@@ -162,7 +162,7 @@ const ProductShowcaseSection = memo(() => {
                         alt={`Capture d'écran de l'interface Crawlers.fr : ${slide.title}`}
                         width={960}
                         height={600}
-                        className="w-full h-auto block min-h-[200px] object-cover"
+                        className="w-full h-auto block object-contain sm:min-h-[200px] sm:object-cover"
                         loading="eager"
                         decoding="async"
                       />
@@ -170,15 +170,15 @@ const ProductShowcaseSection = memo(() => {
                   </div>
 
                   {/* Text */}
-                  <div className="space-y-4">
+                  <div className="min-w-0 space-y-3 sm:space-y-4">
                     <Badge className={`${slide.badgeColor} border-current/20 text-xs font-semibold px-3 py-1`}>
                       <Icon className="w-3.5 h-3.5 mr-1.5" />
                       {slide.title}
                     </Badge>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-foreground font-display leading-tight">
+                    <h3 className="t-h2 sm:text-3xl font-bold text-foreground font-display leading-tight break-words">
                       {slide.title}
                     </h3>
-                    <p className="text-muted-foreground leading-relaxed text-base sm:text-lg">
+                    <p className="text-muted-foreground leading-relaxed text-sm sm:text-lg">
                       {slide.desc}
                     </p>
                     <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary group-hover:underline">
@@ -192,7 +192,7 @@ const ProductShowcaseSection = memo(() => {
 
           <button
             onClick={() => navigate(1)}
-            className="shrink-0 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors active:scale-95 z-10"
+            className="hidden sm:block shrink-0 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors active:scale-95 z-10"
             aria-label="Next"
           >
             <ChevronRight className="h-5 w-5" />
