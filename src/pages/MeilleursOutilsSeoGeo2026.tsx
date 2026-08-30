@@ -257,6 +257,102 @@ const OUTILS: Outil[] = [
   },
 ];
 
+/* ─── Sources de preuve par cellule du tableau ─── */
+
+type Colonne = 'seo' | 'geo' | 'contenuIA' | 'local' | 'execution';
+
+const COLONNES: { key: Colonne; label: string }[] = [
+  { key: 'seo', label: 'SEO' },
+  { key: 'geo', label: 'GEO' },
+  { key: 'contenuIA', label: 'Contenu IA' },
+  { key: 'local', label: 'Local' },
+  { key: 'execution', label: 'Exécution' },
+];
+
+interface Preuve { t: string; u: string }
+
+const PREUVES: Record<string, Partial<Record<Colonne, Preuve>>> = {
+  'SE Ranking': {
+    seo: { t: 'Pages produit SE Ranking : suivi de positions, audit de site, backlinks, analyse concurrentielle', u: 'https://seranking.com/features.html' },
+    geo: { t: 'SE Ranking AI Results Tracker (suivi des AI Overviews et réponses IA)', u: 'https://seranking.com/ai-search-tracker.html' },
+    contenuIA: { t: 'SE Ranking Content Marketing Tool (brief et rédaction assistée)', u: 'https://seranking.com/content-marketing-tool.html' },
+    local: { t: 'SE Ranking Local Marketing (fiche Google Business Profile, positions locales)', u: 'https://seranking.com/local-marketing-tool.html' },
+    execution: { t: 'Documentation SE Ranking : pas de déploiement de correctifs ni de publication automatique', u: 'https://seranking.com/features.html' },
+  },
+  'Crawlers.fr': {
+    seo: { t: 'Audit technique Crawlers : crawl, Core Web Vitals, données structurées, maillage', u: 'https://crawlers.fr/audit-expert' },
+    geo: { t: 'Audit GEO Crawlers : Score GEO et citations mesurées dans 6 LLM', u: 'https://crawlers.fr/generative-engine-optimization' },
+    contenuIA: { t: 'Content Architect Crawlers : génération et scoring d\'articles', u: 'https://crawlers.fr/generateur-contenu-seo' },
+    local: { t: 'Module Google Business Profile et zone de chalandise (couverture locale partielle : pas de geo-grid)', u: 'https://crawlers.fr/tarifs' },
+    execution: { t: 'Déploiement CMS Crawlers : code correctif appliqué et contenu publié automatiquement', u: 'https://crawlers.fr/autopilot-seo' },
+  },
+  'Surfer SEO': {
+    seo: { t: 'Surfer Audit (optimisation on-page d\'une page existante)', u: 'https://surferseo.com/audit/' },
+    geo: { t: 'Surfer AI Tracker (suivi des mentions de marque dans les réponses IA)', u: 'https://surferseo.com/ai-tracker/' },
+    contenuIA: { t: 'Surfer Content Editor et Surfer AI (référence marché de l\'optimisation sémantique)', u: 'https://surferseo.com/content-editor/' },
+    local: { t: 'Catalogue Surfer : aucune fonction de référencement local', u: 'https://surferseo.com/features/' },
+    execution: { t: 'Publication vers WordPress / Google Docs uniquement, pas de correctifs techniques', u: 'https://surferseo.com/integrations/' },
+  },
+  'ThotSEO': {
+    seo: { t: 'ThotSEO : analyse sémantique et optimisation on-page (pas de suite SEO complète)', u: 'https://thot-seo.fr' },
+    contenuIA: { t: 'ThotSEO : guide de rédaction assistée à partir de la SERP', u: 'https://thot-seo.fr' },
+  },
+  'SoRank': {
+    seo: { t: 'SoRank : suivi de positions et audit SEO', u: 'https://sorank.fr' },
+  },
+  'Outrank': {
+    seo: { t: 'Outrank : recherche de mots-clés et optimisation on-page automatisée', u: 'https://outrank.so' },
+    contenuIA: { t: 'Outrank : génération d\'articles longs assistée par IA', u: 'https://outrank.so' },
+    execution: { t: 'Outrank : publication automatique vers WordPress, Webflow, Shopify', u: 'https://outrank.so/integrations' },
+  },
+  'ChatSEO': {
+    seo: { t: 'ChatSEO : analyse de visibilité, couverture SEO classique limitée', u: 'https://chatseo.com' },
+    geo: { t: 'ChatSEO : suivi des mentions de marque dans ChatGPT et Perplexity', u: 'https://chatseo.com' },
+    contenuIA: { t: 'ChatSEO : recommandations de contenu orientées réponses IA', u: 'https://chatseo.com' },
+  },
+  'Cocolyze': {
+    seo: { t: 'Cocolyze : suivi de positions, audit de site et backlinks', u: 'https://cocolyze.com/fr/fonctionnalites' },
+    local: { t: 'Cocolyze : suivi de positions géolocalisé (pas de gestion de fiche locale)', u: 'https://cocolyze.com/fr/fonctionnalites' },
+  },
+  'BotSEO': {
+    seo: { t: 'BotSEO : analyse de logs et accessibilité technique aux crawlers', u: 'https://botseo.io' },
+    geo: { t: 'BotSEO : détection et analyse des passages des crawlers IA (GPTBot, ClaudeBot, PerplexityBot)', u: 'https://botseo.io' },
+  },
+  'Local Ranker': {
+    local: { t: 'Local Ranker : geo-grid, audit de fiche Google Business Profile — référence du référencement local', u: 'https://localranker.ai' },
+  },
+  'Localo': {
+    local: { t: 'Localo : suivi geo-grid et optimisation de fiche Google Business Profile', u: 'https://localo.com/fr' },
+    execution: { t: 'Localo : tâches d\'optimisation et publication de posts Google Business Profile', u: 'https://localo.com/fr' },
+  },
+  'Semrush': {
+    seo: { t: 'Semrush : base de données de mots-clés et backlinks la plus large du marché', u: 'https://www.semrush.com/features/' },
+    geo: { t: 'Semrush AI Visibility Toolkit (module récent de suivi des réponses IA)', u: 'https://www.semrush.com/ai-visibility-index/' },
+    contenuIA: { t: 'Semrush ContentShake AI (add-on payant séparé)', u: 'https://www.semrush.com/contentshake/' },
+    local: { t: 'Semrush Local (fiche Google Business Profile, suivi de positions locales)', u: 'https://www.semrush.com/local/' },
+    execution: { t: 'Semrush : recommandations et Social Toolkit, mais aucun déploiement de correctifs sur le site', u: 'https://www.semrush.com/features/' },
+  },
+  'Ahrefs': {
+    seo: { t: 'Ahrefs Site Explorer et Site Audit — référence de l\'analyse de backlinks', u: 'https://ahrefs.com/fr/seo' },
+    geo: { t: 'Ahrefs Brand Radar (suivi des mentions dans les réponses IA)', u: 'https://ahrefs.com/brand-radar' },
+    contenuIA: { t: 'Ahrefs Content Helper (assistance à l\'optimisation, pas de rédaction complète)', u: 'https://ahrefs.com/fr/seo' },
+    execution: { t: 'Ahrefs : outillage d\'analyse uniquement, aucune action déployée', u: 'https://ahrefs.com/fr/seo' },
+  },
+};
+
+const SOURCE_INDEX = new Map<string, number>();
+const SOURCES: { n: number; outil: string; colonne: string; preuve: Preuve }[] = [];
+OUTILS.forEach((o) => {
+  COLONNES.forEach(({ key, label }) => {
+    const p = PREUVES[o.nom]?.[key];
+    if (!p) return;
+    const n = SOURCES.length + 1;
+    SOURCE_INDEX.set(`${o.nom}|${key}`, n);
+    SOURCES.push({ n, outil: o.nom, colonne: label, preuve: p });
+  });
+});
+
+
 const FAQ = [
   {
     q: 'Quel est le meilleur nouvel outil SEO en 2026 ?',
