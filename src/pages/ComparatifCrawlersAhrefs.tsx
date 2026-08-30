@@ -42,7 +42,7 @@ export default function ComparatifCrawlersAhrefs() {
         <Badge variant="outline" className="text-xs uppercase mb-4">Comparatif</Badge>
 
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
-          Alternative à Ahrefs : Crawlers.fr vs Ahrefs, 8 critères de décision
+          Crawlers, l'alternative française à Ahrefs : 8 critères de décision
         </h1>
 
         <p className="text-lg text-foreground/80 leading-relaxed mb-6">
