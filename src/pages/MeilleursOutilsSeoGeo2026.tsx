@@ -257,6 +257,102 @@ const OUTILS: Outil[] = [
   },
 ];
 
+/* ─── Sources de preuve par cellule du tableau ─── */
+
+type Colonne = 'seo' | 'geo' | 'contenuIA' | 'local' | 'execution';
+
+const COLONNES: { key: Colonne; label: string }[] = [
+  { key: 'seo', label: 'SEO' },
+  { key: 'geo', label: 'GEO' },
+  { key: 'contenuIA', label: 'Contenu IA' },
+  { key: 'local', label: 'Local' },
+  { key: 'execution', label: 'Exécution' },
+];
+
+interface Preuve { t: string; u: string }
+
+const PREUVES: Record<string, Partial<Record<Colonne, Preuve>>> = {
+  'SE Ranking': {
+    seo: { t: 'Pages produit SE Ranking : suivi de positions, audit de site, backlinks, analyse concurrentielle', u: 'https://seranking.com/features.html' },
+    geo: { t: 'SE Ranking AI Results Tracker (suivi des AI Overviews et réponses IA)', u: 'https://seranking.com/ai-search-tracker.html' },
+    contenuIA: { t: 'SE Ranking Content Marketing Tool (brief et rédaction assistée)', u: 'https://seranking.com/content-marketing-tool.html' },
+    local: { t: 'SE Ranking Local Marketing (fiche Google Business Profile, positions locales)', u: 'https://seranking.com/local-marketing-tool.html' },
+    execution: { t: 'Documentation SE Ranking : pas de déploiement de correctifs ni de publication automatique', u: 'https://seranking.com/features.html' },
+  },
+  'Crawlers.fr': {
+    seo: { t: 'Audit technique Crawlers : crawl, Core Web Vitals, données structurées, maillage', u: 'https://crawlers.fr/audit-expert' },
+    geo: { t: 'Audit GEO Crawlers : Score GEO et citations mesurées dans 6 LLM', u: 'https://crawlers.fr/generative-engine-optimization' },
+    contenuIA: { t: 'Content Architect Crawlers : génération et scoring d\'articles', u: 'https://crawlers.fr/generateur-contenu-seo' },
+    local: { t: 'Module Google Business Profile et zone de chalandise (couverture locale partielle : pas de geo-grid)', u: 'https://crawlers.fr/tarifs' },
+    execution: { t: 'Déploiement CMS Crawlers : code correctif appliqué et contenu publié automatiquement', u: 'https://crawlers.fr/autopilot-seo' },
+  },
+  'Surfer SEO': {
+    seo: { t: 'Surfer Audit (optimisation on-page d\'une page existante)', u: 'https://surferseo.com/audit/' },
+    geo: { t: 'Surfer AI Tracker (suivi des mentions de marque dans les réponses IA)', u: 'https://surferseo.com/ai-tracker/' },
+    contenuIA: { t: 'Surfer Content Editor et Surfer AI (référence marché de l\'optimisation sémantique)', u: 'https://surferseo.com/content-editor/' },
+    local: { t: 'Catalogue Surfer : aucune fonction de référencement local', u: 'https://surferseo.com/features/' },
+    execution: { t: 'Publication vers WordPress / Google Docs uniquement, pas de correctifs techniques', u: 'https://surferseo.com/integrations/' },
+  },
+  'ThotSEO': {
+    seo: { t: 'ThotSEO : analyse sémantique et optimisation on-page (pas de suite SEO complète)', u: 'https://thot-seo.fr' },
+    contenuIA: { t: 'ThotSEO : guide de rédaction assistée à partir de la SERP', u: 'https://thot-seo.fr' },
+  },
+  'SoRank': {
+    seo: { t: 'SoRank : suivi de positions et audit SEO', u: 'https://sorank.fr' },
+  },
+  'Outrank': {
+    seo: { t: 'Outrank : recherche de mots-clés et optimisation on-page automatisée', u: 'https://outrank.so' },
+    contenuIA: { t: 'Outrank : génération d\'articles longs assistée par IA', u: 'https://outrank.so' },
+    execution: { t: 'Outrank : publication automatique vers WordPress, Webflow, Shopify', u: 'https://outrank.so/integrations' },
+  },
+  'ChatSEO': {
+    seo: { t: 'ChatSEO : analyse de visibilité, couverture SEO classique limitée', u: 'https://chatseo.com' },
+    geo: { t: 'ChatSEO : suivi des mentions de marque dans ChatGPT et Perplexity', u: 'https://chatseo.com' },
+    contenuIA: { t: 'ChatSEO : recommandations de contenu orientées réponses IA', u: 'https://chatseo.com' },
+  },
+  'Cocolyze': {
+    seo: { t: 'Cocolyze : suivi de positions, audit de site et backlinks', u: 'https://cocolyze.com/fr/fonctionnalites' },
+    local: { t: 'Cocolyze : suivi de positions géolocalisé (pas de gestion de fiche locale)', u: 'https://cocolyze.com/fr/fonctionnalites' },
+  },
+  'BotSEO': {
+    seo: { t: 'BotSEO : analyse de logs et accessibilité technique aux crawlers', u: 'https://botseo.io' },
+    geo: { t: 'BotSEO : détection et analyse des passages des crawlers IA (GPTBot, ClaudeBot, PerplexityBot)', u: 'https://botseo.io' },
+  },
+  'Local Ranker': {
+    local: { t: 'Local Ranker : geo-grid, audit de fiche Google Business Profile — référence du référencement local', u: 'https://localranker.ai' },
+  },
+  'Localo': {
+    local: { t: 'Localo : suivi geo-grid et optimisation de fiche Google Business Profile', u: 'https://localo.com/fr' },
+    execution: { t: 'Localo : tâches d\'optimisation et publication de posts Google Business Profile', u: 'https://localo.com/fr' },
+  },
+  'Semrush': {
+    seo: { t: 'Semrush : base de données de mots-clés et backlinks la plus large du marché', u: 'https://www.semrush.com/features/' },
+    geo: { t: 'Semrush AI Visibility Toolkit (module récent de suivi des réponses IA)', u: 'https://www.semrush.com/ai-visibility-index/' },
+    contenuIA: { t: 'Semrush ContentShake AI (add-on payant séparé)', u: 'https://www.semrush.com/contentshake/' },
+    local: { t: 'Semrush Local (fiche Google Business Profile, suivi de positions locales)', u: 'https://www.semrush.com/local/' },
+    execution: { t: 'Semrush : recommandations et Social Toolkit, mais aucun déploiement de correctifs sur le site', u: 'https://www.semrush.com/features/' },
+  },
+  'Ahrefs': {
+    seo: { t: 'Ahrefs Site Explorer et Site Audit — référence de l\'analyse de backlinks', u: 'https://ahrefs.com/fr/seo' },
+    geo: { t: 'Ahrefs Brand Radar (suivi des mentions dans les réponses IA)', u: 'https://ahrefs.com/brand-radar' },
+    contenuIA: { t: 'Ahrefs Content Helper (assistance à l\'optimisation, pas de rédaction complète)', u: 'https://ahrefs.com/fr/seo' },
+    execution: { t: 'Ahrefs : outillage d\'analyse uniquement, aucune action déployée', u: 'https://ahrefs.com/fr/seo' },
+  },
+};
+
+const SOURCE_INDEX = new Map<string, number>();
+const SOURCES: { n: number; outil: string; colonne: string; preuve: Preuve }[] = [];
+OUTILS.forEach((o) => {
+  COLONNES.forEach(({ key, label }) => {
+    const p = PREUVES[o.nom]?.[key];
+    if (!p) return;
+    const n = SOURCES.length + 1;
+    SOURCE_INDEX.set(`${o.nom}|${key}`, n);
+    SOURCES.push({ n, outil: o.nom, colonne: label, preuve: p });
+  });
+});
+
+
 const FAQ = [
   {
     q: 'Quel est le meilleur nouvel outil SEO en 2026 ?',
@@ -286,7 +382,28 @@ const FAQ = [
 
 /* ─── Petits composants ─── */
 
+function Cell({ outil, col, v }: { outil: string; col: Colonne; v: boolean | 'partiel' | 'top' }) {
+  const n = SOURCE_INDEX.get(`${outil}|${col}`);
+  const p = PREUVES[outil]?.[col];
+  return (
+    <span className="inline-flex items-start justify-center gap-0.5">
+      <Mark v={v} />
+      {n && (
+        <a
+          href={`#source-${n}`}
+          title={p?.t}
+          className="text-[10px] leading-none text-muted-foreground hover:text-primary underline underline-offset-2 tabular-nums"
+          aria-label={`Source ${n} : ${p?.t ?? ''}`}
+        >
+          {n}
+        </a>
+      )}
+    </span>
+  );
+}
+
 function Mark({ v }: { v: boolean | 'partiel' | 'top' }) {
+
   if (v === 'top') return <Check className="w-4 h-4 text-yellow-400 fill-yellow-400/60 mx-auto font-bold" aria-label="Référence du marché" />;
   if (v === true) return <Check className="w-4 h-4 text-emerald-500 mx-auto" aria-label="Oui" />;
   if (v === 'partiel') return <Check className="w-4 h-4 text-amber-500 mx-auto" aria-label="Partiel" />;
@@ -551,11 +668,11 @@ export default function MeilleursOutilsSeoGeo2026() {
                         {o.nom}
                       </a>
                     </td>
-                    <td className="p-3 text-center"><Mark v={o.seo} /></td>
-                    <td className="p-3 text-center"><Mark v={o.geo} /></td>
-                    <td className="p-3 text-center"><Mark v={o.contenuIA} /></td>
-                    <td className="p-3 text-center"><Mark v={o.local} /></td>
-                    <td className="p-3 text-center"><Mark v={o.execution} /></td>
+                    <td className="p-3 text-center"><Cell outil={o.nom} col="seo" v={o.seo} /></td>
+                    <td className="p-3 text-center"><Cell outil={o.nom} col="geo" v={o.geo} /></td>
+                    <td className="p-3 text-center"><Cell outil={o.nom} col="contenuIA" v={o.contenuIA} /></td>
+                    <td className="p-3 text-center"><Cell outil={o.nom} col="local" v={o.local} /></td>
+                    <td className="p-3 text-center"><Cell outil={o.nom} col="execution" v={o.execution} /></td>
                     <td className="p-3 text-muted-foreground whitespace-nowrap">{o.prix}</td>
                     <td className="p-3 text-center"><Note n={o.note} /></td>
                   </tr>
@@ -563,7 +680,46 @@ export default function MeilleursOutilsSeoGeo2026() {
               </tbody>
             </table>
           </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Chaque coche renvoie à une source vérifiable : le petit numéro à côté de l'indicateur
+            pointe vers le panneau « Sources et preuves » ci-dessous.
+          </p>
         </section>
+
+        {/* Sources et preuves */}
+        <section className="mb-12" id="sources">
+          <h2 className="text-2xl font-bold tracking-tight mb-2">Sources et preuves</h2>
+          <p className="citable-passage text-muted-foreground mb-4">
+            Chaque évaluation du tableau comparatif des 13 outils SEO et GEO est traçable : la
+            liste ci-dessous indique, pour chaque outil et chaque colonne, la fonctionnalité
+            officielle qui justifie l'indicateur et le lien vers la page produit correspondante.
+          </p>
+          <ol className="space-y-2 text-sm">
+            {SOURCES.map((s) => (
+              <li key={s.n} id={`source-${s.n}`} className="flex gap-3 scroll-mt-24">
+                <span className="tabular-nums text-muted-foreground w-6 shrink-0">{s.n}.</span>
+                <span>
+                  <strong className="font-semibold">{s.outil}</strong>
+                  <span className="text-muted-foreground"> — {s.colonne} : </span>
+                  {s.preuve.t}{' '}
+                  <a
+                    href={s.preuve.u}
+                    target="_blank"
+                    rel={s.outil === 'Crawlers.fr' ? undefined : 'nofollow noopener'}
+                    className="underline underline-offset-2 hover:text-primary break-all"
+                  >
+                    {s.preuve.u.replace(/^https?:\/\//, '')}
+                  </a>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <p className="text-xs text-muted-foreground mt-4">
+            Sources consultées et vérifiées sur les pages produit officielles des éditeurs.
+            Dernière vérification : août 2026.
+          </p>
+        </section>
+
 
         {/* Verdict */}
         <section className="mb-12">
