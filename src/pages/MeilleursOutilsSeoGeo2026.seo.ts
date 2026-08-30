@@ -31,6 +31,8 @@ export const OUTILS_JSONLD = [
       "BotSEO",
       "Local Ranker",
       "Localo",
+      "Semrush",
+      "Ahrefs",
     ].map((name, i) => ({
       "@type": "ListItem",
       position: i + 1,
