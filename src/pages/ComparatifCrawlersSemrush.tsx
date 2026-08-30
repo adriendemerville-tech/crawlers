@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
 import { SiloNav } from '@/components/seo/SiloNav';
+import { DirectAnswer } from '@/components/seo/DirectAnswer';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -196,6 +197,19 @@ const ComparatifCrawlersSemrush = () => {
                 Crawlers.fr innove avec le <strong className="text-primary">GEO</strong>, le <strong>Content Architect</strong>, le <strong>Cocoon 3D</strong> et le déploiement CMS direct.
                 Voici comment choisir selon vos vrais besoins.
               </p>
+
+              <DirectAnswer
+                className="mt-8"
+                question="Quelle est la meilleure alternative française à Semrush en 2026 ?"
+                answer={<>Semrush reste la référence pour la donnée de marché et le monitoring SEO historique, avec une profondeur d'index que personne n'égale en France. Crawlers.fr prend l'autre bout du problème : l'exécution — audit GEO, Content Architect, Cocoon 3D et déploiement direct dans le CMS — à un tarif pensé pour les TPE, PME et agences françaises.</>}
+                facts={[
+                  { label: 'Quoi', value: 'Comparatif sur 28 critères, SEO classique et GEO' },
+                  { label: 'Qui', value: 'TPE, PME, freelances et agences francophones' },
+                  { label: 'Pourquoi', value: 'Semrush mesure, Crawlers exécute (contenu, code, maillage)' },
+                  { label: 'Combien', value: 'Crawlers à partir de 29 €/mois, Semrush au-delà de 130 $/mois' },
+                  { label: 'Quand', value: 'Comparatif mis à jour en avril 2026' },
+                ]}
+              />
             </div>
           </section>
 

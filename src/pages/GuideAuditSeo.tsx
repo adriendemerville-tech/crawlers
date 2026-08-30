@@ -20,6 +20,7 @@ import { ArrowRight, CheckCircle2, AlertTriangle, TrendingUp, Search, Shield, Za
 import { Link } from '@/lib/router-compat';
 import { ClusterMesh } from '@/components/seo/ClusterMesh';
 import MarinaCitablePassage from "@/components/seo/MarinaCitablePassage";
+import { DirectAnswer } from '@/components/seo/DirectAnswer';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -151,6 +152,18 @@ export default function GuideAuditSeo() {
             <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
               C'est ce constat qui a donné naissance à l'approche <strong className="text-foreground">Identity-First</strong> de <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a> : avant de travailler votre contenu, vos mots-clés ou vos liens, construisez d'abord une identité numérique que les algorithmes — humains et artificiels — peuvent vérifier, comprendre et recommander. Ce guide exhaustif vous donne la méthodologie complète, les outils et les repères tarifaires pour réaliser un audit SEO & GEO qui couvre les deux dimensions de la visibilité moderne.
             </p>
+            <DirectAnswer
+              className="mt-8"
+              question="Qu'est-ce qu'un audit SEO et GEO en 2026 et combien coûte-t-il ?"
+              answer={<>Un audit SEO et GEO examine deux fronts à la fois : la capacité de vos pages à se classer dans Google et leur capacité à être citées par ChatGPT, Gemini, Perplexity ou Claude. L'approche Identity-First traite d'abord l'identité numérique vérifiable du site (entité, cohérence, structuration), puis le contenu, la technique et le maillage. Comptez de quelques centaines à plusieurs milliers d'euros en prestation, ou un audit automatisé immédiat avec Crawlers.fr.</>}
+              facts={[
+                { label: 'Quoi', value: 'Identité, technique, contenu, maillage, citations IA' },
+                { label: 'Qui', value: 'Consultant SEO, agence, ou outil automatisé' },
+                { label: 'Où', value: 'Google, Bing et moteurs génératifs (ChatGPT, Gemini, Perplexity)' },
+                { label: 'Quand', value: 'À la refonte, puis en revue trimestrielle' },
+                { label: 'Pourquoi', value: 'Les LLM citent des entités de confiance, ils ne classent pas des pages' },
+              ]}
+            />
             <CTA className="mt-8" />
           </header>
 

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
+import { DirectAnswer } from '@/components/seo/DirectAnswer';
   ArrowRight, FileText, Shield, CheckCircle2, Search, AlertTriangle,
   Eye, Zap, Globe, Brain, Target, BarChart3, Bot, Terminal, Activity,
   PieChart, Clock, Server, Lock
@@ -122,6 +123,19 @@ const AnalyseLogs = () => {
               <Link to="/analyse-bots-ia" className="text-primary underline underline-offset-2 hover:text-primary/80">les bots IA</Link> et{' '}
               Googlebot font <em>réellement</em> sur votre site — pas ce que la Search Console vous montre.
             </p>
+
+            <DirectAnswer
+              className="mb-8"
+              question="À quoi sert l'analyse de logs serveur en SEO et comment savoir quelles pages Googlebot et les bots IA visitent vraiment ?"
+              answer={<>L'analyse de logs lit le journal brut du serveur pour reconstituer chaque passage de Googlebot, GPTBot, ClaudeBot ou PerplexityBot : URL visitée, code de réponse, fréquence, date. Elle révèle les pages jamais explorées, les pages orphelines et le budget de crawl dépensé sur des URL sans valeur — des angles morts que la Search Console n'expose pas. C'est la seule source qui prouve, fichier à l'appui, ce que les robots font sur votre site.</>}
+              facts={[
+                { label: 'Quoi', value: "Journaux d'accès HTTP du serveur (Apache, Nginx, Cloudflare)" },
+                { label: 'Qui', value: 'Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, Google-Extended' },
+                { label: 'Pourquoi', value: 'Budget de crawl gaspillé, pages orphelines, erreurs 4xx/5xx invisibles' },
+                { label: 'Quand', value: 'Analyse continue, revue mensuelle ou après une refonte' },
+                { label: 'Combien', value: 'Inclus dans le plan Pro Agency de Crawlers.fr' },
+              ]}
+            />
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button asChild size="lg" className="text-base px-8 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white">
                 <Link to="/pro-agency">

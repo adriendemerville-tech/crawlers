@@ -13,6 +13,7 @@ import {
   BarChart3, CheckCircle2, TrendingUp, Monitor, Server, Image
 } from 'lucide-react';
 import { ClusterMesh } from '@/components/seo/ClusterMesh';
+import { DirectAnswer } from '@/components/seo/DirectAnswer';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -59,6 +60,17 @@ const PageSpeedLanding = () => {
               <strong>53% des visiteurs mobiles</strong> quittent un site qui met plus de 3 secondes à charger. 
               Testez vos <strong>Core Web Vitals</strong> et obtenez un plan d'action pour accélérer votre site.
             </p>
+            <DirectAnswer
+              className="mb-8"
+              question="Quelle vitesse de chargement viser en 2026 et comment tester ses Core Web Vitals ?"
+              answer={<>Une page doit s'afficher en moins de 2,5 secondes sur mobile : au-delà de 3 secondes, plus de la moitié des visiteurs abandonnent. Les trois Core Web Vitals à surveiller sont le LCP (≤ 2,5 s), l'INP (≤ 200 ms) et le CLS (≤ 0,1), mesurés sur mobile en priorité. Le test Crawlers.fr les relève sur votre URL et renvoie un plan d'action ordonné par gain réel.</>}
+              facts={[
+                { label: 'Quoi', value: 'LCP ≤ 2,5 s · INP ≤ 200 ms · CLS ≤ 0,1' },
+                { label: 'Où', value: 'Mesure mobile et desktop sur l\'URL de votre choix' },
+                { label: 'Pourquoi', value: '53 % des visiteurs mobiles quittent au-delà de 3 secondes' },
+                { label: 'Combien', value: 'Test gratuit, sans inscription' },
+              ]}
+            />
             <LeadMagnetAudit
               type="pagespeed"
               placeholder="https://votre-site.com"
