@@ -1,6 +1,6 @@
 // Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
 import "@/styles.app.css";
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { DesktopOnlyGate } from "@/components/DesktopOnlyGate";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
@@ -9,7 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@/lib/router-compat";
 import { useAISidebar } from "@/contexts/AISidebarContext";
 import { useCocoonTheme } from "@/hooks/useCocoonTheme";
-import { CocoonForceGraph3D } from "@/components/Cocoon/CocoonForceGraph3D";
+import { ClientOnly } from "@tanstack/react-router";
+const CocoonForceGraph3D = lazy(() => import("@/components/Cocoon/CocoonForceGraph3D").then((m) => ({ default: m.CocoonForceGraph3D })));
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
 import { CocoonRadialGraph } from "@/components/Cocoon/CocoonRadialGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
@@ -949,6 +950,8 @@ function CocoonContent() {
                 </div>
               </div>
             ) : viewMode === '3d' ? (
+              <ClientOnly fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 animate-spin text-[#a78bfa]" /></div>}>
+              <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 animate-spin text-[#a78bfa]" /></div>}>
               <CocoonForceGraph3D
                 key={`3d-${selectedSiteId}`}
                 nodes={filteredNodes}
@@ -976,6 +979,8 @@ function CocoonContent() {
                 linkThickness={linkThickness}
                 bgColorSlider={bgColor}
               />
+              </Suspense>
+              </ClientOnly>
             ) : viewMode === 'radial' ? (
               <CocoonRadialGraph
                 key={`radial-${selectedSiteId}`}
