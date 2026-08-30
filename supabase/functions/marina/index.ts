@@ -77,7 +77,7 @@ import {
   reconcileReportHtml,
   formatVitalSeconds,
   isSecondaryAudienceUrl,
-  splitAudiences,
+  reconcileWeightedTotal,
   reconcileWeightedTotal,
 } from '../_shared/auditReconciliation.ts';
 
