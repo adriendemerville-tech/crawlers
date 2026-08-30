@@ -10,7 +10,9 @@ import { useNavigate } from "@/lib/router-compat";
 import { useAISidebar } from "@/contexts/AISidebarContext";
 import { useCocoonTheme } from "@/hooks/useCocoonTheme";
 import { ClientOnly } from "@tanstack/react-router";
-const CocoonForceGraph3D = lazy(() => import("@/components/Cocoon/CocoonForceGraph3D").then((m) => ({ default: m.CocoonForceGraph3D })));
+import { LazyBoundary } from "@/components/LazyBoundary";
+import { lazyRetry } from "@/lib/lazyWithRetry";
+const CocoonForceGraph3D = lazy(lazyRetry(() => import("@/components/Cocoon/CocoonForceGraph3D").then((m) => ({ default: m.CocoonForceGraph3D }))));
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
 import { CocoonRadialGraph } from "@/components/Cocoon/CocoonRadialGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
@@ -951,7 +953,7 @@ function CocoonContent() {
               </div>
             ) : viewMode === '3d' ? (
               <ClientOnly fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 animate-spin text-[#a78bfa]" /></div>}>
-              <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 animate-spin text-[#a78bfa]" /></div>}>
+              <LazyBoundary label="le graphe 3D" minHeight="24rem" fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 animate-spin text-[#a78bfa]" /></div>}>
               <CocoonForceGraph3D
                 key={`3d-${selectedSiteId}`}
                 nodes={filteredNodes}
@@ -979,7 +981,7 @@ function CocoonContent() {
                 linkThickness={linkThickness}
                 bgColorSlider={bgColor}
               />
-              </Suspense>
+              </LazyBoundary>
               </ClientOnly>
             ) : viewMode === 'radial' ? (
               <CocoonRadialGraph
