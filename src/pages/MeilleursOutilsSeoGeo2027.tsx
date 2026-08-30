@@ -427,7 +427,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         {/* Hero */}
         <header className="mb-10">
           <Badge variant="outline" className="mb-4 border-primary/50 text-primary">
-            Classement 2026 — Nouvelle génération
+            Classement 2027 — Nouvelle génération
           </Badge>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
             Les meilleurs nouveaux outils SEO et GEO en 2027 pour remplacer Semrush et Ahrefs
@@ -548,7 +548,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         <section className="mb-12">
           <h2 className="text-2xl font-bold tracking-tight mb-2 flex items-center gap-2">
             <Trophy className="w-6 h-6 text-primary" aria-hidden />
-            Le classement 2026 des nouveaux outils SEO et GEO
+            Le classement 2027 des nouveaux outils SEO et GEO
           </h2>
           <p className="text-muted-foreground mb-8">
             Onze outils évalués sur leur couverture SEO, leur prise en charge du GEO, la génération
