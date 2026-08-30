@@ -44,8 +44,12 @@ export async function runMatrixStep(job: Job): Promise<Record<string, unknown>> 
         break;
       }
       case 'competitors': {
-        const { fetchVisibilityCompetitors, proposeCompetitorsWithLlm, mergeCompetitors } =
-          await import('./competitors.server');
+        const {
+          fetchVisibilityCompetitors,
+          proposeCompetitorsWithLlm,
+          fetchComparisonCompetitors,
+          mergeCompetitors,
+        } = await import('./competitors.server');
         const { detectLeaders, detectQuickWins, seedSerpDomains } = await import('./leaders.server');
         const identity = job.identity as unknown as Identity;
         const existing = (job.competitors ?? []) as unknown as Competitor[];
