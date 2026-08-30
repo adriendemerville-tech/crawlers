@@ -1690,8 +1690,19 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
             sum += val; sumMax += max;
             return `<div class="stat-card"><div class="value" style="color:${scoreColor(val, max)}">${val}</div><div class="label">${label} /${max}</div></div>`;
           }).join('');
-          const total = Number(expertSeoData?.totalScore ?? sum);
+          // Brief 2026-08-30 (P0) — arithmétique déterministe : le total publié
+          // n'est retenu que s'il correspond à la somme des axes affichés (±0,5)
+          // OU si une réconciliation chiffrée l'explique. Sinon la somme des
+          // axes fait foi : plus jamais « 11+50+38+30+20 = 149 » affiché « 147 ».
           const declaredMax = Number(expertSeoData?.maxScore || sumMax);
+          const recArith = reconcileWeightedTotal(
+            axes.map(([label, axis, defMax]) => ({ label, score: axis?.score, max: Number(axis?.maxScore || defMax) })),
+            expertSeoData?.totalScore,
+          );
+          const hasExplainedGap = !!scores?.reconciliation;
+          const total = hasExplainedGap
+            ? Number(expertSeoData?.totalScore ?? sum)
+            : (recArith.delta !== null && Math.abs(recArith.delta) > 0.5 ? recArith.sum : Number(expertSeoData?.totalScore ?? sum));
           // Réconciliation chiffrée de l'écart entre la somme des axes et le
           // total affiché : bonus/malus liens cassés, facteur de fiabilité de
           // collecte, puis plafond de cohérence. Aucun écart n'est laissé sans
