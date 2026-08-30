@@ -288,7 +288,7 @@ const FAQ = [
 
 function Mark({ v }: { v: boolean | 'partiel' }) {
   if (v === true) return <Check className="w-4 h-4 text-emerald-500 mx-auto" aria-label="Oui" />;
-  if (v === 'partiel') return <span className="inline-block w-3 h-3 rounded-full bg-amber-500 mx-auto align-middle" aria-label="Partiel" />;
+  if (v === 'partiel') return <Check className="w-4 h-4 text-amber-500 mx-auto" aria-label="Partiel" />;
   return <X className="w-4 h-4 text-muted-foreground/40 mx-auto" aria-label="Non" />;
 }
 
