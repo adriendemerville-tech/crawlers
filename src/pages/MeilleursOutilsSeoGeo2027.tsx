@@ -505,7 +505,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* Pourquoi changer */}
-        <section className="mb-12 scroll-mt-24" id="pourquoi-changer"
+        <section className="mb-12 scroll-mt-24" id="pourquoi-changer">
           <h2 className="text-2xl font-bold tracking-tight mb-4">
             Alors, pourquoi changer pour une alternative à Semrush ?
           </h2>
