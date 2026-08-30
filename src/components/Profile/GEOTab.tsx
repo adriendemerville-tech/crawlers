@@ -15,6 +15,7 @@ import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
+import { AuditScoresBanner } from '@/components/Profile/AuditScoresBanner';
 import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashboard';
 import { BotLogAnalysisCard } from '@/components/Profile/BotLogAnalysisCard';
 import { GeoKpiBanner } from '@/components/Profile/geo/GeoKpiBanner';

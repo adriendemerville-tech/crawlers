@@ -33,6 +33,7 @@ import { SmartCmsConnectModal } from '@/components/Profile/SmartCmsConnectModal'
 import { IASCard } from '@/components/Profile/IASCard';
 import { ExternalApisTab } from '@/components/Profile/ExternalApisTab';
 import { SiteIdentityModal } from '@/components/Profile/SiteIdentityModal';
+import { AuditScoresBanner } from '@/components/Profile/AuditScoresBanner';
 import { CompetitorTrackingTab } from '@/components/Profile/CompetitorTrackingTab';
 
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
