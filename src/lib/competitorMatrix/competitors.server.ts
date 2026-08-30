@@ -91,6 +91,91 @@ JSON strict : {"competitors":[{"domain":"exemple.fr","name":"Exemple","type":"me
   return out;
 }
 
+// Un éditeur SaaS se définit contre ses pairs dans des pages « X vs Y »,
+// « alternatives à X », « comparatif outils … » : les domaines cités dans ces
+// pages sont des concurrents déclarés par le marché lui-même. Heuristique
+// d'activation : l'activité déclarée doit évoquer un logiciel/plateforme —
+// pour un artisan ou un e-commerce, ces requêtes ne ramènent que du bruit.
+const SAAS_HINT =
+  /logiciel|saas|software|plateforme|abonnement|outil en ligne|application web|\bapi\b|\bapp\b/i;
+
+export function looksLikeSaas(identity: Identity): boolean {
+  return SAAS_HINT.test(`${identity.activity} ${identity.name}`);
+}
+
+/**
+ * Source « comparatifs » (SaaS uniquement) : interroge la SERP sur
+ * « {nom} vs », « alternative à {nom} », « comparatif {terme marché} » puis
+ * extrait par LLM les domaines de produits cités dans les titres/snippets.
+ * Un produit que les comparatifs opposent au service est un concurrent
+ * métier déclaré — souvent absent de la SERP transactionnelle.
+ */
+export async function fetchComparisonCompetitors(
+  identity: Identity,
+  limit = 4,
+): Promise<Competitor[]> {
+  if (!looksLikeSaas(identity)) return [];
+  const marketTerm = identity.lexicon?.marketTerms?.[0] || identity.activity;
+  const queries = [
+    `${identity.name} vs`,
+    `alternative à ${identity.name}`,
+    `meilleur logiciel ${marketTerm} comparatif`,
+  ];
+  const snippets: string[] = [];
+  for (const keyword of queries) {
+    try {
+      const data = await dfsPost('serp/google/organic/live/advanced', [{
+        keyword,
+        location_code: LOCATION_FR,
+        language_code: 'fr',
+        device: 'desktop',
+        os: 'windows',
+        depth: 20,
+      }]);
+      const items = data?.tasks?.[0]?.result?.[0]?.items || [];
+      for (const it of items) {
+        if (it?.type === 'organic' && it?.title) {
+          snippets.push(`${String(it.title).slice(0, 140)} — ${String(it.description || '').slice(0, 200)}`);
+        }
+      }
+    } catch {
+      // Une requête comparative en échec ne bloque pas la découverte.
+    }
+  }
+  if (!snippets.length) return [];
+
+  const raw = await aiChat({
+    model: 'google/gemini-3.7-flash',
+    json: true,
+    prompt: `On cherche les concurrents de « ${identity.name} » (${identity.domain} — ${identity.activity}).
+
+Voici les titres et descriptions des pages de comparatifs trouvées dans Google.
+Extrais UNIQUEMENT les produits/logiciels cités comme concurrents ou comparables de « ${identity.name} », avec leur nom de domaine exact si tu le connais avec certitude. Ignore les sites médias, blogs, annuaires et comparateurs eux-mêmes. Maximum ${limit} résultats.
+
+${snippets.slice(0, 30).join('\n')}
+
+N'invente aucun domaine : si tu n'es pas certain, ne le cite pas.
+JSON strict : {"competitors":[{"domain":"exemple.com","name":"Exemple"}]}`,
+  });
+
+  const parsed = parseJsonLoose(raw);
+  const list: any[] = Array.isArray(parsed?.competitors) ? parsed.competitors : [];
+  const out: Competitor[] = [];
+  for (const c of list) {
+    const d = cleanDomain(c?.domain || '');
+    if (!acceptable(d, identity.domain)) continue;
+    out.push({
+      domain: d,
+      name: String(c.name || d).slice(0, 60),
+      type: 'metier',
+      reason: 'Cité comme concurrent dans les pages de comparatifs (« vs », « alternatives »)',
+      source: 'comparatif',
+    });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
 /** Quotas de lignes par type, pour garder une matrice lisible. */
 // Les concurrents métier sont l'information la plus attendue : ils passent
 // devant les concurrents de visibilité, qui n'ont souvent pas la même offre.
