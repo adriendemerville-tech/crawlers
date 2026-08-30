@@ -2,6 +2,8 @@ import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { detectCtrOpportunities, CTR_SOURCE } from './ctrOpportunities.ts';
+
 
 /**
  * detect-anomalies: Z-score anomaly detection across all data sources
