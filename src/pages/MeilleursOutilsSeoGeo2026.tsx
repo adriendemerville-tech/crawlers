@@ -647,11 +647,12 @@ export default function MeilleursOutilsSeoGeo2026() {
                         {o.nom}
                       </a>
                     </td>
-                    <td className="p-3 text-center"><Mark v={o.seo} /></td>
-                    <td className="p-3 text-center"><Mark v={o.geo} /></td>
-                    <td className="p-3 text-center"><Mark v={o.contenuIA} /></td>
-                    <td className="p-3 text-center"><Mark v={o.local} /></td>
-                    <td className="p-3 text-center"><Mark v={o.execution} /></td>
+                    <td className="p-3 text-center"><Cell outil={o.nom} col="seo" v={o.seo} /></td>
+                    <td className="p-3 text-center"><Cell outil={o.nom} col="geo" v={o.geo} /></td>
+                    <td className="p-3 text-center"><Cell outil={o.nom} col="contenuIA" v={o.contenuIA} /></td>
+                    <td className="p-3 text-center"><Cell outil={o.nom} col="local" v={o.local} /></td>
+                    <td className="p-3 text-center"><Cell outil={o.nom} col="execution" v={o.execution} /></td>
+
                     <td className="p-3 text-muted-foreground whitespace-nowrap">{o.prix}</td>
                     <td className="p-3 text-center"><Note n={o.note} /></td>
                   </tr>
