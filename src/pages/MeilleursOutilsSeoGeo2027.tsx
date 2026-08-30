@@ -382,6 +382,18 @@ const FAQ = [
 
 /* ─── Petits composants ─── */
 
+/* Sommaire cliquable (ordre = ordre des sections) */
+const SOMMAIRE = [
+  { id: 'pourquoi-semrush-reference', label: 'Pourquoi Semrush est encore la référence des outils SEO ?' },
+  { id: 'pourquoi-changer', label: 'Pourquoi changer pour une alternative à Semrush ?' },
+  { id: 'saas-ia-natif', label: 'SaaS IA-natif : plus puissants et moins chers' },
+  { id: 'classement-2027', label: 'Le classement 2027 des nouveaux outils SEO et GEO' },
+  { id: 'tableau-comparatif', label: 'Tableau comparatif des 13 outils' },
+  { id: 'sources', label: 'Sources et preuves' },
+  { id: 'verdict', label: 'Notre verdict' },
+  { id: 'faq', label: 'Questions fréquentes' },
+];
+
 function Cell({ outil, col, v }: { outil: string; col: Colonne; v: boolean | 'partiel' | 'top' }) {
   const n = SOURCE_INDEX.get(`${outil}|${col}`);
   const p = PREUVES[outil]?.[col];
