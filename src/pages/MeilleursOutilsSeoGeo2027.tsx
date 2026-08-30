@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { Header } from '@/components/Header';
-import { SiloNav } from '@/components/seo/SiloNav';
 import { Badge } from '@/components/ui/badge';
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
