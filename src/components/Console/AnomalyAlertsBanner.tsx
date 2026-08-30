@@ -29,6 +29,8 @@ const severityConfig: Record<string, { bg: string; border: string; icon: any; te
   danger: { bg: 'bg-red-500/10', border: 'border-red-500/30', icon: TrendingDown, text: 'text-red-400' },
   info: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', icon: TrendingUp, text: 'text-blue-400' },
   gsc: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', icon: Search, text: 'text-indigo-400' },
+  opportunity: { bg: 'bg-amber-400/10', border: 'border-amber-400/40', icon: Target, text: 'text-amber-400' },
+
   ga4_up: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', icon: TrendingUp, text: 'text-emerald-400' },
   ga4_down: { bg: 'bg-red-500/10', border: 'border-red-500/30', icon: TrendingDown, text: 'text-red-400' },
 };
