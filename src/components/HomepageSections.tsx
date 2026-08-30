@@ -241,7 +241,7 @@ const MomentumSection = memo(() => {
           ))}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-4 gap-2 md:gap-8">
           {stats.map((s, i) => (
             <div key={i} className="text-center">
               <p className="text-3xl sm:text-4xl font-extrabold text-brand-violet">{s.display}</p>
