@@ -56,9 +56,9 @@ const OUTILS: Outil[] = [
     pays: 'France',
     prix: 'audits gratuits, dès 29 €/mois',
     pointsForts: [
+      'Suite complète : SEO, GEO, génération de contenu avec déploiement CMS, réseaux sociaux et code correctif — là où Semrush ne fait que du monitoring',
       'GEO natif : Score GEO et citations mesurées dans 6 LLM (ChatGPT, Perplexity, Gemini, Claude, Copilot, Mistral)',
-      'Audit technique avec code correctif généré et déploiement CMS (WordPress, Shopify, Wix, PrestaShop)',
-      'Matrice de concurrence SEO + IA et cocon sémantique 3D',
+      'Matrice de concurrence SEO + IA, cocon sémantique 3D et audits gratuits',
     ],
     pointFaible: 'Base de données backlinks moins profonde que les suites historiques',
     geo: true, seo: true, contenuIA: true, local: true,
@@ -288,14 +288,19 @@ export default function MeilleursOutilsSeoGeo2026() {
           <p className="text-muted-foreground mb-3">
             Semrush et Ahrefs dominent le marché depuis plus de quinze ans. Leur force tient à trois
             actifs : des <strong className="text-foreground">bases de données massives</strong> (mots-clés,
-            backlinks, SERP historiques), un <strong className="text-foreground">écosystème complet</strong> (audit,
-            positions, contenu, publicité, réseaux sociaux) et une <strong className="text-foreground">reconnaissance
-            de marque</strong> qui en fait le choix par défaut dans les appels d'offres.
+            backlinks, SERP historiques), un <strong className="text-foreground">monitoring complet</strong> (audit,
+            positions, publicité, veille concurrentielle) et une{' '}
+            <strong className="text-foreground">reconnaissance de marque</strong> qui en fait le choix par défaut
+            dans les appels d'offres.
+          </p>
+          <p className="text-muted-foreground mb-3">
+            Mais attention : ce monitoring est exhaustif, il n'est pas exécution. Semrush ne génère
+            pas le contenu de votre site, ne déploie pas les correctifs techniques, et ne pilote pas
+            vos réseaux sociaux — c'est une suite d'observation, pas d'action.
           </p>
           <p className="text-muted-foreground">
-            Mais cette domination a un prix — littéralement — et elle s'est construite avant
-            l'irruption des moteurs de réponse IA. C'est précisément là que la nouvelle génération
-            d'outils attaque.
+            C'est précisément là que la nouvelle génération attaque : des suites complètes qui
+            mesurent <em>et</em> exécutent, à un prix bien inférieur.
           </p>
         </section>
 
@@ -307,9 +312,10 @@ export default function MeilleursOutilsSeoGeo2026() {
           <blockquote className="citable-passage border-l-2 border-primary pl-4 mb-6 text-muted-foreground">
             Les raisons de changer pour une alternative à Semrush en 2026 sont au nombre de quatre :
             le prix (130 à 450 €/mois contre 29 à 99 €/mois pour les nouveaux acteurs), l'absence
-            de mesure GEO native (visibilité dans ChatGPT, Perplexity, Gemini), des stacks
-            spécialisées plus efficaces qu'une suite généraliste, et l'automatisation de la
-            génération de contenu par IA que les outils historiques ont tardé à intégrer.
+            de mesure GEO native (visibilité dans ChatGPT, Perplexity, Gemini), un périmètre limité
+            au monitoring — sans génération de contenu, sans déploiement de code, sans gestion des
+            réseaux sociaux — et l'essor de suites complètes qui mesurent et exécutent à la place
+            de l'équipe SEO.
           </blockquote>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
@@ -325,8 +331,8 @@ export default function MeilleursOutilsSeoGeo2026() {
               },
               {
                 icon: Layers,
-                title: 'Des stacks spécialisées',
-                text: 'Plutôt qu\'une suite généraliste à 250 €/mois, combiner des outils spécialisés (ex. SE Ranking + Crawlers.fr + Surfer) donne souvent une couverture supérieure pour un coût équivalent ou inférieur.',
+                title: 'Des suites complètes qui exécutent',
+                text: 'Crawlers.fr couvre SEO, GEO, contenu IA, code correctif et réseaux sociaux dans un seul abonnement — un périmètre d\'exécution que Semrush n\'a pas, puisqu\'il s\'arrête au monitoring. Les spécialistes (Surfer, Localo) restent utiles en complément, plus nécessairement.',
               },
               {
                 icon: PenLine,
@@ -481,10 +487,12 @@ export default function MeilleursOutilsSeoGeo2026() {
             GEO natif.
           </blockquote>
           <p className="text-muted-foreground">
-            Aucun outil ne fait tout parfaitement. Le bon réflexe en 2026 n'est plus de chercher la
-            suite unique, mais d'assembler deux ou trois spécialistes : un tracker, un outil GEO et,
-            si vous produisez du contenu, un optimiseur rédactionnel. Pour le local pur, Localo ou
-            Local Ranker suffisent largement.
+            Semrush fait du monitoring complet, mais du monitoring seulement : pas de génération de
+            contenu, pas de déploiement de code, pas de gestion des réseaux sociaux. En 2026, le bon
+            réflexe est donc d'inverser la logique : partir d'une suite complète qui exécute comme
+            Crawlers.fr (SEO, GEO, contenu IA, code correctif, réseaux sociaux), puis n'ajouter un
+            spécialiste que si un besoin précis le justifie — un tracker de positions pur ou un
+            outil de backlinks massif, par exemple.
           </p>
         </section>
 
