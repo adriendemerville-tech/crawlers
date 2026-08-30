@@ -493,48 +493,11 @@ const Observatoire = () => {
                   {t.noData}
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={320}>
-                  <AreaChart data={stats.monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                    <defs>
-                      <linearGradient id="gLoad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gTtfb" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gFcp" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gLcp" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="month" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                    <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} unit="ms" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        color: 'hsl(var(--foreground))',
-                      }}
-                      formatter={(value: number, name: string) => {
-                        const labels: Record<string, string> = { avgLoadTime: 'Load Time', avgTtfb: 'TTFB', avgFcp: 'FCP', avgLcp: 'LCP' };
-                        return [`${value} ms`, labels[name] || name];
-                      }}
-                    />
-                    <Legend />
-                    <Area type="monotone" dataKey="avgLoadTime" name="Load Time" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#gLoad)" />
-                    <Area type="monotone" dataKey="avgTtfb" name="TTFB" stroke="#f59e0b" strokeWidth={2} fill="url(#gTtfb)" />
-                    <Area type="monotone" dataKey="avgFcp" name="FCP" stroke="#10b981" strokeWidth={2} fill="url(#gFcp)" />
-                    <Area type="monotone" dataKey="avgLcp" name="LCP" stroke="#ef4444" strokeWidth={2} fill="url(#gLcp)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <ClientOnly fallback={<Skeleton className="h-72 w-full" />}>
+                  <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+                    <PerfAreaChart data={stats.monthlyData} />
+                  </Suspense>
+                </ClientOnly>
               )}
             </CardContent>
           </Card>
