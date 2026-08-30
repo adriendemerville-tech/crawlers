@@ -33,6 +33,8 @@ interface DirectAnswerProps {
   answer: React.ReactNode;
   /** Faits 5W pertinents pour le thème (facultatif, ordre libre). */
   facts?: DirectAnswerFact[];
+  /** Chemin canonique de la page (ex. "/pagespeed") — alimente le JSON-LD Speakable. */
+  path: string;
   className?: string;
 }
 
@@ -48,7 +50,7 @@ function countWords(node: React.ReactNode): number {
   return children ? countWords(children) : 0;
 }
 
-export function DirectAnswer({ question, answer, facts, className = '' }: DirectAnswerProps) {
+export function DirectAnswer({ question, answer, facts, path, className = '' }: DirectAnswerProps) {
   const total = useMemo(
     () => countWords(question) + countWords(answer) + (facts ?? []).reduce((s, f) => s + countWords(f.value) + 1, 0),
     [question, answer, facts],
@@ -58,14 +60,28 @@ export function DirectAnswer({ question, answer, facts, className = '' }: Direct
     console.warn(`[DirectAnswer] ${total} mots (> ${WORD_LIMIT}) — « ${question} »`);
   }
 
+  const answerId = `da-${slug(question)}`;
+  const speakableJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': `https://crawlers.fr${path}`,
+    url: `https://crawlers.fr${path}`,
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: [`#${answerId}`, `#${answerId} + .citable-passage`],
+    },
+  };
+
   return (
+    <>
+      <script type="application/ld+json">{JSON.stringify(speakableJsonLd)}</script>
     <section
       className={`direct-answer mx-auto max-w-3xl rounded-lg border border-primary/30 bg-card/60 p-5 text-left sm:p-6 ${className}`}
-      aria-labelledby={`da-${slug(question)}`}
+      aria-labelledby={answerId}
       data-direct-answer=""
     >
       <h3
-        id={`da-${slug(question)}`}
+        id={answerId}
         className="mb-3 text-base font-semibold leading-snug text-foreground sm:text-lg"
       >
         {question}
@@ -84,6 +100,7 @@ export function DirectAnswer({ question, answer, facts, className = '' }: Direct
         </dl>
       ) : null}
     </section>
+    </>
   );
 }
 

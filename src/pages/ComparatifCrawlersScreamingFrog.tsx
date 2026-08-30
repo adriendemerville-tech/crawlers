@@ -58,6 +58,7 @@ export default function ComparatifCrawlersScreamingFrog() {
         </p>
 
         <DirectAnswer
+          path="/comparatif-crawlers-screaming-frog"
           className="mb-10"
           question="Quelle alternative à Screaming Frog pour crawler un site sans limite de 500 URL ?"
           answer={<>Crawlers.fr crawle depuis le serveur, sans installation ni plafond de 500 URL, et rend un rapport déjà interprété plutôt qu'un tableau brut à décoder. Screaming Frog reste excellent pour l'exploration ponctuelle en local ; Crawlers.fr vise le suivi continu, l'audit GEO et la restitution lisible pour un client.</>}

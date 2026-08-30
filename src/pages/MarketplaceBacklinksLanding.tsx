@@ -47,6 +47,7 @@ export default function MarketplaceBacklinksLanding() {
           </p>
 
           <DirectAnswer
+          path="/marketplace-backlinks"
             className="mb-6"
             question="Combien coûte un backlink et comment acheter un lien à un prix non négocié ?"
             answer={<>Sur la place d'échange Crawlers.fr, le prix d'un emplacement de lien est calculé, pas discuté : cinq signaux normalisés (autorité, proximité sémantique, trafic de la page, qualité éditoriale, visibilité générative) le placent dans l'un des cinq paliers, de 40 € à 350 €. L'attribut du lien (dofollow ou nofollow) est décidé par le déficit d'autorité réel de l'acheteur, jamais par le vendeur.</>}

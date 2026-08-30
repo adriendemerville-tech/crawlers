@@ -148,6 +148,7 @@ export default function ComparatifClaudeVsCrawlers() {
                 </p>
 
                 <DirectAnswer
+          path="/comparatif-claude-vs-crawlers"
                   className="mb-8"
                   question="Peut-on auditer son SEO avec Claude et des serveurs MCP, ou faut-il un outil dédié ?"
                   answer={<>Claude raisonne très bien mais ne crawle pas : sans exploration réelle du site, sans données de position et sans lecture du code servi, ses conclusions reposent sur ce que vous lui décrivez. Crawlers.fr fournit la mesure (crawl serveur, logs, Search Console, benchmark génératif) puis l'exécution des correctifs, ce que la stack Claude seule ne peut pas faire.</>}
