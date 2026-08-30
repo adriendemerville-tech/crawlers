@@ -24,7 +24,7 @@ interface Outil {
   pointsForts: string[];
   pointFaible: string;
   geo: boolean | 'partiel';
-  seo: boolean;
+  seo: boolean | 'partiel';
   contenuIA: boolean | 'partiel';
   local: boolean | 'partiel';
   ideal: string;
