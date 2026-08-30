@@ -1,6 +1,6 @@
 // Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
 import "@/styles.app.css";
-import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, lazy } from "react";
 import { DesktopOnlyGate } from "@/components/DesktopOnlyGate";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
