@@ -90,6 +90,14 @@ export const OUTILS_JSONLD = [
           text: "Un outil GEO (Generative Engine Optimization) mesure et améliore la visibilité d'un site dans les réponses des IA génératives : ChatGPT, Perplexity, Gemini, Claude, Copilot, Mistral. Il analyse les citations, le balisage structuré, les passages citables et l'accessibilité aux crawlers IA.",
         },
       },
+      {
+        "@type": "Question",
+        name: "Qu'est-ce qu'un SaaS IA-natif et pourquoi est-il moins cher ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Un SaaS IA-natif est un logiciel construit dès l'origine autour d'agents d'intelligence artificielle qui exécutent l'analyse, la rédaction et le déploiement, au lieu de simplement afficher des données. Chaque tâche automatisée remplace des heures de travail manuel et du support humain : l'outil est donc plus puissant qu'une suite traditionnelle sur l'exécution, et vendu 2 à 10 fois moins cher.",
+        },
+      },
     ],
   },
 ];
