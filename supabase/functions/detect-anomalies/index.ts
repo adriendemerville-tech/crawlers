@@ -2,6 +2,8 @@ import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { detectCtrOpportunities, CTR_SOURCE } from './ctrOpportunities.ts';
+
 
 /**
  * detect-anomalies: Z-score anomaly detection across all data sources
@@ -123,17 +125,26 @@ try {
     }
 
     let totalAlerts = 0;
+    let totalOpportunities = 0;
 
     for (const site of siteIds) {
       const alerts = await detectForSite(supabase, site.id, site.domain, site.user_id);
       totalAlerts += alerts;
+      // Quick wins CTR (Search Console, déterministe) — ignoré si pas de connexion Google
+      try {
+        totalOpportunities += await detectCtrOpportunities(supabase, site);
+      } catch (e) {
+        console.error(`[detect-anomalies] opportunités CTR ${site.domain}:`, e);
+      }
     }
 
     return jsonOk({ 
       success: true, 
       sites_analyzed: siteIds.length, 
-      alerts_created: totalAlerts 
+      alerts_created: totalAlerts,
+      ctr_opportunities_created: totalOpportunities
     });
+
 
   } catch (error) {
     console.error('[detect-anomalies] Error:', error);
@@ -475,12 +486,15 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
   }
 
   if (newAlerts.length > 0) {
-    // Clear old non-dismissed alerts for this site (keep dismissed as history)
+    // Clear old non-dismissed alerts for this site (keep dismissed as history).
+    // Les opportunités CTR ont leur propre cycle de purge : ne pas les écraser ici.
     await supabase
       .from('anomaly_alerts')
       .delete()
       .eq('tracked_site_id', trackedSiteId)
-      .eq('is_dismissed', false);
+      .eq('is_dismissed', false)
+      .neq('metric_source', CTR_SOURCE);
+
 
     const { error, data: insertedAlerts } = await supabase.from('anomaly_alerts').insert(newAlerts).select('id, severity, direction');
     if (error) console.error(`[detect-anomalies] Insert error for ${domain}:`, error);

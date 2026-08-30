@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { TrendingUp, TrendingDown, AlertTriangle, X, ChevronUp, ChevronDown, Search, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, X, ChevronUp, ChevronDown, Search, BarChart3, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useClientInitialState } from '@/hooks/useClientInitialState';
 
@@ -29,6 +29,8 @@ const severityConfig: Record<string, { bg: string; border: string; icon: any; te
   danger: { bg: 'bg-red-500/10', border: 'border-red-500/30', icon: TrendingDown, text: 'text-red-400' },
   info: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', icon: TrendingUp, text: 'text-blue-400' },
   gsc: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', icon: Search, text: 'text-indigo-400' },
+  opportunity: { bg: 'bg-amber-400/10', border: 'border-amber-400/40', icon: Target, text: 'text-amber-400' },
+
   ga4_up: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', icon: TrendingUp, text: 'text-emerald-400' },
   ga4_down: { bg: 'bg-red-500/10', border: 'border-red-500/30', icon: TrendingDown, text: 'text-red-400' },
 };
@@ -114,12 +116,24 @@ export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnable
     .filter(a => !dismissed.has(a.id))
     .map(a => {
       const c = severityConfig[a.severity] || severityConfig.info;
-      return { id: a.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: a.domain, desc: `${a.description}${a.affected_pages > 0 ? ` (${a.affected_pages} pages)` : ''}` };
+      const isOpportunity = a.metric_source === 'gsc_ctr';
+      return {
+        id: a.id,
+        icon: c.icon,
+        bg: c.bg,
+        border: c.border,
+        textColor: c.text,
+        title: isOpportunity ? a.metric_name : a.domain,
+        desc: `${a.description}${!isOpportunity && a.affected_pages > 0 ? ` (${a.affected_pages} pages)` : ''}`,
+      };
     });
 
-  // Hide entire banner when GA4 is not connected
-  if (!ga4Connected) return null;
+  const hasOpportunities = tickerItems.some(i => i.id && alerts.find(a => a.id === i.id)?.metric_source === 'gsc_ctr');
+
+  // Les anomalies GA4 exigent une connexion GA4 ; les opportunités CTR (Search Console) non
+  if (!ga4Connected && !hasOpportunities) return null;
   if (tickerItems.length === 0) return null;
+
 
   if (hidden) {
     return (

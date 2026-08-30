@@ -17,7 +17,9 @@ export interface GscRow {
   impressions: number
   ctr: number
   date?: string
+  page?: string
 }
+
 
 export interface GscAccess {
   accessToken: string
@@ -122,15 +124,18 @@ export async function queryGscRows(
   const data = await res.json()
   const dateIndex = dimensions.indexOf('date')
   const queryIndex = dimensions.indexOf('query')
+  const pageIndex = dimensions.indexOf('page')
 
   return (data.rows || []).map((row: any) => ({
     query: queryIndex >= 0 ? String(row.keys[queryIndex]) : '',
     date: dateIndex >= 0 ? String(row.keys[dateIndex]) : undefined,
+    page: pageIndex >= 0 ? String(row.keys[pageIndex]) : undefined,
     position: Math.round((row.position || 0) * 100) / 100,
     clicks: row.clicks || 0,
     impressions: row.impressions || 0,
     ctr: Math.round((row.ctr || 0) * 10000) / 100,
   }))
+
 }
 
 /** GSC a ~2 jours de latence : la fenêtre utile s'arrête à J-2. */
