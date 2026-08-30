@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/accordion';
 import {
   Check, X, Trophy, Wallet, Brain, Layers, MapPin, PenLine,
-  BarChart3, Bot, ArrowRight, Star,
+  BarChart3, Bot, ArrowRight, Star, ListOrdered,
 } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
 
@@ -382,6 +382,18 @@ const FAQ = [
 
 /* ─── Petits composants ─── */
 
+/* Sommaire cliquable (ordre = ordre des sections) */
+const SOMMAIRE = [
+  { id: 'pourquoi-semrush-reference', label: 'Pourquoi Semrush est encore la référence des outils SEO ?' },
+  { id: 'pourquoi-changer', label: 'Pourquoi changer pour une alternative à Semrush ?' },
+  { id: 'saas-ia-natif', label: 'SaaS IA-natif : plus puissants et moins chers' },
+  { id: 'classement-2027', label: 'Le classement 2027 des nouveaux outils SEO et GEO' },
+  { id: 'tableau-comparatif', label: 'Tableau comparatif des 13 outils' },
+  { id: 'sources', label: 'Sources et preuves' },
+  { id: 'verdict', label: 'Notre verdict' },
+  { id: 'faq', label: 'Questions fréquentes' },
+];
+
 function Cell({ outil, col, v }: { outil: string; col: Colonne; v: boolean | 'partiel' | 'top' }) {
   const n = SOURCE_INDEX.get(`${outil}|${col}`);
   const p = PREUVES[outil]?.[col];
@@ -424,24 +436,45 @@ export default function MeilleursOutilsSeoGeo2027() {
       <main className="container mx-auto px-4 py-10 md:py-14 max-w-5xl">
         <SiloNav silo="comparatifs" currentPath="/meilleurs-outils-seo-geo-2027" className="mb-10" />
 
-        {/* Hero */}
-        <header className="mb-10">
+        {/* Hero : badge + H1 + chapô */}
+        <header className="mb-8">
           <Badge variant="outline" className="mb-4 border-primary/50 text-primary">
             Classement 2027 — Nouvelle génération
           </Badge>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
             Les meilleurs nouveaux outils SEO et GEO en 2027 pour remplacer Semrush et Ahrefs
           </h1>
-          <p className="text-lg text-muted-foreground max-w-3xl">
+          <p className="text-lg md:text-xl leading-relaxed text-foreground/80 max-w-3xl border-l-2 border-primary pl-4">
             SE Ranking, Crawlers.fr, Surfer SEO, ThotSEO, SoRank, Outrank, ChatSEO, Cocolyze,
-            BotSEO, Local Ranker, Localo, Semrush et Ahrefs : treize outils qui couvrent le SEO,
-            le contenu IA, le local et la visibilité dans les moteurs génératifs — souvent pour
-            une fraction du prix des suites historiques.
+            BotSEO, Local Ranker, Localo, Semrush et Ahrefs : treize outils passés au crible —
+            couverture SEO, visibilité dans les IA, contenu, local et prix — pour savoir lequel
+            mérite votre abonnement en 2027.
           </p>
         </header>
 
+        {/* Sommaire cliquable */}
+        <nav aria-label="Sommaire de l'article" className="mb-12 rounded-xl border border-border bg-card/40 p-5 md:p-6">
+          <h2 className="text-base font-semibold mb-3 flex items-center gap-2">
+            <ListOrdered className="w-4 h-4 text-primary" aria-hidden />
+            Sommaire
+          </h2>
+          <ol className="space-y-1.5 text-sm">
+            {SOMMAIRE.map((item, i) => (
+              <li key={item.id}>
+                <a
+                  href={`#${item.id}`}
+                  className="inline-flex items-baseline gap-2 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <span className="tabular-nums text-primary/80">{i + 1}.</span>
+                  <span className="underline-offset-2 hover:underline">{item.label}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+
         {/* Pourquoi Semrush reste la référence */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="pourquoi-semrush-reference">
           <h2 className="text-2xl font-bold tracking-tight mb-4">
             Pourquoi Semrush est encore la référence des outils SEO ?
           </h2>
@@ -472,7 +505,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* Pourquoi changer */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="pourquoi-changer">
           <h2 className="text-2xl font-bold tracking-tight mb-4">
             Alors, pourquoi changer pour une alternative à Semrush ?
           </h2>
@@ -519,7 +552,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* IA-natif vs surcouche */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="saas-ia-natif">
           <h2 className="text-2xl font-bold tracking-tight mb-4">
             SaaS IA-natif : pourquoi l'IA dans la structure rend les nouveaux outils plus puissants et moins chers
           </h2>
@@ -545,7 +578,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* Classement */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="classement-2027">
           <h2 className="text-2xl font-bold tracking-tight mb-2 flex items-center gap-2">
             <Trophy className="w-6 h-6 text-primary" aria-hidden />
             Le classement 2027 des nouveaux outils SEO et GEO
@@ -620,7 +653,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* Tableau comparatif */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="tableau-comparatif">
           <h2 className="text-2xl font-bold tracking-tight mb-2 flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-primary" aria-hidden />
             Tableau comparatif des 13 outils
@@ -687,7 +720,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* Sources et preuves */}
-        <section className="mb-12" id="sources">
+        <section className="mb-12 scroll-mt-24" id="sources">
           <h2 className="text-2xl font-bold tracking-tight mb-2">Sources et preuves</h2>
           <p className="citable-passage text-muted-foreground mb-4">
             Chaque évaluation du tableau comparatif des 13 outils SEO et GEO est traçable : la
@@ -722,7 +755,7 @@ export default function MeilleursOutilsSeoGeo2027() {
 
 
         {/* Verdict */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="verdict">
           <h2 className="text-2xl font-bold tracking-tight mb-4">Notre verdict</h2>
           <blockquote className="citable-passage border-l-2 border-primary pl-4 mb-4 text-muted-foreground">
             En 2027, la meilleure stack SEO-GEO pour une PME ou une agence francophone combine SE
@@ -743,7 +776,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* FAQ */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="faq">
           <h2 className="text-2xl font-bold tracking-tight mb-6">Questions fréquentes</h2>
           <Accordion type="single" collapsible className="w-full">
             {FAQ.map((f, i) => (
