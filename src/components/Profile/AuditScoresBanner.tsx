@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
-import { Wrench, Compass } from 'lucide-react';
 import { getConsoleAuditScores } from '@/lib/console/auditScores.functions';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -8,16 +7,49 @@ interface Props {
   domain: string | null | undefined;
 }
 
-const scoreColor = (score: number) =>
-  score >= 80 ? 'text-emerald-500' : score >= 50 ? 'text-yellow-500' : 'text-red-500';
+const scoreStroke = (score: number) =>
+  score >= 80 ? '#34d399' : score >= 50 ? '#fbbf24' : '#ef4444';
+const scoreText = (score: number) =>
+  score >= 80 ? 'text-emerald-600 dark:text-emerald-400' : score >= 50 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400';
 
-const deltaColor = (delta: number) =>
-  delta > 0 ? 'text-emerald-500' : delta >= -5 ? 'text-orange-500' : 'text-red-500';
+function Gauge({ score, label }: { score: number | null; label: string }) {
+  const size = 56;
+  const stroke = 5;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const filled = score != null ? (Math.min(100, Math.max(0, score)) / 100) * c : 0;
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="-rotate-90">
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--border))" strokeWidth={stroke} />
+          {score != null && (
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={r}
+              fill="none"
+              stroke={scoreStroke(score)}
+              strokeWidth={stroke}
+              strokeLinecap="round"
+              strokeDasharray={`${filled} ${c}`}
+            />
+          )}
+        </svg>
+        <span
+          className={`absolute inset-0 flex items-center justify-center font-mono text-base font-bold ${score ? scoreText(score) : 'text-muted-foreground/50'}`}
+        >
+          {score != null ? score : '—'}
+        </span>
+      </div>
+      <span className="text-[10px] leading-tight text-muted-foreground">{label}</span>
+    </div>
+  );
+}
 
 /**
- * Bandeau compact affiché en haut des onglets SEO et GEO de la console :
+ * Jauges circulaires compactes affichées en haut des onglets SEO et GEO :
  * note du dernier audit technique et du dernier audit stratégique du domaine.
- * Quand un second audit existe : ancienne note — différence — nouvelle note.
  */
 export function AuditScoresBanner({ domain }: Props) {
   const { language } = useLanguage();
@@ -32,58 +64,27 @@ export function AuditScoresBanner({ domain }: Props) {
 
   if (!domain || !data || (data.technical.length === 0 && data.strategic.length === 0)) return null;
 
-  const items = [
-    {
-      icon: Wrench,
-      label: language === 'fr' ? 'Audit technique' : language === 'es' ? 'Auditoría técnica' : 'Technical audit',
-      points: data.technical,
-    },
-    {
-      icon: Compass,
-      label: language === 'fr' ? 'Audit stratégique' : language === 'es' ? 'Auditoría estratégica' : 'Strategic audit',
-      points: data.strategic,
-    },
-  ];
+  const technical = data.technical[0]?.score ?? null;
+  const strategic = data.strategic[0]?.score ?? null;
+  const technicalPrev = data.technical[1]?.score ?? null;
+  const strategicPrev = data.strategic[1]?.score ?? null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {items.map(({ icon: Icon, label, points }) => {
-        const latest = points[0];
-        const previous = points[1];
-        const delta = latest && previous ? latest.score - previous.score : null;
-        return (
-          <div
-            key={label}
-            className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-1.5"
-          >
-            <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">{label}</span>
-            {latest ? (
-              <span className="flex items-center gap-1.5">
-                {previous && delta !== null && (
-                  <>
-                    <span className="text-sm font-medium text-muted-foreground/60">{previous.score}/100</span>
-                    <span className={`text-sm font-bold ${deltaColor(delta)}`}>
-                      {delta > 0 ? `+${delta}` : delta}
-                    </span>
-                    <span className="h-px w-3 bg-border" aria-hidden />
-                  </>
-                )}
-                <span className={`text-sm font-bold ${scoreColor(latest.score)}`}>{latest.score}/100</span>
-              </span>
-            ) : (
-              <span className="text-sm font-medium text-muted-foreground/60">—</span>
-            )}
-            {latest?.at && (
-              <span className="text-[10px] text-muted-foreground/60">
-                {new Date(latest.at).toLocaleDateString(
-                  language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
-                )}
-              </span>
-            )}
-          </div>
-        );
-      })}
+    <div className="flex items-center gap-4">
+      <Gauge
+        score={technical}
+        label={
+          (language === 'fr' ? 'Technique' : language === 'es' ? 'Técnico' : 'Technical') +
+          (technical != null && technicalPrev != null ? ` (${technicalPrev >= technical ? '-' : '+'}${Math.abs(technical - technicalPrev)})` : '')
+        }
+      />
+      <Gauge
+        score={strategic}
+        label={
+          (language === 'fr' ? 'Stratégique' : language === 'es' ? 'Estratégico' : 'Strategic') +
+          (strategic != null && strategicPrev != null ? ` (${strategicPrev >= strategic ? '-' : '+'}${Math.abs(strategic - strategicPrev)})` : '')
+        }
+      />
     </div>
   );
 }
