@@ -189,7 +189,7 @@ const ComparatifCrawlersSemrush = () => {
             <div className="container mx-auto px-4 max-w-4xl text-center">
               <Badge variant="outline" className="mb-4 text-xs md:text-sm">Comparatif mis à jour — Avril 2026</Badge>
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-5 text-foreground leading-tight">
-                Crawlers.fr vs Semrush : Le Comparatif Complet 2026
+                Crawlers, l'alternative française à Semrush : le comparatif complet 2026
               </h1>
               <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto">
                 28 critères analysés objectivement. Semrush reste la référence du SEO traditionnel.
