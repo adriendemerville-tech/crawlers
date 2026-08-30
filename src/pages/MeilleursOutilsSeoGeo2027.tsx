@@ -552,7 +552,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* IA-natif vs surcouche */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="saas-ia-natif">
           <h2 className="text-2xl font-bold tracking-tight mb-4">
             SaaS IA-natif : pourquoi l'IA dans la structure rend les nouveaux outils plus puissants et moins chers
           </h2>
@@ -578,7 +578,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* Classement */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="classement-2027">
           <h2 className="text-2xl font-bold tracking-tight mb-2 flex items-center gap-2">
             <Trophy className="w-6 h-6 text-primary" aria-hidden />
             Le classement 2027 des nouveaux outils SEO et GEO
@@ -653,7 +653,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* Tableau comparatif */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="tableau-comparatif">
           <h2 className="text-2xl font-bold tracking-tight mb-2 flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-primary" aria-hidden />
             Tableau comparatif des 13 outils
@@ -720,7 +720,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* Sources et preuves */}
-        <section className="mb-12" id="sources">
+        <section className="mb-12" id="sources" className="mb-12 scroll-mt-24">
           <h2 className="text-2xl font-bold tracking-tight mb-2">Sources et preuves</h2>
           <p className="citable-passage text-muted-foreground mb-4">
             Chaque évaluation du tableau comparatif des 13 outils SEO et GEO est traçable : la
