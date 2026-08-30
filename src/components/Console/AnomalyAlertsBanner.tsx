@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { TrendingUp, TrendingDown, AlertTriangle, X, ChevronUp, ChevronDown, Search, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, X, ChevronUp, ChevronDown, Search, BarChart3, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useClientInitialState } from '@/hooks/useClientInitialState';
 
