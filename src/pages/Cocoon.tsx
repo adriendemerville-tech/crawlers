@@ -979,6 +979,8 @@ function CocoonContent() {
                 linkThickness={linkThickness}
                 bgColorSlider={bgColor}
               />
+              </Suspense>
+              </ClientOnly>
             ) : viewMode === 'radial' ? (
               <CocoonRadialGraph
                 key={`radial-${selectedSiteId}`}
