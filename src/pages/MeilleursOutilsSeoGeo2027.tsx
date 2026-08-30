@@ -505,7 +505,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* Pourquoi changer */}
-        <section className="mb-12 scroll-mt-24" id="pourquoi-changer">
+        <section className="mb-12 scroll-mt-24" id="pourquoi-changer" className-fix
           <h2 className="text-2xl font-bold tracking-tight mb-4">
             Alors, pourquoi changer pour une alternative à Semrush ?
           </h2>
@@ -720,7 +720,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* Sources et preuves */}
-        <section className="mb-12" id="sources" className="mb-12 scroll-mt-24">
+        <section className="mb-12 scroll-mt-24" id="sources">
           <h2 className="text-2xl font-bold tracking-tight mb-2">Sources et preuves</h2>
           <p className="citable-passage text-muted-foreground mb-4">
             Chaque évaluation du tableau comparatif des 13 outils SEO et GEO est traçable : la
@@ -755,7 +755,7 @@ export default function MeilleursOutilsSeoGeo2027() {
 
 
         {/* Verdict */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="verdict">
           <h2 className="text-2xl font-bold tracking-tight mb-4">Notre verdict</h2>
           <blockquote className="citable-passage border-l-2 border-primary pl-4 mb-4 text-muted-foreground">
             En 2027, la meilleure stack SEO-GEO pour une PME ou une agence francophone combine SE
@@ -776,7 +776,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         </section>
 
         {/* FAQ */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="faq">
           <h2 className="text-2xl font-bold tracking-tight mb-6">Questions fréquentes</h2>
           <Accordion type="single" collapsible className="w-full">
             {FAQ.map((f, i) => (
