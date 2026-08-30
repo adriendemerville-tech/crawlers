@@ -21,7 +21,11 @@ interface State {
 const MAX_MANUAL_RETRIES = 2;
 
 function isChunkError(error: unknown): boolean {
-  const msg = `${(error as Error)?.name ?? ""} ${(error as Error)?.message ?? ""}`.toLowerCase();
+  const raw =
+    typeof error === "string"
+      ? error
+      : `${(error as Error)?.name ?? ""} ${(error as Error)?.message ?? ""}`;
+  const msg = raw.toLowerCase();
   return (
     msg.includes("dynamically imported module") ||
     msg.includes("importing a module script failed") ||
