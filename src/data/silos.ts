@@ -82,7 +82,7 @@ export const SILOS: Record<Silo['id'], Silo> = {
       { label: 'Crawlers.fr vs Screaming Frog', to: '/comparatif-crawlers-screaming-frog' },
       { label: 'Crawlers.fr vs Claude', to: '/comparatif-claude-vs-crawlers' },
       { label: 'Plateformes SEO IA comparées', to: '/comparatif-plateforme-seo-ia' },
-      { label: 'Meilleurs outils SEO GEO 2026', to: '/meilleurs-outils-seo-geo-2026' },
+      { label: 'Meilleurs outils SEO GEO 2027', to: '/meilleurs-outils-seo-geo-2027' },
     ],
   },
 };

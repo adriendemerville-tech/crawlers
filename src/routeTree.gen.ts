@@ -62,6 +62,7 @@ import { Route as MarinaRouteImport } from './routes/marina'
 import { Route as MarketplaceBacklinksRouteImport } from './routes/marketplace-backlinks'
 import { Route as MatriceConcurrenceRouteImport } from './routes/matrice-concurrence'
 import { Route as MeilleursOutilsSeoGeo2026RouteImport } from './routes/meilleurs-outils-seo-geo-2026'
+import { Route as MeilleursOutilsSeoGeo2027RouteImport } from './routes/meilleurs-outils-seo-geo-2027'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MethodologieRouteImport } from './routes/methodologie'
 import { Route as ModifierCodeWordpressRouteImport } from './routes/modifier-code-wordpress'
@@ -426,6 +427,12 @@ const MeilleursOutilsSeoGeo2026Route =
   MeilleursOutilsSeoGeo2026RouteImport.update({
     id: '/meilleurs-outils-seo-geo-2026',
     path: '/meilleurs-outils-seo-geo-2026',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const MeilleursOutilsSeoGeo2027Route =
+  MeilleursOutilsSeoGeo2027RouteImport.update({
+    id: '/meilleurs-outils-seo-geo-2027',
+    path: '/meilleurs-outils-seo-geo-2027',
     getParentRoute: () => rootRouteImport,
   } as any)
 const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
@@ -952,6 +959,7 @@ export interface FileRoutesByFullPath {
   '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
   '/matrice-concurrence': typeof MatriceConcurrenceRoute
   '/meilleurs-outils-seo-geo-2026': typeof MeilleursOutilsSeoGeo2026Route
+  '/meilleurs-outils-seo-geo-2027': typeof MeilleursOutilsSeoGeo2027Route
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methodologie': typeof MethodologieRoute
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
@@ -1099,6 +1107,7 @@ export interface FileRoutesByTo {
   '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
   '/matrice-concurrence': typeof MatriceConcurrenceRoute
   '/meilleurs-outils-seo-geo-2026': typeof MeilleursOutilsSeoGeo2026Route
+  '/meilleurs-outils-seo-geo-2027': typeof MeilleursOutilsSeoGeo2027Route
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methodologie': typeof MethodologieRoute
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
@@ -1247,6 +1256,7 @@ export interface FileRoutesById {
   '/marketplace-backlinks': typeof MarketplaceBacklinksRoute
   '/matrice-concurrence': typeof MatriceConcurrenceRoute
   '/meilleurs-outils-seo-geo-2026': typeof MeilleursOutilsSeoGeo2026Route
+  '/meilleurs-outils-seo-geo-2027': typeof MeilleursOutilsSeoGeo2027Route
   '/mentions-legales': typeof MentionsLegalesRoute
   '/methodologie': typeof MethodologieRoute
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
@@ -1396,6 +1406,7 @@ export interface FileRouteTypes {
     | '/marketplace-backlinks'
     | '/matrice-concurrence'
     | '/meilleurs-outils-seo-geo-2026'
+    | '/meilleurs-outils-seo-geo-2027'
     | '/mentions-legales'
     | '/methodologie'
     | '/modifier-code-wordpress'
@@ -1543,6 +1554,7 @@ export interface FileRouteTypes {
     | '/marketplace-backlinks'
     | '/matrice-concurrence'
     | '/meilleurs-outils-seo-geo-2026'
+    | '/meilleurs-outils-seo-geo-2027'
     | '/mentions-legales'
     | '/methodologie'
     | '/modifier-code-wordpress'
@@ -1690,6 +1702,7 @@ export interface FileRouteTypes {
     | '/marketplace-backlinks'
     | '/matrice-concurrence'
     | '/meilleurs-outils-seo-geo-2026'
+    | '/meilleurs-outils-seo-geo-2027'
     | '/mentions-legales'
     | '/methodologie'
     | '/modifier-code-wordpress'
@@ -1838,6 +1851,7 @@ export interface RootRouteChildren {
   MarketplaceBacklinksRoute: typeof MarketplaceBacklinksRoute
   MatriceConcurrenceRoute: typeof MatriceConcurrenceRoute
   MeilleursOutilsSeoGeo2026Route: typeof MeilleursOutilsSeoGeo2026Route
+  MeilleursOutilsSeoGeo2027Route: typeof MeilleursOutilsSeoGeo2027Route
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   MethodologieRoute: typeof MethodologieRoute
   ModifierCodeWordpressRoute: typeof ModifierCodeWordpressRoute
@@ -2303,6 +2317,13 @@ declare module '@tanstack/react-router' {
       path: '/meilleurs-outils-seo-geo-2026'
       fullPath: '/meilleurs-outils-seo-geo-2026'
       preLoaderRoute: typeof MeilleursOutilsSeoGeo2026RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meilleurs-outils-seo-geo-2027': {
+      id: '/meilleurs-outils-seo-geo-2027'
+      path: '/meilleurs-outils-seo-geo-2027'
+      fullPath: '/meilleurs-outils-seo-geo-2027'
+      preLoaderRoute: typeof MeilleursOutilsSeoGeo2027RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mentions-legales': {
@@ -3006,6 +3027,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketplaceBacklinksRoute: MarketplaceBacklinksRoute,
   MatriceConcurrenceRoute: MatriceConcurrenceRoute,
   MeilleursOutilsSeoGeo2026Route: MeilleursOutilsSeoGeo2026Route,
+  MeilleursOutilsSeoGeo2027Route: MeilleursOutilsSeoGeo2027Route,
   MentionsLegalesRoute: MentionsLegalesRoute,
   MethodologieRoute: MethodologieRoute,
   ModifierCodeWordpressRoute: ModifierCodeWordpressRoute,

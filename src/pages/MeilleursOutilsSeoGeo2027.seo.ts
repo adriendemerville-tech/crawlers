@@ -1,13 +1,13 @@
 const SITE_URL = "https://crawlers.fr";
-const PATH = "/meilleurs-outils-seo-geo-2026";
+const PATH = "/meilleurs-outils-seo-geo-2027";
 
 export const OUTILS_JSONLD = [
   {
     "@context": "https://schema.org",
     "@type": "Article",
-    headline: "Classement des meilleurs nouveaux outils SEO et GEO en 2026",
+    headline: "Classement des meilleurs nouveaux outils SEO et GEO en 2027",
     description:
-      "SE Ranking, Crawlers.fr, Surfer SEO, ThotSEO, SoRank, Outrank, ChatSEO, Cocolyze, BotSEO, Local Ranker, Localo, Semrush, Ahrefs : le classement 2026 des meilleurs outils SEO et GEO.",
+      "SE Ranking, Crawlers.fr, Surfer SEO, ThotSEO, SoRank, Outrank, ChatSEO, Cocolyze, BotSEO, Local Ranker, Localo, Semrush, Ahrefs : le classement 2027 des meilleurs outils SEO et GEO.",
     author: { "@type": "Person", name: "Adrien de Volontat", url: `${SITE_URL}/a-propos` },
     publisher: { "@type": "Organization", name: "Crawlers.fr", url: SITE_URL },
     datePublished: "2026-08-30",
@@ -17,7 +17,7 @@ export const OUTILS_JSONLD = [
   {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Meilleurs nouveaux outils SEO et GEO 2026",
+    name: "Meilleurs nouveaux outils SEO et GEO 2027",
     itemListOrder: "https://schema.org/ItemListOrderAscending",
     itemListElement: [
       "SE Ranking",
@@ -45,7 +45,7 @@ export const OUTILS_JSONLD = [
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Accueil", item: SITE_URL },
       { "@type": "ListItem", position: 2, name: "Comparatifs", item: `${SITE_URL}/comparatif-crawlers-semrush` },
-      { "@type": "ListItem", position: 3, name: "Meilleurs outils SEO GEO 2026", item: `${SITE_URL}${PATH}` },
+      { "@type": "ListItem", position: 3, name: "Meilleurs outils SEO GEO 2027", item: `${SITE_URL}${PATH}` },
     ],
   },
   {
@@ -54,10 +54,10 @@ export const OUTILS_JSONLD = [
     mainEntity: [
       {
         "@type": "Question",
-        name: "Quel est le meilleur nouvel outil SEO en 2026 ?",
+        name: "Quel est le meilleur nouvel outil SEO en 2027 ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "SE Ranking est le nouvel outil SEO le plus complet en 2026 : suivi de positions, audit, backlinks et concurrentiel à partir d'environ 65 €/mois. Pour le GEO (visibilité dans ChatGPT, Perplexity, Gemini), Crawlers.fr est la référence française avec un audit technique et GEO gratuit.",
+          text: "SE Ranking est le nouvel outil SEO le plus complet en 2027 : suivi de positions, audit, backlinks et concurrentiel à partir d'environ 65 €/mois. Pour le GEO (visibilité dans ChatGPT, Perplexity, Gemini), Crawlers.fr est la référence française avec un audit technique et GEO gratuit.",
         },
       },
       {
