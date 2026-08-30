@@ -5,6 +5,7 @@ import { FileSearch, Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link, useNavigate } from '@/lib/router-compat';
 import { TrustBadge } from '@/components/TrustBadge';
+import { getAuditedDomainsCount } from '@/lib/auditedDomains.functions';
 
 // L'animation du mot du titre est en CSS pur : framer-motion coûtait 39 KiB
 // transférés sur le chemin critique du LCP pour un simple fondu montant.
@@ -20,9 +21,16 @@ function HeroSectionComponent() {
   const [url, setUrl] = useState('');
   const [wordIndex, setWordIndex] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [domainsCount, setDomainsCount] = useState<number | null>(null);
 
   useEffect(() => {
     setIsHydrated(true);
+    // Preuve sociale : compteur réel + 1000, échec silencieux (décoratif).
+    let cancelled = false;
+    getAuditedDomainsCount()
+      .then((res) => { if (!cancelled) setDomainsCount(res.count); })
+      .catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -49,7 +57,7 @@ function HeroSectionComponent() {
   };
 
   return (
-    <section className="relative flex min-h-0 sm:min-h-[48vh] items-center justify-center overflow-hidden px-4 sm:px-6 py-6 sm:py-2 sm:pt-2">
+    <section className="relative flex min-h-0 sm:min-h-[52vh] items-center justify-center overflow-hidden px-4 sm:px-6 py-6 sm:py-2 sm:pt-2">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-60 -top-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
         <div className="absolute -bottom-60 -right-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
@@ -97,6 +105,12 @@ function HeroSectionComponent() {
 
         {/* URL input + CTA Audit Expert + note — tout sur une seule ligne */}
         <div className="hero-actions mt-2 mx-auto w-full" style={{ maxWidth: 'min(96%, 46rem)' }}>
+          <p className="hero-domains hidden sm:block shrink-0 text-left text-[13px] leading-tight text-muted-foreground whitespace-nowrap" aria-live="polite">
+            <span className="font-bold tabular-nums text-foreground">
+              {`Déjà ${(1000 + Math.max(domainsCount ?? 0, 0)).toLocaleString('fr-FR')}${domainsCount === null ? '+' : ''}`}
+            </span>{' '}
+            sites audités
+          </p>
           <TrustBadge layout="column" className="flex shrink-0 gap-0.5 py-0 justify-center max-sm:items-center [&_.text-sm]:text-[11px] [&_.text-sm]:whitespace-nowrap [&_.text-sm]:text-center sm:[&_.text-sm]:text-left" />
           <div className="hero-input-wrap min-w-0 relative">
             <Input
