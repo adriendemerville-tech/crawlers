@@ -1,5 +1,5 @@
 import "@/styles.app.css";
-import { useEffect, useState, lazy, Suspense} from 'react';
+import { useEffect, useState, lazy } from 'react';
 import { AiCitationsObservatory } from '@/components/observatoire/AiCitationsObservatory';
 import { Helmet } from 'react-helmet-async';
 import { Link } from '@/lib/router-compat';
@@ -22,10 +22,12 @@ import {
   BookOpen, FlaskConical, HelpCircle, ArrowRight, Layers, PieChart
 } from 'lucide-react';
 import { ClientOnly } from '@tanstack/react-router';
-const PerfAreaChart = lazy(() => import('@/components/Observatoire/ObservatoireCharts').then(m => ({ default: m.PerfAreaChart })));
-const SectorRadarChart = lazy(() => import('@/components/Observatoire/ObservatoireCharts').then(m => ({ default: m.SectorRadarChart })));
-const SectorTrendBarChart = lazy(() => import('@/components/Observatoire/ObservatoireCharts').then(m => ({ default: m.SectorTrendBarChart })));
-const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+import { LazyBoundary } from '@/components/LazyBoundary';
+import { lazyRetry } from '@/lib/lazyWithRetry';
+const PerfAreaChart = lazy(lazyRetry(() => import('@/components/Observatoire/ObservatoireCharts').then(m => ({ default: m.PerfAreaChart }))));
+const SectorRadarChart = lazy(lazyRetry(() => import('@/components/Observatoire/ObservatoireCharts').then(m => ({ default: m.SectorRadarChart }))));
+const SectorTrendBarChart = lazy(lazyRetry(() => import('@/components/Observatoire/ObservatoireCharts').then(m => ({ default: m.SectorTrendBarChart }))));
+const Footer = lazy(lazyRetry(() => import('@/components/Footer').then(m => ({ default: m.Footer }))));
 
 
 // ─── Translations ──────────────────────────────────────────
@@ -494,9 +496,9 @@ const Observatoire = () => {
                 </div>
               ) : (
                 <ClientOnly fallback={<Skeleton className="h-72 w-full" />}>
-                  <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+                  <LazyBoundary label="ce graphique" minHeight="18.0rem" fallback={<Skeleton className="h-72 w-full" />}>
                     <PerfAreaChart data={stats.monthlyData} />
-                  </Suspense>
+                  </LazyBoundary>
                 </ClientOnly>
               )}
             </CardContent>
@@ -623,9 +625,9 @@ const Observatoire = () => {
                       </CardHeader>
                       <CardContent>
                         <ClientOnly fallback={<Skeleton className="h-80 w-full" />}>
-                          <Suspense fallback={<Skeleton className="h-80 w-full" />}>
+                          <LazyBoundary label="ce graphique" minHeight="20.0rem" fallback={<Skeleton className="h-80 w-full" />}>
                             <SectorRadarChart data={radarData} sectors={radarSectors} />
-                          </Suspense>
+                          </LazyBoundary>
                         </ClientOnly>
                       </CardContent>
                     </Card>
@@ -668,9 +670,9 @@ const Observatoire = () => {
                       </CardHeader>
                       <CardContent>
                         <ClientOnly fallback={<Skeleton className="h-72 w-full" />}>
-                          <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+                          <LazyBoundary label="ce graphique" minHeight="18.0rem" fallback={<Skeleton className="h-72 w-full" />}>
                             <SectorTrendBarChart data={barData} />
-                          </Suspense>
+                          </LazyBoundary>
                         </ClientOnly>
                       </CardContent>
                     </Card>
@@ -734,7 +736,7 @@ const Observatoire = () => {
         </section>
       </main>
 
-      <Suspense fallback={null}><Footer /></Suspense>
+      <LazyBoundary fallback={null}><Footer /></LazyBoundary>
     </div>
   );
 };
