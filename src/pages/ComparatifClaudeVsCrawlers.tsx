@@ -15,6 +15,7 @@ import { Link } from '@/lib/router-compat';
 import { motion } from 'framer-motion';
 import { ClusterMesh } from '@/components/seo/ClusterMesh';
 import { t3 } from '@/utils/i18n';
+import { DirectAnswer } from '@/components/seo/DirectAnswer';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -145,6 +146,18 @@ export default function ComparatifClaudeVsCrawlers() {
                 <p className={`text-base max-w-xl mx-auto mb-8 ${A.muted}`}>
                   Pour 29€/mois, Crawlers remplace votre abonnement Claude Pro, vos heures de prompting et vos copier-coller. Voici pourquoi.
                 </p>
+
+                <DirectAnswer
+                  className="mb-8"
+                  question="Peut-on auditer son SEO avec Claude et des serveurs MCP, ou faut-il un outil dédié ?"
+                  answer={<>Claude raisonne très bien mais ne crawle pas : sans exploration réelle du site, sans données de position et sans lecture du code servi, ses conclusions reposent sur ce que vous lui décrivez. Crawlers.fr fournit la mesure (crawl serveur, logs, Search Console, benchmark génératif) puis l'exécution des correctifs, ce que la stack Claude seule ne peut pas faire.</>}
+                  facts={[
+                    { label: 'Quoi', value: 'Crawl serveur, données de position, audit GEO, correctifs déployés' },
+                    { label: 'Pourquoi', value: 'Un LLM sans données de crawl produit des recommandations hors sol' },
+                    { label: 'Combien', value: '29 €/mois pour Crawlers.fr' },
+                    { label: 'Quand', value: 'Comparatif 2026' },
+                  ]}
+                />
               </motion.div>
             </div>
           </section>

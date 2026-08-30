@@ -14,6 +14,7 @@ import {
 import { t3 } from '@/utils/i18n';
 import { useEffect, lazy, Suspense} from 'react';
 import { ClusterMesh } from '@/components/seo/ClusterMesh';
+import { DirectAnswer } from '@/components/seo/DirectAnswer';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
@@ -164,6 +165,18 @@ export default function ArchitecteGeneratif() {
                   'Code Architect analiza su sitio y aplica automáticamente las correcciones SEO/GEO correctas en las páginas correctas. Datos estructurados, metadatos, Open Graph: cada URL recibe exactamente lo que necesita.'
                 )}
               </p>
+
+              <DirectAnswer
+                className="mt-8"
+                question="Comment corriger automatiquement les données structurées et métadonnées SEO d'un site page par page ?"
+                answer={<>L'Architecte Génératif de Crawlers.fr analyse chaque URL, identifie le déficit propre à cette page (JSON-LD manquant, title trop long, Open Graph absent) et applique le correctif adapté plutôt qu'un patch global. Chaque modification de code reste soumise à votre validation avant déploiement.</>}
+                facts={[
+                  { label: 'Quoi', value: 'Données structurées, métadonnées, Open Graph, balisage GEO' },
+                  { label: 'Où', value: 'Sur chaque URL du site, individuellement' },
+                  { label: 'Comment', value: 'Correctifs générés puis validés par vous avant mise en ligne' },
+                  { label: 'Pourquoi', value: 'Un correctif global dégrade les pages qui n\'en avaient pas besoin' },
+                ]}
+              />
             </div>
           </section>
 

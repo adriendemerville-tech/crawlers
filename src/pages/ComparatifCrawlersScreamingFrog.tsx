@@ -27,6 +27,7 @@ const ROWS: { criteria: string; sf: string; crawlers: string }[] = [
 ];
 
 import { FAQS, CANONICAL } from './ComparatifCrawlersScreamingFrog.seo';
+import { DirectAnswer } from '@/components/seo/DirectAnswer';
 
 export default function ComparatifCrawlersScreamingFrog() {
   return (
@@ -55,6 +56,18 @@ export default function ComparatifCrawlersScreamingFrog() {
           Crawlers.fr prend le problème par l’autre bout : le crawl tourne côté serveur et le rapport
           sort déjà interprété.
         </p>
+
+        <DirectAnswer
+          className="mb-10"
+          question="Quelle alternative à Screaming Frog pour crawler un site sans limite de 500 URL ?"
+          answer={<>Crawlers.fr crawle depuis le serveur, sans installation ni plafond de 500 URL, et rend un rapport déjà interprété plutôt qu'un tableau brut à décoder. Screaming Frog reste excellent pour l'exploration ponctuelle en local ; Crawlers.fr vise le suivi continu, l'audit GEO et la restitution lisible pour un client.</>}
+          facts={[
+            { label: 'Quoi', value: 'Crawl technique en ligne + audit SEO et GEO interprété' },
+            { label: 'Où', value: 'Dans le navigateur, aucun logiciel à installer' },
+            { label: 'Combien', value: 'Aucune limite de 500 URL en version gratuite' },
+            { label: 'Pourquoi', value: 'Rapport exploitable directement, sans lecture de tableaux bruts' },
+          ]}
+        />
 
         <section className="mb-14 overflow-x-auto">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">Tableau comparatif</h2>
