@@ -21,7 +21,10 @@ import {
   Gauge, Zap, LayoutDashboard, MousePointerClick,
   BookOpen, FlaskConical, HelpCircle, ArrowRight, Layers, PieChart
 } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
+import { ClientOnly } from '@tanstack/react-router';
+const PerfAreaChart = lazy(() => import('@/components/Observatoire/ObservatoireCharts').then(m => ({ default: m.PerfAreaChart })));
+const SectorRadarChart = lazy(() => import('@/components/Observatoire/ObservatoireCharts').then(m => ({ default: m.SectorRadarChart })));
+const SectorTrendBarChart = lazy(() => import('@/components/Observatoire/ObservatoireCharts').then(m => ({ default: m.SectorTrendBarChart })));
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
