@@ -1995,16 +1995,26 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const cocoonGraphDetails = cocoonData?.graph_details || {};
   const orphanPages = cocoonGraphDetails?.orphan_pages || [];
   const clusterDetails = cocoonGraphDetails?.cluster_details || [];
-  const cannibalizationRisks = cocoonGraphDetails?.cannibalization_risks || [];
+  const rawCannibalizationRisks = cocoonGraphDetails?.cannibalization_risks || [];
+  // Brief 2026-08-30 (P1) — modèle multi-audiences : les pages franchise,
+  // recrutement, carrière ou investisseurs répondent à une audience secondaire
+  // légitime. Elles ne cannibalisent pas l'offre commerciale et sont donc
+  // sorties du calcul, en le déclarant explicitement.
+  const cannibalizationRisks = rawCannibalizationRisks.filter(
+    (r: any) => !(r?.urls || []).some((u: unknown) => isSecondaryAudienceUrl(u)),
+  );
+  const secondaryAudienceExcluded = rawCannibalizationRisks.length - cannibalizationRisks.length;
   const thinContentPages = cocoonGraphDetails?.thin_content_pages || [];
   const strategeRecos: Array<{ title: string; description: string; priority: string }> = cocoonData?._stratege_recommendations || [];
 
   // Lot B — verdict pilier / satellite : « /a ↔ /b » n'indique pas quelle page
   // garder. Chaque groupe reçoit donc un verdict déterministe et une action unique.
   // Repli sur la liste brute si les métriques de nœuds manquent.
-  const pillarSatelliteHtml = pillarSatelliteBlockHTML(
+  const pillarSatelliteHtml = `${pillarSatelliteBlockHTML(
     verdictsFromCocoonRisks(cannibalizationRisks, cocoonNodes, 5),
-  );
+  )}${secondaryAudienceExcluded > 0
+    ? `<p style="font-size:11.5px;color:#6b7280;margin:8px 0 0;">${secondaryAudienceExcluded} groupe${secondaryAudienceExcluded > 1 ? 's' : ''} écarté${secondaryAudienceExcluded > 1 ? 's' : ''} du calcul : ${secondaryAudienceExcluded > 1 ? 'ils concernent' : 'il concerne'} des pages destinées à une audience secondaire légitime (franchise, recrutement, carrières, investisseurs), qui ne concurrencent pas l'offre commerciale.</p>`
+    : ''}`;
 
 
   // Lot 6 — nommage lisible des clusters + regroupement des thématiques isolées
