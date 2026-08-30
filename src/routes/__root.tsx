@@ -187,7 +187,7 @@ function RootComponent() {
     <GlobalErrorBoundary>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
             <LanguageProvider>
               <AuthProvider>
                 <DemoModeProvider>
