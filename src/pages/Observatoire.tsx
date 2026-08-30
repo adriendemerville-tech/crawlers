@@ -611,7 +611,6 @@ const Observatoire = () => {
                   }
                   return point;
                 });
-                const radarColors = ['hsl(var(--primary))', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
                 if (radarData.some(d => Object.keys(d).length > 1)) {
                   return (
@@ -623,23 +622,11 @@ const Observatoire = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <ResponsiveContainer width="100%" height={360}>
-                          <RadarChart data={radarData}>
-                            <PolarGrid className="stroke-border" />
-                            <PolarAngleAxis dataKey="metric" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
-                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
-                            {radarSectors.map((sec, i) => (
-                              <Radar key={sec} name={sec.charAt(0).toUpperCase() + sec.slice(1)} dataKey={sec}
-                                stroke={radarColors[i % radarColors.length]} fill={radarColors[i % radarColors.length]}
-                                fillOpacity={0.15} strokeWidth={2} />
-                            ))}
-                            <Legend />
-                            <Tooltip contentStyle={{
-                              backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px', color: 'hsl(var(--foreground))',
-                            }} />
-                          </RadarChart>
-                        </ResponsiveContainer>
+                        <ClientOnly fallback={<Skeleton className="h-80 w-full" />}>
+                          <Suspense fallback={<Skeleton className="h-80 w-full" />}>
+                            <SectorRadarChart data={radarData} sectors={radarSectors} />
+                          </Suspense>
+                        </ClientOnly>
                       </CardContent>
                     </Card>
                   );
