@@ -484,12 +484,15 @@ async function detectForSite(supabase: any, trackedSiteId: string, domain: strin
   }
 
   if (newAlerts.length > 0) {
-    // Clear old non-dismissed alerts for this site (keep dismissed as history)
+    // Clear old non-dismissed alerts for this site (keep dismissed as history).
+    // Les opportunités CTR ont leur propre cycle de purge : ne pas les écraser ici.
     await supabase
       .from('anomaly_alerts')
       .delete()
       .eq('tracked_site_id', trackedSiteId)
-      .eq('is_dismissed', false);
+      .eq('is_dismissed', false)
+      .neq('metric_source', CTR_SOURCE);
+
 
     const { error, data: insertedAlerts } = await supabase.from('anomaly_alerts').insert(newAlerts).select('id, severity, direction');
     if (error) console.error(`[detect-anomalies] Insert error for ${domain}:`, error);
