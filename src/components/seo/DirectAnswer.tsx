@@ -77,11 +77,11 @@ export function DirectAnswer({ question, answer, facts, path, className = '' }: 
       <script type="application/ld+json">{JSON.stringify(speakableJsonLd)}</script>
     <section
       className={`direct-answer mx-auto max-w-3xl rounded-lg border border-primary/30 bg-card/60 p-5 text-left sm:p-6 ${className}`}
-      aria-labelledby={`da-${slug(question)}`}
+      aria-labelledby={answerId}
       data-direct-answer=""
     >
       <h3
-        id={`da-${slug(question)}`}
+        id={answerId}
         className="mb-3 text-base font-semibold leading-snug text-foreground sm:text-lg"
       >
         {question}
