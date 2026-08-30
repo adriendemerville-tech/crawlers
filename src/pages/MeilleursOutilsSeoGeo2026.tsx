@@ -509,7 +509,7 @@ export default function MeilleursOutilsSeoGeo2026() {
           </h2>
           <p className="text-sm text-muted-foreground mb-4">
             <Check className="inline w-3.5 h-3.5 text-emerald-500" aria-hidden /> couvert ·{' '}
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 align-middle" aria-hidden /> partiel ·{' '}
+            <Check className="w-3.5 h-3.5 text-amber-500 align-middle" aria-hidden /> partiel ·{' '}
             <X className="inline w-3.5 h-3.5 text-muted-foreground/40" aria-hidden /> absent
           </p>
           <div className="overflow-x-auto rounded-xl border border-border">
