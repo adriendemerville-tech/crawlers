@@ -233,6 +233,10 @@ const FAQ = [
     q: 'Qu\'est-ce qu\'un outil GEO ?',
     a: 'Un outil GEO (Generative Engine Optimization) mesure et améliore la visibilité d\'un site dans les réponses des IA génératives : ChatGPT, Perplexity, Gemini, Claude, Copilot, Mistral. Il analyse les citations, le balisage structuré, les passages citables et l\'accessibilité aux crawlers IA.',
   },
+  {
+    q: 'Qu\'est-ce qu\'un SaaS IA-natif et pourquoi est-il moins cher ?',
+    a: 'Un SaaS IA-natif est un logiciel construit dès l\'origine autour d\'agents d\'intelligence artificielle qui exécutent l\'analyse, la rédaction et le déploiement, au lieu de simplement afficher des données. Chaque tâche automatisée remplace des heures de travail manuel et du support humain : l\'outil est donc plus puissant qu\'une suite traditionnelle sur l\'exécution, et vendu 2 à 10 fois moins cher.',
+  },
 ];
 
 /* ─── Petits composants ─── */
@@ -327,7 +331,7 @@ export default function MeilleursOutilsSeoGeo2026() {
               {
                 icon: Brain,
                 title: 'L\'IA est partout',
-                text: 'La recherche bascule : une partie croissante des réponses vient de ChatGPT, Perplexity ou Gemini. Les suites historiques ont ajouté le GEO en surcouche tardive ; les nouveaux outils comme Crawlers.fr l\'ont au cœur du produit.',
+                text: 'Dans la recherche d\'abord : une part croissante des réponses vient de ChatGPT, Perplexity ou Gemini, et les suites historiques n\'ont ajouté le GEO qu\'en surcouche tardive. Mais l\'IA est aussi dans le logiciel lui-même : les nouveaux outils sont bâtis IA-natif, avec des agents qui analysent, rédigent et déploient à la place de l\'équipe — plus de puissance, moins de coût humain.',
               },
               {
                 icon: Layers,
@@ -349,6 +353,32 @@ export default function MeilleursOutilsSeoGeo2026() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* IA-natif vs surcouche */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold tracking-tight mb-4">
+            SaaS IA-natif : pourquoi l'IA dans la structure rend les nouveaux outils plus puissants et moins chers
+          </h2>
+          <blockquote className="citable-passage border-l-2 border-primary pl-4 mb-4 text-muted-foreground">
+            Un SaaS IA-natif n'ajoute pas l'IA par-dessus un produit ancien : il est bâti avec des
+            agents qui exécutent l'analyse, la rédaction et le déploiement. Résultat, un outil
+            IA-natif est plus puissant qu'une suite historique sur les tâches répétitives et
+            nettement moins cher, car chaque fonction automatisée remplace des heures de travail
+            manuel et des équipes de support.
+          </blockquote>
+          <p className="text-muted-foreground mb-3">
+            Il faut distinguer deux générations. Les <strong className="text-foreground">suites historiques</strong> ont
+            greffé un assistant conversationnel sur un socle conçu avant 2020 : l'IA y répond, mais
+            le produit ne fait toujours pas. À l'inverse, les <strong className="text-foreground">outils IA-natifs</strong> —
+            Crawlers.fr, Outrank, ChatSEO — placent un agent au centre : il lit les données, décide,
+            génère le contenu ou le code correctif, puis le publie.
+          </p>
+          <p className="text-muted-foreground">
+            C'est cette structure qui explique le paradoxe prix/puissance du classement : un outil
+            construit autour d'agents coûte des abonnements à 29-99 €/mois alors qu'il exécute ce
+            qu'une suite à 450 €/mois se contente de mesurer.
+          </p>
         </section>
 
         {/* Classement */}
