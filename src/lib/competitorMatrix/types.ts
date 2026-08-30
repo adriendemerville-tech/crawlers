@@ -24,7 +24,7 @@ export interface Competitor {
   name: string;
   type: CompetitorType;
   reason: string;
-  source: 'dataforseo' | 'llm' | 'user' | 'serp';
+  source: 'dataforseo' | 'llm' | 'user' | 'serp' | 'comparatif';
 }
 
 export interface MarketKeyword {
