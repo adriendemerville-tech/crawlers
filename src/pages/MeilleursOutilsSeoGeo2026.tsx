@@ -6,7 +6,7 @@ import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from '@/components/ui/accordion';
 import {
-  Check, X, Minus, Trophy, Wallet, Brain, Layers, MapPin, PenLine,
+  Check, X, Trophy, Wallet, Brain, Layers, MapPin, PenLine,
   BarChart3, Bot, ArrowRight, Star,
 } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
@@ -288,7 +288,7 @@ const FAQ = [
 
 function Mark({ v }: { v: boolean | 'partiel' }) {
   if (v === true) return <Check className="w-4 h-4 text-emerald-500 mx-auto" aria-label="Oui" />;
-  if (v === 'partiel') return <Minus className="w-4 h-4 text-amber-500 mx-auto" aria-label="Partiel" />;
+  if (v === 'partiel') return <span className="inline-block w-3 h-3 rounded-full bg-amber-500 mx-auto align-middle" aria-label="Partiel" />;
   return <X className="w-4 h-4 text-muted-foreground/40 mx-auto" aria-label="Non" />;
 }
 
@@ -509,7 +509,7 @@ export default function MeilleursOutilsSeoGeo2026() {
           </h2>
           <p className="text-sm text-muted-foreground mb-4">
             <Check className="inline w-3.5 h-3.5 text-emerald-500" aria-hidden /> couvert ·{' '}
-            <Minus className="inline w-3.5 h-3.5 text-amber-500" aria-hidden /> partiel ·{' '}
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 align-middle" aria-hidden /> partiel ·{' '}
             <X className="inline w-3.5 h-3.5 text-muted-foreground/40" aria-hidden /> absent
           </p>
           <div className="overflow-x-auto rounded-xl border border-border">
