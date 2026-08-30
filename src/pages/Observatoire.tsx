@@ -680,22 +680,11 @@ const Observatoire = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <ResponsiveContainer width="100%" height={320}>
-                          <BarChart data={barData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                            <XAxis dataKey="period" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
-                            <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} domain={[0, 100]} unit="%" />
-                            <Tooltip contentStyle={{
-                              backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px', color: 'hsl(var(--foreground))',
-                            }} />
-                            <Legend />
-                            <Bar dataKey="json_ld_rate" name="JSON-LD" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="https_rate" name="HTTPS" fill="#10b981" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="schema_org_rate" name="Schema.org" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="avg_seo_score" name="Score SEO" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
+                        <ClientOnly fallback={<Skeleton className="h-72 w-full" />}>
+                          <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+                            <SectorTrendBarChart data={barData} />
+                          </Suspense>
+                        </ClientOnly>
                       </CardContent>
                     </Card>
                   );
