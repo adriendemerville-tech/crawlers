@@ -673,7 +673,6 @@ export default function MeilleursOutilsSeoGeo2026() {
                     <td className="p-3 text-center"><Cell outil={o.nom} col="contenuIA" v={o.contenuIA} /></td>
                     <td className="p-3 text-center"><Cell outil={o.nom} col="local" v={o.local} /></td>
                     <td className="p-3 text-center"><Cell outil={o.nom} col="execution" v={o.execution} /></td>
-
                     <td className="p-3 text-muted-foreground whitespace-nowrap">{o.prix}</td>
                     <td className="p-3 text-center"><Note n={o.note} /></td>
                   </tr>
@@ -681,7 +680,46 @@ export default function MeilleursOutilsSeoGeo2026() {
               </tbody>
             </table>
           </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Chaque coche renvoie à une source vérifiable : le petit numéro à côté de l'indicateur
+            pointe vers le panneau « Sources et preuves » ci-dessous.
+          </p>
         </section>
+
+        {/* Sources et preuves */}
+        <section className="mb-12" id="sources">
+          <h2 className="text-2xl font-bold tracking-tight mb-2">Sources et preuves</h2>
+          <p className="citable-passage text-muted-foreground mb-4">
+            Chaque évaluation du tableau comparatif des 13 outils SEO et GEO est traçable : la
+            liste ci-dessous indique, pour chaque outil et chaque colonne, la fonctionnalité
+            officielle qui justifie l'indicateur et le lien vers la page produit correspondante.
+          </p>
+          <ol className="space-y-2 text-sm">
+            {SOURCES.map((s) => (
+              <li key={s.n} id={`source-${s.n}`} className="flex gap-3 scroll-mt-24">
+                <span className="tabular-nums text-muted-foreground w-6 shrink-0">{s.n}.</span>
+                <span>
+                  <strong className="font-semibold">{s.outil}</strong>
+                  <span className="text-muted-foreground"> — {s.colonne} : </span>
+                  {s.preuve.t}{' '}
+                  <a
+                    href={s.preuve.u}
+                    target="_blank"
+                    rel={s.outil === 'Crawlers.fr' ? undefined : 'nofollow noopener'}
+                    className="underline underline-offset-2 hover:text-primary break-all"
+                  >
+                    {s.preuve.u.replace(/^https?:\/\//, '')}
+                  </a>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <p className="text-xs text-muted-foreground mt-4">
+            Sources consultées et vérifiées sur les pages produit officielles des éditeurs.
+            Dernière vérification : août 2026.
+          </p>
+        </section>
+
 
         {/* Verdict */}
         <section className="mb-12">
