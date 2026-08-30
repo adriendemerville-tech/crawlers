@@ -460,7 +460,15 @@ export default function MeilleursOutilsSeoGeo2026() {
                     className={`border-b border-border/50 ${o.crawlers ? 'bg-primary/5' : ''}`}
                   >
                     <td className="p-3 font-medium whitespace-nowrap">
-                      #{o.rang} {o.nom}
+                      #{o.rang}{' '}
+                      <a
+                        href={o.url}
+                        target="_blank"
+                        rel={o.crawlers ? undefined : 'nofollow noopener'}
+                        className="underline underline-offset-2 hover:text-primary"
+                      >
+                        {o.nom}
+                      </a>
                     </td>
                     <td className="p-3 text-center"><Mark v={o.seo} /></td>
                     <td className="p-3 text-center"><Mark v={o.geo} /></td>
