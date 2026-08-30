@@ -100,6 +100,7 @@ export function DirectAnswer({ question, answer, facts, path, className = '' }: 
         </dl>
       ) : null}
     </section>
+    </>
   );
 }
 
