@@ -57,7 +57,7 @@ function HeroSectionComponent() {
   };
 
   return (
-    <section className="relative flex min-h-0 sm:min-h-[48vh] items-center justify-center overflow-hidden px-4 sm:px-6 py-6 sm:py-2 sm:pt-2">
+    <section className="relative flex min-h-0 sm:min-h-[52vh] items-center justify-center overflow-hidden px-4 sm:px-6 py-6 sm:py-2 sm:pt-2">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-60 -top-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
         <div className="absolute -bottom-60 -right-60 h-[28rem] w-[28rem] rounded-full bg-primary/5 blur-[100px]" />
