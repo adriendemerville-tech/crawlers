@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { Header } from '@/components/Header';
-import { SiloNav } from '@/components/seo/SiloNav';
 import { Badge } from '@/components/ui/badge';
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
@@ -434,7 +433,7 @@ export default function MeilleursOutilsSeoGeo2027() {
     <div className="min-h-screen bg-background text-foreground">
       <Header />
       <main className="container mx-auto px-4 py-10 md:py-14 max-w-5xl">
-        <SiloNav silo="comparatifs" currentPath="/meilleurs-outils-seo-geo-2027" className="mb-10" />
+        
 
         {/* Hero : badge + H1 + chapô */}
         <header className="mb-8">
