@@ -281,5 +281,124 @@ export function reconcileReportHtml(html: string, facts: ReconciliationFacts): s
     out = canonicalizeWebVitals(out, facts.webVitals);
   }
 
+  // 4. Périmètre : un seul couple (crawlées / référence) et un seul pourcentage
+  //    de couverture dans tout le document (fin de « 151/151 à 100 % » puis
+  //    « 184 URLs » puis « 177 / 84,7 % »).
+  if (facts.perimeter) {
+    out = canonicalizeCoverage(out, facts.perimeter);
+    out = reconcileCannibalizationCompleteness(out, facts.perimeter);
+  }
+
   return out;
 }
+
+// ─────────────── Couverture : un seul pourcentage ───────────────
+
+/**
+ * Réécrit toute mention de couverture (« couverture X % », « N sur M URLs »,
+ * « M/N pages explorées ») avec les valeurs de la source unique de vérité.
+ * Conservateur : on ne touche qu'aux motifs explicitement liés à la couverture.
+ */
+export function canonicalizeCoverage(html: string, p: Perimeter): string {
+  let out = html || '';
+  if (p.coveragePct !== null) {
+    out = out.replace(
+      /(couverture(?:\s+de)?\s*(?:<[^>]+>\s*)?)(\d{1,3}(?:[.,]\d{1,2})?)(\s*(?:<[^>]+>\s*)?%)/giu,
+      (_m, pre: string, _n: string, post: string) => `${pre}${p.coveragePct}${post}`,
+    );
+    out = out.replace(
+      /(\d{1,3}(?:[.,]\d{1,2})?)(\s*%\s*(?:de\s+)?couverture)/giu,
+      (_m, _n: string, post: string) => `${p.coveragePct}${post}`,
+    );
+  }
+  if (p.crawled !== null && p.reference !== null) {
+    out = out.replace(
+      /(\d[\d\s.,]*)\s*(?:\/|sur)\s*(\d[\d\s.,]*)(\s*(?:URLs?|pages?)\s*(?:explor|crawl|analys|découvert|decouvert))/giu,
+      (_m, _a, _b, tail: string) => `${p.crawled}/${p.reference}${tail}`,
+    );
+  }
+  return out;
+}
+
+/**
+ * Un groupe de cannibalisation ne peut pas être déclaré « mesure incomplète »
+ * dans un rapport qui affiche 100 % de couverture : la mesure est complète,
+ * ce sont les signaux de pilier qui sont trop proches pour arbitrer.
+ */
+export function reconcileCannibalizationCompleteness(html: string, p: Perimeter): string {
+  if (p.coveragePct !== 100) return html || '';
+  return (html || '').replace(
+    /Mesure\s+(?:incompl[eè]te|ni[eè]te)\s*—\s*aucune redirection prescrite/giu,
+    'Signaux de pilier trop proches — aucune redirection prescrite',
+  );
+}
+
+// ─────────── Multi-audiences : sections légitimes distinctes ───────────
+
+/**
+ * Une page de recrutement ou de développement en franchise répond à une
+ * audience secondaire légitime : elle ne doit jamais être comptée comme une
+ * dissonance sémantique ni comme une cannibalisation de l'offre commerciale.
+ */
+export const SECONDARY_AUDIENCE_RE =
+  /\/(?:franchise[^/]*|devenir-franchise[^/]*|recrutement|recrute[^/]*|jobs?|emplois?|carriere[s]?|carriere|careers?|nous-rejoindre|rejoignez[^/]*|stage[s]?|candidature[s]?|investisseur[s]?|presse|press)(?:\/|$|\?|#)/i;
+
+export function isSecondaryAudienceUrl(url: unknown): boolean {
+  const raw = String(url ?? '');
+  if (!raw) return false;
+  let path = raw;
+  try {
+    path = new URL(raw.startsWith('http') ? raw : `https://x.invalid${raw.startsWith('/') ? '' : '/'}${raw}`).pathname;
+  } catch { /* chaîne libre : on teste tel quel */ }
+  return SECONDARY_AUDIENCE_RE.test(path.endsWith('/') ? path : `${path}/`);
+}
+
+/** Sépare une liste d'URLs en offre principale / audience secondaire. */
+export function splitAudiences<T>(items: T[], urlOf: (item: T) => unknown): { primary: T[]; secondary: T[] } {
+  const primary: T[] = [];
+  const secondary: T[] = [];
+  for (const it of items || []) (isSecondaryAudienceUrl(urlOf(it)) ? secondary : primary).push(it);
+  return { primary, secondary };
+}
+
+// ─────────── Arithmétique : le total découle des axes ───────────
+
+export interface WeightedAxis {
+  label: string;
+  score: unknown;
+  max: unknown;
+}
+
+export interface WeightedTotal {
+  sum: number;
+  sumMax: number;
+  on100: number | null;
+  /** Écart entre le total publié et la somme des axes, arrondi au dixième. */
+  delta: number | null;
+}
+
+/**
+ * Recalcule un total depuis les axes réellement affichés. Le total publié n'est
+ * conservé que s'il correspond à ±0,5 point ; sinon la somme des axes fait foi
+ * et l'écart est retourné pour être nommé dans le rapport.
+ */
+export function reconcileWeightedTotal(axes: WeightedAxis[], publishedTotal?: unknown): WeightedTotal {
+  let sum = 0;
+  let sumMax = 0;
+  for (const a of axes || []) {
+    const max = Number(a.max);
+    const bound = Number.isFinite(max) && max > 0 ? max : 100;
+    sum += clampScore(a.score, bound) ?? 0;
+    sumMax += bound;
+  }
+  const published = Number(publishedTotal);
+  const delta = Number.isFinite(published) ? Math.round((published - sum) * 10) / 10 : null;
+  const retained = Number.isFinite(published) && Math.abs(published - sum) <= 0.5 ? published : sum;
+  return {
+    sum,
+    sumMax,
+    on100: sumMax > 0 ? Math.max(0, Math.min(100, Math.round((retained / sumMax) * 100))) : null,
+    delta,
+  };
+}
+
