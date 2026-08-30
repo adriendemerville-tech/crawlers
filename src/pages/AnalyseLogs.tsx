@@ -7,8 +7,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
 import { DirectAnswer } from '@/components/seo/DirectAnswer';
+import {
   ArrowRight, FileText, Shield, CheckCircle2, Search, AlertTriangle,
   Eye, Zap, Globe, Brain, Target, BarChart3, Bot, Terminal, Activity,
   PieChart, Clock, Server, Lock
