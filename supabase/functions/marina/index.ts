@@ -1850,7 +1850,7 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       ${topHtmlEeat}
       ${topHtmlKw}
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
-        <div class="score-badge" style="background:${scoreColor(stratScore, 100)}">${stratScore} / 100</div>
+        <div class="score-badge" style="background:${scoreColor(stratScore, 100)};white-space:nowrap;font-size:18px;line-height:1;padding:10px 16px;">${stratScore}&nbsp;/&nbsp;100</div>
         <div style="font-size:12px;color:#6b7280;line-height:1.5;">
           <strong style="color:#111827;">Score stratégique global${strategicData?._mutualized_from_domain ? ` — niveau domaine (${domain})` : ''}</strong> :
           synthèse de l'ensemble des axes de l'audit stratégique (marché, autorité, mots-clés, E-E-A-T, citabilité).
