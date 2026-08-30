@@ -76,6 +76,8 @@ import {
   assessIdentityUsability,
   reconcileReportHtml,
   formatVitalSeconds,
+  isSecondaryAudienceUrl,
+  reconcileWeightedTotal,
 } from '../_shared/auditReconciliation.ts';
 
 
@@ -1285,7 +1287,7 @@ function buildCompetitiveLandscapeSection(data: any): string {
   }).join('');
 
   return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
-    <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;text-align:left;">⚔️ Paysage Concurrentiel</h3>
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;text-align:left;">Concurrents dans Google et les IA</h3>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
       ${cards}
     </div>
@@ -1687,8 +1689,19 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
             sum += val; sumMax += max;
             return `<div class="stat-card"><div class="value" style="color:${scoreColor(val, max)}">${val}</div><div class="label">${label} /${max}</div></div>`;
           }).join('');
-          const total = Number(expertSeoData?.totalScore ?? sum);
+          // Brief 2026-08-30 (P0) — arithmétique déterministe : le total publié
+          // n'est retenu que s'il correspond à la somme des axes affichés (±0,5)
+          // OU si une réconciliation chiffrée l'explique. Sinon la somme des
+          // axes fait foi : plus jamais « 11+50+38+30+20 = 149 » affiché « 147 ».
           const declaredMax = Number(expertSeoData?.maxScore || sumMax);
+          const recArith = reconcileWeightedTotal(
+            axes.map(([label, axis, defMax]) => ({ label, score: axis?.score, max: Number(axis?.maxScore || defMax) })),
+            expertSeoData?.totalScore,
+          );
+          const hasExplainedGap = !!scores?.reconciliation;
+          const total = hasExplainedGap
+            ? Number(expertSeoData?.totalScore ?? sum)
+            : (recArith.delta !== null && Math.abs(recArith.delta) > 0.5 ? recArith.sum : Number(expertSeoData?.totalScore ?? sum));
           // Réconciliation chiffrée de l'écart entre la somme des axes et le
           // total affiché : bonus/malus liens cassés, facteur de fiabilité de
           // collecte, puis plafond de cohérence. Aucun écart n'est laissé sans
@@ -1992,16 +2005,26 @@ function generateCocoonSectionHTML(cocoonData: any, lang: string, domain: string
   const cocoonGraphDetails = cocoonData?.graph_details || {};
   const orphanPages = cocoonGraphDetails?.orphan_pages || [];
   const clusterDetails = cocoonGraphDetails?.cluster_details || [];
-  const cannibalizationRisks = cocoonGraphDetails?.cannibalization_risks || [];
+  const rawCannibalizationRisks = cocoonGraphDetails?.cannibalization_risks || [];
+  // Brief 2026-08-30 (P1) — modèle multi-audiences : les pages franchise,
+  // recrutement, carrière ou investisseurs répondent à une audience secondaire
+  // légitime. Elles ne cannibalisent pas l'offre commerciale et sont donc
+  // sorties du calcul, en le déclarant explicitement.
+  const cannibalizationRisks = rawCannibalizationRisks.filter(
+    (r: any) => !(r?.urls || []).some((u: unknown) => isSecondaryAudienceUrl(u)),
+  );
+  const secondaryAudienceExcluded = rawCannibalizationRisks.length - cannibalizationRisks.length;
   const thinContentPages = cocoonGraphDetails?.thin_content_pages || [];
   const strategeRecos: Array<{ title: string; description: string; priority: string }> = cocoonData?._stratege_recommendations || [];
 
   // Lot B — verdict pilier / satellite : « /a ↔ /b » n'indique pas quelle page
   // garder. Chaque groupe reçoit donc un verdict déterministe et une action unique.
   // Repli sur la liste brute si les métriques de nœuds manquent.
-  const pillarSatelliteHtml = pillarSatelliteBlockHTML(
+  const pillarSatelliteHtml = `${pillarSatelliteBlockHTML(
     verdictsFromCocoonRisks(cannibalizationRisks, cocoonNodes, 5),
-  );
+  )}${secondaryAudienceExcluded > 0
+    ? `<p style="font-size:11.5px;color:#6b7280;margin:8px 0 0;">${secondaryAudienceExcluded} groupe${secondaryAudienceExcluded > 1 ? 's' : ''} écarté${secondaryAudienceExcluded > 1 ? 's' : ''} du calcul : ${secondaryAudienceExcluded > 1 ? 'ils concernent' : 'il concerne'} des pages destinées à une audience secondaire légitime (franchise, recrutement, carrières, investisseurs), qui ne concurrencent pas l'offre commerciale.</p>`
+    : ''}`;
 
 
   // Lot 6 — nommage lisible des clusters + regroupement des thématiques isolées
@@ -5302,7 +5325,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         // Web Vitals : la mesure Lighthouse est la source unique, tout le
         // document est réécrit au format canonique « X,XX s ».
         const perf = expertData?.scores?.performance ?? null;
+        // Brief 2026-08-30 (P0) — un seul couple de compteurs et un seul
+        // pourcentage de couverture dans tout le document.
+        const reportPerimeter = resolvePerimeter({
+          crawledPages: crawlSnapshot?.crawled_pages || crawlSnapshot?.pagesFound,
+          discoveredUrls: crawlSnapshot?.total_pages,
+          sitemapUrls: crawlSnapshot?.sitemap_urls_count ?? crawlSnapshot?.sitemapUrlsCount,
+        });
         html = reconcileReportHtml(html, {
+          perimeter: reportPerimeter,
           orphanCount,
           toxicity,
           webVitals: perf
