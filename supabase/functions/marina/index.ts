@@ -1288,7 +1288,7 @@ function buildCompetitiveLandscapeSection(data: any): string {
   }).join('');
 
   return `<div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;">
-    <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;text-align:left;">⚔️ Paysage Concurrentiel</h3>
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;text-align:left;">Concurrents dans Google et les IA</h3>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
       ${cards}
     </div>
