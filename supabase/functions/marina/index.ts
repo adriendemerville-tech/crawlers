@@ -5326,7 +5326,15 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         // Web Vitals : la mesure Lighthouse est la source unique, tout le
         // document est réécrit au format canonique « X,XX s ».
         const perf = expertData?.scores?.performance ?? null;
+        // Brief 2026-08-30 (P0) — un seul couple de compteurs et un seul
+        // pourcentage de couverture dans tout le document.
+        const reportPerimeter = resolvePerimeter({
+          crawledPages: crawlSnapshot?.crawled_pages || crawlSnapshot?.pagesFound,
+          discoveredUrls: crawlSnapshot?.total_pages,
+          sitemapUrls: crawlSnapshot?.sitemap_urls_count ?? crawlSnapshot?.sitemapUrlsCount,
+        });
         html = reconcileReportHtml(html, {
+          perimeter: reportPerimeter,
           orphanCount,
           toxicity,
           webVitals: perf
