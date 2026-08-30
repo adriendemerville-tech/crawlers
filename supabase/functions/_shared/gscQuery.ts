@@ -17,7 +17,9 @@ export interface GscRow {
   impressions: number
   ctr: number
   date?: string
+  page?: string
 }
+
 
 export interface GscAccess {
   accessToken: string
