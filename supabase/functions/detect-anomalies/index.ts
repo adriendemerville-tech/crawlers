@@ -123,17 +123,26 @@ try {
     }
 
     let totalAlerts = 0;
+    let totalOpportunities = 0;
 
     for (const site of siteIds) {
       const alerts = await detectForSite(supabase, site.id, site.domain, site.user_id);
       totalAlerts += alerts;
+      // Quick wins CTR (Search Console, déterministe) — ignoré si pas de connexion Google
+      try {
+        totalOpportunities += await detectCtrOpportunities(supabase, site);
+      } catch (e) {
+        console.error(`[detect-anomalies] opportunités CTR ${site.domain}:`, e);
+      }
     }
 
     return jsonOk({ 
       success: true, 
       sites_analyzed: siteIds.length, 
-      alerts_created: totalAlerts 
+      alerts_created: totalAlerts,
+      ctr_opportunities_created: totalOpportunities
     });
+
 
   } catch (error) {
     console.error('[detect-anomalies] Error:', error);
