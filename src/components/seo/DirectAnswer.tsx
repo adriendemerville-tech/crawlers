@@ -33,6 +33,8 @@ interface DirectAnswerProps {
   answer: React.ReactNode;
   /** Faits 5W pertinents pour le thème (facultatif, ordre libre). */
   facts?: DirectAnswerFact[];
+  /** Chemin canonique de la page (ex. "/pagespeed") — alimente le JSON-LD Speakable. */
+  path: string;
   className?: string;
 }
 
