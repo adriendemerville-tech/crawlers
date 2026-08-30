@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/accordion';
 import {
   Check, X, Trophy, Wallet, Brain, Layers, MapPin, PenLine,
-  BarChart3, Bot, ArrowRight, Star,
+  BarChart3, Bot, ArrowRight, Star, ListOrdered,
 } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
 
@@ -424,24 +424,45 @@ export default function MeilleursOutilsSeoGeo2027() {
       <main className="container mx-auto px-4 py-10 md:py-14 max-w-5xl">
         <SiloNav silo="comparatifs" currentPath="/meilleurs-outils-seo-geo-2027" className="mb-10" />
 
-        {/* Hero */}
-        <header className="mb-10">
+        {/* Hero : badge + H1 + chapô */}
+        <header className="mb-8">
           <Badge variant="outline" className="mb-4 border-primary/50 text-primary">
             Classement 2027 — Nouvelle génération
           </Badge>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
             Les meilleurs nouveaux outils SEO et GEO en 2027 pour remplacer Semrush et Ahrefs
           </h1>
-          <p className="text-lg text-muted-foreground max-w-3xl">
+          <p className="text-lg md:text-xl leading-relaxed text-foreground/80 max-w-3xl border-l-2 border-primary pl-4">
             SE Ranking, Crawlers.fr, Surfer SEO, ThotSEO, SoRank, Outrank, ChatSEO, Cocolyze,
-            BotSEO, Local Ranker, Localo, Semrush et Ahrefs : treize outils qui couvrent le SEO,
-            le contenu IA, le local et la visibilité dans les moteurs génératifs — souvent pour
-            une fraction du prix des suites historiques.
+            BotSEO, Local Ranker, Localo, Semrush et Ahrefs : treize outils passés au crible —
+            couverture SEO, visibilité dans les IA, contenu, local et prix — pour savoir lequel
+            mérite votre abonnement en 2027.
           </p>
         </header>
 
+        {/* Sommaire cliquable */}
+        <nav aria-label="Sommaire de l'article" className="mb-12 rounded-xl border border-border bg-card/40 p-5 md:p-6">
+          <h2 className="text-base font-semibold mb-3 flex items-center gap-2">
+            <ListOrdered className="w-4 h-4 text-primary" aria-hidden />
+            Sommaire
+          </h2>
+          <ol className="space-y-1.5 text-sm">
+            {SOMMAIRE.map((item, i) => (
+              <li key={item.id}>
+                <a
+                  href={`#${item.id}`}
+                  className="inline-flex items-baseline gap-2 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <span className="tabular-nums text-primary/80">{i + 1}.</span>
+                  <span className="underline-offset-2 hover:underline">{item.label}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+
         {/* Pourquoi Semrush reste la référence */}
-        <section className="mb-12">
+        <section className="mb-12 scroll-mt-24" id="pourquoi-semrush-reference">
           <h2 className="text-2xl font-bold tracking-tight mb-4">
             Pourquoi Semrush est encore la référence des outils SEO ?
           </h2>
