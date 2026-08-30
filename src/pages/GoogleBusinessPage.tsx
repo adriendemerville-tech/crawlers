@@ -269,6 +269,7 @@ export default function GoogleBusinessPage() {
                 </p>
 
                 <DirectAnswer
+          path="/google-business"
                   question="Comment optimiser sa fiche Google Business pour le SEO local et les moteurs IA ?"
                   answer={<>Une fiche Google Business performante repose sur la complétude et la cohérence : nom, catégorie principale, adresse, horaires, services, photos et avis doivent concorder avec les informations publiées sur votre site. Crawlers.fr contrôle 42 critères, calcule un score de complétude et compare votre fiche à celles de vos concurrents locaux. Les moteurs génératifs s'appuyant sur ces mêmes données, la fiche devient un actif GEO autant qu'un actif SEO local.</>}
                   facts={[

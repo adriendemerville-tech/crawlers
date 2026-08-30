@@ -167,6 +167,7 @@ export default function ArchitecteGeneratif() {
               </p>
 
               <DirectAnswer
+          path="/architecte-generatif"
                 className="mt-8"
                 question="Comment corriger automatiquement les données structurées et métadonnées SEO d'un site page par page ?"
                 answer={<>L'Architecte Génératif de Crawlers.fr analyse chaque URL, identifie le déficit propre à cette page (JSON-LD manquant, title trop long, Open Graph absent) et applique le correctif adapté plutôt qu'un patch global. Chaque modification de code reste soumise à votre validation avant déploiement.</>}

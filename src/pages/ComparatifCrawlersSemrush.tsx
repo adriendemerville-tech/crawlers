@@ -199,6 +199,7 @@ const ComparatifCrawlersSemrush = () => {
               </p>
 
               <DirectAnswer
+          path="/comparatif-crawlers-semrush"
                 className="mt-8"
                 question="Quelle est la meilleure alternative française à Semrush en 2026 ?"
                 answer={<>Semrush reste la référence pour la donnée de marché et le monitoring SEO historique, avec une profondeur d'index que personne n'égale en France. Crawlers.fr prend l'autre bout du problème : l'exécution — audit GEO, Content Architect, Cocoon 3D et déploiement direct dans le CMS — à un tarif pensé pour les TPE, PME et agences françaises.</>}

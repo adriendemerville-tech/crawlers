@@ -203,6 +203,7 @@ export default function EEATPage() {
             </p>
 
             <DirectAnswer
+          path="/eeat"
               className="mb-6"
               question="Qu'est-ce que l'E-E-A-T et comment le mesurer pour le SEO et le GEO en 2026 ?"
               answer={<>L'E-E-A-T (Expérience, Expertise, Autorité, Fiabilité) est le faisceau de signaux qui décide si Google vous classe et si ChatGPT, Claude ou Perplexity vous citent comme source. Crawlers.fr le convertit en score algorithmique à partir de preuves vérifiables : auteur identifié, entité structurée, sources citées, cohérence du site. Le même socle sert au référencement classique et à la citabilité par les moteurs génératifs.</>}

@@ -61,6 +61,7 @@ const PageSpeedLanding = () => {
               Testez vos <strong>Core Web Vitals</strong> et obtenez un plan d'action pour accélérer votre site.
             </p>
             <DirectAnswer
+          path="/pagespeed"
               className="mb-8"
               question="Quelle vitesse de chargement viser en 2026 et comment tester ses Core Web Vitals ?"
               answer={<>Une page doit s'afficher en moins de 2,5 secondes sur mobile : au-delà de 3 secondes, plus de la moitié des visiteurs abandonnent. Les trois Core Web Vitals à surveiller sont le LCP (≤ 2,5 s), l'INP (≤ 200 ms) et le CLS (≤ 0,1), mesurés sur mobile en priorité. Le test Crawlers.fr les relève sur votre URL et renvoie un plan d'action ordonné par gain réel.</>}

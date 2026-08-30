@@ -125,6 +125,7 @@ const AnalyseLogs = () => {
             </p>
 
             <DirectAnswer
+          path="/analyse-logs"
               className="mb-8"
               question="À quoi sert l'analyse de logs serveur en SEO et comment savoir quelles pages Googlebot et les bots IA visitent vraiment ?"
               answer={<>L'analyse de logs lit le journal brut du serveur pour reconstituer chaque passage de Googlebot, GPTBot, ClaudeBot ou PerplexityBot : URL visitée, code de réponse, fréquence, date. Elle révèle les pages jamais explorées, les pages orphelines et le budget de crawl dépensé sur des URL sans valeur — des angles morts que la Search Console n'expose pas. C'est la seule source qui prouve, fichier à l'appui, ce que les robots font sur votre site.</>}
