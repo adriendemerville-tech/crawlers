@@ -176,6 +176,122 @@ JSON strict : {"competitors":[{"domain":"exemple.com","name":"Exemple"}]}`,
   return out;
 }
 
+// Beaucoup d'éditeurs publient eux-mêmes leurs pages « NotreProduit vs X »
+// (souvent regroupées en footer) : c'est une déclaration directe de leurs
+// concurrents, plus fiable que n'importe quelle SERP.
+const INTERNAL_VS_HREF =
+  /\/(?:[a-z0-9-]*\/)?(?:vs|versus|comparatif|comparaison|alternative)s?[-/]/i;
+
+async function fetchHtml(url: string, timeoutMs = 8000): Promise<string> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      redirect: 'follow',
+      headers: { 'user-agent': 'Mozilla/5.0 (compatible; CrawlersBot/1.0)', accept: 'text/html' },
+    });
+    if (!res.ok) return '';
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('html')) return '';
+    return (await res.text()).slice(0, 400_000);
+  } catch {
+    return '';
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/**
+ * Source « comparatifs internes » : explore les liens du domaine cible
+ * (home, puis footer/header) à la recherche de pages « vs X » /
+ * « comparatif X » / « alternative à X », et extrait par LLM les domaines
+ * des produits opposés. Valable pour tout site, pas seulement les SaaS :
+ * si aucune page de ce type n'existe, la source retourne simplement [].
+ */
+export async function fetchInternalComparisonCompetitors(
+  identity: Identity,
+  limit = 4,
+): Promise<Competitor[]> {
+  const self = identity.domain;
+  const home = await fetchHtml(`https://${self}/`);
+  if (!home) return [];
+
+  // 1. Liens internes dont le chemin évoque une page de comparaison.
+  const hrefs = new Set<string>();
+  for (const m of home.matchAll(/href="([^"#]+)"/gi)) {
+    const raw = m[1];
+    let path = '';
+    try {
+      const u = new URL(raw, `https://${self}/`);
+      if (u.hostname !== self && u.hostname !== `www.${self}`) continue;
+      path = u.pathname;
+    } catch { continue; }
+    if (INTERNAL_VS_HREF.test(path) || /(?:^|\/)(?:vs|versus|comparatifs?|alternatives?)\/?$/i.test(path)) {
+      hrefs.add(path);
+    }
+    if (hrefs.size >= 8) break;
+  }
+
+  // 2. S'il existe une page hub (/comparatifs, /vs), on la lit aussi pour
+  //    trouver les pages « vs X » qu'elle liste.
+  const candidatePages = [...hrefs];
+  for (const hubPath of candidatePages.slice(0, 2)) {
+    if (/\/(?:vs|versus|comparatifs?|alternatives?)\/?$/i.test(hubPath)) {
+      const hub = await fetchHtml(`https://${self}${hubPath}`);
+      for (const m of hub.matchAll(/href="([^"#]+)"/gi)) {
+        try {
+          const u = new URL(m[1], `https://${self}/`);
+          if (u.hostname !== self && u.hostname !== `www.${self}`) continue;
+          if (INTERNAL_VS_HREF.test(u.pathname)) hrefs.add(u.pathname);
+        } catch { /* ignore */ }
+        if (hrefs.size >= 10) break;
+      }
+    }
+  }
+  if (!hrefs.size) return [];
+
+  // 3. Titres des pages trouvées (ils contiennent « Produit vs Concurrent »).
+  const pageTitles: string[] = [];
+  for (const path of [...hrefs].slice(0, 6)) {
+    const html = await fetchHtml(`https://${self}${path}`);
+    const title = html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim();
+    const h1 = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1]?.replace(/<[^>]+>/g, '').trim();
+    if (title || h1) pageTitles.push(`${path} — ${title || ''} ${h1 || ''}`.slice(0, 200));
+  }
+
+  const raw = await aiChat({
+    model: 'google/gemini-3.7-flash',
+    json: true,
+    prompt: `Le site « ${identity.name} » (${self} — ${identity.activity}) publie des pages de comparaison avec ses concurrents.
+
+Voici les chemins et titres de ces pages. Extrais UNIQUEMENT les produits/entreprises AUXQUELS « ${identity.name} » se compare, avec leur nom de domaine exact si tu le connais avec certitude. Maximum ${limit} résultats.
+
+${([...hrefs].map((p) => `- ${p}`).join('\n'))}
+${pageTitles.join('\n')}
+
+N'invente aucun domaine : si tu n'es pas certain, déduis-le du nom uniquement s'il est évident (ex. « Qwairy » → qwairy.com), sinon ne cite pas.
+JSON strict : {"competitors":[{"domain":"exemple.com","name":"Exemple"}]}`,
+  });
+
+  const parsed = parseJsonLoose(raw);
+  const list: any[] = Array.isArray(parsed?.competitors) ? parsed.competitors : [];
+  const out: Competitor[] = [];
+  for (const c of list) {
+    const d = cleanDomain(c?.domain || '');
+    if (!acceptable(d, self)) continue;
+    out.push({
+      domain: d,
+      name: String(c.name || d).slice(0, 60),
+      type: 'metier',
+      reason: `Comparatif publié sur le site cible (« ${[...hrefs][0] || 'vs'} »)`,
+      source: 'comparatif',
+    });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
 /** Quotas de lignes par type, pour garder une matrice lisible. */
 // Les concurrents métier sont l'information la plus attendue : ils passent
 // devant les concurrents de visibilité, qui n'ont souvent pas la même offre.

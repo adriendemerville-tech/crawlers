@@ -48,6 +48,7 @@ export async function runMatrixStep(job: Job): Promise<Record<string, unknown>> 
           fetchVisibilityCompetitors,
           proposeCompetitorsWithLlm,
           fetchComparisonCompetitors,
+          fetchInternalComparisonCompetitors,
           mergeCompetitors,
         } = await import('./competitors.server');
         const { detectLeaders, detectQuickWins, seedSerpDomains } = await import('./leaders.server');
