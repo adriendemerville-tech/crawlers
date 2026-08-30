@@ -382,7 +382,28 @@ const FAQ = [
 
 /* ─── Petits composants ─── */
 
+function Cell({ outil, col, v }: { outil: string; col: Colonne; v: boolean | 'partiel' | 'top' }) {
+  const n = SOURCE_INDEX.get(`${outil}|${col}`);
+  const p = PREUVES[outil]?.[col];
+  return (
+    <span className="inline-flex items-start justify-center gap-0.5">
+      <Mark v={v} />
+      {n && (
+        <a
+          href={`#source-${n}`}
+          title={p?.t}
+          className="text-[10px] leading-none text-muted-foreground hover:text-primary underline underline-offset-2 tabular-nums"
+          aria-label={`Source ${n} : ${p?.t ?? ''}`}
+        >
+          {n}
+        </a>
+      )}
+    </span>
+  );
+}
+
 function Mark({ v }: { v: boolean | 'partiel' | 'top' }) {
+
   if (v === 'top') return <Check className="w-4 h-4 text-yellow-400 fill-yellow-400/60 mx-auto font-bold" aria-label="Référence du marché" />;
   if (v === true) return <Check className="w-4 h-4 text-emerald-500 mx-auto" aria-label="Oui" />;
   if (v === 'partiel') return <Check className="w-4 h-4 text-amber-500 mx-auto" aria-label="Partiel" />;
