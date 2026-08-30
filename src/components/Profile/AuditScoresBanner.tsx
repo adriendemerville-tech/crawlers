@@ -11,9 +11,13 @@ interface Props {
 const scoreColor = (score: number) =>
   score >= 80 ? 'text-emerald-500' : score >= 50 ? 'text-yellow-500' : 'text-red-500';
 
+const deltaColor = (delta: number) =>
+  delta > 0 ? 'text-emerald-500' : delta >= -5 ? 'text-orange-500' : 'text-red-500';
+
 /**
  * Bandeau compact affiché en haut des onglets SEO et GEO de la console :
  * note du dernier audit technique et du dernier audit stratégique du domaine.
+ * Quand un second audit existe : ancienne note — différence — nouvelle note.
  */
 export function AuditScoresBanner({ domain }: Props) {
   const { language } = useLanguage();
@@ -26,43 +30,60 @@ export function AuditScoresBanner({ domain }: Props) {
     staleTime: 5 * 60 * 1000,
   });
 
-  if (!domain || !data || (data.technicalScore === null && data.strategicScore === null)) return null;
-
-  const fmtDate = (iso: string | null) =>
-    iso ? new Date(iso).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US') : null;
+  if (!domain || !data || (data.technical.length === 0 && data.strategic.length === 0)) return null;
 
   const items = [
     {
       icon: Wrench,
       label: language === 'fr' ? 'Audit technique' : language === 'es' ? 'Auditoría técnica' : 'Technical audit',
-      score: data.technicalScore,
-      at: fmtDate(data.technicalAt),
+      points: data.technical,
     },
     {
       icon: Compass,
       label: language === 'fr' ? 'Audit stratégique' : language === 'es' ? 'Auditoría estratégica' : 'Strategic audit',
-      score: data.strategicScore,
-      at: fmtDate(data.strategicAt),
+      points: data.strategic,
     },
   ];
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {items.map(({ icon: Icon, label, score, at }) => (
-        <div
-          key={label}
-          className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-1.5"
-        >
-          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">{label}</span>
-          {score !== null ? (
-            <span className={`text-sm font-bold ${scoreColor(score)}`}>{score}/100</span>
-          ) : (
-            <span className="text-sm font-medium text-muted-foreground/60">—</span>
-          )}
-          {at && <span className="text-[10px] text-muted-foreground/60">{at}</span>}
-        </div>
-      ))}
+      {items.map(({ icon: Icon, label, points }) => {
+        const latest = points[0];
+        const previous = points[1];
+        const delta = latest && previous ? latest.score - previous.score : null;
+        return (
+          <div
+            key={label}
+            className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-1.5"
+          >
+            <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">{label}</span>
+            {latest ? (
+              <span className="flex items-center gap-1.5">
+                {previous && delta !== null && (
+                  <>
+                    <span className="text-sm font-medium text-muted-foreground/60">{previous.score}/100</span>
+                    <span className={`text-sm font-bold ${deltaColor(delta)}`}>
+                      {delta > 0 ? `+${delta}` : delta}
+                    </span>
+                    <span className="h-px w-3 bg-border" aria-hidden />
+                  </>
+                )}
+                <span className={`text-sm font-bold ${scoreColor(latest.score)}`}>{latest.score}/100</span>
+              </span>
+            ) : (
+              <span className="text-sm font-medium text-muted-foreground/60">—</span>
+            )}
+            {latest?.at && (
+              <span className="text-[10px] text-muted-foreground/60">
+                {new Date(latest.at).toLocaleDateString(
+                  language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
+                )}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
