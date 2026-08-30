@@ -57,14 +57,17 @@ export async function runMatrixStep(job: Job): Promise<Record<string, unknown>> 
         const userDomains = existing.filter((c) => c.source === 'user').map((c) => c.domain);
         const seed = (job.seed_serp ?? []) as unknown as SeedSerpReading[];
         const leaders = detectLeaders(seed, job.domain);
-        const [visibility, proposed, comparatifs] = await Promise.all([
+        const [visibility, proposed, comparatifs, internes] = await Promise.all([
           fetchVisibilityCompetitors(job.domain),
           proposeCompetitorsWithLlm(identity),
           // Pages « X vs Y » / « alternatives » : n'apporte quelque chose que
           // pour les SaaS, la fonction retourne [] sinon.
           fetchComparisonCompetitors(identity),
+          // Pages « vs X » publiées par le site cible lui-même (footer, hub
+          // /comparatifs) : déclaration directe de concurrents, tout site.
+          fetchInternalComparisonCompetitors(identity),
         ]);
-        proposed.push(...comparatifs);
+        proposed.push(...comparatifs, ...internes);
         const { matrix, outOfScope } = mergeCompetitors(
           userDomains, proposed, visibility, job.domain, leaders, seedSerpDomains(seed),
         );
