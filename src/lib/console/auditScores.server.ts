@@ -1,51 +1,57 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+export interface ConsoleAuditScorePoint {
+  score: number;
+  at: string | null;
+}
+
 export interface ConsoleAuditScores {
-  technicalScore: number | null;
-  technicalAt: string | null;
-  strategicScore: number | null;
-  strategicAt: string | null;
+  technical: ConsoleAuditScorePoint[];
+  strategic: ConsoleAuditScorePoint[];
 }
 
 /**
- * Lit les notes des derniers audits technique et stratégique pour un domaine.
+ * Lit les notes des deux derniers audits technique et stratégique pour un domaine.
  * Source unique : audit_raw_data (RLS appliquée via le client du contexte).
  * - technique : raw_payload.totalScore sur 200 → normalisé /100
  * - stratégique : raw_payload.strategic.overallScore (/100)
+ * Chaque tableau est ordonné du plus récent au plus ancien (index 0 = dernier).
  */
 export async function fetchConsoleAuditScores(
   supabase: SupabaseClient,
   domain: string,
 ): Promise<ConsoleAuditScores> {
   const clean = domain.trim().toLowerCase();
-  if (!clean) return { technicalScore: null, technicalAt: null, strategicScore: null, strategicAt: null };
+  if (!clean) return { technical: [], strategic: [] };
 
-  const [{ data: tech }, { data: strat }] = await Promise.all([
+  const [{ data: techRows }, { data: stratRows }] = await Promise.all([
     supabase
       .from('audit_raw_data')
       .select('raw_payload, created_at')
       .eq('domain', clean)
       .eq('audit_type', 'technical')
       .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .limit(2),
     supabase
       .from('audit_raw_data')
       .select('raw_payload, created_at')
       .eq('domain', clean)
       .in('audit_type', ['strategic', 'marina'])
       .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .limit(2),
   ]);
 
-  const techTotal = (tech?.raw_payload as any)?.totalScore;
-  const stratOverall = (strat?.raw_payload as any)?.strategic?.overallScore;
+  const toPoints = (rows: any[] | null, extract: (p: any) => number | null): ConsoleAuditScorePoint[] =>
+    (rows ?? [])
+      .map((r) => ({ score: extract(r.raw_payload), at: (r.created_at as string) ?? null }))
+      .filter((p): p is ConsoleAuditScorePoint => p.score !== null);
 
   return {
-    technicalScore: typeof techTotal === 'number' ? Math.round((techTotal / 200) * 100) : null,
-    technicalAt: (tech?.created_at as string) ?? null,
-    strategicScore: typeof stratOverall === 'number' ? Math.round(stratOverall) : null,
-    strategicAt: (strat?.created_at as string) ?? null,
+    technical: toPoints(techRows, (p) =>
+      typeof p?.totalScore === 'number' ? Math.round((p.totalScore / 200) * 100) : null,
+    ),
+    strategic: toPoints(stratRows, (p) =>
+      typeof p?.strategic?.overallScore === 'number' ? Math.round(p.strategic.overallScore) : null,
+    ),
   };
 }
