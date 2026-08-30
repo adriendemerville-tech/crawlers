@@ -321,7 +321,7 @@ function getMarinaStyles(): string {
     .section { background: white; border-radius: 10px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); page-break-inside: avoid; }
     .section-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .section-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #3b82f6; color: white; font-size: 13px; font-weight: 700; line-height: 1; text-align: center; flex-shrink: 0; }
-    .score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 18px; color: white; }
+    .score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 18px; color: white; white-space: nowrap; flex-shrink: 0; }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     .stat-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
     .stat-card { background: #f8fafc; padding: 16px; border-radius: 8px; text-align: center; }
