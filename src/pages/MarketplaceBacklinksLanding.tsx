@@ -12,6 +12,7 @@ import { ArrowRight, ShieldCheck, Gauge, Scale, Link2, Repeat, FileCheck2 } from
 const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
 
 import { MARKETPLACE_FAQ } from './MarketplaceBacklinksLanding.faq';
+import { DirectAnswer } from '@/components/seo/DirectAnswer';
 
 export default function MarketplaceBacklinksLanding() {
   return (
@@ -44,6 +45,18 @@ export default function MarketplaceBacklinksLanding() {
             d’insertion sont calculés par Crawlers.fr à partir de vos données réelles de crawl et de
             Search Console — sans négociation, sans place de marché opaque, sans ferme de liens.
           </p>
+
+          <DirectAnswer
+            className="mb-6"
+            question="Combien coûte un backlink et comment acheter un lien à un prix non négocié ?"
+            answer={<>Sur la place d'échange Crawlers.fr, le prix d'un emplacement de lien est calculé, pas discuté : cinq signaux normalisés (autorité, proximité sémantique, trafic de la page, qualité éditoriale, visibilité générative) le placent dans l'un des cinq paliers, de 40 € à 350 €. L'attribut du lien (dofollow ou nofollow) est décidé par le déficit d'autorité réel de l'acheteur, jamais par le vendeur.</>}
+            facts={[
+              { label: 'Combien', value: '5 paliers de 40 € à 350 €, commission de 15 %' },
+              { label: 'Qui', value: 'Éditeurs vendeurs et annonceurs acheteurs vérifiés' },
+              { label: 'Comment', value: 'Prix déterministe issu du crawl et de la Search Console' },
+              { label: 'Pourquoi', value: 'Éviter la négociation opaque et les fermes de liens' },
+            ]}
+          />
 
           <CitablePassage source="Crawlers.fr — Place d’échange">
             Sur la place d’échange Crawlers.fr, le prix d’un emplacement de lien découle de cinq

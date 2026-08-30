@@ -18,6 +18,7 @@ import { QuickEEATTest } from '@/components/eeat/QuickEEATTest';
 import { LazyVisible } from '@/components/LazyVisible';
 import { ClusterMesh } from '@/components/seo/ClusterMesh';
 import { PillarRelatedArticles } from '@/components/seo/PillarRelatedArticles';
+import { DirectAnswer } from '@/components/seo/DirectAnswer';
 
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
@@ -200,6 +201,19 @@ export default function EEATPage() {
               complet et une mesure de la <strong>citabilité IA</strong> (ChatGPT, Claude, Perplexity, Google AI Overviews).
               Multi-sites, white-label, autopilote. <strong>Inscription gratuite, sans carte bancaire.</strong>
             </p>
+
+            <DirectAnswer
+              className="mb-6"
+              question="Qu'est-ce que l'E-E-A-T et comment le mesurer pour le SEO et le GEO en 2026 ?"
+              answer={<>L'E-E-A-T (Expérience, Expertise, Autorité, Fiabilité) est le faisceau de signaux qui décide si Google vous classe et si ChatGPT, Claude ou Perplexity vous citent comme source. Crawlers.fr le convertit en score algorithmique à partir de preuves vérifiables : auteur identifié, entité structurée, sources citées, cohérence du site. Le même socle sert au référencement classique et à la citabilité par les moteurs génératifs.</>}
+              facts={[
+                { label: 'Quoi', value: 'Score E-E-A-T algorithmique + audit technique + citabilité IA' },
+                { label: 'Qui', value: 'Freelances SEO, consultants et agences SEO / GEO' },
+                { label: 'Où', value: 'Google, ChatGPT, Claude, Perplexity, AI Overviews' },
+                { label: 'Pourquoi', value: 'Les moteurs IA citent des entités de confiance, pas des pages optimisées' },
+                { label: 'Combien', value: 'Inscription gratuite, sans carte bancaire' },
+              ]}
+            />
 
             <blockquote className="citable-passage border-l-4 border-amber-500 bg-amber-500/5 px-5 py-4 rounded-r-lg my-6 text-foreground">
               En 2026, l'E-E-A-T n'est plus seulement un signal SEO Google : c'est le critère principal utilisé par les moteurs IA

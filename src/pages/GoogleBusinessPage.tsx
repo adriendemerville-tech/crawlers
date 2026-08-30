@@ -13,6 +13,7 @@ import {
   Clock, Users, Search, Crown, Sparkles, Target, Award
 } from 'lucide-react';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
+import { DirectAnswer } from '@/components/seo/DirectAnswer';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 
@@ -266,6 +267,17 @@ export default function GoogleBusinessPage() {
                     'En Crawlers, nuestro módulo Google Business Profile (GBP/GMB) analiza 42 criterios de su ficha de establecimiento y genera un score de completitud accionable. En 2026, el 67% de las consultas locales pasan por motores generativos antes de mostrar el pack local de Google.'
                   )}
                 </p>
+
+                <DirectAnswer
+                  question="Comment optimiser sa fiche Google Business pour le SEO local et les moteurs IA ?"
+                  answer={<>Une fiche Google Business performante repose sur la complétude et la cohérence : nom, catégorie principale, adresse, horaires, services, photos et avis doivent concorder avec les informations publiées sur votre site. Crawlers.fr contrôle 42 critères, calcule un score de complétude et compare votre fiche à celles de vos concurrents locaux. Les moteurs génératifs s'appuyant sur ces mêmes données, la fiche devient un actif GEO autant qu'un actif SEO local.</>}
+                  facts={[
+                    { label: 'Quoi', value: '42 critères de complétude de la fiche d\'établissement' },
+                    { label: 'Qui', value: 'Commerces, artisans, prestataires et réseaux multi-établissements' },
+                    { label: 'Où', value: 'Pack local Google, Maps, ChatGPT, Gemini, Perplexity' },
+                    { label: 'Pourquoi', value: 'Une fiche incohérente casse la confiance accordée à l\'entité' },
+                  ]}
+                />
 
                 <div className="flex flex-wrap gap-3">
                   <Button asChild variant="hero" size="lg">
