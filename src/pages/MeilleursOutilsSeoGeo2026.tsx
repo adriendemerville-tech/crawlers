@@ -23,6 +23,7 @@ interface Outil {
   prix: string;
   pointsForts: string[];
   pointFaible: string;
+  analyse: string;
   geo: boolean | 'partiel';
   seo: boolean | 'partiel';
   contenuIA: boolean | 'partiel';
@@ -45,6 +46,7 @@ const OUTILS: Outil[] = [
       'Rapports en marque blanche pour agences',
     ],
     pointFaible: 'Mesure GEO encore jeune, base backlinks plus réduite que Semrush',
+    analyse: 'SE Ranking s\'est imposé comme la suite généraliste la plus équilibrée du marché : suivi de positions précis, audit technique, analyse de backlinks et veille concurrentielle dans une interface claire. Son positionnement tarifaire, environ deux fois moins cher que Semrush à fonctionnalités comparables, en fait le choix de référence des agences et des PME. Sa mesure de la visibilité dans les IA reste cependant récente et moins approfondie que celle des outils GEO natifs.',
     geo: 'partiel', seo: true, contenuIA: 'partiel', local: 'partiel',
     ideal: 'Agences et PME qui veulent une suite complète abordable',
     note: 9.2,
@@ -61,6 +63,7 @@ const OUTILS: Outil[] = [
       'Matrice de concurrence SEO + IA, cocon sémantique 3D et audits gratuits',
     ],
     pointFaible: 'Base de données backlinks moins profonde que les suites historiques',
+    analyse: 'Crawlers.fr est la seule suite de ce classement qui ne se contente pas de mesurer : elle exécute. Audit technique avec code correctif, génération de contenu avec déploiement direct dans le CMS, gestion des réseaux sociaux et Score GEO mesuré dans six LLM sont réunis dans un seul abonnement. Construite en France et pensée pour le marché francophone, elle cible les sites qui veulent passer du constat à l\'action sans multiplier les outils. Sa base de backlinks, plus jeune que celle des suites historiques, reste sa principale marge de progression.',
     geo: true, seo: true, contenuIA: true, local: true,
     ideal: 'Sites francophones, agences marque blanche, visibilité IA',
     note: 9.0,
@@ -78,6 +81,7 @@ const OUTILS: Outil[] = [
       'Suivi des citations IA (AI Tracker) intégré',
     ],
     pointFaible: 'Pas d\'audit technique ni de backlinks : à compléter avec un autre outil',
+    analyse: 'Surfer SEO est devenu la référence de l\'optimisation de contenu on-page : son éditeur compare en temps réel votre texte aux pages qui rankent et attribue un score NLP immédiatement exploitable par les rédacteurs. L\'ajout récent d\'un suivi des citations IA montre que l\'outil prend le virage du GEO. Il reste cependant un outil de contenu : pour l\'audit technique, les backlinks ou le suivi de positions, il faut le compléter avec une suite généraliste.',
     geo: 'partiel', seo: 'partiel', contenuIA: true, local: false,
     ideal: 'Rédacteurs et content managers orientés SERP',
     note: 8.6,
@@ -94,6 +98,7 @@ const OUTILS: Outil[] = [
       'Interface pensée pour les rédacteurs web francophones',
     ],
     pointFaible: 'Périmètre limité au contenu, pas d\'audit technique ni de GEO',
+    analyse: 'ThotSEO est l\'outil français d\'optimisation sémantique : il analyse la SERP francophone, extrait les champs lexicaux attendus par Google et génère des briefs de rédaction directement utilisables. Son interface entièrement en français et sa tarification accessible en font un favori des rédacteurs web et des petites agences françaises. Son périmètre s\'arrête toutefois au contenu : ni audit technique, ni backlinks, ni mesure de la visibilité dans les IA.',
     geo: false, seo: 'partiel', contenuIA: 'partiel', local: false,
     ideal: 'Rédacteurs SEO francophones',
     note: 8.0,
@@ -110,6 +115,7 @@ const OUTILS: Outil[] = [
       'Tarification accessible aux freelances',
     ],
     pointFaible: 'Fonctionnalités avancées (backlinks, GEO) limitées',
+    analyse: 'SoRank mise sur la pédagogie : plutôt que d\'afficher des tableaux de données brutes, l\'outil guide l\'utilisateur pas à pas avec des recommandations concrètes et priorisées. C\'est une approche particulièrement adaptée aux freelances et aux indépendants qui font leur SEO eux-mêmes sans être spécialistes. En contrepartie, les fonctionnalités avancées — backlinks, analyse concurrentielle profonde, GEO — restent limitées face aux suites complètes.',
     geo: false, seo: true, contenuIA: false, local: 'partiel',
     ideal: 'Freelances SEO et petites agences',
     note: 7.8,
@@ -126,6 +132,7 @@ const OUTILS: Outil[] = [
       'Intéressant pour scaler la production de contenu',
     ],
     pointFaible: 'Qualité de contenu variable, supervision éditoriale indispensable',
+    analyse: 'Outrank pousse la logique d\'automatisation à l\'extrême : recherche de mots-clés, rédaction d\'articles et publication se font en pilote automatique, sans intervention quotidienne. Pour les éditeurs de sites de niche qui misent sur le volume, le modèle est séduisant. Mais la qualité des textes générés reste inégale et une supervision éditoriale humaine demeure indispensable pour éviter le contenu générique que Google pénalise de plus en plus.',
     geo: false, seo: 'partiel', contenuIA: true, local: false,
     ideal: 'Sites de niche et éditeurs de contenu à volume',
     note: 7.5,
@@ -142,6 +149,7 @@ const OUTILS: Outil[] = [
       'Bonne porte d\'entrée pour les non-spécialistes',
     ],
     pointFaible: 'Profondeur d\'analyse limitée face aux suites complètes',
+    analyse: 'ChatSEO propose une approche conversationnelle du référencement : on discute avec un assistant qui analyse le site, répond aux questions et suggère des actions, sans jargon ni tableau de bord complexe. C\'est une excellente porte d\'entrée pour les dirigeants de TPE et les non-techniciens qui veulent comprendre avant d\'investir. La profondeur d\'analyse reste néanmoins limitée : au-delà des premiers constats, une suite complète prend le relais.',
     geo: 'partiel', seo: 'partiel', contenuIA: 'partiel', local: false,
     ideal: 'Dirigeants de TPE et non-techniciens',
     note: 7.2,
@@ -158,6 +166,7 @@ const OUTILS: Outil[] = [
       'Outil français historique, support en français',
     ],
     pointFaible: 'Pas de GEO, fonctionnalités de contenu limitées',
+    analyse: 'Cocolyze est l\'un des outils SEO français historiques : suivi de positions clair, scan de pages avec alertes quotidiennes et support en français. L\'outil fait ce qu\'il promet, simplement, et convient bien aux PME qui veulent surveiller leur visibilité sans y consacrer des heures. En revanche, il n\'a pas pris le tournant de l\'IA : ni mesure GEO, ni génération de contenu, ce qui limite son évolutivité face à la nouvelle génération d\'outils.',
     geo: false, seo: true, contenuIA: false, local: 'partiel',
     ideal: 'PME qui veulent un suivi simple',
     note: 7.0,
@@ -174,6 +183,7 @@ const OUTILS: Outil[] = [
       'Pertinent sur les gros sites (e-commerce, médias)',
     ],
     pointFaible: 'Outil de niche technique, pas de suite marketing',
+    analyse: 'BotSEO occupe une niche technique précieuse : l\'analyse de logs serveur et le crawl à grande échelle. Comprendre comment Googlebot parcourt réellement un site — pages crawlées, budget de crawl, erreurs rencontrées — est décisif sur les gros sites e-commerce ou médias de plusieurs milliers de pages. C\'est un outil d\'expert, puissant dans son domaine, mais qui ne prétend pas couvrir le contenu, les backlinks ou le suivi de positions.',
     geo: 'partiel', seo: 'partiel', contenuIA: false, local: false,
     ideal: 'SEO techniques et sites à fort volume de pages',
     note: 6.9,
@@ -190,6 +200,7 @@ const OUTILS: Outil[] = [
       'Rapports clients pour agences locales',
     ],
     pointFaible: 'Uniquement local : aucun audit de site ni contenu',
+    analyse: 'Local Ranker est spécialisé dans le référencement local : ses grilles de positions géolocalisées montrent précisément où un établissement apparaît dans Google Maps, rue par rue. Le suivi multi-établissements et les rapports en marque blanche en font un outil apprécié des agences locales et des réseaux de franchises. Son périmètre s\'arrête au local : aucun audit de site, aucun contenu, aucun suivi national.',
     geo: false, seo: false, contenuIA: false, local: true,
     ideal: 'Réseaux d\'établissements et agences locales',
     note: 6.8,
@@ -206,6 +217,7 @@ const OUTILS: Outil[] = [
       'Très accessible pour un commerçant',
     ],
     pointFaible: 'Périmètre strictement local, pas de SEO de site',
+    analyse: 'Localo transforme l\'optimisation d\'une fiche Google Business Profile en liste de tâches hebdomadaires simples : photos à ajouter, avis à solliciter, posts à publier. C\'est l\'outil le plus accessible de ce classement pour un commerçant ou un artisan qui veut progresser en local sans compétence SEO. Mais le périmètre est strictement la fiche d\'établissement : pour le site web lui-même, il faudra un autre outil.',
     geo: false, seo: false, contenuIA: false, local: true,
     ideal: 'Commerces et artisans locaux',
     note: 6.7,
@@ -221,6 +233,7 @@ const OUTILS: Outil[] = [
       'Monitoring complet : positions, audit, concurrentiel, publicité',
     ],
     pointFaible: 'Monitoring uniquement : aucune génération de contenu, aucun code correctif, aucune gestion des réseaux sociaux, pas de mesure GEO native — et 2 à 5 fois plus cher',
+    analyse: 'Semrush demeure la référence absolue du monitoring SEO : aucune base de données n\'égale ses 25 milliards de mots-clés, son historique de positions et sa profondeur concurrentielle. Mais c\'est un outil d\'observation, pas d\'exécution : il mesure sans corriger, sans rédiger, sans déployer, et sa couverture de la visibilité dans les IA reste embryonnaire. À partir de 130 €/mois — et vite 250 à 450 € en usage réel —, le rapport valeur/prix devient difficile à justifier pour une PME quand des suites complètes exécutent pour une fraction du prix.',
     geo: false, seo: true, contenuIA: 'partiel', local: 'partiel',
     ideal: 'Grandes équipes SEO avec budget conséquent',
     note: 8.5,
@@ -236,6 +249,7 @@ const OUTILS: Outil[] = [
       'Exploration de mots-clés et de contenu concurrent très solide',
     ],
     pointFaible: 'Monitoring uniquement : pas d\'exécution (contenu, code, déploiement), pas de mesure GEO native, tarif élevé dès l\'entrée de gamme',
+    analyse: 'Ahrefs reste la référence mondiale de l\'analyse de backlinks : son index de liens, son exploration de contenu concurrent et la fiabilité de ses métriques en font l\'outil favori des spécialistes du netlinking. Comme Semrush, c\'est cependant un pur outil de monitoring : il mesure mais n\'exécute rien — ni contenu, ni code, ni déploiement — et la visibilité dans les IA n\'est pas couverte nativement. Son tarif d\'entrée élevé le réserve aux équipes qui exploitent pleinement sa donnée de liens.',
     geo: false, seo: true, contenuIA: false, local: 'partiel',
     ideal: 'SEO techniques centrés sur le netlinking',
     note: 8.3,
@@ -466,6 +480,7 @@ export default function MeilleursOutilsSeoGeo2026() {
                     <span>{o.pointFaible}</span>
                   </li>
                 </ul>
+                <p className="text-sm text-muted-foreground mb-3">{o.analyse}</p>
                 <p className="text-sm">
                   <span className="font-semibold">Idéal pour :</span>{' '}
                   <span className="text-muted-foreground">{o.ideal}</span>
