@@ -6,7 +6,7 @@ import { createServerFn } from '@tanstack/react-start';
 // L'agrégat balaie 9 tables : il est donc mis en cache (table + mémoire de
 // l'isolat) pour ne pas être recalculé à chaque affichage de la home.
 const METRIC = 'audited_domains_count';
-const TTL_MS = 6 * 3600 * 1000;
+const TTL_MS = 10 * 60 * 1000;
 
 export const getAuditedDomainsCount = createServerFn({ method: 'GET' }).handler(async () => {
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
