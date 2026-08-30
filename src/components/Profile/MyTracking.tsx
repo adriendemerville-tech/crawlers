@@ -648,6 +648,8 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
 
                     </div>
 
+                    <AuditScoresBanner domain={h.currentSite.domain} />
+
                     {/* KPI Cards */}
                     {(() => {
                       const defaultKpiOrder = ['performanceMobile', 'performanceDesktop', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
