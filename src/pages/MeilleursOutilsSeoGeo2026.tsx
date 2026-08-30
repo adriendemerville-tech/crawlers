@@ -210,6 +210,36 @@ const OUTILS: Outil[] = [
     ideal: 'Commerces et artisans locaux',
     note: 6.7,
   },
+  {
+    rang: 12,
+    nom: 'Semrush',
+    url: 'https://semrush.com',
+    pays: 'États-Unis',
+    prix: 'dès ~130 €/mois',
+    pointsForts: [
+      'Base de données massive : 25 milliards de mots-clés, backlinks, historique 10+ ans',
+      'Monitoring complet : positions, audit, concurrentiel, publicité',
+    ],
+    pointFaible: 'Monitoring uniquement : aucune génération de contenu, aucun code correctif, aucune gestion des réseaux sociaux, pas de mesure GEO native — et 2 à 5 fois plus cher',
+    geo: false, seo: true, contenuIA: 'partiel', local: 'partiel',
+    ideal: 'Grandes équipes SEO avec budget conséquent',
+    note: 8.5,
+  },
+  {
+    rang: 13,
+    nom: 'Ahrefs',
+    url: 'https://ahrefs.com',
+    pays: 'Singapour',
+    prix: 'dès ~120 €/mois',
+    pointsForts: [
+      'Référence mondiale pour l\'analyse de backlinks',
+      'Exploration de mots-clés et de contenu concurrent très solide',
+    ],
+    pointFaible: 'Monitoring uniquement : pas d\'exécution (contenu, code, déploiement), pas de mesure GEO native, tarif élevé dès l\'entrée de gamme',
+    geo: false, seo: true, contenuIA: false, local: 'partiel',
+    ideal: 'SEO techniques centrés sur le netlinking',
+    note: 8.3,
+  },
 ];
 
 const FAQ = [
@@ -271,9 +301,9 @@ export default function MeilleursOutilsSeoGeo2026() {
           </h1>
           <p className="text-lg text-muted-foreground max-w-3xl">
             SE Ranking, Crawlers.fr, Surfer SEO, ThotSEO, SoRank, Outrank, ChatSEO, Cocolyze,
-            BotSEO, Local Ranker, Localo : onze outils récents qui couvrent le SEO, le contenu IA,
-            le local et la visibilité dans les moteurs génératifs — souvent pour une fraction du
-            prix des suites historiques.
+            BotSEO, Local Ranker, Localo, Semrush et Ahrefs : treize outils qui couvrent le SEO,
+            le contenu IA, le local et la visibilité dans les moteurs génératifs — souvent pour
+            une fraction du prix des suites historiques.
           </p>
         </header>
 
@@ -459,7 +489,7 @@ export default function MeilleursOutilsSeoGeo2026() {
         <section className="mb-12">
           <h2 className="text-2xl font-bold tracking-tight mb-2 flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-primary" aria-hidden />
-            Tableau comparatif des 11 outils
+            Tableau comparatif des 13 outils
           </h2>
           <p className="text-sm text-muted-foreground mb-4">
             <Check className="inline w-3.5 h-3.5 text-emerald-500" aria-hidden /> couvert ·{' '}
