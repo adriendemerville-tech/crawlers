@@ -24,11 +24,11 @@ interface Outil {
   pointsForts: string[];
   pointFaible: string;
   analyse: string;
-  geo: boolean | 'partiel';
-  seo: boolean | 'partiel';
-  contenuIA: boolean | 'partiel';
-  local: boolean | 'partiel';
-  execution: boolean | 'partiel';
+  geo: boolean | 'partiel' | 'top';
+  seo: boolean | 'partiel' | 'top';
+  contenuIA: boolean | 'partiel' | 'top';
+  local: boolean | 'partiel' | 'top';
+  execution: boolean | 'partiel' | 'top';
   ideal: string;
   note: number; // /10
   crawlers?: boolean;
@@ -65,7 +65,7 @@ const OUTILS: Outil[] = [
     ],
     pointFaible: 'Base de données backlinks moins profonde que les suites historiques',
     analyse: 'Crawlers.fr est la seule suite de ce classement qui ne se contente pas de mesurer : elle exécute. Audit technique avec code correctif, génération de contenu avec déploiement direct dans le CMS, gestion des réseaux sociaux et Score GEO mesuré dans six LLM sont réunis dans un seul abonnement. Construite en France et pensée pour le marché francophone, elle cible les sites qui veulent passer du constat à l\'action sans multiplier les outils. Sa base de backlinks, plus jeune que celle des suites historiques, reste sa principale marge de progression.',
-    geo: true, seo: true, contenuIA: true, local: 'partiel', execution: true,
+    geo: 'top', seo: true, contenuIA: true, local: 'partiel', execution: 'top',
     ideal: 'Sites francophones, agences marque blanche, visibilité IA',
     note: 9.0,
     crawlers: true,
@@ -83,7 +83,7 @@ const OUTILS: Outil[] = [
     ],
     pointFaible: 'Pas d\'audit technique ni de backlinks : à compléter avec un autre outil',
     analyse: 'Surfer SEO est devenu la référence de l\'optimisation de contenu on-page : son éditeur compare en temps réel votre texte aux pages qui rankent et attribue un score NLP immédiatement exploitable par les rédacteurs. L\'ajout récent d\'un suivi des citations IA montre que l\'outil prend le virage du GEO. Il reste cependant un outil de contenu : pour l\'audit technique, les backlinks ou le suivi de positions, il faut le compléter avec une suite généraliste.',
-    geo: 'partiel', seo: 'partiel', contenuIA: true, local: false, execution: 'partiel',
+    geo: 'partiel', seo: 'partiel', contenuIA: 'top', local: false, execution: 'partiel',
     ideal: 'Rédacteurs et content managers orientés SERP',
     note: 8.6,
   },
@@ -202,7 +202,7 @@ const OUTILS: Outil[] = [
     ],
     pointFaible: 'Uniquement local : aucun audit de site ni contenu',
     analyse: 'Local Ranker est spécialisé dans le référencement local : ses grilles de positions géolocalisées montrent précisément où un établissement apparaît dans Google Maps, rue par rue. Le suivi multi-établissements et les rapports en marque blanche en font un outil apprécié des agences locales et des réseaux de franchises. Son périmètre s\'arrête au local : aucun audit de site, aucun contenu, aucun suivi national.',
-    geo: false, seo: false, contenuIA: false, local: true, execution: false,
+    geo: false, seo: false, contenuIA: false, local: 'top', execution: false,
     ideal: 'Réseaux d\'établissements et agences locales',
     note: 6.8,
   },
@@ -235,7 +235,7 @@ const OUTILS: Outil[] = [
     ],
     pointFaible: 'Monitoring uniquement : aucune génération de contenu, aucun code correctif, aucune gestion des réseaux sociaux, mesure GEO encore jeune — et 2 à 5 fois plus cher',
     analyse: 'Semrush demeure la référence absolue du monitoring SEO : aucune base de données n\'égale ses 25 milliards de mots-clés, son historique de positions et sa profondeur concurrentielle. Mais c\'est un outil d\'observation, pas d\'exécution : il mesure sans corriger, sans rédiger, sans déployer, et sa couverture de la visibilité dans les IA reste embryonnaire. À partir de 130 €/mois — et vite 250 à 450 € en usage réel —, le rapport valeur/prix devient difficile à justifier pour une PME quand des suites complètes exécutent pour une fraction du prix.',
-    geo: 'partiel', seo: true, contenuIA: 'partiel', local: true, execution: false,
+    geo: 'partiel', seo: 'top', contenuIA: 'partiel', local: true, execution: false,
     ideal: 'Grandes équipes SEO avec budget conséquent',
     note: 8.5,
   },
@@ -251,7 +251,7 @@ const OUTILS: Outil[] = [
     ],
     pointFaible: 'Monitoring uniquement : pas d\'exécution (contenu, code, déploiement), mesure GEO limitée au Brand Radar, tarif élevé dès l\'entrée de gamme',
     analyse: 'Ahrefs reste la référence mondiale de l\'analyse de backlinks : son index de liens, son exploration de contenu concurrent et la fiabilité de ses métriques en font l\'outil favori des spécialistes du netlinking. Comme Semrush, c\'est cependant un pur outil de monitoring : il mesure mais n\'exécute rien — ni contenu, ni code, ni déploiement — et la visibilité dans les IA n\'est pas couverte nativement. Son tarif d\'entrée élevé le réserve aux équipes qui exploitent pleinement sa donnée de liens.',
-    geo: 'partiel', seo: true, contenuIA: false, local: 'partiel', execution: false,
+    geo: 'partiel', seo: 'top', contenuIA: false, local: 'partiel', execution: false,
     ideal: 'SEO techniques centrés sur le netlinking',
     note: 8.3,
   },
@@ -286,7 +286,8 @@ const FAQ = [
 
 /* ─── Petits composants ─── */
 
-function Mark({ v }: { v: boolean | 'partiel' }) {
+function Mark({ v }: { v: boolean | 'partiel' | 'top' }) {
+  if (v === 'top') return <Check className="w-4 h-4 text-yellow-400 fill-yellow-400/60 mx-auto font-bold" aria-label="Référence du marché" />;
   if (v === true) return <Check className="w-4 h-4 text-emerald-500 mx-auto" aria-label="Oui" />;
   if (v === 'partiel') return <Check className="w-4 h-4 text-amber-500 mx-auto" aria-label="Partiel" />;
   return <X className="w-4 h-4 text-muted-foreground/40 mx-auto" aria-label="Non" />;
@@ -509,6 +510,7 @@ export default function MeilleursOutilsSeoGeo2026() {
           </h2>
           <p className="text-sm text-muted-foreground mb-4">
             <Check className="inline w-3.5 h-3.5 text-emerald-500" aria-hidden /> couvert ·{' '}
+            <Check className="inline w-3.5 h-3.5 text-yellow-400 fill-yellow-400/60" aria-hidden /> référence du marché ·{' '}
             <Check className="inline w-3.5 h-3.5 text-amber-500 align-middle" aria-hidden /> partiel ·{' '}
             <X className="inline w-3.5 h-3.5 text-muted-foreground/40" aria-hidden /> absent
           </p>
