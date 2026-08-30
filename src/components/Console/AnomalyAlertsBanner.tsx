@@ -116,12 +116,24 @@ export function AnomalyAlertsBanner({ trackedSiteId, domain, simulatedDataEnable
     .filter(a => !dismissed.has(a.id))
     .map(a => {
       const c = severityConfig[a.severity] || severityConfig.info;
-      return { id: a.id, icon: c.icon, bg: c.bg, border: c.border, textColor: c.text, title: a.domain, desc: `${a.description}${a.affected_pages > 0 ? ` (${a.affected_pages} pages)` : ''}` };
+      const isOpportunity = a.metric_source === 'gsc_ctr';
+      return {
+        id: a.id,
+        icon: c.icon,
+        bg: c.bg,
+        border: c.border,
+        textColor: c.text,
+        title: isOpportunity ? a.metric_name : a.domain,
+        desc: `${a.description}${!isOpportunity && a.affected_pages > 0 ? ` (${a.affected_pages} pages)` : ''}`,
+      };
     });
 
-  // Hide entire banner when GA4 is not connected
-  if (!ga4Connected) return null;
+  const hasOpportunities = tickerItems.some(i => i.id && alerts.find(a => a.id === i.id)?.metric_source === 'gsc_ctr');
+
+  // Les anomalies GA4 exigent une connexion GA4 ; les opportunités CTR (Search Console) non
+  if (!ga4Connected && !hasOpportunities) return null;
   if (tickerItems.length === 0) return null;
+
 
   if (hidden) {
     return (
