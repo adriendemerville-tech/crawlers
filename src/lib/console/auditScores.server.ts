@@ -43,8 +43,11 @@ export async function fetchConsoleAuditScores(
 
   const toPoints = (rows: any[] | null, extract: (p: any) => number | null): ConsoleAuditScorePoint[] =>
     (rows ?? [])
-      .map((r) => ({ score: extract(r.raw_payload), at: (r.created_at as string) ?? null }))
-      .filter((p): p is ConsoleAuditScorePoint => p.score !== null);
+      .map((r) => {
+        const score = extract(r.raw_payload);
+        return score === null ? null : { score, at: (r.created_at as string) ?? null };
+      })
+      .filter((p): p is ConsoleAuditScorePoint => p !== null);
 
   return {
     technical: toPoints(techRows, (p) =>
