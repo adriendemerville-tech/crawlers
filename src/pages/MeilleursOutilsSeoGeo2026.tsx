@@ -65,7 +65,7 @@ const OUTILS: Outil[] = [
     ],
     pointFaible: 'Base de données backlinks moins profonde que les suites historiques',
     analyse: 'Crawlers.fr est la seule suite de ce classement qui ne se contente pas de mesurer : elle exécute. Audit technique avec code correctif, génération de contenu avec déploiement direct dans le CMS, gestion des réseaux sociaux et Score GEO mesuré dans six LLM sont réunis dans un seul abonnement. Construite en France et pensée pour le marché francophone, elle cible les sites qui veulent passer du constat à l\'action sans multiplier les outils. Sa base de backlinks, plus jeune que celle des suites historiques, reste sa principale marge de progression.',
-    geo: true, seo: true, contenuIA: true, local: true, execution: true,
+    geo: true, seo: true, contenuIA: true, local: 'partiel', execution: true,
     ideal: 'Sites francophones, agences marque blanche, visibilité IA',
     note: 9.0,
     crawlers: true,
