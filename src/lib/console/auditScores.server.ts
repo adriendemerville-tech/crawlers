@@ -43,7 +43,7 @@ export async function fetchConsoleAuditScores(
 
   const toPoints = (rows: any[] | null, extract: (p: any) => number | null): ConsoleAuditScorePoint[] =>
     (rows ?? [])
-      .map((r) => {
+      .map((r): ConsoleAuditScorePoint | null => {
         const score = extract(r.raw_payload);
         return score === null ? null : { score, at: (r.created_at as string) ?? null };
       })
