@@ -7,7 +7,7 @@ export const OUTILS_JSONLD = [
     "@type": "Article",
     headline: "Classement des meilleurs nouveaux outils SEO et GEO en 2027",
     description:
-      "SE Ranking, Crawlers.fr, Surfer SEO, ThotSEO, SoRank, Outrank, ChatSEO, Cocolyze, BotSEO, Local Ranker, Localo, Semrush, Ahrefs, Qwairy, Peak Ace : le classement 2027 des meilleurs outils SEO et GEO.",
+      "SE Ranking, Crawlers.fr, Surfer SEO, ThotSEO, SoRank, Outrank, ChatSEO, Cocolyze, BotSEO, Local Ranker, Localo, Semrush, Ahrefs, Qwairy, Peak Ace, Datashake : le classement 2027 des meilleurs outils SEO et GEO.",
     author: { "@type": "Person", name: "Adrien de Volontat", url: `${SITE_URL}/a-propos` },
     publisher: { "@type": "Organization", name: "Crawlers.fr", url: SITE_URL },
     datePublished: "2026-08-30",
@@ -35,6 +35,7 @@ export const OUTILS_JSONLD = [
       "Ahrefs",
       "Qwairy",
       "Peak Ace",
+      "Datashake",
     ].map((name, i) => ({
       "@type": "ListItem",
       position: i + 1,

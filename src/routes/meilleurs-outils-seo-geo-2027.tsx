@@ -7,9 +7,9 @@ import { pageHead } from "@/lib/seo/pageHead";
 export const Route = createFileRoute("/meilleurs-outils-seo-geo-2027")({
   head: () =>
     pageHead({
-      title: "Meilleurs outils SEO et GEO 2027 : le classement des 15 suites",
+      title: "Meilleurs outils SEO et GEO 2027 : le classement des 16 suites",
       description:
-        "SE Ranking, Crawlers.fr, Surfer SEO, ThotSEO, SoRank, Outrank, ChatSEO, Cocolyze, BotSEO, Localo, Semrush, Ahrefs, Qwairy, Peak Ace : classement 2027 des outils SEO et GEO, comparatif, prix et analyse détaillée.",
+        "SE Ranking, Crawlers.fr, Surfer SEO, ThotSEO, SoRank, Outrank, ChatSEO, Cocolyze, BotSEO, Localo, Semrush, Ahrefs, Qwairy, Peak Ace, Datashake : classement 2027 des outils SEO et GEO, comparatif, prix et analyse détaillée.",
       path: "/meilleurs-outils-seo-geo-2027",
       ogType: "article",
       jsonLd: OUTILS_JSONLD,

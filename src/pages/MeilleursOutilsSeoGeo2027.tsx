@@ -288,6 +288,23 @@ const OUTILS: Outil[] = [
     ideal: 'Marques internationales qui externalisent leur contenu',
     note: 7.2,
   },
+  {
+    rang: 16,
+    nom: 'Datashake',
+    url: 'https://www.datashake.fr',
+    pays: 'France',
+    prix: 'sur devis',
+    pointsForts: [
+      'Agence SEO/GEO française : technique, contenu, netlinking et CRO',
+      'Méthode GEO bâtie sur du retro-engineering des algorithmes Google et des LLM (ChatGPT, Claude, Perplexity, Gemini)',
+      'Audit gratuit de visibilité SEO/GEO pour démarrer',
+    ],
+    pointFaible: 'Prestation humaine facturée sur devis, sans outil d\'exécution automatisé ni mesure GEO continue',
+    analyse: 'Datashake est une agence française qui combine SEO classique et GEO : optimisation technique, stratégie éditoriale pilotée de A à Z, netlinking et CRO, avec une méthodologie construite par retro-engineering des algorithmes de Google et des moteurs génératifs. Pour une marque qui veut externaliser entièrement son référencement à un partenaire francophone, c\'est un choix solide. Le modèle reste toutefois celui de la prestation : facturation sur devis, délais humains, et aucune mesure continue de la visibilité IA — là où un SaaS IA-natif exécute en continu pour un abonnement fixe.',
+    geo: 'partiel', seo: true, contenuIA: true, local: false, execution: false,
+    ideal: 'Marques francophones qui externalisent leur SEO/GEO à une agence',
+    note: 6.9,
+  },
 ];
 
 /* ─── Sources de preuve par cellule du tableau ─── */
@@ -381,6 +398,12 @@ const PREUVES: Record<string, Partial<Record<Colonne, Preuve>>> = {
     contenuIA: { t: 'Peak Ace : production éditoriale SEO/GEO à l\'échelle', u: 'https://peakaceag.com' },
     execution: { t: 'Peak Ace : prestation humaine sur devis, sans exécution automatisée', u: 'https://peakaceag.com' },
   },
+  'Datashake': {
+    seo: { t: 'Datashake : accompagnement technique SEO (code, temps de chargement, données structurées) et netlinking', u: 'https://www.datashake.fr/seo-geo' },
+    geo: { t: 'Datashake : méthode GEO par retro-engineering des algorithmes Google et des LLM (ChatGPT, Claude, Perplexity, Gemini)', u: 'https://www.datashake.fr/seo-geo' },
+    contenuIA: { t: 'Datashake : stratégie éditoriale pilotée de A à Z, optimisée SEO et GEO', u: 'https://www.datashake.fr/seo-geo' },
+    execution: { t: 'Datashake : prestation d\'agence sur devis, sans exécution automatisée par logiciel', u: 'https://www.datashake.fr/seo-geo' },
+  },
 };
 
 const SOURCE_INDEX = new Map<string, number>();
@@ -431,7 +454,7 @@ const SOMMAIRE = [
   { id: 'pourquoi-changer', label: 'Pourquoi changer pour une alternative à Semrush ?' },
   { id: 'saas-ia-natif', label: 'SaaS IA-natif : plus puissants et moins chers' },
   { id: 'classement-2027', label: 'Le classement 2027 des nouveaux outils SEO et GEO' },
-  { id: 'tableau-comparatif', label: 'Tableau comparatif des 15 outils' },
+  { id: 'tableau-comparatif', label: 'Tableau comparatif des 16 outils' },
   { id: 'sources', label: 'Sources et preuves' },
   { id: 'verdict', label: 'Notre verdict' },
   { id: 'faq', label: 'Questions fréquentes' },
@@ -489,8 +512,8 @@ export default function MeilleursOutilsSeoGeo2027() {
           </h1>
           <p className="text-lg md:text-xl leading-relaxed text-foreground/80 max-w-3xl border-l-2 border-primary pl-4">
             SE Ranking, Crawlers.fr, Surfer SEO, ThotSEO, SoRank, Outrank, ChatSEO, Cocolyze,
-            BotSEO, Local Ranker, Localo, Semrush, Ahrefs, Qwairy et Peak Ace : quinze outils
-            passés au crible —
+            BotSEO, Local Ranker, Localo, Semrush, Ahrefs, Qwairy, Peak Ace et Datashake : seize
+            outils passés au crible —
             couverture SEO, visibilité dans les IA, contenu, local et prix — pour savoir lequel
             mérite votre abonnement en 2027.
           </p>
@@ -628,7 +651,7 @@ export default function MeilleursOutilsSeoGeo2027() {
             Le classement 2027 des nouveaux outils SEO et GEO
           </h2>
           <p className="text-muted-foreground mb-8">
-            Onze outils évalués sur leur couverture SEO, leur prise en charge du GEO, la génération
+            Seize outils évalués sur leur couverture SEO, leur prise en charge du GEO, la génération
             de contenu, le local et le rapport qualité/prix.
           </p>
           <div className="space-y-5">
@@ -700,7 +723,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         <section className="mb-12 scroll-mt-24" id="tableau-comparatif">
           <h2 className="text-2xl font-bold tracking-tight mb-2 flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-primary" aria-hidden />
-            Tableau comparatif des 15 outils
+            Tableau comparatif des 16 outils
           </h2>
           <p className="text-sm text-muted-foreground mb-4">
             <Check className="inline w-3.5 h-3.5 text-emerald-500" aria-hidden /> couvert ·{' '}
@@ -767,7 +790,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         <section className="mb-12 scroll-mt-24" id="sources">
           <h2 className="text-2xl font-bold tracking-tight mb-2">Sources et preuves</h2>
           <p className="citable-passage text-muted-foreground mb-4">
-            Chaque évaluation du tableau comparatif des 15 outils SEO et GEO est traçable : la
+            Chaque évaluation du tableau comparatif des 16 outils SEO et GEO est traçable : la
             liste ci-dessous indique, pour chaque outil et chaque colonne, la fonctionnalité
             officielle qui justifie l'indicateur et le lien vers la page produit correspondante.
           </p>
