@@ -272,6 +272,23 @@ const OUTILS: Outil[] = [
     note: 7.4,
   },
   {
+    rang: 15,
+    nom: 'Peak Ace',
+    url: 'https://peakaceag.com',
+    pays: 'France / Allemagne',
+    prix: 'sur devis',
+    pointsForts: [
+      'Production de contenu SEO et GEO à l\'échelle, multilingue',
+      'Expertise éditoriale et consultance technique pointue',
+      'Approche multi-marchés pour marques internationales',
+    ],
+    pointFaible: 'Prestation humaine facturée sur devis, sans outil d\'exécution automatisé ni mesure GEO intégrée',
+    analyse: 'Peak Ace n\'est pas une suite logicielle mais un studio de production de contenu et de consultance SEO/GEO, avec une vraie force sur les marchés multilingues. Pour une marque internationale qui externalise entièrement sa production éditoriale, c\'est un partenaire solide. Le modèle reste celui de la prestation : facturation au projet ou au forfait, délais d\'exécution humains, et aucune mesure continue de la visibilité dans les IA — le contraire d\'un SaaS IA-natif qui exécute en continu pour un abonnement fixe.',
+    geo: 'partiel', seo: true, contenuIA: true, local: false, execution: false,
+    ideal: 'Marques internationales qui externalisent leur contenu',
+    note: 7.2,
+  },
+  {
     rang: 16,
     nom: 'Datashake',
     url: 'https://www.datashake.fr',
