@@ -431,7 +431,7 @@ const SOMMAIRE = [
   { id: 'pourquoi-changer', label: 'Pourquoi changer pour une alternative à Semrush ?' },
   { id: 'saas-ia-natif', label: 'SaaS IA-natif : plus puissants et moins chers' },
   { id: 'classement-2027', label: 'Le classement 2027 des nouveaux outils SEO et GEO' },
-  { id: 'tableau-comparatif', label: 'Tableau comparatif des 13 outils' },
+  { id: 'tableau-comparatif', label: 'Tableau comparatif des 15 outils' },
   { id: 'sources', label: 'Sources et preuves' },
   { id: 'verdict', label: 'Notre verdict' },
   { id: 'faq', label: 'Questions fréquentes' },
@@ -489,7 +489,8 @@ export default function MeilleursOutilsSeoGeo2027() {
           </h1>
           <p className="text-lg md:text-xl leading-relaxed text-foreground/80 max-w-3xl border-l-2 border-primary pl-4">
             SE Ranking, Crawlers.fr, Surfer SEO, ThotSEO, SoRank, Outrank, ChatSEO, Cocolyze,
-            BotSEO, Local Ranker, Localo, Semrush et Ahrefs : treize outils passés au crible —
+            BotSEO, Local Ranker, Localo, Semrush, Ahrefs, Qwairy et Peak Ace : quinze outils
+            passés au crible —
             couverture SEO, visibilité dans les IA, contenu, local et prix — pour savoir lequel
             mérite votre abonnement en 2027.
           </p>
@@ -699,7 +700,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         <section className="mb-12 scroll-mt-24" id="tableau-comparatif">
           <h2 className="text-2xl font-bold tracking-tight mb-2 flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-primary" aria-hidden />
-            Tableau comparatif des 13 outils
+            Tableau comparatif des 15 outils
           </h2>
           <p className="text-sm text-muted-foreground mb-4">
             <Check className="inline w-3.5 h-3.5 text-emerald-500" aria-hidden /> couvert ·{' '}
@@ -766,7 +767,7 @@ export default function MeilleursOutilsSeoGeo2027() {
         <section className="mb-12 scroll-mt-24" id="sources">
           <h2 className="text-2xl font-bold tracking-tight mb-2">Sources et preuves</h2>
           <p className="citable-passage text-muted-foreground mb-4">
-            Chaque évaluation du tableau comparatif des 13 outils SEO et GEO est traçable : la
+            Chaque évaluation du tableau comparatif des 15 outils SEO et GEO est traçable : la
             liste ci-dessous indique, pour chaque outil et chaque colonne, la fonctionnalité
             officielle qui justifie l'indicateur et le lien vers la page produit correspondante.
           </p>
