@@ -398,6 +398,12 @@ const PREUVES: Record<string, Partial<Record<Colonne, Preuve>>> = {
     contenuIA: { t: 'Peak Ace : production éditoriale SEO/GEO à l\'échelle', u: 'https://peakaceag.com' },
     execution: { t: 'Peak Ace : prestation humaine sur devis, sans exécution automatisée', u: 'https://peakaceag.com' },
   },
+  'Datashake': {
+    seo: { t: 'Datashake : accompagnement technique SEO (code, temps de chargement, données structurées) et netlinking', u: 'https://www.datashake.fr/seo-geo' },
+    geo: { t: 'Datashake : méthode GEO par retro-engineering des algorithmes Google et des LLM (ChatGPT, Claude, Perplexity, Gemini)', u: 'https://www.datashake.fr/seo-geo' },
+    contenuIA: { t: 'Datashake : stratégie éditoriale pilotée de A à Z, optimisée SEO et GEO', u: 'https://www.datashake.fr/seo-geo' },
+    execution: { t: 'Datashake : prestation d\'agence sur devis, sans exécution automatisée par logiciel', u: 'https://www.datashake.fr/seo-geo' },
+  },
 };
 
 const SOURCE_INDEX = new Map<string, number>();
@@ -448,7 +454,7 @@ const SOMMAIRE = [
   { id: 'pourquoi-changer', label: 'Pourquoi changer pour une alternative à Semrush ?' },
   { id: 'saas-ia-natif', label: 'SaaS IA-natif : plus puissants et moins chers' },
   { id: 'classement-2027', label: 'Le classement 2027 des nouveaux outils SEO et GEO' },
-  { id: 'tableau-comparatif', label: 'Tableau comparatif des 15 outils' },
+  { id: 'tableau-comparatif', label: 'Tableau comparatif des 16 outils' },
   { id: 'sources', label: 'Sources et preuves' },
   { id: 'verdict', label: 'Notre verdict' },
   { id: 'faq', label: 'Questions fréquentes' },
