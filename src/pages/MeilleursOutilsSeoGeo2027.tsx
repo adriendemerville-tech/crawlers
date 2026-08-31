@@ -254,6 +254,40 @@ const OUTILS: Outil[] = [
     ideal: 'SEO techniques centrés sur le netlinking',
     note: 8.3,
   },
+  {
+    rang: 14,
+    nom: 'Qwairy',
+    url: 'https://qwairy.co',
+    pays: 'France',
+    prix: 'dès ~49 €/mois',
+    pointsForts: [
+      'Suivi de visibilité de marque dans les assistants IA (ChatGPT, Perplexity, Gemini, Claude)',
+      'Analyse des sources citées et du sentiment des citations',
+      'Outil français, simple à prendre en main',
+    ],
+    pointFaible: 'GEO uniquement : aucun audit technique SEO, aucun contenu ni exécution',
+    analyse: 'Qwairy est un outil GEO dédié : il interroge régulièrement les assistants IA sur des prompts choisis et mesure si votre marque y est citée, avec quelle tonalité et depuis quelles sources. Les tableaux de bord et les alertes rendent l\'évolution de la visibilité lisible pour un marketeur, sans compétence technique. Le périmètre s\'arrête toutefois à la mesure : pas d\'audit de site, pas de génération de contenu ni de correction — c\'est un thermomètre, pas une suite qui exécute.',
+    geo: true, seo: false, contenuIA: 'partiel', local: false, execution: false,
+    ideal: 'Marques qui veulent suivre leur visibilité IA sans suite SEO',
+    note: 7.4,
+  },
+  {
+    rang: 15,
+    nom: 'Peak Ace',
+    url: 'https://peakaceag.com',
+    pays: 'France / Allemagne',
+    prix: 'sur devis',
+    pointsForts: [
+      'Production de contenu SEO et GEO à l\'échelle, multilingue',
+      'Expertise éditoriale et consultance technique pointue',
+      'Approche multi-marchés pour marques internationales',
+    ],
+    pointFaible: 'Prestation humaine facturée sur devis, sans outil d\'exécution automatisé ni mesure GEO intégrée',
+    analyse: 'Peak Ace n\'est pas une suite logicielle mais un studio de production de contenu et de consultance SEO/GEO, avec une vraie force sur les marchés multilingues. Pour une marque internationale qui externalise entièrement sa production éditoriale, c\'est un partenaire solide. Le modèle reste celui de la prestation : facturation au projet ou au forfait, délais d\'exécution humains, et aucune mesure continue de la visibilité dans les IA — le contraire d\'un SaaS IA-natif qui exécute en continu pour un abonnement fixe.',
+    geo: 'partiel', seo: true, contenuIA: true, local: false, execution: false,
+    ideal: 'Marques internationales qui externalisent leur contenu',
+    note: 7.2,
+  },
 ];
 
 /* ─── Sources de preuve par cellule du tableau ─── */
@@ -336,6 +370,16 @@ const PREUVES: Record<string, Partial<Record<Colonne, Preuve>>> = {
     geo: { t: 'Ahrefs Brand Radar (suivi des mentions dans les réponses IA)', u: 'https://ahrefs.com/brand-radar' },
     contenuIA: { t: 'Ahrefs Content Helper (assistance à l\'optimisation, pas de rédaction complète)', u: 'https://ahrefs.com/fr/seo' },
     execution: { t: 'Ahrefs : outillage d\'analyse uniquement, aucune action déployée', u: 'https://ahrefs.com/fr/seo' },
+  },
+  'Qwairy': {
+    geo: { t: 'Qwairy : suivi de visibilité de marque dans ChatGPT, Perplexity, Gemini et Claude', u: 'https://qwairy.co' },
+    contenuIA: { t: 'Qwairy : recommandations de contenu et de prompts à partir des réponses IA', u: 'https://qwairy.co' },
+  },
+  'Peak Ace': {
+    seo: { t: 'Peak Ace : consultance SEO technique et production de contenu multilingue', u: 'https://peakaceag.com' },
+    geo: { t: 'Peak Ace : offres GEO (contenu citable et consultance visibilité IA)', u: 'https://peakaceag.com' },
+    contenuIA: { t: 'Peak Ace : production éditoriale SEO/GEO à l\'échelle', u: 'https://peakaceag.com' },
+    execution: { t: 'Peak Ace : prestation humaine sur devis, sans exécution automatisée', u: 'https://peakaceag.com' },
   },
 };
 
