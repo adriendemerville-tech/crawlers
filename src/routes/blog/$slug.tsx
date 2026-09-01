@@ -95,12 +95,28 @@ export const Route = createFileRoute("/blog/$slug")({
       };
     }
 
-    const { data } = await supabase
-      .from("blog_articles")
-      .select("*")
-      .eq("slug", slug)
-      .eq("status", "published")
-      .maybeSingle();
+    // Un backend indisponible ne doit pas suspendre le SSR pendant plusieurs
+    // dizaines de secondes sur un slug inconnu : on borne cette lecture.
+    let data: {
+      title: string;
+      excerpt: string | null;
+      image_url: string | null;
+      published_at: string | null;
+      created_at: string;
+      updated_at?: string | null;
+    } | null = null;
+    try {
+      const result = await supabase
+        .from("blog_articles")
+        .select("*")
+        .eq("slug", slug)
+        .eq("status", "published")
+        .abortSignal(AbortSignal.timeout(3000))
+        .maybeSingle();
+      data = result.data;
+    } catch (error) {
+      console.error("blog article lookup timed out or failed", error);
+    }
 
     if (data) {
       return {
