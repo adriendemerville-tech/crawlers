@@ -163,8 +163,8 @@ const ProductShowcaseSection = memo(() => {
                         width={960}
                         height={600}
                         className="w-full h-auto block object-contain sm:min-h-[200px] sm:object-cover"
-                        loading="eager"
-                        decoding={current === 0 ? 'sync' : 'async'}
+                        loading={current === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
                         fetchPriority={current === 0 ? 'high' : 'auto'}
                       />
                     </div>
