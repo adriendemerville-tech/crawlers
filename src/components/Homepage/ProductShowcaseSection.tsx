@@ -179,18 +179,24 @@ const ProductShowcaseSection = memo(() => {
                           </div>
                         </div>
                       </div>
-                      {/* Le showcase commence sous le premier écran mobile : il ne doit
-                          pas concurrencer le texte du hero pour le LCP. */}
-                      <img
-                        src={slide.image}
-                        alt={`Capture d'écran de l'interface Crawlers.fr : ${slide.title}`}
-                        width={960}
-                        height={600}
-                        className="w-full h-auto block object-contain sm:min-h-[200px] sm:object-cover"
-                        loading="lazy"
-                        decoding="async"
-                        fetchPriority="low"
-                      />
+                      {/* Le showcase démarre sous le premier écran mobile. Rendu seulement
+                          à l'approche de la section : sinon Chromium le précharge malgré
+                          loading="lazy" et il devient le candidat LCP. L'emplacement est
+                          réservé au même ratio pour éviter tout décalage de mise en page. */}
+                      {isNearViewport ? (
+                        <img
+                          src={slide.image}
+                          alt={`Capture d'écran de l'interface Crawlers.fr : ${slide.title}`}
+                          width={960}
+                          height={600}
+                          className="w-full h-auto block object-contain sm:min-h-[200px] sm:object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          fetchPriority="low"
+                        />
+                      ) : (
+                        <div className="w-full bg-muted/30" style={{ aspectRatio: '960 / 600' }} aria-hidden="true" />
+                      )}
                     </div>
                   </div>
 
