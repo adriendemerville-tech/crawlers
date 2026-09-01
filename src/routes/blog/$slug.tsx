@@ -97,7 +97,14 @@ export const Route = createFileRoute("/blog/$slug")({
 
     // Un backend indisponible ne doit pas suspendre le SSR pendant plusieurs
     // dizaines de secondes sur un slug inconnu : on borne cette lecture.
-    let data: Record<string, unknown> | null = null;
+    let data: {
+      title: string;
+      excerpt: string | null;
+      image_url: string | null;
+      published_at: string | null;
+      created_at: string;
+      updated_at?: string | null;
+    } | null = null;
     try {
       const result = await supabase
         .from("blog_articles")
@@ -106,7 +113,7 @@ export const Route = createFileRoute("/blog/$slug")({
         .eq("status", "published")
         .abortSignal(AbortSignal.timeout(3000))
         .maybeSingle();
-      data = (result.data as Record<string, unknown> | null) ?? null;
+      data = result.data;
     } catch (error) {
       console.error("blog article lookup timed out or failed", error);
     }
