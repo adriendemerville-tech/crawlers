@@ -102,7 +102,9 @@ const ProductShowcaseSection = memo(() => {
           observer.disconnect();
         }
       },
-      { rootMargin: '120px 0px' },
+      // La section est volontairement hors du premier écran : ne pas l'insérer
+      // avant son entrée réelle dans le viewport pour préserver le LCP.
+      { rootMargin: '0px' },
     );
     observer.observe(section);
     return () => observer.disconnect();
