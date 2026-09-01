@@ -17,6 +17,8 @@ const ProductShowcaseSection = memo(() => {
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [direction, setDirection] = useState(1);
+  const [isNearViewport, setIsNearViewport] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const slides = [
@@ -87,6 +89,28 @@ const ProductShowcaseSection = memo(() => {
   }, [slides.length]);
 
   useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || typeof IntersectionObserver === 'undefined') {
+      setIsNearViewport(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setIsNearViewport(true);
+          observer.disconnect();
+        }
+      },
+      // La section est volontairement hors du premier écran : ne pas l'insérer
+      // avant son entrée réelle dans le viewport pour préserver le LCP.
+      { rootMargin: '0px' },
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     const timer = setInterval(() => navigate(1), 6000);
     return () => clearInterval(timer);
   }, [navigate]);
@@ -100,7 +124,7 @@ const ProductShowcaseSection = memo(() => {
   const Icon = slide.icon;
 
   return (
-    <section className="relative py-14 sm:py-20 overflow-hidden">
+    <section ref={sectionRef} className="relative py-14 sm:py-20 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_50%)]" />
 
       <div className="relative mx-auto max-w-7xl px-4">
@@ -157,16 +181,24 @@ const ProductShowcaseSection = memo(() => {
                           </div>
                         </div>
                       </div>
-                      <img
-                        src={slide.image}
-                        alt={`Capture d'écran de l'interface Crawlers.fr : ${slide.title}`}
-                        width={960}
-                        height={600}
-                        className="w-full h-auto block object-contain sm:min-h-[200px] sm:object-cover"
-                        loading={current === 0 ? 'eager' : 'lazy'}
-                        decoding="async"
-                        fetchPriority={current === 0 ? 'high' : 'auto'}
-                      />
+                      {/* Le showcase démarre sous le premier écran mobile. Rendu seulement
+                          à l'approche de la section : sinon Chromium le précharge malgré
+                          loading="lazy" et il devient le candidat LCP. L'emplacement est
+                          réservé au même ratio pour éviter tout décalage de mise en page. */}
+                      {isNearViewport ? (
+                        <img
+                          src={slide.image}
+                          alt={`Capture d'écran de l'interface Crawlers.fr : ${slide.title}`}
+                          width={960}
+                          height={600}
+                          className="w-full h-auto block object-contain sm:min-h-[200px] sm:object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          fetchPriority="low"
+                        />
+                      ) : (
+                        <div className="w-full bg-muted/30" style={{ aspectRatio: '960 / 600' }} aria-hidden="true" />
+                      )}
                     </div>
                   </div>
 

@@ -26,7 +26,10 @@ const css = fs.readFileSync(path.join(ASSETS, cssFiles[0].f), 'utf8');
 const html = fs.readFileSync(process.argv[2] ?? '/tmp/home.html', 'utf8');
 
 const bodyStart = html.indexOf('<body');
-const above = html.slice(bodyStart, bodyStart + 60000);
+// Fenêtre mobile : le header SSR contient aussi la navigation desktop et gonfle
+// artificiellement l'extraction. On s'arrête avant le showcase, après le formulaire.
+const ABOVE_WINDOW = Number(process.env.ABOVE_WINDOW ?? 19000);
+const above = html.slice(bodyStart, bodyStart + ABOVE_WINDOW);
 
 const classes = new Set();
 for (const m of above.matchAll(/class="([^"]*)"/g)) m[1].split(/\s+/).forEach((c) => c && classes.add(c));
@@ -35,8 +38,9 @@ classes.delete('prose');
 const tags = new Set();
 for (const m of above.matchAll(/<([a-z][a-z0-9]*)/g)) tags.add(m[1]);
 
-// variantes inutiles au premier paint
-const DROP = /:hover|:focus|:active|:where\(\.group|prose|animate-|group-hover/;
+// Variantes inutiles au premier paint mobile : états d'interaction, animations,
+// et breakpoints desktop repris par styles.css après son chargement.
+const DROP = /:hover|:focus|:focus-visible|:active|:where\(\.group|prose|animate-|group-hover|peer-|data-\[state|\\@(lg|xl|2xl)|^\s*\.(lg|xl|2xl)\\:/;
 
 const keepSel = (sel) => {
   if (DROP.test(sel)) return false;
@@ -57,8 +61,14 @@ const prune = (container) => {
       if (!keepSel(node.selector)) node.remove();
     } else if (node.type === 'atrule') {
       if (node.name === 'keyframes') return void node.remove();
-      if (node.name === 'font-face' || node.name === 'property') return;
+      if (node.name === 'font-face') return;
+      // Tailwind v4 émet 88 @property génériques (environ 5,7 Ko) ; aucun
+      // n'est requis pour le rendu statique du header ou du hero.
+      if (node.name === 'property') return void node.remove();
       if (/hover:hover/.test(node.params)) return void node.remove();
+      // media queries desktop : inutiles au LCP mobile
+      const mw = node.params.match(/min-width:\s*([\d.]+)rem/);
+      if (node.name === 'media' && mw && Number(mw[1]) >= 64) return void node.remove();
       if (node.nodes) {
         prune(node);
         if (node.nodes.length === 0) node.remove();
@@ -69,6 +79,20 @@ const prune = (container) => {
 
 const root = postcss.parse(css);
 prune(root);
+
+// Tailwind imprime tout son thème (couleurs, tailles, animations) dans le CSS
+// inline, même quand la home n'en utilise qu'une petite partie. On conserve
+// uniquement les variables référencées par les règles critiques restantes.
+const theme = root.nodes.find((node) => node.type === 'atrule' && node.name === 'layer' && node.params === 'theme');
+const criticalBody = root.toString().replace(theme?.toString() ?? '', '');
+if (theme) {
+  theme.walkDecls((decl) => {
+    if (!criticalBody.includes(`var(${decl.prop})`)) decl.remove();
+  });
+  theme.walkRules((rule) => {
+    if (!rule.nodes?.length) rule.remove();
+  });
+}
 
 const out = root.toString().replace(/\n\s*/g, '\n').trim();
 fs.writeFileSync('src/styles.critical.css', out);
