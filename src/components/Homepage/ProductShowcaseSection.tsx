@@ -122,7 +122,7 @@ const ProductShowcaseSection = memo(() => {
   const Icon = slide.icon;
 
   return (
-    <section className="relative py-14 sm:py-20 overflow-hidden">
+    <section ref={sectionRef} className="relative py-14 sm:py-20 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_50%)]" />
 
       <div className="relative mx-auto max-w-7xl px-4">
