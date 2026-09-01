@@ -165,9 +165,18 @@ const HTML_CACHE_PATHS = new Set<string>([
   "/marina",
   "/lexique",
   "/a-propos",
+  "/contact",
+  "/confidentialite",
+  "/comparatif-crawlers-semrush",
+  "/comparatif-crawlers-ahrefs",
+  "/meilleurs-outils-seo-geo-2026",
+  "/meilleurs-outils-seo-geo-2027",
+  "/matrice-concurrence",
 ]);
-const HTML_CACHE_FRESH_S = 300;
-const HTML_CACHE_STALE_S = 3600;
+// Les pages publiques changent peu : garder plus longtemps le rendu SSR
+// évite de payer un nouveau rendu à chaque réveil d'isolate.
+const HTML_CACHE_FRESH_S = 900;
+const HTML_CACHE_STALE_S = 21600;
 const CACHE_TS_HEADER = "x-html-cache-ts";
 
 type WaitUntilCtx = { waitUntil?: (promise: Promise<unknown>) => void };
