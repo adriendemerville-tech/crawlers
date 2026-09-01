@@ -31,7 +31,8 @@ export async function getPublicConfig(): Promise<ConfigMap> {
       const { data } = await supabase
         .from('system_config')
         .select('key,value')
-        .in('key', PUBLIC_CONFIG_KEYS as unknown as string[]);
+        .in('key', PUBLIC_CONFIG_KEYS as unknown as string[])
+        .abortSignal(AbortSignal.timeout(4000));
 
       const map: ConfigMap = {};
       for (const row of data ?? []) {

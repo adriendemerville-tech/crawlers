@@ -69,11 +69,12 @@ async function trackEventViaEdge(
       body,
       keepalive: true,
       mode: 'cors',
-    }).catch((error) => {
-      console.error('Failed to track event:', error);
+      signal: AbortSignal.timeout(5000),
+    }).catch(() => {
+      // Télémétrie best-effort : jamais d'erreur console en production.
     });
-  } catch (error) {
-    console.error('Failed to track event:', error);
+  } catch {
+    // idem : l'analytics ne doit jamais polluer la console.
   }
 }
 
@@ -144,7 +145,7 @@ export async function storeAnalyzedUrl(url: string) {
           last_analyzed_at: new Date().toISOString(),
         }, { onConflict: 'url' });
     }
-  } catch (error) {
-    console.error('Failed to store analyzed URL:', error);
+  } catch {
+    // best-effort
   }
 }
