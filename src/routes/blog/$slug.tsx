@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import ArticlePage from "@/pages/Blog/ArticlePage";
 import { ARTICLE_SEO_OVERRIDES } from "@/pages/Blog/articleSeoOverrides";
 import { getArticleBySlug } from "@/data/blogArticles";
