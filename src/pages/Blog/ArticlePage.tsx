@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { getRouteApi } from '@tanstack/react-router';
-import { Navigate } from '@/lib/router-compat';
+
 import { ArticleLayout, HtmlContentRenderer } from '@/components/Blog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getArticleBySlug } from '@/data/blogArticles';
