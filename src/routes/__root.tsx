@@ -39,7 +39,6 @@ import criticalCss from "../styles.critical.css?raw";
 // Les polices passent par le pipeline Vite (nom haché sous /assets) : servies
 // depuis /public elles arrivaient sans aucun TTL, soit 70 Kio resservis à
 // chaque visite d'après PageSpeed.
-import interFontUrl from "../assets/fonts/inter-latin-wght-normal.woff2?url";
 import spaceGroteskFontUrl from "../assets/fonts/space-grotesk-latin-wght-normal.woff2?url";
 
 const supabaseOrigin = "https://tutlimtasnjabdfhpewu.supabase.co";
