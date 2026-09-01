@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import ArticlePage from "@/pages/Blog/ArticlePage";
 import { ARTICLE_SEO_OVERRIDES } from "@/pages/Blog/articleSeoOverrides";
 import { getArticleBySlug } from "@/data/blogArticles";
@@ -117,7 +117,10 @@ export const Route = createFileRoute("/blog/$slug")({
       };
     }
 
-    return { found: false, title: null, description: null, image: null, date: null, updatedAt: null, db: null };
+    // Slug inconnu : vrai 404 côté serveur. Sans ça le composant rendait un
+    // <Navigate> pendant le SSR → réponse 200 après ~45 s (soft 404 + TTFB).
+    throw notFound();
+
   },
   head: ({ params, loaderData }) => {
     const path = `/blog/${params.slug}`;
