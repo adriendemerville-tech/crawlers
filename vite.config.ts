@@ -17,9 +17,10 @@ export default defineConfig({
     // Project MCP server (kept from the Classic config; not bundled by the wrapper).
     plugins: [mcpPlugin()],
     build: {
-      // Lighthouse signale l'absence de source maps sur index-*.js : on les
-      // publie en fichiers .map séparés (aucun impact sur le poids servi).
-      sourcemap: true,
+      // Source maps générées mais sans commentaire //# sourceMappingURL :
+      // les .map ne sont pas servis par le worker, et les références cassées
+      // provoquaient des "Timed out fetching resource" dans Lighthouse.
+      sourcemap: "hidden",
     },
     ssr: {
       // react-helmet-async ships CJS as its node "main"; left external, the SSR
