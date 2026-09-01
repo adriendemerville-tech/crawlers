@@ -39,7 +39,6 @@ import criticalCss from "../styles.critical.css?raw";
 // Les polices passent par le pipeline Vite (nom haché sous /assets) : servies
 // depuis /public elles arrivaient sans aucun TTL, soit 70 Kio resservis à
 // chaque visite d'après PageSpeed.
-import interFontUrl from "../assets/fonts/inter-latin-wght-normal.woff2?url";
 import spaceGroteskFontUrl from "../assets/fonts/space-grotesk-latin-wght-normal.woff2?url";
 
 const supabaseOrigin = "https://tutlimtasnjabdfhpewu.supabase.co";
@@ -54,9 +53,9 @@ const SITE_DESCRIPTION =
   "Auditez votre site en SEO et GEO, corrigez vos pages automatiquement et suivez votre visibilité dans Google comme dans les réponses des IA.";
 
 
-// styles.css est servi en media="print" (donc non bloquant) : on le repasse en
-// "all" dès qu'il est chargé, le premier rendu étant peint par le CSS critique inline.
-const CSS_SWAP = `(function(){function s(){var l=document.getElementById('main-css');if(!l){document.addEventListener('DOMContentLoaded',s);return;}var go=function(){l.media='all';};if(l.sheet){go();}else{l.addEventListener('load',go);window.addEventListener('load',go);}}s();})();`;
+// styles.css reste non bloquant jusqu'à son événement load : le premier rendu
+// est assuré par le CSS critique inline, puis la feuille complète prend le relais.
+const CSS_SWAP = `(function(){function s(){var l=document.getElementById('main-css');if(!l){document.addEventListener('DOMContentLoaded',s,{once:true});return;}var go=function(){l.media='all';};l.addEventListener('load',go,{once:true});if(document.readyState==='complete')go();}s();})();`;
 
 // ported from index.html — gtag bootstrap (gtag.js itself is loaded by GTM below)
 const GTAG_BOOTSTRAP = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-0S0D56VSWQ', { send_page_view: false });`;
@@ -130,13 +129,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: supabaseOrigin, crossOrigin: "anonymous" },
       { rel: "dns-prefetch", href: "https://www.googletagmanager.com" },
       { rel: "dns-prefetch", href: "https://images.unsplash.com" },
-      {
-        rel: "preload",
-        href: interFontUrl,
-        as: "font",
-        type: "font/woff2",
-        crossOrigin: "anonymous",
-      },
+      // La police d'affichage est prioritaire pour le H1 du premier écran.
+      // Inter reste chargé à la demande par @font-face lorsqu'il est utilisé.
       {
         rel: "preload",
         href: spaceGroteskFontUrl,
@@ -144,8 +138,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         type: "font/woff2",
         crossOrigin: "anonymous",
       },
-      // Les @font-face d'affichage sont désormais dans src/styles.css :
-      // /fonts-deferred.css bloquait le premier rendu 460 ms pour rien.
     ],
     styles: [{ children: criticalCss }],
     scripts: [
