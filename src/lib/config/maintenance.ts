@@ -38,6 +38,7 @@ export async function getMaintenanceState(): Promise<MaintenanceState> {
       const { data } = await supabase
         .from('site_maintenance')
         .select('active,scope,paths,message')
+        .abortSignal(AbortSignal.timeout(4000))
         .maybeSingle();
 
       cache = data
