@@ -17,6 +17,8 @@ const ProductShowcaseSection = memo(() => {
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [direction, setDirection] = useState(1);
+  const [isNearViewport, setIsNearViewport] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const slides = [
@@ -85,6 +87,26 @@ const ProductShowcaseSection = memo(() => {
       return true;
     });
   }, [slides.length]);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || typeof IntersectionObserver === 'undefined') {
+      setIsNearViewport(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setIsNearViewport(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '120px 0px' },
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => navigate(1), 6000);
@@ -157,15 +179,17 @@ const ProductShowcaseSection = memo(() => {
                           </div>
                         </div>
                       </div>
+                      {/* Le showcase commence sous le premier écran mobile : il ne doit
+                          pas concurrencer le texte du hero pour le LCP. */}
                       <img
                         src={slide.image}
                         alt={`Capture d'écran de l'interface Crawlers.fr : ${slide.title}`}
                         width={960}
                         height={600}
                         className="w-full h-auto block object-contain sm:min-h-[200px] sm:object-cover"
-                        loading={current === 0 ? 'eager' : 'lazy'}
+                        loading="lazy"
                         decoding="async"
-                        fetchPriority={current === 0 ? 'high' : 'auto'}
+                        fetchPriority="low"
                       />
                     </div>
                   </div>
