@@ -36,14 +36,12 @@ function ArticlePageComponent() {
   const staticArticle = getArticleBySlug(slug || '');
   const dbArticle = (loaderData?.db as DbArticle | null) ?? null;
 
-  if (!slug) {
-    return <Navigate to="/blog" replace />;
+  // Le cas « slug inconnu » est traité côté loader (notFound), jamais ici :
+  // un <Navigate> rendu pendant le SSR bloquait la réponse ~45 s.
+  if (!staticArticle && !dbArticle) {
+    return null;
   }
 
-  // No static article and nothing published in DB → back to the blog index
-  if (!staticArticle && !dbArticle) {
-    return <Navigate to="/blog" replace />;
-  }
 
   const staticContent = articleContent[slug];
   // DB body wins only when there is no rich JSX content and the row is substantial
