@@ -52,7 +52,7 @@ function Gauge({ score, label }: { score: number | null; label: string }) {
  * Jauges circulaires compactes affichées en haut des onglets SEO et GEO :
  * note du dernier audit technique et du dernier audit stratégique du domaine.
  */
-export function AuditScoresBanner({ domain }: Props) {
+export function AuditScoresBanner({ domain, showStrategic = true }: Props) {
   const { language } = useLanguage();
   const fetchScores = useServerFn(getConsoleAuditScores);
 
