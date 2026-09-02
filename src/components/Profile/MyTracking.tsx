@@ -279,6 +279,8 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
   const [smartCmsOpen, setSmartCmsOpen] = useState(false);
   const [smartCmsSiteId, setSmartCmsSiteId] = useState<string | null>(null);
   const [noSiteApiModalOpen, setNoSiteApiModalOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<{ id: string; domain: string } | null>(null);
+  const [removing, setRemoving] = useState(false);
   const isMobile = useIsMobile();
 
   // Open API panel when triggered from sidebar.
