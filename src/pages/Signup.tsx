@@ -125,8 +125,12 @@ export default function Signup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showExistsBanner, setShowExistsBanner] = useState(false);
-  const [personaSelected, setPersonaSelected] = useState(!!sessionStorage.getItem('pending_persona_type'));
+  const [personaSelected, setPersonaSelected] = useState(false);
   const [isSigningUp, setIsSigningUp] = useState(false); // blocks auto-redirect during signup flow
+
+  useEffect(() => {
+    setPersonaSelected(Boolean(window.sessionStorage.getItem('pending_persona_type')));
+  }, []);
 
   // Verification state
   const [step, setStep] = useState<'form' | 'verify' | 'success'>('form');
