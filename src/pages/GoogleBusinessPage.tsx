@@ -13,6 +13,7 @@ import {
   Clock, Users, Search, Crown, Sparkles, Target, Award
 } from 'lucide-react';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
+import { STARTUP_TRIAL_OFFER } from '@/lib/seo/startupTrialOffer';
 import { DirectAnswer } from '@/components/seo/DirectAnswer';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
