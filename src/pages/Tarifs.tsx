@@ -789,6 +789,11 @@ export default function Tarifs() {
 
             {/* Offre jeunes entreprises */}
             <StartupTrialOffer />
+            <p className="text-center text-sm text-muted-foreground">
+              <Link to="/offre-jeune-entreprise" className="underline">
+                Tout savoir sur l’offre 12 mois gratuits pour les jeunes entreprises
+              </Link>
+            </p>
 
             {/* CTA */}
             <div className="text-center">
