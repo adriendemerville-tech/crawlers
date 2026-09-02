@@ -790,6 +790,9 @@ export function useMyTracking() {
       setSelectedSite(sites.find(s => s.id !== siteId)?.id || null);
     }
     toast.success(t.removeConfirm);
+    if (typeof window !== 'undefined') {
+      setTimeout(() => window.location.reload(), 600);
+    }
   };
 
   // ─── Rollback ───
