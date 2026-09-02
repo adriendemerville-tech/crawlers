@@ -58,6 +58,115 @@ async function lookupEligibleCompany(siret: string) {
   };
 }
 
+async function sha256Hex(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Parcours public : vérification SIRET + Kbis sans compte.
+ * Si le Kbis est conforme, un jeton à usage unique (24 h) encode la gratuité ;
+ * l'utilisateur est ensuite redirigé vers l'inscription avec ce jeton.
+ */
+export const claimStartupTrialToken = createServerFn({ method: 'POST' })
+  .inputValidator((data) => z.object({
+    siret: siretSchema,
+    kbisPdfBase64: z.string().min(100).max(9_000_000),
+  }).parse(data))
+  .handler(async ({ data }) => {
+    const verified = await lookupEligibleCompany(data.siret);
+    if (!verified.eligible || !verified.legalName || !verified.creationDate) {
+      return { status: 'rejected' as const, reason: verified.reason ?? 'Entreprise non éligible.', token: null, legalName: null };
+    }
+
+    const binary = Uint8Array.from(atob(data.kbisPdfBase64.replace(/^data:[^,]+,/, '')), (c) => c.charCodeAt(0));
+    if (binary.byteLength > 10 * 1024 * 1024) {
+      return { status: 'rejected' as const, reason: 'Le Kbis dépasse 10 Mo.', token: null, legalName: null };
+    }
+    if (String.fromCharCode(...binary.slice(0, 5)) !== '%PDF-') {
+      return { status: 'rejected' as const, reason: 'Le fichier fourni n’est pas un PDF valide.', token: null, legalName: null };
+    }
+
+    const { verifyKbisDocument } = await import('@/lib/kbisCheck.server');
+    const pdfBuffer = binary.buffer.slice(binary.byteOffset, binary.byteOffset + binary.byteLength) as ArrayBuffer;
+    const kbisCheck = await verifyKbisDocument(pdfBuffer, data.siret, verified.legalName);
+
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const kbisPath = `claims/${crypto.randomUUID()}.pdf`;
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('startup-trial-kbis')
+      .upload(kbisPath, binary, { contentType: 'application/pdf', upsert: false });
+    if (uploadError) {
+      console.error('[startup-trial] kbis upload failed', uploadError);
+      return { status: 'rejected' as const, reason: 'Le dépôt du Kbis a échoué. Réessayez.', token: null, legalName: null };
+    }
+
+    if (!kbisCheck.ok) {
+      return { status: 'review' as const, reason: kbisCheck.reason, token: null, legalName: verified.legalName };
+    }
+
+    const { data: existing } = await supabaseAdmin
+      .from('startup_trial_applications')
+      .select('id')
+      .eq('siret', data.siret)
+      .maybeSingle();
+    if (existing) {
+      return { status: 'rejected' as const, reason: 'Une offre jeune entreprise a déjà été activée pour ce SIRET.', token: null, legalName: null };
+    }
+
+    const token = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+    const tokenHash = await sha256Hex(token);
+    await supabaseAdmin
+      .from('startup_trial_signup_tokens')
+      .update({ status: 'expired' })
+      .eq('siret', data.siret)
+      .eq('status', 'pending');
+    const { error: tokenError } = await supabaseAdmin.from('startup_trial_signup_tokens').insert({
+      token_hash: tokenHash,
+      siret: data.siret,
+      legal_name: verified.legalName,
+      creation_date: verified.creationDate,
+      kbis_path: kbisPath,
+      verification_details: { source: 'recherche-entreprises.api.gouv.fr', kbis: { method: 'pdf-text-extraction', ...kbisCheck } },
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    });
+    if (tokenError) {
+      console.error('[startup-trial] token creation failed', tokenError);
+      return { status: 'rejected' as const, reason: 'Impossible de générer votre accès. Réessayez.', token: null, legalName: null };
+    }
+
+    return { status: 'approved' as const, reason: null, token, legalName: verified.legalName };
+  });
+
+/** Consomme le jeton de gratuité après création du compte et active Pro Agency 12 mois. */
+export const redeemStartupTrialToken = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ token: z.string().trim().min(32).max(128) }).parse(data))
+  .handler(async ({ data, context }) => {
+    const tokenHash = await sha256Hex(data.token);
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: result, error } = await supabaseAdmin.rpc('redeem_startup_trial_signup_token', {
+      p_token_hash: tokenHash,
+      p_user_id: context.userId,
+    });
+    if (error) {
+      const raw = `${error.message ?? ''}`;
+      if (raw.includes('already used')) throw new Error('Ce lien de gratuité a déjà été utilisé.');
+      if (raw.includes('expired')) throw new Error('Ce lien de gratuité a expiré : recommencez la vérification.');
+      if (raw.includes('already been claimed')) throw new Error('Une offre jeune entreprise a déjà été activée pour ce compte ou ce SIRET.');
+      if (raw.includes('Unknown startup trial token')) throw new Error('Lien de gratuité invalide.');
+      console.error('[startup-trial] redeem failed', error);
+      throw new Error('Activation impossible pour le moment.');
+    }
+    const row = Array.isArray(result) ? result[0] : result;
+    return {
+      applicationId: row?.application_id ?? null,
+      expiresAt: row?.expires_at ?? null,
+      legalName: row?.legal_name ?? null,
+    };
+  });
+
 export const verifyStartupSiret = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ siret: siretSchema }).parse(data))
