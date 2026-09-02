@@ -11,7 +11,7 @@
 - **Images:** NO_TEXT_GUARD forbids text in AI-generated images unless specifically requested.
 - **SEO:** Métadonnées via `head()` TanStack + `src/lib/seo/pageHead.ts` (jamais Helmet pour title/description/canonical/og). Include `blockquote.citable-passage` for AI visibility.
 - **Silos:** 4 piliers seulement (crawler, GEO, outil-crawl, comparatifs) — voir [Architecture en 4 silos](mem://tech/seo/silo-architecture-4-pillars-fr).
-- **Auth:** Client-side rate limiting on login + Server-side GoTrue. OAuth disconnects must revoke tokens.
+- **Auth:** Client-side rate limiting on login + Server-side GoTrue. OAuth disconnects must revoke tokens. Un timeout Google OAuth = service auth dégradé, jamais un bug client — voir [Diagnostic timeout Google OAuth](mem://tech/security/google-oauth-timeout-diagnosis-fr).
 - **Queue:** Jobs prioritized by plan: agency_premium(10) > agency_pro(20) > new_user(30) > registered(40).
 - **Team Roles:** owner/editor/auditor — gate actions via `useTeamPermissions().can('permission_key')`.
 - **Agents:** Agent SEO autonome sur le CONTENU (publication directe, max 1/semaine, dépublication auto) ; JAMAIS sur le CODE (validation humaine obligatoire).
@@ -33,3 +33,4 @@
 - [Dofollow — facteur contextuel](mem://tech/audit/dofollow-contextual-factor-fr) — Faisceau d'indices (0/3/8 pts), autorité indépendante estimée, verdict « risque élevé à investiguer », jamais « pénalité Google »
 - [Calibration du GEO par la citation réelle](mem://tech/audit/geo-citation-calibration-fr) — Modulation ±10 % du score des 10 sous-signaux par le benchmark LLM observé ; bandeau Marina sur le score déterministe, jamais la note LLM
 - [Matrice concurrence — leaders lus dans la SERP](mem://tech/competitor-matrix/serp-first-leader-detection-fr) — Deux passes SERP, type `leader`, requalification des goliaths, quick wins
+- [Diagnostic timeout Google OAuth](mem://tech/security/google-oauth-timeout-diagnosis-fr) — 504 sur /authorize, test discriminant provider non configuré, redémarrage backend
