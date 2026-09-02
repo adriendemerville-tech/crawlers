@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { normalizeUrl } from '@/hooks/useUrlValidation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { checkLlmVisibilityLite } from '@/lib/llmVisibilityLite.functions';
 
 interface BotResult {
   name: string;
