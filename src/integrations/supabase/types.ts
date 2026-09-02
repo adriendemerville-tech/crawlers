@@ -17845,6 +17845,14 @@ export type Database = {
         }
         Returns: Json
       }
+      redeem_startup_trial_signup_token: {
+        Args: { p_token_hash: string; p_user_id: string }
+        Returns: {
+          application_id: string
+          expires_at: string
+          legal_name: string
+        }[]
+      }
       refresh_archetype_mix_benchmarks: { Args: never; Returns: number }
       release_browserless_slot: {
         Args: { p_lease_id: string }
