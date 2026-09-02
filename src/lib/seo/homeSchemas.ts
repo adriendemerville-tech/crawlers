@@ -52,7 +52,7 @@ const softwareApplication = {
   url: SITE_URL,
   creator: ORG,
   description:
-    "Plateforme SaaS d'audit SEO, GEO et visibilité IA. Audit technique 200+ points, matrice de concurrence SERP et citations IA, audit Marina, cocon sémantique 3D, autopilote éditorial, détection de bots IA, et API développeurs pour piloter tous les modules par programmation.",
+    "Plateforme SaaS d'acquisition française : suite GEO et plateforme d'intelligence de visibilité couvrant l'audit SEO, le GEO et la visibilité IA. Audit technique 200+ points, matrice de concurrence SERP et citations IA, audit Marina, cocon sémantique 3D, autopilote éditorial, détection de bots IA, et API développeurs pour piloter tous les modules par programmation.",
   offers: [
     {
       '@type': 'Offer',
