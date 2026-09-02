@@ -68,6 +68,8 @@ const T = {
   },
 };
 
+import { DeferredCard, CardSkeleton } from './geo/DeferredCard';
+
 export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
@@ -202,43 +204,49 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
       {/* Sprint 2 — Shield / Crawl bots IA / Attribution humaine */}
       <div className="grid gap-4 lg:grid-cols-3">
         <ShieldStatusCard trackedSiteId={currentSite.id} />
-        <AICrawlActivityCard trackedSiteId={currentSite.id} />
-        <AIAttributionCard trackedSiteId={currentSite.id} />
+        <DeferredCard><AICrawlActivityCard trackedSiteId={currentSite.id} /></DeferredCard>
+        <DeferredCard><AIAttributionCard trackedSiteId={currentSite.id} /></DeferredCard>
       </div>
 
       {/* Cartes : qualité contenu + fan-out */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <GeoQualityCard trackedSiteId={currentSite.id} />
-        <GeoFanOutClustersCard trackedSiteId={currentSite.id} />
+        <DeferredCard><GeoQualityCard trackedSiteId={currentSite.id} /></DeferredCard>
+        <DeferredCard><GeoFanOutClustersCard trackedSiteId={currentSite.id} /></DeferredCard>
       </div>
 
       {/* Drop Detector + Mix LLM */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <GeoDropDetectorCard trackedSiteId={currentSite.id} />
-        <GeoBotMixCard trackedSiteId={currentSite.id} />
+        <DeferredCard><GeoDropDetectorCard trackedSiteId={currentSite.id} /></DeferredCard>
+        <DeferredCard><GeoBotMixCard trackedSiteId={currentSite.id} /></DeferredCard>
       </div>
 
       {/* Profondeur LLM */}
-      <LLMDepthCard
-        trackedSiteId={currentSite.id}
-        domain={currentSite.domain}
-        userId={user?.id || ''}
-      />
+      <DeferredCard lines={5}>
+        <LLMDepthCard
+          trackedSiteId={currentSite.id}
+          domain={currentSite.domain}
+          userId={user?.id || ''}
+        />
+      </DeferredCard>
 
       {/* Benchmark LLM */}
-      <LLMVisibilityDashboard
-        trackedSiteId={currentSite.id}
-        domain={currentSite.domain}
-        userId={user?.id || ''}
-      />
+      <DeferredCard lines={5}>
+        <LLMVisibilityDashboard
+          trackedSiteId={currentSite.id}
+          domain={currentSite.domain}
+          userId={user?.id || ''}
+        />
+      </DeferredCard>
 
       {/* Analyse des logs bots — Pro Agency+ */}
       {showLogs ? (
-        <BotLogAnalysisCard
-          trackedSiteId={currentSite.id}
-          domain={currentSite.domain}
-          simulatedDataEnabled={simulatedDataEnabled}
-        />
+        <DeferredCard lines={6}>
+          <BotLogAnalysisCard
+            trackedSiteId={currentSite.id}
+            domain={currentSite.domain}
+            simulatedDataEnabled={simulatedDataEnabled}
+          />
+        </DeferredCard>
       ) : (
         <Card>
           <CardHeader>
