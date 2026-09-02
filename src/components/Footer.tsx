@@ -54,6 +54,11 @@ function FooterComponent() {
       description: t3(language, 'Nos offres et tarifs', 'Our offers and pricing', 'Nuestras ofertas y precios')
     },
     { 
+      label: t3(language, 'Offre jeune entreprise', 'Young business offer', 'Oferta joven empresa'),
+      href: '/offre-jeune-entreprise',
+      description: t3(language, 'Pro Agency gratuit 12 mois pour les moins de 12 mois', 'Free 12-month Pro Agency for businesses under 12 months', 'Pro Agency gratis 12 meses para empresas de menos de 12 meses')
+    },
+    { 
       label: t3(language, 'Lexique SEO/GEO', 'SEO/GEO Glossary', 'Glosario SEO/GEO'),
       href: '/lexique',
       description: t3(language, 'Définitions des termes SEO et GEO', 'SEO and GEO terms definitions', 'Definiciones de términos SEO y GEO')
