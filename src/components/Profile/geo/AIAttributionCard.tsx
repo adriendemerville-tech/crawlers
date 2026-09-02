@@ -4,12 +4,13 @@
  *
  * Modèle : multi-touch pondéré, fingerprint anonymisé.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ExternalLink } from 'lucide-react';
+import { Sparkles, ExternalLink, BarChart3 } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { MethodologyTooltip } from './MethodologyTooltip';
 import { edgeFunctionUrl } from '@/utils/supabaseUrl';
@@ -70,13 +71,44 @@ function formatDate(value: string, interval: Interval): string {
     : { day: '2-digit', month: 'short', timeZone: 'UTC' }).format(date);
 }
 
+interface FakePoint {
+  date: string;
+  gemini: number;
+  chatgpt: number;
+  copilot: number;
+  claude: number;
+}
+
+/** Données fictives (démo) affichées floutées quand la GA4 n'est pas connectée. */
+function buildFakeChartData(days: number, interval: Interval): FakePoint[] {
+  const points: FakePoint[] = [];
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - i);
+    points.push({
+      date: d.toISOString().slice(0, 10),
+      gemini: Math.max(1, Math.round(6 + 3 * Math.sin(i / 3.1) + (i % 5))),
+      chatgpt: Math.max(1, Math.round(9 + 4 * Math.sin(i / 2.4 + 1) + (i % 4))),
+      copilot: Math.max(1, Math.round(4 + 2 * Math.sin(i / 4.2 + 2) + (i % 3))),
+      claude: Math.max(1, Math.round(3 + 2 * Math.sin(i / 3.6 + 0.5) + (i % 3))),
+    });
+  }
+  if (interval === 'week') return points.filter((_, idx) => idx % 7 === 0);
+  if (interval === 'month') return points.filter((_, idx) => idx % 30 === 0);
+  return points;
+}
+
 export function AIAttributionCard({ trackedSiteId }: AIAttributionCardProps) {
+  const { user, profile } = useAuth();
   const [data, setData] = useState<AttributionSummary | null>(null);
   const [period, setPeriod] = useState<Period>('days');
   const [interval, setInterval] = useState<Interval>('day');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState(false);
 
+  const ga4Connected = !!profile?.ga4_property_id;
   const selectedPeriod = PERIODS.find((item) => item.value === period) ?? PERIODS[0];
 
   useEffect(() => {
@@ -105,6 +137,25 @@ export function AIAttributionCard({ trackedSiteId }: AIAttributionCardProps) {
     };
   }, [trackedSiteId, selectedPeriod.days, interval]);
 
+  const fakeChartData = useMemo(
+    () => (ga4Connected ? [] : buildFakeChartData(selectedPeriod.days, interval)),
+    [ga4Connected, selectedPeriod.days, interval],
+  );
+
+  const handleConnectGa4 = async () => {
+    if (!user || connecting) return;
+    setConnecting(true);
+    try {
+      const { data: res, error: fnError } = await supabase.functions.invoke('gsc-auth', {
+        body: { action: 'login', user_id: user.id, frontend_origin: window.location.origin },
+      });
+      if (fnError) throw fnError;
+      if (res?.auth_url) window.location.href = res.auth_url;
+    } catch {
+      setConnecting(false);
+    }
+  };
+
   const sources = data ? Object.entries(data.by_source).sort((a, b) => b[1] - a[1]) : [];
   const chartData = data?.timeline_by_source.map((point) => ({
     date: point.date,
@@ -122,23 +173,37 @@ export function AIAttributionCard({ trackedSiteId }: AIAttributionCardProps) {
             <Sparkles className="h-4 w-4 text-primary" />
             Attribution IA → visites humaines
           </span>
-          <MethodologyTooltip
-            label="Méthode"
-            title="Attribution multi-touch pondérée"
-            body={
-              <>
-                <p>
-                  Lorsqu'un humain visite votre site avec un <strong>referer</strong> ChatGPT, Claude, Perplexity… nous
-                  recherchons les visites bots IA précédentes sur la <strong>même URL</strong>.
-                </p>
-                <p>
-                  La pondération suit une décroissance exponentielle : <code>poids = exp(-jours / 15)</code>. Aucune
-                  donnée personnelle n'est conservée : seul un <strong>fingerprint anonymisé</strong> est utilisé pour
-                  dédupliquer les sessions.
-                </p>
-              </>
-            }
-          />
+          <span className="flex items-center gap-1.5">
+            <MethodologyTooltip
+              label="Méthode"
+              title="Attribution multi-touch pondérée"
+              body={
+                <>
+                  <p>
+                    Lorsqu'un humain visite votre site avec un <strong>referer</strong> ChatGPT, Claude, Perplexity… nous
+                    recherchons les visites bots IA précédentes sur la <strong>même URL</strong>.
+                  </p>
+                  <p>
+                    La pondération suit une décroissance exponentielle : <code>poids = exp(-jours / 15)</code>. Aucune
+                    donnée personnelle n'est conservée : seul un <strong>fingerprint anonymisé</strong> est utilisé pour
+                    dédupliquer les sessions.
+                  </p>
+                </>
+              }
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleConnectGa4}
+              disabled={connecting}
+              aria-label={ga4Connected ? 'GA4 connecté' : 'Connecter GA4'}
+              className={`h-6 gap-1 px-2 text-[10px] bg-transparent border-border ${ga4Connected ? 'border-primary text-primary' : 'text-foreground'}`}
+            >
+              <BarChart3 className="h-3 w-3" />
+              GA4
+            </Button>
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -203,8 +268,47 @@ export function AIAttributionCard({ trackedSiteId }: AIAttributionCardProps) {
                   </span>
                 ))}
               </div>
-              <div className="h-56 w-full min-w-0">
-                {chartData.length === 0 ? (
+              <div className="relative h-56 w-full min-w-0">
+                {!ga4Connected ? (
+                  <>
+                    <div aria-hidden className="h-full w-full opacity-60">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={fakeChartData} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}>
+                          <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+                          <XAxis
+                            dataKey="date"
+                            tickFormatter={(value: string) => formatDate(value, interval)}
+                            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                            axisLine={false}
+                            tickLine={false}
+                            minTickGap={22}
+                          />
+                          <YAxis
+                            allowDecimals={false}
+                            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                            axisLine={false}
+                            tickLine={false}
+                            width={34}
+                          />
+                          <Line type="monotone" dataKey="chatgpt" stroke="hsl(var(--muted-foreground))" strokeWidth={2} dot={false} connectNulls />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-muted/40 backdrop-blur-[2px]">
+                      <p className="text-xs font-medium text-foreground">Connectez votre GA4</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleConnectGa4}
+                        disabled={connecting}
+                        className="h-7 bg-transparent border-primary text-primary"
+                      >
+                        {connecting ? 'Connexion…' : 'Connecter GA4'}
+                      </Button>
+                    </div>
+                  </>
+                ) : chartData.length === 0 ? (
                   <div className="flex h-full items-center justify-center border-y border-border/50 text-xs text-muted-foreground">
                     Aucune visite attribuée sur cette période.
                   </div>
