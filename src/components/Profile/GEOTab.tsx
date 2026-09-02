@@ -193,7 +193,7 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
         />
       </div>
 
-      <AuditScoresBanner domain={currentSite.domain} />
+      <AuditScoresBanner domain={currentSite.domain} showTechnical={false} />
 
       {/* Onboarding Shield si non déployé */}
       <ShieldOnboardingBanner trackedSiteId={currentSite.id} domain={currentSite.domain} />
