@@ -307,6 +307,26 @@ const OUTILS: Outil[] = [
   },
 ];
 
+/* ─── Catégorie principale de chaque outil ─── */
+const CATEGORIE: Record<string, string> = {
+  'SE Ranking': 'Multitool',
+  'Crawlers.fr': 'Multitool',
+  'Surfer SEO': 'Content Helper',
+  'ThotSEO': 'Content Helper',
+  'SoRank': 'Référencement',
+  'Outrank': 'Content Helper',
+  'ChatSEO': 'Content Helper',
+  'Cocolyze': 'Référencement',
+  'BotSEO': 'Audit',
+  'Local Ranker': 'Local',
+  'Localo': 'Local',
+  'Semrush': 'Multitool',
+  'Ahrefs': 'Référencement',
+  'Qwairy': 'Visibilité IA',
+  'Peak Ace': 'Content Helper',
+  'Datashake': 'Visibilité IA',
+};
+
 /* ─── Sources de preuve par cellule du tableau ─── */
 
 type Colonne = 'seo' | 'geo' | 'contenuIA' | 'local' | 'execution';
