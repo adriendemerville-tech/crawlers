@@ -62,7 +62,8 @@ export const submitStartupTrial = createServerFn({ method: 'POST' })
       throw new Error('La vérification de l’entreprise a expiré. Recommencez la vérification du SIRET.');
     }
 
-    const { data: result, error } = await context.supabase.rpc('submit_startup_trial_application', {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: result, error } = await supabaseAdmin.rpc('submit_startup_trial_application', {
       p_siret: data.siret,
       p_legal_name: data.legalName,
       p_creation_date: data.creationDate,

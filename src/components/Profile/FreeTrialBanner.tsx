@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
+import { Button } from '@/components/ui/button';
 import { Gift, X } from 'lucide-react';
 
 export function FreeTrialBanner() {
@@ -48,9 +49,9 @@ export function FreeTrialBanner() {
       <p className="text-sm font-medium text-amber-800 dark:text-amber-300 flex-1">
         {label}
       </p>
-      <button onClick={handleDismiss} className="shrink-0 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 transition-colors" aria-label="Fermer">
+      <Button variant="ghost" size="icon" onClick={handleDismiss} className="shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200" aria-label="Fermer">
         <X className="h-4 w-4" />
-      </button>
+      </Button>
     </div>
   );
 }
