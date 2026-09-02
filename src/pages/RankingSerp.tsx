@@ -642,7 +642,12 @@ const RankingSerp = memo(() => {
           </div>
         </section>
 
+        <section className="container mx-auto max-w-3xl px-4">
+          <CompetitorMatrixCta intro="Vous connaissez vos positions : voyez maintenant qui les occupe à votre place. La Matrice Concurrence croise vos concurrents et 20 requêtes clés, dans Google et dans les IA génératives." />
+        </section>
+
         {/* CTA */}
+
         <section className="container mx-auto max-w-3xl px-4 text-center">
           <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
             <CardContent className="py-10 space-y-4">
