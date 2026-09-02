@@ -25,6 +25,7 @@ import { AccountManager } from '@/components/Profile/AccountManager';
 import { TeamSharingSettings } from '@/components/Profile/TeamSharingSettings';
 import { TeamRoleManager } from '@/components/Profile/TeamRoleManager';
 import { RetentionModal } from '@/components/Profile/RetentionModal';
+import { SubscriptionManagementModal } from '@/components/Profile/SubscriptionManagementModal';
 const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
 import { CrawlQuotaCard } from '@/components/Profile/CrawlQuotaCard';
 import { ContentQuotaCard } from '@/components/Profile/ContentQuotaCard';
