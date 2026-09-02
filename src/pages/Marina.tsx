@@ -1011,8 +1011,13 @@ export default function Marina() {
                         </Button>
                       </CardContent>
                     </Card>
+                    <CompetitorMatrixCta
+                      className="max-w-md mx-auto text-left"
+                      intro="Votre audit est prêt. Comparez maintenant votre visibilité à celle de vos concurrents sur les 20 requêtes clés de votre marché, dans Google et dans les réponses des IA."
+                    />
                   </div>
                 )}
+
 
                 {/* Purge de cache : visible uniquement pour les admins */}
                 {isAdmin && (
