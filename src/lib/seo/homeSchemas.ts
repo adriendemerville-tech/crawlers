@@ -73,7 +73,7 @@ const softwareApplication = {
     {
       '@type': 'Offer',
       name: 'Pro Agency+',
-      price: '99',
+      price: '79',
       priceCurrency: 'EUR',
       description: '50 000 pages de crawl par mois, 3 comptes, support prioritaire.',
       availability: 'https://schema.org/InStock',
