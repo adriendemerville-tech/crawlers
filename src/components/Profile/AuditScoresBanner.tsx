@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   domain: string | null | undefined;
+  showStrategic?: boolean;
 }
 
 const scoreStroke = (score: number) =>
