@@ -711,13 +711,14 @@ export default function Tarifs() {
           "name": "Pro Agency — Monthly Subscription",
           "description": "Unlimited SEO/GEO reports, unlimited corrective code generation, multi-page corrective code (per-URL rules), White Label branding, 3 team accounts, priority support, Google Search Console integration, AI visibility monitoring dashboard.",
           "price": "29.00",
-          "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "29.00", "priceCurrency": "EUR", "valueAddedTaxIncluded": true },
+          "priceCurrency": "EUR",
           "availability": "https://schema.org/InStock",
           "priceValidUntil": "2027-12-31",
           "priceSpecification": {
             "@type": "UnitPriceSpecification",
             "price": "29.00",
-            "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "29.00", "priceCurrency": "EUR", "valueAddedTaxIncluded": true },
+            "priceCurrency": "EUR",
+            "valueAddedTaxIncluded": true,
             "billingDuration": "P1M",
             "unitText": "MONTH",
             "referenceQuantity": {
