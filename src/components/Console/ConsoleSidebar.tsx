@@ -508,7 +508,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
       {/* Domain selector */}
       {!isMobile && !collapsed && sites.length > 0 && (
         <div className="px-2 pt-[47px] pb-1 space-y-1">
-          <div className="relative">
+          <div className="relative" ref={selectorRef}>
             <button
               onClick={() => setSelectorOpen(!selectorOpen)}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-accent/20 hover:bg-accent/40 transition-colors text-left"
