@@ -70,7 +70,7 @@ async function askModel(
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(25_000),
       body: JSON.stringify({
         model: entry.model,
         messages: [
