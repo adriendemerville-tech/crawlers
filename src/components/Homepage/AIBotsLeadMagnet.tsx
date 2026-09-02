@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { normalizeUrl } from '@/hooks/useUrlValidation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { checkLlmVisibilityLite } from '@/lib/llmVisibilityLite.functions';
 
 interface BotResult {
   name: string;
@@ -197,16 +198,9 @@ export function AIBotsLeadMagnet() {
           setError(data?.error || 'Error');
         }
       } else if (tab === 'llm') {
-        const { data, error: fnError } = await supabase.functions.invoke('llm-visibility-lite', {
-          body: { url: normalized },
-        });
-        if (fnError) throw fnError;
-        if (data?.success && data.data) {
-          setLlmResults(data.data.results);
-          setLlmBrand(data.data.brand);
-        } else {
-          setError(data?.error || 'Error');
-        }
+        const payload = await checkLlmVisibilityLite({ data: { url: normalized } });
+        setLlmResults(payload.results);
+        setLlmBrand(payload.brand);
       } else {
         const { data, error: fnError } = await supabase.functions.invoke('check-geo', {
           body: { url: normalized },
