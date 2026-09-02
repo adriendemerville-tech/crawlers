@@ -307,6 +307,26 @@ const OUTILS: Outil[] = [
   },
 ];
 
+/* ─── Catégorie principale de chaque outil ─── */
+const CATEGORIE: Record<string, string> = {
+  'SE Ranking': 'Multitool',
+  'Crawlers.fr': 'Multitool',
+  'Surfer SEO': 'Content Helper',
+  'ThotSEO': 'Content Helper',
+  'SoRank': 'Référencement',
+  'Outrank': 'Content Helper',
+  'ChatSEO': 'Content Helper',
+  'Cocolyze': 'Référencement',
+  'BotSEO': 'Audit',
+  'Local Ranker': 'Local',
+  'Localo': 'Local',
+  'Semrush': 'Multitool',
+  'Ahrefs': 'Référencement',
+  'Qwairy': 'Visibilité IA',
+  'Peak Ace': 'Content Helper',
+  'Datashake': 'Visibilité IA',
+};
+
 /* ─── Sources de preuve par cellule du tableau ─── */
 
 type Colonne = 'seo' | 'geo' | 'contenuIA' | 'local' | 'execution';
@@ -736,6 +756,7 @@ export default function MeilleursOutilsSeoGeo2027() {
               <thead>
                 <tr className="border-b border-border bg-card/60">
                   <th className="text-left p-3 font-semibold">Outil</th>
+                  <th className="text-left p-3 font-semibold">Catégorie</th>
                   <th className="p-3 font-semibold text-center">SEO</th>
                   <th className="p-3 font-semibold text-center">
                     <span className="inline-flex items-center gap-1"><Bot className="w-3.5 h-3.5" aria-hidden /> GEO</span>
@@ -767,6 +788,11 @@ export default function MeilleursOutilsSeoGeo2027() {
                       >
                         {o.nom}
                       </a>
+                    </td>
+                    <td className="p-3 whitespace-nowrap">
+                      <span className="inline-block rounded border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                        {CATEGORIE[o.nom] ?? '—'}
+                      </span>
                     </td>
                     <td className="p-3 text-center"><Cell outil={o.nom} col="seo" v={o.seo} /></td>
                     <td className="p-3 text-center"><Cell outil={o.nom} col="geo" v={o.geo} /></td>
