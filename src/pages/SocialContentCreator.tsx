@@ -62,8 +62,8 @@ const SocialContentCreator = memo(() => {
         "description": "Créez, planifiez et publiez du contenu social optimisé SEO/GEO sur LinkedIn, Facebook et Instagram, alimenté par vos données de site.",
         "offers": [
           STARTUP_TRIAL_OFFER,
-          { "@type": "Offer", "name": "Pro Agency", "price": "29", "priceCurrency": "EUR" },
-          { "@type": "Offer", "name": "Pro Agency +", "price": "79", "priceCurrency": "EUR" },
+          { "@type": "Offer", "name": "Pro Agency", "price": "29", "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "29", "priceCurrency": "EUR", "valueAddedTaxIncluded": true } },
+          { "@type": "Offer", "name": "Pro Agency +", "price": "79", "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "79", "priceCurrency": "EUR", "valueAddedTaxIncluded": true } },
         ],
         "featureList": [
           "AI-powered social content generation",

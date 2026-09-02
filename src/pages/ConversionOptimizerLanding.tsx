@@ -54,8 +54,8 @@ const ConversionOptimizerLanding = memo(() => {
         "description": "Analysez le ton, les CTAs, la lisibilité et le potentiel de conversion de chaque page de votre site, calibré sur votre contexte business.",
         "offers": [
           STARTUP_TRIAL_OFFER,
-          { "@type": "Offer", "name": "Pro Agency", "price": "29", "priceCurrency": "EUR" },
-          { "@type": "Offer", "name": "Pro Agency +", "price": "79", "priceCurrency": "EUR" },
+          { "@type": "Offer", "name": "Pro Agency", "price": "29", "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "29", "priceCurrency": "EUR", "valueAddedTaxIncluded": true } },
+          { "@type": "Offer", "name": "Pro Agency +", "price": "79", "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "79", "priceCurrency": "EUR", "valueAddedTaxIncluded": true } },
         ],
         "featureList": ["UX audit on 7 axes", "Contextual AI analysis", "CTA pressure analysis", "Mobile UX scoring", "Keyword usage optimization", "Workbench integration"],
       },
