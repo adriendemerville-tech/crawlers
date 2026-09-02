@@ -18,6 +18,7 @@ import {
   Palette, Globe, Brain, TrendingUp, Lock, Star, Layers,
   Building2, MessageCircle, Server, Database
 } from 'lucide-react';
+import { STARTUP_TRIAL_OFFER } from '@/lib/seo/startupTrialOffer';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 const translations = {
@@ -451,6 +452,7 @@ export default function ProAgency() {
     "image": "https://crawlers.fr/crawlers-logo-violet.png",
     "brand": { "@type": "Brand", "name": "Crawlers.fr" },
     "offers": [
+        STARTUP_TRIAL_OFFER,
       {
         "@type": "Offer",
         "name": "Pro Agency — Sans engagement",

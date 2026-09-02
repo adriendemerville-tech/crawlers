@@ -11,6 +11,7 @@ import {
   ArrowRight, Eye, Target, Type, MousePointerClick, BarChart3,
   Smartphone, Search, TrendingUp, CheckCircle2, Layers, Zap, PenTool, ArrowDown
 } from 'lucide-react';
+import { STARTUP_TRIAL_OFFER } from '@/lib/seo/startupTrialOffer';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -52,6 +53,7 @@ const ConversionOptimizerLanding = memo(() => {
         "operatingSystem": "Web",
         "description": "Analysez le ton, les CTAs, la lisibilité et le potentiel de conversion de chaque page de votre site, calibré sur votre contexte business.",
         "offers": [
+          STARTUP_TRIAL_OFFER,
           { "@type": "Offer", "name": "Pro Agency", "price": "29", "priceCurrency": "EUR" },
           { "@type": "Offer", "name": "Pro Agency +", "price": "79", "priceCurrency": "EUR" },
         ],
