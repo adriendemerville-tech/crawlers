@@ -791,6 +791,10 @@ export default function MeilleursOutilsSeoGeo2027() {
                     <span className="inline-flex items-center gap-1"><PenLine className="w-3.5 h-3.5" aria-hidden /> Exécution</span>
                   </th>
                   <th className="text-left p-3 font-semibold">Prix d'entrée</th>
+                  <th className="text-left p-3 font-semibold">Couverture LLMs</th>
+                  <th className="text-left p-3 font-semibold">Créé en</th>
+                  <th className="text-left p-3 font-semibold">Gratuit / essai</th>
+                  <th className="text-left p-3 font-semibold">Pour qui&nbsp;?</th>
                   <th className="p-3 font-semibold text-center">Note</th>
                 </tr>
               </thead>
