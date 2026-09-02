@@ -161,7 +161,7 @@ export function MyWallet() {
   const handleUpgrade = async () => {
     setUpgradeLoading(true);
     try {
-      const billing = billingPeriod === 'annual' ? 'annual' : 'monthly';
+      const billing = walletBilling;
       const { data, error } = await supabase.functions.invoke('stripe-actions', {
         body: { action: 'subscription_premium', billing },
       });
