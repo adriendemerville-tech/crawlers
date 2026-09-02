@@ -142,6 +142,7 @@ export default function Signup() {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const startupToken = searchParams.get('startup');
   const t = translations[language] || translations.fr;
   const { containerRef, token, reset: resetTurnstile } = useTurnstile();
 
@@ -183,7 +184,15 @@ export default function Signup() {
 
 
   useEffect(() => {
+    if (startupToken && startupToken.length >= 32) {
+      sessionStorage.setItem('startup_trial_token', startupToken);
+    }
+  }, [startupToken]);
+
+  useEffect(() => {
     if (user && step === 'form' && !isSigningUp) {
+      // Laisser StartupTrialWelcome consommer le jeton et afficher la modale dédiée.
+      if (startupToken) return;
       const returnPath = sessionStorage.getItem('audit_return_path');
       const downloadReturnPath = sessionStorage.getItem('download_return_path');
       if (returnPath) {
@@ -195,7 +204,7 @@ export default function Signup() {
         navigate('/');
       }
     }
-  }, [user, navigate, step, isSigningUp]);
+  }, [user, navigate, step, isSigningUp, startupToken]);
 
   const verifyTurnstile = async (): Promise<boolean> => {
     // Non-blocking: if token isn't ready yet, skip silently

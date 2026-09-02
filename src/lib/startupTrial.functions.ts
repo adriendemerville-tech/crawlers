@@ -72,7 +72,8 @@ async function sha256Hex(value: string) {
 export const claimStartupTrialToken = createServerFn({ method: 'POST' })
   .inputValidator((data) => z.object({
     siret: siretSchema,
-    kbisPdfBase64: z.string().min(100).max(9_000_000),
+    // 10 Mo de PDF encodé en base64 nécessitent environ 14 Mo de texte.
+    kbisPdfBase64: z.string().min(100).max(14_000_000),
   }).parse(data))
   .handler(async ({ data }) => {
     const verified = await lookupEligibleCompany(data.siret);
