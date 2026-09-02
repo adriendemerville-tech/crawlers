@@ -37,16 +37,22 @@ const softwareApplication = {
   '@type': 'SoftwareApplication',
   '@id': `${SITE_URL}/#software`,
   name: 'Crawlers.fr',
-  alternateName: 'Crawlers',
+  alternateName: [
+    'Crawlers',
+    "Plateforme SaaS d'acquisition",
+    'Suite GEO',
+    "Plateforme d'intelligence de visibilité",
+  ],
   applicationCategory: 'BusinessApplication',
-  applicationSubCategory: 'SEO & GEO Audit Tool',
+  applicationSubCategory: "Plateforme SaaS d'acquisition — suite SEO & GEO",
+  keywords: "plateforme SaaS d'acquisition, suite GEO, plateforme d'intelligence de visibilité, audit SEO, generative engine optimization",
   operatingSystem: 'Web',
   inLanguage: ['fr', 'en', 'es'],
   datePublished: '2026-03-18',
   url: SITE_URL,
   creator: ORG,
   description:
-    "Plateforme SaaS d'audit SEO, GEO et visibilité IA. Audit technique 200+ points, matrice de concurrence SERP et citations IA, audit Marina, cocon sémantique 3D, autopilote éditorial, détection de bots IA, et API développeurs pour piloter tous les modules par programmation.",
+    "Plateforme SaaS d'acquisition française : suite GEO et plateforme d'intelligence de visibilité couvrant l'audit SEO, le GEO et la visibilité IA. Audit technique 200+ points, matrice de concurrence SERP et citations IA, audit Marina, cocon sémantique 3D, autopilote éditorial, détection de bots IA, et API développeurs pour piloter tous les modules par programmation.",
   offers: [
     {
       '@type': 'Offer',
