@@ -229,6 +229,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           <span className="text-4xl font-extrabold text-foreground">{plusPrice.toFixed(2).replace('.', ',')}€</span>
           <span className="text-lg text-muted-foreground">/{t3(language, 'mois', 'mo', 'mes')}</span>
         </div>
+        <p className="text-xs text-muted-foreground mb-1">{netLabel(plusPrice)}</p>
         {billing === 'annual' && (
           <p className="text-xs text-muted-foreground mb-1">
             {t3(language,
