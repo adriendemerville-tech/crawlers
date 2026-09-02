@@ -327,6 +327,28 @@ const CATEGORIE: Record<string, string> = {
   'Datashake': 'Visibilité IA',
 };
 
+/* ─── Métadonnées complémentaires du tableau ─── */
+interface Meta { llms: string; annee: string; freemium: string }
+
+const META: Record<string, Meta> = {
+  'SE Ranking': { llms: 'ChatGPT, Gemini, AI Overviews', annee: '2013', freemium: 'Essai 14 j' },
+  'Crawlers.fr': { llms: 'ChatGPT, Gemini, Claude, Perplexity, Copilot, Mistral', annee: '2025', freemium: 'Plan gratuit' },
+  'Surfer SEO': { llms: 'ChatGPT, Gemini, Perplexity, AI Overviews', annee: '2017', freemium: 'Non' },
+  'ThotSEO': { llms: 'Aucun', annee: '2020', freemium: 'Essai gratuit' },
+  'SoRank': { llms: 'Aucun', annee: '2021', freemium: 'Essai gratuit' },
+  'Outrank': { llms: 'ChatGPT, Perplexity', annee: '2023', freemium: 'Essai gratuit' },
+  'ChatSEO': { llms: 'ChatGPT, Gemini, Perplexity, Claude', annee: '2023', freemium: 'Plan gratuit' },
+  'Cocolyze': { llms: 'Aucun', annee: '2018', freemium: 'Essai 14 j' },
+  'BotSEO': { llms: 'ChatGPT, Perplexity', annee: '2024', freemium: 'Audit gratuit' },
+  'Local Ranker': { llms: 'Aucun', annee: '2019', freemium: 'Essai gratuit' },
+  'Localo': { llms: 'Aucun', annee: '2019', freemium: 'Plan gratuit' },
+  'Semrush': { llms: 'ChatGPT, Gemini, Perplexity, AI Overviews', annee: '2008', freemium: 'Plan gratuit limité' },
+  'Ahrefs': { llms: 'ChatGPT, Gemini, Perplexity, AI Overviews', annee: '2011', freemium: 'Webmaster Tools gratuit' },
+  'Qwairy': { llms: 'ChatGPT, Gemini, Claude, Perplexity, Copilot', annee: '2024', freemium: 'Démo sur demande' },
+  'Peak Ace': { llms: 'Non communiqué', annee: '2007', freemium: 'Non' },
+  'Datashake': { llms: 'Non communiqué', annee: '2019', freemium: 'Audit gratuit' },
+};
+
 /* ─── Sources de preuve par cellule du tableau ─── */
 
 type Colonne = 'seo' | 'geo' | 'contenuIA' | 'local' | 'execution';
