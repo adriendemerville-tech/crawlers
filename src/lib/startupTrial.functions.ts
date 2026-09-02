@@ -169,7 +169,6 @@ export const redeemStartupTrialToken = createServerFn({ method: 'POST' })
   });
 
 export const verifyStartupSiret = createServerFn({ method: 'POST' })
-  .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ siret: siretSchema }).parse(data))
   .handler(async ({ data }) => lookupEligibleCompany(data.siret));
 

@@ -71,6 +71,13 @@
       "when": 1788356431966,
       "tag": "0009_redeem_startup_trial_signup_token",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788357850578,
+      "tag": "0010_allow_startup_trial_billing_period",
+      "breakpoints": true
     }
   ]
 }
