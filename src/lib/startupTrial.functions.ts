@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { verifyKbisDocument } from '@/lib/kbisCheck.server';
+
 
 const siretSchema = z.string()
   .transform((value) => value.replace(/\s/g, ''))
@@ -96,6 +96,7 @@ export const submitStartupTrial = createServerFn({ method: 'POST' })
     if (String.fromCharCode(...header) !== '%PDF-') {
       throw new Error('Le fichier fourni n’est pas un PDF valide.');
     }
+    const { verifyKbisDocument } = await import('@/lib/kbisCheck.server');
     const kbisCheck = await verifyKbisDocument(pdfBytes, data.siret, data.legalName);
     const verificationDetails = {
       source: 'recherche-entreprises.api.gouv.fr',
