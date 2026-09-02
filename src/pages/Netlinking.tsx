@@ -1,4 +1,5 @@
 // Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import { CompetitorMatrixCta } from '@/components/seo/CompetitorMatrixCta';
 import { Header } from "@/components/Header";
 import "@/styles.app.css";
 import { useState, useEffect, useMemo } from "react";

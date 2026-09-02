@@ -1,3 +1,4 @@
+import { CompetitorMatrixCta } from '@/components/seo/CompetitorMatrixCta';
 import "@/styles.app.css";
 import { useEffect, useState, lazy } from 'react';
 import { AiCitationsObservatory } from '@/components/observatoire/AiCitationsObservatory';

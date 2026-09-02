@@ -1,3 +1,4 @@
+import { CompetitorMatrixCta } from '@/components/seo/CompetitorMatrixCta';
 import { lazy, Suspense, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';

@@ -1,3 +1,4 @@
+import { CompetitorMatrixCta } from '@/components/seo/CompetitorMatrixCta';
 import { lazy, Suspense } from 'react';
 import { ArrowRight, Check, Linkedin, ListOrdered, Search, ShieldAlert } from 'lucide-react';
 import { Header } from '@/components/Header';
