@@ -724,7 +724,12 @@ const Observatoire = () => {
           </div>
         </section>
 
+        <section className="container mx-auto max-w-3xl px-4">
+          <CompetitorMatrixCta intro="Les tendances sectorielles se vérifient sur votre propre marché : comparez votre visibilité à celle de vos concurrents sur 20 requêtes clés, dans Google et dans les réponses des IA." />
+        </section>
+
         {/* CTA */}
+
         <section className="container mx-auto max-w-3xl px-4 pb-16">
           <div className="rounded-xl bg-primary/5 border border-primary/20 p-8 md:p-10 text-center">
             <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">{t.ctaTitle}</h2>
