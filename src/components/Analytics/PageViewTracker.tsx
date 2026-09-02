@@ -16,14 +16,27 @@ export function PageViewTracker() {
     // Defer tracking to avoid blocking LCP
     timeoutRef.current = setTimeout(() => {
       trackEvent('page_view');
+      // GA4 (via GTM) : le SPA ne déclenche pas de page_view natif, on le pousse explicitement
+      try {
+        const w = window as unknown as { dataLayer?: unknown[] };
+        w.dataLayer = w.dataLayer || [];
+        w.dataLayer.push({
+          event: 'spa_page_view',
+          page_path: location.pathname + location.search,
+          page_location: window.location.href,
+          page_title: document.title,
+        });
+      } catch {
+        /* noop */
+      }
     }, 100);
-    
+
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [location.pathname, trackEvent]);
+  }, [location.pathname, location.search, trackEvent]);
 
   return null;
 }
