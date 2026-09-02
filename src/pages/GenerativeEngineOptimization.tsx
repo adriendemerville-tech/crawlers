@@ -1,3 +1,4 @@
+import { CompetitorMatrixCta } from '@/components/seo/CompetitorMatrixCta';
 import { lazy, Suspense, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
@@ -395,7 +396,11 @@ const GenerativeEngineOptimization = () => {
             </div>
           </div>
         </article>
+        <div className="max-w-4xl mx-auto px-4">
+          <CompetitorMatrixCta />
+        </div>
         <MarinaCitablePassage />
+
         <div className="max-w-4xl mx-auto px-4 pb-12">
           <SiloNav
             silo="geo"

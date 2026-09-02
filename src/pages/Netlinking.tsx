@@ -1,4 +1,5 @@
 // Utilitaires Tailwind des espaces applicatifs (hors feuille critique publique).
+import { CompetitorMatrixCta } from '@/components/seo/CompetitorMatrixCta';
 import { Header } from "@/components/Header";
 import "@/styles.app.css";
 import { useState, useEffect, useMemo } from "react";
@@ -555,6 +556,9 @@ export default function Netlinking() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <CompetitorMatrixCta intro="Un gap de backlinks se lit mieux face au marché : comparez vos concurrents et vous sur 20 requêtes clés, dans la SERP Google et dans les réponses des IA génératives." />
     </div>
+
   );
 }
