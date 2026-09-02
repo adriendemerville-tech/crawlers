@@ -63,7 +63,8 @@ export const submitStartupTrial = createServerFn({ method: 'POST' })
     }
 
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-    const { data: result, error } = await supabaseAdmin.rpc('submit_startup_trial_application', {
+    const { data: result, error } = await supabaseAdmin.rpc('activate_startup_trial_application', {
+      p_user_id: context.userId,
       p_siret: data.siret,
       p_legal_name: data.legalName,
       p_creation_date: data.creationDate,
