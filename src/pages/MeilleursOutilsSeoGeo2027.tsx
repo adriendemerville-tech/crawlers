@@ -826,6 +826,10 @@ export default function MeilleursOutilsSeoGeo2027() {
                     <td className="p-3 text-center"><Cell outil={o.nom} col="local" v={o.local} /></td>
                     <td className="p-3 text-center"><Cell outil={o.nom} col="execution" v={o.execution} /></td>
                     <td className="p-3 text-muted-foreground whitespace-nowrap">{o.prix}</td>
+                    <td className="p-3 text-muted-foreground text-xs min-w-[10rem]">{META[o.nom]?.llms ?? '—'}</td>
+                    <td className="p-3 text-muted-foreground whitespace-nowrap">{META[o.nom]?.annee ?? '—'}</td>
+                    <td className="p-3 text-muted-foreground text-xs whitespace-nowrap">{META[o.nom]?.freemium ?? '—'}</td>
+                    <td className="p-3 text-muted-foreground text-xs min-w-[12rem]">{o.ideal}</td>
                     <td className="p-3 text-center"><Note n={o.note} /></td>
                   </tr>
                 ))}
