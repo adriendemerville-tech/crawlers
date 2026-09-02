@@ -27,6 +27,7 @@ async function getOrCreateAnnualPrice(planKey: string): Promise<string> {
     currency: "eur",
     recurring: { interval: "year" },
     lookup_key: config.lookupKey,
+    tax_behavior: "inclusive",
     metadata: { discount: "10pct", billing: "annual" },
   });
   return price.id;
