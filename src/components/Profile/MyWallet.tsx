@@ -123,6 +123,8 @@ export function MyWallet() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [showFreeOfferModal, setShowFreeOfferModal] = useState(false);
   const [showRetentionModal, setShowRetentionModal] = useState(false);
+  const [showSubscriptionManagement, setShowSubscriptionManagement] = useState(false);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
   const t = translations[language];
 
   const handleOpenPortal = async () => {
@@ -153,6 +155,27 @@ export function MyWallet() {
       }
     } finally {
       setPortalLoading(false);
+    }
+  };
+
+  const handleUpgrade = async () => {
+    setUpgradeLoading(true);
+    try {
+      const billing = billingPeriod === 'annual' ? 'annual' : 'monthly';
+      const { data, error } = await supabase.functions.invoke('stripe-actions', {
+        body: { action: 'subscription_premium', billing },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        setShowSubscriptionManagement(false);
+        window.open(data.url, '_blank', 'noopener');
+      } else {
+        throw new Error(data?.error || 'Aucune URL de paiement reçue');
+      }
+    } catch (err) {
+      toast({ title: 'Erreur', description: String(err), variant: 'destructive' });
+    } finally {
+      setUpgradeLoading(false);
     }
   };
 
@@ -546,6 +569,21 @@ export function MyWallet() {
         open={showTopUpModal}
         onOpenChange={setShowTopUpModal}
         currentBalance={balance}
+      />
+      <SubscriptionManagementModal
+        open={showSubscriptionManagement}
+        onOpenChange={setShowSubscriptionManagement}
+        currentPlan={planType === 'agency_premium' ? 'agency_premium' : 'agency_pro'}
+        upgradeLoading={upgradeLoading}
+        onUpgrade={handleUpgrade}
+        onManagePayment={() => {
+          setShowSubscriptionManagement(false);
+          void handleOpenPortal();
+        }}
+        onCancel={() => {
+          setShowSubscriptionManagement(false);
+          setShowRetentionModal(true);
+        }}
       />
       <RetentionModal
         open={showRetentionModal}
