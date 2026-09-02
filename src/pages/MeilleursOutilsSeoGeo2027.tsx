@@ -789,6 +789,11 @@ export default function MeilleursOutilsSeoGeo2027() {
                         {o.nom}
                       </a>
                     </td>
+                    <td className="p-3 whitespace-nowrap">
+                      <span className="inline-block rounded border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                        {CATEGORIE[o.nom] ?? '—'}
+                      </span>
+                    </td>
                     <td className="p-3 text-center"><Cell outil={o.nom} col="seo" v={o.seo} /></td>
                     <td className="p-3 text-center"><Cell outil={o.nom} col="geo" v={o.geo} /></td>
                     <td className="p-3 text-center"><Cell outil={o.nom} col="contenuIA" v={o.contenuIA} /></td>
