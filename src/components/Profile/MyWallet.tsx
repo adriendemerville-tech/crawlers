@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,6 +126,15 @@ export function MyWallet() {
   const [showSubscriptionManagement, setShowSubscriptionManagement] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const t = translations[language];
+
+  // Ouverture via l'entrée « Gérer mon abonnement » de la sidebar console
+  useEffect(() => {
+    if (creditsLoading || !isAgencyPro) return;
+    if (sessionStorage.getItem('open-subscription-management') === '1') {
+      sessionStorage.removeItem('open-subscription-management');
+      setShowSubscriptionManagement(true);
+    }
+  }, [creditsLoading, isAgencyPro]);
 
   const handleOpenPortal = async () => {
     setPortalLoading(true);
