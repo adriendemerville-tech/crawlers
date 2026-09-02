@@ -13,6 +13,9 @@ export const SECTION_LEADS = {
   gaps:
     'Ces requêtes sont couvertes par un leader et pas par vous, ou vous y êtes trop bas pour être vu. Elles sont classées par rentabilité : le volume de recherche pondéré par la distance qui vous sépare du top 10 et par la difficulté de la requête. Le haut du tableau se traite d’abord.',
 
+  semantic:
+    'Comment chaque page d’accueil se présente aux moteurs et aux IA : structure Hn, balisage Schema.org et passages citables, relevés sur le HTML servi. Un score faible plafonne la citabilité, il ne garantit rien en position.',
+
   aiOverviews:
     'Sur ces requêtes, Google rédige la réponse et cite ses sources avant tout lien organique. Y être classé ne suffit plus : ne pas être cité revient à ne pas exister sur la requête.',
   matrix:

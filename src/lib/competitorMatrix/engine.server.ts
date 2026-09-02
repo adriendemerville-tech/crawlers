@@ -123,8 +123,23 @@ export async function runMatrixStep(job: Job): Promise<Record<string, unknown>> 
           console.error('[competitor-matrix] authority step degraded', e instanceof Error ? e.message : e);
           patch.authority = null;
         }
-        patch.step = 'ai';
+        patch.step = 'semantic';
         patch.progress = 70;
+        break;
+      }
+      // Présentation sémantique : structure Hn, balisage Schema.org et passages
+      // citables de la cible et des concurrents. Déterministe, sans LLM.
+      case 'semantic': {
+        const { readSemanticPresentations } = await import('./semantic.server');
+        const competitors = (job.competitors ?? []) as unknown as Competitor[];
+        try {
+          patch.semantic = await readSemanticPresentations(job.domain, competitors);
+        } catch (e) {
+          console.error('[competitor-matrix] semantic step degraded', e instanceof Error ? e.message : e);
+          patch.semantic = null;
+        }
+        patch.step = 'ai';
+        patch.progress = 76;
         break;
       }
       case 'ai': {
@@ -154,7 +169,7 @@ export async function runMatrixStep(job: Job): Promise<Record<string, unknown>> 
             : [...done, reading];
           const units = Math.max(1, targets.length * modelNames.length);
           const doneUnits = currentIndex * modelNames.length + (reading.modelsDone?.length ?? 1);
-          patch.progress = 70 + Math.round((25 * doneUnits) / units);
+          patch.progress = 76 + Math.round((19 * doneUnits) / units);
           break;
         }
 

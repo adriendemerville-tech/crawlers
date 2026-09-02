@@ -3,7 +3,7 @@
 // Règle : aucune valeur inventée — une donnée non mesurée est exclue du calcul,
 // jamais comptée comme un échec.
 
-import type { MarketKeyword, MatrixJobState, MatrixResult, MatrixRow } from './types';
+import type { MarketKeyword, MatrixJobState, MatrixResult, MatrixRow, SemanticReading } from './types';
 import { COMPETITOR_TYPE_LABEL } from './types';
 import { buildEeatAnalysis, type EeatAnalysis } from './eeat';
 import { buildActionablePlan, type ActionablePlan } from './plan';
@@ -119,8 +119,17 @@ export interface MatrixReport {
   lostVolume: number;
   /** Analyse E-E-A-T et profil de backlinks, null si l'étape n'a pas été relevée. */
   eeat: EeatAnalysis;
+  /** Présentation sémantique des pages (structure Hn, Schema.org, citabilité), null si non relevée. */
+  semantic: SemanticAnalysis | null;
   /** Quick wins et plan en 4 phases dérivés de l'ensemble des constats. */
   plan: ActionablePlan;
+}
+
+export interface SemanticAnalysis {
+  /** Cible en premier, puis concurrents par score décroissant. */
+  entries: SemanticReading[];
+  headline: string;
+  detail: string;
 }
 
 
@@ -448,6 +457,7 @@ export function buildMatrixReport(job: MatrixJobState): MatrixReport | null {
 
   const actions = buildActions(job, matrix);
   const criticalCount = actions.filter((a) => a.priority === 'P1').length;
+  const semantic = buildSemanticAnalysis(job.semantic, target.domain);
 
   let level: VerdictLevel = rawScore >= 60 ? 'strong' : rawScore >= 35 ? 'ok' : rawScore >= 15 ? 'weak' : 'critical';
   // Garde d'exigence : des blocages P1 interdisent de déclarer une position solide.
@@ -543,6 +553,59 @@ export function buildMatrixReport(job: MatrixJobState): MatrixReport | null {
     },
     lostVolume,
     eeat,
+    semantic,
     plan: buildActionablePlan(job, matrix, coverageGaps, eeat),
   };
+}
+
+/**
+ * Compare la présentation sémantique de la page d'accueil de la cible à celle
+ * des concurrents : structure Hn, balisage Schema.org, passages citables.
+ * Déterministe — null quand l'étape n'a rien relevé.
+ */
+function buildSemanticAnalysis(
+  readings: SemanticReading[] | null,
+  targetDomain: string,
+): SemanticAnalysis | null {
+  if (!readings || readings.length === 0) return null;
+  const measured = readings.filter((r) => r.fetched && r.score !== null);
+  if (measured.length === 0) return null;
+
+  const entries = [...measured].sort((a, b) => {
+    if (a.isTarget !== b.isTarget) return a.isTarget ? -1 : 1;
+    return (b.score ?? 0) - (a.score ?? 0);
+  });
+
+  const targetReading = measured.find((r) => r.domain === targetDomain) ?? null;
+  const bestRival = measured
+    .filter((r) => !r.isTarget)
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0] ?? null;
+
+  let headline: string;
+  let detail: string;
+  if (!targetReading) {
+    headline = 'Votre page n’a pas pu être lue';
+    detail = 'La page d’accueil de votre domaine n’a pas répondu au relevé. Aucune comparaison sémantique n’est possible sur ce run.';
+  } else if (!bestRival) {
+    headline = `Score sémantique de votre page : ${targetReading.score}/100`;
+    detail = 'Aucun concurrent du panel n’a pu être lu : la comparaison porte sur votre page seule.';
+  } else {
+    const delta = (targetReading.score ?? 0) - (bestRival.score ?? 0);
+    headline = delta >= 0
+      ? `Votre page est mieux balisée que ${bestRival.domain} (${targetReading.score} vs ${bestRival.score})`
+      : `${bestRival.domain} présente sa page plus lisiblement pour les IA (${bestRival.score} vs ${targetReading.score})`;
+    const missing: string[] = [];
+    if (!targetReading.hasOrganization) missing.push('balisage Organization');
+    if (!targetReading.hasFAQSchema) missing.push('FAQPage');
+    if (!targetReading.hasToc) missing.push('sommaire');
+    if (targetReading.citablePassages === 0) missing.push('passages citables');
+    detail = [
+      `Structure relevée : ${targetReading.h2Count} H2, ${targetReading.h3Count} H3, ${targetReading.citablePassages} passage(s) citable(s), ${targetReading.schemaCount} type(s) Schema.org.`,
+      missing.length > 0
+        ? `Ce qui manque face au mieux placé : ${missing.join(', ')}.`
+        : 'Votre page couvre déjà les signaux sémantiques mesurés.',
+    ].join(' ');
+  }
+
+  return { entries, headline, detail };
 }

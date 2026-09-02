@@ -415,7 +415,53 @@ export function MatrixReportView({ job }: { job: MatrixJobState }) {
         </section>
       )}
 
-      {/* 7. Quick wins */}
+      {/* 7. Présentation sémantique des pages */}
+      {report.semantic && (
+        <section>
+          <SectionTitle
+            title="Présentation sémantique des pages"
+            lead="Comment chaque page d'accueil se présente aux moteurs et aux IA : structure Hn, balisage Schema.org et passages citables, relevés sur le HTML servi. 100 sur 100 ne garantit pas une position, mais un score faible plafonne la citabilité."
+          />
+          <Card>
+            <CardContent className="space-y-4 p-6">
+              <h4 className="text-base font-semibold">{report.semantic.headline}</h4>
+              <p className="text-sm text-muted-foreground">{report.semantic.detail}</p>
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/40 text-left">
+                      <th className="p-3">Domaine</th>
+                      <th className="p-3">Score</th>
+                      <th className="p-3">H2 / H3</th>
+                      <th className="p-3">Passages citables</th>
+                      <th className="p-3">Types Schema.org</th>
+                      <th className="p-3">Sommaire</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {report.semantic.entries.map((e) => (
+                      <tr key={e.domain} className="border-b border-border last:border-0">
+                        <td className={`p-3 ${e.isTarget ? 'font-semibold' : ''}`}>
+                          {e.domain}{e.isTarget ? ' (vous)' : ''}
+                        </td>
+                        <td className="p-3">{e.score ?? 'non lu'}</td>
+                        <td className="p-3">{e.h2Count} / {e.h3Count}</td>
+                        <td className="p-3">{e.citablePassages}</td>
+                        <td className="p-3 text-xs text-muted-foreground">
+                          {e.schemaTypes.length > 0 ? e.schemaTypes.join(', ') : 'aucun'}
+                        </td>
+                        <td className="p-3">{e.hasToc ? 'oui' : 'non'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      {/* 8. Quick wins */}
       {report.plan.quickWins.length > 0 && (
         <section>
           <SectionTitle

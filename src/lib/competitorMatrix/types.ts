@@ -132,7 +132,7 @@ export interface AiReadingJson {
 
 export type MatrixStep =
   | 'pending' | 'identity' | 'seed_keywords' | 'seed_serp'
-  | 'competitors' | 'keywords' | 'serp' | 'authority' | 'ai' | 'done';
+  | 'competitors' | 'keywords' | 'serp' | 'authority' | 'semantic' | 'ai' | 'done';
 
 export const STEP_LABEL: Record<MatrixStep, string> = {
   pending: 'En file',
@@ -143,6 +143,7 @@ export const STEP_LABEL: Record<MatrixStep, string> = {
   keywords: 'Mots-clés du marché',
   serp: 'Relevés Google et AI Overviews',
   authority: 'Autorité, backlinks et signaux E-E-A-T',
+  semantic: 'Présentation sémantique des pages',
   ai: 'Citations Gemini, ChatGPT et Claude',
   done: 'Terminé',
 };
@@ -159,8 +160,29 @@ export interface MatrixJobState {
   keywords: MarketKeyword[];
   matrix: MatrixResult | null;
   authority: AuthorityReading | null;
+  semantic: SemanticReading[] | null;
   error: string | null;
   shareToken: string;
+}
+
+/** Relevé sémantique d'une page d'accueil : structure Hn + balisage + citabilité. */
+export interface SemanticReading {
+  domain: string;
+  isTarget: boolean;
+  fetched: boolean;
+  score: number | null;
+  schemaTypes: string[];
+  schemaCount: number;
+  hasGraph: boolean;
+  hasFAQSchema: boolean;
+  hasOrganization: boolean;
+  h1Count: number;
+  h2Count: number;
+  h3Count: number;
+  listCount: number;
+  tableCount: number;
+  hasToc: boolean;
+  citablePassages: number;
 }
 
 export const MATRIX_KEYWORDS = 20;
