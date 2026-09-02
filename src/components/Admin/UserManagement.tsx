@@ -496,7 +496,7 @@ export function UserManagement() {
             <Button
               variant={showPayingTab ? 'default' : 'outline'}
               size="sm"
-              onClick={() => { setShowPayingTab(!showPayingTab); setShowPendingTab(false); }}
+              onClick={() => { setShowPayingTab(!showPayingTab); setShowPendingTab(false); setShowStartupTab(false); }}
               className="gap-1 h-7 text-xs px-2"
             >
               <Crown className="h-3.5 w-3.5" />
@@ -505,7 +505,7 @@ export function UserManagement() {
             <Button
               variant={showPendingTab ? 'default' : 'outline'}
               size="sm"
-              onClick={() => { setShowPendingTab(!showPendingTab); setShowPayingTab(false); if (!showPendingTab) fetchPendingUsers(); }}
+              onClick={() => { setShowPendingTab(!showPendingTab); setShowPayingTab(false); setShowStartupTab(false); if (!showPendingTab) fetchPendingUsers(); }}
               className="gap-1 h-7 text-xs px-2 relative"
             >
               <MailWarning className="h-3.5 w-3.5" />
@@ -516,6 +516,16 @@ export function UserManagement() {
                   {pendingUsers.length}
                 </span>
               )}
+            </Button>
+            <Button
+              variant={showStartupTab ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => { setShowStartupTab(!showStartupTab); setShowPayingTab(false); setShowPendingTab(false); }}
+              className="gap-1 h-7 text-xs px-2"
+            >
+              <Rocket className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Jeunes entreprises</span>
+              <span className="sm:hidden">JE</span>
             </Button>
             <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="h-7 px-2">
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
