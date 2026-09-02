@@ -1,13 +1,13 @@
 /**
  * geo-attribution-summary
  * -----------------------
- * Renvoie l'agrégation 30j des attributions IA pour un tracked_site :
+ * Renvoie l'agrégation des attributions IA pour un tracked_site :
  *  - total visites attribuées
- *  - répartition par source IA (chatgpt / claude / perplexity…)
+ *  - répartition par source IA
  *  - top URLs attribuées
- *  - timeline quotidienne
+ *  - timeline par moteur IA, agrégée par jour, semaine ou mois
  *
- * Utilisé par la carte AIAttributionCard de la Console > GEO.
+ * Utilisé par la Console > GEO.
  */
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 import { getServiceClient } from "../_shared/supabaseClient.ts";
@@ -22,6 +22,24 @@ interface AttribRow {
   country: string | null;
 }
 
+type Interval = "day" | "week" | "month";
+
+function getIsoWeekStart(value: Date): string {
+  const date = new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
+  const day = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() - day + 1);
+  return date.toISOString().slice(0, 10);
+}
+
+function getBucketDate(value: string, interval: Interval): string {
+  const date = new Date(value);
+  if (interval === "week") return getIsoWeekStart(date);
+  if (interval === "month") {
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-01`;
+  }
+  return value.slice(0, 10);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -33,6 +51,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
     const supabase = getServiceClient();
     const token = authHeader.replace("Bearer ", "");
     const { data: claims, error: claimsErr } = await supabase.auth.getClaims(token);
@@ -46,7 +65,11 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url);
     const trackedSiteId = url.searchParams.get("tracked_site_id");
-    const days = Number(url.searchParams.get("days") ?? "30");
+    const requestedDays = Number(url.searchParams.get("days") ?? "30");
+    const days = Number.isFinite(requestedDays) ? Math.min(730, Math.max(1, Math.round(requestedDays))) : 30;
+    const requestedInterval = url.searchParams.get("interval");
+    const interval: Interval = requestedInterval === "week" || requestedInterval === "month" ? requestedInterval : "day";
+
     if (!trackedSiteId) {
       return new Response(JSON.stringify({ error: "tracked_site_id required" }), {
         status: 400,
@@ -54,7 +77,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Vérifier ownership
     const { data: site } = await supabase
       .from("tracked_sites")
       .select("id, domain, user_id")
@@ -73,22 +95,20 @@ Deno.serve(async (req) => {
       .select("ai_source, url, path, visited_at, attributed_count, top_attributed_bot, country")
       .eq("tracked_site_id", trackedSiteId)
       .gte("visited_at", since)
-      .order("visited_at", { ascending: false })
-      .limit(5000);
+      .order("visited_at", { ascending: true })
+      .limit(10000);
     if (error) throw error;
 
     const rows = (data ?? []) as AttribRow[];
     const total = rows.length;
 
-    // Par source
-    const bySource = rows.reduce<Record<string, number>>((acc, r) => {
-      acc[r.ai_source] = (acc[r.ai_source] ?? 0) + 1;
+    const bySource = rows.reduce<Record<string, number>>((acc, row) => {
+      acc[row.ai_source] = (acc[row.ai_source] ?? 0) + 1;
       return acc;
     }, {});
 
-    // Top URLs
-    const byUrl = rows.reduce<Record<string, number>>((acc, r) => {
-      acc[r.path] = (acc[r.path] ?? 0) + 1;
+    const byUrl = rows.reduce<Record<string, number>>((acc, row) => {
+      acc[row.path] = (acc[row.path] ?? 0) + 1;
       return acc;
     }, {});
     const topUrls = Object.entries(byUrl)
@@ -96,38 +116,26 @@ Deno.serve(async (req) => {
       .slice(0, 10)
       .map(([path, count]) => ({ path, count }));
 
-    // Timeline daily
-    const byDay = rows.reduce<Record<string, number>>((acc, r) => {
-      const day = r.visited_at.slice(0, 10);
-      acc[day] = (acc[day] ?? 0) + 1;
+    const bySourceDay = rows.reduce<Record<string, Record<string, number>>>((acc, row) => {
+      const bucket = getBucketDate(row.visited_at, interval);
+      acc[bucket] = acc[bucket] ?? {};
+      acc[bucket][row.ai_source] = (acc[bucket][row.ai_source] ?? 0) + 1;
       return acc;
     }, {});
-    const timeline = Object.entries(byDay)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, count]) => ({ date, count }));
-
-    // Timeline daily par moteur IA (pour le graphe multi-courbes)
-    const bySourceDay = rows.reduce<Record<string, Record<string, number>>>((acc, r) => {
-      const day = r.visited_at.slice(0, 10);
-      acc[day] = acc[day] ?? {};
-      acc[day][r.ai_source] = (acc[day][r.ai_source] ?? 0) + 1;
-      return acc;
-    }, {});
-    const timeline_by_source = Object.entries(bySourceDay)
+    const timelineBySource = Object.entries(bySourceDay)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, counts]) => ({ date, counts }));
-
 
     return new Response(
       JSON.stringify({
         ok: true,
         domain: site.domain,
         window_days: days,
+        interval,
         total,
         by_source: bySource,
         top_urls: topUrls,
-        timeline,
-        timeline_by_source,
+        timeline_by_source: timelineBySource,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
