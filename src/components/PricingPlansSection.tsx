@@ -227,7 +227,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
         </div>
         <div className="flex items-baseline gap-1 mb-1">
           <span className="text-4xl font-extrabold text-foreground">{plusPrice.toFixed(2).replace('.', ',')}€</span>
-          <span className="text-lg text-muted-foreground">/{t3(language, 'mois', 'mo', 'mes')}</span>
+          <span className="text-lg text-muted-foreground">/{t3(language, 'mois', 'mo', 'mes')} {t3(language, 'TTC', 'incl. VAT', 'IVA incl.')}</span>
         </div>
         <p className="text-xs text-muted-foreground mb-1">{netLabel(plusPrice)}</p>
         {billing === 'annual' && (
