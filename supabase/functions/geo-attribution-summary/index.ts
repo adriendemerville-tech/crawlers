@@ -127,6 +127,7 @@ Deno.serve(async (req) => {
         by_source: bySource,
         top_urls: topUrls,
         timeline,
+        timeline_by_source,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
