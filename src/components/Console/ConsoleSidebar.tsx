@@ -86,6 +86,18 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
   const [sidebarOrder, setSidebarOrder] = useState<string[]>([]);
   const [dragValue, setDragValue] = useState<string | null>(null);
   const [dragOverValue, setDragOverValue] = useState<string | null>(null);
+  const selectorRef = useRef<HTMLDivElement>(null);
+
+  // Ferme le sélecteur de domaine au clic extérieur
+  useEffect(() => {
+    if (!selectorOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (selectorRef.current && !selectorRef.current.contains(e.target as Node)) setSelectorOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [selectorOpen]);
+
 
 
   const handleAddDomain = async (e?: React.FormEvent) => {
