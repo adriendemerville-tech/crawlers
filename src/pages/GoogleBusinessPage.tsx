@@ -531,12 +531,15 @@ export default function GoogleBusinessPage() {
         "operatingSystem": "Web",
         "url": "https://crawlers.fr/google-business",
         "description": "Optimisez votre fiche Google Business Profile pour le SEO local et la visibilité dans les moteurs IA (GEO). Score de complétude sur 42 critères, benchmark concurrentiel, recommandations IA.",
-        "offers": {
-          "@type": "Offer",
-          "price": "79",
-          "priceCurrency": "EUR",
-          "description": "Inclus dans l'abonnement Pro Agency+ à 79 €/mois"
-        }
+        "offers": [
+          {
+            "@type": "Offer",
+            "price": "79",
+            "priceCurrency": "EUR",
+            "description": "Inclus dans l'abonnement Pro Agency+ à 79 €/mois"
+          },
+          STARTUP_TRIAL_OFFER
+        ]
       })}} />
     </>
   );
