@@ -57,6 +57,13 @@
       "when": 1788355743710,
       "tag": "0007_startup_trial_status_param",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788356364253,
+      "tag": "0008_startup_trial_signup_tokens",
+      "breakpoints": true
     }
   ]
 }

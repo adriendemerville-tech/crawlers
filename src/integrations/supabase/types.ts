@@ -15535,6 +15535,51 @@ export type Database = {
         }
         Relationships: []
       }
+      startup_trial_signup_tokens: {
+        Row: {
+          claimed_at: string | null
+          claimed_user_id: string | null
+          created_at: string
+          creation_date: string
+          expires_at: string
+          id: string
+          kbis_path: string
+          legal_name: string
+          siret: string
+          status: string
+          token_hash: string
+          verification_details: Json
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_user_id?: string | null
+          created_at?: string
+          creation_date: string
+          expires_at: string
+          id?: string
+          kbis_path: string
+          legal_name: string
+          siret: string
+          status?: string
+          token_hash: string
+          verification_details?: Json
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_user_id?: string | null
+          created_at?: string
+          creation_date?: string
+          expires_at?: string
+          id?: string
+          kbis_path?: string
+          legal_name?: string
+          siret?: string
+          status?: string
+          token_hash?: string
+          verification_details?: Json
+        }
+        Relationships: []
+      }
       strategist_recommendations: {
         Row: {
           action_type: string
