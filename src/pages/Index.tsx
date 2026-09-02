@@ -707,6 +707,15 @@ const Index = () => {
         {/* Trust Banner — right after Pro Agency */}
         <div className="cv-auto"><Suspense fallback={null}><TrustBanner /></Suspense></div>
 
+        {/* Offre jeune entreprise — citation SEO interne */}
+        <div className="cv-auto">
+          <p className="text-center text-sm text-muted-foreground px-4">
+            <Link to="/offre-jeune-entreprise" className="underline hover:text-foreground">
+              Entreprise ou freelance de moins de 12 mois : 12 mois de Pro Agency offerts
+            </Link>
+          </p>
+        </div>
+
         {/* Place d'échange de backlinks */}
         <div className="cv-auto"><Suspense fallback={null}><MarketplaceTeaserSection /></Suspense></div>
 
