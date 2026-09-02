@@ -260,8 +260,47 @@ export function AIAttributionCard({ trackedSiteId }: AIAttributionCardProps) {
                   </span>
                 ))}
               </div>
-              <div className="h-56 w-full min-w-0">
-                {chartData.length === 0 ? (
+              <div className="relative h-56 w-full min-w-0">
+                {!ga4Connected ? (
+                  <>
+                    <div aria-hidden className="h-full w-full opacity-60">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={fakeChartData} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}>
+                          <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+                          <XAxis
+                            dataKey="date"
+                            tickFormatter={(value: string) => formatDate(value, interval)}
+                            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                            axisLine={false}
+                            tickLine={false}
+                            minTickGap={22}
+                          />
+                          <YAxis
+                            allowDecimals={false}
+                            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                            axisLine={false}
+                            tickLine={false}
+                            width={34}
+                          />
+                          <Line type="monotone" dataKey="chatgpt" stroke="hsl(var(--muted-foreground))" strokeWidth={2} dot={false} connectNulls />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-muted/40 backdrop-blur-[2px]">
+                      <p className="text-xs font-medium text-foreground">Connectez votre GA4</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleConnectGa4}
+                        disabled={connecting}
+                        className="h-7 bg-transparent border-primary text-primary"
+                      >
+                        {connecting ? 'Connexion…' : 'Connecter GA4'}
+                      </Button>
+                    </div>
+                  </>
+                ) : chartData.length === 0 ? (
                   <div className="flex h-full items-center justify-center border-y border-border/50 text-xs text-muted-foreground">
                     Aucune visite attribuée sur cette période.
                   </div>
