@@ -651,7 +651,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
 
                     </div>
 
-                    <AuditScoresBanner domain={h.currentSite.domain} />
+                    <AuditScoresBanner domain={h.currentSite.domain} showStrategic={false} />
 
                     {/* KPI Cards */}
                     {(() => {
