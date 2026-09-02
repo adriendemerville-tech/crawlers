@@ -3058,6 +3058,7 @@ export type Database = {
           quick_wins: Json
           seed_serp: Json
           seen_at: string | null
+          semantic: Json | null
           serp: Json
           share_token: string
           status: string
@@ -3089,6 +3090,7 @@ export type Database = {
           quick_wins?: Json
           seed_serp?: Json
           seen_at?: string | null
+          semantic?: Json | null
           serp?: Json
           share_token: string
           status?: string
@@ -3120,6 +3122,7 @@ export type Database = {
           quick_wins?: Json
           seed_serp?: Json
           seen_at?: string | null
+          semantic?: Json | null
           serp?: Json
           share_token?: string
           status?: string
