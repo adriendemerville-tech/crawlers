@@ -397,9 +397,9 @@ const RankingSerp = memo(() => {
               </div>
               <h1 className="text-xl sm:text-2xl font-extrabold text-foreground leading-tight">
                 {t3(language,
-                  'Benchmark Rank SERP',
-                  'SERP Rank Benchmark',
-                  'Benchmark Rank SERP'
+                  'Comparez 4 sources SERP pour un classement Google fiable',
+                  'Compare 4 SERP sources for reliable Google rankings',
+                  'Compara 4 fuentes SERP para un posicionamiento Google fiable'
                 )}
               </h1>
               <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto">
