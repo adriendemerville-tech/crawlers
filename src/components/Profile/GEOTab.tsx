@@ -176,10 +176,13 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            {t.title}
-          </h1>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-primary" />
+              {t.title}
+            </h1>
+            <p className="text-sm text-muted-foreground">{t.description}</p>
+          </div>
           <AuditScoresBanner domain={currentSite.domain} showTechnical={false} />
         </div>
         <MachineLayerCTA
