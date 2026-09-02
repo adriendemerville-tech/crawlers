@@ -580,7 +580,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                           </Button>
                         )}
                         {!h.isCollaborator && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-muted-foreground/80" onClick={() => h.handleRemoveSite(h.currentSite!.id, t)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-muted-foreground/80" onClick={() => setRemoveTarget({ id: h.currentSite!.id, domain: h.currentSite!.domain })}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         )}
