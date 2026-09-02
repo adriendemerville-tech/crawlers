@@ -135,6 +135,17 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
 
   const enterpriseIcons = [Infinity, Users, Server, Database, Shield, Headphones, Users, Shield, Headphones, Server];
 
+  const vatNote = (
+    <p className="mt-6 text-center text-xs text-muted-foreground">
+      {t3(
+        language,
+        'Tous les prix sont exprimés en euros TTC (TVA française 20 %). La TVA applicable est calculée au paiement selon votre pays ; les professionnels de l’UE disposant d’un numéro de TVA valide bénéficient de l’autoliquidation.',
+        'All prices are shown in euros including VAT (20% France). Applicable VAT is calculated at checkout based on your country; EU businesses with a valid VAT number benefit from reverse charge.',
+        'Todos los precios se muestran en euros con IVA incluido (20 % Francia). El IVA aplicable se calcula en el pago según su país; las empresas de la UE con NIF-IVA válido se benefician de la inversión del sujeto pasivo.'
+      )}
+    </p>
+  );
+
   const billingToggle = (
     <div className="flex items-center justify-center gap-3 mb-8">
       <button
@@ -173,7 +184,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
         </div>
         <div className="flex items-baseline gap-1 mb-1">
           <span className="text-4xl font-extrabold text-foreground">{proPrice.toFixed(2).replace('.', ',')}€</span>
-          <span className="text-lg text-muted-foreground">/{t3(language, 'mois', 'mo', 'mes')}</span>
+          <span className="text-lg text-muted-foreground">/{t3(language, 'mois', 'mo', 'mes')} {t3(language, 'TTC', 'incl. VAT', 'IVA incl.')}</span>
         </div>
         <p className="text-xs text-muted-foreground mb-1">{netLabel(proPrice)}</p>
         {billing === 'annual' && (
@@ -227,7 +238,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
         </div>
         <div className="flex items-baseline gap-1 mb-1">
           <span className="text-4xl font-extrabold text-foreground">{plusPrice.toFixed(2).replace('.', ',')}€</span>
-          <span className="text-lg text-muted-foreground">/{t3(language, 'mois', 'mo', 'mes')}</span>
+          <span className="text-lg text-muted-foreground">/{t3(language, 'mois', 'mo', 'mes')} {t3(language, 'TTC', 'incl. VAT', 'IVA incl.')}</span>
         </div>
         <p className="text-xs text-muted-foreground mb-1">{netLabel(plusPrice)}</p>
         {billing === 'annual' && (
@@ -311,6 +322,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
       <div>
         {billingToggle}
         <div className="grid gap-6 md:grid-cols-3">{cards}</div>
+        {vatNote}
       </div>
     );
   }
@@ -324,6 +336,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
         </div>
         {billingToggle}
         <div className="grid gap-6 md:grid-cols-3">{cards}</div>
+        {vatNote}
       </div>
     </section>
   );
