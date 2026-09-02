@@ -2,6 +2,7 @@ import Stripe from "npm:stripe@14.21.0";
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { AUTOMATIC_TAX_SESSION_PARAMS, ensureTaxablePrice } from '../_shared/stripeTax.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
