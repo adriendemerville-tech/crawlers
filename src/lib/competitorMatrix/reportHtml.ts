@@ -161,6 +161,30 @@ function aiHtml(r: MatrixReport): string {
   </div>`;
 }
 
+function semanticHtml(r: MatrixReport): string {
+  if (!r.semantic || r.semantic.entries.length === 0) return '';
+  return `<div class="section" data-pdf-section="semantic">
+    <h2>Présentation sémantique des pages</h2>
+    <p class="lead">${esc('Comment chaque page d’accueil se présente aux moteurs et aux IA : structure Hn, balisage Schema.org et passages citables, relevés sur le HTML servi.')}</p>
+    <p><span class="badge">${esc(r.semantic.headline)}</span></p>
+    <p>${esc(r.semantic.detail)}</p>
+    <table><thead><tr><th>Domaine</th><th>Score</th><th>H2 / H3</th><th>Passages citables</th><th>Types Schema.org</th><th>Sommaire</th></tr></thead><tbody>
+      ${r.semantic.entries
+        .map(
+          (e) => `<tr>
+        <td>${e.isTarget ? `<strong>${esc(e.domain)} (vous)</strong>` : esc(e.domain)}</td>
+        <td>${e.score ?? 'non lu'}</td>
+        <td>${e.h2Count} / ${e.h3Count}</td>
+        <td>${e.citablePassages}</td>
+        <td>${esc(e.schemaTypes.length > 0 ? e.schemaTypes.join(', ') : 'aucun')}</td>
+        <td>${e.hasToc ? 'oui' : 'non'}</td>
+      </tr>`,
+        )
+        .join('')}
+    </tbody></table>
+  </div>`;
+}
+
 function eeatHtml(r: MatrixReport): string {
   const e = r.eeat;
   const measured = e.signals.filter((s) => s.status !== 'not_measured');
@@ -318,6 +342,7 @@ export function generateMatrixReportHTML(
   ${leaderboardHtml(report)}
   ${gapsHtml(report)}
   ${aiHtml(report)}
+  ${semanticHtml(report)}
   ${eeatHtml(report)}
   ${quickWinsHtml(report)}
   ${phasesHtml(report)}
