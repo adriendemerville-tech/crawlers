@@ -11,7 +11,7 @@
 - **Images:** NO_TEXT_GUARD forbids text in AI-generated images unless specifically requested.
 - **SEO:** Métadonnées via `head()` TanStack + `src/lib/seo/pageHead.ts` (jamais Helmet pour title/description/canonical/og). Include `blockquote.citable-passage` for AI visibility.
 - **Silos:** 4 piliers seulement (crawler, GEO, outil-crawl, comparatifs) — voir [Architecture en 4 silos](mem://tech/seo/silo-architecture-4-pillars-fr).
-- **Auth:** Client-side rate limiting on login + Server-side GoTrue. OAuth disconnects must revoke tokens.
+- **Auth:** Client-side rate limiting on login + Server-side GoTrue. OAuth disconnects must revoke tokens. Un timeout Google OAuth = service auth dégradé, jamais un bug client — voir [Diagnostic timeout Google OAuth](mem://tech/security/google-oauth-timeout-diagnosis-fr).
 - **Queue:** Jobs prioritized by plan: agency_premium(10) > agency_pro(20) > new_user(30) > registered(40).
 - **Team Roles:** owner/editor/auditor — gate actions via `useTeamPermissions().can('permission_key')`.
 - **Agents:** Agent SEO autonome sur le CONTENU (publication directe, max 1/semaine, dépublication auto) ; JAMAIS sur le CODE (validation humaine obligatoire).
