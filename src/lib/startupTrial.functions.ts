@@ -13,16 +13,33 @@ type CompanyLookup = {
   etat_administratif?: string;
 };
 
-async function lookupEligibleCompany(siret: string) {
-  const response = await fetch(
+async function fetchDirectory(siret: string, timeoutMs: number) {
+  return fetch(
     `https://recherche-entreprises.api.gouv.fr/search?q=${encodeURIComponent(siret)}&per_page=1`,
-    { signal: AbortSignal.timeout(5000), headers: { Accept: 'application/json' } },
+    {
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: { Accept: 'application/json', 'User-Agent': 'crawlers.fr/1.0 (startup-trial)' },
+    },
   );
-  if (!response.ok) return { eligible: false as const, reason: 'L’annuaire officiel est temporairement indisponible.' };
+}
+
+async function lookupEligibleCompany(siret: string) {
+  // 3 tentatives avec timeouts croissants : l'annuaire officiel est souvent lent en heure de pointe.
+  let response: Response | null = null;
+  for (const timeoutMs of [8000, 12000, 20000]) {
+    try {
+      const attempt = await fetchDirectory(siret, timeoutMs);
+      if (attempt.ok) { response = attempt; break; }
+      if (attempt.status === 404) { response = attempt; break; }
+    } catch { /* timeout / réseau : on retente */ }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  if (!response?.ok) return { eligible: false as const, reason: 'L’annuaire officiel n’a pas répondu à temps. Réessayez dans quelques secondes.' };
 
   const payload = await response.json() as { results?: CompanyLookup[] };
-  const company = payload.results?.find((entry) => entry.siege?.siret === siret);
+  const company = payload.results?.find((entry) => entry.siege?.siret === siret) ?? payload.results?.[0];
   if (!company?.date_creation) return { eligible: false as const, reason: 'SIRET introuvable dans l’annuaire officiel.' };
+
 
   const creationDate = company.date_creation.slice(0, 10);
   const creation = new Date(`${creationDate}T00:00:00Z`);
