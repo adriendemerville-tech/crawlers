@@ -71,13 +71,36 @@ function formatDate(value: string, interval: Interval): string {
     : { day: '2-digit', month: 'short', timeZone: 'UTC' }).format(date);
 }
 
+/** Données fictives (démo) affichées floutées quand la GA4 n'est pas connectée. */
+function buildFakeChartData(days: number, interval: Interval) {
+  const points: Array<{ date: string } & Record<string, number>> = [];
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - i);
+    points.push({
+      date: d.toISOString().slice(0, 10),
+      gemini: Math.max(1, Math.round(6 + 3 * Math.sin(i / 3.1) + (i % 5))),
+      chatgpt: Math.max(1, Math.round(9 + 4 * Math.sin(i / 2.4 + 1) + (i % 4))),
+      copilot: Math.max(1, Math.round(4 + 2 * Math.sin(i / 4.2 + 2) + (i % 3))),
+      claude: Math.max(1, Math.round(3 + 2 * Math.sin(i / 3.6 + 0.5) + (i % 3))),
+    });
+  }
+  if (interval === 'week') return points.filter((_, idx) => idx % 7 === 0);
+  if (interval === 'month') return points.filter((_, idx) => idx % 30 === 0);
+  return points;
+}
+
 export function AIAttributionCard({ trackedSiteId }: AIAttributionCardProps) {
+  const { user, profile } = useAuth();
   const [data, setData] = useState<AttributionSummary | null>(null);
   const [period, setPeriod] = useState<Period>('days');
   const [interval, setInterval] = useState<Interval>('day');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState(false);
 
+  const ga4Connected = !!profile?.ga4_property_id;
   const selectedPeriod = PERIODS.find((item) => item.value === period) ?? PERIODS[0];
 
   useEffect(() => {
@@ -105,6 +128,25 @@ export function AIAttributionCard({ trackedSiteId }: AIAttributionCardProps) {
       cancelled = true;
     };
   }, [trackedSiteId, selectedPeriod.days, interval]);
+
+  const fakeChartData = useMemo(
+    () => (ga4Connected ? [] : buildFakeChartData(selectedPeriod.days, interval)),
+    [ga4Connected, selectedPeriod.days, interval],
+  );
+
+  const handleConnectGa4 = async () => {
+    if (!user || connecting) return;
+    setConnecting(true);
+    try {
+      const { data: res, error: fnError } = await supabase.functions.invoke('gsc-auth', {
+        body: { action: 'login', user_id: user.id, frontend_origin: window.location.origin },
+      });
+      if (fnError) throw fnError;
+      if (res?.auth_url) window.location.href = res.auth_url;
+    } catch {
+      setConnecting(false);
+    }
+  };
 
   const sources = data ? Object.entries(data.by_source).sort((a, b) => b[1] - a[1]) : [];
   const chartData = data?.timeline_by_source.map((point) => ({
