@@ -279,6 +279,8 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
   const [smartCmsOpen, setSmartCmsOpen] = useState(false);
   const [smartCmsSiteId, setSmartCmsSiteId] = useState<string | null>(null);
   const [noSiteApiModalOpen, setNoSiteApiModalOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<{ id: string; domain: string } | null>(null);
+  const [removing, setRemoving] = useState(false);
   const isMobile = useIsMobile();
 
   // Open API panel when triggered from sidebar.
@@ -578,7 +580,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                           </Button>
                         )}
                         {!h.isCollaborator && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-muted-foreground/80" onClick={() => h.handleRemoveSite(h.currentSite!.id, t)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-muted-foreground/80" onClick={() => setRemoveTarget({ id: h.currentSite!.id, domain: h.currentSite!.domain })}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         )}
@@ -1134,8 +1136,59 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
         </DialogContent>
       </Dialog>
 
+      {/* Confirmation de retrait du suivi */}
+      <Dialog open={!!removeTarget} onOpenChange={(o) => { if (!o && !removing) setRemoveTarget(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold">
+              {h.language === 'en' ? 'Remove this site from tracking?' : h.language === 'es' ? '¿Eliminar este sitio del seguimiento?' : 'Retirer ce site du suivi ?'}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {removeTarget?.domain}
+              {' — '}
+              {h.language === 'en'
+                ? 'Automatic audits and autopilot will be stopped. This action is irreversible.'
+                : h.language === 'es'
+                ? 'Se detendrán las auditorías automáticas y el autopilot. Esta acción es irreversible.'
+                : 'Les audits automatiques et l\'autopilot seront arrêtés. Cette action est irréversible.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-transparent hover:bg-transparent"
+              disabled={removing}
+              onClick={() => setRemoveTarget(null)}
+            >
+              {h.language === 'en' ? 'Cancel' : h.language === 'es' ? 'Cancelar' : 'Annuler'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-transparent hover:bg-transparent"
+              disabled={removing}
+              onClick={async () => {
+                if (!removeTarget) return;
+                setRemoving(true);
+                try {
+                  await h.handleRemoveSite(removeTarget.id, t);
+                } finally {
+                  setRemoving(false);
+                  setRemoveTarget(null);
+                }
+              }}
+            >
+              {removing && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+              {h.language === 'en' ? 'Remove' : h.language === 'es' ? 'Eliminar' : 'Retirer'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Smart CMS Connect — auto-detection wizard */}
       {(() => {
+
         const smartSite = h.sites.find(s => s.id === smartCmsSiteId);
         if (!smartSite) return null;
         return (
