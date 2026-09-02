@@ -23,6 +23,7 @@ interface Profile {
   subscription_expires_at: string | null;
   stripe_subscription_id: string | null;
   gsc_access_token: string | null;
+  ga4_property_id: string | null;
   created_at: string;
   updated_at: string;
 }

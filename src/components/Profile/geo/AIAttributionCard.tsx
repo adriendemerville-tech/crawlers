@@ -71,9 +71,17 @@ function formatDate(value: string, interval: Interval): string {
     : { day: '2-digit', month: 'short', timeZone: 'UTC' }).format(date);
 }
 
+interface FakePoint {
+  date: string;
+  gemini: number;
+  chatgpt: number;
+  copilot: number;
+  claude: number;
+}
+
 /** Données fictives (démo) affichées floutées quand la GA4 n'est pas connectée. */
-function buildFakeChartData(days: number, interval: Interval) {
-  const points: Array<{ date: string } & Record<string, number>> = [];
+function buildFakeChartData(days: number, interval: Interval): FakePoint[] {
+  const points: FakePoint[] = [];
   const now = new Date();
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(now);
