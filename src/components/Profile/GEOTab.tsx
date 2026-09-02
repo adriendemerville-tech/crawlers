@@ -68,6 +68,8 @@ const T = {
   },
 };
 
+import { DeferredCard, CardSkeleton } from './geo/DeferredCard';
+
 export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
@@ -82,6 +84,7 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     setLoading(true);
     supabase
       .from('tracked_sites')
@@ -89,6 +92,7 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
       .eq('user_id', user.id)
       .order('domain')
       .then(({ data }) => {
+        if (cancelled) return;
         const list = (data as TrackedSite[]) || [];
         setSites(list);
         // Resolve current site: external prop > first
@@ -99,7 +103,13 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
           null;
         setCurrentSite(target);
         setLoading(false);
+      })
+      .then(undefined, () => {
+        if (!cancelled) setLoading(false);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [user, externalSiteId, externalDomain]);
 
   // Read simulated data flag (admin global config)
@@ -119,8 +129,25 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            {t.title}
+          </h1>
+          <p className="text-sm text-muted-foreground">{t.description}</p>
+        </div>
+        <CardSkeleton lines={2} />
+        <CardSkeleton lines={3} />
+        <div className="grid gap-4 lg:grid-cols-3">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
       </div>
     );
   }
@@ -141,6 +168,7 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
       </Card>
     );
   }
+
 
   const showLogs = isAgencyPro || isAdmin;
 
@@ -176,43 +204,49 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
       {/* Sprint 2 — Shield / Crawl bots IA / Attribution humaine */}
       <div className="grid gap-4 lg:grid-cols-3">
         <ShieldStatusCard trackedSiteId={currentSite.id} />
-        <AICrawlActivityCard trackedSiteId={currentSite.id} />
-        <AIAttributionCard trackedSiteId={currentSite.id} />
+        <DeferredCard><AICrawlActivityCard trackedSiteId={currentSite.id} /></DeferredCard>
+        <DeferredCard><AIAttributionCard trackedSiteId={currentSite.id} /></DeferredCard>
       </div>
 
       {/* Cartes : qualité contenu + fan-out */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <GeoQualityCard trackedSiteId={currentSite.id} />
-        <GeoFanOutClustersCard trackedSiteId={currentSite.id} />
+        <DeferredCard><GeoQualityCard trackedSiteId={currentSite.id} /></DeferredCard>
+        <DeferredCard><GeoFanOutClustersCard trackedSiteId={currentSite.id} /></DeferredCard>
       </div>
 
       {/* Drop Detector + Mix LLM */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <GeoDropDetectorCard trackedSiteId={currentSite.id} />
-        <GeoBotMixCard trackedSiteId={currentSite.id} />
+        <DeferredCard><GeoDropDetectorCard trackedSiteId={currentSite.id} /></DeferredCard>
+        <DeferredCard><GeoBotMixCard trackedSiteId={currentSite.id} /></DeferredCard>
       </div>
 
       {/* Profondeur LLM */}
-      <LLMDepthCard
-        trackedSiteId={currentSite.id}
-        domain={currentSite.domain}
-        userId={user?.id || ''}
-      />
+      <DeferredCard lines={5}>
+        <LLMDepthCard
+          trackedSiteId={currentSite.id}
+          domain={currentSite.domain}
+          userId={user?.id || ''}
+        />
+      </DeferredCard>
 
       {/* Benchmark LLM */}
-      <LLMVisibilityDashboard
-        trackedSiteId={currentSite.id}
-        domain={currentSite.domain}
-        userId={user?.id || ''}
-      />
+      <DeferredCard lines={5}>
+        <LLMVisibilityDashboard
+          trackedSiteId={currentSite.id}
+          domain={currentSite.domain}
+          userId={user?.id || ''}
+        />
+      </DeferredCard>
 
       {/* Analyse des logs bots — Pro Agency+ */}
       {showLogs ? (
-        <BotLogAnalysisCard
-          trackedSiteId={currentSite.id}
-          domain={currentSite.domain}
-          simulatedDataEnabled={simulatedDataEnabled}
-        />
+        <DeferredCard lines={6}>
+          <BotLogAnalysisCard
+            trackedSiteId={currentSite.id}
+            domain={currentSite.domain}
+            simulatedDataEnabled={simulatedDataEnabled}
+          />
+        </DeferredCard>
       ) : (
         <Card>
           <CardHeader>
