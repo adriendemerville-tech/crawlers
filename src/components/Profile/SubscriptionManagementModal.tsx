@@ -87,7 +87,7 @@ export function SubscriptionManagementModal({
           {!isPremium && (
             <Button
               variant="outline"
-              className="h-auto w-full justify-start gap-3 whitespace-normal border-yellow-500/50 py-3 text-left hover:bg-yellow-500/10"
+              className="h-auto w-full justify-start gap-3 whitespace-normal border-yellow-500/50 bg-transparent py-3 text-left hover:bg-transparent"
               onClick={onUpgrade}
               disabled={upgradeLoading}
             >
@@ -104,7 +104,7 @@ export function SubscriptionManagementModal({
 
           <Button
             variant="outline"
-            className="h-auto w-full justify-start gap-3 whitespace-normal py-3 text-left"
+            className="h-auto w-full justify-start gap-3 whitespace-normal bg-transparent py-3 text-left hover:bg-transparent"
             onClick={onManagePayment}
           >
             <CreditCard className="h-5 w-5 shrink-0 text-violet-400" />
@@ -117,7 +117,7 @@ export function SubscriptionManagementModal({
 
           <Button
             variant="outline"
-            className="h-auto w-full justify-start gap-3 whitespace-normal border-destructive/40 py-3 text-left text-destructive hover:bg-destructive/10"
+            className="h-auto w-full justify-start gap-3 whitespace-normal border-destructive/40 bg-transparent py-3 text-left text-destructive hover:bg-transparent"
             onClick={onCancel}
           >
             <X className="h-5 w-5 shrink-0" />
