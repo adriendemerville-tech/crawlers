@@ -79,13 +79,15 @@ export function AuditScoresBanner({ domain, showStrategic = true }: Props) {
           (technical != null && technicalPrev != null ? ` (${technicalPrev >= technical ? '-' : '+'}${Math.abs(technical - technicalPrev)})` : '')
         }
       />
-      <Gauge
-        score={strategic}
-        label={
-          (language === 'fr' ? 'Stratégique' : language === 'es' ? 'Estratégico' : 'Strategic') +
-          (strategic != null && strategicPrev != null ? ` (${strategicPrev >= strategic ? '-' : '+'}${Math.abs(strategic - strategicPrev)})` : '')
-        }
-      />
+      {showStrategic && (
+        <Gauge
+          score={strategic}
+          label={
+            (language === 'fr' ? 'Stratégique' : language === 'es' ? 'Estratégico' : 'Strategic') +
+            (strategic != null && strategicPrev != null ? ` (${strategicPrev >= strategic ? '-' : '+'}${Math.abs(strategic - strategicPrev)})` : '')
+          }
+        />
+      )}
     </div>
   );
 }
