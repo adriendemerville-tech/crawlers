@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.submit_startup_trial_application(text, text, date, text, jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.submit_startup_trial_application(text, text, date, text, jsonb) TO authenticated;

@@ -22,6 +22,34 @@
       "when": 1788015037900,
       "tag": "0002_sitemap_add_missing_public_pages",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788346274630,
+      "tag": "0003_startup_trial_siret_kbis",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788346379393,
+      "tag": "0004_lock_startup_trial_activation",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788346437764,
+      "tag": "0005_allow_authenticated_startup_trial_submit",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788346658484,
+      "tag": "0006_lock_startup_trial_activation_server_only",
+      "breakpoints": true
     }
   ]
 }
