@@ -175,15 +175,12 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary" />
-              {t.title}
-            </h1>
-            <p className="text-sm text-muted-foreground">{t.description}</p>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">{currentSite.domain}</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            {t.title}
+          </h1>
+          <AuditScoresBanner domain={currentSite.domain} showTechnical={false} />
         </div>
         <MachineLayerCTA
           domain={currentSite.domain}
@@ -192,8 +189,6 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
           className="mt-1 shrink-0"
         />
       </div>
-
-      <AuditScoresBanner domain={currentSite.domain} showTechnical={false} />
 
       {/* Onboarding Shield si non déployé */}
       <ShieldOnboardingBanner trackedSiteId={currentSite.id} domain={currentSite.domain} />
