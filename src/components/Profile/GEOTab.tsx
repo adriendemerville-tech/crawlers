@@ -82,6 +82,7 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     setLoading(true);
     supabase
       .from('tracked_sites')
@@ -89,6 +90,7 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
       .eq('user_id', user.id)
       .order('domain')
       .then(({ data }) => {
+        if (cancelled) return;
         const list = (data as TrackedSite[]) || [];
         setSites(list);
         // Resolve current site: external prop > first
@@ -99,7 +101,13 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
           null;
         setCurrentSite(target);
         setLoading(false);
+      })
+      .then(undefined, () => {
+        if (!cancelled) setLoading(false);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [user, externalSiteId, externalDomain]);
 
   // Read simulated data flag (admin global config)
@@ -119,8 +127,25 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            {t.title}
+          </h1>
+          <p className="text-sm text-muted-foreground">{t.description}</p>
+        </div>
+        <CardSkeleton lines={2} />
+        <CardSkeleton lines={3} />
+        <div className="grid gap-4 lg:grid-cols-3">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
       </div>
     );
   }
@@ -141,6 +166,7 @@ export function GEOTab({ externalSiteId, externalDomain }: GEOTabProps) {
       </Card>
     );
   }
+
 
   const showLogs = isAgencyPro || isAdmin;
 
