@@ -17,6 +17,7 @@ import {
   Share2, Megaphone, Briefcase, Award
 } from 'lucide-react';
 import { PricingPlansSection } from '@/components/PricingPlansSection';
+import { StartupTrialOffer } from '@/components/StartupTrialOffer';
 import proAgencyPlusLogo from '@/assets/pro-agency-plus-logo.webp';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -775,6 +776,9 @@ export default function Tarifs() {
 
             {/* Pro Agency Plans */}
             <PricingPlansSection />
+
+            {/* Offre jeunes entreprises */}
+            <StartupTrialOffer />
 
             {/* CTA */}
             <div className="text-center">
