@@ -15487,6 +15487,54 @@ export type Database = {
         }
         Relationships: []
       }
+      startup_trial_applications: {
+        Row: {
+          created_at: string
+          creation_date: string
+          id: string
+          kbis_path: string
+          legal_name: string
+          siret: string
+          status: string
+          trial_expires_at: string
+          trial_started_at: string
+          updated_at: string
+          user_id: string
+          verification_details: Json
+          verification_source: string
+        }
+        Insert: {
+          created_at?: string
+          creation_date: string
+          id?: string
+          kbis_path: string
+          legal_name: string
+          siret: string
+          status?: string
+          trial_expires_at: string
+          trial_started_at?: string
+          updated_at?: string
+          user_id: string
+          verification_details?: Json
+          verification_source?: string
+        }
+        Update: {
+          created_at?: string
+          creation_date?: string
+          id?: string
+          kbis_path?: string
+          legal_name?: string
+          siret?: string
+          status?: string
+          trial_expires_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          user_id?: string
+          verification_details?: Json
+          verification_source?: string
+        }
+        Relationships: []
+      }
       strategist_recommendations: {
         Row: {
           action_type: string
@@ -17826,6 +17874,20 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      submit_startup_trial_application: {
+        Args: {
+          p_creation_date: string
+          p_kbis_path: string
+          p_legal_name: string
+          p_siret: string
+          p_verification_details?: Json
+        }
+        Returns: {
+          application_id: string
+          application_status: string
+          expires_at: string
+        }[]
+      }
       title_similarity: { Args: { a: string; b: string }; Returns: number }
       upsert_analyzed_url: {
         Args: { p_domain: string; p_url: string }
