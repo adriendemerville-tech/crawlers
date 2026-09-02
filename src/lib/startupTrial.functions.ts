@@ -81,13 +81,36 @@ export const submitStartupTrial = createServerFn({ method: 'POST' })
     }
 
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: document, error: downloadError } = await supabaseAdmin.storage
+      .from('startup-trial-kbis')
+      .download(data.kbisPath);
+    if (downloadError || !document) {
+      throw new Error('Le Kbis est introuvable dans l’espace sécurisé. Téléversez-le à nouveau.');
+    }
+    if (document.size > 10 * 1024 * 1024) {
+      throw new Error('Le Kbis dépasse la taille maximale autorisée de 10 Mo.');
+    }
+
+    const pdfBytes = await document.arrayBuffer();
+    const header = new Uint8Array(pdfBytes.slice(0, 5));
+    if (String.fromCharCode(...header) !== '%PDF-') {
+      throw new Error('Le fichier fourni n’est pas un PDF valide.');
+    }
+    const kbisCheck = await verifyKbisDocument(pdfBytes, data.siret, data.legalName);
+    const verificationDetails = {
+      source: 'recherche-entreprises.api.gouv.fr',
+      kbis: { method: 'pdf-text-extraction', ...kbisCheck },
+    };
+    const status = kbisCheck.ok ? 'approved' : 'review';
+
     const { data: result, error } = await supabaseAdmin.rpc('activate_startup_trial_application', {
       p_user_id: context.userId,
       p_siret: data.siret,
       p_legal_name: data.legalName,
       p_creation_date: data.creationDate,
       p_kbis_path: data.kbisPath,
-      p_verification_details: { source: 'recherche-entreprises.api.gouv.fr' },
+      p_status: status,
+      p_verification_details: verificationDetails,
     });
     if (error) {
       console.error('[startup-trial] activation failed', error);
@@ -101,7 +124,8 @@ export const submitStartupTrial = createServerFn({ method: 'POST' })
     const application = Array.isArray(result) ? result[0] : result;
     return {
       applicationId: application?.application_id ?? null,
-      status: application?.application_status ?? 'approved',
+      status: application?.application_status ?? status,
       expiresAt: application?.expires_at ?? null,
+      kbisCheck,
     };
   });
