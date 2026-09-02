@@ -82,6 +82,14 @@ export function StartupTrialOffer() {
   }
 
   if (success) {
+    return (
+      <Alert className="border-amber-500/50 bg-amber-500/5">
+        <CheckCircle2 className="h-5 w-5 text-amber-500" />
+        <AlertTitle>Accès Pro Agency activé</AlertTitle>
+        <AlertDescription>Votre offre entreprise de moins de 12 mois est valable pendant un an, sans paiement.</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <Card className="border-amber-500/50 bg-amber-500/5">
