@@ -24,6 +24,7 @@ export function StartupTrialOffer() {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [manualReview, setManualReview] = useState(false);
 
   const verifyMutation = useMutation({
     mutationFn: () => verify({ data: { siret } }),
@@ -57,13 +58,28 @@ export function StartupTrialOffer() {
         verificationDetails: { source: 'recherche-entreprises.api.gouv.fr' },
       } });
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
+      if (result.status === 'review') {
+        setManualReview(true);
+        toast.success('Votre dossier a été transmis pour vérification manuelle.');
+        return;
+      }
       setSuccess(true);
       toast.success('Votre accès Pro Agency est actif pendant 12 mois.');
       await refreshProfile();
     },
     onError: (err: Error) => setError(err.message),
   });
+
+  if (manualReview) {
+    return (
+      <Alert className="border-amber-500/50 bg-amber-500/5">
+        <FileCheck2 className="h-5 w-5 text-amber-500" />
+        <AlertTitle>Dossier en attente de vérification</AlertTitle>
+        <AlertDescription>Le SIRET est éligible, mais le Kbis nécessite une vérification manuelle avant l’activation de l’offre.</AlertDescription>
+      </Alert>
+    );
+  }
 
   if (success) {
     return (
@@ -121,7 +137,7 @@ export function StartupTrialOffer() {
               {submitMutation.isPending ? <Loader2 className="animate-spin" /> : <FileCheck2 />}
               Activer mon année Pro Agency
             </Button>}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Upload className="h-3.5 w-3.5" />Le SIRET est vérifié auprès de l’annuaire officiel des entreprises.</div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Upload className="h-3.5 w-3.5" />Le SIRET est vérifié auprès de l’annuaire officiel et le Kbis est rapproché automatiquement avant activation.</div>
           </div>
         )}
       </CardContent>

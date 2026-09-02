@@ -17412,21 +17412,38 @@ export type Database = {
         Args: { p_label?: string; p_lease_id: string; p_lease_seconds?: number }
         Returns: number
       }
-      activate_startup_trial_application: {
-        Args: {
-          p_creation_date: string
-          p_kbis_path: string
-          p_legal_name: string
-          p_siret: string
-          p_user_id: string
-          p_verification_details?: Json
-        }
-        Returns: {
-          application_id: string
-          application_status: string
-          expires_at: string
-        }[]
-      }
+      activate_startup_trial_application:
+        | {
+            Args: {
+              p_creation_date: string
+              p_kbis_path: string
+              p_legal_name: string
+              p_siret: string
+              p_user_id: string
+              p_verification_details?: Json
+            }
+            Returns: {
+              application_id: string
+              application_status: string
+              expires_at: string
+            }[]
+          }
+        | {
+            Args: {
+              p_creation_date: string
+              p_kbis_path: string
+              p_legal_name: string
+              p_siret: string
+              p_status?: string
+              p_user_id: string
+              p_verification_details?: Json
+            }
+            Returns: {
+              application_id: string
+              application_status: string
+              expires_at: string
+            }[]
+          }
       atomic_credit_update: {
         Args: { p_amount: number; p_user_id: string }
         Returns: Json

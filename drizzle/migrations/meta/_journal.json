@@ -50,6 +50,13 @@
       "when": 1788346658484,
       "tag": "0006_lock_startup_trial_activation_server_only",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788355743710,
+      "tag": "0007_startup_trial_status_param",
+      "breakpoints": true
     }
   ]
 }
