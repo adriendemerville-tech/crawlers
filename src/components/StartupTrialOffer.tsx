@@ -9,21 +9,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { submitStartupTrial, verifyStartupSiret } from '@/lib/startupTrial.functions';
+import { useNavigate } from '@/lib/router-compat';
+import { claimStartupTrialToken, verifyStartupSiret } from '@/lib/startupTrial.functions';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
+async function fileToBase64(file: File) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 8192) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  }
+  return btoa(binary);
+}
+
 export function StartupTrialOffer() {
-  const { user, refreshProfile } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const verify = useServerFn(verifyStartupSiret);
-  const submit = useServerFn(submitStartupTrial);
+  const claim = useServerFn(claimStartupTrialToken);
   const [open, setOpen] = useState(false);
   const [siret, setSiret] = useState('');
   const [company, setCompany] = useState<{ legalName: string; creationDate: string; siret: string } | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [manualReview, setManualReview] = useState(false);
 
   const verifyMutation = useMutation({
@@ -40,33 +49,30 @@ export function StartupTrialOffer() {
     onError: (err: Error) => setError(err.message),
   });
 
-  const submitMutation = useMutation({
+  const claimMutation = useMutation({
     mutationFn: async () => {
-      if (!user || !company || !file) throw new Error('Complétez la vérification et joignez le Kbis.');
+      if (!company || !file) throw new Error('Complétez la vérification et joignez le Kbis.');
       if (file.type !== 'application/pdf' || file.size > MAX_FILE_SIZE) throw new Error('Le Kbis doit être un PDF de 10 Mo maximum.');
-      const path = `${user.id}/${crypto.randomUUID()}.pdf`;
-      const { error: uploadError } = await supabase.storage.from('startup-trial-kbis').upload(path, file, {
-        contentType: 'application/pdf',
-        upsert: false,
-      });
-      if (uploadError) throw uploadError;
-      return submit({ data: {
-        siret: company.siret,
-        legalName: company.legalName,
-        creationDate: company.creationDate,
-        kbisPath: path,
-        verificationDetails: { source: 'recherche-entreprises.api.gouv.fr' },
-      } });
+      const kbisPdfBase64 = await fileToBase64(file);
+      return claim({ data: { siret: company.siret, kbisPdfBase64 } });
     },
-    onSuccess: async (result) => {
-      if (result.status === 'review') {
-        setManualReview(true);
-        toast.success('Votre dossier a été transmis pour vérification manuelle.');
+    onSuccess: (result) => {
+      if (result.status === 'approved' && result.token) {
+        // Le jeton encode la gratuité : il est consommé dès qu'une session existe.
+        sessionStorage.setItem('startup_trial_token', result.token);
+        toast.success('Kbis conforme : créez votre compte pour activer vos 12 mois offerts.');
+        if (user) {
+          navigate('/app/console?startup=' + encodeURIComponent(result.token));
+        } else {
+          navigate('/signup?startup=' + encodeURIComponent(result.token));
+        }
         return;
       }
-      setSuccess(true);
-      toast.success('Votre accès Pro Agency est actif pendant 12 mois.');
-      await refreshProfile();
+      if (result.status === 'review') {
+        setManualReview(true);
+        return;
+      }
+      setError(result.reason ?? 'Vérification refusée.');
     },
     onError: (err: Error) => setError(err.message),
   });
@@ -81,16 +87,6 @@ export function StartupTrialOffer() {
     );
   }
 
-  if (success) {
-    return (
-      <Alert className="border-amber-500/50 bg-amber-500/5">
-        <CheckCircle2 className="h-5 w-5 text-amber-500" />
-        <AlertTitle>Accès Pro Agency activé</AlertTitle>
-        <AlertDescription>Votre offre entreprise de moins de 12 mois est valable pendant un an, sans paiement.</AlertDescription>
-      </Alert>
-    );
-  }
-
   return (
     <Card className="border-amber-500/50 bg-amber-500/5">
       <CardHeader className="pb-4">
@@ -98,16 +94,12 @@ export function StartupTrialOffer() {
           <Building2 className="h-6 w-6 text-amber-500" />
           <div>
             <CardTitle>Un an offert pour les jeunes entreprises</CardTitle>
-            <CardDescription className="mt-1">Entreprises et freelances immatriculés depuis moins de 12 mois : Pro Agency offert pendant un an.</CardDescription>
+            <CardDescription className="mt-1">Entreprises et freelances immatriculés depuis moins de 12 mois : Pro Agency offert pendant un an, sans compte préalable.</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        {!user ? (
-          <Button variant="outline" onClick={() => { sessionStorage.setItem('startup_trial_return_path', '/tarifs'); window.location.href = '/auth'; }}>
-            Se connecter pour vérifier mon entreprise
-          </Button>
-        ) : !open ? (
+        {!open ? (
           <Button variant="outline" onClick={() => setOpen(true)}>Vérifier mon éligibilité</Button>
         ) : (
           <div className="space-y-4">
@@ -129,15 +121,15 @@ export function StartupTrialOffer() {
               </div>
             )}
 
-            {company && <div className="space-y-2"><Label htmlFor="startup-kbis">Extrait Kbis (PDF, 10 Mo maximum)</Label><Input id="startup-kbis" type="file" accept="application/pdf" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /><p className="text-xs text-muted-foreground">Le document est conservé dans un espace privé et accessible uniquement à votre compte et à l’équipe de validation.</p></div>}
+            {company && <div className="space-y-2"><Label htmlFor="startup-kbis">Extrait Kbis (PDF, 10 Mo maximum)</Label><Input id="startup-kbis" type="file" accept="application/pdf" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /><p className="text-xs text-muted-foreground">Le document est conservé dans un espace privé et rapproché automatiquement du SIRET et de la raison sociale.</p></div>}
 
             {error && <Alert variant="destructive"><XCircle className="h-4 w-4" /><AlertDescription>{error}</AlertDescription></Alert>}
 
-            {company && <Button variant="outline" onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending || !file}>
-              {submitMutation.isPending ? <Loader2 className="animate-spin" /> : <FileCheck2 />}
-              Activer mon année Pro Agency
+            {company && <Button variant="outline" onClick={() => claimMutation.mutate()} disabled={claimMutation.isPending || !file}>
+              {claimMutation.isPending ? <Loader2 className="animate-spin" /> : <FileCheck2 />}
+              {user ? 'Activer mon année Pro Agency' : 'Valider et créer mon compte'}
             </Button>}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Upload className="h-3.5 w-3.5" />Le SIRET est vérifié auprès de l’annuaire officiel et le Kbis est rapproché automatiquement avant activation.</div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Upload className="h-3.5 w-3.5" />Si le Kbis est conforme, vous êtes redirigé vers l’inscription avec vos 12 mois déjà acquis.</div>
           </div>
         )}
       </CardContent>

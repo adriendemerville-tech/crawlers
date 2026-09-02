@@ -25,6 +25,7 @@ import { CanonicalHreflangGlobal } from "@/components/SEO/CanonicalHreflangGloba
 import { AISidebarPageWrapper } from "@/components/AISidebarPageWrapper";
 import { DeferredGlobals } from "@/components/DeferredGlobals";
 import { MaintenanceGate } from "@/components/MaintenanceGate";
+import { StartupTrialWelcome } from "@/components/StartupTrialWelcome";
 
 import NotFound from "@/pages/NotFound";
 import { SITEWIDE_JSONLD } from "@/lib/seo/organization";
@@ -195,6 +196,7 @@ function RootComponent() {
                             <Outlet />
                           </AISidebarPageWrapper>
                           <DeferredGlobals />
+                          <StartupTrialWelcome />
 
                         </TooltipProvider>
                       </AISidebarProvider>
