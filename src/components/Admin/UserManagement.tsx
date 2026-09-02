@@ -15,6 +15,8 @@ import { CheckCircle, Clock, MailWarning } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
 import { useUserActions } from '@/hooks/useUserActions';
 import { PayingUsersTab } from './PayingUsersTab';
+import { StartupTrialsTab } from './StartupTrialsTab';
+import { Rocket } from 'lucide-react';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
 
 /** Actionable event types to expose in the filter (label → event_type(s)) */
@@ -69,6 +71,7 @@ export function UserManagement() {
   const [confirmingUserId, setConfirmingUserId] = useState<string | null>(null);
   const [showPendingTab, setShowPendingTab] = useState(false);
   const [showPayingTab, setShowPayingTab] = useState(false);
+  const [showStartupTab, setShowStartupTab] = useState(false);
 
   // Create user state
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
