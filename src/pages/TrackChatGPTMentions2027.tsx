@@ -269,8 +269,10 @@ export default function TrackChatGPTMentions2027() {
             </div>
           </section>
 
+          <CompetitorMatrixCta intro="Les mentions ChatGPT ne se lisent pas seules : comparez votre présence à celle de vos concurrents sur les 20 requêtes clés de votre marché, dans la SERP et dans les réponses des IA." />
           <ArticleCta bottom />
           <AuthorBox />
+
         </article>
       </main>
       <Suspense fallback={null}><Footer /></Suspense>
