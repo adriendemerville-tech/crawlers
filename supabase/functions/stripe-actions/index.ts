@@ -193,8 +193,9 @@ async function handleSubscription(req: Request, body: any) {
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: [{ price: await ensureTaxablePrice(stripe, priceId), quantity: 1 }],
     mode: "subscription",
+    ...AUTOMATIC_TAX_SESSION_PARAMS,
     metadata: { user_id: auth.user.id, user_email: auth.user.email || "", transaction_type: "subscription", plan_type: "agency_pro", billing },
     subscription_data: { metadata: { user_id: auth.user.id, plan_type: "agency_pro", billing } },
     success_url: `${origin}/tarifs?subscription_success=true`,
