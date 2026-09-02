@@ -612,6 +612,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                     <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500" />
                   )}
                 </button>
+                </div>
               </div>
 
               {/* Main content */}
