@@ -395,7 +395,11 @@ const GenerativeEngineOptimization = () => {
             </div>
           </div>
         </article>
+        <div className="max-w-4xl mx-auto px-4">
+          <CompetitorMatrixCta />
+        </div>
         <MarinaCitablePassage />
+
         <div className="max-w-4xl mx-auto px-4 pb-12">
           <SiloNav
             silo="geo"
