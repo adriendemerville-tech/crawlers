@@ -4,12 +4,13 @@
  *
  * Modèle : multi-touch pondéré, fingerprint anonymisé.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ExternalLink } from 'lucide-react';
+import { Sparkles, ExternalLink, BarChart3 } from 'lucide-react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { MethodologyTooltip } from './MethodologyTooltip';
 import { edgeFunctionUrl } from '@/utils/supabaseUrl';
