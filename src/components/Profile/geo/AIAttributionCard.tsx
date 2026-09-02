@@ -11,6 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Sparkles, ExternalLink } from 'lucide-react';
 import { MethodologyTooltip } from './MethodologyTooltip';
 import { edgeFunctionUrl } from '@/utils/supabaseUrl';
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+
 
 interface AIAttributionCardProps {
   trackedSiteId: string;
