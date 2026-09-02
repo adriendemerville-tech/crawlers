@@ -203,7 +203,7 @@ function FooterComponent() {
     <>
       {allArticles.length > 0 && (
         <section className="border-t border-border bg-muted/20">
-          <div className="mx-auto max-w-7xl px-4 py-5">
+          <div className="w-full px-4 py-5 sm:px-6">
             <button
               onClick={() => setResourcesOpen(!resourcesOpen)}
               className="flex items-center justify-center gap-2 mb-3 w-full group"
@@ -250,7 +250,7 @@ function FooterComponent() {
       )}
 
       <footer className="border-t border-border bg-card" role="contentinfo">
-        <div className="mx-auto max-w-7xl px-4 py-12">
+        <div className="w-full px-4 py-12 sm:px-6">
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4 xl:grid-cols-5">
             
             <div className="space-y-4">
@@ -342,7 +342,7 @@ function FooterComponent() {
         </div>
 
         <div className="border-t border-border bg-muted/30">
-          <div className="mx-auto max-w-7xl px-4 py-6">
+          <div className="w-full px-4 py-6 sm:px-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <nav aria-label="Mentions légales" className="flex flex-wrap gap-x-6 gap-y-2">
                 {legalLinks.map((link) => (
