@@ -126,6 +126,7 @@ import { Route as FeaturesConsoleRouteImport } from './routes/features/console'
 import { Route as GuideSlugRouteImport } from './routes/guide/$slug'
 import { Route as GuidesIndexRouteImport } from './routes/guides/index'
 import { Route as GuidesGeoVsSeoRouteImport } from './routes/guides/geo-vs-seo'
+import { Route as GuidesSuivreMentionsMarqueChatgpt2027RouteImport } from './routes/guides/suivre-mentions-marque-chatgpt-2027'
 import { Route as LandingSlugRouteImport } from './routes/landing/$slug'
 import { Route as LexiqueIndexRouteImport } from './routes/lexique/index'
 import { Route as LexiqueSlugRouteImport } from './routes/lexique/$slug'
@@ -755,6 +756,12 @@ const GuidesGeoVsSeoRoute = GuidesGeoVsSeoRouteImport.update({
   path: '/guides/geo-vs-seo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesSuivreMentionsMarqueChatgpt2027Route =
+  GuidesSuivreMentionsMarqueChatgpt2027RouteImport.update({
+    id: '/guides/suivre-mentions-marque-chatgpt-2027',
+    path: '/guides/suivre-mentions-marque-chatgpt-2027',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LandingSlugRoute = LandingSlugRouteImport.update({
   id: '/landing/$slug',
   path: '/landing/$slug',
@@ -1018,6 +1025,7 @@ export interface FileRoutesByFullPath {
   '/features/console': typeof FeaturesConsoleRoute
   '/guide/$slug': typeof GuideSlugRoute
   '/guides/geo-vs-seo': typeof GuidesGeoVsSeoRoute
+  '/guides/suivre-mentions-marque-chatgpt-2027': typeof GuidesSuivreMentionsMarqueChatgpt2027Route
   '/landing/$slug': typeof LandingSlugRoute
   '/lexique/$slug': typeof LexiqueSlugRoute
   '/m/$code': typeof MCodeRoute
@@ -1166,6 +1174,7 @@ export interface FileRoutesByTo {
   '/features/console': typeof FeaturesConsoleRoute
   '/guide/$slug': typeof GuideSlugRoute
   '/guides/geo-vs-seo': typeof GuidesGeoVsSeoRoute
+  '/guides/suivre-mentions-marque-chatgpt-2027': typeof GuidesSuivreMentionsMarqueChatgpt2027Route
   '/landing/$slug': typeof LandingSlugRoute
   '/lexique/$slug': typeof LexiqueSlugRoute
   '/m/$code': typeof MCodeRoute
@@ -1315,6 +1324,7 @@ export interface FileRoutesById {
   '/features/console': typeof FeaturesConsoleRoute
   '/guide/$slug': typeof GuideSlugRoute
   '/guides/geo-vs-seo': typeof GuidesGeoVsSeoRoute
+  '/guides/suivre-mentions-marque-chatgpt-2027': typeof GuidesSuivreMentionsMarqueChatgpt2027Route
   '/landing/$slug': typeof LandingSlugRoute
   '/lexique/$slug': typeof LexiqueSlugRoute
   '/m/$code': typeof MCodeRoute
@@ -1465,6 +1475,7 @@ export interface FileRouteTypes {
     | '/features/console'
     | '/guide/$slug'
     | '/guides/geo-vs-seo'
+    | '/guides/suivre-mentions-marque-chatgpt-2027'
     | '/landing/$slug'
     | '/lexique/$slug'
     | '/m/$code'
@@ -1613,6 +1624,7 @@ export interface FileRouteTypes {
     | '/features/console'
     | '/guide/$slug'
     | '/guides/geo-vs-seo'
+    | '/guides/suivre-mentions-marque-chatgpt-2027'
     | '/landing/$slug'
     | '/lexique/$slug'
     | '/m/$code'
@@ -1761,6 +1773,7 @@ export interface FileRouteTypes {
     | '/features/console'
     | '/guide/$slug'
     | '/guides/geo-vs-seo'
+    | '/guides/suivre-mentions-marque-chatgpt-2027'
     | '/landing/$slug'
     | '/lexique/$slug'
     | '/m/$code'
@@ -1910,6 +1923,7 @@ export interface RootRouteChildren {
   FeaturesConsoleRoute: typeof FeaturesConsoleRoute
   GuideSlugRoute: typeof GuideSlugRoute
   GuidesGeoVsSeoRoute: typeof GuidesGeoVsSeoRoute
+  GuidesSuivreMentionsMarqueChatgpt2027Route: typeof GuidesSuivreMentionsMarqueChatgpt2027Route
   LandingSlugRoute: typeof LandingSlugRoute
   LexiqueSlugRoute: typeof LexiqueSlugRoute
   MCodeRoute: typeof MCodeRoute
@@ -2767,6 +2781,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuidesGeoVsSeoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guides/suivre-mentions-marque-chatgpt-2027': {
+      id: '/guides/suivre-mentions-marque-chatgpt-2027'
+      path: '/guides/suivre-mentions-marque-chatgpt-2027'
+      fullPath: '/guides/suivre-mentions-marque-chatgpt-2027'
+      preLoaderRoute: typeof GuidesSuivreMentionsMarqueChatgpt2027RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/landing/$slug': {
       id: '/landing/$slug'
       path: '/landing/$slug'
@@ -3088,6 +3109,8 @@ const rootRouteChildren: RootRouteChildren = {
   FeaturesConsoleRoute: FeaturesConsoleRoute,
   GuideSlugRoute: GuideSlugRoute,
   GuidesGeoVsSeoRoute: GuidesGeoVsSeoRoute,
+  GuidesSuivreMentionsMarqueChatgpt2027Route:
+    GuidesSuivreMentionsMarqueChatgpt2027Route,
   LandingSlugRoute: LandingSlugRoute,
   LexiqueSlugRoute: LexiqueSlugRoute,
   MCodeRoute: MCodeRoute,
