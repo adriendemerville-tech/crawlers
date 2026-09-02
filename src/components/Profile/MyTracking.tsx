@@ -342,13 +342,11 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
       <ActiveCrawlBanner />
       
       <Card>
-        <CardHeader className="pb-2 pt-3 px-4">
-          <CardTitle>{t.title}</CardTitle>
-          <CardDescription>{t.description}</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4 px-4">
           {h.sites.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
+              <CardTitle>{t.title}</CardTitle>
+              <CardDescription className="mt-1 mb-4">{t.description}</CardDescription>
               <Radar className="h-12 w-12 mx-auto mb-4 opacity-30" />
               <p>{t.noSites}</p>
               <Button variant="outline" className="mt-4 gap-2" onClick={() => h.setShowAddModal(true)}>
@@ -358,8 +356,13 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
             </div>
           ) : (
             <div>
-              {/* Add site + API buttons */}
-              <div className="flex items-center justify-end gap-2 mb-4 flex-wrap">
+              {/* Titre + boutons sur la même ligne */}
+              <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+                <div className="min-w-0">
+                  <CardTitle>{t.title}</CardTitle>
+                  <CardDescription className="mt-1">{t.description}</CardDescription>
+                </div>
+                <div className="flex items-center justify-end gap-2 flex-wrap">
                 {h.currentSite && !h.showApiPanel && (
                   <div className="flex items-center justify-end gap-1.5 flex-wrap">
 
