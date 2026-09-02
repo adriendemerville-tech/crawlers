@@ -85,6 +85,13 @@
       "when": 1788358336566,
       "tag": "0011_add_semantic_to_competitor_matrix_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788358522025,
+      "tag": "0012_purge_expired_startup_trial_tokens",
+      "breakpoints": true
     }
   ]
 }
