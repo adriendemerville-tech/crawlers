@@ -618,10 +618,20 @@ export default function Tarifs() {
     "offers": {
       "@type": "AggregateOffer",
       "lowPrice": "0",
-      "highPrice": "99",
+      "highPrice": "79",
       "priceCurrency": "EUR",
       "offerCount": 5,
       "offers": [
+        {
+          "@type": "Offer",
+          "name": "Gratuit 12 mois — Jeunes entreprises",
+          "description": "Plan Pro Agency gratuit pendant 12 mois pour les entreprises de moins d'un an (vérification SIRET + Kbis). Sans engagement.",
+          "price": "0",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2027-12-31",
+          "category": "Startup Offer"
+        },
         {
           "@type": "Offer",
           "name": "Audit Flash SEO/GEO Gratuit",
