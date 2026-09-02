@@ -536,7 +536,7 @@ export default function GoogleBusinessPage() {
           {
             "@type": "Offer",
             "price": "79",
-            "priceCurrency": "EUR",
+            "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "79", "priceCurrency": "EUR", "valueAddedTaxIncluded": true },
             "description": "Inclus dans l'abonnement Pro Agency+ à 79 €/mois"
           },
           STARTUP_TRIAL_OFFER

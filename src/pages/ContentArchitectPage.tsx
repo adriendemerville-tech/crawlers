@@ -520,9 +520,9 @@ const ContentArchitectPage = memo(() => {
           "description": tr.meta.description,
           "offers": [
             STARTUP_TRIAL_OFFER,
-            { "@type": "Offer", "name": "Pay-as-you-go", "price": "2.50", "priceCurrency": "EUR", "description": "5 credits per page" },
-            { "@type": "Offer", "name": "Pro Agency — Sans engagement", "price": "29", "priceCurrency": "EUR" },
-            { "@type": "Offer", "name": "Pro Agency + — Sans engagement", "price": "79", "priceCurrency": "EUR" },
+            { "@type": "Offer", "name": "Pay-as-you-go", "price": "2.50", "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "2.50", "priceCurrency": "EUR", "valueAddedTaxIncluded": true }, "description": "5 credits per page" },
+            { "@type": "Offer", "name": "Pro Agency — Sans engagement", "price": "29", "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "29", "priceCurrency": "EUR", "valueAddedTaxIncluded": true } },
+            { "@type": "Offer", "name": "Pro Agency + — Sans engagement", "price": "79", "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "79", "priceCurrency": "EUR", "valueAddedTaxIncluded": true } },
           ],
           "featureList": ["Automated SEO content generation", "Multi-engine AI image generation", "Multi-CMS publishing", "Schema.org structured data", "GEO optimization", "Canva-like editor"],
         })}</script>

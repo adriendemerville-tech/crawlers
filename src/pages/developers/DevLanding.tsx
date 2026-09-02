@@ -32,7 +32,7 @@ const DEVELOPERS_JSON_LD = [
     brand: { "@type": "Brand", name: "Crawlers.fr" },
     offers: [
       { "@type": "Offer", name: "Free", price: "0", priceCurrency: "EUR", description: "100 jobs cumulés / mois, sans carte bancaire." },
-      { "@type": "Offer", name: "Pay-as-you-go", price: "0.05", priceCurrency: "EUR", description: "Tarif moyen par job, facturé au volume réel via Stripe." },
+      { "@type": "Offer", name: "Pay-as-you-go", price: "0.05", priceCurrency: "EUR", priceSpecification: { "@type": "PriceSpecification", price: "0.05", priceCurrency: "EUR", valueAddedTaxIncluded: true }, description: "Tarif moyen par job, facturé au volume réel via Stripe." },
     ],
   },
   {

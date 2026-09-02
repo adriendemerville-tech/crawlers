@@ -135,8 +135,8 @@ const SOFTWARE_APPLICATION_JSON_LD = {
   ],
   offers: [
     { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'EUR' },
-    { '@type': 'Offer', name: 'Pro Agency', price: '29', priceCurrency: 'EUR' },
-    { '@type': 'Offer', name: 'Pro Agency+', price: '79', priceCurrency: 'EUR' },
+    { '@type': 'Offer', name: 'Pro Agency', price: '29', priceCurrency: 'EUR', priceSpecification: { "@type": 'PriceSpecification', price: '29', priceCurrency: 'EUR', valueAddedTaxIncluded: true } },
+    { '@type': 'Offer', name: 'Pro Agency+', price: '79', priceCurrency: 'EUR', priceSpecification: { "@type": 'PriceSpecification', price: '79', priceCurrency: 'EUR', valueAddedTaxIncluded: true } },
   ],
   aggregateRating: {
     '@type': 'AggregateRating',

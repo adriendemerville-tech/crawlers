@@ -46,7 +46,7 @@ const SeaSeoBridgePage = memo(() => {
     offers: {
       '@type': 'Offer',
       price: '29',
-      priceCurrency: 'EUR',
+      priceCurrency: 'EUR', priceSpecification: { "@type": 'PriceSpecification', price: '29', priceCurrency: 'EUR', valueAddedTaxIncluded: true },
       description: 'Inclus dans l\'abonnement Pro Agency (sans engagement)',
       availability: 'https://schema.org/InStock',
     },

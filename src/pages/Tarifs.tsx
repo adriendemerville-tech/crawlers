@@ -647,7 +647,7 @@ export default function Tarifs() {
           "name": "Pack Essentiel — 10 Crédits",
           "description": "10 crédits pour audits stratégiques IA, génération de code correctif personnalisé et modules premium.",
           "price": "5.00",
-          "priceCurrency": "EUR",
+          "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "5.00", "priceCurrency": "EUR", "valueAddedTaxIncluded": true },
           "availability": "https://schema.org/InStock",
           "priceValidUntil": "2027-12-31",
           "category": "Credit Pack"
@@ -657,7 +657,7 @@ export default function Tarifs() {
           "name": "Pack Lite — 50 Crédits",
           "description": "50 crédits à 0.38€/unité. Idéal pour les consultants SEO et les sites multi-pages. Économie de 24%.",
           "price": "19.00",
-          "priceCurrency": "EUR",
+          "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "19.00", "priceCurrency": "EUR", "valueAddedTaxIncluded": true },
           "availability": "https://schema.org/InStock",
           "priceValidUntil": "2027-12-31",
           "category": "Credit Pack"
@@ -667,7 +667,7 @@ export default function Tarifs() {
           "name": "Pack Premium — 150 Crédits",
           "description": "150 crédits à 0.30€/unité. Pour les agences avec un large portefeuille clients. Économie de 40%.",
           "price": "45.00",
-          "priceCurrency": "EUR",
+          "priceCurrency": "EUR", "priceSpecification": { "@type": "PriceSpecification", "price": "45.00", "priceCurrency": "EUR", "valueAddedTaxIncluded": true },
           "availability": "https://schema.org/InStock",
           "priceValidUntil": "2027-12-31",
           "category": "Credit Pack"
@@ -718,6 +718,7 @@ export default function Tarifs() {
             "@type": "UnitPriceSpecification",
             "price": "29.00",
             "priceCurrency": "EUR",
+            "valueAddedTaxIncluded": true,
             "billingDuration": "P1M",
             "unitText": "MONTH",
             "referenceQuantity": {
