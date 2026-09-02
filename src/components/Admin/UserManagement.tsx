@@ -548,7 +548,10 @@ export function UserManagement() {
         </div>
       </CardHeader>
       <CardContent>
-        {showPayingTab ? (
+        {showStartupTab ? (
+          /* ====== Startup Trial Applications Tab ====== */
+          <StartupTrialsTab />
+        ) : showPayingTab ? (
           /* ====== Paying Users Tab ====== */
           <PayingUsersTab />
         ) : showPendingTab ? (
