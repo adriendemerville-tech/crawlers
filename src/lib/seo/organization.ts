@@ -29,7 +29,13 @@ export const ORGANIZATION_NODE = {
   '@id': ORGANIZATION_ID,
   name: 'Crawlers.fr',
   legalName: 'Voluntas Novare',
-  alternateName: ['Crawlers', 'Crawlers SEO GEO'],
+  alternateName: [
+    'Crawlers',
+    'Crawlers SEO GEO',
+    "Plateforme SaaS d'acquisition",
+    'Suite GEO',
+    "Plateforme d'intelligence de visibilité",
+  ],
   url: SITE_URL_CANONICAL,
   logo: {
     '@type': 'ImageObject',
@@ -38,7 +44,7 @@ export const ORGANIZATION_NODE = {
   },
   image: `${SITE_URL_CANONICAL}/og-image.png`,
   description:
-    "Plateforme française d'audit SEO et GEO : diagnostic technique, score de citabilité par les moteurs génératifs, correction automatique des pages et connexion directe aux CMS.",
+    "Plateforme SaaS d'acquisition française : suite GEO et plateforme d'intelligence de visibilité réunissant diagnostic technique, score de citabilité par les moteurs génératifs, correction automatique des pages et connexion directe aux CMS.",
   email: 'contact@crawlers.fr',
   foundingDate: '2025',
   slogan: 'Visible dans Google comme dans les réponses des IA.',
