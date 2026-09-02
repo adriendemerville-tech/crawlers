@@ -88,7 +88,15 @@ export const submitStartupTrial = createServerFn({ method: 'POST' })
       p_kbis_path: data.kbisPath,
       p_verification_details: { source: 'recherche-entreprises.api.gouv.fr' },
     });
-    if (error) throw new Error('Impossible d’activer l’offre pour le moment.');
+    if (error) {
+      console.error('[startup-trial] activation failed', error);
+      const raw = `${error.message ?? ''}`;
+      if (raw.includes('already been claimed')) throw new Error('Une offre jeune entreprise a déjà été activée pour ce compte ou ce SIRET.');
+      if (raw.includes('not eligible')) throw new Error('Cette entreprise a plus de 12 mois : offre non applicable.');
+      if (raw.includes('Invalid Kbis')) throw new Error('Le document Kbis n’a pas été correctement téléversé. Réessayez.');
+      if (raw.includes('Server activation required')) throw new Error('Activation indisponible : contactez le support.');
+      throw new Error(`Impossible d’activer l’offre : ${raw || 'erreur inconnue'}`);
+    }
     const application = Array.isArray(result) ? result[0] : result;
     return {
       applicationId: application?.application_id ?? null,
