@@ -40,6 +40,7 @@ import { MarinaMyAuditsTab } from '@/components/Marina/MarinaMyAuditsTab';
 import { MarinaRunningAuditsSection } from '@/components/Marina/MarinaRunningAuditsSection';
 import { MarinaSeoContent } from '@/components/Marina/MarinaSeoContent';
 import { ClaudeVerdictBlock } from '@/components/Marina/ClaudeVerdictBlock';
+import { STARTUP_TRIAL_OFFER } from '@/lib/seo/startupTrialOffer';
 
 
 
@@ -920,6 +921,7 @@ export default function Marina() {
           "description": t.meta.schemaDesc,
           "url": "https://crawlers.fr/marina",
           "offers": [
+            STARTUP_TRIAL_OFFER,
             { "@type": "Offer", "name": "Per report", "price": "9.00", "priceCurrency": "EUR", "description": "30 credits per report" },
             { "@type": "Offer", "name": "Pro Agency", "price": "29", "priceCurrency": "EUR", "description": "Marina included" },
           ],

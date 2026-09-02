@@ -21,6 +21,7 @@ import { CreditCoin } from '@/components/ui/CreditCoin';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import contentArchitectPreview from '@/assets/screenshots/content-architect-preview.webp';
+import { STARTUP_TRIAL_OFFER } from '@/lib/seo/startupTrialOffer';
 
 const CreditTopUpModal = lazy(() => import('@/components/CreditTopUpModal').then(m => ({ default: m.CreditTopUpModal })));
 
@@ -518,6 +519,7 @@ const ContentArchitectPage = memo(() => {
           "operatingSystem": "Web",
           "description": tr.meta.description,
           "offers": [
+            STARTUP_TRIAL_OFFER,
             { "@type": "Offer", "name": "Pay-as-you-go", "price": "2.50", "priceCurrency": "EUR", "description": "5 credits per page" },
             { "@type": "Offer", "name": "Pro Agency — Sans engagement", "price": "29", "priceCurrency": "EUR" },
             { "@type": "Offer", "name": "Pro Agency + — Sans engagement", "price": "79", "priceCurrency": "EUR" },

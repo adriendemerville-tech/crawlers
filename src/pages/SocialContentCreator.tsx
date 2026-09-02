@@ -11,6 +11,7 @@ import {
   Sparkles, Target, Layers, Zap, CheckCircle2, MessageSquare, Image,
   TrendingUp, Languages, FileDown
 } from 'lucide-react';
+import { STARTUP_TRIAL_OFFER } from '@/lib/seo/startupTrialOffer';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -60,6 +61,7 @@ const SocialContentCreator = memo(() => {
         "operatingSystem": "Web",
         "description": "Créez, planifiez et publiez du contenu social optimisé SEO/GEO sur LinkedIn, Facebook et Instagram, alimenté par vos données de site.",
         "offers": [
+          STARTUP_TRIAL_OFFER,
           { "@type": "Offer", "name": "Pro Agency", "price": "29", "priceCurrency": "EUR" },
           { "@type": "Offer", "name": "Pro Agency +", "price": "79", "priceCurrency": "EUR" },
         ],
