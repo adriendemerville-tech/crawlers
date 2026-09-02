@@ -165,23 +165,37 @@ export function AIAttributionCard({ trackedSiteId }: AIAttributionCardProps) {
             <Sparkles className="h-4 w-4 text-primary" />
             Attribution IA → visites humaines
           </span>
-          <MethodologyTooltip
-            label="Méthode"
-            title="Attribution multi-touch pondérée"
-            body={
-              <>
-                <p>
-                  Lorsqu'un humain visite votre site avec un <strong>referer</strong> ChatGPT, Claude, Perplexity… nous
-                  recherchons les visites bots IA précédentes sur la <strong>même URL</strong>.
-                </p>
-                <p>
-                  La pondération suit une décroissance exponentielle : <code>poids = exp(-jours / 15)</code>. Aucune
-                  donnée personnelle n'est conservée : seul un <strong>fingerprint anonymisé</strong> est utilisé pour
-                  dédupliquer les sessions.
-                </p>
-              </>
-            }
-          />
+          <span className="flex items-center gap-1.5">
+            <MethodologyTooltip
+              label="Méthode"
+              title="Attribution multi-touch pondérée"
+              body={
+                <>
+                  <p>
+                    Lorsqu'un humain visite votre site avec un <strong>referer</strong> ChatGPT, Claude, Perplexity… nous
+                    recherchons les visites bots IA précédentes sur la <strong>même URL</strong>.
+                  </p>
+                  <p>
+                    La pondération suit une décroissance exponentielle : <code>poids = exp(-jours / 15)</code>. Aucune
+                    donnée personnelle n'est conservée : seul un <strong>fingerprint anonymisé</strong> est utilisé pour
+                    dédupliquer les sessions.
+                  </p>
+                </>
+              }
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleConnectGa4}
+              disabled={connecting}
+              aria-label={ga4Connected ? 'GA4 connecté' : 'Connecter GA4'}
+              className={`h-6 gap-1 px-2 text-[10px] bg-transparent border-border ${ga4Connected ? 'border-primary text-primary' : 'text-foreground'}`}
+            >
+              <BarChart3 className="h-3 w-3" />
+              GA4
+            </Button>
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
