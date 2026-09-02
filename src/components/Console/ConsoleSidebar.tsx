@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -86,6 +86,18 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
   const [sidebarOrder, setSidebarOrder] = useState<string[]>([]);
   const [dragValue, setDragValue] = useState<string | null>(null);
   const [dragOverValue, setDragOverValue] = useState<string | null>(null);
+  const selectorRef = useRef<HTMLDivElement>(null);
+
+  // Ferme le sélecteur de domaine au clic extérieur
+  useEffect(() => {
+    if (!selectorOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (selectorRef.current && !selectorRef.current.contains(e.target as Node)) setSelectorOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [selectorOpen]);
+
 
 
   const handleAddDomain = async (e?: React.FormEvent) => {
@@ -496,7 +508,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
       {/* Domain selector */}
       {!isMobile && !collapsed && sites.length > 0 && (
         <div className="px-2 pt-[47px] pb-1 space-y-1">
-          <div className="relative">
+          <div className="relative" ref={selectorRef}>
             <button
               onClick={() => setSelectorOpen(!selectorOpen)}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-accent/20 hover:bg-accent/40 transition-colors text-left"
