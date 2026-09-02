@@ -16,6 +16,7 @@ export function toMatrixState(row: any): MatrixJobState {
     keywords: row.keywords ?? [],
     matrix: row.matrix ?? null,
     authority: row.authority ?? null,
+    semantic: row.semantic ?? null,
     error: row.error ?? null,
     shareToken: row.share_token,
   };
