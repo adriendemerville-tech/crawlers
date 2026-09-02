@@ -97,8 +97,9 @@ Deno.serve(handleRequest(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: await ensureTaxablePrice(stripe, priceId), quantity: 1 }],
       mode: "subscription",
+      ...AUTOMATIC_TAX_SESSION_PARAMS,
       metadata: {
         user_id: user.id,
         user_email: user.email || "",
