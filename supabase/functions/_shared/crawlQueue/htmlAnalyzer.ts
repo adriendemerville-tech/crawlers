@@ -15,6 +15,44 @@ export function simpleHash(text: string): string {
   return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
+function normalizeHeading(text: string): string[] {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/&[a-z0-9#]+;/gi, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+/** Détecte un title qui répète le H1, y compris avec un suffixe de marque. */
+export function areTitleAndH1TooSimilar(title: string | null, h1: string | null): boolean {
+  if (!title || !h1) return false;
+
+  const titleWords = normalizeHeading(title);
+  const h1Words = normalizeHeading(h1);
+  if (titleWords.length === 0 || h1Words.length === 0) return false;
+
+  const titleText = titleWords.join(' ');
+  const h1Text = h1Words.join(' ');
+  if (titleText === h1Text) return true;
+
+  const titleSet = new Set(titleWords);
+  const h1Set = new Set(h1Words);
+  const shorter = titleSet.size <= h1Set.size ? titleSet : h1Set;
+  const longer = titleSet.size <= h1Set.size ? h1Set : titleSet;
+  const shared = [...shorter].filter((word) => longer.has(word)).length;
+
+  // Une reprise complète d'une expression d'au moins deux mots est une duplication,
+  // même si le title ajoute la marque ou une promesse secondaire.
+  if (shorter.size >= 2 && shared === shorter.size) return true;
+
+  const unionSize = new Set([...titleSet, ...h1Set]).size;
+  return unionSize > 0 && shared / unionSize >= 0.8;
+}
+
 // ── Schema.org Validation ──────────────────────────────────
 export function validateSchemaOrg(html: string): { types: string[]; errors: string[] } {
   const types: string[] = [];
@@ -318,6 +356,7 @@ export function analyzeHtml(
   else if (meta_description.length < 50) issues.push('meta_description_too_short');
   if (!h1) issues.push('missing_h1');
   if ((html.match(/<h1[\s>]/gi) || []).length > 1) issues.push('multiple_h1');
+  if (areTitleAndH1TooSimilar(title, h1)) issues.push('title_h1_too_similar');
   if (h2_count === 0 && word_count > 200) issues.push('missing_h2');
   if (word_count < 100) issues.push('thin_content');
   if (!has_schema_org) issues.push('missing_schema_org');
