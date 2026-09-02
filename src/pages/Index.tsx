@@ -853,12 +853,12 @@ const Index = () => {
             ? '¿Qué es Crawlers.fr exactamente?'
             : 'What exactly is Crawlers.fr?'}
           intro={language === 'fr'
-            ? "Crawlers.fr est né d'un constat simple : un site ne se référence plus seulement sur Google, il doit aussi être cité par les IA. La plateforme réunit dans un même audit le crawl technique classique et la mesure de visibilité dans les moteurs génératifs."
+            ? "Crawlers.fr est né d'un constat simple : un site ne se référence plus seulement sur Google, il doit aussi être cité par les IA. Cette plateforme SaaS d'acquisition réunit dans un même audit le crawl technique classique et la mesure de visibilité dans les moteurs génératifs."
             : language === 'es'
             ? 'Crawlers.fr nació de una constatación simple: un sitio ya no se posiciona solo en Google, también debe ser citado por las IA. La plataforma reúne en una misma auditoría el rastreo técnico clásico y la medición de visibilidad en los motores generativos.'
             : 'Crawlers.fr was born from a simple observation: a site no longer ranks only on Google, it must also be cited by AI. The platform combines classic technical crawling and generative-engine visibility measurement in a single audit.'}
           citable={language === 'fr'
-            ? "Crawlers.fr est un outil de crawl SEO et GEO qui audite un site web sur 168 critères techniques, mesure sa visibilité dans ChatGPT, Gemini et Perplexity, puis génère un plan d'action correctif prêt à déployer."
+            ? "Crawlers.fr est une plateforme SaaS d'acquisition française — une suite GEO et une plateforme d'intelligence de visibilité — qui audite un site web sur 168 critères techniques, mesure sa visibilité dans ChatGPT, Gemini et Perplexity, puis génère un plan d'action correctif prêt à déployer."
             : language === 'es'
             ? 'Crawlers.fr es una herramienta de rastreo SEO y GEO que audita un sitio web sobre 168 criterios técnicos, mide su visibilidad en ChatGPT, Gemini y Perplexity, y genera un plan de acción correctivo listo para implementar.'
             : 'Crawlers.fr is an SEO and GEO crawl tool that audits a website across 168 technical criteria, measures its visibility in ChatGPT, Gemini and Perplexity, then generates a corrective action plan ready to deploy.'}
