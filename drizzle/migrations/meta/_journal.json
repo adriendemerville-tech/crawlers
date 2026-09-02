@@ -43,6 +43,13 @@
       "when": 1788346437764,
       "tag": "0005_allow_authenticated_startup_trial_submit",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788346658484,
+      "tag": "0006_lock_startup_trial_activation_server_only",
+      "breakpoints": true
     }
   ]
 }
