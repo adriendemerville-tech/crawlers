@@ -135,6 +135,17 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
 
   const enterpriseIcons = [Infinity, Users, Server, Database, Shield, Headphones, Users, Shield, Headphones, Server];
 
+  const vatNote = (
+    <p className="mt-6 text-center text-xs text-muted-foreground">
+      {t3(
+        language,
+        'Tous les prix sont exprimés en euros TTC (TVA française 20 %). La TVA applicable est calculée au paiement selon votre pays ; les professionnels de l’UE disposant d’un numéro de TVA valide bénéficient de l’autoliquidation.',
+        'All prices are shown in euros including VAT (20% France). Applicable VAT is calculated at checkout based on your country; EU businesses with a valid VAT number benefit from reverse charge.',
+        'Todos los precios se muestran en euros con IVA incluido (20 % Francia). El IVA aplicable se calcula en el pago según su país; las empresas de la UE con NIF-IVA válido se benefician de la inversión del sujeto pasivo.'
+      )}
+    </p>
+  );
+
   const billingToggle = (
     <div className="flex items-center justify-center gap-3 mb-8">
       <button
@@ -315,17 +326,6 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
       </div>
     );
   }
-
-  const vatNote = (
-    <p className="mt-6 text-center text-xs text-muted-foreground">
-      {t3(
-        language,
-        'Tous les prix sont exprimés en euros TTC (TVA française 20 %). La TVA applicable est calculée au paiement selon votre pays ; les professionnels de l’UE disposant d’un numéro de TVA valide bénéficient de l’autoliquidation.',
-        'All prices are shown in euros including VAT (20% France). Applicable VAT is calculated at checkout based on your country; EU businesses with a valid VAT number benefit from reverse charge.',
-        'Todos los precios se muestran en euros con IVA incluido (20 % Francia). El IVA aplicable se calcula en el pago según su país; las empresas de la UE con NIF-IVA válido se benefician de la inversión del sujeto pasivo.'
-      )}
-    </p>
-  );
 
   return (
     <section className="border-y border-border bg-muted/20 py-16 sm:py-24">
