@@ -14,6 +14,10 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    // Cache incrémental hors node_modules : le pré-bundling des dépendances et
+    // les transformations survivent aux réinstallations (bun install ne le vide
+    // plus), ce qui raccourcit les builds et démarrages successifs.
+    cacheDir: ".cache/vite",
     // Project MCP server (kept from the Classic config; not bundled by the wrapper).
     plugins: [mcpPlugin()],
     build: {
