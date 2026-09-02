@@ -756,6 +756,7 @@ export default function MeilleursOutilsSeoGeo2027() {
               <thead>
                 <tr className="border-b border-border bg-card/60">
                   <th className="text-left p-3 font-semibold">Outil</th>
+                  <th className="text-left p-3 font-semibold">Catégorie</th>
                   <th className="p-3 font-semibold text-center">SEO</th>
                   <th className="p-3 font-semibold text-center">
                     <span className="inline-flex items-center gap-1"><Bot className="w-3.5 h-3.5" aria-hidden /> GEO</span>
