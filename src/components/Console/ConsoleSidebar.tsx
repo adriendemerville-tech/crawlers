@@ -12,6 +12,7 @@ import {
   Network, Store, Blocks, FileBox, FileEdit, Anchor, Target, Globe,
   Shield, Code2, ChevronDown, Search, Sparkles, Database, Link2,
   Plus, Loader2, Check, X, GripVertical, PanelLeftClose, PanelLeft, Swords,
+  CreditCard,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConsoleViewMode } from '@/contexts/ConsoleViewModeContext';
@@ -43,17 +44,17 @@ const translations = {
   fr: {
     tracking: 'SEO', geo: 'GEO', actionPlans: 'Plans d\'Action', correctiveCodes: '<Scripts>',
     wallet: 'Portefeuille', reports: 'Rapports', settings: 'Paramètres', creator: 'Administration',
-    allSites: 'Tous les sites',
+    allSites: 'Tous les sites', subscription: 'Gérer mon abonnement',
   },
   en: {
     tracking: 'SEO', geo: 'GEO', actionPlans: 'Action Plans', correctiveCodes: '<Scripts>',
     wallet: 'Wallet', reports: 'Reports', settings: 'Settings', creator: 'Administration',
-    allSites: 'All sites',
+    allSites: 'All sites', subscription: 'Manage subscription',
   },
   es: {
     tracking: 'SEO', geo: 'GEO', actionPlans: 'Planes de Acción', correctiveCodes: '<Scripts>',
     wallet: 'Billetera', reports: 'Informes', settings: 'Configuración', creator: 'Administración',
-    allSites: 'Todos los sitios',
+    allSites: 'Todos los sitios', subscription: 'Gestionar suscripción',
   },
 };
 
@@ -357,6 +358,7 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
     },
     ...(isAdmin ? [{ value: 'bundle', label: 'Bundle', icon: Blocks, adminOnly: true, hideOnMobile: true, advancedOnly: true }] : []),
     { value: 'settings', label: t.settings, icon: Settings, hideOnMobile: true },
+    ...(isAgencyPro ? [{ value: 'manage-subscription', label: t.subscription, icon: CreditCard, hideOnMobile: true }] : []),
     ...(hasAdminAccess ? [{ value: 'admin', label: t.creator, icon: Shield }] : []),
   ];
 
@@ -456,6 +458,12 @@ export function ConsoleSidebar({ activeTab, onTabChange, onSiteSelect, collapsed
             // Custom href items navigate natively via the anchor
             if (item.href) return;
             e.preventDefault();
+            // Entrée « Gérer mon abonnement » : ouvre l'onglet Pro Agency puis la modal
+            if (item.value === 'manage-subscription') {
+              sessionStorage.setItem('open-subscription-management', '1');
+              onTabChange('wallet');
+              return;
+            }
             // Si le module porte une notification, on bascule sur le domaine concerné.
             const notified = notifiedDomainsFor(item.value);
             if (notified.length > 0) {
