@@ -25,6 +25,7 @@ import { AccountManager } from '@/components/Profile/AccountManager';
 import { TeamSharingSettings } from '@/components/Profile/TeamSharingSettings';
 import { TeamRoleManager } from '@/components/Profile/TeamRoleManager';
 import { RetentionModal } from '@/components/Profile/RetentionModal';
+import { SubscriptionManagementModal } from '@/components/Profile/SubscriptionManagementModal';
 const MyReports = lazy(() => import('@/components/Profile/MyReports').then(m => ({ default: m.MyReports })));
 import { CrawlQuotaCard } from '@/components/Profile/CrawlQuotaCard';
 import { ContentQuotaCard } from '@/components/Profile/ContentQuotaCard';
@@ -122,6 +123,8 @@ export function MyWallet() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [showFreeOfferModal, setShowFreeOfferModal] = useState(false);
   const [showRetentionModal, setShowRetentionModal] = useState(false);
+  const [showSubscriptionManagement, setShowSubscriptionManagement] = useState(false);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
   const t = translations[language];
 
   const handleOpenPortal = async () => {
@@ -152,6 +155,27 @@ export function MyWallet() {
       }
     } finally {
       setPortalLoading(false);
+    }
+  };
+
+  const handleUpgrade = async () => {
+    setUpgradeLoading(true);
+    try {
+      const billing = walletBilling;
+      const { data, error } = await supabase.functions.invoke('stripe-actions', {
+        body: { action: 'subscription_premium', billing },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        setShowSubscriptionManagement(false);
+        window.open(data.url, '_blank', 'noopener');
+      } else {
+        throw new Error(data?.error || 'Aucune URL de paiement reçue');
+      }
+    } catch (err) {
+      toast({ title: 'Erreur', description: String(err), variant: 'destructive' });
+    } finally {
+      setUpgradeLoading(false);
     }
   };
 
@@ -448,7 +472,7 @@ export function MyWallet() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setShowRetentionModal(true)}
+                        onClick={() => setShowSubscriptionManagement(true)}
                         disabled={portalLoading}
                         className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
                       >
@@ -545,6 +569,21 @@ export function MyWallet() {
         open={showTopUpModal}
         onOpenChange={setShowTopUpModal}
         currentBalance={balance}
+      />
+      <SubscriptionManagementModal
+        open={showSubscriptionManagement}
+        onOpenChange={setShowSubscriptionManagement}
+        currentPlan={planType === 'agency_premium' ? 'agency_premium' : 'agency_pro'}
+        upgradeLoading={upgradeLoading}
+        onUpgrade={handleUpgrade}
+        onManagePayment={() => {
+          setShowSubscriptionManagement(false);
+          void handleOpenPortal();
+        }}
+        onCancel={() => {
+          setShowSubscriptionManagement(false);
+          setShowRetentionModal(true);
+        }}
       />
       <RetentionModal
         open={showRetentionModal}
