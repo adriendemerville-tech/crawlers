@@ -29,6 +29,13 @@
       "when": 1788346274630,
       "tag": "0003_startup_trial_siret_kbis",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788346379393,
+      "tag": "0004_lock_startup_trial_activation",
+      "breakpoints": true
     }
   ]
 }
