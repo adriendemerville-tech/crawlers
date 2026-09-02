@@ -68,6 +68,7 @@ import { Route as MethodologieRouteImport } from './routes/methodologie'
 import { Route as ModifierCodeWordpressRouteImport } from './routes/modifier-code-wordpress'
 import { Route as MonitoringGptbotPerplexityRouteImport } from './routes/monitoring-gptbot-perplexity'
 import { Route as ObservatoireRouteImport } from './routes/observatoire'
+import { Route as OffreJeuneEntrepriseRouteImport } from './routes/offre-jeune-entreprise'
 import { Route as OptimisationLlmSeoRouteImport } from './routes/optimisation-llm-seo'
 import { Route as OutilGeoIaRouteImport } from './routes/outil-geo-ia'
 import { Route as PagespeedRouteImport } from './routes/pagespeed'
@@ -460,6 +461,11 @@ const MonitoringGptbotPerplexityRoute =
 const ObservatoireRoute = ObservatoireRouteImport.update({
   id: '/observatoire',
   path: '/observatoire',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OffreJeuneEntrepriseRoute = OffreJeuneEntrepriseRouteImport.update({
+  id: '/offre-jeune-entreprise',
+  path: '/offre-jeune-entreprise',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OptimisationLlmSeoRoute = OptimisationLlmSeoRouteImport.update({
@@ -972,6 +978,7 @@ export interface FileRoutesByFullPath {
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
   '/monitoring-gptbot-perplexity': typeof MonitoringGptbotPerplexityRoute
   '/observatoire': typeof ObservatoireRoute
+  '/offre-jeune-entreprise': typeof OffreJeuneEntrepriseRoute
   '/optimisation-llm-seo': typeof OptimisationLlmSeoRoute
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
@@ -1121,6 +1128,7 @@ export interface FileRoutesByTo {
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
   '/monitoring-gptbot-perplexity': typeof MonitoringGptbotPerplexityRoute
   '/observatoire': typeof ObservatoireRoute
+  '/offre-jeune-entreprise': typeof OffreJeuneEntrepriseRoute
   '/optimisation-llm-seo': typeof OptimisationLlmSeoRoute
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
@@ -1271,6 +1279,7 @@ export interface FileRoutesById {
   '/modifier-code-wordpress': typeof ModifierCodeWordpressRoute
   '/monitoring-gptbot-perplexity': typeof MonitoringGptbotPerplexityRoute
   '/observatoire': typeof ObservatoireRoute
+  '/offre-jeune-entreprise': typeof OffreJeuneEntrepriseRoute
   '/optimisation-llm-seo': typeof OptimisationLlmSeoRoute
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
@@ -1422,6 +1431,7 @@ export interface FileRouteTypes {
     | '/modifier-code-wordpress'
     | '/monitoring-gptbot-perplexity'
     | '/observatoire'
+    | '/offre-jeune-entreprise'
     | '/optimisation-llm-seo'
     | '/outil-geo-ia'
     | '/pagespeed'
@@ -1571,6 +1581,7 @@ export interface FileRouteTypes {
     | '/modifier-code-wordpress'
     | '/monitoring-gptbot-perplexity'
     | '/observatoire'
+    | '/offre-jeune-entreprise'
     | '/optimisation-llm-seo'
     | '/outil-geo-ia'
     | '/pagespeed'
@@ -1720,6 +1731,7 @@ export interface FileRouteTypes {
     | '/modifier-code-wordpress'
     | '/monitoring-gptbot-perplexity'
     | '/observatoire'
+    | '/offre-jeune-entreprise'
     | '/optimisation-llm-seo'
     | '/outil-geo-ia'
     | '/pagespeed'
@@ -1870,6 +1882,7 @@ export interface RootRouteChildren {
   ModifierCodeWordpressRoute: typeof ModifierCodeWordpressRoute
   MonitoringGptbotPerplexityRoute: typeof MonitoringGptbotPerplexityRoute
   ObservatoireRoute: typeof ObservatoireRoute
+  OffreJeuneEntrepriseRoute: typeof OffreJeuneEntrepriseRoute
   OptimisationLlmSeoRoute: typeof OptimisationLlmSeoRoute
   OutilGeoIaRoute: typeof OutilGeoIaRoute
   PagespeedRoute: typeof PagespeedRoute
@@ -2373,6 +2386,13 @@ declare module '@tanstack/react-router' {
       path: '/observatoire'
       fullPath: '/observatoire'
       preLoaderRoute: typeof ObservatoireRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/offre-jeune-entreprise': {
+      id: '/offre-jeune-entreprise'
+      path: '/offre-jeune-entreprise'
+      fullPath: '/offre-jeune-entreprise'
+      preLoaderRoute: typeof OffreJeuneEntrepriseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/optimisation-llm-seo': {
@@ -3054,6 +3074,7 @@ const rootRouteChildren: RootRouteChildren = {
   ModifierCodeWordpressRoute: ModifierCodeWordpressRoute,
   MonitoringGptbotPerplexityRoute: MonitoringGptbotPerplexityRoute,
   ObservatoireRoute: ObservatoireRoute,
+  OffreJeuneEntrepriseRoute: OffreJeuneEntrepriseRoute,
   OptimisationLlmSeoRoute: OptimisationLlmSeoRoute,
   OutilGeoIaRoute: OutilGeoIaRoute,
   PagespeedRoute: PagespeedRoute,
