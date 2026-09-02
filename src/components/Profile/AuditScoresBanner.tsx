@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   domain: string | null | undefined;
+  showStrategic?: boolean;
 }
 
 const scoreStroke = (score: number) =>
@@ -51,7 +52,7 @@ function Gauge({ score, label }: { score: number | null; label: string }) {
  * Jauges circulaires compactes affichées en haut des onglets SEO et GEO :
  * note du dernier audit technique et du dernier audit stratégique du domaine.
  */
-export function AuditScoresBanner({ domain }: Props) {
+export function AuditScoresBanner({ domain, showStrategic = true }: Props) {
   const { language } = useLanguage();
   const fetchScores = useServerFn(getConsoleAuditScores);
 
@@ -78,13 +79,15 @@ export function AuditScoresBanner({ domain }: Props) {
           (technical != null && technicalPrev != null ? ` (${technicalPrev >= technical ? '-' : '+'}${Math.abs(technical - technicalPrev)})` : '')
         }
       />
-      <Gauge
-        score={strategic}
-        label={
-          (language === 'fr' ? 'Stratégique' : language === 'es' ? 'Estratégico' : 'Strategic') +
-          (strategic != null && strategicPrev != null ? ` (${strategicPrev >= strategic ? '-' : '+'}${Math.abs(strategic - strategicPrev)})` : '')
-        }
-      />
+      {showStrategic && (
+        <Gauge
+          score={strategic}
+          label={
+            (language === 'fr' ? 'Stratégique' : language === 'es' ? 'Estratégico' : 'Strategic') +
+            (strategic != null && strategicPrev != null ? ` (${strategicPrev >= strategic ? '-' : '+'}${Math.abs(strategic - strategicPrev)})` : '')
+          }
+        />
+      )}
     </div>
   );
 }
