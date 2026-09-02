@@ -56,6 +56,15 @@ const softwareApplication = {
   offers: [
     {
       '@type': 'Offer',
+      name: 'Gratuit 12 mois — Jeunes entreprises',
+      price: '0',
+      priceCurrency: 'EUR',
+      description: "Plan Pro Agency gratuit pendant 12 mois pour les entreprises de moins d'un an (vérification SIRET + Kbis).",
+      availability: 'https://schema.org/InStock',
+      url: `${SITE_URL}/tarifs`,
+    },
+    {
+      '@type': 'Offer',
       name: 'Gratuit',
       price: '0',
       priceCurrency: 'EUR',
