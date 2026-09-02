@@ -106,6 +106,18 @@ Deno.serve(async (req) => {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, count]) => ({ date, count }));
 
+    // Timeline daily par moteur IA (pour le graphe multi-courbes)
+    const bySourceDay = rows.reduce<Record<string, Record<string, number>>>((acc, r) => {
+      const day = r.visited_at.slice(0, 10);
+      acc[day] = acc[day] ?? {};
+      acc[day][r.ai_source] = (acc[day][r.ai_source] ?? 0) + 1;
+      return acc;
+    }, {});
+    const timeline_by_source = Object.entries(bySourceDay)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, counts]) => ({ date, counts }));
+
+
     return new Response(
       JSON.stringify({
         ok: true,
