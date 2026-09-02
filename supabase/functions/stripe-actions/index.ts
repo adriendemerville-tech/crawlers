@@ -2,6 +2,7 @@ import Stripe from "npm:stripe@14.21.0";
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { AUTOMATIC_TAX_SESSION_PARAMS, ensureTaxablePrice } from '../_shared/stripeTax.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -44,6 +45,7 @@ async function getOrCreateAnnualPrice(planKey: string): Promise<string> {
     currency: "eur",
     recurring: { interval: "year" },
     lookup_key: config.lookupKey,
+    tax_behavior: "inclusive",
     metadata: { discount: "10pct", billing: "annual" },
   });
   console.log(`Created annual price for ${planKey}: ${price.id} (${annualAmountCents} cents/year)`);
@@ -191,8 +193,9 @@ async function handleSubscription(req: Request, body: any) {
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: [{ price: await ensureTaxablePrice(stripe, priceId), quantity: 1 }],
     mode: "subscription",
+    ...AUTOMATIC_TAX_SESSION_PARAMS,
     metadata: { user_id: auth.user.id, user_email: auth.user.email || "", transaction_type: "subscription", plan_type: "agency_pro", billing },
     subscription_data: { metadata: { user_id: auth.user.id, plan_type: "agency_pro", billing } },
     success_url: `${origin}/tarifs?subscription_success=true`,
@@ -239,8 +242,9 @@ async function handleSubscriptionPremium(req: Request, body: any) {
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: [{ price: await ensureTaxablePrice(stripe, priceId), quantity: 1 }],
     mode: "subscription",
+    ...AUTOMATIC_TAX_SESSION_PARAMS,
     metadata: { user_id: auth.user.id, user_email: auth.user.email || "", transaction_type: "subscription", plan_type: "agency_premium", billing },
     subscription_data: { metadata: { user_id: auth.user.id, plan_type: "agency_premium", billing } },
     success_url: `${origin}/tarifs?subscription_success=true`,

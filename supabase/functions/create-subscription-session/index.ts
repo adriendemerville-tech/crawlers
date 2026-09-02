@@ -1,6 +1,7 @@
 import Stripe from "npm:stripe@14.21.0";
 import { getUserClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { AUTOMATIC_TAX_SESSION_PARAMS, ensureTaxablePrice } from '../_shared/stripeTax.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -26,6 +27,7 @@ async function getOrCreateAnnualPrice(planKey: string): Promise<string> {
     currency: "eur",
     recurring: { interval: "year" },
     lookup_key: config.lookupKey,
+    tax_behavior: "inclusive",
     metadata: { discount: "10pct", billing: "annual" },
   });
   return price.id;
@@ -95,8 +97,9 @@ Deno.serve(handleRequest(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: await ensureTaxablePrice(stripe, priceId), quantity: 1 }],
       mode: "subscription",
+      ...AUTOMATIC_TAX_SESSION_PARAMS,
       metadata: {
         user_id: user.id,
         user_email: user.email || "",

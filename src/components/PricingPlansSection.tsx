@@ -85,6 +85,16 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
   const proPrice = billing === 'annual' ? proAnnualMonthly : proMonthly;
   const plusPrice = billing === 'annual' ? plusAnnualMonthly : plusMonthly;
 
+  // Les prix affichés sont TTC (TVA calculée automatiquement par Stripe Tax au checkout).
+  const fmt = (n: number) => n.toFixed(2).replace('.', ',');
+  const netLabel = (ttc: number) =>
+    t3(
+      language,
+      `TTC · soit ${fmt(ttc / 1.2)}€ HT (TVA 20 % France)`,
+      `incl. VAT · ${fmt(ttc / 1.2)}€ excl. VAT (20% France)`,
+      `IVA incl. · ${fmt(ttc / 1.2)}€ sin IVA (20 % Francia)`
+    );
+
   const proFeatures = [
     t3(language, '5 000 pages crawlées/mois', '5,000 pages/month', '5 000 páginas/mes'),
     t3(language, '10 pages par scan', '10 pages per scan', '10 páginas por escaneo'),
@@ -165,6 +175,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           <span className="text-4xl font-extrabold text-foreground">{proPrice.toFixed(2).replace('.', ',')}€</span>
           <span className="text-lg text-muted-foreground">/{t3(language, 'mois', 'mo', 'mes')}</span>
         </div>
+        <p className="text-xs text-muted-foreground mb-1">{netLabel(proPrice)}</p>
         {billing === 'annual' && (
           <p className="text-xs text-muted-foreground mb-1">
             {t3(language,
@@ -218,6 +229,7 @@ export function PricingPlansSection({ title, subtitle, embedded }: PricingPlansS
           <span className="text-4xl font-extrabold text-foreground">{plusPrice.toFixed(2).replace('.', ',')}€</span>
           <span className="text-lg text-muted-foreground">/{t3(language, 'mois', 'mo', 'mes')}</span>
         </div>
+        <p className="text-xs text-muted-foreground mb-1">{netLabel(plusPrice)}</p>
         {billing === 'annual' && (
           <p className="text-xs text-muted-foreground mb-1">
             {t3(language,
