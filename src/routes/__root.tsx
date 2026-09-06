@@ -157,6 +157,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { children: DOMAIN_CANONICALIZATION },
       { children: TEXT_SIZE_BOOTSTRAP },
       { children: GTM_LAZY_LOADER },
+      { children: GA4_FALLBACK_LOADER },
     ],
   }),
   shellComponent: RootShell,

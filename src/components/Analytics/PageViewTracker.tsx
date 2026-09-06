@@ -26,6 +26,19 @@ export function PageViewTracker() {
           page_location: window.location.href,
           page_title: document.title,
         });
+        // Secours : si GTM est absent (bloqueur, tag GA4 défaillant), on envoie
+        // la page vue SPA directement à GA4 via gtag.js (chargé par le fallback).
+        const gtmLoaded = !!(window as unknown as { google_tag_manager?: Record<string, unknown> })
+          .google_tag_manager?.['GTM-TDGHZZ49'];
+        const directGtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
+        if (!gtmLoaded && typeof directGtag === 'function') {
+          directGtag('event', 'page_view', {
+            page_path: location.pathname + location.search,
+            page_location: window.location.href,
+            page_title: document.title,
+            send_to: 'G-0S0D56VSWQ',
+          });
+        }
       } catch {
         /* noop */
       }
