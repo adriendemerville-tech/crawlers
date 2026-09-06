@@ -70,6 +70,12 @@ const TEXT_SIZE_BOOTSTRAP = `try {var ts = localStorage.getItem('ui.textSize');i
 // ported from index.html — GTM loaded on first user interaction, avant sortie de page, OU après 2,5s (compromis LCP/mesure)
 const GTM_LAZY_LOADER = `(function() {var loaded = false;function loadGTM() {if (loaded) return;loaded = true;var h = window.location.hostname;if (h.includes('lovableproject.com') || h.includes('lovable.app') || h === 'localhost') return;(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-TDGHZZ49');}var evts = ['pointerdown','touchstart','keydown','scroll','mousemove'];var fire = function(){ evts.forEach(function(e){ window.removeEventListener(e, fire, {passive:true}); }); loadGTM(); };evts.forEach(function(e){ window.addEventListener(e, fire, {passive:true, once:true}); });document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') loadGTM(); });window.addEventListener('pagehide', loadGTM);window.addEventListener('load', function(){ setTimeout(loadGTM, 2500); });})();`;
 
+// Secours GA4 : si GTM n'a pas chargé 4s après le load (bloqueur de pub, échec
+// réseau, tag GA4 défaillant côté GTM), on charge gtag.js en direct avec
+// send_page_view=true pour garantir au moins la page vue initiale. Si GTM est
+// présent, on ne fait rien pour éviter le double comptage.
+const GA4_FALLBACK_LOADER = `(function(){var h=window.location.hostname;if(h.includes('lovableproject.com')||h.includes('lovable.app')||h==='localhost')return;window.addEventListener('load',function(){setTimeout(function(){if(window.google_tag_manager&&window.google_tag_manager['GTM-TDGHZZ49'])return;if(document.querySelector('script[src*="googletagmanager.com/gtag/js"]'))return;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-0S0D56VSWQ';s.onload=function(){try{window.gtag('config','G-0S0D56VSWQ',{send_page_view:true});}catch(e){}};document.head.appendChild(s);},4000);});})();`;
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
