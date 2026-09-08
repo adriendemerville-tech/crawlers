@@ -387,7 +387,7 @@ export const getPasseConnections = createServerFn({ method: "POST" })
         .eq("status", "active"),
       supabase
         .from("gmb_locations")
-        .select("id, location_id, location_name, address, tracked_site_id")
+        .select("id, place_id, location_name, address, tracked_site_id")
         .eq("user_id", userId)
         .limit(50),
     ]);
