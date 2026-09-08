@@ -40,9 +40,8 @@ Une étape visible à la fois, un seul bouton, reprise possible là où le clien
 - La preuve : avant / après réels, pas de captures de démo.
 - Données structurées produit / offre, un seul H1, page rendue côté serveur, mise en cache, ajoutée au sitemap. Design noir et blanc, sans emoji, boutons à bordure.
 
-## Ce qui doit être précisé par toi avant le code
+## Ce qui doit encore être précisé avant le code
 
-- **Le prix de la passe** et son nom commercial.
 - **Le périmètre exact des correctifs site** inclus (titres, descriptions, balisage, vitesse ? — le verrou à définir pour ne pas promettre l'illimité).
 - **Les sujets des 3 contenus** : choisis par le moteur à partir du diagnostic et présentés pour accord, ou fixés dès le départ ?
 - **Le délai annoncé** entre paiement et déploiement (proposition : 72 h).
