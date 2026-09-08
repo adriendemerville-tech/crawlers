@@ -25,7 +25,7 @@ const FEATURES = [
   { id: "semantic_audit",       status: "stable",  fn: "cocoon-diag-semantic",         desc: "Audit sémantique (champ lexical, entités, alignement intention)", input: { url: "string", keyword: "string?" } },
   { id: "cocoon",               status: "stable",  fn: "calculate-cocoon-logic",       desc: "Génération du cocon sémantique 3D (clusters, cannibalisation)", input: { domain: "string" } },
   { id: "content_architect",    status: "stable",  fn: "content-architecture-advisor", desc: "Recommandation éditoriale (4-étages : brief, stratège, rédacteur, tonalisateur)", input: { domain: "string", topic: "string", target_audience: "string?" } },
-  { id: "autopilot_status",     status: "stable",  fn: "__autopilot_status",           desc: "Lecture du statut Autopilot (Parménion) pour un domaine", input: { domain: "string" } },
+  { id: "autopilot_status",     status: "stable",  fn: "__autopilot_status",           desc: "Lecture du statut Autopilot (Périclès) pour un domaine", input: { domain: "string" } },
   { id: "conversion_optimizer", status: "preview", fn: null,                           desc: "Audit conversion (CTA, friction, GA4 behavioral metrics)", input: { url: "string" } },
   { id: "social_hub",           status: "stable",  fn: "generate-social-content",      desc: "Génération de variations sociales depuis un article", input: { url: "string", platforms: "string[]?" } },
   { id: "geo_score",            status: "stable",  fn: "check-geo",                    desc: "Score GEO (Generative Engine Optimization)", input: { url: "string" } },

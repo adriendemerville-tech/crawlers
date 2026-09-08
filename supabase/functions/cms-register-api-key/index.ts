@@ -18,7 +18,7 @@
  * Modes :
  *   - mode='manual' (défaut)  : { tracked_site_id, api_key, platform? }
  *   - mode='reuse_admin'      : { tracked_site_id, platform? }
- *       Réutilise la clé déjà stockée dans parmenion_targets pour le domaine
+ *       Réutilise la clé déjà stockée dans pericles_targets pour le domaine
  *       (utile pour les admins qui ont déjà seedé la clé côté autopilot).
  */
 
@@ -264,7 +264,7 @@ Deno.serve(async (req: Request) => {
       const { data, error } = await supabase.rpc('get_pericles_target_api_key', { p_domain: site.domain })
       if (error || !data || typeof data !== 'string') {
         return new Response(JSON.stringify({
-          error: `No admin key found in parmenion_targets for "${site.domain}"`,
+          error: `No admin key found in pericles_targets for "${site.domain}"`,
         }), {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
