@@ -1,6 +1,11 @@
-# Offre unique « Audit + correctifs » — plan d'implantation v2
+# Offre unique « Parmenion » — plan d'implantation
 
-Produit : un achat unique. Audit du site et de la fiche Google Maps, correctifs proposés, 3 contenus rédigés et validés par le client, optimisation de la fiche Google Maps. **Rien n'est déployé avant paiement.** Le client relit et valide tout avant de payer ; la validation humaine sur le contenu est une règle projet (les agents ne touchent jamais le code sans validation, on applique la même règle aux publications client).
+Produit : un achat unique à 59 € TTC. Audit du site et de la fiche Google Maps, correctifs proposés, 3 contenus rédigés et validés par le client, optimisation de la fiche Google Maps. **Rien n'est déployé avant paiement.** Le client relit et valide tout avant de payer ; la validation humaine sur le contenu est une règle projet (les agents ne touchent jamais le code sans validation, on applique la même règle aux publications client).
+
+## Décisions déjà tranchées
+
+- **Nom commercial : Parmenion.**
+- **Prix unique : 59 € TTC.**
 
 ## Améliorations par rapport au plan v1
 
@@ -35,9 +40,8 @@ Une étape visible à la fois, un seul bouton, reprise possible là où le clien
 - La preuve : avant / après réels, pas de captures de démo.
 - Données structurées produit / offre, un seul H1, page rendue côté serveur, mise en cache, ajoutée au sitemap. Design noir et blanc, sans emoji, boutons à bordure.
 
-## Ce qui doit être précisé par toi avant le code
+## Ce qui doit encore être précisé avant le code
 
-- **Le prix de la passe** et son nom commercial.
 - **Le périmètre exact des correctifs site** inclus (titres, descriptions, balisage, vitesse ? — le verrou à définir pour ne pas promettre l'illimité).
 - **Les sujets des 3 contenus** : choisis par le moteur à partir du diagnostic et présentés pour accord, ou fixés dès le départ ?
 - **Le délai annoncé** entre paiement et déploiement (proposition : 72 h).
