@@ -346,6 +346,63 @@ async function getLocationInfoReal(token: GmbTokenInfo) {
   }
 }
 
+
+/**
+ * Écriture sur la fiche : description, catégorie principale, site web, téléphone.
+ * Chaque champ modifié est renvoyé pour être journalisé par l'appelant.
+ */
+async function updateLocationInfoReal(token: GmbTokenInfo, fields: Record<string, any>) {
+  const locationName = `locations/${token.location_id}`
+  const body: Record<string, any> = {}
+  const mask: string[] = []
+
+  if (typeof fields.description === 'string' && fields.description.trim()) {
+    body.profile = { description: String(fields.description).slice(0, 750) }
+    mask.push('profile.description')
+  }
+  if (typeof fields.website === 'string' && fields.website.trim()) {
+    body.websiteUri = String(fields.website).trim()
+    mask.push('websiteUri')
+  }
+  if (typeof fields.phone === 'string' && fields.phone.trim()) {
+    body.phoneNumbers = { primaryPhone: String(fields.phone).trim() }
+    mask.push('phoneNumbers.primaryPhone')
+  }
+  if (typeof fields.primary_category_id === 'string' && fields.primary_category_id.trim()) {
+    body.categories = { primaryCategory: { name: String(fields.primary_category_id).trim() } }
+    mask.push('categories.primaryCategory')
+  }
+
+  if (mask.length === 0) return { success: false, error: 'no_field_to_update', changed: [] }
+
+  await gbpFetch(
+    `${GBP_BASE}/${locationName}?updateMask=${encodeURIComponent(mask.join(','))}`,
+    token.access_token,
+    { method: 'PATCH', body: JSON.stringify(body) },
+  )
+
+  return { success: true, changed: Object.keys(fields).filter((k) => fields[k]), simulated: false }
+}
+
+/** Publication sur la fiche (Google Business Profile v4 localPosts). */
+async function createPostReal(token: GmbTokenInfo, params: { summary: string; ctaUrl?: string }) {
+  const locationName = `accounts/${token.account_id}/locations/${token.location_id}`
+  const body: Record<string, any> = {
+    languageCode: 'fr',
+    summary: String(params.summary || '').slice(0, 1500),
+    topicType: 'STANDARD',
+  }
+  if (params.ctaUrl) {
+    body.callToAction = { actionType: 'LEARN_MORE', url: params.ctaUrl }
+  }
+  const data = await gbpFetch(`${GBP_REVIEWS_BASE}/${locationName}/localPosts`, token.access_token, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  return { success: true, post_name: data?.name ?? null, simulated: false }
+}
+
+
 function formatAddress(addr: any): string {
   if (!addr) return ''
   return [addr.addressLines?.join(', '), addr.locality, addr.postalCode, addr.regionCode].filter(Boolean).join(', ')
@@ -612,6 +669,20 @@ try {
           simulated: true,
         }
         break
+
+      case 'update-location-info':
+        if (!token) throw new Error('Google Business Profile connection required to update the listing')
+        if (!params.fields || typeof params.fields !== 'object') throw new Error('fields required')
+        result = await updateLocationInfoReal(token, params.fields as Record<string, any>)
+        break
+
+      case 'create-post':
+        if (!token) throw new Error('Google Business Profile connection required to publish a post')
+        if (!params.summary) throw new Error('summary required')
+        result = await createPostReal(token, params as any)
+        break
+
+
 
       default:
         return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {

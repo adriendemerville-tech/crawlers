@@ -12061,14 +12061,40 @@ export type Database = {
         }
         Relationships: []
       }
+      passe_free_diagnostics: {
+        Row: {
+          created_at: string | null
+          id: string
+          ip_hash: string
+          normalized_url: string
+          score: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ip_hash: string
+          normalized_url: string
+          score?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ip_hash?: string
+          normalized_url?: string
+          score?: number | null
+        }
+        Relationships: []
+      }
       passe_order_contents: {
         Row: {
           client_revision: string | null
+          cms_id: string | null
           created_at: string | null
           draft_html: string | null
           id: string
           order_id: string
           outline: Json | null
+          published_url: string | null
           revision_count: number
           status: string
           title: string | null
@@ -12078,11 +12104,13 @@ export type Database = {
         }
         Insert: {
           client_revision?: string | null
+          cms_id?: string | null
           created_at?: string | null
           draft_html?: string | null
           id?: string
           order_id: string
           outline?: Json | null
+          published_url?: string | null
           revision_count?: number
           status?: string
           title?: string | null
@@ -12092,11 +12120,13 @@ export type Database = {
         }
         Update: {
           client_revision?: string | null
+          cms_id?: string | null
           created_at?: string | null
           draft_html?: string | null
           id?: string
           order_id?: string
           outline?: Json | null
+          published_url?: string | null
           revision_count?: number
           status?: string
           title?: string | null
@@ -12153,15 +12183,22 @@ export type Database = {
         Row: {
           created_at: string | null
           deployed_at: string | null
+          diagnostic: Json | null
           findings: Json | null
+          fixes: Json | null
           gmb_account_id: string | null
+          gmb_deploy_status: string | null
           gmb_location_id: string | null
+          gmb_preview: Json | null
           id: string
           normalized_url: string | null
           paid_at: string | null
           report: Json | null
+          site_deploy_status: string | null
+          snapshot: Json | null
           status: string
           step: number
+          tracked_site_id: string | null
           updated_at: string | null
           url: string | null
           user_id: string
@@ -12169,15 +12206,22 @@ export type Database = {
         Insert: {
           created_at?: string | null
           deployed_at?: string | null
+          diagnostic?: Json | null
           findings?: Json | null
+          fixes?: Json | null
           gmb_account_id?: string | null
+          gmb_deploy_status?: string | null
           gmb_location_id?: string | null
+          gmb_preview?: Json | null
           id?: string
           normalized_url?: string | null
           paid_at?: string | null
           report?: Json | null
+          site_deploy_status?: string | null
+          snapshot?: Json | null
           status?: string
           step?: number
+          tracked_site_id?: string | null
           updated_at?: string | null
           url?: string | null
           user_id: string
@@ -12185,15 +12229,22 @@ export type Database = {
         Update: {
           created_at?: string | null
           deployed_at?: string | null
+          diagnostic?: Json | null
           findings?: Json | null
+          fixes?: Json | null
           gmb_account_id?: string | null
+          gmb_deploy_status?: string | null
           gmb_location_id?: string | null
+          gmb_preview?: Json | null
           id?: string
           normalized_url?: string | null
           paid_at?: string | null
           report?: Json | null
+          site_deploy_status?: string | null
+          snapshot?: Json | null
           status?: string
           step?: number
+          tracked_site_id?: string | null
           updated_at?: string | null
           url?: string | null
           user_id?: string
