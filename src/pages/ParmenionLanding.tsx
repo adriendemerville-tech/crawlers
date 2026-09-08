@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useRef } from 'react';
+import { memo, useState, useCallback, useRef, lazy, Suspense } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Input } from '@/components/ui/input';
@@ -6,9 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Link } from '@/lib/router-compat';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePaddleCheckout } from '@/hooks/usePaddleCheckout';
-import { createParmenionOrder } from '@/lib/parmenion/parmenion.functions';
+import { createParmenionOrder, runFreePasseDiagnostic } from '@/lib/parmenion/parmenion.functions';
 import { ArrowRight, Check, Shield, Clock, FileText, MapPin, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const PasseFlow = lazy(() => import('@/components/Parmenion/PasseFlow'));
+
 
 const URL = 'https://crawlers.fr/passe-visibilite';
 
