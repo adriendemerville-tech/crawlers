@@ -428,19 +428,19 @@ try {
       return jsonOk({ success: true, assistant_report: assistantReport })
     }
 
-    // ─── Action: Audit Parménion (Autopilot) errors ──────────────
-    if (action === 'audit_parmenion') {
+    // ─── Action: Audit Périclès (Autopilot) errors ──────────────
+    if (action === 'audit_pericles' || action === 'audit_parmenion') {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-      // Fetch recent Parménion decision logs
+      // Fetch recent Périclès decision logs
       const [decisionsRes, errorRateRes] = await Promise.all([
         supabase
-          .from('parmenion_decision_log')
+          .from('pericles_decision_log')
           .select('*')
           .gte('created_at', thirtyDaysAgo)
           .order('created_at', { ascending: false })
           .limit(50),
-        supabase.rpc('parmenion_error_rate', { p_domain: body.domain || '%', p_last_n: 20 }),
+        supabase.rpc('pericles_error_rate', { p_domain: body.domain || '%', p_last_n: 20 }),
       ])
 
       const decisions = decisionsRes.data || []
@@ -451,7 +451,7 @@ try {
       const highRiskActions = decisions.filter((d: any) => (d.risk_predicted || 0) >= 4)
 
       // Build LLM audit prompt
-      const parmenionPrompt = `Tu es le SUPERVISOR. Tu audites les décisions de l'intelligence Parménion (pilote automatique SEO).
+      const periclesPrompt = `Tu es le SUPERVISOR. Tu audites les décisions de l'intelligence Périclès (pilote automatique SEO).
 
 STATISTIQUES :
 - Décisions analysées : ${decisions.length} (30 derniers jours)
@@ -483,11 +483,11 @@ ${JSON.stringify(highRiskActions.slice(0, 10).map((d: any) => ({
   is_error: d.is_error,
 })), null, 2)}
 
-Audite la qualité des décisions Parménion. Identifie les patterns d'erreur, les biais, et les recommandations stratégiques.
+Audite la qualité des décisions Périclès. Identifie les patterns d'erreur, les biais, et les recommandations stratégiques.
 
 Réponds en JSON :
 {
-  "summary": "Vue d'ensemble de la qualité décisionnelle Parménion",
+  "summary": "Vue d'ensemble de la qualité décisionnelle Périclès",
   "error_patterns": ["Pattern 1", ...],
   "risk_calibration_quality": "Score 0-100 sur la qualité de calibration du risque",
   "conservative_mode_justified": true/false,
@@ -504,8 +504,8 @@ Réponds en JSON :
         timeoutMs: 60000,
         body: {
           messages: [
-            { role: 'system', content: 'Tu es le Supervisor de Crawlers. Tu audites la qualité des décisions de l\'intelligence Parménion.' },
-            { role: 'user', content: parmenionPrompt },
+            { role: 'system', content: 'Tu es le Supervisor de Crawlers. Tu audites la qualité des décisions de l\'intelligence Périclès.' },
+            { role: 'user', content: periclesPrompt },
           ],
           temperature: 0.15,
           max_tokens: 4000,
@@ -525,17 +525,17 @@ Réponds en JSON :
 
       // Log into supervisor_logs
       await supabase.from('supervisor_logs').insert({
-        audit_id: `supervisor_parmenion_${Date.now()}`,
-        analysis_summary: analysis?.summary || `Audit Parménion — ${errors.length} erreurs sur ${decisions.length} décisions`,
+        audit_id: `supervisor_pericles_${Date.now()}`,
+        analysis_summary: analysis?.summary || `Audit Périclès — ${errors.length} erreurs sur ${decisions.length} décisions`,
         self_critique: `Score: ${analysis?.overall_score || 'N/A'}/100, Taux d'erreur: ${errorRate.error_rate}%`,
         confidence_score: 0,
         decision: analysis?.severity === 'critical' ? 'needs_review' : 'approved',
         cto_score: analysis?.overall_score || 0,
         correction_count: decisions.length,
-        functions_audited: ['parmenion', 'autopilot-engine'],
+        functions_audited: ['pericles', 'autopilot-engine'],
         post_deploy_errors: errors.length,
         metadata: {
-          type: 'parmenion_audit',
+          type: 'pericles_audit',
           error_rate: errorRate,
           analysis,
           high_risk_count: highRiskActions.length,
@@ -544,7 +544,7 @@ Réponds en JSON :
 
       return new Response(JSON.stringify({
         success: true,
-        parmenion_report: {
+        pericles_report: {
           total_decisions: decisions.length,
           errors: errors.length,
           error_rate: errorRate,

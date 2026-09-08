@@ -16,7 +16,7 @@ interface Props {
   targetLabel: string;
 }
 
-export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
+export function PericlesThrottleControl({ targetId, targetLabel }: Props) {
   const { toast } = useToast();
   const [maxContent, setMaxContent] = useState<number>(3);
   const [period, setPeriod] = useState<Period>('day');
@@ -29,7 +29,7 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
     (async () => {
       setLoading(true);
       const { data } = await supabase
-        .from('parmenion_targets')
+        .from('pericles_targets')
         .select('max_content_per_period, throttle_period, backlog_guard_paused')
         .eq('id', targetId)
         .maybeSingle();
@@ -45,7 +45,7 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
   const save = async () => {
     setSaving(true);
     const { error } = await supabase
-      .from('parmenion_targets')
+      .from('pericles_targets')
       .update({ max_content_per_period: maxContent, throttle_period: period })
       .eq('id', targetId);
     setSaving(false);
@@ -59,7 +59,7 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
   const toggleBacklogGuard = async (checked: boolean) => {
     setTogglingGuard(true);
     const { error } = await supabase
-      .from('parmenion_targets')
+      .from('pericles_targets')
       .update({ backlog_guard_paused: checked })
       .eq('id', targetId);
     setTogglingGuard(false);
@@ -70,8 +70,8 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
       toast({
         title: checked ? 'Backlog Guard en pause' : 'Backlog Guard réactivé',
         description: checked
-          ? `Parménion peut publier librement sur ${targetLabel} sans limite de file d'attente.`
-          : `Parménion sera pausé au-delà de 5 décisions CMS en attente sur ${targetLabel}.`,
+          ? `Périclès peut publier librement sur ${targetLabel} sans limite de file d'attente.`
+          : `Périclès sera pausé au-delà de 5 décisions CMS en attente sur ${targetLabel}.`,
       });
     }
   };
@@ -84,7 +84,7 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
           Limite de production de contenu
         </CardTitle>
         <CardDescription>
-          Nombre maximum de nouveaux contenus que Parménion peut créer sur ce CMS, par période.
+          Nombre maximum de nouveaux contenus que Périclès peut créer sur ce CMS, par période.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap items-end gap-3">
@@ -116,7 +116,7 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
           {saving ? 'Enregistrement…' : 'Enregistrer'}
         </Button>
         <p className="text-xs text-muted-foreground basis-full">
-          0 = aucune création (mises à jour uniquement). Au-delà de la limite, Parménion saute le cycle de création.
+          0 = aucune création (mises à jour uniquement). Au-delà de la limite, Périclès saute le cycle de création.
         </p>
 
         <div className="basis-full border-t pt-3 mt-2 flex flex-wrap items-center justify-between gap-3">
@@ -125,7 +125,7 @@ export function ParmenionThrottleControl({ targetId, targetLabel }: Props) {
               Pause Backlog Guard
             </Label>
             <p className="text-xs text-muted-foreground max-w-md">
-              Si activé, Parménion ignore le seuil de 5 décisions CMS en attente (depuis plus d'1h) et publie à son rythme d'origine sur ce CMS.
+              Si activé, Périclès ignore le seuil de 5 décisions CMS en attente (depuis plus d'1h) et publie à son rythme d'origine sur ce CMS.
             </p>
 
           </div>

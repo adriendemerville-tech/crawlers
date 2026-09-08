@@ -111,11 +111,11 @@ function SortableTaskRow({ task, index }: { task: WorkbenchTask; index: number }
   );
 }
 
-interface ParmenionTaskPlanProps {
+interface PericlesTaskPlanProps {
   domain: string;
 }
 
-export function ParmenionTaskPlan({ domain }: ParmenionTaskPlanProps) {
+export function PericlesTaskPlan({ domain }: PericlesTaskPlanProps) {
   const [tasks, setTasks] = useState<WorkbenchTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

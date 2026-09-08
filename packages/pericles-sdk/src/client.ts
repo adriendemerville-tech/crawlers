@@ -1,5 +1,5 @@
 import {
-  ParmenionError,
+  PericlesError,
   type ClientOptions,
   type FailedResult,
   type PendingTask,
@@ -8,10 +8,10 @@ import {
 } from './types.js';
 
 const DEFAULT_BASE_URL =
-  'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/parmenion-api';
+  'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/pericles-api';
 const SDK_VERSION = '0.1.0';
 
-export class ParmenionClient {
+export class PericlesClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
@@ -19,7 +19,7 @@ export class ParmenionClient {
 
   constructor(options: ClientOptions) {
     if (!options.apiKey || !options.apiKey.startsWith('prm_live_')) {
-      throw new ParmenionError(
+      throw new PericlesError(
         'Invalid apiKey: expected a key starting with "prm_live_".',
         'invalid_api_key'
       );
@@ -44,16 +44,16 @@ export class ParmenionClient {
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
-          'User-Agent': `@parmenion/sdk/${SDK_VERSION}`,
+          'User-Agent': `@pericles/sdk/${SDK_VERSION}`,
         },
         body: body ? JSON.stringify(body) : undefined,
         signal: ctrl.signal,
       });
     } catch (err) {
       if ((err as Error).name === 'AbortError') {
-        throw new ParmenionError(`Request timed out after ${this.timeoutMs}ms.`, 'timeout');
+        throw new PericlesError(`Request timed out after ${this.timeoutMs}ms.`, 'timeout');
       }
-      throw new ParmenionError(`Network error: ${(err as Error).message}`, 'network');
+      throw new PericlesError(`Network error: ${(err as Error).message}`, 'network');
     } finally {
       clearTimeout(timer);
     }
@@ -62,7 +62,7 @@ export class ParmenionClient {
     const payload = text ? JSON.parse(text) : null;
     if (res.ok) return payload as T;
 
-    throw new ParmenionError(
+    throw new PericlesError(
       payload?.error ?? payload?.message ?? res.statusText,
       `http_${res.status}`
     );
@@ -105,7 +105,7 @@ export class ParmenionClient {
       try {
         tasks = await this.pending(batch);
       } catch (e) {
-        console.error('[parmenion] poll failed:', e);
+        console.error('[pericles] poll failed:', e);
       }
 
       for (const task of tasks) {

@@ -201,7 +201,7 @@ export function ContentIntegrityPanel({ crawlId }: { crawlId?: string | null }) 
       </Card>
 
       <p className="md:col-span-2 text-[10px] text-muted-foreground">
-        Ces constats sont transmis automatiquement au Workbench, exploité par l'Autopilot Parménion et le Stratège
+        Ces constats sont transmis automatiquement au Workbench, exploité par l'Autopilot Périclès et le Stratège
         Cocoon (fusion, redirection 301, enrichissement).
       </p>
     </div>

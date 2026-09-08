@@ -767,7 +767,7 @@ export function useMyTracking() {
   };
 
   // ─── Remove site ───
-  // Supprime un site suivi : désactive aussi l'autopilot lié et la cible Parménion
+  // Supprime un site suivi : désactive aussi l'autopilot lié et la cible Périclès
   // sur le même domaine afin que plus aucun audit / cycle automatique ne tourne.
   const handleRemoveSite = async (siteId: string, t: Record<string, string>) => {
     const site = sites.find(s => s.id === siteId);
@@ -776,10 +776,10 @@ export function useMyTracking() {
       .from('autopilot_configs')
       .update({ is_active: false })
       .eq('tracked_site_id', siteId);
-    // 2) Désactiver la cible Parménion sur ce domaine (si présente)
+    // 2) Désactiver la cible Périclès sur ce domaine (si présente)
     if (site?.domain) {
       await supabase
-        .from('parmenion_targets')
+        .from('pericles_targets')
         .update({ is_active: false })
         .ilike('domain', site.domain);
     }

@@ -27,16 +27,16 @@ interface IntegrationTarget {
 type TestStatus = 'idle' | 'testing' | 'success' | 'failure';
 
 /**
- * ParmenionApiKeyManager
+ * PericlesApiKeyManager
  *
- * Onglet Admin > Parménion > Intégrations.
+ * Onglet Admin > Périclès > Intégrations.
  * Liste toutes les cibles connectées via API key (dictadevi, iktracker, etc.)
  * et permet de mettre à jour la clé + tester la connexion.
  *
- * Stockage : la valeur est conservée dans `parmenion_targets.api_key_name`
+ * Stockage : la valeur est conservée dans `pericles_targets.api_key_name`
  * (cf. note tech Sprint 8.1 — toléré en clair).
  */
-export function ParmenionApiKeyManager() {
+export function PericlesApiKeyManager() {
   const { toast } = useToast();
   const [targets, setTargets] = useState<IntegrationTarget[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +51,7 @@ export function ParmenionApiKeyManager() {
   const fetchTargets = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from('parmenion_targets')
+      .from('pericles_targets')
       .select('id, domain, label, platform, api_key_name')
       .eq('is_active', true)
       .order('created_at', { ascending: true });
@@ -103,7 +103,7 @@ export function ParmenionApiKeyManager() {
 
     setSaving(true);
     const { error } = await supabase
-      .from('parmenion_targets')
+      .from('pericles_targets')
       .update({ api_key_name: newKey.trim(), updated_at: new Date().toISOString() })
       .eq('id', editing.id);
 

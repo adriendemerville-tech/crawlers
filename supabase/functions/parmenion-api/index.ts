@@ -1,20 +1,21 @@
-// Parménion API — pull model: client site polls for pending content tasks
+// Périclès API — pull model: client site polls for pending content tasks
 // and reports back when published or failed.
 //
-// Endpoints (all under /functions/v1/parmenion-api):
+// Endpoints (all under /functions/v1/parmenion-api — slug de déploiement conservé):
 //   GET    /v1/health
 //   GET    /v1/tasks/pending?limit=10
 //   POST   /v1/tasks/{id}/ack
 //   POST   /v1/tasks/{id}/published   body: { url, cms_post_id?, notes? }
 //   POST   /v1/tasks/{id}/failed      body: { error_message, error_category? }
 //
-// Auth: header `Authorization: Bearer prm_live_xxx` OR `x-parmenion-key: prm_live_xxx`
+// Auth: header `Authorization: Bearer <token>` OR `x-pericles-key: <token>`
+// (legacy `x-parmenion-key` still accepted for backward compatibility)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-parmenion-key, content-type, apikey',
+  'Access-Control-Allow-Headers': 'authorization, x-pericles-key, x-parmenion-key, content-type, apikey',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
@@ -31,13 +32,13 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 function extractToken(req: Request): string | null {
   const auth = req.headers.get('authorization') || '';
   if (auth.toLowerCase().startsWith('bearer ')) return auth.slice(7).trim();
-  const x = req.headers.get('x-parmenion-key');
+  const x = req.headers.get('x-pericles-key') || req.headers.get('x-parmenion-key');
   if (x) return x.trim();
   return null;
 }
 
 async function verifyToken(token: string) {
-  const { data, error } = await admin.rpc('parmenion_verify_pull_token', { _token: token });
+  const { data, error } = await admin.rpc('pericles_verify_pull_token', { _token: token });
   if (error || !data || data.length === 0) return null;
   const row = data[0] as {
     target_id: string;
@@ -53,12 +54,12 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   const url = new URL(req.url);
-  // Strip "/parmenion-api" prefix the gateway prepends, keep "/v1/..."
-  const path = url.pathname.replace(/^\/parmenion-api/, '') || '/';
+  // Strip "/parmenion-api" prefix the gateway prepends (deployment slug kept), keep "/v1/..."
+  const path = url.pathname.replace(/^\/parmenion-api/, '').replace(/^\/pericles-api/, '') || '/';
 
   // Public health
   if (req.method === 'GET' && path === '/v1/health') {
-    return json({ ok: true, service: 'parmenion-api', version: 'v1', time: new Date().toISOString() });
+    return json({ ok: true, service: 'pericles-api', version: 'v1', time: new Date().toISOString() });
   }
 
   // Auth
@@ -72,7 +73,7 @@ Deno.serve(async (req) => {
   if (req.method === 'GET' && path === '/v1/tasks/pending') {
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '10', 10) || 10, 50);
     const { data, error } = await admin
-      .from('parmenion_decision_log')
+      .from('pericles_decision_log')
       .select(
         'id, domain, action_type, action_payload, goal_description, goal_type, pipeline_phase, cycle_number, created_at',
       )
@@ -105,7 +106,7 @@ Deno.serve(async (req) => {
 
     // Confirm the task belongs to this target's domain
     const { data: task, error: taskErr } = await admin
-      .from('parmenion_decision_log')
+      .from('pericles_decision_log')
       .select('id, status, domain, execution_results')
       .eq('id', taskId)
       .eq('domain', target.domain)
@@ -125,7 +126,7 @@ Deno.serve(async (req) => {
 
     if (verb === 'ack') {
       const { error } = await admin
-        .from('parmenion_decision_log')
+        .from('pericles_decision_log')
         .update({
           status: 'in_progress',
           execution_started_at: now,
@@ -141,7 +142,7 @@ Deno.serve(async (req) => {
       const publishedUrl = typeof body.url === 'string' ? body.url : null;
       if (!publishedUrl) return json({ error: 'invalid_body', message: '`url` is required' }, 400);
       const { error } = await admin
-        .from('parmenion_decision_log')
+        .from('pericles_decision_log')
         .update({
           status: 'completed',
           execution_completed_at: now,
@@ -164,7 +165,7 @@ Deno.serve(async (req) => {
       const msg = typeof body.error_message === 'string' ? body.error_message : 'unknown error';
       const cat = typeof body.error_category === 'string' ? body.error_category : 'client_failure';
       const { error } = await admin
-        .from('parmenion_decision_log')
+        .from('pericles_decision_log')
         .update({
           status: 'error',
           is_error: true,

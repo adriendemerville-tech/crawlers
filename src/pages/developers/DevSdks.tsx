@@ -42,36 +42,36 @@ try {
     docsLink: "/docs/api/crawlers",
   },
   {
-    name: "@parmenion/sdk",
+    name: "@pericles/sdk",
     prefix: "prm_live_",
     desc: "Worker pull-model pour l'Autopilote : récupère, ack, publie et reporte les tâches de contenu.",
-    install: "npm install @parmenion/sdk",
-    quickstart: `import { ParmenionClient } from '@parmenion/sdk';
+    install: "npm install @pericles/sdk",
+    quickstart: `import { PericlesClient } from '@pericles/sdk';
 
-const parmenion = new ParmenionClient({
-  apiKey: process.env.PARMENION_API_KEY!,
+const pericles = new PericlesClient({
+  apiKey: process.env.PERICLES_API_KEY!,
 });
 
 // Worker prêt à l'emploi : poll → ack → handler → published/failed
-await parmenion.runWorker(async (task) => {
+await pericles.runWorker(async (task) => {
   const url = await publishToYourCms(task.payload);
   return { url, cms_post_id: 'wp_42' };
 });`,
     errors: `// API bas-niveau
-const tasks = await parmenion.pending(10);
-await parmenion.ack(tasks[0].id);
+const tasks = await pericles.pending(10);
+await pericles.ack(tasks[0].id);
 
-await parmenion.published(tasks[0].id, {
+await pericles.published(tasks[0].id, {
   url: 'https://...',
   cms_post_id: '42',
 });
 
 // ou en cas d'échec
-await parmenion.failed(tasks[0].id, {
+await pericles.failed(tasks[0].id, {
   error_message: 'CMS down',
   error_category: 'cms_unreachable',
 });`,
-    docsLink: "/docs/api/parmenion",
+    docsLink: "/docs/api/pericles",
   },
 ];
 
@@ -79,7 +79,7 @@ export default function DevSdks() {
   return (
     <DevLayout
       title="SDKs TypeScript"
-      description="SDKs officiels TypeScript pour les APIs Crawlers et Parménion."
+      description="SDKs officiels TypeScript pour les APIs Crawlers et Périclès."
     >
       <div className="mb-10">
         <h1 className="text-3xl font-light tracking-tight mb-2">SDKs TypeScript</h1>
@@ -142,7 +142,7 @@ export default function DevSdks() {
           <li>Stocker la clé API en variable d'environnement, jamais en clair côté client.</li>
           <li><code className="text-foreground">jobs.run()</code> = create + polling auto jusqu'à l'état terminal.</li>
           <li>Timeout par défaut : 30 s par requête, 5 min par job. Configurables via <code>timeoutMs</code> / <code>WaitOptions</code>.</li>
-          <li>Pour un arrêt propre du worker Parménion : passer un <code>AbortSignal</code> via <code>runWorker(handler, &#123; signal &#125;)</code>.</li>
+          <li>Pour un arrêt propre du worker Périclès : passer un <code>AbortSignal</code> via <code>runWorker(handler, &#123; signal &#125;)</code>.</li>
         </ul>
       </section>
     </DevLayout>

@@ -89,7 +89,7 @@ const CTO_FUNCTION_REGISTRY: { key: string; label: string; category: string }[] 
   // Pipeline
   { key: 'marina', label: 'Marina (Pipeline Rapports)', category: 'Pipeline' },
   { key: 'autopilot-engine', label: 'Autopilote Engine', category: 'Pipeline' },
-  { key: 'parmenion-orchestrator', label: 'Parménion', category: 'Pipeline' },
+  { key: 'pericles-orchestrator', label: 'Périclès', category: 'Pipeline' },
   // Agents
   { key: 'sav-agent', label: 'Félix (SAV)', category: 'Agents' },
   { key: 'agent-cto', label: 'Agent CTO', category: 'Agents' },

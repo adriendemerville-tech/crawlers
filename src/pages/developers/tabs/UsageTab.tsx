@@ -14,7 +14,7 @@ interface UsageRow {
 
 const API_LABELS: Record<string, string> = {
   crawlers: "Crawlers",
-  parmenion: "Parménion",
+  pericles: "Périclès",
   marina: "Marina",
 };
 
@@ -78,7 +78,7 @@ export default function UsageTab() {
       <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">Filtre :</span>
         <div className="flex gap-1">
-          {["all", "crawlers", "parmenion", "marina"].map(a => (
+          {["all", "crawlers", "pericles", "marina"].map(a => (
             <button
               key={a}
               onClick={() => setFilterApi(a)}

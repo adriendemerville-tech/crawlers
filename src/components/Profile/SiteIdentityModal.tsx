@@ -405,7 +405,7 @@ function BusinessModelSelector({ site, onUpdate }: { site: Record<string, any>; 
         })}
       </div>
       <p className="text-[10px] text-muted-foreground/60">
-        La sélection manuelle prévaut sur la détection automatique et alimente Parménion (CTA, ton, personas).
+        La sélection manuelle prévaut sur la détection automatique et alimente Périclès (CTA, ton, personas).
       </p>
     </div>
   );

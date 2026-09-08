@@ -1,7 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
 import { DICTADEVI_BASE_URL, DICTADEVI_PUBLIC_RESOURCES, getDictadeviApiKey } from '../_shared/domainUtils.ts'
-import { checkEditorialGuard } from '../_shared/parmenionEditorialGuard.ts'
+import { checkEditorialGuard } from '../_shared/periclesEditorialGuard.ts'
 import { checkDictadeviTopicAgainstBrief } from '../_shared/dictadeviEditorialBrief.ts'
 import { marked } from 'https://esm.sh/marked@12.0.2'
 
@@ -82,7 +82,7 @@ function ensureHtmlContent(body: Record<string, unknown>, ctx: string): void {
 /**
  * dictadevi-actions
  *
- * Pont API entre Crawlers (Parménion / autopilot-engine) et l'API REST custom
+ * Pont API entre Crawlers (Périclès / autopilot-engine) et l'API REST custom
  * de Dictadevi (v1). Voir knowledge/tech/api/dictadevi-bridge-fr.md.
  *
  * Base URL : https://dictadevi.io/api/v1
@@ -93,7 +93,7 @@ function ensureHtmlContent(body: Record<string, unknown>, ctx: string): void {
  *   - list-posts           → GET /posts        (status, slug, limit, offset)
  *   - get-post             → GET /posts/:slug
  *   - create-post          → POST /posts       (upsert: si slug existe, bascule en update)
- *   - update-post          → PUT /posts/:slug  (garde éditoriale Parménion)
+ *   - update-post          → PUT /posts/:slug  (garde éditoriale Périclès)
  *   - delete-post          → DELETE /posts/:slug
  *   - get-page             → GET /pages/:key
  *   - get-public-resources → liste statique des sitemaps/llms.txt (no auth)
@@ -101,14 +101,14 @@ function ensureHtmlContent(body: Record<string, unknown>, ctx: string): void {
  * Actions non supportées (Dictadevi n'expose PAS ces endpoints) → 501 not_supported :
  *   - push-code-head/body/page, get-injection-*, redirects, robots.txt,
  *     push-event, list-pages, create/update/delete-page.
- *   Le routeur Parménion (cmsActionRouter) doit les éviter pour Dictadevi.
- *
- * Garde éditoriale (cohérence avec iktracker-actions):
- *   - Refus si auteur ∈ {parménion, parmenion, crawlers autopilot}
+  *   Le routeur Périclès (cmsActionRouter) doit les éviter pour Dictadevi.
+  *
+  * Garde éditoriale (cohérence avec iktracker-actions):
+  *   - Refus si auteur ∈ {périclès, pericles, parménion, parmenion, crawlers autopilot}
  *   - Refus si published_at > 6 mois
  */
 
-// ── Editorial Guard (Fix 10.7 — aliases DB-driven via _shared/parmenionEditorialGuard) ──
+// ── Editorial Guard (Fix 10.7 — aliases DB-driven via _shared/periclesEditorialGuard) ──
 // Import en haut du fichier ; voir checkEditorialGuard(content, domain, supabase)
 
 // ── HTTP helper ──
@@ -254,7 +254,7 @@ function getPublicResources() {
 }
 
 // Actions explicitly not supported by Dictadevi v1 — surfaced clearly so callers
-// (autopilot-engine, parmenion) can route them elsewhere or skip.
+// (autopilot-engine, pericles) can route them elsewhere or skip.
 const UNSUPPORTED_ACTIONS = new Set<string>([
   'push-code-head', 'push-code-body', 'push-code-page',
   'get-injection-head', 'get-injection-body-end', 'get-injection-page',
@@ -308,8 +308,8 @@ Deno.serve(handleRequest(async (req: Request) => {
 
   // /health is the only auth-less route on Dictadevi → tolerate missing key for test-connection
   if (!apiKey && action !== 'test-connection') {
-    console.error('[dictadevi-actions] No API key found (env DICTADEVI_API_KEY missing AND no row in parmenion_targets)')
-    return jsonError('DICTADEVI_API_KEY not configured (set env or seed parmenion_targets row for dictadevi.io)', 500)
+    console.error('[dictadevi-actions] No API key found (env DICTADEVI_API_KEY missing AND no row in pericles_targets)')
+    return jsonError('DICTADEVI_API_KEY not configured (set env or seed pericles_targets row for dictadevi.io)', 500)
   }
 
   try {

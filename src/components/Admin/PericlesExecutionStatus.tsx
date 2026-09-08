@@ -103,16 +103,16 @@ function ModeBadge({ mode }: { mode: ImplementationMode }) {
   return <Badge variant="outline">{mode || 'inconnu'}</Badge>;
 }
 
-export function ParmenionExecutionStatus() {
+export function PericlesExecutionStatus() {
   const [rows, setRows] = useState<SiteRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchStatus = useCallback(async () => {
     setLoading(true);
 
-    // 1. Sites Parménion actifs
+    // 1. Sites Périclès actifs
     const { data: targets } = await supabase
-      .from('parmenion_targets')
+      .from('pericles_targets')
       .select('domain, label, is_active')
       .eq('is_active', true)
       .order('domain');
@@ -152,7 +152,7 @@ export function ParmenionExecutionStatus() {
 
       // Dernier cycle_number connu
       const { data: lastCycleRow } = await supabase
-        .from('parmenion_decision_log')
+        .from('pericles_decision_log')
         .select('cycle_number')
         .eq('domain', t.domain)
         .order('created_at', { ascending: false })
@@ -167,7 +167,7 @@ export function ParmenionExecutionStatus() {
 
       if (lastCycleNumber !== null) {
         const { data: phaseRows } = await supabase
-          .from('parmenion_decision_log')
+          .from('pericles_decision_log')
           .select('pipeline_phase, status, created_at')
           .eq('domain', t.domain)
           .eq('cycle_number', lastCycleNumber)
@@ -186,7 +186,7 @@ export function ParmenionExecutionStatus() {
       // visible nulle part (le chip de phase ne portait ni cause ni compteur).
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { data: incidentRows } = await supabase
-        .from('parmenion_decision_log')
+        .from('pericles_decision_log')
         .select('pipeline_phase, status, created_at, execution_error, action_type')
         .eq('domain', t.domain)
         .in('status', ['degraded', 'partial', 'failed'])
@@ -228,7 +228,7 @@ export function ParmenionExecutionStatus() {
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <div>
-            <CardTitle className="text-lg">Statut d'exécution Parménion</CardTitle>
+            <CardTitle className="text-lg">Statut d'exécution Périclès</CardTitle>
             <CardDescription>
               Mode actuel et phases réellement exécutées au dernier cycle pour chaque site
             </CardDescription>
@@ -244,7 +244,7 @@ export function ParmenionExecutionStatus() {
           <p className="text-sm text-muted-foreground">Chargement…</p>
         )}
         {!loading && rows.length === 0 && (
-          <p className="text-sm text-muted-foreground">Aucun site branché à Parménion.</p>
+          <p className="text-sm text-muted-foreground">Aucun site branché à Périclès.</p>
         )}
         {rows.map((row) => (
           <div key={row.domain} className="rounded-lg border bg-card/50 p-4 space-y-3">

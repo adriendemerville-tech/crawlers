@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Play, Pause, Trash2, Plus, RefreshCw, Shield, AlertTriangle, CheckCircle2, Clock, Brain, Target, Swords, Coins, Globe, FileText, Pencil, PlusCircle, Trash, Eye, Timer, Download, Send, Database } from 'lucide-react';
-import { generateParmenionReport } from '@/utils/parmenionPdfReport';
+import { generatePericlesReport } from '@/utils/periclesPdfReport';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
-import { ParmenionTargetingLenses } from './ParmenionTargetingLenses';
+import { PericlesTargetingLenses } from './PericlesTargetingLenses';
 
 
 interface DecisionLog {
@@ -79,7 +79,7 @@ function riskBadge(risk: number) {
   return <Badge variant="outline" className="text-destructive border-destructive/40 text-[10px]">Risque {risk}</Badge>;
 }
 
-export interface ParmenionTargetPanelProps {
+export interface PericlesTargetPanelProps {
   targetLabel: string;
   targetDomain: string;
   eventType: string; // e.g. 'cms_action:iktracker' or 'cms_action:crawlers'
@@ -88,14 +88,14 @@ export interface ParmenionTargetPanelProps {
   showForceArticle?: boolean;
 }
 
-export function ParmenionTargetPanel({
+export function PericlesTargetPanel({
   targetLabel,
   targetDomain,
   eventType,
   historyTitle,
   historyDescription,
   showForceArticle = false,
-}: ParmenionTargetPanelProps) {
+}: PericlesTargetPanelProps) {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [logs, setLogs] = useState<DecisionLog[]>([]);
@@ -122,7 +122,7 @@ export function ParmenionTargetPanel({
       if (!user) throw new Error('Not authenticated');
 
       const directiveText = [
-        `[AUTO-ESCALADE Parménion #${log.cycle_number}]`,
+        `[AUTO-ESCALADE Périclès #${log.cycle_number}]`,
         `Phase: ${log.pipeline_phase || 'inconnue'}`,
         `Domaine: ${log.domain}`,
         `Objectif: ${log.goal_description}`,
@@ -136,7 +136,7 @@ export function ParmenionTargetPanel({
       const { error } = await supabase.from('agent_cto_directives').insert({
         user_id: user.id,
         directive_text: directiveText,
-        target_function: log.functions_called?.[0] || 'parmenion-orchestrator',
+        target_function: log.functions_called?.[0] || 'pericles-orchestrator',
         target_url: `https://${log.domain}`,
         status: 'pending',
       });
@@ -153,7 +153,7 @@ export function ParmenionTargetPanel({
 
   const fetchLogs = useCallback(async () => {
     const { data, error } = await supabase
-      .from('parmenion_decision_log')
+      .from('pericles_decision_log')
       .select('*')
       .eq('domain', targetDomain)
       .order('created_at', { ascending: false })
@@ -164,7 +164,7 @@ export function ParmenionTargetPanel({
 
   const fetchErrorRate = useCallback(async () => {
     if (!targetDomain) return;
-    const { data } = await supabase.rpc('parmenion_error_rate', { p_domain: targetDomain });
+    const { data } = await supabase.rpc('pericles_error_rate', { p_domain: targetDomain });
     if (data) setErrorRate(data as unknown as { total: number; errors: number; error_rate: number; conservative_mode: boolean });
   }, [targetDomain]);
 
@@ -180,7 +180,7 @@ export function ParmenionTargetPanel({
       .limit(200);
 
     if (error) {
-      console.error('[Parménion] lecture autopilot_configs impossible', error);
+      console.error('[Périclès] lecture autopilot_configs impossible', error);
     }
 
     // Ne JAMAIS retomber sur data[0] : cela viserait un autre domaine.
@@ -310,7 +310,7 @@ export function ParmenionTargetPanel({
           : 'Le rédacteur n\'utilisera plus le contexte métier Dictadevi.',
       });
     } catch (e) {
-      console.error('[ParmenionTargetPanel] toggle dictadevi context', e);
+      console.error('[PericlesTargetPanel] toggle dictadevi context', e);
       setDictadeviContextEnabled(!next);
       toast({ title: 'Erreur', description: 'Échec de la mise à jour du contexte.', variant: 'destructive' });
     } finally {
@@ -320,8 +320,8 @@ export function ParmenionTargetPanel({
 
   useEffect(() => {
     const channel = supabase
-      .channel(`parmenion-live-${targetDomain}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'parmenion_decision_log' }, () => {
+      .channel(`pericles-live-${targetDomain}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pericles_decision_log' }, () => {
         fetchLogs();
       })
       .subscribe();
@@ -332,15 +332,15 @@ export function ParmenionTargetPanel({
     const newState = !isPaused;
     setIsPaused(newState);
     toast({
-      title: newState ? '⏸ Parménion en pause' : '▶️ Parménion reprend',
+      title: newState ? '⏸ Périclès en pause' : '▶️ Périclès reprend',
       description: newState ? `Réflexion suspendue pour ${targetLabel}.` : `Réflexion reprend pour ${targetLabel}.`,
     });
   };
 
   const handlePurge = async () => {
-    if (!confirm(`Purger le registre Parménion pour ${targetLabel} ? Cette action est irréversible.`)) return;
+    if (!confirm(`Purger le registre Périclès pour ${targetLabel} ? Cette action est irréversible.`)) return;
     const { error } = await supabase
-      .from('parmenion_decision_log')
+      .from('pericles_decision_log')
       .update({ status: 'cancelled' } as any)
       .eq('domain', targetDomain)
       .neq('status', 'cancelled');
@@ -355,7 +355,7 @@ export function ParmenionTargetPanel({
       toast({ title: 'Erreur', description: `Aucun site autopilote actif trouvé pour ${targetLabel}.`, variant: 'destructive' });
       return;
     }
-    toast({ title: 'Nouvelle action demandée', description: `Cycle Parménion lancé pour ${targetLabel}.` });
+    toast({ title: 'Nouvelle action demandée', description: `Cycle Périclès lancé pour ${targetLabel}.` });
     
     const body = {
       force_new: true,
@@ -366,11 +366,11 @@ export function ParmenionTargetPanel({
 
     let lastError: Error | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
-      const { data, error } = await supabase.functions.invoke('parmenion-orchestrator', { body });
+      const { data, error } = await supabase.functions.invoke('pericles-orchestrator', { body });
       if (!error) {
         // Check structured error response (always 200)
         if (data?.ok === false) {
-          toast({ title: 'Parménion — Erreur', description: data.message || 'Erreur inconnue', variant: 'destructive' });
+          toast({ title: 'Périclès — Erreur', description: data.message || 'Erreur inconnue', variant: 'destructive' });
           return;
         }
         fetchLogs();
@@ -402,7 +402,7 @@ export function ParmenionTargetPanel({
     };
 
     try {
-      const { data, error } = await supabase.functions.invoke('parmenion-orchestrator', { body });
+      const { data, error } = await supabase.functions.invoke('pericles-orchestrator', { body });
       if (error) throw error;
       if (data?.ok === false) {
         setAuditPhaseResult(`Erreur : ${data.message || 'inconnue'}`);
@@ -442,7 +442,7 @@ export function ParmenionTargetPanel({
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            Parménion — {targetLabel}
+            Périclès — {targetLabel}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
             Registre décisionnel · {targetDomain}
@@ -501,7 +501,7 @@ export function ParmenionTargetPanel({
                   setAutopilotConfig(prev => prev ? { ...prev, force_iktracker_article: newVal } : prev);
                   toast({
                     title: newVal ? 'Article forcé' : 'Article désactivé',
-                    description: newVal ? `Parménion créera un article à chaque cycle pour ${targetLabel}.` : 'Le mode article forcé est désactivé.',
+                    description: newVal ? `Périclès créera un article à chaque cycle pour ${targetLabel}.` : 'Le mode article forcé est désactivé.',
                   });
                 }
               }}
@@ -602,7 +602,7 @@ export function ParmenionTargetPanel({
       </Card>
 
       {/* Lentilles de ciblage (localisation / persona / thématique) */}
-      <ParmenionTargetingLenses targetDomain={targetDomain} />
+      <PericlesTargetingLenses targetDomain={targetDomain} />
 
 
 
@@ -743,7 +743,7 @@ export function ParmenionTargetPanel({
             <Brain className="h-4 w-4 text-primary" />
             Registre de réflexion
           </CardTitle>
-          <CardDescription>Historique des décisions et raisonnements de Parménion pour {targetLabel}</CardDescription>
+          <CardDescription>Historique des décisions et raisonnements de Périclès pour {targetLabel}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -755,7 +755,7 @@ export function ParmenionTargetPanel({
             <div className="text-center py-12 text-muted-foreground">
               <Brain className="h-10 w-10 mx-auto mb-3 opacity-30" />
               <p>Aucune décision enregistrée</p>
-              <p className="text-xs mt-1">Parménion n'a pas encore été invoqué pour {targetLabel}</p>
+              <p className="text-xs mt-1">Périclès n'a pas encore été invoqué pour {targetLabel}</p>
             </div>
           ) : (
             <ScrollArea className={cn(isMobile ? "h-[400px]" : "h-[500px]", "pr-4")}>
@@ -892,7 +892,7 @@ export function ParmenionTargetPanel({
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
                 const last24h = history.filter(ev => new Date(ev.created_at) >= new Date(Date.now() - 24 * 60 * 60 * 1000));
-                generateParmenionReport(last24h as any, targetDomain);
+                generatePericlesReport(last24h as any, targetDomain);
                 toast({ title: 'Rapport PDF téléchargé', description: `${last24h.length} action(s) sur les dernières 24h` });
               }}>
                 <Download className="h-3.5 w-3.5" />

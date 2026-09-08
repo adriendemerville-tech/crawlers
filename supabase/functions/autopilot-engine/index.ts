@@ -55,7 +55,7 @@ import { runPostAudit, runPostDiagnose } from '../_shared/autopilot/postDiagnose
 import { checkSemanticGate } from '../_shared/autopilot/semanticGate.ts';
 import { resolveEditorialSubject, buildEditorialBrief } from '../_shared/autopilot/editorialSubjectGuard.ts';
 
-import { buildOriginalImageBrief } from '../_shared/parmenion/imageOriginality.ts';
+import { buildOriginalImageBrief } from '../_shared/pericles/imageOriginality.ts';
 import { markDeployedItems } from '../_shared/autopilot/postExecute.ts';
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
 import { countRecentContentCreations, logContentCreation } from '../_shared/contentThrottle.ts';
@@ -273,7 +273,7 @@ try {
         const PLANNED_BACKLOG_THRESHOLD = 5;
         const BACKLOG_GRACE_MINUTES = 60; // ignore les décisions trop récentes (< 1h)
         const { data: targetGuard } = await supabase
-          .from('parmenion_targets')
+          .from('pericles_targets')
           .select('backlog_guard_paused, max_content_per_period, throttle_period')
           .eq('domain', siteInfo.domain)
           .eq('is_active', true)
@@ -285,7 +285,7 @@ try {
         // saturer artificiellement le backlog guard.
         const staleCutoff = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
         const { data: reconciled } = await supabase
-          .from('parmenion_decision_log')
+          .from('pericles_decision_log')
           .update({ status: 'skipped_stale', execution_error: 'Cycle interrompu (timeout) — décision réconciliée', updated_at: new Date().toISOString() })
           .eq('tracked_site_id', config.tracked_site_id)
           .eq('status', 'planned')
@@ -298,7 +298,7 @@ try {
         const graceCutoff = new Date(Date.now() - BACKLOG_GRACE_MINUTES * 60 * 1000).toISOString();
 
         const { count: plannedBacklog } = await supabase
-          .from('parmenion_decision_log')
+          .from('pericles_decision_log')
           .select('id', { count: 'exact', head: true })
           .eq('tracked_site_id', config.tracked_site_id)
           .eq('action_type', 'cms')
@@ -370,7 +370,7 @@ try {
         // perdrait les actions CMS calculées par prescribe.
         if (onlyPhases && !phasesToRun.includes('prescribe')) {
           const { data: prescribeLog } = await supabase
-            .from('parmenion_decision_log')
+            .from('pericles_decision_log')
             .select('id, action_payload, functions_called, goal_type, goal_description')
             .eq('tracked_site_id', config.tracked_site_id)
             .eq('cycle_number', cycleNumber)
@@ -565,7 +565,7 @@ try {
             : phaseErrors.some(e => e.severity === 'degraded') ? 'degraded'
             : executionSuccess ? 'completed' : 'partial';
           
-          await supabase.from('parmenion_decision_log').update({
+          await supabase.from('pericles_decision_log').update({
             status: phaseStatus,
             error_category: phaseErrors.length > 0 ? categorizePhaseErrors(phaseErrors) : null,
             execution_started_at: new Date().toISOString(),

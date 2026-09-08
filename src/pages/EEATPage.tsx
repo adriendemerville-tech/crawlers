@@ -94,7 +94,7 @@ const structuredData = {
         {
           "@type": "Question",
           "name": "Comment se déroule un accompagnement SEO avec Crawlers.fr ?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Trois étapes : 1) inscription gratuite et crawl du site cible, 2) génération automatique du scoring E-E-A-T, SEO et GEO avec plan d'action priorisé, 3) exécution assistée par les agents Felix (audit), Parménion (autopilote) et Content Architect (rédaction). Le freelance ou l'agence garde la main sur chaque validation. Inscription en 30 secondes, sans carte bancaire." }
+          "acceptedAnswer": { "@type": "Answer", "text": "Trois étapes : 1) inscription gratuite et crawl du site cible, 2) génération automatique du scoring E-E-A-T, SEO et GEO avec plan d'action priorisé, 3) exécution assistée par les agents Felix (audit), Périclès (autopilote) et Content Architect (rédaction). Le freelance ou l'agence garde la main sur chaque validation. Inscription en 30 secondes, sans carte bancaire." }
         },
         {
           "@type": "Question",
@@ -142,7 +142,7 @@ const freelancePerks = [
 const agencyPerks = [
   { title: 'Comptes équipe (owner / editor / auditor)', desc: 'Répartissez les rôles entre consultants seniors, juniors et auditeurs externes avec permissions granulaires.' },
   { title: 'White-label complet', desc: 'Rapports SEO et GEO sous votre marque, livrables PDF personnalisés, démonstrations clients sans logo Crawlers.' },
-  { title: 'Autopilote Parménion', desc: 'Industrialisez les optimisations récurrentes : un agent SEO/GEO autonome par site client, sous votre supervision.' },
+  { title: 'Autopilote Périclès', desc: 'Industrialisez les optimisations récurrentes : un agent SEO/GEO autonome par site client, sous votre supervision.' },
   { title: 'GEO + IA générative natifs', desc: 'Scoring de la citabilité ChatGPT, Claude, Perplexity inclus. Devancez les agences qui ne mesurent encore que Google.' },
 ];
 

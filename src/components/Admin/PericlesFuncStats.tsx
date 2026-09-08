@@ -9,7 +9,7 @@ interface FuncStat {
   count: number;
 }
 
-export function ParmenionFuncStats() {
+export function PericlesFuncStats() {
   const [stats, setStats] = useState<FuncStat[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,7 @@ export function ParmenionFuncStats() {
 
         while (hasMore) {
           const { data, error } = await supabase
-            .from('parmenion_decision_log')
+            .from('pericles_decision_log')
             .select('functions_called')
             .range(offset, offset + PAGE_SIZE - 1);
 
@@ -67,7 +67,7 @@ export function ParmenionFuncStats() {
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-primary" />
-          <CardTitle className="text-base">Fonctions appelées par Parménion</CardTitle>
+          <CardTitle className="text-base">Fonctions appelées par Périclès</CardTitle>
           {total > 0 && <Badge variant="secondary" className="ml-auto">{total} appels</Badge>}
         </div>
       </CardHeader>

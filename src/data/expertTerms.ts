@@ -3206,7 +3206,7 @@ function computeETV(keywords: KeywordData[]): number {
       term: 'Voice DNA (ADN de Marque)',
       category: 'data-ai',
       microDefinition: 'Profil tonal persistant d\'une marque pour la génération de contenu IA.',
-      fullDefinition: 'Le Voice DNA (ADN de Marque) est un profil tonal structuré décrivant le style d\'écriture d\'un site : ton (professionnel, conversationnel, technique), vocabulaire signature, structures de phrases récurrentes, et niveau de formalité. Stocké dans tracked_sites.voice_dna, il est injecté dans les prompts du Content Architect et de Parménion pour garantir la cohérence éditoriale.',
+      fullDefinition: 'Le Voice DNA (ADN de Marque) est un profil tonal structuré décrivant le style d\'écriture d\'un site : ton (professionnel, conversationnel, technique), vocabulaire signature, structures de phrases récurrentes, et niveau de formalité. Stocké dans tracked_sites.voice_dna, il est injecté dans les prompts du Content Architect et de Périclès pour garantir la cohérence éditoriale.',
       deepDive: `## Voice DNA : L'empreinte éditoriale
 
 ### Composantes analysées

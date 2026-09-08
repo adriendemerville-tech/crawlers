@@ -84,7 +84,7 @@ export function MarinaSeoContent() {
             l'<Link to="/analyse-site-web-gratuit" className="text-primary underline">analyse de site web</Link>
             {' '}détaillent la méthodologie, et l'
 
-            <Link to="/etudes/autopilot-parmenion-iktracker" className="text-primary underline">étude de cas Iktracker</Link>
+            <Link to="/etudes/autopilot-pericles-iktracker" className="text-primary underline">étude de cas Iktracker</Link>
             {' '}montre les résultats sur un site réel.
           </p>
         </div>

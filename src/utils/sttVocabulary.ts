@@ -10,7 +10,7 @@ const CRAWLERS_VOCAB: [RegExp, string][] = [
   // Brand & product
   [/\bcrawler(?:s?)\b/gi, 'Crawlers'],
   [/\bfé ?li(?:x|ks)\b/gi, 'Félix'],
-  [/\bpar ?mén(?:i|y)on\b/gi, 'Parménion'],
+  [/\bpar ?mén(?:i|y)on\b/gi, 'Périclès'],
 
   // Features — prevent word splitting
   [/\bauto ?pil(?:ote?|ot)\b/gi, 'Autopilot'],

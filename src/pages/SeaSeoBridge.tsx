@@ -83,7 +83,7 @@ const SeaSeoBridgePage = memo(() => {
       {
         '@type': 'Question',
         name: 'Peut-on automatiser l\'exploitation des opportunités détectées ?',
-        acceptedAnswer: { '@type': 'Answer', text: 'Oui. Les opportunités détectées peuvent être injectées directement dans le Workbench de Parménion (l\'agent stratégique de Crawlers). Elles sont automatiquement catégorisées en content gaps, quick wins ou risques de cannibalisation, et peuvent être transformées en contenus via Content Architect.' },
+        acceptedAnswer: { '@type': 'Answer', text: 'Oui. Les opportunités détectées peuvent être injectées directement dans le Workbench de Périclès (l\'agent stratégique de Crawlers). Elles sont automatiquement catégorisées en content gaps, quick wins ou risques de cannibalisation, et peuvent être transformées en contenus via Content Architect.' },
       },
       {
         '@type': 'Question',
@@ -411,7 +411,7 @@ const SeaSeoBridgePage = memo(() => {
               {[
                 { step: '01', icon: <Layers className="h-6 w-6" />, title: 'Prérequis', desc: 'Connectez Google Ads et Search Console depuis l\'onglet API. Lancez un audit technique, un audit stratégique et une session Cocoon sur le site cible.' },
                 { step: '02', icon: <PieChart className="h-6 w-6" />, title: 'Analyse croisée', desc: 'Le module croise automatiquement vos mots-clés SEA avec les positions organiques et les content gaps Cocoon. Un dashboard interactif affiche les opportunités classées par potentiel.' },
-                { step: '03', icon: <Rocket className="h-6 w-6" />, title: 'Injection & Action', desc: 'Sélectionnez les opportunités pertinentes et injectez-les en 1 clic dans le Workbench. Parménion les priorise et Content Architect peut générer les contenus ciblés.' },
+                { step: '03', icon: <Rocket className="h-6 w-6" />, title: 'Injection & Action', desc: 'Sélectionnez les opportunités pertinentes et injectez-les en 1 clic dans le Workbench. Périclès les priorise et Content Architect peut générer les contenus ciblés.' },
               ].map((s, i) => (
                 <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
                   <Card className={`h-full border ${V.border} ${V.cardHover} transition-all`}>

@@ -9,13 +9,13 @@ import { ArrowRight, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
-const SLUG = 'autopilot-parmenion-iktracker';
+const SLUG = 'autopilot-pericles-iktracker';
 const CANONICAL = `https://crawlers.fr/etudes/${SLUG}`;
 const PUBLISHED = '2026-08-02';
 
 /**
  * Étude de cas E-E-A-T — données réelles extraites de la base Crawlers.fr :
- *  - parmenion_decision_log (cycles, actions CMS exécutées)
+ *  - pericles_decision_log (cycles, actions CMS exécutées)
  *  - gsc_history_log (Google Search Console, propriété sc-domain:iktracker.fr)
  * Période GSC couverte : 9 mars 2026 → 1er juin 2026 (13 semaines complètes).
  */
@@ -96,7 +96,7 @@ const FAQS = [
   },
   {
     q: "D'où viennent les chiffres de cette étude ?",
-    a: "Les volumes de publication proviennent du journal de décisions de l'Autopilot (table parmenion_decision_log). Les données de performance proviennent de l'API Google Search Console sur la propriété sc-domain:iktracker.fr, agrégées par semaine. Aucun chiffre n'est modélisé ni extrapolé.",
+    a: "Les volumes de publication proviennent du journal de décisions de l'Autopilot (table pericles_decision_log). Les données de performance proviennent de l'API Google Search Console sur la propriété sc-domain:iktracker.fr, agrégées par semaine. Aucun chiffre n'est modélisé ni extrapolé.",
   },
   {
     q: "Peut-on reproduire ce résultat sur n'importe quel site ?",
@@ -177,7 +177,7 @@ export default function AutopilotIktracker() {
             Automatisation SEO : 927 publications exécutées sur iktracker.fr et 9 requêtes en progression
           </h1>
           <p className="text-lg text-foreground/80 leading-relaxed">
-            Entre mars et août 2026, l'Autopilot Parménion a piloté seul la production éditoriale
+            Entre mars et août 2026, l'Autopilot Périclès a piloté seul la production éditoriale
             de <strong>iktracker.fr</strong> : 289 cycles, 5 742 actions journalisées,
             <strong> 927 publications CMS exécutées</strong>. Sur les 13 semaines couvertes par
             Google Search Console, les impressions hebdomadaires ont été multipliées par 2,5 au pic
@@ -190,7 +190,7 @@ export default function AutopilotIktracker() {
         </header>
 
         <blockquote className="citable-passage mb-12 border-l-2 border-border pl-5 text-base text-foreground/85 italic">
-          Sur iktracker.fr, l'Autopilot Parménion de Crawlers.fr a exécuté 927 publications CMS
+          Sur iktracker.fr, l'Autopilot Périclès de Crawlers.fr a exécuté 927 publications CMS
           en 289 cycles entre le 24 mars et le 2 août 2026. Les données Google Search Console
           montrent un passage de 84,5 clics hebdomadaires en moyenne sur la baseline à 279 clics
           au pic d'avril 2026, avec une position moyenne améliorée de 2,3 places sur les requêtes
@@ -260,7 +260,7 @@ export default function AutopilotIktracker() {
 
           <h3 className="text-xl font-semibold mt-6 mb-2">Un cycle = un diagnostic, une décision, une publication</h3>
           <p className="leading-relaxed text-foreground/85">
-            Chaque cycle Parménion enchaîne quatre phases : audit multi-dimensionnel du site,
+            Chaque cycle Périclès enchaîne quatre phases : audit multi-dimensionnel du site,
             prescription d'un objectif éditorial déterministe, rédaction via le pipeline en quatre
             étages (briefing, stratège, rédacteur, tonalisateur), puis publication via le pont
             CMS. 289 cycles ont été journalisés sur iktracker.fr, avec 5 742 actions au total.

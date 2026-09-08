@@ -148,7 +148,7 @@ export const expertTermsMeta: Record<string, Record<string, ExpertTermMeta>> =
     "voice-dna": {
       "term": "Voice DNA (ADN de Marque)",
       "description": "Le Voice DNA (ADN de Marque) est un profil tonal structuré décrivant le style d'écriture d'un site : ton (professionnel, conversationnel, technique), vocab",
-      "definition": "Le Voice DNA (ADN de Marque) est un profil tonal structuré décrivant le style d'écriture d'un site : ton (professionnel, conversationnel, technique), vocabulaire signature, structures de phrases récurrentes, et niveau de formalité. Stocké dans tracked_sites.voice_dna, il est injecté dans les prompts du Content Architect et de Parménion pour garantir la cohérence éditoriale."
+      "definition": "Le Voice DNA (ADN de Marque) est un profil tonal structuré décrivant le style d'écriture d'un site : ton (professionnel, conversationnel, technique), vocabulaire signature, structures de phrases récurrentes, et niveau de formalité. Stocké dans tracked_sites.voice_dna, il est injecté dans les prompts du Content Architect et de Périclès pour garantir la cohérence éditoriale."
     },
     "marina-prospection": {
       "term": "Marina (Module Prospection B2B)",

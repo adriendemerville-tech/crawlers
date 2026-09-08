@@ -166,7 +166,7 @@ export function GuidesManagement() {
     else { toast.success('Guide supprimé'); fetchGuides(); }
   };
 
-  const handleAddToParmenion = async (guide: any) => {
+  const handleAddToPericles = async (guide: any) => {
     try {
       const targetUrl = `https://crawlers.fr/guide/${guide.slug}`;
       const { data: existing } = await supabase
@@ -177,14 +177,14 @@ export function GuidesManagement() {
         .neq('status', 'done' as any)
         .limit(1);
       if (existing && existing.length > 0) {
-        toast.info('Déjà dans le plan Parménion');
+        toast.info('Déjà dans le plan Périclès');
         return;
       }
       const { error } = await supabase.from('architect_workbench').insert({
         user_id: user?.id,
         domain: 'crawlers.fr',
         title: `Optimiser : ${guide.title}`,
-        description: `Guide SEO ajouté manuellement au plan Parménion (Glaive)`,
+        description: `Guide SEO ajouté manuellement au plan Périclès (Glaive)`,
         target_url: targetUrl,
         finding_category: 'content',
         source_type: 'manual',
@@ -192,10 +192,10 @@ export function GuidesManagement() {
         status: 'open',
       } as any);
       if (error) throw error;
-      toast.success('Ajouté au plan Parménion');
+      toast.success('Ajouté au plan Périclès');
     } catch (e: any) {
-      console.error('Parmenion add error:', e);
-      toast.error('Erreur ajout Parménion');
+      console.error('Pericles add error:', e);
+      toast.error('Erreur ajout Périclès');
     }
   };
 
@@ -327,8 +327,8 @@ export function GuidesManagement() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleAddToParmenion(g)}
-                              title="Parménion — Ajouter au plan de tâches"
+                              onClick={() => handleAddToPericles(g)}
+                              title="Périclès — Ajouter au plan de tâches"
                               className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-500 hover:text-purple-600"
                             >
                               <Swords className="h-4 w-4" />

@@ -12012,7 +12012,7 @@ export type Database = {
           pull_token_created_at: string | null
           pull_token_hash: string | null
           pull_token_prefix: string | null
-          throttle_period: Database["public"]["Enums"]["parmenion_throttle_period"]
+          throttle_period: Database["public"]["Enums"]["pericles_throttle_period"]
           updated_at: string
         }
         Insert: {
@@ -12034,7 +12034,7 @@ export type Database = {
           pull_token_created_at?: string | null
           pull_token_hash?: string | null
           pull_token_prefix?: string | null
-          throttle_period?: Database["public"]["Enums"]["parmenion_throttle_period"]
+          throttle_period?: Database["public"]["Enums"]["pericles_throttle_period"]
           updated_at?: string
         }
         Update: {
@@ -12056,7 +12056,7 @@ export type Database = {
           pull_token_created_at?: string | null
           pull_token_hash?: string | null
           pull_token_prefix?: string | null
-          throttle_period?: Database["public"]["Enums"]["parmenion_throttle_period"]
+          throttle_period?: Database["public"]["Enums"]["pericles_throttle_period"]
           updated_at?: string
         }
         Relationships: []
@@ -12369,6 +12369,277 @@ export type Database = {
           file_path?: string
           id?: string
           status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pericles_decision_log: {
+        Row: {
+          action_payload: Json
+          action_type: string
+          baseline_clicks: number | null
+          baseline_ctr: number | null
+          baseline_impressions: number | null
+          baseline_position: number | null
+          calibration_note: string | null
+          created_at: string
+          cycle_number: number
+          domain: string
+          error_category: string | null
+          estimated_tokens: number | null
+          execution_completed_at: string | null
+          execution_error: string | null
+          execution_results: Json | null
+          execution_started_at: string | null
+          final_scope: Json
+          functions_called: string[]
+          goal_changed: boolean
+          goal_cluster_id: string | null
+          goal_description: string
+          goal_type: string
+          id: string
+          impact_actual: string | null
+          impact_level: string
+          impact_predicted: string | null
+          initial_scope: Json
+          is_error: boolean
+          measured_at: string | null
+          pipeline_phase: string | null
+          reward_signal: number | null
+          risk_calibrated: number | null
+          risk_iterations: number
+          risk_predicted: number
+          scope_reductions: number
+          spiral_score_at_decision: number | null
+          status: string
+          t30_clicks: number | null
+          t30_ctr: number | null
+          t30_impressions: number | null
+          t30_position: number | null
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_payload?: Json
+          action_type: string
+          baseline_clicks?: number | null
+          baseline_ctr?: number | null
+          baseline_impressions?: number | null
+          baseline_position?: number | null
+          calibration_note?: string | null
+          created_at?: string
+          cycle_number?: number
+          domain: string
+          error_category?: string | null
+          estimated_tokens?: number | null
+          execution_completed_at?: string | null
+          execution_error?: string | null
+          execution_results?: Json | null
+          execution_started_at?: string | null
+          final_scope?: Json
+          functions_called?: string[]
+          goal_changed?: boolean
+          goal_cluster_id?: string | null
+          goal_description: string
+          goal_type: string
+          id?: string
+          impact_actual?: string | null
+          impact_level?: string
+          impact_predicted?: string | null
+          initial_scope?: Json
+          is_error?: boolean
+          measured_at?: string | null
+          pipeline_phase?: string | null
+          reward_signal?: number | null
+          risk_calibrated?: number | null
+          risk_iterations?: number
+          risk_predicted?: number
+          scope_reductions?: number
+          spiral_score_at_decision?: number | null
+          status?: string
+          t30_clicks?: number | null
+          t30_ctr?: number | null
+          t30_impressions?: number | null
+          t30_position?: number | null
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_payload?: Json
+          action_type?: string
+          baseline_clicks?: number | null
+          baseline_ctr?: number | null
+          baseline_impressions?: number | null
+          baseline_position?: number | null
+          calibration_note?: string | null
+          created_at?: string
+          cycle_number?: number
+          domain?: string
+          error_category?: string | null
+          estimated_tokens?: number | null
+          execution_completed_at?: string | null
+          execution_error?: string | null
+          execution_results?: Json | null
+          execution_started_at?: string | null
+          final_scope?: Json
+          functions_called?: string[]
+          goal_changed?: boolean
+          goal_cluster_id?: string | null
+          goal_description?: string
+          goal_type?: string
+          id?: string
+          impact_actual?: string | null
+          impact_level?: string
+          impact_predicted?: string | null
+          initial_scope?: Json
+          is_error?: boolean
+          measured_at?: string | null
+          pipeline_phase?: string | null
+          reward_signal?: number | null
+          risk_calibrated?: number | null
+          risk_iterations?: number
+          risk_predicted?: number
+          scope_reductions?: number
+          spiral_score_at_decision?: number | null
+          status?: string
+          t30_clicks?: number | null
+          t30_ctr?: number | null
+          t30_impressions?: number | null
+          t30_position?: number | null
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pericles_decision_log_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pericles_targeting_lenses: {
+        Row: {
+          conversion_target: Json
+          created_at: string
+          enabled: boolean
+          id: string
+          lens_type: string
+          proof_level: string
+          proof_signals: Json
+          publish_directory: string | null
+          share_pct: number
+          target_id: string
+          updated_at: string
+          values: Json
+        }
+        Insert: {
+          conversion_target?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          lens_type: string
+          proof_level?: string
+          proof_signals?: Json
+          publish_directory?: string | null
+          share_pct?: number
+          target_id: string
+          updated_at?: string
+          values?: Json
+        }
+        Update: {
+          conversion_target?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          lens_type?: string
+          proof_level?: string
+          proof_signals?: Json
+          publish_directory?: string | null
+          share_pct?: number
+          target_id?: string
+          updated_at?: string
+          values?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pericles_targeting_lenses_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "pericles_targets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pericles_targets: {
+        Row: {
+          api_key_name: string | null
+          author_aliases: Json
+          autopilot_enabled: boolean
+          backlog_guard_paused: boolean
+          consecutive_crawl_skips: number
+          created_at: string
+          created_by_user_id: string | null
+          domain: string
+          event_type: string
+          id: string
+          is_active: boolean
+          label: string
+          last_crawl_skip_at: string | null
+          max_content_per_period: number
+          platform: string
+          pull_token_created_at: string | null
+          pull_token_hash: string | null
+          pull_token_prefix: string | null
+          throttle_period: Database["public"]["Enums"]["pericles_throttle_period"]
+          updated_at: string
+        }
+        Insert: {
+          api_key_name?: string | null
+          author_aliases?: Json
+          autopilot_enabled?: boolean
+          backlog_guard_paused?: boolean
+          consecutive_crawl_skips?: number
+          created_at?: string
+          created_by_user_id?: string | null
+          domain: string
+          event_type?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          last_crawl_skip_at?: string | null
+          max_content_per_period?: number
+          platform?: string
+          pull_token_created_at?: string | null
+          pull_token_hash?: string | null
+          pull_token_prefix?: string | null
+          throttle_period?: Database["public"]["Enums"]["pericles_throttle_period"]
+          updated_at?: string
+        }
+        Update: {
+          api_key_name?: string | null
+          author_aliases?: Json
+          autopilot_enabled?: boolean
+          backlog_guard_paused?: boolean
+          consecutive_crawl_skips?: number
+          created_at?: string
+          created_by_user_id?: string | null
+          domain?: string
+          event_type?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          last_crawl_skip_at?: string | null
+          max_content_per_period?: number
+          platform?: string
+          pull_token_created_at?: string | null
+          pull_token_hash?: string | null
+          pull_token_prefix?: string | null
+          throttle_period?: Database["public"]["Enums"]["pericles_throttle_period"]
           updated_at?: string
         }
         Relationships: []
@@ -17851,6 +18122,11 @@ export type Database = {
         Args: { p_domain: string }
         Returns: string
       }
+      get_pericles_author_aliases: { Args: { p_domain: string }; Returns: Json }
+      get_pericles_target_api_key: {
+        Args: { p_domain: string }
+        Returns: string
+      }
       get_seasonal_news: {
         Args: { p_geo?: string; p_limit?: number; p_sector?: string }
         Returns: {
@@ -17991,6 +18267,44 @@ export type Database = {
           target_id: string
         }[]
       }
+      pericles_error_rate: {
+        Args: { p_domain: string; p_last_n?: number }
+        Returns: Json
+      }
+      pericles_recent_errors: {
+        Args: { p_domain: string; p_limit?: number }
+        Returns: {
+          action_type: string
+          calibration_note: string
+          cycle_number: number
+          error_category: string
+          goal_description: string
+          impact_actual: string
+          impact_predicted: string
+          risk_calibrated: number
+          risk_predicted: number
+        }[]
+      }
+      pericles_rotate_pull_token: {
+        Args: { _target_id: string }
+        Returns: {
+          prefix: string
+          token: string
+        }[]
+      }
+      pericles_should_skip_phase: {
+        Args: { p_domain: string; p_phase: string }
+        Returns: Json
+      }
+      pericles_verify_pull_token: {
+        Args: { _token: string }
+        Returns: {
+          autopilot_enabled: boolean
+          domain: string
+          is_active: boolean
+          target_id: string
+        }[]
+      }
       populate_architect_workbench: {
         Args: {
           p_domain: string
@@ -18016,6 +18330,10 @@ export type Database = {
         Returns: Json
       }
       reconcile_stale_parmenion_decisions: {
+        Args: { p_hours?: number }
+        Returns: number
+      }
+      reconcile_stale_pericles_decisions: {
         Args: { p_hours?: number }
         Returns: number
       }
@@ -18317,7 +18635,7 @@ export type Database = {
         | "file"
         | "oauth_linkedin"
         | "oauth_meta"
-      parmenion_throttle_period: "day" | "week"
+      pericles_throttle_period: "day" | "week"
       report_type:
         | "seo_technical"
         | "seo_strategic"
@@ -18621,7 +18939,7 @@ export const Constants = {
         "oauth_linkedin",
         "oauth_meta",
       ],
-      parmenion_throttle_period: ["day", "week"],
+      pericles_throttle_period: ["day", "week"],
       report_type: [
         "seo_technical",
         "seo_strategic",

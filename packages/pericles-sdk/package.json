@@ -1,7 +1,7 @@
 {
-  "name": "@parmenion/sdk",
+  "name": "@pericles/sdk",
   "version": "0.1.0",
-  "description": "Official TypeScript SDK for the Parménion API — pull model for content tasks (Autopilote).",
+  "description": "Official TypeScript SDK for the Périclès API — pull model for content tasks (Autopilote).",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -19,7 +19,7 @@
     "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
     "test": "vitest run"
   },
-  "keywords": ["parmenion", "autopilote", "content", "cms", "seo"],
+  "keywords": ["pericles", "autopilote", "content", "cms", "seo"],
   "author": "Crawlers.fr",
   "license": "MIT",
   "homepage": "https://crawlers.fr/developers",

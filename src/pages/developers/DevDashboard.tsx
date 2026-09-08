@@ -17,7 +17,7 @@ export default function DevDashboard() {
   const [stats, setStats] = useState<ApiStat[]>([
     { name: "Crawlers API", prefix: "crw_live_", jobs24h: 0, hasKey: false, docs: "/docs/api/crawlers" },
     { name: "Marina API", prefix: "mk_live_", jobs24h: 0, hasKey: false, docs: "/docs/api/marina" },
-    { name: "Parménion API", prefix: "prm_live_", jobs24h: 0, hasKey: false, docs: "/docs/api/parmenion" },
+    { name: "Périclès API", prefix: "prm_live_", jobs24h: 0, hasKey: false, docs: "/docs/api/pericles" },
   ]);
   const [loading, setLoading] = useState(true);
 
@@ -29,12 +29,12 @@ export default function DevDashboard() {
         supabase.from("crawlers_api_keys").select("id", { count: "exact", head: true }).is("revoked_at", null),
         supabase.from("crawlers_api_jobs").select("id", { count: "exact", head: true }).gte("created_at", since),
         supabase.from("marina_api_keys").select("id", { count: "exact", head: true }).eq("is_active", true),
-        supabase.from("parmenion_targets").select("id", { count: "exact", head: true }).eq("created_by_user_id", user.id),
+        supabase.from("pericles_targets").select("id", { count: "exact", head: true }).eq("created_by_user_id", user.id),
       ]);
       setStats([
         { name: "Crawlers API", prefix: "crw_live_", jobs24h: crwJobs.count || 0, hasKey: (crwKeys.count || 0) > 0, docs: "/docs/api/crawlers" },
         { name: "Marina API", prefix: "mk_live_", jobs24h: 0, hasKey: (mkKeys.count || 0) > 0, docs: "/docs/api/marina" },
-        { name: "Parménion API", prefix: "prm_live_", jobs24h: 0, hasKey: (prmTargets.count || 0) > 0, docs: "/docs/api/parmenion" },
+        { name: "Périclès API", prefix: "prm_live_", jobs24h: 0, hasKey: (prmTargets.count || 0) > 0, docs: "/docs/api/pericles" },
       ]);
       setLoading(false);
     })();

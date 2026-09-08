@@ -29,7 +29,7 @@ const SCHEMA_REFERENCE = `
 - "sessions cocoon" → cocoon_sessions
 - "publications content architect" → cocoon_batch_operations (operation_type, status, total_pages, processed_pages)
 - "erreurs cocoon" → cocoon_errors (domain, problem_description, is_crawled)
-- "cycles autopilote / parménion" → parmenion_decision_log (cycle_number, goal_type, action_type, status, is_error)
+- "cycles autopilote / périclès" → pericles_decision_log (cycle_number, goal_type, action_type, status, is_error)
 
 ## PÉRIODES TEMPORELLES
 - "aujourd'hui" → created_at >= date_trunc('day', now())
@@ -72,8 +72,8 @@ const SCHEMA_REFERENCE = `
 - cocoon_batch_operations: id, user_id, tracked_site_id, domain, operation_type, mode, status, total_pages, processed_pages, failed_pages, created_at, completed_at, error_message — PUBLICATIONS CONTENT ARCHITECT
 - cocoon_errors: id, domain, problem_description, created_at, is_crawled, ai_response — REGISTRE DES ERREURS COCOON
 
-## Autopilote (Parménion)
-- parmenion_decision_log: id, domain, cycle_number, goal_type, goal_description, action_type, status, impact_level, risk_predicted, risk_calibrated, is_error, error_category, calibration_note, execution_error, impact_predicted, impact_actual, estimated_tokens, functions_called, scope_reductions, goal_changed, created_at
+## Autopilote (Périclès)
+- pericles_decision_log: id, domain, cycle_number, goal_type, goal_description, action_type, status, impact_level, risk_predicted, risk_calibrated, is_error, error_category, calibration_note, execution_error, impact_predicted, impact_actual, estimated_tokens, functions_called, scope_reductions, goal_changed, created_at
 - autopilot_configs: id, user_id, tracked_site_id, is_active, status, implementation_mode, total_cycles_run, last_cycle_at, cooldown_hours
 - autopilot_modification_log: id, user_id, tracked_site_id, action_type, phase, description, page_url, status, cycle_number, created_at
 
@@ -125,8 +125,8 @@ const SCHEMA_REFERENCE = `
 - check_fair_use_v2(p_user_id, p_action, p_hourly_limit, p_daily_limit) → jsonb
 - get_database_size() → jsonb
 - use_credit(p_user_id, p_description, p_amount) → jsonb
-- parmenion_error_rate(p_domain, p_last_n) → jsonb
-- parmenion_recent_errors(p_domain, p_limit) → table
+- pericles_error_rate(p_domain, p_last_n) → jsonb
+- pericles_recent_errors(p_domain, p_limit) → table
 `;
 
 const QUERY_SYSTEM_PROMPT = `Tu es un assistant base de données READ-ONLY pour Crawlers.fr.

@@ -1,7 +1,7 @@
 /**
  * content-pruning — Audit de pruning (consolidation / suppression / redirection)
  *
- * Source unique de vérité : `_shared/parmenionPriority.ts`
+ * Source unique de vérité : `_shared/periclesPriority.ts`
  *   - `pruneRoi`   → verdict page par page + ROI comparable aux tâches de création
  *   - `computeDebtFromCorpus` → dette de pruning au niveau site (régime sain / encombré / saturé)
  *
@@ -23,7 +23,7 @@ import {
   computeDebtFromCorpus,
   type PruneVerdict,
   type DebtPageInput,
-} from '../_shared/parmenionPriority.ts'
+} from '../_shared/periclesPriority.ts'
 import { fetchGscPageMetrics, normalizeUrlKey } from '../_shared/gscPages.ts'
 
 function json(data: unknown, status = 200) {

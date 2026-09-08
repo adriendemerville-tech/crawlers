@@ -695,7 +695,7 @@ export const LANDING_ENRICHMENT: Record<string, LandingEnrichment> = {
               { title: "Signaux d'expansion", body: "Trous thématiques dans le cocon, requêtes opportunes (volume + faisabilité), gaps vs concurrents, fan-out detection des LLM." },
             ],
           },
-          { title: 'Orchestration Parménion', body: "Le moteur Parménion V3 traduit la phase active en plan de 8 tâches concrètes : refresh d'une page, création d'un article, ajout de FAQ, injection de JSON-LD, optimisation de maillage interne, etc." },
+          { title: 'Orchestration Périclès', body: "Le moteur Périclès V3 traduit la phase active en plan de 8 tâches concrètes : refresh d'une page, création d'un article, ajout de FAQ, injection de JSON-LD, optimisation de maillage interne, etc." },
         ],
       },
       {

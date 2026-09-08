@@ -1,11 +1,11 @@
 /**
  * lensOptions.server.ts — Calcul déterministe des options de lentilles de
- * ciblage Parménion (localisation / persona / cluster) + répertoires et pages
+ * ciblage Périclès (localisation / persona / cluster) + répertoires et pages
  * candidates. Aucun appel LLM : uniquement des lectures de données mesurées.
  */
 
 import { extractGeoCandidates, normalizeGeo, regionOfCity, type GeoCandidate } from './geoLexicon';
-import { decomposePersonas } from '../../../supabase/functions/_shared/parmenion/personaEngine';
+import { decomposePersonas } from '../../../supabase/functions/_shared/pericles/personaEngine';
 
 export type ProofLevel = 'none' | 'weak' | 'strong';
 

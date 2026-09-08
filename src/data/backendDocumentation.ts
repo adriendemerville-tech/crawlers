@@ -41,7 +41,7 @@ export const backendDocSections: DocSection[] = [
 
 ## Vue d'ensemble
 
-Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first**, avec un front **TanStack Start (SSR)** depuis la migration d'août 2026 : assistant Félix (SAV IA), Copilot multi-personas, Content Architecture Advisor (+ génération d'images IA), générateur Scribe, Stratège Cocoon, module Content Integrity (near-duplicate / thin content), confrontation d'audits tiers, autopilote Parménion (cycles complets + file d'attente), pipeline Marina (mono-page et multipages 15 URLs), Netlinking, automatisation LinkedIn, captures Pagebolt, Quiz SEO, Benchmark SERP multi-providers, serveur MCP et API publique Crawlers :
+Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une architecture **serverless edge-first**, avec un front **TanStack Start (SSR)** depuis la migration d'août 2026 : assistant Félix (SAV IA), Copilot multi-personas, Content Architecture Advisor (+ génération d'images IA), générateur Scribe, Stratège Cocoon, module Content Integrity (near-duplicate / thin content), confrontation d'audits tiers, autopilote Périclès (cycles complets + file d'attente), pipeline Marina (mono-page et multipages 15 URLs), Netlinking, automatisation LinkedIn, captures Pagebolt, Quiz SEO, Benchmark SERP multi-providers, serveur MCP et API publique Crawlers :
 
 \`\`\`
 ┌─────────────────────────────────────────────────────────┐
@@ -189,7 +189,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 |-------|-------------|---------------|
 | \`content_prompt_presets\` | Prompts custom par user/site/type | \`user_id\`, \`tracked_site_id\`, \`page_type\`, \`name\`, \`preset_data\` (ton, angle, longueur, CTA…), \`is_default\` |
 | \`content_prompt_templates\` | Templates SEO/GEO système par type de page | \`page_type\`, \`template_data\`, \`is_active\` |
-| \`content_generation_logs\` | Log chaque génération (features du brief, pas le texte) | \`user_id\`, \`tracked_site_id\`, \`page_type\`, \`market_sector\`, \`brief_tone\`, \`brief_angle\`, \`brief_length_target\`, \`brief_h2_count\`, \`brief_cta_count\`, \`source\` (content_architect/parmenion), \`measurement_phase\`, deltas GSC/GEO/LLM à T+30/T+90 |
+| \`content_generation_logs\` | Log chaque génération (features du brief, pas le texte) | \`user_id\`, \`tracked_site_id\`, \`page_type\`, \`market_sector\`, \`brief_tone\`, \`brief_angle\`, \`brief_length_target\`, \`brief_h2_count\`, \`brief_cta_count\`, \`source\` (content_architect/pericles), \`measurement_phase\`, deltas GSC/GEO/LLM à T+30/T+90 |
 | \`content_performance_correlations\` | Agrégats anonymes cross-utilisateurs | \`page_type\`, \`market_sector\`, \`tone\`, \`angle\`, \`avg_gsc_clicks_delta\`, \`avg_geo_score_delta\`, \`avg_llm_visibility_delta\`, \`sample_count\`, \`confidence_grade\` (A/B/C/F), \`week_start\` |
 | \`sav_quality_scores\` | Scoring précision agent SAV | \`conversation_id\`, \`precision_score\`, \`route_match\`, \`repeated_intent_count\`, \`escalated_to_phone\` |
 
@@ -582,8 +582,8 @@ Historique : stocké dans \`analytics_events\` (\`event_type: ci_test_run\`)
 |----------|------|-------------|
 | \`marina\` | ✅ | Pipeline de rapports automatisés (3 phases chaînées : audit → crawl → synthèse) |
 | \`autopilot-engine\` | ✅ | Moteur d'autopilote SEO — cycles complets 5 phases (cron quotidien 3h UTC) |
-| \`parmenion-orchestrator\` | ✅ | Intelligence décisionnelle Parménion (Gemini Flash/Pro) |
-| \`parmenion-feedback\` | ✅ | Boucle rétroaction T+30 Parménion |
+| \`pericles-orchestrator\` | ✅ | Intelligence décisionnelle Périclès (Gemini Flash/Pro) |
+| \`pericles-feedback\` | ✅ | Boucle rétroaction T+30 Périclès |
 | \`mcp-server\` | ❌/✅ | Serveur MCP (Model Context Protocol) — 2 tiers d'accès |
 | \`api-balances\` | ✅ | Soldes API en temps réel (SerpAPI, OpenRouter, Firecrawl) |
 | \`seasonality-detector\` | ✅ | Détection de saisonnalité (tendances cycliques) |
@@ -774,7 +774,7 @@ Ces secrets sont configurés dans Lovable Cloud :
 | \`OPENROUTER_API_KEY\` | fallback IA | Clé OpenRouter (backup) |
 | \`LOVABLE_API_KEY\` | Lovable AI | Accès aux modèles Gemini/GPT |
 | \`IKTRACKER_API_KEY\` | \`iktracker-actions\` | Clé bridge IKtracker |
-| \`DICTADEVI_API_KEY\` | \`dictadevi-actions\` | Clé Bearer \`dk_…\` du bridge Dictadevi (optionnelle : fallback RPC \`get_parmenion_target_api_key('dictadevi.io')\` lit \`parmenion_targets.api_key_name\`) |
+| \`DICTADEVI_API_KEY\` | \`dictadevi-actions\` | Clé Bearer \`dk_…\` du bridge Dictadevi (optionnelle : fallback RPC \`get_pericles_target_api_key('dictadevi.io')\` lit \`pericles_targets.api_key_name\`) |
 | \`GOOGLE_PLACES_API_KEY\` | \`gmb-places-autocomplete\` | Clé Google Places API (autocomplete concurrents GMB) |
 | \`FLY_RENDERER_URL\` | rendering SPA | URL du renderer Fly.io |
 | \`FLY_RENDERER_SECRET\` | rendering SPA | Secret Fly.io |
@@ -909,7 +909,7 @@ Utilitaires de manipulation de texte (troncature, nettoyage HTML, extraction).
 Configuration du rendu headless (Browserless/Fly.io).
 
 ### \`contentBrief.ts\` *(nouveau)*
-Calcul déterministe du **ContentBrief** avant appel LLM : longueur cible, ton, nombre de H2/H3, angle éditorial, CTA, liens internes. Utilisé par Content Architect et Parménion.
+Calcul déterministe du **ContentBrief** avant appel LLM : longueur cible, ton, nombre de H2/H3, angle éditorial, CTA, liens internes. Utilisé par Content Architect et Périclès.
 
 ### \`email-templates/\`
 Templates HTML d'emails transactionnels (bienvenue, vérification, rapports).
@@ -1464,10 +1464,10 @@ Ce comportement restitue la fonctionnalité historique de \\\`sav-agent\\\` perd
 - **Indexabilité** : Les contenus générés incluent systématiquement \\\`<meta name="robots" content="index, follow">\\\` et \\\`isAccessibleForFree: true\\\` dans le schema.org
 - **Publication CMS** : Via \\\`cms-publish-draft\\\` — supporte **articles ET pages statiques** pour WordPress (\\\`/wp/v2/pages\\\`), Drupal (\\\`node--page\\\`), Shopify (\\\`/pages.json\\\`), Odoo, PrestaShop, IKtracker, **crawlers_internal** (écriture directe dans \\\`blog_articles\\\` / \\\`seo_page_drafts\\\`). Paramètre \\\`content_type: "page" | "post"\\\`
 - **CMS Interne crawlers.fr** : Plateforme \\\`crawlers_internal\\\` dans l'enum \\\`cms_platform\\\`. Connexion \\\`cms_connections\\\` avec \\\`auth_method = 'internal'\\\`. Handler dédié dans \\\`cms-patch-content\\\` et \\\`cms-publish-draft\\\` pour écriture directe en base (résolution slug depuis l'URL cible : \\\`/blog/{slug}\\\` → \\\`blog_articles\\\`, sinon → \\\`seo_page_drafts\\\`)
-- **Bouton Parménion (Glaive)** : Dans le CMS admin, au survol de chaque ligne d'article, un bouton épée (violet) insère une tâche \\\`pending\\\` dans \\\`architect_workbench\\\` avec \\\`source_function = 'cms-glaive'\\\`. Vérification anti-doublon avant insertion
+- **Bouton Périclès (Glaive)** : Dans le CMS admin, au survol de chaque ligne d'article, un bouton épée (violet) insère une tâche \\\`pending\\\` dans \\\`architect_workbench\\\` avec \\\`source_function = 'cms-glaive'\\\`. Vérification anti-doublon avant insertion
 - **Tarification** : Abonnés Pro Agency / Pro Agency+ : inclus dans le quota mensuel (100/150 pages). Non-abonnés : **5 crédits** par page (couvre LLM + 2 images). Le bouton Publier affiche le coût \\\`Publier (5 crédits)\\\` pour les non-abonnés
 - **Fair use mensuel** : Limite par plan via \\\`check_monthly_fair_use\\\` (SQL RPC) — Free: 5/mois, Pro Agency: 100/mois, Pro Agency+: 150/mois. Renouvellement le 1er du mois calendaire. Admins: bypass
-- **Routeur CMS** : Parménion utilise le routeur intelligent \\\`assign_workbench_action_type\\\` pour router les prescriptions vers Content Architect (contenu visible) ou Code Architect (métadonnées/structured data)
+- **Routeur CMS** : Périclès utilise le routeur intelligent \\\`assign_workbench_action_type\\\` pour router les prescriptions vers Content Architect (contenu visible) ou Code Architect (métadonnées/structured data)
 - **ContentBrief déterministe** : Le module \\\`_shared/contentBrief.ts\\\` calcule les contraintes éditoriales (longueur, ton, H2/H3, angle, CTA, liens internes) avant l'appel LLM
 - **Presets utilisateur** : Prompts custom par site et type de page (\\\`content_prompt_presets\\\`), appelables depuis Cocoon ou Content
 - **Templates système** : Templates SEO/GEO par type de page (\\\`content_prompt_templates\\\`) : landing, product, article
@@ -1713,8 +1713,8 @@ Chaque cycle boucle sur l'ensemble des phases pour garantir un traitement de bou
 |-------|------|
 | \`autopilot_configs\` | Configuration du pipeline par site (phases, mode, garde-fous, exclusions) |
 | \`autopilot_modification_log\` | Registre de chaque modification (phase, action, URL, diff, statut) |
-| \`parmenion_decision_log\` | Registre décisionnel de Parménion (but, tactique, risque, impact, tokens, coût) |
-| \`parmenion_targets\` | Cibles multi-tenant pilotées par Parménion (\`domain\`, \`label\`, \`platform\`, \`event_type\`, \`api_key_name\`, \`is_active\`) |
+| \`pericles_decision_log\` | Registre décisionnel de Périclès (but, tactique, risque, impact, tokens, coût) |
+| \`pericles_targets\` | Cibles multi-tenant pilotées par Périclès (\`domain\`, \`label\`, \`platform\`, \`event_type\`, \`api_key_name\`, \`is_active\`) |
 | \`matrix_audits\` | Sprint 7 — historique des audits matriciels (\`label\`, \`audit_type\`, \`global_score\`, \`results\` JSONB, \`pivot_snapshot\` JSONB) |
 
 ## Moteur d'exécution (autopilot-engine)
@@ -1726,19 +1726,19 @@ L'Edge Function \`autopilot-engine\` est le moteur central de l'Autopilote, invo
 1. **Fetch** : Récupère toutes les \`autopilot_configs\` actives
 2. **Cooldown** : Vérifie le délai minimum (défaut 48h) depuis \`last_cycle_at\`
 3. **Boucle 5 phases** : Pour chaque phase (audit → diagnose → prescribe → execute → validate) :
-   - Appelle \`parmenion-orchestrator\` avec le contexte de la phase
-   - Exécute les actions décidées par Parménion
-   - Log dans \`autopilot_modification_log\` et \`parmenion_decision_log\`
+   - Appelle \`pericles-orchestrator\` avec le contexte de la phase
+   - Exécute les actions décidées par Périclès
+   - Log dans \`autopilot_modification_log\` et \`pericles_decision_log\`
 4. **MAJ** : Incrémente \`total_cycles_run\`, met à jour \`last_cycle_at\`
 5. **Sync IKtracker** : Événement de statut final si applicable
 
-### Parménion — Intelligence décisionnelle (V3 — prescribe déterministe)
+### Périclès — Intelligence décisionnelle (V3 — prescribe déterministe)
 
 - **Modèle** : Gemini 2.5 Flash (escalade vers Pro si nécessaire)
 - **Phase prescribe V3** : appel déterministe à \`cocoon-strategist\` qui retourne un plan priorisé (max 8 tâches) avec \`executor_function\`, \`urgency\`, \`depends_on\`, \`priority_score\`. L'exécuteur prend toujours la tâche #1. Fallback V2 (\`prescribeWithDualPrompts\`) si le stratège échoue.
 - **content_priority_mode** : booste x1.8 les tâches contenu (create_content, rewrite_content, publish_draft, improve_eeat).
 - **Sécurité** : Risque ≥ 4 bloqué. Mode conservateur si erreurs > 20% (segmenté par action_type).
-- **Apprentissage** : Boucle rétroaction T+30 via \`parmenion-feedback\`
+- **Apprentissage** : Boucle rétroaction T+30 via \`pericles-feedback\`
 
 ### Exécution découplée (file d'attente)
 
@@ -1746,7 +1746,7 @@ La phase \`execute\` ne s'exécute plus en ligne dans le cycle : elle est **pous
 
 - **Advisor circuit breaker** : \`content-architecture-advisor\` est appelé en mode asynchrone avec polling ; en cas d'échecs répétés, le breaker coupe l'appel et le cycle continue sans bloquer.
 - **Backlog guard** : si plus de 5 décisions CMS \`planned\` restent non exécutées sur un site, le cycle est sauté et la config passe en \`paused\` (reprise manuelle).
-- **Auto-config** : un trigger DB crée automatiquement une \`autopilot_configs\` (dry_run, idle, toutes phases) à chaque insertion/activation dans \`parmenion_targets\`.
+- **Auto-config** : un trigger DB crée automatiquement une \`autopilot_configs\` (dry_run, idle, toutes phases) à chaque insertion/activation dans \`pericles_targets\`.
 
 ### Garde-fous éditoriaux et sémantiques
 
@@ -1767,9 +1767,9 @@ La phase \`execute\` ne s'exécute plus en ligne dans le cycle : elle est **pous
 - **Autorité off-site** : axe \`offsite_authority\` du stratège branché sur le module Netlinking (\`netlinking-search\` / \`netlinking-order\`, monitoring \`cron-netlinking-monitor\`).
 
 
-### Cibles multi-tenant (\`parmenion_targets\`)
+### Cibles multi-tenant (\`pericles_targets\`)
 
-Parménion gère plusieurs sites cibles via la table \`parmenion_targets\`. Plateformes branchées et opérationnelles :
+Périclès gère plusieurs sites cibles via la table \`pericles_targets\`. Plateformes branchées et opérationnelles :
 
 | Domaine | Plateforme | Pont API | Statut autonomie |
 |---------|------------|----------|------------------|
@@ -1787,7 +1787,7 @@ Parménion gère plusieurs sites cibles via la table \`parmenion_targets\`. Plat
 | \`*dictadevi*\` | \`dictadevi-actions\` | nested \`{ action, params: {...} }\` + header \`Authorization: Bearer dk_…\` |
 | autre | (skip / interne) | — |
 
-La garde éditoriale (refus si auteur ∈ {parménion, parmenion, crawlers autopilot} ou \`published_at\` > 6 mois) est appliquée de manière identique dans les deux bridges. \`pushIktrackerEvent\` reste gardé par \`isIktrackerDomain\` et n'est jamais invoqué pour Dictadevi.
+La garde éditoriale (refus si auteur ∈ {parménion, pericles, crawlers autopilot} ou \`published_at\` > 6 mois) est appliquée de manière identique dans les deux bridges. \`pushIktrackerEvent\` reste gardé par \`isIktrackerDomain\` et n'est jamais invoqué pour Dictadevi.
 
 ### Surface API Dictadevi (v1)
 
@@ -1834,7 +1834,7 @@ Actions retournant **HTTP 501 \`_not_supported_by_dictadevi\`** (Dictadevi v1 ne
 export const docMetadata = {
   version: '12.0.0',
   lastUpdated: '2026-08-07',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM sur TanStack Start (SSR) + Stratège Cocoon + Content Integrity (near-duplicate / thin content) + Confrontation d\'audits tiers + Content Architect + Scribe + Copilot multi-personas + SAV Félix + Autopilote Parménion (exécution en file d\'attente) + Marina mono & multipages + Netlinking + Automatisation LinkedIn + Captures Pagebolt + MCP + API publique Crawlers',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM sur TanStack Start (SSR) + Stratège Cocoon + Content Integrity (near-duplicate / thin content) + Confrontation d\'audits tiers + Content Architect + Scribe + Copilot multi-personas + SAV Félix + Autopilote Périclès (exécution en file d\'attente) + Marina mono & multipages + Netlinking + Automatisation LinkedIn + Captures Pagebolt + MCP + API publique Crawlers',
   totalEdgeFunctions: 310,
   totalSharedModules: 97,
   totalTables: '190+',

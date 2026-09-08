@@ -201,13 +201,13 @@ export function SmartCmsConnectModal({
     }
   };
 
-  // ─── Probe parmenion_targets for an admin-managed key (only for admins) ───
+  // ─── Probe pericles_targets for an admin-managed key (only for admins) ───
   useEffect(() => {
     if (!open || !customRest || !isAdmin || step !== 'custom_rest') return;
     let cancelled = false;
     (async () => {
       try {
-        const { data, error } = await supabase.rpc('get_parmenion_target_api_key', { p_domain: siteDomain });
+        const { data, error } = await supabase.rpc('get_pericles_target_api_key', { p_domain: siteDomain });
         if (cancelled) return;
         if (!error && typeof data === 'string' && data.startsWith(customRest.keyPrefix)) {
           setAdminKeyAvailable(true);

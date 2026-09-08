@@ -1,13 +1,14 @@
 /**
- * parmenionEditorialGuard.ts — Garde éditoriale partagée Parménion
+ * periclesEditorialGuard.ts — Garde éditoriale partagée Périclès
  *
- * Fix 10.7 — Liste d'alias auteur "Parménion" résolue depuis la DB
- * (`parmenion_targets.author_aliases`, JSONB array) avec fallback statique
+ * Fix 10.7 — Liste d'alias auteur "Périclès" résolue depuis la DB
+ * (`pericles_targets.author_aliases`, JSONB array) avec fallback statique
+
  * si la colonne est vide / l'appel échoue. Le fallback est CRITIQUE :
  * on ne veut jamais désactiver la garde par accident si la DB est incomplète.
  */
 
-const STATIC_FALLBACK_ALIASES = ['parménion', 'parmenion', 'crawlers autopilot'] as const;
+const STATIC_FALLBACK_ALIASES = ['périclès', 'pericles', 'parménion', 'parmenion', 'crawlers autopilot'] as const;
 const EDITORIAL_AGE_LIMIT_MONTHS = 6;
 
 // Cache léger (5 min) par domaine pour éviter un RPC à chaque check
@@ -38,14 +39,14 @@ export async function loadAuthorAliases(
   let aliases: string[] = [];
   if (supabase) {
     try {
-      const { data, error } = await supabase.rpc('get_parmenion_author_aliases', { p_domain: domain });
+      const { data, error } = await supabase.rpc('get_pericles_author_aliases', { p_domain: domain });
       if (!error && Array.isArray(data)) {
         aliases = (data as unknown[])
           .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
           .map(v => v.toLowerCase().trim());
       }
     } catch (e) {
-      console.warn(`[editorial-guard] RPC get_parmenion_author_aliases failed for "${domain}": ${(e as Error).message}`);
+      console.warn(`[editorial-guard] RPC get_pericles_author_aliases failed for "${domain}": ${(e as Error).message}`);
     }
   }
 
@@ -60,7 +61,7 @@ export async function loadAuthorAliases(
 }
 
 /**
- * Vérifie qu'un contenu CMS peut être modifié par Parménion.
+ * Vérifie qu'un contenu CMS peut être modifié par Périclès.
  *  - Bloque si auteur ∈ aliases (DB ou statique)
  *  - Bloque si publié_at > 6 mois
  */
@@ -75,7 +76,7 @@ export async function checkEditorialGuard(
     if (aliases.some(p => author.includes(p))) {
       return {
         allowed: false,
-        reason: `Parménion ne peut pas modifier un contenu dont il est l'auteur (author: "${author}", matched alias DB/statique)`,
+        reason: `Périclès ne peut pas modifier un contenu dont il est l'auteur (author: "${author}", matched alias DB/statique)`,
       };
     }
   }

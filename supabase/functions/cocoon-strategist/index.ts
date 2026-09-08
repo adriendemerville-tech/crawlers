@@ -8,7 +8,7 @@ import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { scanCmsContent, findMatchingContent, type CmsContentInventory } from '../_shared/cmsContentScanner.ts';
 import { getSavPatternsForStrategist } from '../_shared/crossAgentContext.ts';
 import { computeCrawlPageQuality, resolveBusinessProfile, type CrawlPageInput } from '../_shared/crawlPageQuality.ts';
-import { newContentPremium, isCreationFrozen, type DebtRegime } from '../_shared/parmenionPriority.ts';
+import { newContentPremium, isCreationFrozen, type DebtRegime } from '../_shared/periclesPriority.ts';
 
 
 /**
@@ -393,7 +393,7 @@ function label(key: string, lang: string): string {
 
 Deno.serve(handleRequest(async (req) => {
 try {
-    // Accept service_role key (internal calls from parmenion-orchestrator)
+    // Accept service_role key (internal calls from pericles-orchestrator)
     const authHeader = req.headers.get('Authorization') || '';
     const isServiceRole = authHeader.includes(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '___none___');
     
@@ -1223,7 +1223,7 @@ try {
 
     // ═══════════════════════════════════════════════════════════
     // PHASE 4b: Boucle mesure → correction — push des findings critiques
-    // dans architect_workbench (consommé par Parménion / Architects).
+    // dans architect_workbench (consommé par Périclès / Architects).
     // Non bloquant par construction.
     // ═══════════════════════════════════════════════════════════
     let workbenchWrite = { attempted: 0, written: 0 };
@@ -1738,7 +1738,7 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
     case 'backlink_toxicity':
       // Un profil de liens pollué se corrige par un audit + désaveu des domaines
       // toxiques, JAMAIS par du maillage interne. Action offsite non automatisable :
-      // marquée destructive pour forcer une validation humaine dans Parménion.
+      // marquée destructive pour forcer une validation humaine dans Périclès.
       tasks.push({
         id: `${baseId}_disavow`,
         action_type: 'fix_technical',

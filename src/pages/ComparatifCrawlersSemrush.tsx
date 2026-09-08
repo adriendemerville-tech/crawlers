@@ -149,7 +149,7 @@ const comparisonData: Row[] = [
   { cat: "Agence", criteria: "Marque blanche (White Label)", crawlers: "Oui (logo, couleurs, rapports, API)", semrush: "Non (branding Semrush imposé)", cWin: true, sWin: false },
   { cat: "Agence", criteria: "Dashboard multi-clients", crawlers: "Oui (inclus dès 29€/mois)", semrush: "Oui (add-on payant)", cWin: true, sWin: false },
   { cat: "Agence", criteria: "Plans d'action pilotables", crawlers: "Oui (tâches, suivi, export)", semrush: "Non", cWin: true, sWin: false },
-  { cat: "Agence", criteria: "Autopilote SEO (Parménion)", crawlers: "Oui (maintenance prédictive automatisée)", semrush: "Non", cWin: true, sWin: false },
+  { cat: "Agence", criteria: "Autopilote SEO (Périclès)", crawlers: "Oui (maintenance prédictive automatisée)", semrush: "Non", cWin: true, sWin: false },
   // Divers
   { cat: "Divers", criteria: "API disponible", crawlers: "Oui (API Marina, Pro Agency+)", semrush: "Oui (API complète)", cWin: null, sWin: null },
   { cat: "Divers", criteria: "SEA → SEO Bridge", crawlers: "Oui (identification mots-clés Ads capturables)", semrush: "Partiel (données PPC)", cWin: true, sWin: false },
@@ -245,7 +245,7 @@ const ComparatifCrawlersSemrush = () => {
                     <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Score GEO + Benchmark LLM (ChatGPT, Gemini, Claude, Perplexity)</li>
                     <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Content Architect : génération de pages complètes SEO+GEO</li>
                     <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Code Architect : code correctif injectable + déploiement CMS</li>
-                    <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Cocoon 3D, marque blanche, Autopilote Parménion</li>
+                    <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> Cocoon 3D, marque blanche, Autopilote Périclès</li>
                     <li className="flex gap-2"><Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /> À partir de 0€ — Pro Agency dès 29€/mois</li>
                   </ul>
                 </div>
@@ -330,7 +330,7 @@ const ComparatifCrawlersSemrush = () => {
                       <tr className="border-b border-border/50"><td className="p-3 font-medium text-foreground">User-agents émulés</td><td className="p-3">Googlebot (desktop/mobile)</td><td className="p-3 bg-primary/5">Googlebot + 5 bots IA (GPTBot, ClaudeBot, PerplexityBot, Applebot-Extended, CCBot)</td></tr>
                       <tr className="border-b border-border/50"><td className="p-3 font-medium text-foreground">Volume mensuel</td><td className="p-3">Jusqu'à 100 000 pages (Guru+)</td><td className="p-3 bg-primary/5">Jusqu'à 50 000 pages (Pro Agency+) — crawl priorisé par PageRank interne</td></tr>
                       <tr className="border-b border-border/50"><td className="p-3 font-medium text-foreground">Fréquence par défaut</td><td className="p-3">Hebdomadaire</td><td className="p-3 bg-primary/5">Quotidienne sur les pages actives, hebdo sur les stales (scheduler pondéré)</td></tr>
-                      <tr className="border-b border-border/50"><td className="p-3 font-medium text-foreground">Sortie du diagnostic</td><td className="p-3">Rapport HTML + CSV</td><td className="p-3 bg-primary/5">Rapport + patch de code injectable + plan Autopilot Parménion</td></tr>
+                      <tr className="border-b border-border/50"><td className="p-3 font-medium text-foreground">Sortie du diagnostic</td><td className="p-3">Rapport HTML + CSV</td><td className="p-3 bg-primary/5">Rapport + patch de code injectable + plan Autopilot Périclès</td></tr>
                       <tr className="border-b border-border/50"><td className="p-3 font-medium text-foreground">Parité SPA / bots IA</td><td className="p-3">Non mesurée</td><td className="p-3 bg-primary/5">Oui — comparaison word_count JS vs no-JS, H1 unique, cloaking check</td></tr>
                       <tr><td className="p-3 font-medium text-foreground">Analyse des logs serveur</td><td className="p-3">Add-on payant</td><td className="p-3 bg-primary/5">Inclus dans Pro Agency+ (visites GPTBot, ClaudeBot, PerplexityBot vérifiées rDNS/ASN)</td></tr>
                     </tbody>
@@ -435,10 +435,10 @@ const ComparatifCrawlersSemrush = () => {
                 </p>
 
                 <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
-                  <Cpu className="h-4 w-4" /> Autopilote Parménion : maintenance SEO prédictive
+                  <Cpu className="h-4 w-4" /> Autopilote Périclès : maintenance SEO prédictive
                 </h3>
                 <p>
-                  L'<strong>Autopilote Parménion</strong> surveille automatiquement votre site, détecte les anomalies (chute de performance, erreurs techniques, nouvelles opportunités) et lance les diagnostics et corrections de manière autonome. Semrush n'offre rien d'équivalent.
+                  L'<strong>Autopilote Périclès</strong> surveille automatiquement votre site, détecte les anomalies (chute de performance, erreurs techniques, nouvelles opportunités) et lance les diagnostics et corrections de manière autonome. Semrush n'offre rien d'équivalent.
                 </p>
 
                 <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
@@ -495,7 +495,7 @@ const ComparatifCrawlersSemrush = () => {
                   Nous ne cherchons pas à remplacer Semrush. Certains de nos utilisateurs Pro les plus actifs utilisent les deux : Semrush pour le suivi de positions et l'analyse concurrentielle, Crawlers.fr pour l'audit technique automatisé, le GEO, le Content Architect et le déploiement CMS direct.
                 </p>
                 <p>
-                  La <strong>stack idéale en 2026</strong> combine un outil SEO traditionnel (Semrush ou Ahrefs) pour le tracking Google, et Crawlers.fr pour la dimension Identity-First, GEO, la génération de contenu et la maintenance automatisée via l'Autopilote Parménion.
+                  La <strong>stack idéale en 2026</strong> combine un outil SEO traditionnel (Semrush ou Ahrefs) pour le tracking Google, et Crawlers.fr pour la dimension Identity-First, GEO, la génération de contenu et la maintenance automatisée via l'Autopilote Périclès.
                 </p>
               </article>
             </div>

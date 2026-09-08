@@ -2,7 +2,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { IKTRACKER_BASE_URL } from '../_shared/domainUtils.ts';
-import { checkEditorialGuard as checkEditorialGuardShared } from '../_shared/parmenionEditorialGuard.ts';
+import { checkEditorialGuard as checkEditorialGuardShared } from '../_shared/periclesEditorialGuard.ts';
 import {
   isBlocked as slugMemoryIsBlocked,
   shouldUsePut as slugMemoryShouldUsePut,

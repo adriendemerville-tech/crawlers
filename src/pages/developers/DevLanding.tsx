@@ -18,7 +18,7 @@ const DEVELOPERS_JSON_LD = [
     name: "Crawlers API Platform",
     url: "https://crawlers.fr/developers",
     description:
-      "3 APIs REST async pour automatiser SEO, GEO et visibilité IA : Crawlers API (18 modules), Marina API (audit B2B white-label), Parménion API (publication CMS autopilote).",
+      "3 APIs REST async pour automatiser SEO, GEO et visibilité IA : Crawlers API (18 modules), Marina API (audit B2B white-label), Périclès API (publication CMS autopilote).",
     documentation: "https://crawlers.fr/developers/docs",
     provider: { "@type": "Organization", name: "Crawlers.fr", url: "https://crawlers.fr" },
     termsOfService: "https://crawlers.fr/cgvu",
@@ -52,7 +52,7 @@ const DEVELOPERS_JSON_LD = [
         name: "Quelles APIs sont disponibles ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Trois APIs REST async : Crawlers API (clé crw_live_, 18 modules SEO/GEO/IA), Marina API (clé mk_live_, audit prospects B2B white-label) et Parménion API (clé prm_live_, publication CMS autopilote).",
+          text: "Trois APIs REST async : Crawlers API (clé crw_live_, 18 modules SEO/GEO/IA), Marina API (clé mk_live_, audit prospects B2B white-label) et Périclès API (clé prm_live_, publication CMS autopilote).",
         },
       },
       {
@@ -60,7 +60,7 @@ const DEVELOPERS_JSON_LD = [
         name: "Comment authentifier mes requêtes ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Par clé API en en-tête : Authorization: Bearer crw_live_... pour Crawlers et Parménion, x-marina-key: mk_live_... pour Marina.",
+          text: "Par clé API en en-tête : Authorization: Bearer crw_live_... pour Crawlers et Périclès, x-marina-key: mk_live_... pour Marina.",
         },
       },
       {
@@ -95,11 +95,11 @@ const APIS = [
   -d '{"domain":"prospect.com","services":["identity","digital","strategy"]}'`,
   },
   {
-    name: "Parménion API",
+    name: "Périclès API",
     prefix: "prm_live_",
     desc: "Pull model : récupère les tâches de contenu pré-validées par l'Autopilote, publie côté CMS, renvoie l'URL.",
-    docs: "/docs/api/parmenion",
-    sample: `curl https://api.crawlers.fr/parmenion-api/v1/tasks/pending \\
+    docs: "/docs/api/pericles",
+    sample: `curl https://api.crawlers.fr/pericles-api/v1/tasks/pending \\
   -H "Authorization: Bearer prm_live_..."`,
   },
 ];
@@ -111,7 +111,7 @@ export default function DevLanding() {
     <DevLayout>
       <SEOHead
         title="API SEO & GEO pour développeurs — REST async, pay-as-you-go"
-        description="3 APIs REST async (Crawlers, Marina, Parménion) pour automatiser SEO, GEO et visibilité IA. 100 jobs gratuits/mois, auth par clé, sans engagement."
+        description="3 APIs REST async (Crawlers, Marina, Périclès) pour automatiser SEO, GEO et visibilité IA. 100 jobs gratuits/mois, auth par clé, sans engagement."
         path="/developers"
       >
         {DEVELOPERS_JSON_LD.map((schema, i) => (
@@ -128,7 +128,7 @@ export default function DevLanding() {
           3 APIs REST async pour automatiser audit SEO, score GEO et visibilité IA. Auth par clé, pay-as-you-go, 100 jobs gratuits chaque mois.
         </p>
         <blockquote className="citable-passage max-w-2xl mx-auto mb-8 text-sm text-muted-foreground italic border-l-2 border-foreground/30 pl-4 text-left">
-          Crawlers.fr expose sa plateforme SEO &amp; GEO via trois APIs REST asynchrones : Crawlers API (préfixe <code>crw_live_</code>, 18 modules dont audit expert, score GEO et visibilité LLM), Marina API (<code>mk_live_</code>, audit B2B white-label) et Parménion API (<code>prm_live_</code>, publication CMS pilotée par l'Autopilote).
+          Crawlers.fr expose sa plateforme SEO &amp; GEO via trois APIs REST asynchrones : Crawlers API (préfixe <code>crw_live_</code>, 18 modules dont audit expert, score GEO et visibilité LLM), Marina API (<code>mk_live_</code>, audit B2B white-label) et Périclès API (<code>prm_live_</code>, publication CMS pilotée par l'Autopilote).
         </blockquote>
         <div className="flex gap-3 justify-center">
           <Link to="/developers/signup" className="px-6 py-3 border border-foreground rounded text-sm font-medium hover:bg-foreground hover:text-background transition-colors">

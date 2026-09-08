@@ -99,6 +99,13 @@
       "when": 1788870457757,
       "tag": "0013_create_parmenion_passe_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788873521361,
+      "tag": "0014_rename_parmenion_to_pericles",
+      "breakpoints": true
     }
   ]
 }

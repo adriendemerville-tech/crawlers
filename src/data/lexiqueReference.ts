@@ -91,13 +91,13 @@ export const LEXIQUE_REFERENCE: LexiqueEntry[] = [
   // ── Crawlers.fr — Agents ──
   { term: 'Félix', def: "Assistant SAV intelligent. Navigation, scores, questions SEO/GEO." },
   { term: 'Stratège Cocoon', def: "Agent IA du cocon sémantique : diagnostics + plans stratégiques." },
-  { term: 'Parménion', def: "Orchestrateur autonome : Audit → Diagnostic → Prescription → Exécution." },
+  { term: 'Périclès', def: "Orchestrateur autonome : Audit → Diagnostic → Prescription → Exécution." },
   { term: 'TIM', def: "Tracked Intelligence Memory — mémoire contextuelle persistante." },
 
   // ── Crawlers.fr — Architecture ──
   { term: 'Cascade de Crawl', def: "Fetch Natif → Spider.cloud → Firecrawl (marge 75%)." },
   { term: 'Stratégie 360°', def: "4 diagnostics parallèles + plan priorisé + 3 axes de développement." },
-  { term: 'Autopilote', def: "Mode automatisé de Parménion avec seuils de risque configurables." },
+  { term: 'Autopilote', def: "Mode automatisé de Périclès avec seuils de risque configurables." },
   { term: 'Auto-Maillage IA', def: "IA trouvant les meilleurs emplacements d'ancres de liens internes." },
   { term: 'Architect Workbench', def: "Table centralisée priorisant les findings de tous les diagnostics." },
   { term: 'Télémétrie', def: "Mesure automatique par crawl HTML : balises, Schema.org, liens." },

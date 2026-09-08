@@ -6,7 +6,7 @@ import { buildBreadcrumbJsonLd } from "@/lib/seo/articleSchema";
 export const Route = createFileRoute("/developers/sdks")({
   head: () => pageHead({
     title: "SDKs TypeScript — Crawlers Developers",
-    description: "SDKs officiels TypeScript pour les APIs Crawlers et Parménion.",
+    description: "SDKs officiels TypeScript pour les APIs Crawlers et Périclès.",
     path: "/developers/sdks",
     jsonLd: [
       {
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/developers/sdks")({
         "@type": "SoftwareSourceCode",
         name: "SDKs TypeScript Crawlers",
         description:
-          "SDKs officiels TypeScript pour consommer les APIs Crawlers et Parménion : création de jobs, polling, typage des rapports.",
+          "SDKs officiels TypeScript pour consommer les APIs Crawlers et Périclès : création de jobs, polling, typage des rapports.",
         programmingLanguage: "TypeScript",
         codeRepository: "https://crawlers.fr/developers/sdks",
         url: "https://crawlers.fr/developers/sdks",

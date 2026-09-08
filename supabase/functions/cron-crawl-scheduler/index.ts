@@ -2,7 +2,7 @@
  * cron-crawl-scheduler — Planificateur automatique de crawls
  *
  * Lancé quotidiennement par pg_cron (03h).
- * Pour chaque `parmenion_targets` actif :
+ * Pour chaque `pericles_targets` actif :
  *   - Si dernier crawl complet > 15j (ou jamais) → lance un FULL crawl (maxPages=300)
  *   - Sinon si dernier crawl ciblé > 5j → lance un crawl ciblé sur le répertoire le plus actif
  *
@@ -151,7 +151,7 @@ Deno.serve(handleRequest(async (req: Request) => {
     // 1) Tous les targets actifs
 
     let q = supabase
-      .from('parmenion_targets')
+      .from('pericles_targets')
       .select('domain, created_by_user_id')
       .eq('is_active', true)
       .eq('autopilot_enabled', true);
