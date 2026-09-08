@@ -23,7 +23,7 @@ const PLATFORMS = [
   { value: 'custom', label: 'Autre / Custom API' },
 ];
 
-export function ParmenionAddTargetModal({ open, onOpenChange, onAdded }: Props) {
+export function PericlesAddTargetModal({ open, onOpenChange, onAdded }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [domain, setDomain] = useState('');
@@ -46,7 +46,7 @@ export function ParmenionAddTargetModal({ open, onOpenChange, onAdded }: Props) 
       // → déclenche l'auto-rattachement du site dans "Mes Sites" + création de cms_connections
       const { data: { user } } = await supabase.auth.getUser();
 
-      const { error } = await supabase.from('parmenion_targets').insert({
+      const { error } = await supabase.from('pericles_targets').insert({
         domain: cleanDomain,
         label: label.trim(),
         platform,
@@ -64,7 +64,7 @@ export function ParmenionAddTargetModal({ open, onOpenChange, onAdded }: Props) 
         return;
       }
 
-      toast({ title: 'Site ajouté', description: `${label.trim()} (${cleanDomain}) a été ajouté comme cible Parménion.` });
+      toast({ title: 'Site ajouté', description: `${label.trim()} (${cleanDomain}) a été ajouté comme cible Périclès.` });
       setDomain('');
       setLabel('');
       setPlatform('custom');
@@ -85,7 +85,7 @@ export function ParmenionAddTargetModal({ open, onOpenChange, onAdded }: Props) 
         <DialogHeader>
           <DialogTitle>Ajouter un site cible</DialogTitle>
           <DialogDescription>
-            Configurez un nouveau site pour le pilotage automatique par Parménion.
+            Configurez un nouveau site pour le pilotage automatique par Périclès.
           </DialogDescription>
         </DialogHeader>
 

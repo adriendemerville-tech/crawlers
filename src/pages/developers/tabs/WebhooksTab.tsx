@@ -28,7 +28,7 @@ interface Delivery {
 const APIS = [
   { id: "crawlers", label: "Crawlers" },
   { id: "marina", label: "Marina (à venir)" },
-  { id: "parmenion", label: "Parménion (à venir)" },
+  { id: "pericles", label: "Périclès (à venir)" },
 ];
 
 export default function WebhooksTab() {

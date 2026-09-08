@@ -238,7 +238,7 @@ export function BlogManagement() {
     }
   };
 
-  const handleAddToParmenion = async (article: BlogArticle) => {
+  const handleAddToPericles = async (article: BlogArticle) => {
     try {
       const targetUrl = `https://crawlers.fr/blog/${article.slug}`;
       const { data: { user } } = await supabase.auth.getUser();
@@ -253,7 +253,7 @@ export function BlogManagement() {
         .limit(1);
 
       if (existing && existing.length > 0) {
-        toast.info('Déjà dans le plan Parménion');
+        toast.info('Déjà dans le plan Périclès');
         return;
       }
 
@@ -261,7 +261,7 @@ export function BlogManagement() {
         user_id: user.id,
         domain: 'crawlers.fr',
         title: `Optimiser : ${article.title}`,
-        description: `Article CMS ajouté manuellement au plan Parménion (Glaive)`,
+        description: `Article CMS ajouté manuellement au plan Périclès (Glaive)`,
         target_url: targetUrl,
         finding_category: 'content',
         severity: 'medium',
@@ -271,10 +271,10 @@ export function BlogManagement() {
       });
 
       if (error) throw error;
-      toast.success('Ajouté au plan Parménion');
+      toast.success('Ajouté au plan Périclès');
     } catch (e: any) {
-      console.error('Parmenion add error:', e);
-      toast.error('Erreur ajout Parménion');
+      console.error('Pericles add error:', e);
+      toast.error('Erreur ajout Périclès');
     }
   };
 
@@ -556,8 +556,8 @@ export function BlogManagement() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleAddToParmenion(article)}
-                              title="Parménion (Glaive) — Ajouter au plan de tâches"
+                              onClick={() => handleAddToPericles(article)}
+                              title="Périclès (Glaive) — Ajouter au plan de tâches"
                               className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-500 hover:text-purple-600"
                             >
                               <Swords className="h-4 w-4" />

@@ -41,9 +41,9 @@ export interface WorkerOptions {
   signal?: AbortSignal;
 }
 
-export class ParmenionError extends Error {
+export class PericlesError extends Error {
   constructor(message: string, public readonly code: string) {
     super(message);
-    this.name = 'ParmenionError';
+    this.name = 'PericlesError';
   }
 }

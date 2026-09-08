@@ -83,7 +83,7 @@ function extractActionDetails(ev: IkAction): { url: string; action: string; desc
   return { url, action: actionLabel, description: desc, date, time };
 }
 
-export async function generateParmenionReport(events: IkAction[], domain: string = 'iktracker.fr') {
+export async function generatePericlesReport(events: IkAction[], domain: string = 'iktracker.fr') {
   const { jsPDF, autoTable } = await loadPDFLibraries();
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
@@ -94,7 +94,7 @@ export async function generateParmenionReport(events: IkAction[], domain: string
   // Header
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('Rapport Parménion — Actions 24h', 14, 18);
+  doc.text('Rapport Périclès — Actions 24h', 14, 18);
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
@@ -135,7 +135,7 @@ export async function generateParmenionReport(events: IkAction[], domain: string
         doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
         doc.text(
-          `Parménion · Crawlers.fr — Page ${data.pageNumber} / ${pageCount}`,
+          `Périclès · Crawlers.fr — Page ${data.pageNumber} / ${pageCount}`,
           14, doc.internal.pageSize.height - 8
         );
       },
@@ -143,9 +143,9 @@ export async function generateParmenionReport(events: IkAction[], domain: string
   }
 
   const { addDisclaimerPage } = await import('@/lib/reports/auditDisclaimer');
-  addDisclaimerPage(doc, { auditType: 'parmenion', domain, target: domain, language: 'fr', scope: { analyzedAt: now } });
+  addDisclaimerPage(doc, { auditType: 'pericles', domain, target: domain, language: 'fr', scope: { analyzedAt: now } });
 
   // Save
-  const filename = `Parmenion_Rapport_24h_${domain}_${now.toISOString().slice(0, 10)}.pdf`;
+  const filename = `Pericles_Rapport_24h_${domain}_${now.toISOString().slice(0, 10)}.pdf`;
   doc.save(filename);
 }

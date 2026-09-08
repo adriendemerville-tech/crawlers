@@ -2,11 +2,11 @@ import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 
 /**
- * Options de lentilles de ciblage Parménion pour un domaine.
+ * Options de lentilles de ciblage Périclès pour un domaine.
  * Réservé aux administrateurs : la vérification du rôle se fait via le client
  * utilisateur (RLS) avant toute lecture privilégiée.
  */
-export const getParmenionLensOptions = createServerFn({ method: 'POST' })
+export const getPericlesLensOptions = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { domain: string }) => {
     const domain = (input?.domain || '').trim();

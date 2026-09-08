@@ -13,11 +13,11 @@ export interface DomainKnowledge {
 export const architectureKnowledge: Record<string, DomainKnowledge> = {
   CORE: {
     summary: "Le hub central qui orchestre toute la plateforme : profils utilisateurs, sites suivis, workbench architecte et contexte saisonnier.",
-    detail: `Le domaine CORE est le cœur de Crawlers. Il contient les 4 tables fondamentales (profiles, tracked_sites, architect_workbench, seasonal_context) et les fonctions d'orchestration clés (parmenion-orchestrator, supervisor-actions, dispatch-agent-directives, autopilot-engine, ensure-profile, session-heartbeat).
+    detail: `Le domaine CORE est le cœur de Crawlers. Il contient les 4 tables fondamentales (profiles, tracked_sites, architect_workbench, seasonal_context) et les fonctions d'orchestration clés (pericles-orchestrator, supervisor-actions, dispatch-agent-directives, autopilot-engine, ensure-profile, session-heartbeat).
 
 **Impact utilisateur :** Chaque action sur la plateforme passe par le CORE — c'est lui qui relie votre profil à vos sites, distribue les tâches aux agents IA, et maintient la cohérence de l'ensemble du système. Sans le CORE, aucun domaine ne peut fonctionner de manière autonome.
 
-**Rôle technique :** Parménion (l'orchestrateur principal) décide quel agent activer, dans quel ordre, et avec quelles données. Le session-heartbeat maintient la connexion temps réel.`,
+**Rôle technique :** Périclès (l'orchestrateur principal) décide quel agent activer, dans quel ordre, et avec quelles données. Le session-heartbeat maintient la connexion temps réel.`,
     relationships: {
       "AGENTS IA": "Les agents IA lisent les profils et sites depuis le CORE pour contextualiser leurs analyses et leurs directives.",
       AUDIT: "Les audits accèdent au CORE pour savoir quel site analyser et stocker les résultats dans le workbench architecte.",
@@ -25,7 +25,7 @@ export const architectureKnowledge: Record<string, DomainKnowledge> = {
       CONTENT: "Le Content Architect récupère le contexte du site depuis le CORE pour générer du contenu pertinent et adapté à la saisonnalité.",
       "SERP & VISIBILITY": "Les données de visibilité SERP et LLM sont rattachées aux tracked_sites du CORE pour le suivi longitudinal.",
       "GSC & GA4": "Les connexions Google (Search Console, Analytics) sont liées aux tracked_sites pour associer les données à chaque site.",
-      AUTOPILOT: "L'Autopilot lit la configuration depuis le CORE et utilise parmenion-orchestrator pour séquencer ses cycles automatiques.",
+      AUTOPILOT: "L'Autopilot lit la configuration depuis le CORE et utilise pericles-orchestrator pour séquencer ses cycles automatiques.",
       "CMS & DEPLOY": "Le déploiement de code et contenu s'appuie sur les tracked_sites du CORE pour cibler le bon site.",
       PROFIL: "Le domaine Profil gère l'authentification et les sessions, directement lié aux profiles du CORE.",
       ABONNEMENT: "Les crédits et abonnements sont rattachés au profil CORE pour déterminer les fonctionnalités accessibles.",
@@ -100,8 +100,8 @@ export const architectureKnowledge: Record<string, DomainKnowledge> = {
   },
 
   "AGENTS IA": {
-    summary: "Le système multi-agents : CTO, SEO, UX, Supervisor — piloté par Parménion l'orchestrateur et accessible via Félix.",
-    detail: `Le domaine AGENTS IA regroupe les 4 agents spécialisés (CTO, SEO, UX, Supervisor) coordonnés par Parménion, l'orchestrateur stratégique. Chaque agent opère dans son domaine d'expertise et produit des directives actionnables.
+    summary: "Le système multi-agents : CTO, SEO, UX, Supervisor — piloté par Périclès l'orchestrateur et accessible via Félix.",
+    detail: `Le domaine AGENTS IA regroupe les 4 agents spécialisés (CTO, SEO, UX, Supervisor) coordonnés par Périclès, l'orchestrateur stratégique. Chaque agent opère dans son domaine d'expertise et produit des directives actionnables.
 
 **Impact utilisateur :** Les agents travaillent en arrière-plan pour optimiser votre site : l'agent CTO propose des corrections de code, l'agent SEO des optimisations de contenu, l'agent UX des améliorations d'interface, et le Supervisor coordonne l'ensemble. Les propositions sont soumises à validation avant déploiement.
 
@@ -177,12 +177,12 @@ export const architectureKnowledge: Record<string, DomainKnowledge> = {
 
 **Impact utilisateur :** Vous configurez vos préférences (types de diagnostics, seuils, pages exclues) et l'Autopilot optimise votre site en continu. Chaque modification est tracée et réversible. Un seuil de pause automatique protège contre les modifications excessives.
 
-**Fonctions clés :** autopilot-engine (moteur principal), avec coordination via parmenion-orchestrator du CORE.`,
+**Fonctions clés :** autopilot-engine (moteur principal), avec coordination via pericles-orchestrator du CORE.`,
     relationships: {
       "AGENTS IA": "L'Autopilot active les agents IA selon ses cycles — c'est le lien le plus structurant : il décide quel agent intervient, quand et sur quoi.",
       CONTENT: "L'Autopilot peut déclencher la génération de contenu dans ses cycles de prescription.",
       "CMS & DEPLOY": "Les modifications prescrites par l'Autopilot sont déployées via le système CMS & Deploy.",
-      CORE: "L'Autopilot utilise parmenion-orchestrator et les tracked_sites pour ses cycles.",
+      CORE: "L'Autopilot utilise pericles-orchestrator et les tracked_sites pour ses cycles.",
       AUDIT: "L'Autopilot utilise les résultats d'audit comme base de décision pour ses cycles.",
     },
   },

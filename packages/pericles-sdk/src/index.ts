@@ -1,2 +1,2 @@
-export { ParmenionClient } from './client.js';
+export { PericlesClient } from './client.js';
 export * from './types.js';

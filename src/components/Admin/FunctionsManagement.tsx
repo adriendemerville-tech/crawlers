@@ -80,8 +80,8 @@ const FUNCTION_CATEGORIES: Record<string, string[]> = {
     'webhook-shopify-orders', 'webhook-woo-orders',
     'odoo-connector', 'prestashop-connector', 'haloscan-connector',
   ],
-  'Autopilote & Parménion': [
-    'autopilot-engine', 'parmenion-orchestrator', 'parmenion-feedback',
+  'Autopilote & Périclès': [
+    'autopilot-engine', 'pericles-orchestrator', 'pericles-feedback',
   ],
   'Outils tiers (Bundle)': [
     'gtmetrix-actions', 'rankmath-actions', 'linkwhisper-actions',

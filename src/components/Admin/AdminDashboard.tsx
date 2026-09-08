@@ -33,7 +33,7 @@ import { InjectionErrorsRegistry } from './InjectionErrorsRegistry';
 import { MatrixErrorsRegistry } from './MatrixErrorsRegistry';
 import { BundleManagement } from './BundleManagement';
 import { SurveyManagement } from './SurveyManagement';
-import { ParmenionDashboard } from './ParmenionDashboard';
+import { PericlesDashboard } from './PericlesDashboard';
 import { WorkbenchAdmin } from './WorkbenchAdmin';
 import { EeatScoringAdmin } from './EeatScoringAdmin';
 import { MarinaDashboard } from './MarinaDashboard';
@@ -288,7 +288,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
     {
       label: 'Automatisation',
       items: [
-        { id: 'parmenion', label: 'Parménion', icon: Shield, group: 'automation' },
+        { id: 'pericles', label: 'Périclès', icon: Shield, group: 'automation' },
         { id: 'workbench', label: 'Workbench', icon: ClipboardList, group: 'automation' },
         { id: 'eeat', label: 'E-E-A-T', icon: Award, group: 'automation' },
         { id: 'marina', label: 'Marina', icon: Anchor, group: 'automation' },
@@ -330,7 +330,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'platform-api': return <PlatformApiDashboard />;
       case 'surveys': return <SurveyManagement />;
       case 'bundle': return <BundleManagement />;
-      case 'parmenion': return wrap(<ParmenionDashboard />);
+      case 'pericles': return wrap(<PericlesDashboard />);
       case 'workbench': return wrap(<WorkbenchAdmin />);
       case 'eeat': return wrap(<EeatScoringAdmin />);
       case 'marina': return wrap(<MarinaDashboard />);

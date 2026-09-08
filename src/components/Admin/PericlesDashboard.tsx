@@ -2,14 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Globe, FileText, ListTodo, BarChart3, Plus, Key, Activity, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ParmenionTargetPanel } from './ParmenionTargetPanel';
-import { ParmenionTaskPlan } from './ParmenionTaskPlan';
-import { ParmenionFuncStats } from './ParmenionFuncStats';
-import { ParmenionAddTargetModal } from './ParmenionAddTargetModal';
-import { ParmenionApiKeyManager } from './ParmenionApiKeyManager';
-import { ParmenionExecutionStatus } from './ParmenionExecutionStatus';
-import { ParmenionSlugMemory } from './ParmenionSlugMemory';
-import { ParmenionThrottleControl } from './ParmenionThrottleControl';
+import { PericlesTargetPanel } from './PericlesTargetPanel';
+import { PericlesTaskPlan } from './PericlesTaskPlan';
+import { PericlesFuncStats } from './PericlesFuncStats';
+import { PericlesAddTargetModal } from './PericlesAddTargetModal';
+import { PericlesApiKeyManager } from './PericlesApiKeyManager';
+import { PericlesExecutionStatus } from './PericlesExecutionStatus';
+import { PericlesSlugMemory } from './PericlesSlugMemory';
+import { PericlesThrottleControl } from './PericlesThrottleControl';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Target {
@@ -21,13 +21,13 @@ interface Target {
   is_active: boolean;
 }
 
-export function ParmenionDashboard() {
+export function PericlesDashboard() {
   const [targets, setTargets] = useState<Target[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const fetchTargets = useCallback(async () => {
     const { data } = await supabase
-      .from('parmenion_targets')
+      .from('pericles_targets')
       .select('id, domain, label, event_type, platform, is_active')
       .eq('is_active', true)
       .order('created_at', { ascending: true });
@@ -81,14 +81,14 @@ export function ParmenionDashboard() {
       </div>
 
       <TabsContent value="execution">
-        <ParmenionExecutionStatus />
+        <PericlesExecutionStatus />
       </TabsContent>
 
       {targets.map((t) => (
         <TabsContent key={t.id} value={t.domain.replace(/\./g, '-')}>
           <div className="space-y-4">
-            <ParmenionThrottleControl targetId={t.id} targetLabel={t.label} />
-            <ParmenionTargetPanel
+            <PericlesThrottleControl targetId={t.id} targetLabel={t.label} />
+            <PericlesTargetPanel
               targetLabel={t.label}
               targetDomain={t.domain}
               eventType={t.event_type}
@@ -103,24 +103,24 @@ export function ParmenionDashboard() {
       <TabsContent value="task-plan">
         <div className="space-y-4">
           {targets.map((t) => (
-            <ParmenionTaskPlan key={t.id} domain={t.domain} />
+            <PericlesTaskPlan key={t.id} domain={t.domain} />
           ))}
         </div>
       </TabsContent>
 
       <TabsContent value="integrations">
-        <ParmenionApiKeyManager />
+        <PericlesApiKeyManager />
       </TabsContent>
 
       <TabsContent value="slug-memory">
-        <ParmenionSlugMemory />
+        <PericlesSlugMemory />
       </TabsContent>
 
       <TabsContent value="stats">
-        <ParmenionFuncStats />
+        <PericlesFuncStats />
       </TabsContent>
 
-      <ParmenionAddTargetModal
+      <PericlesAddTargetModal
         open={showAddModal}
         onOpenChange={setShowAddModal}
         onAdded={fetchTargets}

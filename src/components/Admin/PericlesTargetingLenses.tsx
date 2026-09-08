@@ -11,7 +11,7 @@ import { Filter, RefreshCw, Save, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useServerFn } from '@tanstack/react-start';
-import { getParmenionLensOptions } from '@/lib/parmenion/lensOptions.functions';
+import { getPericlesLensOptions } from '@/lib/pericles/lensOptions.functions';
 
 type LensType = 'location' | 'persona' | 'cluster';
 type ProofLevel = 'none' | 'weak' | 'strong';
@@ -78,13 +78,13 @@ function defaultRow(lens_type: LensType): LensRow {
   };
 }
 
-export interface ParmenionTargetingLensesProps {
+export interface PericlesTargetingLensesProps {
   targetDomain: string;
 }
 
-export function ParmenionTargetingLenses({ targetDomain }: ParmenionTargetingLensesProps) {
+export function PericlesTargetingLenses({ targetDomain }: PericlesTargetingLensesProps) {
   const { toast } = useToast();
-  const fetchOptions = useServerFn(getParmenionLensOptions);
+  const fetchOptions = useServerFn(getPericlesLensOptions);
   const [targetId, setTargetId] = useState<string | null>(null);
   const [options, setOptions] = useState<LensOptionsPayload | null>(null);
   const [rows, setRows] = useState<Record<LensType, LensRow>>({
@@ -99,7 +99,7 @@ export function ParmenionTargetingLenses({ targetDomain }: ParmenionTargetingLen
     setLoading(true);
     try {
       const { data: target } = await supabase
-        .from('parmenion_targets')
+        .from('pericles_targets')
         .select('id')
         .eq('domain', targetDomain)
         .order('created_at', { ascending: false })
@@ -110,7 +110,7 @@ export function ParmenionTargetingLenses({ targetDomain }: ParmenionTargetingLen
 
       if (target?.id) {
         const { data: lenses } = await supabase
-          .from('parmenion_targeting_lenses')
+          .from('pericles_targeting_lenses')
           .select('lens_type, enabled, values, share_pct, publish_directory, conversion_target, proof_level')
           .eq('target_id', target.id);
 
@@ -179,8 +179,8 @@ export function ParmenionTargetingLenses({ targetDomain }: ParmenionTargetingLen
   const save = async (type: LensType) => {
     if (!targetId) {
       toast({
-        title: 'Cible Parménion introuvable',
-        description: 'Ce domaine n’est pas encore enregistré comme cible Parménion.',
+        title: 'Cible Périclès introuvable',
+        description: 'Ce domaine n’est pas encore enregistré comme cible Périclès.',
         variant: 'destructive',
       });
       return;
@@ -205,7 +205,7 @@ export function ParmenionTargetingLenses({ targetDomain }: ParmenionTargetingLen
 
     setSaving(type);
     try {
-      const { error } = await supabase.from('parmenion_targeting_lenses').upsert(
+      const { error } = await supabase.from('pericles_targeting_lenses').upsert(
         {
           target_id: targetId,
           lens_type: type,
@@ -355,7 +355,7 @@ export function ParmenionTargetingLenses({ targetDomain }: ParmenionTargetingLen
                           <SelectValue placeholder="Libre" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="__free">Libre (Parménion choisit)</SelectItem>
+                          <SelectItem value="__free">Libre (Périclès choisit)</SelectItem>
                           {(options?.directories || []).map((d) => (
                             <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
                           ))}

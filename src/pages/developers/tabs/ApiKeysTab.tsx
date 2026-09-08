@@ -20,7 +20,7 @@ export default function ApiKeysTab() {
     const [crw, mk, prm] = await Promise.all([
       supabase.from("crawlers_api_keys").select("id, name, key_prefix, created_at, last_used_at, revoked_at").order("created_at", { ascending: false }),
       supabase.from("marina_api_keys").select("id, label, api_key, created_at, is_active").order("created_at", { ascending: false }),
-      supabase.from("parmenion_targets").select("id, domain, label, is_active, pull_token_prefix").eq("created_by_user_id", user.id),
+      supabase.from("pericles_targets").select("id, domain, label, is_active, pull_token_prefix").eq("created_by_user_id", user.id),
     ]);
     setCrwKeys((crw.data as CrwKey[]) || []);
     setMkKeys((mk.data as MkKey[]) || []);
@@ -143,17 +143,17 @@ export default function ApiKeysTab() {
         )}
       </section>
 
-      {/* Parménion */}
+      {/* Périclès */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-medium">Parménion API</h2>
+            <h2 className="text-lg font-medium">Périclès API</h2>
             <p className="text-xs text-muted-foreground">Préfixe <code className="text-[hsl(280_70%_60%)]">prm_live_</code> — pull tasks par domaine</p>
           </div>
         </div>
         {prmTargets.length === 0 ? (
           <div className="border border-dashed border-border rounded p-6 text-center text-sm text-muted-foreground">
-            Aucun target. Les targets Parménion sont créés par un administrateur ou via l'onboarding Autopilote.
+            Aucun target. Les targets Périclès sont créés par un administrateur ou via l'onboarding Autopilote.
           </div>
         ) : (
           <div className="border border-border rounded overflow-hidden">

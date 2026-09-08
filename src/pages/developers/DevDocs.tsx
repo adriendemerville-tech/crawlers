@@ -4,7 +4,7 @@ import DevLayout from "./DevLayout";
 const DOCS = [
   { name: "Crawlers API", desc: "18 modules SEO/GEO/IA — async polling.", to: "/docs/api/crawlers", prefix: "crw_live_" },
   { name: "Marina API", desc: "Audit prospects B2B white-label.", to: "/docs/api/marina", prefix: "mk_live_" },
-  { name: "Parménion API", desc: "Pull model pour tâches de contenu Autopilote.", to: "/docs/api/parmenion", prefix: "prm_live_" },
+  { name: "Périclès API", desc: "Pull model pour tâches de contenu Autopilote.", to: "/docs/api/pericles", prefix: "prm_live_" },
 ];
 
 export default function DevDocs() {

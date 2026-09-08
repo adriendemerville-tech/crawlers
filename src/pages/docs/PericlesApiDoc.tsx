@@ -9,7 +9,7 @@ import { ArrowRight, Terminal, Key, RefreshCw, AlertCircle, FileCode2, Workflow 
 
 const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
 
-const BASE = 'https://tutlimtasnjabdfhpewu.functions.supabase.co/parmenion-api/v1';
+const BASE = 'https://tutlimtasnjabdfhpewu.functions.supabase.co/pericles-api/v1';
 
 const Code = ({ children, lang = 'bash' }: { children: string; lang?: string }) => (
   <pre className="overflow-x-auto rounded-md border border-border bg-muted/40 p-4 text-xs leading-relaxed">
@@ -26,17 +26,17 @@ const Endpoint = ({ method, path }: { method: string; path: string }) => (
   </div>
 );
 
-export default function ParmenionApiDoc() {
-  useCanonicalHreflang('/docs/api/parmenion');
+export default function PericlesApiDoc() {
+  useCanonicalHreflang('/docs/api/pericles');
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
       {
         '@type': 'TechArticle',
-        headline: 'API Parménion — Documentation officielle (Crawlers.fr)',
+        headline: 'API Périclès — Documentation officielle (Crawlers.fr)',
         description:
-          "Référence complète de l'API Parménion : modèle pull où le site client poll les tâches de contenu planifiées par Parménion (Crawlers), les publie sur son CMS, et notifie le résultat. Auth par token, polling, ack, published, failed.",
+          "Référence complète de l'API Périclès : modèle pull où le site client poll les tâches de contenu planifiées par Périclès (Crawlers), les publie sur son CMS, et notifie le résultat. Auth par token, polling, ack, published, failed.",
         author: { '@type': 'Organization', name: 'Crawlers.fr' },
         publisher: { '@type': 'Organization', name: 'Crawlers.fr' },
         datePublished: '2026-05-26',
@@ -47,9 +47,9 @@ export default function ParmenionApiDoc() {
       },
       {
         '@type': 'APIReference',
-        name: 'Parménion Pull API',
+        name: 'Périclès Pull API',
         description:
-          "API REST en mode pull pour récupérer les tâches de contenu planifiées par l'agent SEO Parménion et confirmer leur publication.",
+          "API REST en mode pull pour récupérer les tâches de contenu planifiées par l'agent SEO Périclès et confirmer leur publication.",
         programmingModel: 'REST (pull/polling)',
         targetPlatform: 'Web, CMS, Workers',
       },
@@ -58,7 +58,7 @@ export default function ParmenionApiDoc() {
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://crawlers.fr/' },
           { '@type': 'ListItem', position: 2, name: 'API & Intégrations', item: 'https://crawlers.fr/api-integrations' },
-          { '@type': 'ListItem', position: 3, name: 'API Parménion', item: 'https://crawlers.fr/docs/api/parmenion' },
+          { '@type': 'ListItem', position: 3, name: 'API Périclès', item: 'https://crawlers.fr/docs/api/pericles' },
         ],
       },
     ],
@@ -76,14 +76,14 @@ export default function ParmenionApiDoc() {
         <nav aria-label="Fil d'Ariane" className="mb-6 text-xs text-muted-foreground">
           <Link to="/" className="hover:text-foreground">Accueil</Link> /{' '}
           <Link to="/api-integrations" className="hover:text-foreground">API & Intégrations</Link> /{' '}
-          <span className="text-foreground">API Parménion</span>
+          <span className="text-foreground">API Périclès</span>
         </nav>
 
         <header className="mb-12 border-b border-border pb-8">
           <Badge variant="outline" className="mb-3 border-2">v1 · stable · pull model</Badge>
-          <h1 className="mb-4 text-4xl font-bold tracking-tight">API Parménion</h1>
+          <h1 className="mb-4 text-4xl font-bold tracking-tight">API Périclès</h1>
           <p className="text-lg text-muted-foreground">
-            Modèle <strong>pull</strong> : votre site interroge Parménion pour récupérer les tâches de contenu SEO
+            Modèle <strong>pull</strong> : votre site interroge Périclès pour récupérer les tâches de contenu SEO
             planifiées (titre, brief, HTML prêt à publier), les pousse sur votre CMS interne, puis confirme la
             publication. Vous ne donnez <strong>aucun</strong> accès sortant à Crawlers — votre site reste en
             contrôle total.
@@ -112,7 +112,7 @@ export default function ParmenionApiDoc() {
             si vous avez un WAF/ModSecurity strict.
           </p>
           <Code lang="text">{`┌─────────────┐     1. GET /tasks/pending           ┌────────────────┐
-│ Votre CMS / │ ─────────────────────────────────►  │   Parménion    │
+│ Votre CMS / │ ─────────────────────────────────►  │   Périclès    │
 │   Cron      │                                     │  (Crawlers.fr) │
 │             │ ◄──── { tasks: [{ id, payload }] }  │                │
 │             │                                     │                │
@@ -151,10 +151,10 @@ export default function ParmenionApiDoc() {
             <Terminal className="h-5 w-5" /> 1. Quickstart
           </h2>
           <p className="mb-4 text-muted-foreground">
-            Quatre appels suffisent : (1) récupérer votre token Parménion, (2) GET les tâches, (3) publier en
+            Quatre appels suffisent : (1) récupérer votre token Périclès, (2) GET les tâches, (3) publier en
             local, (4) POST le résultat.
           </p>
-          <Code lang="bash">{`# 1. Token fourni par Crawlers (admin → Mes Sites → Parménion → Générer un token)
+          <Code lang="bash">{`# 1. Token fourni par Crawlers (admin → Mes Sites → Périclès → Générer un token)
 export PRM_TOKEN="prm_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 # 2. Récupérer les tâches en attente
@@ -186,10 +186,10 @@ curl -s -X POST "${BASE}/tasks/<TASK_ID>/published" \\
 Authorization: Bearer prm_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Option B
-x-parmenion-key: prm_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`}</Code>
+x-pericles-key: prm_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`}</Code>
           <p className="mt-4 text-sm text-muted-foreground">
             Le token est lié à un <strong>domaine unique</strong>. Il ne donne accès qu'aux tâches de ce
-            domaine. Régénération via le dashboard Crawlers : <strong>Console → Mes Sites → Parménion → Rotate
+            domaine. Régénération via le dashboard Crawlers : <strong>Console → Mes Sites → Périclès → Rotate
             token</strong>. La rotation invalide instantanément l'ancien token.
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -334,7 +334,7 @@ Content-Type: application/json
   "published_url": "https://votresite.com/..."
 }`}</Code>
           <p className="mt-4 text-sm text-muted-foreground">
-            Parménion utilise l'URL retournée pour vérifier l'indexation, mesurer l'impact GSC/GA4 à J+30 et
+            Périclès utilise l'URL retournée pour vérifier l'indexation, mesurer l'impact GSC/GA4 à J+30 et
             recalibrer son scoring d'urgence. Mettez la <strong>vraie URL publique</strong>, pas l'URL admin.
           </p>
         </section>
@@ -363,7 +363,7 @@ Content-Type: application/json
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Trois échecs successifs sur le même domaine déclenchent le <strong>backlog guard</strong> côté
-            Parménion : les cycles suivants sont mis en pause jusqu'à intervention manuelle dans la console.
+            Périclès : les cycles suivants sont mis en pause jusqu'à intervention manuelle dans la console.
           </p>
         </section>
 
@@ -434,7 +434,7 @@ Content-Type: application/json
                 <tr className="border-b border-border/50">
                   <td className="py-2 pr-4 font-mono">401</td>
                   <td className="py-2 pr-4 font-mono">missing_token</td>
-                  <td className="py-2">Aucun header Authorization ni x-parmenion-key.</td>
+                  <td className="py-2">Aucun header Authorization ni x-pericles-key.</td>
                 </tr>
                 <tr className="border-b border-border/50">
                   <td className="py-2 pr-4 font-mono">401</td>
@@ -463,7 +463,7 @@ Content-Type: application/json
           </h2>
 
           <p className="mb-2 mt-4 text-sm font-semibold">Node.js (zéro dépendance)</p>
-          <Code lang="typescript">{`// parmenion-pull.ts — à exécuter en cron toutes les 5 min
+          <Code lang="typescript">{`// pericles-pull.ts — à exécuter en cron toutes les 5 min
 const TOKEN = process.env.PRM_TOKEN!;
 const BASE = "${BASE}";
 const h = { Authorization: \`Bearer \${TOKEN}\`, "Content-Type": "application/json" };
@@ -540,13 +540,13 @@ for t in tasks:
             <RefreshCw className="h-5 w-5" /> 10. Cron WordPress prêt à coller
           </h2>
           <p className="mb-4 text-muted-foreground">
-            Coller dans <code className="rounded bg-muted px-1">wp-content/mu-plugins/parmenion-pull.php</code> —
+            Coller dans <code className="rounded bg-muted px-1">wp-content/mu-plugins/pericles-pull.php</code> —
             aucun plugin externe requis. Tourne toutes les 5 min via WP-Cron.
           </p>
           <Code lang="php">{`<?php
 /**
- * Plugin Name: Parménion Pull (Crawlers)
- * Description: Poll Parménion toutes les 5 min et publie les articles planifiés.
+ * Plugin Name: Périclès Pull (Crawlers)
+ * Description: Poll Périclès toutes les 5 min et publie les articles planifiés.
  */
 define('PRM_TOKEN', 'prm_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
 define('PRM_BASE',  '${BASE}');
@@ -594,7 +594,7 @@ add_action('prm_pull_cron', function () {
 
         <div className="rounded-md border border-border p-6">
           <p className="mb-3 text-sm text-muted-foreground">
-            Besoin d'un autre modèle ? Crawlers supporte aussi le mode <strong>push</strong> (Parménion se
+            Besoin d'un autre modèle ? Crawlers supporte aussi le mode <strong>push</strong> (Périclès se
             connecte directement à votre CMS via App Password WordPress, REST custom, Webflow, Shopify…) — voir
             la liste complète des intégrations.
           </p>

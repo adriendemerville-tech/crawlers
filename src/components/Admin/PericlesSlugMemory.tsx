@@ -49,7 +49,7 @@ const STATUS_LABEL: Record<SlugStatus, string> = {
   error: 'Erreur',
 };
 
-export function ParmenionSlugMemory() {
+export function PericlesSlugMemory() {
   const { toast } = useToast();
   const [rows, setRows] = useState<SlugMemoryRow[]>([]);
   const [loading, setLoading] = useState(false);
