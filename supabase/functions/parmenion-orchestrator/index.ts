@@ -26,7 +26,7 @@ import { isSeoTacticText, siteSellsSeo } from '../_shared/autopilot/editorialSub
 import { getDictadeviEditorialBrief, renderDictadeviBriefBlock } from '../_shared/dictadeviEditorialBrief.ts';
 
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
-import { loadPersonaRotation, buildPersonaPromptBlock, recordPersonaServed } from '../_shared/parmenion/personaEngine.ts';
+import { loadPersonaRotation, buildPersonaPromptBlock, recordPersonaServed } from '../_shared/pericles/personaEngine.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
