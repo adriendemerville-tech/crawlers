@@ -2485,7 +2485,7 @@ const audit_internal_mesh: SkillDefinition = {
 // ═══════════════════════════════════════════════════════════
 // detect_content_cannibalization — clustering déterministe (0 LLM)
 // Implémentation partagée : _shared/cannibalizationClusters.ts
-// (même source que le garde de saturation de Parménion).
+// (même source que le garde de saturation de Périclès).
 // ═══════════════════════════════════════════════════════════
 const detect_content_cannibalization: SkillDefinition = {
   name: 'detect_content_cannibalization',
