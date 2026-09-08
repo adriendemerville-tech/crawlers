@@ -41,27 +41,56 @@ const FAQ = [
   ['Les 3 contenus sont-ils écrits par une IA ?', 'Les premiers brouillons sont produits par notre moteur éditorial, puis relus, ajustés et validés par vos soins avant publication.'],
 ];
 
+type Teaser = {
+  host: string;
+  score: number;
+  unreachable: boolean;
+  total: number;
+  teaser: { id: string; label: string; impact: string }[];
+};
+
 function ParmenionLandingComponent(): React.ReactElement {
   const { user } = useAuth();
-  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
   const inputRef = useRef<HTMLInputElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
   const [url, setUrl] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [ordering, setOrdering] = useState(false);
+  const [teaser, setTeaser] = useState<Teaser | null>(null);
+  const [session, setSession] = useState<{ orderId: string; passToken: string; priceId: string } | null>(null);
 
   const focusInput = useCallback(() => {
     inputRef.current?.focus();
     inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
 
-  const startAnalysis = useCallback(() => {
+  const startAnalysis = useCallback(async () => {
     if (!url.trim()) {
       focusInput();
       return;
     }
     setAnalyzing(true);
-    // TODO: wire to free diagnostic server function
-    setTimeout(() => setAnalyzing(false), 1200);
+    try {
+      const res = await runFreePasseDiagnostic({ data: { url: url.trim() } });
+      if ('error' in res) {
+        toast.error(res.message ?? 'Analyse impossible.');
+        return;
+      }
+      setTeaser({
+        host: res.host,
+        score: res.score,
+        unreachable: Boolean(res.unreachable),
+        total: res.total,
+        teaser: res.teaser,
+      });
+      requestAnimationFrame(() =>
+        resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      );
+    } catch {
+      toast.error('Analyse impossible pour le moment.');
+    } finally {
+      setAnalyzing(false);
+    }
   }, [url, focusInput]);
 
   const handleOrder = useCallback(async () => {
@@ -70,34 +99,28 @@ function ParmenionLandingComponent(): React.ReactElement {
       return;
     }
     if (!user) {
-      toast.info('Connectez-vous pour passer commande');
-      window.location.href = `/login?redirect=${encodeURIComponent(`/passe-visibilite?url=${encodeURIComponent(url)}`)}`;
+      toast.info('Créez votre compte pour voir le détail de vos correctifs');
+      window.location.href = `/signup?redirect=${encodeURIComponent(`/passe-visibilite?url=${encodeURIComponent(url)}`)}`;
       return;
     }
     setOrdering(true);
     try {
       const result = await createParmenionOrder({ data: { url: url.trim() } });
       if ('error' in result || !result.orderId) {
-        toast.error('Impossible de créer la commande. Réessayez.');
+        toast.error('Impossible de démarrer votre passe. Réessayez.');
         return;
       }
-      await openCheckout({
-        priceId: result.priceId,
-        customerEmail: user.email,
-        customData: {
-          kind: 'parmenion_pass',
-          orderId: result.orderId,
-          userId: user.id,
-          passToken: result.passToken,
-        },
-        successUrl: `${window.location.origin}/passe-visibilite?checkout=success&order=${result.orderId}`,
-      });
+      setSession({ orderId: result.orderId, passToken: result.passToken, priceId: result.priceId });
+      requestAnimationFrame(() =>
+        resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      );
     } catch {
-      toast.error('Impossible d\'ouvrir le paiement.');
+      toast.error('Impossible de démarrer votre passe.');
     } finally {
       setOrdering(false);
     }
-  }, [url, user, openCheckout, focusInput]);
+  }, [url, user, focusInput]);
+
 
   return (
     <>
