@@ -98,8 +98,8 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
   const doGenerate = useCallback(async () => {
     setBusy('contents');
     try {
-      const res = await generatePasseContents({ data: { orderId } });
-      if ('error' in res) toast.error('Génération impossible pour le moment.');
+      const res = (await generatePasseContents({ data: { orderId } })) as { error?: string };
+      if (res.error) toast.error('Génération impossible pour le moment.');
       await refresh();
     } finally {
       setBusy(null);
@@ -112,8 +112,8 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
       if (instruction.length < 3) return;
       setBusy(contentId);
       try {
-        const res = await revisePasseContent({ data: { contentId, instruction } });
-        if ('error' in res) {
+        const res = (await revisePasseContent({ data: { contentId, instruction } })) as { error?: string };
+        if (res.error) {
           toast.error(
             res.error === 'revision_limit'
               ? 'Deux corrections maximum par contenu.'
@@ -190,8 +190,8 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
   const doDeploy = useCallback(async () => {
     setBusy('deploy');
     try {
-      const res = await deployPasseOrder({ data: { orderId } });
-      if ('error' in res) {
+      const res = (await deployPasseOrder({ data: { orderId } })) as { error?: string; deployed?: boolean };
+      if (res.error) {
         toast.error(res.error === 'not_paid' ? 'Paiement non confirmé.' : 'Déploiement impossible.');
       } else if (res.deployed) {
         toast.success('Déploiement terminé.');
