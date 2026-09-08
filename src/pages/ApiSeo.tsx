@@ -39,8 +39,8 @@ const endpoints = [
   },
   {
     method: 'GET',
-    path: '/parmenion-api/v1/tasks/pending',
-    role: 'API Parménion : récupère les tâches de prescription d\u2019optimisations à appliquer.',
+    path: '/pericles-api/v1/tasks/pending',
+    role: 'API Périclès : récupère les tâches de prescription d\u2019optimisations à appliquer.',
   },
 ];
 

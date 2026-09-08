@@ -170,7 +170,7 @@ const LEGACY_INLINE_ORGANIZATION_FILES = new Set([
   'src/pages/developers/DevLanding.tsx',
   'src/pages/docs/CrawlersApiDoc.tsx',
   'src/pages/docs/MarinaApiDoc.tsx',
-  'src/pages/docs/ParmenionApiDoc.tsx',
+  'src/pages/docs/PericlesApiDoc.tsx',
   'src/pages/etudes/AutopilotIktracker.tsx',
   'src/pages/etudes/CoutChatGPTvsGoogleAds.tsx',
   'src/routes/contact.tsx',

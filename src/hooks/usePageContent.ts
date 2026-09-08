@@ -21,7 +21,7 @@ export type PageContent = Record<string, string>;
  * return <h1>{content.h1}</h1>;
  * ```
  *
- * Parmenion can update these values via `cms-patch-content` or direct DB write
+ * Pericles can update these values via `cms-patch-content` or direct DB write
  * without requiring a redeploy.
  */
 export function usePageContent(pageKey: string, defaults: PageContent = {}): {

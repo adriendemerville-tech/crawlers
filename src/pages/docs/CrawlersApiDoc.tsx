@@ -35,7 +35,7 @@ const FEATURES: Array<{ id: string; title: string; desc: string; input: Record<s
   { id: 'semantic_audit',       title: 'Audit sémantique',             desc: 'Champ lexical, entités, alignement intention (Lexical Footprint v2).',                input: { url: 'string', keyword: 'string?' }, status: 'preview' },
   { id: 'cocoon',               title: 'Cocoon sémantique 3D',         desc: 'Clusters, cannibalisation, profondeur, liens internes.',                              input: { domain: 'string' }, status: 'preview' },
   { id: 'content_architect',    title: 'Content Architect',            desc: 'Recommandation éditoriale en 4 étages (brief / stratège / rédacteur / tonalisateur).', input: { domain: 'string', topic: 'string', target_audience: 'string?' }, status: 'preview' },
-  { id: 'autopilot_status',     title: 'Autopilote (statut)',          desc: 'Lecture du statut Parménion pour un domaine.',                                        input: { domain: 'string' }, status: 'preview' },
+  { id: 'autopilot_status',     title: 'Autopilote (statut)',          desc: 'Lecture du statut Périclès pour un domaine.',                                        input: { domain: 'string' }, status: 'preview' },
   { id: 'conversion_optimizer', title: 'Conversion Optimizer',         desc: 'CTA, friction, GA4 behavioral metrics.',                                              input: { url: 'string' }, status: 'preview' },
   { id: 'social_hub',           title: 'Social Hub',                   desc: 'Génère des variations sociales depuis un article.',                                   input: { url: 'string', platforms: 'string[]?' }, status: 'preview' },
   { id: 'geo_score',            title: 'Score GEO',                    desc: 'Generative Engine Optimization (lisibilité par moteurs IA).',                          input: { url: 'string' }, status: 'preview' },
@@ -107,7 +107,7 @@ export default function CrawlersApiDoc() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild variant="outline"><Link to="/api-integrations">Toutes les APIs <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
             <Button asChild variant="outline"><Link to="/docs/api/marina">API Marina</Link></Button>
-            <Button asChild variant="outline"><Link to="/docs/api/parmenion">API Parménion</Link></Button>
+            <Button asChild variant="outline"><Link to="/docs/api/pericles">API Périclès</Link></Button>
           </div>
         </header>
 
@@ -139,7 +139,7 @@ export default function CrawlersApiDoc() {
             <code className="block break-all font-mono text-xs">{BASE}</code>
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            Pour le pipeline éditorial complet (publication CMS), voir <Link className="underline" to="/docs/api/parmenion">l'API Parménion</Link>.
+            Pour le pipeline éditorial complet (publication CMS), voir <Link className="underline" to="/docs/api/pericles">l'API Périclès</Link>.
             Pour la génération de rapports B2B en marque blanche, voir <Link className="underline" to="/docs/api/marina">l'API Marina</Link>.
           </p>
         </section>

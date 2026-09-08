@@ -1139,7 +1139,7 @@ export default function Tarifs() {
                     : 'What a subscription actually produces: 927 automated publications, real Search Console and acquisition figures.'}
                 </p>
                 <Link
-                  to="/etudes/autopilot-parmenion-iktracker"
+                  to="/etudes/autopilot-pericles-iktracker"
                   className="mt-3 inline-block text-sm font-medium underline hover:no-underline"
                 >
                   {language === 'fr' ? "Lire l'étude de cas automatisation SEO" : 'Read the SEO automation case study'}

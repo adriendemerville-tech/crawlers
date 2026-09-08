@@ -111,7 +111,7 @@ const SOFTWARE_APPLICATION_JSON_LD = {
     'Suivi de visibilité LLM (mesure des citations dans ChatGPT, Claude, Perplexity, Gemini)',
     'Analyse des bots IA (GPTBot, ClaudeBot, PerplexityBot) avec vérification rDNS/ASN',
     'Cloudflare AI Shield Wizard (gestion fine des accès bots IA)',
-    'Autopilot éditorial Parménion (génération et publication automatique de contenu)',
+    'Autopilot éditorial Périclès (génération et publication automatique de contenu)',
     'Pipeline éditoriale 4 étapes (briefing, stratège, rédacteur, tonalisateur)',
     'Publication CMS multi-plateformes (WordPress, Shopify, Webflow, Dictadevi, custom REST)',
     'SERP benchmark multi-providers (DataForSEO, SerpApi, Serper, Bright Data)',

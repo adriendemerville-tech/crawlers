@@ -174,7 +174,7 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     // Agents & assistants
     { term: "Félix", definition: "Assistant SAV intelligent de Crawlers.fr. Accompagne les utilisateurs dans la navigation, explique les scores, répond aux questions SEO/GEO et peut prendre la main dans Content Architect.", category: "ai" },
     { term: "Stratège Cocoon", definition: "Agent IA pilotant le workflow sémantique dans le module Cocon Sémantique. Lance les diagnostics, priorise les tâches et produit des plans stratégiques 360°.", category: "ai" },
-    { term: "Parménion", definition: "Orchestrateur autonome Crawlers.fr enchaînant les phases Audit → Diagnostic → Prescription → Exécution → Validation en boucle continue. Gère les cycles d'optimisation automatisés.", category: "ai" },
+    { term: "Périclès", definition: "Orchestrateur autonome Crawlers.fr enchaînant les phases Audit → Diagnostic → Prescription → Exécution → Validation en boucle continue. Gère les cycles d'optimisation automatisés.", category: "ai" },
     { term: "TIM", acronym: "Tracked Intelligence Memory", definition: "Agent mémoire de Crawlers.fr qui persiste et restitue le contexte structuré d'un domaine (identité, GSC/GA4, audits) pour garantir la cohérence entre les modules.", category: "ai" },
 
     // Techniques de scoring & analyse
@@ -202,7 +202,7 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     { term: "Cascade de Crawl", definition: "Algorithme 'smartFetch' utilisant une cascade optimisée (Fetch Natif → Spider.cloud → Firecrawl) avec marge cible de 75% pour maximiser la fiabilité de récupération des pages.", category: "technical" },
     { term: "Architect Workbench", definition: "Table centralisée recevant les findings de tous les diagnostics (audits, cocoon, crawl). Priorise les tâches par tier, sévérité et ancienneté pour alimenter les plans d'action.", category: "technical" },
     { term: "Stratégie 360°", definition: "Mode du Stratège Cocoon lançant 4 diagnostics en parallèle (contenu, sémantique, structure, autorité) puis consolidant un plan d'action priorisé avec 3 axes de développement.", category: "seo", toolLink: { path: "/cocoon", label: "Lancer une Stratégie 360°" } },
-    { term: "Autopilote", definition: "Mode d'exécution automatisé de Parménion. Enchaîne les cycles diagnostic → prescription → exécution avec des seuils de risque configurables et un journal de modifications.", category: "ai" },
+    { term: "Autopilote", definition: "Mode d'exécution automatisé de Périclès. Enchaîne les cycles diagnostic → prescription → exécution avec des seuils de risque configurables et un journal de modifications.", category: "ai" },
     { term: "Plan d'Action", definition: "Liste de tâches priorisées par impact, urgence et faisabilité, générée par l'Audit Stratégique ou la Stratégie 360°. Suivi dans la Console.", category: "seo", toolLink: { path: "/console", label: "Voir mes plans d'action" } },
 
     // Concepts GEO avancés
@@ -341,7 +341,7 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     { term: "Predictive Triangle", definition: "90-day traffic prediction model via GSC/GA4 cross-correlation. MAPE < 15%. Connects SERP positions, traffic, and conversions.", category: "seo" },
     { term: "Félix", definition: "Crawlers.fr intelligent support assistant. Guides users through navigation, explains scores, answers SEO/GEO questions.", category: "ai" },
     { term: "Cocoon Strategist", definition: "AI agent driving the semantic workflow in the Semantic Cocoon module. Runs diagnostics, prioritizes tasks, and produces 360° strategic plans.", category: "ai" },
-    { term: "Parmenion", definition: "Crawlers.fr autonomous orchestrator chaining Audit → Diagnosis → Prescription → Execution → Validation in continuous loops.", category: "ai" },
+    { term: "Pericles", definition: "Crawlers.fr autonomous orchestrator chaining Audit → Diagnosis → Prescription → Execution → Validation in continuous loops.", category: "ai" },
     { term: "Telemetry", definition: "Data automatically measured via HTML crawl: meta tags, Schema.org, internal/external links, freshness signals, HTTP status codes. No AI involved.", category: "technical" },
     { term: "Heuristic", definition: "Score calculated from weighted rules applied to raw signals detected by the crawler. Objective measurement without AI.", category: "technical" },
     { term: "Hybrid Scoring", definition: "Approach combining raw telemetry and AI semantic analysis. 11 of 14 criteria are crawl-based, 3 use LLM (originality, relevance, writing quality).", category: "ai" },
@@ -349,7 +349,7 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
     { term: "SEO Cannibalization", definition: "When multiple pages on the same site compete for the same keyword, diluting authority and reducing ranking chances.", category: "seo" },
     { term: "Crawl Cascade", definition: "SmartFetch algorithm using an optimized cascade (Native Fetch → Spider.cloud → Firecrawl) with 75% reliability margin.", category: "technical" },
     { term: "360° Strategy", definition: "Cocoon Strategist mode launching 4 parallel diagnostics (content, semantic, structure, authority) then consolidating a prioritized action plan.", category: "seo" },
-    { term: "Autopilot", definition: "Automated execution mode of Parmenion. Chains diagnosis → prescription → execution cycles with configurable risk thresholds.", category: "ai" },
+    { term: "Autopilot", definition: "Automated execution mode of Pericles. Chains diagnosis → prescription → execution cycles with configurable risk thresholds.", category: "ai" },
     { term: "AEO", acronym: "Answer Engine Optimization", definition: "Optimization for direct answer engines (featured snippets, People Also Ask, voice assistants). Subset of GEO.", category: "geo" },
     { term: "AI Citation", definition: "Mention of a website as a source in a language model response. Key indicator of GEO visibility.", category: "geo" },
     { term: "Internal Linking", definition: "All hyperlinks connecting pages within the same site. Optimized linking distributes authority, guides crawl, and improves UX.", category: "seo" },

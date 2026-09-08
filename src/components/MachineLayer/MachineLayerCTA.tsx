@@ -185,7 +185,7 @@ export function MachineLayerCTA({
     );
   }
 
-  // ── Variant: task-row (Parménion / workbench) ────────────────────────────
+  // ── Variant: task-row (Périclès / workbench) ────────────────────────────
   if (variant === 'task-row') {
     return (
       <div className={cn('flex items-center justify-between gap-3 py-2 px-3 rounded-md border border-border/50 hover:bg-muted/30 transition-colors', className)}>

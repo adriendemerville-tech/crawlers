@@ -20,7 +20,7 @@ export type AuditKind =
   | 'expert'
   | 'cro'
   | 'marina'
-  | 'parmenion'
+  | 'pericles'
   | 'generic';
 
 export type DisclaimerContext = {
@@ -311,7 +311,7 @@ const METHODOLOGY: Record<AuditKind, Record<Locale, { measured: string[]; estima
       ],
     },
   },
-  parmenion: {
+  pericles: {
     fr: {
       measured: ['Actions réellement exécutées et horodatées par le moteur d\'automatisation, avec leur statut de retour CMS.'],
       estimated: [
