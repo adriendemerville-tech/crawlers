@@ -120,7 +120,7 @@ import { Route as DevelopersLoginRouteImport } from './routes/developers/login'
 import { Route as DevelopersProfileRouteImport } from './routes/developers/profile'
 import { Route as DevelopersSdksRouteImport } from './routes/developers/sdks'
 import { Route as DevelopersSignupRouteImport } from './routes/developers/signup'
-import { Route as EtudesAutopilotParmenionIktrackerRouteImport } from './routes/etudes/autopilot-parmenion-iktracker'
+import { Route as EtudesAutopilotPericlesIktrackerRouteImport } from './routes/etudes/autopilot-pericles-iktracker'
 import { Route as EtudesCoutReponseChatgptVsGoogleAdsRouteImport } from './routes/etudes/cout-reponse-chatgpt-vs-google-ads'
 import { Route as FeaturesIndexRouteImport } from './routes/features/index'
 import { Route as FeaturesCocoonRouteImport } from './routes/features/cocoon'
@@ -154,7 +154,7 @@ import { Route as AppRapportCocoonRouteImport } from './routes/app/rapport/cocoo
 import { Route as AppRapportMatriceRouteImport } from './routes/app/rapport/matrice'
 import { Route as DocsApiCrawlersRouteImport } from './routes/docs/api/crawlers'
 import { Route as DocsApiMarinaRouteImport } from './routes/docs/api/marina'
-import { Route as DocsApiParmenionRouteImport } from './routes/docs/api/parmenion'
+import { Route as DocsApiPericlesRouteImport } from './routes/docs/api/pericles'
 import { Route as ApiPublicHooksCompetitorMatrixTickRouteImport } from './routes/api/public/hooks/competitor-matrix-tick'
 import { Route as ApiPublicHooksLinkHealthScanRouteImport } from './routes/api/public/hooks/link-health-scan'
 import { Route as ApiPublicHooksMarinaBatchTickRouteImport } from './routes/api/public/hooks/marina-batch-tick'
@@ -726,10 +726,10 @@ const DevelopersSignupRoute = DevelopersSignupRouteImport.update({
   path: '/developers/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EtudesAutopilotParmenionIktrackerRoute =
-  EtudesAutopilotParmenionIktrackerRouteImport.update({
-    id: '/etudes/autopilot-parmenion-iktracker',
-    path: '/etudes/autopilot-parmenion-iktracker',
+const EtudesAutopilotPericlesIktrackerRoute =
+  EtudesAutopilotPericlesIktrackerRouteImport.update({
+    id: '/etudes/autopilot-pericles-iktracker',
+    path: '/etudes/autopilot-pericles-iktracker',
     getParentRoute: () => rootRouteImport,
   } as any)
 const EtudesCoutReponseChatgptVsGoogleAdsRoute =
@@ -900,9 +900,9 @@ const DocsApiMarinaRoute = DocsApiMarinaRouteImport.update({
   path: '/docs/api/marina',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DocsApiParmenionRoute = DocsApiParmenionRouteImport.update({
-  id: '/docs/api/parmenion',
-  path: '/docs/api/parmenion',
+const DocsApiPericlesRoute = DocsApiPericlesRouteImport.update({
+  id: '/docs/api/pericles',
+  path: '/docs/api/pericles',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHooksCompetitorMatrixTickRoute =
@@ -1033,7 +1033,7 @@ export interface FileRoutesByFullPath {
   '/developers/profile': typeof DevelopersProfileRoute
   '/developers/sdks': typeof DevelopersSdksRoute
   '/developers/signup': typeof DevelopersSignupRoute
-  '/etudes/autopilot-parmenion-iktracker': typeof EtudesAutopilotParmenionIktrackerRoute
+  '/etudes/autopilot-pericles-iktracker': typeof EtudesAutopilotPericlesIktrackerRoute
   '/etudes/cout-reponse-chatgpt-vs-google-ads': typeof EtudesCoutReponseChatgptVsGoogleAdsRoute
   '/features/cocoon': typeof FeaturesCocoonRoute
   '/features/console': typeof FeaturesConsoleRoute
@@ -1070,7 +1070,7 @@ export interface FileRoutesByFullPath {
   '/app/rapport/matrice': typeof AppRapportMatriceRoute
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
-  '/docs/api/parmenion': typeof DocsApiParmenionRoute
+  '/docs/api/pericles': typeof DocsApiPericlesRoute
   '/api/public/hooks/competitor-matrix-tick': typeof ApiPublicHooksCompetitorMatrixTickRoute
   '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
@@ -1184,7 +1184,7 @@ export interface FileRoutesByTo {
   '/developers/profile': typeof DevelopersProfileRoute
   '/developers/sdks': typeof DevelopersSdksRoute
   '/developers/signup': typeof DevelopersSignupRoute
-  '/etudes/autopilot-parmenion-iktracker': typeof EtudesAutopilotParmenionIktrackerRoute
+  '/etudes/autopilot-pericles-iktracker': typeof EtudesAutopilotPericlesIktrackerRoute
   '/etudes/cout-reponse-chatgpt-vs-google-ads': typeof EtudesCoutReponseChatgptVsGoogleAdsRoute
   '/features/cocoon': typeof FeaturesCocoonRoute
   '/features/console': typeof FeaturesConsoleRoute
@@ -1221,7 +1221,7 @@ export interface FileRoutesByTo {
   '/app/rapport/matrice': typeof AppRapportMatriceRoute
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
-  '/docs/api/parmenion': typeof DocsApiParmenionRoute
+  '/docs/api/pericles': typeof DocsApiPericlesRoute
   '/api/public/hooks/competitor-matrix-tick': typeof ApiPublicHooksCompetitorMatrixTickRoute
   '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
@@ -1336,7 +1336,7 @@ export interface FileRoutesById {
   '/developers/profile': typeof DevelopersProfileRoute
   '/developers/sdks': typeof DevelopersSdksRoute
   '/developers/signup': typeof DevelopersSignupRoute
-  '/etudes/autopilot-parmenion-iktracker': typeof EtudesAutopilotParmenionIktrackerRoute
+  '/etudes/autopilot-pericles-iktracker': typeof EtudesAutopilotPericlesIktrackerRoute
   '/etudes/cout-reponse-chatgpt-vs-google-ads': typeof EtudesCoutReponseChatgptVsGoogleAdsRoute
   '/features/cocoon': typeof FeaturesCocoonRoute
   '/features/console': typeof FeaturesConsoleRoute
@@ -1373,7 +1373,7 @@ export interface FileRoutesById {
   '/app/rapport/matrice': typeof AppRapportMatriceRoute
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
-  '/docs/api/parmenion': typeof DocsApiParmenionRoute
+  '/docs/api/pericles': typeof DocsApiPericlesRoute
   '/api/public/hooks/competitor-matrix-tick': typeof ApiPublicHooksCompetitorMatrixTickRoute
   '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
@@ -1489,7 +1489,7 @@ export interface FileRouteTypes {
     | '/developers/profile'
     | '/developers/sdks'
     | '/developers/signup'
-    | '/etudes/autopilot-parmenion-iktracker'
+    | '/etudes/autopilot-pericles-iktracker'
     | '/etudes/cout-reponse-chatgpt-vs-google-ads'
     | '/features/cocoon'
     | '/features/console'
@@ -1526,7 +1526,7 @@ export interface FileRouteTypes {
     | '/app/rapport/matrice'
     | '/docs/api/crawlers'
     | '/docs/api/marina'
-    | '/docs/api/parmenion'
+    | '/docs/api/pericles'
     | '/api/public/hooks/competitor-matrix-tick'
     | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
@@ -1640,7 +1640,7 @@ export interface FileRouteTypes {
     | '/developers/profile'
     | '/developers/sdks'
     | '/developers/signup'
-    | '/etudes/autopilot-parmenion-iktracker'
+    | '/etudes/autopilot-pericles-iktracker'
     | '/etudes/cout-reponse-chatgpt-vs-google-ads'
     | '/features/cocoon'
     | '/features/console'
@@ -1677,7 +1677,7 @@ export interface FileRouteTypes {
     | '/app/rapport/matrice'
     | '/docs/api/crawlers'
     | '/docs/api/marina'
-    | '/docs/api/parmenion'
+    | '/docs/api/pericles'
     | '/api/public/hooks/competitor-matrix-tick'
     | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
@@ -1791,7 +1791,7 @@ export interface FileRouteTypes {
     | '/developers/profile'
     | '/developers/sdks'
     | '/developers/signup'
-    | '/etudes/autopilot-parmenion-iktracker'
+    | '/etudes/autopilot-pericles-iktracker'
     | '/etudes/cout-reponse-chatgpt-vs-google-ads'
     | '/features/cocoon'
     | '/features/console'
@@ -1828,7 +1828,7 @@ export interface FileRouteTypes {
     | '/app/rapport/matrice'
     | '/docs/api/crawlers'
     | '/docs/api/marina'
-    | '/docs/api/parmenion'
+    | '/docs/api/pericles'
     | '/api/public/hooks/competitor-matrix-tick'
     | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
@@ -1943,7 +1943,7 @@ export interface RootRouteChildren {
   DevelopersProfileRoute: typeof DevelopersProfileRoute
   DevelopersSdksRoute: typeof DevelopersSdksRoute
   DevelopersSignupRoute: typeof DevelopersSignupRoute
-  EtudesAutopilotParmenionIktrackerRoute: typeof EtudesAutopilotParmenionIktrackerRoute
+  EtudesAutopilotPericlesIktrackerRoute: typeof EtudesAutopilotPericlesIktrackerRoute
   EtudesCoutReponseChatgptVsGoogleAdsRoute: typeof EtudesCoutReponseChatgptVsGoogleAdsRoute
   FeaturesCocoonRoute: typeof FeaturesCocoonRoute
   FeaturesConsoleRoute: typeof FeaturesConsoleRoute
@@ -1980,7 +1980,7 @@ export interface RootRouteChildren {
   AppRapportMatriceRoute: typeof AppRapportMatriceRoute
   DocsApiCrawlersRoute: typeof DocsApiCrawlersRoute
   DocsApiMarinaRoute: typeof DocsApiMarinaRoute
-  DocsApiParmenionRoute: typeof DocsApiParmenionRoute
+  DocsApiPericlesRoute: typeof DocsApiPericlesRoute
   ApiPublicHooksCompetitorMatrixTickRoute: typeof ApiPublicHooksCompetitorMatrixTickRoute
   ApiPublicHooksLinkHealthScanRoute: typeof ApiPublicHooksLinkHealthScanRoute
   ApiPublicHooksMarinaBatchTickRoute: typeof ApiPublicHooksMarinaBatchTickRoute
@@ -2765,11 +2765,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevelopersSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/etudes/autopilot-parmenion-iktracker': {
-      id: '/etudes/autopilot-parmenion-iktracker'
-      path: '/etudes/autopilot-parmenion-iktracker'
-      fullPath: '/etudes/autopilot-parmenion-iktracker'
-      preLoaderRoute: typeof EtudesAutopilotParmenionIktrackerRouteImport
+    '/etudes/autopilot-pericles-iktracker': {
+      id: '/etudes/autopilot-pericles-iktracker'
+      path: '/etudes/autopilot-pericles-iktracker'
+      fullPath: '/etudes/autopilot-pericles-iktracker'
+      preLoaderRoute: typeof EtudesAutopilotPericlesIktrackerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/etudes/cout-reponse-chatgpt-vs-google-ads': {
@@ -3003,11 +3003,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsApiMarinaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/docs/api/parmenion': {
-      id: '/docs/api/parmenion'
-      path: '/docs/api/parmenion'
-      fullPath: '/docs/api/parmenion'
-      preLoaderRoute: typeof DocsApiParmenionRouteImport
+    '/docs/api/pericles': {
+      id: '/docs/api/pericles'
+      path: '/docs/api/pericles'
+      fullPath: '/docs/api/pericles'
+      preLoaderRoute: typeof DocsApiPericlesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/competitor-matrix-tick': {
@@ -3143,8 +3143,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevelopersProfileRoute: DevelopersProfileRoute,
   DevelopersSdksRoute: DevelopersSdksRoute,
   DevelopersSignupRoute: DevelopersSignupRoute,
-  EtudesAutopilotParmenionIktrackerRoute:
-    EtudesAutopilotParmenionIktrackerRoute,
+  EtudesAutopilotPericlesIktrackerRoute: EtudesAutopilotPericlesIktrackerRoute,
   EtudesCoutReponseChatgptVsGoogleAdsRoute:
     EtudesCoutReponseChatgptVsGoogleAdsRoute,
   FeaturesCocoonRoute: FeaturesCocoonRoute,
@@ -3183,7 +3182,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRapportMatriceRoute: AppRapportMatriceRoute,
   DocsApiCrawlersRoute: DocsApiCrawlersRoute,
   DocsApiMarinaRoute: DocsApiMarinaRoute,
-  DocsApiParmenionRoute: DocsApiParmenionRoute,
+  DocsApiPericlesRoute: DocsApiPericlesRoute,
   ApiPublicHooksCompetitorMatrixTickRoute:
     ApiPublicHooksCompetitorMatrixTickRoute,
   ApiPublicHooksLinkHealthScanRoute: ApiPublicHooksLinkHealthScanRoute,
