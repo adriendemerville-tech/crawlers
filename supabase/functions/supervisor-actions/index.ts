@@ -428,19 +428,19 @@ try {
       return jsonOk({ success: true, assistant_report: assistantReport })
     }
 
-    // ─── Action: Audit Parménion (Autopilot) errors ──────────────
-    if (action === 'audit_parmenion') {
+    // ─── Action: Audit Périclès (Autopilot) errors ──────────────
+    if (action === 'audit_pericles' || action === 'audit_parmenion') {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-      // Fetch recent Parménion decision logs
+      // Fetch recent Périclès decision logs
       const [decisionsRes, errorRateRes] = await Promise.all([
         supabase
-          .from('parmenion_decision_log')
+          .from('pericles_decision_log')
           .select('*')
           .gte('created_at', thirtyDaysAgo)
           .order('created_at', { ascending: false })
           .limit(50),
-        supabase.rpc('parmenion_error_rate', { p_domain: body.domain || '%', p_last_n: 20 }),
+        supabase.rpc('pericles_error_rate', { p_domain: body.domain || '%', p_last_n: 20 }),
       ])
 
       const decisions = decisionsRes.data || []
