@@ -401,7 +401,7 @@ async function createPostReal(token: GmbTokenInfo, params: { summary: string; ct
   })
   return { success: true, post_name: data?.name ?? null, simulated: false }
 }
-}
+
 
 function formatAddress(addr: any): string {
   if (!addr) return ''
