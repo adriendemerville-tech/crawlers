@@ -72,6 +72,7 @@ import { Route as OffreJeuneEntrepriseRouteImport } from './routes/offre-jeune-e
 import { Route as OptimisationLlmSeoRouteImport } from './routes/optimisation-llm-seo'
 import { Route as OutilGeoIaRouteImport } from './routes/outil-geo-ia'
 import { Route as PagespeedRouteImport } from './routes/pagespeed'
+import { Route as PasseVisibiliteRouteImport } from './routes/passe-visibilite'
 import { Route as PolitiqueConfidentialiteRouteImport } from './routes/politique-confidentialite'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivacyGoogleAdsRouteImport } from './routes/privacy-google-ads'
@@ -481,6 +482,11 @@ const OutilGeoIaRoute = OutilGeoIaRouteImport.update({
 const PagespeedRoute = PagespeedRouteImport.update({
   id: '/pagespeed',
   path: '/pagespeed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PasseVisibiliteRoute = PasseVisibiliteRouteImport.update({
+  id: '/passe-visibilite',
+  path: '/passe-visibilite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PolitiqueConfidentialiteRoute =
@@ -982,6 +988,7 @@ export interface FileRoutesByFullPath {
   '/optimisation-llm-seo': typeof OptimisationLlmSeoRoute
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
+  '/passe-visibilite': typeof PasseVisibiliteRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
@@ -1132,6 +1139,7 @@ export interface FileRoutesByTo {
   '/optimisation-llm-seo': typeof OptimisationLlmSeoRoute
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
+  '/passe-visibilite': typeof PasseVisibiliteRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
@@ -1283,6 +1291,7 @@ export interface FileRoutesById {
   '/optimisation-llm-seo': typeof OptimisationLlmSeoRoute
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
+  '/passe-visibilite': typeof PasseVisibiliteRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
@@ -1435,6 +1444,7 @@ export interface FileRouteTypes {
     | '/optimisation-llm-seo'
     | '/outil-geo-ia'
     | '/pagespeed'
+    | '/passe-visibilite'
     | '/politique-confidentialite'
     | '/privacy'
     | '/privacy-google-ads'
@@ -1585,6 +1595,7 @@ export interface FileRouteTypes {
     | '/optimisation-llm-seo'
     | '/outil-geo-ia'
     | '/pagespeed'
+    | '/passe-visibilite'
     | '/politique-confidentialite'
     | '/privacy'
     | '/privacy-google-ads'
@@ -1735,6 +1746,7 @@ export interface FileRouteTypes {
     | '/optimisation-llm-seo'
     | '/outil-geo-ia'
     | '/pagespeed'
+    | '/passe-visibilite'
     | '/politique-confidentialite'
     | '/privacy'
     | '/privacy-google-ads'
@@ -1886,6 +1898,7 @@ export interface RootRouteChildren {
   OptimisationLlmSeoRoute: typeof OptimisationLlmSeoRoute
   OutilGeoIaRoute: typeof OutilGeoIaRoute
   PagespeedRoute: typeof PagespeedRoute
+  PasseVisibiliteRoute: typeof PasseVisibiliteRoute
   PolitiqueConfidentialiteRoute: typeof PolitiqueConfidentialiteRoute
   PrivacyRoute: typeof PrivacyRoute
   PrivacyGoogleAdsRoute: typeof PrivacyGoogleAdsRoute
@@ -2414,6 +2427,13 @@ declare module '@tanstack/react-router' {
       path: '/pagespeed'
       fullPath: '/pagespeed'
       preLoaderRoute: typeof PagespeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/passe-visibilite': {
+      id: '/passe-visibilite'
+      path: '/passe-visibilite'
+      fullPath: '/passe-visibilite'
+      preLoaderRoute: typeof PasseVisibiliteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/politique-confidentialite': {
@@ -3078,6 +3098,7 @@ const rootRouteChildren: RootRouteChildren = {
   OptimisationLlmSeoRoute: OptimisationLlmSeoRoute,
   OutilGeoIaRoute: OutilGeoIaRoute,
   PagespeedRoute: PagespeedRoute,
+  PasseVisibiliteRoute: PasseVisibiliteRoute,
   PolitiqueConfidentialiteRoute: PolitiqueConfidentialiteRoute,
   PrivacyRoute: PrivacyRoute,
   PrivacyGoogleAdsRoute: PrivacyGoogleAdsRoute,

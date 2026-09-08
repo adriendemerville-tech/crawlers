@@ -41,6 +41,7 @@ import { MarinaRunningAuditsSection } from '@/components/Marina/MarinaRunningAud
 import { MarinaSeoContent } from '@/components/Marina/MarinaSeoContent';
 import { ClaudeVerdictBlock } from '@/components/Marina/ClaudeVerdictBlock';
 import { STARTUP_TRIAL_OFFER } from '@/lib/seo/startupTrialOffer';
+import ParmenionCta from '@/components/Parmenion/ParmenionCta';
 
 
 
@@ -1017,6 +1018,10 @@ export default function Marina() {
                     <CompetitorMatrixCta
                       className="max-w-md mx-auto text-left"
                       intro="Votre audit est prêt. Comparez maintenant votre visibilité à celle de vos concurrents sur les 20 requêtes clés de votre marché, dans Google et dans les réponses des IA."
+                    />
+                    <ParmenionCta
+                      className="max-w-md mx-auto mt-4 text-left"
+                      intro="Votre audit identifie les points à corriger. Faites appliquer les correctifs, rédiger 3 pages et optimiser votre fiche Google Maps — une seule fois, à prix fixe."
                     />
                   </div>
                 )}

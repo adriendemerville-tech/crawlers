@@ -52,6 +52,92 @@ Deno.serve(async (req) => {
         return new Response("ok", { status: 200 });
       }
 
+      // Achat de la passe unique Parmenion (59 € TTC) : on active la commande et le pass.
+      if (txn.customData?.kind === "parmenion_pass") {
+        const orderId = String(txn.customData?.orderId || "");
+        const userId = String(txn.customData?.userId || "");
+        const passToken = String(txn.customData?.passToken || "");
+        if (!orderId || !userId || !passToken) {
+          console.warn("[payments-webhook] parmenion_pass missing orderId, userId or passToken", txn.id);
+          return new Response("ok", { status: 200 });
+        }
+
+        const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+        const now = new Date().toISOString();
+
+        // Récupère le pass existant pour vérifier le montant attendu et l'état.
+        const { data: existingPass } = await admin
+          .from("passe_passes")
+          .select("id, status, amount_cents")
+          .eq("pass_token", passToken)
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (!existingPass) {
+          console.warn("[payments-webhook] parmenion pass not found", passToken.slice(0, 8));
+          return new Response("ok", { status: 200 });
+        }
+
+        // Vérifie le statut de la transaction Paddle.
+        if (txn.status && txn.status !== "completed") {
+          console.log(`[payments-webhook] parmenion transaction status=${txn.status}, skipping`);
+          return new Response("ok", { status: 200 });
+        }
+
+        // Met à jour la commande seulement si elle n'est pas déjà payée.
+        const { error: orderErr } = await admin.from("passe_orders").update({
+          status: "paid",
+          paid_at: now,
+          updated_at: now,
+        }).eq("id", orderId).eq("user_id", userId).neq("status", "paid");
+        if (orderErr) {
+          console.error("[payments-webhook] parmenion order update error", orderErr);
+          return new Response("db_error", { status: 500 });
+        }
+
+        // Active le pass (idempotent grâce à la contrainte unique sur pass_token).
+        const { error: passErr } = await admin.from("passe_passes").upsert(
+          {
+            order_id: orderId,
+            user_id: userId,
+            pass_token: passToken,
+            txn_id: txn.id,
+            amount_cents: existingPass.amount_cents || 5900,
+            status: "granted",
+          },
+          { onConflict: "pass_token" },
+        );
+        if (passErr) {
+          console.error("[payments-webhook] parmenion pass upsert error", passErr);
+          return new Response("db_error", { status: 500 });
+        }
+
+        // Événement idempotent : on n'insère qu'une seule fois par txn_id.
+        const { data: existingEvent } = await admin
+          .from("passe_order_events")
+          .select("id")
+          .eq("order_id", orderId)
+          .eq("event", "payment_received")
+          .eq("payload->>txn_id", txn.id)
+          .maybeSingle();
+
+        if (!existingEvent) {
+          await admin.from("passe_order_events").insert({
+            order_id: orderId,
+            user_id: userId,
+            event: "payment_received",
+            payload: {
+              txn_id: txn.id,
+              amount_cents: existingPass.amount_cents || 5900,
+              pass_token: passToken,
+            },
+          });
+        }
+
+        console.log(`[payments-webhook] parmenion pass granted order=${orderId.slice(0, 8)}…`);
+        return new Response("ok", { status: 200 });
+      }
+
       const userId = txn.customData?.userId;
       if (!userId) {
         console.warn("[payments-webhook] no userId in customData, skipping", txn.id);

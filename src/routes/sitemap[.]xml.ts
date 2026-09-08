@@ -8,6 +8,7 @@ const DOMAIN = "crawlers.fr";
 const FALLBACK_PATHS = [
   "/",
   "/marina",
+  "/passe-visibilite",
   "/blog",
   "/guides",
   "/observatoire",
