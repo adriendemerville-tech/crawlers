@@ -4,7 +4,7 @@
  * candidates. Aucun appel LLM : uniquement des lectures de données mesurées.
  */
 
-import { extractGeoCandidates, normalizeGeo, regionOfCity, type GeoCandidate } from './geoLexicon';
+import { extractGeoCandidates, normalizeGeo, regionOfCity, type GeoCandidate } from '@/lib/parmenion/geoLexicon';
 import { decomposePersonas } from '../../../supabase/functions/_shared/pericles/personaEngine';
 
 export type ProofLevel = 'none' | 'weak' | 'strong';
