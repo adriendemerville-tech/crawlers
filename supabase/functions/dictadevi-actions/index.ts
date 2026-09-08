@@ -101,10 +101,10 @@ function ensureHtmlContent(body: Record<string, unknown>, ctx: string): void {
  * Actions non supportées (Dictadevi n'expose PAS ces endpoints) → 501 not_supported :
  *   - push-code-head/body/page, get-injection-*, redirects, robots.txt,
  *     push-event, list-pages, create/update/delete-page.
- *   Le routeur Parménion (cmsActionRouter) doit les éviter pour Dictadevi.
- *
- * Garde éditoriale (cohérence avec iktracker-actions):
- *   - Refus si auteur ∈ {parménion, parmenion, crawlers autopilot}
+  *   Le routeur Périclès (cmsActionRouter) doit les éviter pour Dictadevi.
+  *
+  * Garde éditoriale (cohérence avec iktracker-actions):
+  *   - Refus si auteur ∈ {périclès, pericles, parménion, parmenion, crawlers autopilot}
  *   - Refus si published_at > 6 mois
  */
 
