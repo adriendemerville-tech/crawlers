@@ -1,65 +1,67 @@
-# Offre « Débug + correctifs » en une fois — parcours vertical
+# Offre unique « Audit + correctifs » — plan d'implantation
 
-## Réponse courte
+Produit : un achat unique. Audit du site et de la fiche Google Maps, correctifs proposés, 3 contenus rédigés et validés par le client, optimisation de la fiche Google Maps. **Rien n'est déployé avant paiement.**
 
-Oui, c'est faisable, et la majorité des briques existent déjà : audit du site (Marina / audit expert), diagnostic Google Maps avec score et recommandations, génération d'articles, connexion au site (CMS) et à Google Maps, paiement à l'unité. Deux briques manquent réellement et doivent être construites : **l'écriture sur la fiche Google Maps** (aujourd'hui on sait lire la fiche, les avis, les publications, et répondre aux avis — pas modifier la description ni publier) et **le séquenceur de commande** qui bloque tout déploiement avant paiement.
-
-## L'offre proposée
-
-Prix unique, une passe complète :
-- audit du site et de la fiche Google Maps,
-- liste des correctifs prioritaires,
-- 3 pages de contenu rédigées et relues par le client,
-- optimisation de la fiche Google Maps (description, catégories, horaires, 1 publication),
-- déploiement uniquement après paiement.
-
-## Le parcours, sans aucun choix
-
-Une seule URL, une seule colonne, un seul bouton à chaque étape.
+## Le parcours, une seule URL, aucun choix
 
 ```text
-1. Adresse du site         -> analyse gratuite visible immédiatement
-2. Création de compte      -> le résultat est conservé
-3. Diagnostic              -> problèmes classés, sans jargon
-4. Correctifs proposés     -> liste figée, non modifiable
-5. 3 contenus rédigés      -> lecture, correction, validation par le client
+/passe-visibilite
+1. Adresse du site        -> analyse gratuite affichée
+2. Inscription            -> le résultat est rattaché au compte
+3. Diagnostic             -> problèmes classés, sans jargon
+4. Correctifs proposés    -> liste figée
+5. 3 contenus rédigés     -> relecture et corrections du client, puis validation
 6. Connexions             -> son site + sa fiche Google Maps
 7. Récapitulatif + paiement
-8. Déploiement automatique -> site et fiche Google Maps
-9. Compte rendu            -> avant / après
+8. Déploiement            -> site et fiche Google Maps
+9. Compte rendu           -> avant / après
 ```
 
-Rien n'est publié avant l'étape 8. Le client peut quitter et reprendre : chaque étape est enregistrée.
+Une étape visible à la fois, un seul bouton, reprise possible là où le client s'est arrêté.
 
-## Ce qui existe déjà
+## Étapes d'implantation
 
-- Analyse d'un site sans compte, avec conservation du résultat après inscription.
-- Diagnostic Google Maps : score de complétude, recommandations classées, idées de publications.
-- Rédaction d'articles et de pages, avec relecture et correction avant publication.
-- Connexion au site pour publier (WordPress, Shopify, Webflow, Wix, etc.).
-- Paiement et facturation.
-- Offre 12 mois gratuits pour les jeunes entreprises, réutilisable comme variante.
+### Étape 1 — La commande en base
+Une table `passe_orders` : une ligne par client, l'étape en cours, le site, la fiche Google Maps visée, les problèmes retenus, les 3 contenus et leur statut de validation, `paid_at`, `deployed_at`, le compte rendu. Isolation par `auth.uid()`, droits explicites, accès complet pour les traitements serveur.
+Tables filles : `passe_order_contents` (un contenu = une ligne, versions successives de relecture) et `passe_order_events` (journal : créé, validé, payé, déployé, échec).
 
-## Ce qui manque et doit être construit
+### Étape 2 — Le diagnostic réutilisé
+Aucune nouvelle analyse : on branche l'audit existant du site et le diagnostic de fiche Google Maps déjà en place, et on n'en garde que les 6 à 10 problèmes réellement corrigeables par cette offre. Le reste est présenté comme « inclus dans le suivi mensuel ».
 
-1. **Publier sur la fiche Google Maps.** Aujourd'hui on lit la fiche et on répond aux avis, mais on ne modifie ni la description, ni les catégories, ni les horaires, et on ne publie pas de post. À ajouter, avec l'autorisation Google correspondante et un aperçu avant / après.
-2. **La commande elle-même.** Un enregistrement unique qui suit l'avancement du client (étape en cours, contenus validés, connexions faites, paiement reçu, déploiement effectué), avec un verrou : aucun déploiement possible sans paiement confirmé.
-3. **La page du parcours.** Une page dédiée, une étape visible à la fois, aucun menu, aucun choix de plan.
-4. **Le compte rendu final.** Ce qui a été corrigé, ce qui a été publié, ce qui reste à faire.
+### Étape 3 — Les 3 contenus
+Rédaction via la chaîne éditoriale existante, en brouillon. Génération unique par contenu, mise en cache ; les corrections du client sont appliquées sans nouvelle génération complète. Deux allers-retours inclus, puis validation ferme.
 
-## Points à trancher avant d'écrire le code
+### Étape 4 — Les connexions
+Site : connexion existante (WordPress, Shopify, Webflow, Wix, etc.). Fiche Google Maps : autorisation Google déjà gérée. Si l'une des deux est impossible, l'étape le dit clairement et propose la livraison en fichiers plutôt que la publication.
 
-- Le prix de la passe unique, et s'il s'accompagne d'une remise sur l'abonnement de suivi.
-- Ce qui se passe si le client n'a pas de fiche Google Maps, ou si son site n'est pas connectable : offre dégradée ou remboursement.
-- Le nombre de retouches incluses sur les 3 contenus.
+### Étape 5 — L'écriture sur la fiche Google Maps (à construire)
+Aujourd'hui on lit la fiche, les avis, les publications, et on répond aux avis. À ajouter : mise à jour de la description, des catégories, des horaires et du site web, et création d'une publication. Avec aperçu avant / après et journal de ce qui a été modifié.
+
+### Étape 6 — Paiement et verrou
+Paiement unique. La confirmation vient exclusivement du prestataire de paiement, jamais du navigateur. Le déploiement refuse de démarrer si `paid_at` est vide. Après paiement, remboursement possible selon la politique en place tant que le déploiement n'a pas eu lieu.
+
+### Étape 7 — Déploiement et compte rendu
+Publication des 3 contenus, application des correctifs de la fiche Google Maps, instantané avant / après, compte rendu lisible : ce qui a été corrigé, ce qui a été publié, ce qui reste à faire, et proposition d'abonnement de suivi.
+
+### Étape 8 — La page publique
+Page dédiée, rendue côté serveur, mise en cache, sections basses en chargement différé, un seul titre principal, métadonnées propres, bloc de réponse directe, données structurées produit / offre, ajout au sitemap. Design noir et blanc, sans emoji, boutons à bordure.
+
+### Étape 9 — Suivi interne
+Un onglet d'administration : commandes en cours, étape bloquante, paiements, déploiements en échec, relance possible.
+
+## Points à trancher avant de coder
+
+- Le prix de la passe unique, et la remise éventuelle vers l'abonnement de suivi.
 - Le délai annoncé entre paiement et déploiement.
+- Le nombre de retouches incluses sur les contenus (proposition : deux).
+- Cas sans fiche Google Maps ou site non connectable : offre dégradée à prix réduit, ou refus en amont.
 
 ## Détails techniques
 
-- Nouvelle table de commande (une ligne par client), colonnes d'état par étape, `paid_at`, `deployed_at`, RLS sur `auth.uid()`, GRANT explicites.
-- Verrou de déploiement côté serveur : la fonction de déploiement refuse si `paid_at` est nul. Le paiement est confirmé par le webhook du prestataire de paiement, jamais par le client.
-- Écriture Google Maps : nouvelles actions dans `supabase/functions/gmb-actions` (mise à jour des informations de la fiche et création de publication), autorisation `business.manage` déjà gérée par `gbp-auth`.
-- Publication site : réutilisation de `cms-push-draft` / `cms-patch-content`, avec instantané avant / après.
-- Contenus : réutilisation de la chaîne éditoriale existante, en mode brouillon jusqu'à validation puis paiement.
-- Page du parcours en rendu serveur, cache HTML, sections basses en chargement différé, un seul H1, métadonnées propres, données structurées `Product` / `Offer`.
-- Aucune dépense LLM avant l'étape 5, et une seule génération par contenu, avec cache, pour maîtriser le coût.
+- `passe_orders`, `passe_order_contents`, `passe_order_events` créées par migration, avec `GRANT` sur `authenticated` et `service_role`, RLS scopée `auth.uid()`, validations temporelles par déclencheur et non par contrainte.
+- Verrou : la fonction de déploiement lit `paid_at` côté serveur avec le client de service ; le client ne peut jamais déclencher un déploiement.
+- Paiement : réutilisation de la chaîne Paddle existante (`create-checkout`, `payments-webhook`) avec un prix ponctuel, filtrage systématique sur l'environnement.
+- Google Maps : nouvelles actions dans `supabase/functions/gmb-actions` (`update-location-info`, `create-post`), jeton et rafraîchissement déjà gérés par `gbp-auth`, portée `business.manage`.
+- Site : réutilisation de `cms-push-draft` et `cms-patch-content`, instantané dans `content_deploy_snapshots`.
+- Diagnostic : réutilisation des fonctions d'audit existantes et de `gmb-optimization`, sans nouvelle dépense LLM avant l'étape 5.
+- Page publique : route et page dédiées, ajout du chemin au cache HTML de `src/server.ts` et au sitemap.
