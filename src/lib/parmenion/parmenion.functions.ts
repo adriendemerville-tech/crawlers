@@ -235,15 +235,18 @@ export const generatePasseContents = createServerFn({ method: "POST" })
       .order("created_at");
     if ((already ?? []).length >= 3) return { contents: already ?? [] };
 
-    const diag = (order.diagnostic ?? {}) as PasseDiagnostic;
-    const topics = (data.topics && data.topics.length === 3
-      ? data.topics
-      : deriveTopics(diag.host ? diag : ({ ...diag, host: order.normalized_url ?? "" } as PasseDiagnostic))
+    const diag = (order.diagnostic ?? {}) as unknown as PasseDiagnostic;
+    const host = diag.host || (order.normalized_url ? new URL(order.normalized_url).hostname : "");
+    const topics = (
+      data.topics && data.topics.length === 3
+        ? data.topics
+        : deriveTopics({ ...diag, host, brand: diag.brand || host } as PasseDiagnostic)
     ).slice(0, 3);
 
-    const domain = order.normalized_url ? new URL(order.normalized_url).hostname : diag.host;
+    const domain = host;
 
-    const created: unknown[] = [];
+    const created: Record<string, unknown>[] = [];
+
     for (const topic of topics) {
       let html = "";
       let title = topic;
