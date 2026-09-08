@@ -151,7 +151,7 @@ Deno.serve(handleRequest(async (req: Request) => {
     // 1) Tous les targets actifs
 
     let q = supabase
-      .from('parmenion_targets')
+      .from('pericles_targets')
       .select('domain, created_by_user_id')
       .eq('is_active', true)
       .eq('autopilot_enabled', true);

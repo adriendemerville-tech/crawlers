@@ -261,7 +261,7 @@ Deno.serve(async (req: Request) => {
       })
     }
     try {
-      const { data, error } = await supabase.rpc('get_parmenion_target_api_key', { p_domain: site.domain })
+      const { data, error } = await supabase.rpc('get_pericles_target_api_key', { p_domain: site.domain })
       if (error || !data || typeof data !== 'string') {
         return new Response(JSON.stringify({
           error: `No admin key found in parmenion_targets for "${site.domain}"`,

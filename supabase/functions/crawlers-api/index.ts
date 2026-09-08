@@ -112,7 +112,7 @@ async function runFeature(admin: any, jobId: string, userId: string, feature: st
       const domain = String(input?.domain || "");
       if (!domain) throw new Error("missing field: domain");
       const { data, error } = await admin
-        .from("parmenion_targets")
+        .from("pericles_targets")
         .select("domain, status, last_cycle_at, next_cycle_at, paused_reason")
         .eq("user_id", userId)
         .eq("domain", domain)

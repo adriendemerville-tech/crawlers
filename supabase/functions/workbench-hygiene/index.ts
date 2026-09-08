@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { runPriorityPass } from "../_shared/parmenionPass.ts";
+import { runPriorityPass } from "../_shared/periclesPass.ts";
 
 
 const corsHeaders = {

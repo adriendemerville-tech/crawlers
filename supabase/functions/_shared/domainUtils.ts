@@ -47,7 +47,7 @@ export async function getDictadeviApiKey(supabase?: {
 
   if (supabase) {
     try {
-      const { data, error } = await supabase.rpc('get_parmenion_target_api_key', { p_domain: domain });
+      const { data, error } = await supabase.rpc('get_pericles_target_api_key', { p_domain: domain });
       if (!error) {
         dbHasEntry = data !== null && data !== undefined;
         if (typeof data === 'string' && data.trim().length > 0) {

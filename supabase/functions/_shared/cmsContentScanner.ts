@@ -325,7 +325,8 @@ async function scanShopify(conn: any, inventory: CmsContentInventory) {
 }
 
 async function scanDictadevi(conn: any, inventory: CmsContentInventory, supabase: any) {
-  // Dictadevi v1 API key is resolved via DB-first helper (parmenion_targets) with env fallback
+  // Dictadevi v1 API key is resolved via DB-first helper (pericles_targets) with env fallback
+
   const apiKey = await getDictadeviApiKey(supabase);
   if (!apiKey) {
     inventory.errors.push('dictadevi: no API key resolved (parmenion_targets + DICTADEVI_API_KEY both empty)');
