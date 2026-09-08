@@ -173,6 +173,63 @@ function ParmenionLandingComponent(): React.ReactElement {
           </div>
         </section>
 
+        {/* Résultat de l'analyse gratuite, puis parcours complet */}
+        {(teaser || session) && (
+          <section ref={resultRef} className="border-b border-border">
+            <div className="mx-auto max-w-5xl px-4 py-12">
+              {session ? (
+                <Suspense
+                  fallback={
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Préparation de votre passe…
+                    </div>
+                  }
+                >
+                  <PasseFlow
+                    orderId={session.orderId}
+                    passToken={session.passToken}
+                    priceId={session.priceId}
+                  />
+                </Suspense>
+              ) : teaser ? (
+                <div className="rounded-lg border-2 border-foreground p-6">
+                  <h2 className="mb-2 text-xl font-bold">
+                    {teaser.unreachable
+                      ? `${teaser.host} n'a pas pu être analysé`
+                      : `Résultat pour ${teaser.host}`}
+                  </h2>
+                  {!teaser.unreachable && (
+                    <p className="mb-4 text-sm text-muted-foreground">
+                      Note de visibilité : <span className="font-semibold text-foreground">{teaser.score}/100</span> ·{' '}
+                      {teaser.total} problèmes corrigeables détectés
+                    </p>
+                  )}
+                  <ul className="mb-6 space-y-2 text-sm">
+                    {teaser.teaser.map((t) => (
+                      <li key={t.id} className="flex items-center justify-between gap-3 rounded border border-border p-3">
+                        <span>{t.label}</span>
+                        <span className="text-xs uppercase tracking-wide text-primary">{t.impact}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    onClick={handleOrder}
+                    disabled={ordering}
+                    className="h-12 gap-2 border border-foreground bg-transparent px-6 text-foreground hover:bg-foreground hover:text-background"
+                  >
+                    {ordering ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Voir le détail et mes correctifs'}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    Gratuit. Vous ne payez qu'après avoir relu et validé vos 3 contenus.
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </section>
+        )}
+
+
         {/* What's included */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
