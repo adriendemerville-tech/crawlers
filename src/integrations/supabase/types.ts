@@ -12061,6 +12061,192 @@ export type Database = {
         }
         Relationships: []
       }
+      passe_order_contents: {
+        Row: {
+          client_revision: string | null
+          created_at: string | null
+          draft_html: string | null
+          id: string
+          order_id: string
+          outline: Json | null
+          revision_count: number
+          status: string
+          title: string | null
+          topic: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          client_revision?: string | null
+          created_at?: string | null
+          draft_html?: string | null
+          id?: string
+          order_id: string
+          outline?: Json | null
+          revision_count?: number
+          status?: string
+          title?: string | null
+          topic: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          client_revision?: string | null
+          created_at?: string | null
+          draft_html?: string | null
+          id?: string
+          order_id?: string
+          outline?: Json | null
+          revision_count?: number
+          status?: string
+          title?: string | null
+          topic?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passe_order_contents_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "passe_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passe_order_events: {
+        Row: {
+          created_at: string | null
+          event: string
+          id: string
+          order_id: string
+          payload: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event: string
+          id?: string
+          order_id: string
+          payload?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event?: string
+          id?: string
+          order_id?: string
+          payload?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passe_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "passe_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passe_orders: {
+        Row: {
+          created_at: string | null
+          deployed_at: string | null
+          findings: Json | null
+          gmb_account_id: string | null
+          gmb_location_id: string | null
+          id: string
+          normalized_url: string | null
+          paid_at: string | null
+          report: Json | null
+          status: string
+          step: number
+          updated_at: string | null
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          deployed_at?: string | null
+          findings?: Json | null
+          gmb_account_id?: string | null
+          gmb_location_id?: string | null
+          id?: string
+          normalized_url?: string | null
+          paid_at?: string | null
+          report?: Json | null
+          status?: string
+          step?: number
+          updated_at?: string | null
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          deployed_at?: string | null
+          findings?: Json | null
+          gmb_account_id?: string | null
+          gmb_location_id?: string | null
+          id?: string
+          normalized_url?: string | null
+          paid_at?: string | null
+          report?: Json | null
+          status?: string
+          step?: number
+          updated_at?: string | null
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      passe_passes: {
+        Row: {
+          amount_cents: number | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          order_id: string | null
+          pass_token: string
+          status: string
+          txn_id: string | null
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          pass_token: string
+          status?: string
+          txn_id?: string | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          pass_token?: string
+          status?: string
+          txn_id?: string | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passe_passes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "passe_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patch_effectiveness: {
         Row: {
           agent_source: string

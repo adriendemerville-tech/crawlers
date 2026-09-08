@@ -92,6 +92,13 @@
       "when": 1788358522025,
       "tag": "0012_purge_expired_startup_trial_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788870457757,
+      "tag": "0013_create_parmenion_passe_tables",
+      "breakpoints": true
     }
   ]
 }
