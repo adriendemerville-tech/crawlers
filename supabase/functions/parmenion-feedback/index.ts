@@ -3,7 +3,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
 /**
- * Parménion Feedback Loop
+ * Périclès Feedback Loop
  * 
  * Runs at T+30 after a decision was executed.
  * Compares predicted impact with actual GSC data.
@@ -87,7 +87,7 @@ try {
 
     // Find decisions ready for feedback (completed, no measurement yet, > 30 days old)
     let query = supabase
-      .from('parmenion_decision_log')
+      .from('pericles_decision_log')
       .select('*')
       .eq('status', 'completed')
       .is('measured_at', null)
@@ -175,7 +175,7 @@ try {
 
       // Update the decision log
       const { error: updateError } = await supabase
-        .from('parmenion_decision_log')
+        .from('pericles_decision_log')
         .update({
           impact_actual: impactActual,
           risk_calibrated: riskCalibrated,
@@ -192,7 +192,7 @@ try {
         .eq('id', decision.id);
 
       if (updateError) {
-        console.error(`[Parménion Feedback] Update error for ${decision.id}:`, updateError);
+        console.error(`[Périclès Feedback] Update error for ${decision.id}:`, updateError);
       }
 
       results.push({
@@ -211,7 +211,7 @@ try {
     }
 
     // Check if conservative mode should trigger
-    const { data: errorRate } = await supabase.rpc('parmenion_error_rate', { p_domain: domain || decisions[0]?.domain });
+    const { data: errorRate } = await supabase.rpc('pericles_error_rate', { p_domain: domain || decisions[0]?.domain });
 
     return jsonOk({
       processed: results.length,
@@ -222,7 +222,7 @@ try {
     });
 
   } catch (e) {
-    console.error('[Parménion Feedback] Error:', e);
+    console.error('[Périclès Feedback] Error:', e);
     return jsonError(e instanceof Error ? e.message : 'Unknown error', 500);
   }
 }));
