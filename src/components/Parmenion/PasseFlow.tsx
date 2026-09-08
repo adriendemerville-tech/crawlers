@@ -69,20 +69,24 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
   const [revision, setRevision] = useState<Record<string, string>>({});
   const [connections, setConnections] = useState<{
     cms: { id: string; platform: string; site_url: string | null; tracked_site_id: string | null }[];
-    locations: { id: string; location_id: string; location_name: string | null; tracked_site_id: string | null }[];
+    locations: { id: string; place_id: string | null; location_name: string | null; tracked_site_id: string | null }[];
   }>({ cms: [], locations: [] });
   const [gmbDescription, setGmbDescription] = useState('');
 
   const refresh = useCallback(async () => {
-    const res = await getPasseOrder({ data: { orderId } });
-    if ('error' in res) return;
+    const res = (await getPasseOrder({ data: { orderId } })) as {
+      error?: string;
+      order?: unknown;
+      contents?: unknown[];
+    };
+    if (res.error || !res.order) return;
     setOrder(res.order as unknown as Order);
     setContents((res.contents ?? []) as unknown as Content[]);
   }, [orderId]);
 
   useEffect(() => {
     void refresh();
-    void getPasseConnections().then((r) => setConnections(r as typeof connections));
+    void getPasseConnections().then((r) => setConnections(r as unknown as typeof connections));
   }, [refresh]);
 
   const findings = ((order?.['findings'] as Finding[] | null) ?? []).filter(Boolean);
@@ -354,14 +358,14 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
                   <li key={l.id} className="flex items-center justify-between gap-3 rounded border border-border p-3 text-sm">
                     <span className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-primary" />
-                      {l.location_name ?? l.location_id}
+                      {l.location_name ?? l.place_id}
                     </span>
-                    {order.gmb_location_id === l.location_id ? (
+                    {order.gmb_location_id === l.place_id ? (
                       <Check className="h-4 w-4 text-primary" />
                     ) : (
                       <Button
-                        onClick={() => void doLink(undefined, l.location_id)}
-                        disabled={busy === 'link'}
+                        onClick={() => void doLink(l.tracked_site_id ?? undefined, l.place_id ?? undefined)}
+                        disabled={busy === 'link' || !l.place_id}
                         className="h-8 border border-foreground bg-transparent px-3 text-xs text-foreground hover:bg-foreground hover:text-background"
                       >
                         Choisir
