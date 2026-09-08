@@ -272,10 +272,11 @@ function ParmenionLandingComponent(): React.ReactElement {
               </ul>
               <Button
                 onClick={handleOrder}
-                disabled={ordering || checkoutLoading}
+                disabled={ordering}
                 className="h-12 w-full gap-2 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background"
               >
-                {(ordering || checkoutLoading) ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Passer commande — 59 € TTC'}
+                {ordering ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Démarrer ma passe — 59 € TTC'}
+
                 <ArrowRight className="h-4 w-4" />
               </Button>
               <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
