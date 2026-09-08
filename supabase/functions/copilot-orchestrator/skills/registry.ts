@@ -538,7 +538,7 @@ const cms_patch_content: SkillDefinition = {
 
 const admin_lookup_user: SkillDefinition = {
   name: 'admin_lookup_user',
-  description: "[ADMIN] Recherche un utilisateur par nom/prénom/email et retourne ses sites suivis + statut COMPLET des connexions : CMS user (UI), CMS miroir Parménion (admin-pushed via parmenion_targets), Google (GSC/GA4/GMB), Matomo, Canva, IKtracker. Distingue clairement cms_user (connexion explicite par l'utilisateur) de cms_parmenion_mirror (clé API ajoutée par admin dans Parménion → injection autopilote). Si parmenion_active=true sur un site, le pont autopilote pousse du contenu même sans connexion user. Filtre optionnel par domaine.",
+  description: "[ADMIN] Recherche un utilisateur par nom/prénom/email et retourne ses sites suivis + statut COMPLET des connexions : CMS user (UI), CMS miroir Périclès (admin-pushed via pericles_targets), Google (GSC/GA4/GMB), Matomo, Canva, IKtracker. Distingue clairement cms_user (connexion explicite par l'utilisateur) de cms_pericles_mirror (clé API ajoutée par admin dans Périclès → injection autopilote). Si pericles_active=true sur un site, le pont autopilote pousse du contenu même sans connexion user. Filtre optionnel par domaine.",
   parameters: {
     type: 'object',
     properties: {
@@ -594,19 +594,19 @@ const admin_lookup_user: SkillDefinition = {
       const userGoogle = googleRes.data ?? [];
       const userCanva = canvaRes.data ?? [];
 
-      // 4) Pour chaque site : connexions CMS + matchs Google par URL + targets Parménion (admin-pushed).
+      // 4) Pour chaque site : connexions CMS + matchs Google par URL + targets Périclès (admin-pushed).
       const sitesEnriched = await Promise.all((sites ?? []).map(async (s) => {
         const domainNorm = (s.domain ?? '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
 
-        const [cmsRes, matomoRes, parmenionRes, iktrackerRes] = await Promise.all([
+        const [cmsRes, matomoRes, periclesRes, iktrackerRes] = await Promise.all([
           ctx.service.from('cms_connections')
             .select('id, platform, auth_method, status, site_url, scopes, capabilities, created_at, updated_at, token_expiry, managed_by')
             .eq('user_id', p.user_id).eq('tracked_site_id', s.id),
           ctx.service.from('matomo_connections')
             .select('id, matomo_url, site_id, is_active, last_sync_at, sync_error, created_at')
             .eq('user_id', p.user_id).eq('tracked_site_id', s.id),
-          // Parménion : scope DOMAINE (pas user) — admin-pushed, indépendant de la propriété user
-          ctx.service.from('parmenion_targets')
+          // Périclès : scope DOMAINE (pas user) — admin-pushed, indépendant de la propriété user
+          ctx.service.from('pericles_targets')
             .select('id, domain, label, platform, event_type, is_active, api_key_name, created_at, updated_at')
             .ilike('domain', domainNorm),
           // IKtracker : connexions admin-pushed pour le pont IK
@@ -621,11 +621,11 @@ const admin_lookup_user: SkillDefinition = {
           return urls.some((u) => String(u).toLowerCase().includes(domainNorm));
         });
 
-        // Sépare connexions user vs miroirs Parménion pour transparence
+        // Sépare connexions user vs miroirs Périclès pour transparence
         const cmsAll = cmsRes.data ?? [];
         const cmsUser = cmsAll.filter((c: any) => (c.managed_by ?? 'user') === 'user');
-        const cmsParmenionMirror = cmsAll.filter((c: any) => c.managed_by === 'parmenion');
-        const parmenionTargets = (parmenionRes.data ?? []).map((t: any) => ({
+        const cmsPericlesMirror = cmsAll.filter((c: any) => c.managed_by === 'pericles' || c.managed_by === 'parmenion');
+        const periclesTargets = (periclesRes.data ?? []).map((t: any) => ({
           id: t.id, domain: t.domain, label: t.label, platform: t.platform,
           event_type: t.event_type, is_active: t.is_active,
           has_api_key: !!t.api_key_name && t.api_key_name.trim() !== '',
@@ -642,15 +642,15 @@ const admin_lookup_user: SkillDefinition = {
           last_audit_at: s.last_audit_at,
           connections: {
             cms_user: cmsUser,                      // connexions CMS explicitement créées par le user
-            cms_parmenion_mirror: cmsParmenionMirror, // miroirs créés via Parménion (admin)
+            cms_pericles_mirror: cmsPericlesMirror, // miroirs créés via Périclès (admin)
             cms_count_total: cmsAll.length,
             cms_count_user: cmsUser.length,
-            cms_count_parmenion: cmsParmenionMirror.length,
+            cms_count_pericles: cmsPericlesMirror.length,
             google_for_this_site: googleForSite,
             matomo: matomoRes.data ?? [],
             // Pont autopilote (admin) — distinct des CMS standards
-            parmenion_targets: parmenionTargets,
-            parmenion_active: parmenionTargets.some((t: any) => t.is_active && t.has_api_key),
+            pericles_targets: periclesTargets,
+            pericles_active: periclesTargets.some((t: any) => t.is_active && t.has_api_key),
             iktracker_connections: (iktrackerRes as any)?.data ?? [],
           },
         };
