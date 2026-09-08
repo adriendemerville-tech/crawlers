@@ -155,7 +155,7 @@ export async function runDiagnostic(url: string): Promise<PasseDiagnostic> {
   if (!description) add("desc_missing", "Aucune description dans les résultats de recherche", "Google écrit alors une phrase au hasard depuis votre page. Une description rédigée augmente nettement les clics.", "fort");
   else if (description.length < 70) add("desc_short", "Votre description est trop courte", `Description actuelle : ${description.length} caractères. Visez 140 à 160 caractères avec une promesse claire.`, "moyen");
 
-  if (h1s.length === 0) add("h1_missing", "Votre page n'a pas de titre principal visible", "Le titre principal indique le sujet de la page. Sans lui, moteurs et assistants doivent devinerv.", "fort");
+  if (h1s.length === 0) add("h1_missing", "Votre page n'a pas de titre principal visible", "Le titre principal indique le sujet de la page. Sans lui, moteurs et assistants doivent le deviner.", "fort");
   else if (h1s.length > 1) add("h1_multiple", "Plusieurs titres principaux sur la même page", `${h1s.length} titres principaux détectés : le sujet de la page devient ambigu.`, "moyen");
   else if (title && jaccard(normalizeWords(title), normalizeWords(h1s[0] ?? "")) >= 0.8) add("h1_duplicate", "Votre titre et votre titre principal sont identiques", "Deux formulations différentes couvrent deux fois plus de recherches.", "moyen");
 
