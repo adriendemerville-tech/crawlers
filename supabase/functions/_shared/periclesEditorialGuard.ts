@@ -1,8 +1,9 @@
 /**
- * parmenionEditorialGuard.ts — Garde éditoriale partagée Parménion
+ * periclesEditorialGuard.ts — Garde éditoriale partagée Périclès
  *
- * Fix 10.7 — Liste d'alias auteur "Parménion" résolue depuis la DB
- * (`parmenion_targets.author_aliases`, JSONB array) avec fallback statique
+ * Fix 10.7 — Liste d'alias auteur "Périclès" résolue depuis la DB
+ * (`pericles_targets.author_aliases`, JSONB array) avec fallback statique
+
  * si la colonne est vide / l'appel échoue. Le fallback est CRITIQUE :
  * on ne veut jamais désactiver la garde par accident si la DB est incomplète.
  */

@@ -329,7 +329,7 @@ async function scanDictadevi(conn: any, inventory: CmsContentInventory, supabase
 
   const apiKey = await getDictadeviApiKey(supabase);
   if (!apiKey) {
-    inventory.errors.push('dictadevi: no API key resolved (parmenion_targets + DICTADEVI_API_KEY both empty)');
+    inventory.errors.push('dictadevi: no API key resolved (pericles_targets + DICTADEVI_API_KEY both empty)');
     return;
   }
 

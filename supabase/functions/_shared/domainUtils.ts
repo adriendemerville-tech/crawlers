@@ -31,7 +31,7 @@ export function getIktrackerApiKey(): string | undefined {
  * Get Dictadevi API key avec traçabilité explicite (Fix 10.5).
  *
  * Priorité (DB d'abord) :
- *   1. parmenion_targets.api_key_name (RPC SECURITY DEFINER) — source de vérité
+ *   1. pericles_targets.api_key_name (RPC SECURITY DEFINER) — source de vérité
  *   2. Deno.env.get('DICTADEVI_API_KEY') — fallback bootstrap / dev
  *
  * Chaque résolution log : domaine, source utilisée, présence ou non d'une
@@ -71,7 +71,7 @@ export async function getDictadeviApiKey(supabase?: {
 
   if (envKey) {
     if (dbHasEntry) {
-      console.warn(`[dictadevi-key] domain=${domain} source=env DESYNC_WARNING db_entry=true (existe mais vide) — vérifier Admin > Parménion > Intégrations`);
+      console.warn(`[dictadevi-key] domain=${domain} source=env DESYNC_WARNING db_entry=true (existe mais vide) — vérifier Admin > Périclès > Intégrations`);
     } else {
       console.log(`[dictadevi-key] domain=${domain} source=env db_entry=false key_prefix=${envKey.slice(0, 6)}***`);
     }
@@ -108,7 +108,7 @@ export function detectPlatform(domain: string): 'iktracker' | 'dictadevi' | 'cra
 
 /**
  * Normalize a target URL or slug into a clean page key.
- * Used by autopilot-engine, parmenion, and CMS action routing.
+ * Used by autopilot-engine, pericles, and CMS action routing.
  *
  * Examples:
  *   "https://iktracker.fr/blog/my-post" → "my-post"
