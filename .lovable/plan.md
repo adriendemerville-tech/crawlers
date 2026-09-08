@@ -2,82 +2,90 @@
 
 Une page dédiée aux dirigeants de TPE/PME, inspirée de la structure et de l'esthétique noir & blanc de got_the_ref, sans reprise de son contenu ni de ses visuels. La Home actuelle reste inchangée et garde son intention (plateforme SEO/GEO).
 
-URL : `/visibilite-ia-entreprise`
+URL proposée : `/etre-cite-par-les-ia` — intention « mon entreprise est-elle citée quand un client interroge une IA », distincte des pages existantes.
+
+## Ce qui est perfectible dans l'approche — à trancher avant d'écrire
+
+1. **Chevauchement avec des pages existantes.** Il existe déjà `/generative-engine-optimization` (guide GEO), `/marina` (audit), `/visibilite-llm`, `/audit-geo`, `/score-geo`. Une page « visibilité IA » de plus se cannibaliserait. La page ne se justifie que si elle prend un angle différent : le dirigeant qui veut des clients, pas le praticien qui veut une méthode. Le vocabulaire doit donc être commercial, jamais méthodologique, et les pages existantes doivent pointer vers elle plutôt que traiter le même sujet.
+2. **Il nous manque l'offre qui rend cette page efficace.** La force de got_the_ref est un achat ponctuel à petit prix (une passe complète). Notre grille est uniquement par abonnement. Pour une TPE sans culture SEO, l'abonnement est un frein plus grand que le prix. Décision à prendre : créer une offre ponctuelle (un audit complet + corrections, payé une fois), ou assumer l'abonnement en insistant sur l'essai 14 jours sans carte.
+3. **La preuve est notre vrai point faible.** Sans clients, des courbes « de démonstration » se retournent contre nous. Bien plus solide : un vrai rapport Marina réalisé sur un site public, anonymisé, avec ses chiffres réels. Une preuve véritable vaut mieux que trois graphiques illustratifs.
+4. **La comparaison à l'agence SEO doit être sourcée.** Pas de tarif d'agence inventé : soit une fourchette avec source citée, soit une comparaison qualitative (engagement, délai, corrections appliquées ou non).
+5. **Une landing page ne crée pas son trafic.** Elle n'a de valeur que comme destination de la prospection (LinkedIn, groupes Facebook, e-mails) et comme cible de liens depuis nos pages existantes. À prévoir dans le même mouvement.
 
 ## Séquence en 4 temps
 
 1. **L'urgence** — « Vos clients posent leurs questions aux IA. Êtes-vous cité ? »
-   - Bandeau de requêtes réelles qui défilent (type « quelle agence web choisir à Bordeaux »), en noir & blanc.
-   - Champ URL + CTA unique « Lancer mon analyse gratuite » → lead magnet visibilité LLM déjà en place.
-   - Carte de démonstration : 3 requêtes, dont une où l'entreprise est citée et deux où elle ne l'est pas (mention explicite « exemple de démonstration »).
+   - Bandeau de requêtes qui défilent, en noir & blanc.
+   - Champ URL + CTA unique « Lancer mon analyse gratuite » → lead magnet visibilité LLM existant.
+   - Carte montrant, question par question, où l'entreprise est citée et où elle ne l'est pas.
 
 2. **Le GEO : ce qu'on fait, et combien ça coûte**
    - 3 bénéfices concrets : savoir sur quelles questions vous êtes cité, corriger les pages, remesurer.
-   - Carte tarifaire sobre reprenant les prix réels : Gratuit, Pro Agency 29 €/mois, Pro Agency+ 79 €/mois, essai 14 jours sans carte, 12 mois offerts aux entreprises de moins d'un an (lien vers `/offre-jeune-entreprise`).
-   - Comparaison « agence SEO vs Crawlers » sur les critères vérifiables (engagement, délai de premier livrable, corrections appliquées ou non). Aucun tarif d'agence inventé : soit une fourchette sourcée, soit formulation qualitative.
+   - Prix réels : Gratuit, Pro Agency 29 €/mois, Pro Agency+ 79 €/mois, essai 14 jours sans carte, 12 mois offerts aux entreprises de moins d'un an (lien vers `/offre-jeune-entreprise`). Ajout d'une offre ponctuelle si tu la valides au point 2 ci-dessus.
+   - Comparaison agence SEO vs Crawlers, sur critères vérifiables et sourcés.
 
 3. **Le SEO : pas de bon GEO sans bon SEO**
-   - Explication courte : les IA citent ce qu'elles trouvent et comprennent ; structure, données structurées et Search Console restent la base.
-   - Bloc preuve : courbe de type Search Console clairement étiquetée comme démonstration jusqu'à ce que tu fournisses des données client réelles.
+   - Les IA citent ce qu'elles trouvent et comprennent ; structure, données structurées et Search Console restent la base.
+   - Bloc preuve : extrait d'un vrai rapport Marina anonymisé.
    - Second lead magnet : CTA vers `/matrice-concurrence`.
 
 4. **Preuve, objections, passage à l'action**
    - À qui ça s'adresse : commerce local, prestataire de services, e-commerce, SaaS.
-   - Lever les objections : sans engagement, résiliable, pas de refonte de site nécessaire, rapport lisible sans expertise SEO.
-   - FAQ en passages citables (`blockquote.citable-passage`) + JSON-LD FAQPage.
+   - Objections : sans engagement, résiliable, pas de refonte de site, rapport lisible sans expertise SEO.
+   - FAQ en passages citables + JSON-LD FAQPage.
    - CTA final identique au premier.
 
 ## Design
 
-- Noir & blanc dominant, accent violet et jaune d'or réservés aux états et micro-signaux, conformément à la charte.
-- Boutons sans fond : bordure + texte, selon la règle du projet.
-- Cartes à grands rayons, typographie large, une idée par écran, lecture mobile d'abord.
+- Noir & blanc dominant, violet et jaune d'or réservés aux états et micro-signaux.
+- Boutons sans fond : bordure + texte.
+- Cartes à grands rayons, typographie large, une idée par écran, mobile d'abord.
 - CTA sticky en bas sur mobile.
 - Aucun emoji, aucun bleu IA.
 
 ## Cahier des charges technique (performance mobile et référencement)
 
-Reprise des mécanismes déjà en place sur la Home, appliqués systématiquement.
+Reprise des mécanismes déjà en place sur la Home.
 
 **Rendu et cache**
-- Page rendue côté serveur (SSR), sans dépendance à une donnée utilisateur pour le premier écran.
-- Ajout de la route à la liste des pages mises en cache HTML côté serveur (`HTML_CACHE_PATHS`), soit 15 min de fraîcheur et 6 h de service en arrière-plan. Objectif : premier octet quasi instantané en cache HIT.
-- Aucun appel réseau bloquant au premier rendu ; tout appel (analyse, compteurs, analytics) part après affichage, avec délai maximal court et échec silencieux.
+- Rendu serveur, sans donnée utilisateur nécessaire au premier écran.
+- Ajout de la route au cache HTML serveur (`HTML_CACHE_PATHS`) : 15 min de fraîcheur, 6 h de service en arrière-plan.
+- Aucun appel réseau bloquant au premier rendu ; tout appel part après affichage, délai court, échec silencieux.
 
 **LCP et premier affichage**
-- Élément LCP = le titre et le champ URL, en texte, présents dans le HTML servi ; pas d'image lourde en haut de page.
-- Aucun nouveau CSS global : réutilisation des classes existantes pour ne pas gonfler le CSS critique déjà inliné (~28 Ko).
-- Si un visuel de haut de page est ajouté : format WebP, largeur maximale 600–960 px, dimensions déclarées, `fetchPriority="high"` et aucune image décorative avant le titre.
+- Élément LCP = titre + champ URL, en texte, dans le HTML servi. Pas d'image lourde en haut de page.
+- Aucun nouveau CSS global, pour ne pas gonfler le CSS critique inliné (~28 Ko).
+- Toute image éventuelle : WebP, largeur 600–960 px, dimensions déclarées, `fetchPriority="high"` uniquement sur l'élément principal.
 
 **JS et découpage**
-- Seuls les deux premiers écrans sont dans le rendu initial. Toutes les sections suivantes en `React.lazy` + `LazyVisible` (montage à 300 px de la viewport), comme la Home.
-- Aucune librairie de graphiques, carte ou 3D chargée au premier rendu ; le bloc preuve utilise un tracé léger (SVG) plutôt qu'une librairie.
-- Pas de nouvelle dépendance npm.
+- Seuls les deux premiers écrans dans le rendu initial ; toutes les sections suivantes en `React.lazy` + `LazyVisible` (montage à 300 px de la viewport).
+- Aucune librairie de graphiques, carte ou 3D au premier rendu ; le bloc preuve en SVG léger.
+- Aucune nouvelle dépendance npm.
 
 **CLS et stabilité**
-- Hauteur réservée sur chaque bloc différé (`minHeight`) et sur toute image ou graphique.
-- `content-visibility` sur les sections basses, comme la Home.
-- Bandeau de requêtes animé en transformation CSS uniquement, désactivé si l'utilisateur demande moins d'animations.
+- Hauteur réservée sur chaque bloc différé et chaque visuel.
+- `content-visibility` sur les sections basses.
+- Bandeau animé en transformation CSS, désactivé si l'utilisateur demande moins d'animations.
 
 **INP**
-- Aucun calcul lourd au clic : le CTA ne fait que valider l'URL et déclencher l'analyse existante.
-- Animation du bandeau en CSS, pas en boucle JavaScript.
+- Aucun calcul lourd au clic ; le CTA valide l'URL et déclenche l'analyse existante.
+- Animation en CSS, pas en boucle JavaScript.
 
 **Référencement**
-- `head()` via `src/lib/seo/pageHead.ts` : title unique (< 60 caractères), description (< 160), canonical auto-référencé, og:title/description, og:type website. Pas d'og:image tant qu'il n'y a pas d'image absolue pertinente.
-- Un seul H1, hiérarchie H2/H3 propre, une intention principale unique pour ne pas concurrencer la Home (les autres intentions restent sur leurs pages).
+- `head()` via `src/lib/seo/pageHead.ts` : title unique (< 60 caractères), description (< 160), canonical auto-référencé, og:title/description, og:type website. Pas d'og:image sans image absolue pertinente.
+- Un seul H1, hiérarchie propre, une intention principale unique.
 - JSON-LD : `WebPage`, `FAQPage`, `BreadcrumbList`.
-- Bloc Direct Answer en tête (question en H3 + réponse de 2-3 phrases), passages citables pour la visibilité IA.
-- Alt text sur toute image, liens internes vers `/tarifs`, `/offre-jeune-entreprise`, `/matrice-concurrence`, `/marina`.
-- Ajout au sitemap (priorité 0,8) et lien entrant depuis au moins une page existante.
+- Bloc Direct Answer en tête + passages citables.
+- Alt text partout, liens internes vers `/tarifs`, `/offre-jeune-entreprise`, `/matrice-concurrence`, `/marina`.
+- Ajout au sitemap (priorité 0,8) et liens entrants depuis les pages GEO existantes.
 
 **Contrôles avant livraison**
-- Mesure du LCP en conditions mobiles simulées (4G, CPU ×4) : cible sous 3,5 s.
-- Contrôle du poids total de la page et du nombre de requêtes au premier rendu.
-- Vérification visuelle mobile et desktop dans l'aperçu, console sans erreur.
+- LCP mesuré en conditions mobiles simulées (4G, CPU ×4) : cible sous 3,5 s.
+- Poids total et nombre de requêtes au premier rendu.
+- Vérification mobile et desktop dans l'aperçu, console sans erreur.
 
 ## Détails techniques
 
-- `src/pages/VisibiliteIaEntreprise.tsx` + route `src/routes/visibilite-ia-entreprise.tsx`.
-- Réutilisation des composants existants : `LeadMagnetAudit`, `CompetitorMatrixCta`, `DirectAnswer`, `LazyVisible`, `Header`, `Footer`.
-- Aucun chiffre client, témoignage ou résultat inventé : les blocs de démonstration sont étiquetés comme tels.
+- `src/pages/EtreCiteParLesIa.tsx` + route `src/routes/etre-cite-par-les-ia.tsx`.
+- Réutilisation de `LeadMagnetAudit`, `CompetitorMatrixCta`, `DirectAnswer`, `LazyVisible`, `Header`, `Footer`.
+- Aucun chiffre client, témoignage ou résultat inventé.
