@@ -1,6 +1,11 @@
-# Offre unique « Audit + correctifs » — plan d'implantation v2
+# Offre unique « Parmenion » — plan d'implantation
 
-Produit : un achat unique. Audit du site et de la fiche Google Maps, correctifs proposés, 3 contenus rédigés et validés par le client, optimisation de la fiche Google Maps. **Rien n'est déployé avant paiement.** Le client relit et valide tout avant de payer ; la validation humaine sur le contenu est une règle projet (les agents ne touchent jamais le code sans validation, on applique la même règle aux publications client).
+Produit : un achat unique à 59 € TTC. Audit du site et de la fiche Google Maps, correctifs proposés, 3 contenus rédigés et validés par le client, optimisation de la fiche Google Maps. **Rien n'est déployé avant paiement.** Le client relit et valide tout avant de payer ; la validation humaine sur le contenu est une règle projet (les agents ne touchent jamais le code sans validation, on applique la même règle aux publications client).
+
+## Décisions déjà tranchées
+
+- **Nom commercial : Parmenion.**
+- **Prix unique : 59 € TTC.**
 
 ## Améliorations par rapport au plan v1
 
