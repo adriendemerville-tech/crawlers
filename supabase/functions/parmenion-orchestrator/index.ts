@@ -16,17 +16,17 @@ import {
   PIPELINE_PHASES, PHASE_FUNCTIONS, TIER_NAMES,
   getNextPhase,
   type PipelinePhase, type ParmenionDecision, type ScoredWorkbenchItem, type SiteInfo as ParmenionSiteInfo, type ActionReliability,
-} from '../_shared/parmenion/types.ts';
-import { TECH_TOOLS, CONTENT_TOOLS, DECISION_TOOL } from '../_shared/parmenion/toolSchemas.ts';
-import { buildPhaseInstructions } from '../_shared/parmenion/prompts.ts';
-import { enrichKeywordsForPrescribe } from '../_shared/parmenion/keywordEnrichment.ts';
-import { callLLMWithTools } from '../_shared/parmenion/llmClient.ts';
-import { writePrescriptionsToWorkbench } from '../_shared/parmenion/prescriptionWorkbench.ts';
+} from '../_shared/pericles/types.ts';
+import { TECH_TOOLS, CONTENT_TOOLS, DECISION_TOOL } from '../_shared/pericles/toolSchemas.ts';
+import { buildPhaseInstructions } from '../_shared/pericles/prompts.ts';
+import { enrichKeywordsForPrescribe } from '../_shared/pericles/keywordEnrichment.ts';
+import { callLLMWithTools } from '../_shared/pericles/llmClient.ts';
+import { writePrescriptionsToWorkbench } from '../_shared/pericles/prescriptionWorkbench.ts';
 import { isSeoTacticText, siteSellsSeo } from '../_shared/autopilot/editorialSubjectGuard.ts';
 import { getDictadeviEditorialBrief, renderDictadeviBriefBlock } from '../_shared/dictadeviEditorialBrief.ts';
 
 import { runEditorialPipeline, type ContentType } from '../_shared/editorialPipeline.ts';
-import { loadPersonaRotation, buildPersonaPromptBlock, recordPersonaServed } from '../_shared/parmenion/personaEngine.ts';
+import { loadPersonaRotation, buildPersonaPromptBlock, recordPersonaServed } from '../_shared/pericles/personaEngine.ts';
 
 /**
  * Parménion — Orchestrateur stratégique autonome pour Autopilot
