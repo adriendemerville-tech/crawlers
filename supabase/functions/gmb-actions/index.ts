@@ -670,6 +670,20 @@ try {
         }
         break
 
+      case 'update-location-info':
+        if (!token) throw new Error('Google Business Profile connection required to update the listing')
+        if (!params.fields || typeof params.fields !== 'object') throw new Error('fields required')
+        result = await updateLocationInfoReal(token, params.fields as Record<string, any>)
+        break
+
+      case 'create-post':
+        if (!token) throw new Error('Google Business Profile connection required to publish a post')
+        if (!params.summary) throw new Error('summary required')
+        result = await createPostReal(token, params as any)
+        break
+
+
+
       default:
         return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
