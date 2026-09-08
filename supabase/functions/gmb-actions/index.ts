@@ -343,7 +343,9 @@ async function getLocationInfoReal(token: GmbTokenInfo) {
   } catch (err) {
     console.warn('[gmb-actions] Location API error, falling back to simulated:', err)
     return getLocationInfoSimulated()
+  }
 }
+
 
 /**
  * Écriture sur la fiche : description, catégorie principale, site web, téléphone.
