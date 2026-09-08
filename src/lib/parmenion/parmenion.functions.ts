@@ -228,12 +228,11 @@ export const generatePasseContents = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!order) return { error: "not_found" as const };
 
-    const { data: already } = await supabase
+    const { count: existingCount } = await supabase
       .from("passe_order_contents")
-      .select("*")
-      .eq("order_id", data.orderId)
-      .order("created_at");
-    if ((already ?? []).length >= 3) return { contents: already ?? [] };
+      .select("id", { count: "exact", head: true })
+      .eq("order_id", data.orderId);
+    if ((existingCount ?? 0) >= 3) return { generated: 0, alreadyDone: true };
 
     const diag = (order.diagnostic ?? {}) as unknown as PasseDiagnostic;
     const host = diag.host || (order.normalized_url ? new URL(order.normalized_url).hostname : "");
@@ -245,7 +244,7 @@ export const generatePasseContents = createServerFn({ method: "POST" })
 
     const domain = host;
 
-    const created: Record<string, unknown>[] = [];
+    let generated = 0;
 
     for (const topic of topics) {
       let html = "";
@@ -271,9 +270,9 @@ export const generatePasseContents = createServerFn({ method: "POST" })
           draft_html: html,
           status: html ? "draft" : "failed",
         })
-        .select("*")
+        .select("id")
         .single();
-      if (row) created.push(row);
+      if (row) generated += 1;
     }
 
     await supabase.from("passe_order_events").insert({
@@ -282,7 +281,7 @@ export const generatePasseContents = createServerFn({ method: "POST" })
     });
     await supabase.from("passe_orders").update({ step: 5 }).eq("id", data.orderId).eq("user_id", userId);
 
-    return { contents: created };
+    return { generated, alreadyDone: false };
   });
 
 export const revisePasseContent = createServerFn({ method: "POST" })
