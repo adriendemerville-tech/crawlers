@@ -320,7 +320,10 @@ function ParmenionLandingComponent(): React.ReactElement {
         {/* Guarantee / trust */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
-            <h2 className="mb-10 text-2xl font-bold sm:text-3xl">Rien n'est déployé avant votre validation</h2>
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Rien n'est déployé avant votre validation</h2>
+            <p className="citable-passage mb-10 max-w-3xl text-muted-foreground">
+              Aucune modification n'est publiée sur votre site ou votre fiche Google Maps avant votre accord écrit et le paiement des 59 € TTC. Chaque déploiement est journalisé et réversible : vous savez quoi a été changé, quand, et vous pouvez revenir à l'état précédent. Tant que rien n'est publié, le remboursement est intégral.
+            </p>
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="flex gap-4">
                 <Clock className="h-6 w-6 shrink-0 text-primary" />
