@@ -49,6 +49,7 @@ export const SILOS: Record<Silo['id'], Silo> = {
       { label: 'Visibilité IA : mesurer ses citations', to: '/visibilite-ia' },
       { label: 'Audit SEO par IA : ce qui est mesuré', to: '/audit-seo-par-ia' },
       { label: 'SEO avec Claude (MCP)', to: '/seo-avec-claude' },
+      { label: 'Serveur MCP GEO : visibilité IA par agent', to: '/geo-mcp-server' },
       { label: 'SEO MCP Server (EN)', to: '/seo-mcp-server' },
       { label: 'E-E-A-T : autorité et citations IA', to: '/eeat' },
       { label: 'Place d’échange de backlinks', to: '/marketplace-backlinks' },

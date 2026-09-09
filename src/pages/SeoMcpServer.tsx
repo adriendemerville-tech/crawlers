@@ -186,6 +186,7 @@ export default function SeoMcpServer() {
                 { label: 'Developer API and pay-as-you-go', to: '/developers' },
                 { label: 'REST SEO API endpoints', to: '/api-seo' },
                 { label: 'SEO avec Claude (français)', to: '/seo-avec-claude' },
+                { label: 'Serveur MCP GEO (français)', to: '/geo-mcp-server' },
                 { label: 'Generative Engine Optimization', to: '/generative-engine-optimization' },
               ].map((link) => (
                 <li key={link.to}>

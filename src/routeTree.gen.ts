@@ -53,6 +53,7 @@ import { Route as ExtensionRouteImport } from './routes/extension'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as FeedDotxmlRouteImport } from './routes/feed[.]xml'
 import { Route as GenerativeEngineOptimizationRouteImport } from './routes/generative-engine-optimization'
+import { Route as GeoMcpServerRouteImport } from './routes/geo-mcp-server'
 import { Route as GeoVsSeoRouteImport } from './routes/geo-vs-seo'
 import { Route as GoogleBusinessRouteImport } from './routes/google-business'
 import { Route as GuideAuditSeoRouteImport } from './routes/guide-audit-seo'
@@ -390,6 +391,11 @@ const GenerativeEngineOptimizationRoute =
     path: '/generative-engine-optimization',
     getParentRoute: () => rootRouteImport,
   } as any)
+const GeoMcpServerRoute = GeoMcpServerRouteImport.update({
+  id: '/geo-mcp-server',
+  path: '/geo-mcp-server',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GeoVsSeoRoute = GeoVsSeoRouteImport.update({
   id: '/geo-vs-seo',
   path: '/geo-vs-seo',
@@ -999,6 +1005,7 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/feed.xml': typeof FeedDotxmlRoute
   '/generative-engine-optimization': typeof GenerativeEngineOptimizationRoute
+  '/geo-mcp-server': typeof GeoMcpServerRoute
   '/geo-vs-seo': typeof GeoVsSeoRoute
   '/google-business': typeof GoogleBusinessRoute
   '/guide-audit-seo': typeof GuideAuditSeoRoute
@@ -1155,6 +1162,7 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/feed.xml': typeof FeedDotxmlRoute
   '/generative-engine-optimization': typeof GenerativeEngineOptimizationRoute
+  '/geo-mcp-server': typeof GeoMcpServerRoute
   '/geo-vs-seo': typeof GeoVsSeoRoute
   '/google-business': typeof GoogleBusinessRoute
   '/guide-audit-seo': typeof GuideAuditSeoRoute
@@ -1312,6 +1320,7 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/feed.xml': typeof FeedDotxmlRoute
   '/generative-engine-optimization': typeof GenerativeEngineOptimizationRoute
+  '/geo-mcp-server': typeof GeoMcpServerRoute
   '/geo-vs-seo': typeof GeoVsSeoRoute
   '/google-business': typeof GoogleBusinessRoute
   '/guide-audit-seo': typeof GuideAuditSeoRoute
@@ -1470,6 +1479,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/feed.xml'
     | '/generative-engine-optimization'
+    | '/geo-mcp-server'
     | '/geo-vs-seo'
     | '/google-business'
     | '/guide-audit-seo'
@@ -1626,6 +1636,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/feed.xml'
     | '/generative-engine-optimization'
+    | '/geo-mcp-server'
     | '/geo-vs-seo'
     | '/google-business'
     | '/guide-audit-seo'
@@ -1782,6 +1793,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/feed.xml'
     | '/generative-engine-optimization'
+    | '/geo-mcp-server'
     | '/geo-vs-seo'
     | '/google-business'
     | '/guide-audit-seo'
@@ -1939,6 +1951,7 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   FeedDotxmlRoute: typeof FeedDotxmlRoute
   GenerativeEngineOptimizationRoute: typeof GenerativeEngineOptimizationRoute
+  GeoMcpServerRoute: typeof GeoMcpServerRoute
   GeoVsSeoRoute: typeof GeoVsSeoRoute
   GoogleBusinessRoute: typeof GoogleBusinessRoute
   GuideAuditSeoRoute: typeof GuideAuditSeoRoute
@@ -2359,6 +2372,13 @@ declare module '@tanstack/react-router' {
       path: '/generative-engine-optimization'
       fullPath: '/generative-engine-optimization'
       preLoaderRoute: typeof GenerativeEngineOptimizationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/geo-mcp-server': {
+      id: '/geo-mcp-server'
+      path: '/geo-mcp-server'
+      fullPath: '/geo-mcp-server'
+      preLoaderRoute: typeof GeoMcpServerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/geo-vs-seo': {
@@ -3179,6 +3199,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   FeedDotxmlRoute: FeedDotxmlRoute,
   GenerativeEngineOptimizationRoute: GenerativeEngineOptimizationRoute,
+  GeoMcpServerRoute: GeoMcpServerRoute,
   GeoVsSeoRoute: GeoVsSeoRoute,
   GoogleBusinessRoute: GoogleBusinessRoute,
   GuideAuditSeoRoute: GuideAuditSeoRoute,
