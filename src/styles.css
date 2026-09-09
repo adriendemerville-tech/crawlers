@@ -274,6 +274,31 @@
   --sidebar-ring: 217.2 91.2% 59.8%;
 }
 
+/* Force le thème clair sur une page précise (ex : landing /audit-geo-seo),
+   même quand le site est en mode sombre. */
+.light-scope {
+  --background: 43 10% 96%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --brand-violet: 262 83% 58%;
+  --brand-violet-muted: 262 72% 96%;
+  --brand-gold: 45 93% 47%;
+  --brand-gold-muted: 45 90% 95%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 20% 40%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+  --destructive-muted: 0 70% 95%;
+  --warning-muted: 38 90% 92%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+}
+
 @layer base {
   * {
     border-color: hsl(var(--border));
