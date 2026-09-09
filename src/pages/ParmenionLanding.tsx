@@ -11,6 +11,35 @@ import { ArrowRight, Check, Shield, Clock, FileText, MapPin, Loader2 } from 'luc
 import { toast } from 'sonner';
 
 const PasseFlow = lazy(() => import('@/components/Parmenion/PasseFlow'));
+const AiAnswerDemo = lazy(() => import('@/components/Parmenion/AiAnswerDemo'));
+const SectorMarquee = lazy(() => import('@/components/Parmenion/SectorMarquee'));
+
+const STEPS = [
+  {
+    title: 'On lit votre site comme un moteur IA',
+    description:
+      'Crawl du site, extraction du contenu réellement servi, détection de votre activité, de votre zone et de vos concurrents directs.',
+    chips: ['Activité détectée', 'Zone locale', 'Concurrents'],
+  },
+  {
+    title: 'On mesure ce qui bloque',
+    description:
+      'Titres, métadonnées, hiérarchie, données structurées, vitesse, maillage, citabilité des passages : chaque constat est chiffré et priorisé.',
+    chips: ['JSON-LD', 'Core Web Vitals', 'Citabilité'],
+  },
+  {
+    title: 'On rédige et on corrige',
+    description:
+      'Trois pages de contenu sur les sujets qui rapportent des clients, plus les correctifs techniques et votre fiche Google Maps.',
+    chips: ['3 contenus', 'Correctifs', 'Google Maps'],
+  },
+  {
+    title: 'Vous validez, puis on déploie',
+    description:
+      'Rien n\'est publié avant votre accord. Chaque déploiement est journalisé et réversible, avec un compte rendu avant / après.',
+    chips: ['Validation', 'Journalisé', 'Réversible'],
+  },
+];
 
 
 const URL = 'https://crawlers.fr/audit-geo-seo';
@@ -154,51 +183,92 @@ function ParmenionLandingComponent(): React.ReactElement {
       <Header />
       <main className="min-h-screen bg-background text-foreground">
         {/* Hero */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-5xl px-4 py-16 sm:py-24">
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/30 px-3 py-1 text-xs font-medium text-primary">
-              <span className="h-2 w-2 rounded-full bg-primary" />
-              Passe unique à prix fixe
-            </div>
-            <h1 className="mb-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
-              Faites corriger votre visibilité en ligne, une fois, à prix fixe
-            </h1>
-            <p className="citable-passage mb-8 max-w-2xl text-lg text-muted-foreground">
-              Parmenion audit votre site, rédige 3 pages de contenu et optimise votre fiche Google Maps. Vous relisez et validez chaque élément avant le moindre déploiement.
-            </p>
-
-            {/* Direct answer block */}
-            <div className="mb-10 rounded-lg border border-border bg-card p-6">
-              <h3 className="mb-3 text-lg font-semibold">Qu'est-ce que Parmenion et combien ça coûte ?</h3>
-              <p className="citable-passage text-muted-foreground">
-                Parmenion est une passe unique proposée par Crawlers.fr à 59 € TTC. Elle comprend un audit de site, la rédaction de 3 contenus, l'optimisation de la fiche Google Maps et un compte rendu avant / après. Le délai annoncé est de 72 heures après paiement, et le remboursement est intégral tant qu'aucun déploiement n'a eu lieu.
+        <section className="relative overflow-hidden border-b border-border">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-40 -right-32 h-80 w-80 rounded-full bg-brand-violet/10 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-40 -left-32 h-80 w-80 rounded-full bg-brand-gold/10 blur-3xl"
+          />
+          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:py-24 lg:grid-cols-2">
+            <div>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-violet/40 px-3 py-1 text-xs font-medium text-brand-violet">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-violet" />
+                Passe unique · 59 € TTC · sans abonnement
+              </div>
+              <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+                Faites venir vos clients depuis{' '}
+                <span className="text-brand-violet">les moteurs IA</span> et Google Maps
+              </h1>
+              <p className="citable-passage mb-8 max-w-xl text-lg text-muted-foreground">
+                Crawlers audite votre site, rédige 3 pages de contenu et optimise votre fiche Google Maps. Vous relisez et validez chaque élément avant le moindre déploiement.
               </p>
+
+              {/* URL input */}
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Input
+                  ref={inputRef}
+                  type="url"
+                  placeholder="https://votre-site.fr"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  className="h-12 flex-1 border-border bg-background text-foreground placeholder:text-muted-foreground"
+                />
+                <Button
+                  onClick={startAnalysis}
+                  disabled={analyzing || !url.trim()}
+                  className="h-12 gap-2 border border-foreground bg-transparent px-6 text-foreground hover:bg-foreground hover:text-background"
+                >
+                  {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Analyser mon site gratuitement'}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
+                {[
+                  'Analyse gratuite et immédiate, sans carte bancaire.',
+                  'Remboursement intégral tant que rien n\'est déployé.',
+                  'Déploiement complet sous 72 heures ouvrées après paiement.',
+                ].map((line) => (
+                  <li key={line} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            {/* URL input */}
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Input
-                ref={inputRef}
-                type="url"
-                placeholder="https://votre-site.fr"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="h-12 flex-1 border-border bg-background text-foreground placeholder:text-muted-foreground"
-              />
-              <Button
-                onClick={startAnalysis}
-                disabled={analyzing || !url.trim()}
-                className="h-12 gap-2 border border-foreground bg-transparent px-6 text-foreground hover:bg-foreground hover:text-background"
-              >
-                {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Lancer mon analyse gratuite'}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Analyse gratuite, sans carte bancaire. L'inscription n'est requise que pour débloquer le détail des correctifs.
+            <Suspense fallback={<div className="h-72 rounded-xl border border-border bg-card" />}>
+              <AiAnswerDemo />
+            </Suspense>
+          </div>
+        </section>
+
+        {/* Secteurs */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-10">
+            <p className="mb-5 text-center text-sm font-medium tracking-wide text-muted-foreground">
+              Conçu pour les TPE, PME et commerces locaux, dans tous les secteurs
+            </p>
+            <Suspense fallback={<div className="h-12" />}>
+              <SectorMarquee />
+            </Suspense>
+          </div>
+        </section>
+
+        {/* Réponse directe */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-3xl px-4 py-14">
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
+              Qu'est-ce que la passe Crawlers et combien ça coûte ?
+            </h2>
+            <p className="citable-passage text-muted-foreground">
+              La passe Crawlers est une prestation unique à 59 € TTC. Elle comprend un audit de site, la rédaction de 3 contenus, l'optimisation de la fiche Google Maps et un compte rendu avant / après. Le délai annoncé est de 72 heures après paiement, et le remboursement est intégral tant qu'aucun déploiement n'a eu lieu.
             </p>
           </div>
         </section>
+
 
         {/* Résultat de l'analyse gratuite, puis parcours complet */}
         {(teaser || session) && (
@@ -235,7 +305,7 @@ function ParmenionLandingComponent(): React.ReactElement {
                     {teaser.teaser.map((t) => (
                       <li key={t.id} className="flex items-center justify-between gap-3 rounded border border-border p-3">
                         <span>{t.label}</span>
-                        <span className="text-xs uppercase tracking-wide text-primary">{t.impact}</span>
+                        <span className="text-xs uppercase tracking-wide text-brand-gold">{t.impact}</span>
                       </li>
                     ))}
                   </ul>
@@ -257,17 +327,50 @@ function ParmenionLandingComponent(): React.ReactElement {
         )}
 
 
+        {/* Comment ça marche */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+            <p className="mb-3 text-sm font-medium uppercase tracking-wider text-brand-gold">
+              Comment ça marche
+            </p>
+            <h2 className="mb-12 max-w-2xl text-3xl font-bold sm:text-4xl">
+              Quatre étapes, de l'analyse au déploiement validé
+            </h2>
+            <ol className="grid list-none gap-8 sm:grid-cols-2">
+              {STEPS.map((s, i) => (
+                <li key={s.title} className="relative rounded-xl border border-border p-6">
+                  <span className="mb-4 block text-sm font-semibold text-brand-violet">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <h3 className="mb-2 text-lg font-semibold">{s.title}</h3>
+                  <p className="mb-4 text-sm text-muted-foreground">{s.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {s.chips.map((c) => (
+                      <span
+                        key={c}
+                        className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground"
+                      >
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
         {/* What's included */}
         <section className="border-b border-border">
-          <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
             <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Ce qui est corrigé en une seule passe</h2>
             <p className="citable-passage mb-10 max-w-3xl text-muted-foreground">
-              Une passe Parmenion corrige trois familles de problèmes de référencement local et de visibilité IA : les erreurs techniques et sémantiques de vos pages (titres, métadonnées, hiérarchie de titres, données structurées), le manque de contenu répondant aux questions réelles de vos clients, et une fiche Google Maps incomplète ou non optimisée. Le périmètre est volontairement borné : un site, une fiche, trois contenus.
+              Une passe Crawlers corrige trois familles de problèmes de référencement local et de visibilité IA : les erreurs techniques et sémantiques de vos pages (titres, métadonnées, hiérarchie de titres, données structurées), le manque de contenu répondant aux questions réelles de vos clients, et une fiche Google Maps incomplète ou non optimisée. Le périmètre est volontairement borné : un site, une fiche, trois contenus.
             </p>
             <div className="grid gap-6 sm:grid-cols-3">
               {INCLUDED.map((item) => (
-                <div key={item.title} className="rounded-lg border border-border p-6">
-                  <item.icon className="mb-4 h-6 w-6 text-primary" />
+                <div key={item.title} className="rounded-xl border border-border p-6">
+                  <item.icon className="mb-4 h-6 w-6 text-brand-violet" />
                   <h3 className="mb-2 font-semibold">{item.title}</h3>
                   <p className="text-sm text-muted-foreground">{item.description}</p>
                 </div>
@@ -275,6 +378,7 @@ function ParmenionLandingComponent(): React.ReactElement {
             </div>
           </div>
         </section>
+
 
         {/* Price card */}
         <section className="border-b border-border">
@@ -295,7 +399,7 @@ function ParmenionLandingComponent(): React.ReactElement {
                   'Délai : 72 h après paiement',
                 ].map((line) => (
                   <li key={line} className="flex items-start gap-3">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
                     <span>{line}</span>
                   </li>
                 ))}
@@ -326,14 +430,14 @@ function ParmenionLandingComponent(): React.ReactElement {
             </p>
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="flex gap-4">
-                <Clock className="h-6 w-6 shrink-0 text-primary" />
+                <Clock className="h-6 w-6 shrink-0 text-brand-gold" />
                 <div>
                   <h3 className="mb-1 font-semibold">Délai maîtrisé</h3>
                   <p className="text-sm text-muted-foreground">Vous recevez un calendrier clair. Le déploiement n'intervient qu'après votre validation ferme.</p>
                 </div>
               </div>
               <div className="flex gap-4">
-                <Shield className="h-6 w-6 shrink-0 text-primary" />
+                <Shield className="h-6 w-6 shrink-0 text-brand-gold" />
                 <div>
                   <h3 className="mb-1 font-semibold">Garantie satisfait ou remboursé</h3>
                   <p className="text-sm text-muted-foreground">Tant qu'aucune modification n'est publiée sur votre site ou votre fiche, vous pouvez demander le remboursement intégral.</p>
