@@ -27,6 +27,7 @@ import { Route as AuditGeoSeoRouteImport } from './routes/audit-geo-seo'
 import { Route as AuditSemantiqueRouteImport } from './routes/audit-semantique'
 import { Route as AuditSeoGeoRouteImport } from './routes/audit-seo-geo'
 import { Route as AuditSeoGratuitRouteImport } from './routes/audit-seo-gratuit'
+import { Route as AuditSeoParIaRouteImport } from './routes/audit-seo-par-ia'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BreathingSpiralRouteImport } from './routes/breathing-spiral'
 import { Route as CfShieldRouteImport } from './routes/cf-shield'
@@ -250,6 +251,11 @@ const AuditSeoGeoRoute = AuditSeoGeoRouteImport.update({
 const AuditSeoGratuitRoute = AuditSeoGratuitRouteImport.update({
   id: '/audit-seo-gratuit',
   path: '/audit-seo-gratuit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditSeoParIaRoute = AuditSeoParIaRouteImport.update({
+  id: '/audit-seo-par-ia',
+  path: '/audit-seo-par-ia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -961,6 +967,7 @@ export interface FileRoutesByFullPath {
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
+  '/audit-seo-par-ia': typeof AuditSeoParIaRoute
   '/auth': typeof AuthRoute
   '/breathing-spiral': typeof BreathingSpiralRoute
   '/cf-shield': typeof CfShieldRoute
@@ -1115,6 +1122,7 @@ export interface FileRoutesByTo {
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
+  '/audit-seo-par-ia': typeof AuditSeoParIaRoute
   '/auth': typeof AuthRoute
   '/breathing-spiral': typeof BreathingSpiralRoute
   '/cf-shield': typeof CfShieldRoute
@@ -1270,6 +1278,7 @@ export interface FileRoutesById {
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
+  '/audit-seo-par-ia': typeof AuditSeoParIaRoute
   '/auth': typeof AuthRoute
   '/breathing-spiral': typeof BreathingSpiralRoute
   '/cf-shield': typeof CfShieldRoute
@@ -1426,6 +1435,7 @@ export interface FileRouteTypes {
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
+    | '/audit-seo-par-ia'
     | '/auth'
     | '/breathing-spiral'
     | '/cf-shield'
@@ -1580,6 +1590,7 @@ export interface FileRouteTypes {
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
+    | '/audit-seo-par-ia'
     | '/auth'
     | '/breathing-spiral'
     | '/cf-shield'
@@ -1734,6 +1745,7 @@ export interface FileRouteTypes {
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
+    | '/audit-seo-par-ia'
     | '/auth'
     | '/breathing-spiral'
     | '/cf-shield'
@@ -1889,6 +1901,7 @@ export interface RootRouteChildren {
   AuditSemantiqueRoute: typeof AuditSemantiqueRoute
   AuditSeoGeoRoute: typeof AuditSeoGeoRoute
   AuditSeoGratuitRoute: typeof AuditSeoGratuitRoute
+  AuditSeoParIaRoute: typeof AuditSeoParIaRoute
   AuthRoute: typeof AuthRoute
   BreathingSpiralRoute: typeof BreathingSpiralRoute
   CfShieldRoute: typeof CfShieldRoute
@@ -2151,6 +2164,13 @@ declare module '@tanstack/react-router' {
       path: '/audit-seo-gratuit'
       fullPath: '/audit-seo-gratuit'
       preLoaderRoute: typeof AuditSeoGratuitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit-seo-par-ia': {
+      id: '/audit-seo-par-ia'
+      path: '/audit-seo-par-ia'
+      fullPath: '/audit-seo-par-ia'
+      preLoaderRoute: typeof AuditSeoParIaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -3113,6 +3133,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuditSemantiqueRoute: AuditSemantiqueRoute,
   AuditSeoGeoRoute: AuditSeoGeoRoute,
   AuditSeoGratuitRoute: AuditSeoGratuitRoute,
+  AuditSeoParIaRoute: AuditSeoParIaRoute,
   AuthRoute: AuthRoute,
   BreathingSpiralRoute: BreathingSpiralRoute,
   CfShieldRoute: CfShieldRoute,
