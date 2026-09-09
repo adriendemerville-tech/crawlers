@@ -673,7 +673,18 @@ export const deployPasseOrder = createServerFn({ method: "POST" })
       }
     }
 
-    const allDone = siteOk && gmbStatus !== "failed";
+    /* Correctifs délégués une fois pour toutes — aucune relance de l'utilisateur. */
+    const { deployAuthorizedFixes } = await import('./passeFixDeploy.server');
+    const fixResults = await deployAuthorizedFixes(
+      supabase as never,
+      userId,
+      data.orderId,
+      order.tracked_site_id ?? null,
+    );
+    const fixesFailed = fixResults.filter((r) => r.status === 'failed').length;
+
+    const allDone = siteOk && gmbStatus !== "failed" && fixesFailed === 0;
+
     await supabase
       .from("passe_orders")
       .update({
@@ -684,7 +695,7 @@ export const deployPasseOrder = createServerFn({ method: "POST" })
         step: allDone ? 9 : 8,
         report: {
           before: { score: (order.diagnostic as { score?: number } | null)?.score ?? null, findings: order.findings },
-          after: { published, gmb: gmbStatus },
+          after: { published, gmb: gmbStatus, fixes: fixResults },
           at: new Date().toISOString(),
         } as never,
         updated_at: new Date().toISOString(),
@@ -692,9 +703,10 @@ export const deployPasseOrder = createServerFn({ method: "POST" })
       .eq("id", data.orderId)
       .eq("user_id", userId);
 
-    await log(allDone ? "deployed" : "deploy_partial", { published, gmb: gmbStatus });
+    await log(allDone ? "deployed" : "deploy_partial", { published, gmb: gmbStatus, fixes: fixResults });
 
-    return { deployed: allDone, published, gmb: gmbStatus };
+    return { deployed: allDone, published, gmb: gmbStatus, fixes: fixResults };
+
   });
 
 /* ── aperçu fiche Google Maps validé avant écriture ───────── */

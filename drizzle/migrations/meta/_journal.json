@@ -197,6 +197,13 @@
       "when": 1788958232426,
       "tag": "0027_sitemap_demote_lexique",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1788959228146,
+      "tag": "0028_passe_fix_registry_and_consent",
+      "breakpoints": true
     }
   ]
 }

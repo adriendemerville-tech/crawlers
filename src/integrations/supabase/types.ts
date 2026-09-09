@@ -12262,6 +12262,50 @@ export type Database = {
         }
         Relationships: []
       }
+      passe_order_consents: {
+        Row: {
+          authorized_fix_ids: string[]
+          created_at: string
+          declined_fix_ids: string[]
+          granted_at: string
+          id: string
+          order_id: string
+          scope_version: string
+          summary_snapshot: Json
+          user_id: string
+        }
+        Insert: {
+          authorized_fix_ids?: string[]
+          created_at?: string
+          declined_fix_ids?: string[]
+          granted_at?: string
+          id?: string
+          order_id: string
+          scope_version?: string
+          summary_snapshot?: Json
+          user_id: string
+        }
+        Update: {
+          authorized_fix_ids?: string[]
+          created_at?: string
+          declined_fix_ids?: string[]
+          granted_at?: string
+          id?: string
+          order_id?: string
+          scope_version?: string
+          summary_snapshot?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passe_order_consents_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "passe_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       passe_order_contents: {
         Row: {
           client_revision: string | null
@@ -12349,6 +12393,83 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "passe_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "passe_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passe_order_fixes: {
+        Row: {
+          before_state: Json
+          channel: string
+          created_at: string
+          deployed_at: string | null
+          detail: string
+          error_detail: string | null
+          family: string
+          fix_key: string
+          id: string
+          injection_slug: string | null
+          label: string
+          order_id: string
+          page_url: string | null
+          payload: Json
+          reverted_at: string | null
+          rollback_ref: string | null
+          seo_impact: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          before_state?: Json
+          channel?: string
+          created_at?: string
+          deployed_at?: string | null
+          detail?: string
+          error_detail?: string | null
+          family: string
+          fix_key: string
+          id?: string
+          injection_slug?: string | null
+          label: string
+          order_id: string
+          page_url?: string | null
+          payload?: Json
+          reverted_at?: string | null
+          rollback_ref?: string | null
+          seo_impact?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          before_state?: Json
+          channel?: string
+          created_at?: string
+          deployed_at?: string | null
+          detail?: string
+          error_detail?: string | null
+          family?: string
+          fix_key?: string
+          id?: string
+          injection_slug?: string | null
+          label?: string
+          order_id?: string
+          page_url?: string | null
+          payload?: Json
+          reverted_at?: string | null
+          rollback_ref?: string | null
+          seo_impact?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passe_order_fixes_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "passe_orders"

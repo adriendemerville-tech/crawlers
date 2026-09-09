@@ -15,6 +15,10 @@ import {
   savePasseGmbPreview,
   deployPasseOrder,
 } from '@/lib/parmenion/parmenion.functions';
+import { CmsPlatformDetector } from './CmsPlatformDetector';
+import { PasseDelegation } from './PasseDelegation';
+
+
 
 interface Props {
   orderId: string;
@@ -357,13 +361,14 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
           <div>
             <p className="mb-3 text-sm font-medium">Votre site</p>
             {connections.cms.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Aucun site connecté.{' '}
-                <a href="/app/console" className="underline">
-                  Connecter mon site
-                </a>
-              </p>
+              <CmsPlatformDetector
+                siteUrl={(order['url'] as string | null) ?? null}
+                onConnected={() => {
+                  void getPasseConnections().then((r) => setConnections(r as unknown as typeof connections));
+                }}
+              />
             ) : (
+
               <ul className="space-y-2">
                 {connections.cms.map((c) => (
                   <li key={c.id} className="flex items-center justify-between gap-3 rounded border border-border p-3 text-sm">
@@ -433,9 +438,16 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
         </div>
       </section>
 
-      {/* Étape 7 — récapitulatif et paiement */}
+      {/* Étape 7 — délégation unique des correctifs */}
+      <section className="rounded-lg border border-border p-6">
+        <StepTitle n={7}>Votre autorisation, demandée une seule fois</StepTitle>
+        <PasseDelegation orderId={order.id as string} />
+      </section>
+
+      {/* Étape 8 — récapitulatif et paiement */}
       <section className="rounded-lg border-2 border-foreground p-6">
-        <StepTitle n={7}>Récapitulatif et paiement</StepTitle>
+        <StepTitle n={8}>Récapitulatif et paiement</StepTitle>
+
         <ul className="mb-6 space-y-2 text-sm">
           <li>{findings.length} problèmes relevés, {fixes.length} correctifs inclus</li>
           <li>{contents.filter((c) => c.status === 'approved' || c.status === 'published').length}/3 contenus validés</li>
@@ -464,10 +476,11 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
         )}
       </section>
 
-      {/* Étape 8 / 9 — déploiement et compte rendu */}
+      {/* Étape 9 — déploiement et compte rendu */}
       {paid && (
         <section className="rounded-lg border border-border p-6">
-          <StepTitle n={8}>Déploiement et compte rendu</StepTitle>
+          <StepTitle n={9}>Déploiement et compte rendu</StepTitle>
+
           {order.deployed_at ? (
             <div className="space-y-2 text-sm">
               <p className="flex items-center gap-2 text-primary">
