@@ -13,6 +13,8 @@ import { toast } from 'sonner';
 const PasseFlow = lazy(() => import('@/components/Parmenion/PasseFlow'));
 const AiAnswerDemo = lazy(() => import('@/components/Parmenion/AiAnswerDemo'));
 const SectorMarquee = lazy(() => import('@/components/Parmenion/SectorMarquee'));
+const QuestionsMarquee = lazy(() => import('@/components/Parmenion/QuestionsMarquee'));
+const AuditReportPreview = lazy(() => import('@/components/Parmenion/AuditReportPreview'));
 
 const STEPS = [
   {
@@ -280,6 +282,21 @@ function ParmenionLandingComponent(): React.ReactElement {
           </div>
         </section>
 
+        {/* Questions que vos clients posent déjà aux IA */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-14 sm:py-16">
+            <h2 className="mb-3 text-center font-display text-2xl font-bold sm:text-3xl">
+              Vos clients posent déjà ces questions <span className="text-brand-violet">aux IA</span>
+            </h2>
+            <p className="mx-auto mb-10 max-w-2xl text-center text-muted-foreground">
+              Chaque jour, des clients décrivent leur besoin à ChatGPT ou à Google. Si votre site ne répond pas à ces questions, une autre entreprise est recommandée à votre place.
+            </p>
+            <Suspense fallback={<div className="h-28" />}>
+              <QuestionsMarquee />
+            </Suspense>
+          </div>
+        </section>
+
         {/* Réponse directe */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-3xl px-4 py-14">
@@ -403,6 +420,58 @@ function ParmenionLandingComponent(): React.ReactElement {
         </section>
 
 
+        {/* Aperçu du rapport */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
+            <h2 className="mb-3 font-display text-2xl font-bold sm:text-3xl">
+              Ce que vous recevez <span className="text-brand-violet">pour 59 €</span>
+            </h2>
+            <p className="mb-10 max-w-3xl text-muted-foreground">
+              Un rapport clair, chiffré et actionnable : vos scores avant / après, les mots-clés qui comptent pour votre activité, et chaque correctif expliqué ligne par ligne.
+            </p>
+            <Suspense fallback={<div className="h-96 rounded-3xl border border-border bg-card" />}>
+              <AuditReportPreview />
+            </Suspense>
+          </div>
+        </section>
+
+        {/* Comparatif agence vs Crawlers */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
+            <h2 className="mb-3 font-display text-2xl font-bold sm:text-3xl">
+              Une agence facture <span className="text-brand-violet">des milliers d'euros</span> pour la même chose
+            </h2>
+            <p className="mb-10 max-w-3xl text-muted-foreground">
+              Audit, contenus et fiche Google Maps : c'est le cœur de la prestation d'une agence SEO locale. La différence, c'est le prix et le délai.
+            </p>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+                <h3 className="mb-1 font-display text-lg font-semibold">Agence SEO classique</h3>
+                <p className="mb-6 text-sm text-muted-foreground">Prestation équivalente</p>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex justify-between gap-3 border-b border-border pb-2"><span>Audit technique</span><span className="font-semibold text-foreground">800 – 1 500 €</span></li>
+                  <li className="flex justify-between gap-3 border-b border-border pb-2"><span>3 contenus rédigés</span><span className="font-semibold text-foreground">450 – 900 €</span></li>
+                  <li className="flex justify-between gap-3 border-b border-border pb-2"><span>Fiche Google Maps</span><span className="font-semibold text-foreground">150 – 300 €</span></li>
+                  <li className="flex justify-between gap-3 border-b border-border pb-2"><span>Délai moyen</span><span className="font-semibold text-foreground">3 à 6 semaines</span></li>
+                  <li className="flex justify-between gap-3 pt-1"><span>Total</span><span className="font-semibold text-foreground">1 400 – 2 700 €</span></li>
+                </ul>
+              </div>
+              <div className="rounded-3xl border-2 border-brand-violet bg-card p-8 shadow-sm">
+                <h3 className="mb-1 font-display text-lg font-semibold text-brand-violet">Passe Crawlers</h3>
+                <p className="mb-6 text-sm text-muted-foreground">Le même périmètre, borné et transparent</p>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>Audit technique et GEO complet</span></li>
+                  <li className="flex items-start gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>3 contenus rédigés, relus et validés par vous</span></li>
+                  <li className="flex items-start gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>Fiche Google Maps optimisée</span></li>
+                  <li className="flex items-start gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>Déployé sous 72 h ouvrées, rien sans votre accord</span></li>
+                  <li className="flex items-start gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>Remboursé intégralement avant déploiement</span></li>
+                </ul>
+                <p className="mt-6 text-3xl font-bold">59 € <span className="text-base font-normal text-muted-foreground">TTC, une seule fois</span></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Price card */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
@@ -510,6 +579,27 @@ function ParmenionLandingComponent(): React.ReactElement {
                 </li>
               ))}
             </ul>
+          </div>
+        </section>
+
+        {/* Urgence */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-5xl px-4 py-14 sm:py-16">
+            <div className="rounded-3xl border-2 border-foreground bg-card p-8 text-center shadow-sm sm:p-10">
+              <h2 className="mb-3 font-display text-2xl font-bold sm:text-3xl">
+                Pendant que vous attendez, <span className="text-brand-violet">vos concurrents sont cités à votre place</span>
+              </h2>
+              <p className="mx-auto mb-8 max-w-2xl text-muted-foreground">
+                Chaque jour, des clients de votre ville demandent une recommandation à une IA. Les entreprises citées aujourd'hui prennent une avance difficile à rattraper. L'analyse est gratuite et prend moins d'une minute.
+              </p>
+              <Button
+                onClick={focusInput}
+                className="h-12 gap-2 border border-foreground bg-transparent px-8 text-foreground hover:bg-foreground hover:text-background"
+              >
+                Vérifier ma visibilité maintenant
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </section>
 
