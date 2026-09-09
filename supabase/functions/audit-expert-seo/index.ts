@@ -12,6 +12,7 @@ import { resolveSocialProof, fetchPlacesSocialProof, formatSocialProofForPrompt,
 import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
 import { classifyLink, isFalsePositiveDomain, type LinkVerdict } from '../_shared/linkVerdictShared.ts';
 import { measurePerformance, measureTtfbDirect } from '../_shared/perfMeasurement.ts';
+import { computeCruxWeighting } from '../_shared/cruxWeighting.ts';
 import { geoFactsFromExpertAudit, expertFactsFromAuditPayload } from '../_shared/geoFactsFromExpertAudit.ts';
 import { buildGeoSubSignals } from '../_shared/geoSubSignals.ts';
 
