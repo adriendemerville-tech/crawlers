@@ -29,6 +29,8 @@ export interface RoiAnnotation {
   tier_label: string;
   effort_label: string;
   roi_note: string;
+  /** Multiplicateur appliqué si l'action touche une page pilier (1 sinon). */
+  pillar_boost?: number;
 }
 
 export interface RoiScorable {
