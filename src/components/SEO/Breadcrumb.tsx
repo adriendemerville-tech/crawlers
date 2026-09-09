@@ -158,7 +158,7 @@ export function Breadcrumb({ customItems, currentLabel, visuallyHidden = false }
         // Google Rich Results: omit `item` for non-navigable segments
         // (avoids "Invalid item URL" errors on virtual route prefixes).
         if (item.navigable) {
-          listItem.item = item.url;
+          listItem.item = { '@type': 'Thing', '@id': item.url, name: item.name };
         }
         return listItem;
       }),
