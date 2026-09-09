@@ -213,7 +213,7 @@ try {
     // ═══ Fetch active autopilot configs ═══
     let query = supabase
       .from('autopilot_configs')
-      .select('id, tracked_site_id, user_id, implementation_mode, max_pages_per_cycle, cooldown_hours, auto_pause_threshold, last_cycle_at, total_cycles_run, status, force_content_cycle, content_budget_pct, force_iktracker_article')
+      .select('id, tracked_site_id, user_id, implementation_mode, max_pages_per_cycle, cooldown_hours, auto_pause_threshold, last_cycle_at, total_cycles_run, status, force_content_cycle, content_budget_pct, force_iktracker_article, resumed_at')
       .eq('is_active', true);
 
     if (targetSiteId) {
