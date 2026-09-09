@@ -6,6 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReactMarkdown from 'react-markdown';
 import { resolveArticleDates, formatUpdatedDate } from '@/lib/blog/lastUpdated';
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
 
 export interface GuideSection {
   h2: string;
@@ -101,12 +102,11 @@ function buildSpeakableJsonLd(slug: string) {
 function buildBreadcrumbJsonLd(title: string, slug: string) {
   return {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://crawlers.fr/' },
-      { '@type': 'ListItem', position: 2, name: 'Guides', item: 'https://crawlers.fr/guides' },
-      { '@type': 'ListItem', position: 3, name: title, item: `https://crawlers.fr/guide/${slug}` },
-    ],
+    ...breadcrumbList([
+      { name: 'Accueil', url: 'https://crawlers.fr/' },
+      { name: 'Guides', url: 'https://crawlers.fr/guides' },
+      { name: title, url: `https://crawlers.fr/guide/${slug}` },
+    ]),
   };
 }
 
