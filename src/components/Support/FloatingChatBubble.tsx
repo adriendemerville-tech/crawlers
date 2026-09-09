@@ -273,23 +273,6 @@ export function FloatingChatBubble() {
         </div>
       )}
 
-      {/* Guest quiz suggestion tooltip */}
-      {guestBubbleVisible && !isOpen && !showOnboardingPulse && (
-        <div
-          className="fixed bottom-[72px] z-[110] max-w-[240px] rounded-xl border border-foreground/20 bg-background/95 backdrop-blur text-foreground px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group"
-           style={{ right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3.5rem))' }}
-          onClick={() => { setShowGuestQuizSuggestion(false); setIsOpen(true); }}
-        >
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowGuestQuizSuggestion(false); }}
-            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border border-border bg-background text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted text-[10px] font-bold"
-            aria-label="Fermer"
-          >
-            <X className="h-3 w-3" />
-          </button>
-          Je peux vous aider à choisir.
-        </div>
-      )}
 
       {/* Hallucination diagnosis suggestion bubble */}
       {showHallucinationBubble && !isOpen && (
