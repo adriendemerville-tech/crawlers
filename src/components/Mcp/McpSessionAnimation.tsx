@@ -50,6 +50,7 @@ const severityClass: Record<'high' | 'medium' | 'low', string> = {
 export function McpSessionAnimation({ windowTitle, steps, caption }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState<number>(-1); // -1 = SSR : tout affiché
+  const [thinking, setThinking] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -57,30 +58,38 @@ export function McpSessionAnimation({ windowTitle, steps, caption }: Props) {
       setVisible(steps.length);
       return;
     }
-    const start = () => setVisible(0);
-    const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-      start();
-      return;
-    }
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          start();
+          setVisible((v) => (v < 0 ? 0 : v));
           io.disconnect();
         }
       },
-      { threshold: 0.2 },
+      { threshold: 0.35 },
     );
     io.observe(el);
     return () => io.disconnect();
   }, [steps.length]);
 
   useEffect(() => {
-    if (visible < 0 || visible >= steps.length) return;
-    const id = window.setTimeout(() => setVisible((v) => v + 1), STEP_DELAY);
+    if (visible < 0 || visible >= steps.length) {
+      setThinking(false);
+      return;
+    }
+    const next = steps[visible];
+    const isUser = next.kind === 'user';
+    if (isUser) {
+      setThinking(false);
+      const id = window.setTimeout(() => setVisible((v) => v + 1), THINKING_DELAY);
+      return () => window.clearTimeout(id);
+    }
+    setThinking(true);
+    const id = window.setTimeout(() => {
+      setThinking(false);
+      setVisible((v) => v + 1);
+    }, STEP_DELAY);
     return () => window.clearTimeout(id);
-  }, [visible, steps.length]);
+  }, [visible, steps]);
 
   const shown = (i: number) => visible < 0 || i < visible;
   const running = visible >= 0 && visible < steps.length;
@@ -101,6 +110,19 @@ export function McpSessionAnimation({ windowTitle, steps, caption }: Props) {
       }`}
     />
   );
+
+  const thinkingRow = thinking ? (
+    <div className="flex items-center gap-2 text-[13px] text-[#63625c] dark:text-[#a8a7a0]">
+      {assistantMark}
+      <span>Claude réfléchit</span>
+      <span className="flex gap-1" aria-hidden>
+        <span className="h-1.5 w-1.5 rounded-full bg-current animate-[pulse_1s_ease-in-out_infinite]" />
+        <span className="h-1.5 w-1.5 rounded-full bg-current animate-[pulse_1s_ease-in-out_0.2s_infinite]" />
+        <span className="h-1.5 w-1.5 rounded-full bg-current animate-[pulse_1s_ease-in-out_0.4s_infinite]" />
+      </span>
+    </div>
+  ) : null;
+
 
   return (
     <div ref={ref} className="not-prose my-10 w-full">
