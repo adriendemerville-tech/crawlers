@@ -67,6 +67,8 @@ export interface CannibResult {
   clusters_count: number;
   redundant_pages: number;
   clusters: CannibCluster[];
+  /** Conflits entre deux pages piliers sur la même intention (alerte forte). */
+  pillar_conflicts: PillarConflict[];
   report_markdown: string;
 }
 
