@@ -1538,6 +1538,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
                 <TechnicalResultsSection result={result} url={url} t={t} onReportClick={handleReportButtonClick} />
               </Suspense>
               <GeoPillarsCard technicalResult={technicalResult ?? result} strategicResult={strategicResult} />
+              <RankedKeywordsCard data={(technicalResult ?? result)?.ranked_keywords} />
 
               <NextStepFloatingButton
                 nextStepLabel={language === 'en' ? 'Next: AI Visibility Audit' : language === 'es' ? 'Siguiente: Auditoría GEO' : 'Étape suivante : Audit GEO'}
