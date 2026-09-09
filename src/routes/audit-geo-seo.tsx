@@ -1,10 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { lazy } from 'react';
-import { pageHead } from '@/lib/seo/pageHead';
+import { pageHead, DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/seo/pageHead';
+import { ORGANIZATION_REF } from '@/lib/seo/organization';
 
 const ParmenionLanding = lazy(() => import('@/pages/ParmenionLanding'));
 
 const URL = 'https://crawlers.fr/audit-geo-seo';
+const PRODUCT_ID = `${URL}#produit`;
+const OFFER_ID = `${URL}#offre`;
+const WEBPAGE_ID = `${URL}#webpage`;
 
 const FAQ: Array<[string, string]> = [
   ['Que contient exactement la passe Parmenion ?', 'Un audit technique et éditorial de votre site, la rédaction de 3 pages de contenu, l\'optimisation de votre fiche Google Maps, et un compte rendu avant / après.'],
@@ -13,6 +17,15 @@ const FAQ: Array<[string, string]> = [
   ['Que se passe-t-il si je n\'ai pas de fiche Google Maps ?', 'Nous vous guidons pour la créer. C\'est inclus dans la passe.'],
   ['Les 3 contenus sont-ils écrits par une IA ?', 'Les premiers brouillons sont produits par notre moteur éditorial, puis relus, ajustés et validés par vos soins avant publication.'],
 ];
+
+/** Les 4 étapes affichées dans la page (STEPS de ParmenionLanding). */
+const STEPS: Array<[string, string]> = [
+  ['On lit votre site comme un moteur IA', 'Crawl du site, extraction du contenu réellement servi, détection de votre activité, de votre zone et de vos concurrents directs.'],
+  ['On mesure ce qui bloque', 'Titres, métadonnées, hiérarchie, données structurées, vitesse, maillage, citabilité des passages : chaque constat est chiffré et priorisé.'],
+  ['On rédige et on corrige', 'Trois pages de contenu sur les sujets qui rapportent des clients, plus les correctifs techniques et votre fiche Google Maps.'],
+  ['Vous validez, puis on déploie', 'Rien n\'est publié avant votre accord. Chaque déploiement est journalisé et réversible, avec un compte rendu avant / après.'],
+];
+
 
 export const Route = createFileRoute('/audit-geo-seo')({
   head: () =>
