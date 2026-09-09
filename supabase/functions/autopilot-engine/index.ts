@@ -265,15 +265,20 @@ try {
         // Reprise = action humaine (remise en 'idle' depuis l'admin).
         if (!bypassCooldown && config.status !== 'paused') {
           const pauseThreshold = Number(config.auto_pause_threshold ?? 15);
-          const { data: health } = await supabase.rpc('pericles_reward_health', { p_domain: siteInfo.domain });
+          const { data: health } = await supabase.rpc('pericles_reward_health', {
+            p_domain: siteInfo.domain,
+            p_since: (config as any).resumed_at ?? null,
+          });
           const measured = Number((health as any)?.measured ?? 0);
           const avgReward = Number((health as any)?.avg_reward ?? 0);
 
           if (measured >= 5 && avgReward <= -pauseThreshold) {
             const reason = `Récompense moyenne ${avgReward} sur ${measured} décisions mesurées (seuil -${pauseThreshold}) — cycles gelés`;
             await supabase.from('autopilot_configs').update({
-              status: 'paused', updated_at: new Date().toISOString(),
+              status: 'paused', paused_at: new Date().toISOString(), paused_reason: reason,
+              updated_at: new Date().toISOString(),
             }).eq('id', config.id);
+
 
             await supabase.from('autopilot_modification_log').insert({
               tracked_site_id: config.tracked_site_id, config_id: config.id, user_id: config.user_id,
