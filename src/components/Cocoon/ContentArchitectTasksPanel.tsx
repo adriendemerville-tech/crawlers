@@ -49,14 +49,19 @@ export function ContentArchitectTasksPanel({ domain, trackedSiteId, onApplyTask 
       .order('spiral_score', { ascending: false })
       .limit(20)
       .then(({ data }) => {
-        const allTasks: QuickWinTask[] = (data || []).map((item: any) => ({
+        const allTasks: PillarAwareTask[] = (data || []).map((item: any) => ({
           id: item.id,
           title: item.title,
           description: item.description || '',
           priority: item.severity === 'critical' ? 'high' : item.severity === 'high' ? 'important' : 'optional',
           category: item.finding_category || 'seo',
           completed: false,
+          isPillar: Boolean(item.payload?.is_pillar),
+          pillarBoost: Number(item.payload?.pillar_boost) || 1,
         }));
+        // Un correctif sur une page pilier profite à tous ses satellites :
+        // il remonte devant, à gravité comparable (boost plafonné côté serveur).
+        allTasks.sort((a, b) => (b.pillarBoost || 1) - (a.pillarBoost || 1));
         setTasks(allTasks);
         setLoading(false);
       });
