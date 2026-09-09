@@ -102,25 +102,6 @@ export function FloatingChatBubble() {
     return () => window.removeEventListener('felix-hallucination-diagnosis', handler);
   }, [isMuted]);
 
-  // Suggest Crawlers quiz to non-logged users on home after 5s
-  // Auto-hide the bubble after 10s but keep the notification badge
-  const [guestBubbleVisible, setGuestBubbleVisible] = useState(false);
-  useEffect(() => {
-    if (isMuted) return;
-    if (user) return;
-    if (location.pathname !== '/') return;
-    const key = 'felix_guest_quiz_suggested';
-    if (sessionStorage.getItem(key)) return;
-    const showTimer = setTimeout(() => {
-      sessionStorage.setItem(key, '1');
-      setShowGuestQuizSuggestion(true);
-      setGuestBubbleVisible(true);
-      if (!isSilentPage) playNotificationSound();
-      // Auto-hide bubble text after 10s, keep notification dot
-      setTimeout(() => setGuestBubbleVisible(false), 10000);
-    }, 5000);
-    return () => clearTimeout(showTimer);
-  }, [user, location.pathname, isMuted]);
 
   // Show notification only every 3 visits, not if dismissed this session
   useEffect(() => {
