@@ -47,16 +47,10 @@ export const SCREAMING_FROG_JSONLD = [
   },
   {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://crawlers.fr/' },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Comparatifs',
-        item: 'https://crawlers.fr/comparatif-crawlers-semrush',
-      },
-      { '@type': 'ListItem', position: 3, name: 'Crawlers.fr vs Screaming Frog', item: CANONICAL },
-    ],
+    ...breadcrumbList([
+      { name: 'Accueil', url: 'https://crawlers.fr/' },
+      { name: 'Comparatifs', url: 'https://crawlers.fr/comparatif-crawlers-semrush' },
+      { name: 'Crawlers.fr vs Screaming Frog', url: CANONICAL },
+    ]),
   },
 ];
