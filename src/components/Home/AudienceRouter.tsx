@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from '@/lib/router-compat';
-import { ArrowRight, CornerDownLeft } from 'lucide-react';
+import { Mic, Plus } from 'lucide-react';
 
 /**
- * Aiguillage d'audience — première fenêtre de la home.
+ * Aiguillage d'audience — première fenêtre de la home, style Claude minimaliste.
  *
  * Une seule URL indexable : tout le contenu de la home reste dans le DOM SSR,
  * ce bloc s'affiche par-dessus le premier écran côté client uniquement.
@@ -19,6 +19,7 @@ import { ArrowRight, CornerDownLeft } from 'lucide-react';
 const STORAGE_KEY = 'crawlers_audience_choice';
 const COOKIE_NAME = 'crawlers_audience_choice';
 const COOKIE_MAX_AGE_DAYS = 90;
+const THINKING_DELAY_MS = 2000;
 
 function setCookie(name: string, value: string, days: number) {
   if (typeof document === 'undefined') return;
@@ -109,6 +110,30 @@ export function classifyAudience(answer: string): AudienceChoice {
   return business > pro ? 'business' : 'pro';
 }
 
+function SendIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="19" x2="12" y2="5" />
+      <polyline points="5 12 12 5 19 12" />
+    </svg>
+  );
+}
+
+function CrawlersLogoPulse() {
+  return (
+    <div className="relative flex items-center justify-center">
+      <img
+        src="/crawlers-logo-violet.png"
+        alt="Crawlers"
+        className="h-10 w-auto animate-pulse"
+      />
+      <span className="absolute -bottom-6 text-xs tracking-wide text-muted-foreground">
+        Crawlers réfléchit…
+      </span>
+    </div>
+  );
+}
+
 export function AudienceRouter() {
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
@@ -123,15 +148,11 @@ export function AudienceRouter() {
   }, []);
 
   useEffect(() => {
-    if (visible) inputRef.current?.focus();
-  }, [visible]);
-
-  const remember = (choice: AudienceChoice) => {
-    persistChoice(choice);
-  };
+    if (visible && !thinking) inputRef.current?.focus();
+  }, [visible, thinking]);
 
   const apply = (choice: AudienceChoice) => {
-    remember(choice);
+    persistChoice(choice);
     if (choice === 'business') {
       navigate('/audit-geo-seo');
       return;
@@ -143,71 +164,88 @@ export function AudienceRouter() {
     if (!answer.trim() || thinking) return;
     setThinking(true);
     const choice = classifyAudience(answer);
-    // Court délai : la réponse s'affiche avant la bascule, sans faire attendre.
-    window.setTimeout(() => apply(choice), 700);
+    window.setTimeout(() => apply(choice), THINKING_DELAY_MS);
   };
 
-  const placeholder = useMemo(
-    () =>
-      'Ex. : je veux que mon entreprise soit citée par ChatGPT et trouvée sur Google — ou : j\'audite les sites de mes clients',
-    [],
-  );
+  const placeholder = useMemo(() => 'Poser une question', []);
 
   if (!visible) return null;
 
   return (
     <section
       aria-label="Orientation du visiteur"
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-background px-5 py-10 animate-fade-in"
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-between bg-background px-4 pb-6 pt-16 animate-fade-in"
     >
-      <div className="w-full max-w-2xl">
-        <p className="mb-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">Crawlers</p>
-        <h2 className="text-2xl font-semibold leading-tight text-foreground sm:text-4xl">
-          Pourquoi avez-vous besoin de Crawlers&nbsp;?
-        </h2>
-
-        <div className="mt-8 rounded-2xl border border-border bg-card/60 p-3 backdrop-blur-sm">
-          <textarea
-            ref={inputRef}
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                submit();
-              }
-            }}
-            rows={3}
-            disabled={thinking}
-            placeholder={placeholder}
-            aria-label="Pourquoi avez-vous besoin de Crawlers ?"
-            className="w-full resize-none bg-transparent px-2 py-1 text-sm text-foreground outline-none placeholder:text-muted-foreground/70 sm:text-base"
-          />
-          <div className="mt-2 flex items-center justify-between gap-3 px-2">
-            <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
-              <CornerDownLeft className="h-3.5 w-3.5" />
-              Entrée pour valider
-            </span>
-            <button
-              type="button"
-              onClick={submit}
-              disabled={!answer.trim() || thinking}
-              className="ml-auto inline-flex items-center gap-2 rounded-full border border-foreground/40 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-foreground disabled:opacity-40"
-            >
-              {thinking ? 'Un instant…' : 'Continuer'}
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
+      {thinking ? (
+        <div className="flex flex-1 flex-col items-center justify-center">
+          <CrawlersLogoPulse />
         </div>
+      ) : (
+        <>
+          <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+            <h2 className="max-w-3xl text-2xl font-medium leading-snug text-foreground sm:text-4xl">
+              Pourquoi avez-vous besoin de Crawlers&nbsp;?
+            </h2>
+          </div>
 
-        <button
-          type="button"
-          onClick={() => apply('pro')}
-          className="mt-6 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
-        >
-          Voir le site sans répondre
-        </button>
-      </div>
+          <div className="w-full max-w-3xl px-2">
+            <div className="flex items-end gap-2 rounded-3xl border border-border bg-secondary/40 px-3 py-3 backdrop-blur-sm">
+              <button
+                type="button"
+                aria-label="Options"
+                className="mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+
+              <textarea
+                ref={inputRef}
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    submit();
+                  }
+                }}
+                rows={1}
+                placeholder={placeholder}
+                aria-label="Pourquoi avez-vous besoin de Crawlers ?"
+                className="max-h-32 min-h-[2rem] flex-1 resize-none bg-transparent px-1 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 sm:text-base"
+              />
+
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  aria-label="Dictée vocale"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <Mic className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={submit}
+                  disabled={!answer.trim()}
+                  aria-label="Envoyer"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/30 text-foreground transition-colors hover:border-foreground hover:bg-foreground/5 disabled:opacity-30"
+                >
+                  <SendIcon />
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={() => apply('pro')}
+                className="text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+              >
+                Voir le site sans répondre
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </section>
   );
 }
