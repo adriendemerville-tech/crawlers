@@ -673,7 +673,18 @@ export const deployPasseOrder = createServerFn({ method: "POST" })
       }
     }
 
-    const allDone = siteOk && gmbStatus !== "failed";
+    /* Correctifs délégués une fois pour toutes — aucune relance de l'utilisateur. */
+    const { deployAuthorizedFixes } = await import('./passeFixDeploy.server');
+    const fixResults = await deployAuthorizedFixes(
+      supabase as never,
+      userId,
+      data.orderId,
+      order.tracked_site_id ?? null,
+    );
+    const fixesFailed = fixResults.filter((r) => r.status === 'failed').length;
+
+    const allDone = siteOk && gmbStatus !== "failed" && fixesFailed === 0;
+
     await supabase
       .from("passe_orders")
       .update({
