@@ -2,13 +2,15 @@
 
 Objectif : aucun correctif n'est appliqué sur le site du client sans une case cochée par lui, correctif par correctif, avec avant/après visible et possibilité d'annuler. Cela inclut les plus simples (titre, meta description, JSON-LD, redirection 301).
 
-## Principe de délégation
+## Principe de délégation — une seule fois
 
-1. L'audit produit une liste de correctifs proposés, chacun avec : ce qui est constaté, ce qui sera écrit, la page concernée, l'impact attendu, le niveau de risque.
-2. Le client coche ce qu'il délègue. Rien de coché = rien de déployé.
-3. Une seule case globale « je délègue tout ce qui est coché » avec horodatage, conservée comme preuve de consentement.
-4. Chaque correctif déployé garde son état d'avant, pour être annulé en un clic.
-5. Ce que la plateforme technique ne peut pas appliquer sur le site du client est livré en mode « à copier », pas silencieusement ignoré.
+1. L'audit produit la liste complète des correctifs proposés, chacun avec : ce qui est constaté, ce qui sera écrit, la page concernée, l'impact attendu.
+2. Le client lit cette liste et donne **une seule autorisation**, une fois, pour l'ensemble. Pas de validation correctif par correctif, pas de relance à chaque déploiement.
+3. Cette autorisation est horodatée et conservée comme preuve de consentement, avec la liste exacte des correctifs couverts.
+4. Il peut, avant de valider, décocher les correctifs qu'il ne veut pas ; ce qui reste coché est déployé sans lui redemander.
+5. Chaque correctif déployé garde son état d'avant, annulable en un clic à tout moment.
+6. Ce que la plateforme ne peut pas appliquer sur son site est livré en mode « à copier », pas silencieusement ignoré.
+
 
 ## Liste des correctifs proposables
 
@@ -67,7 +69,9 @@ Catégories, description, horaires, publications, réponses aux avis.
 Suppression de contenu existant, changement d'URL d'une page qui reçoit du trafic, modification du thème ou du code serveur, achat de liens. Ces points sont signalés mais jamais exécutés par la plateforme.
 
 ## Détails techniques
-- Nouvelle table de registre des correctifs de la passe : commande, page, type (référence au catalogue d'injections existant, 39 entrées), charge utile générée, état avant, statut (proposé / délégué / déployé / annulé / non applicable), horodatage de délégation, identifiant de retour.
+- Nouvelle table de registre des correctifs de la passe : commande, page, type (référence au catalogue d'injections existant, 39 entrées), charge utile générée, état avant, statut (proposé / autorisé / déployé / annulé / non applicable), identifiant de retour.
+- Une table de consentement par commande : horodatage unique, liste des correctifs couverts, version du récapitulatif affiché. Le déploiement lit ce consentement et n'interroge plus l'utilisateur.
 - Le déploiement de la passe branche, en plus de la publication d'articles et de la fiche Maps, les canaux de correctif de contenu, de code et de redirection déjà présents côté serveur.
 - Chaque type de correctif déclare les capacités CMS requises ; s'il manque une capacité, le correctif passe en « à copier » avec le code fourni.
-- Écran de délégation dans le parcours de la passe : liste groupée par famille, avant/après, sélection, récapitulatif, puis déploiement et suivi par correctif.
+- Écran unique de délégation dans le parcours de la passe : liste groupée par famille, avant/après, décochage possible, une validation, puis suivi de déploiement en lecture seule.
+
