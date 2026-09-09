@@ -10,10 +10,48 @@ import { ArrowRight, CornerDownLeft } from 'lucide-react';
  * Selon la réponse, on redirige vers la landing dirigeants (/audit-geo-seo)
  * ou on révèle la home actuelle (profils SEO/GEO avancés).
  *
+ * Le choix est persisté en cookie (90 jours, accessible au SSR) ET en localStorage
+ * pour que l'aiguillage ne réapparaisse pas lors des visites suivantes.
+ *
  * Classification 100 % déterministe et locale : aucun appel LLM, aucun token.
  */
 
 const STORAGE_KEY = 'crawlers_audience_choice';
+const COOKIE_NAME = 'crawlers_audience_choice';
+const COOKIE_MAX_AGE_DAYS = 90;
+
+function setCookie(name: string, value: string, days: number) {
+  if (typeof document === 'undefined') return;
+  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()[\]\\/+^])/g, '\\$1') + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function getStoredChoice(): AudienceChoice | null {
+  try {
+    const local = localStorage.getItem(STORAGE_KEY);
+    if (local === 'business' || local === 'pro') return local;
+  } catch {
+    /* ignore */
+  }
+  const cookie = getCookie(COOKIE_NAME);
+  if (cookie === 'business' || cookie === 'pro') return cookie;
+  return null;
+}
+
+function persistChoice(choice: AudienceChoice) {
+  try {
+    localStorage.setItem(STORAGE_KEY, choice);
+  } catch {
+    /* ignore */
+  }
+  setCookie(COOKIE_NAME, choice, COOKIE_MAX_AGE_DAYS);
+}
 
 /** Signaux « dirigeant / TPE-PME » : résultat commercial, pas de vocabulaire métier. */
 const BUSINESS_SIGNALS = [
