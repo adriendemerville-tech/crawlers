@@ -4,7 +4,7 @@ import { pageHead } from '@/lib/seo/pageHead';
 
 const ParmenionLanding = lazy(() => import('@/pages/ParmenionLanding'));
 
-const URL = 'https://crawlers.fr/passe-visibilite';
+const URL = 'https://crawlers.fr/audit-geo-seo';
 
 const FAQ: Array<[string, string]> = [
   ['Que contient exactement la passe Parmenion ?', 'Un audit technique et éditorial de votre site, la rédaction de 3 pages de contenu, l\'optimisation de votre fiche Google Maps, et un compte rendu avant / après.'],
@@ -17,12 +17,12 @@ const FAQ: Array<[string, string]> = [
 export const Route = createFileRoute('/audit-geo-seo')({
   head: () =>
     pageHead({
-      title: 'Parmenion — Corrigez votre visibilité en ligne, une fois, à 59 € TTC',
+      title: 'Audit GEO SEO local — Corrigez votre visibilité IA et Google Maps',
       description:
-        'Passe unique Crawlers.fr : audit SEO/GEO, 3 contenus rédigés, optimisation Google Maps. Rien n\'est déployé avant votre validation.',
-      path: '/passe-visibilite',
+        'Passe unique Crawlers.fr : audit GEO SEO, 3 contenus rédigés, optimisation Google Maps. Rien n\'est déployé avant votre validation.',
+      path: '/audit-geo-seo',
       keywords:
-        'audit site prix fixe, optimisation google maps, contenu seo, visibilité locale, référencement local, audit pas cher',
+        'audit geo seo, référencement local, optimisation google maps, visibilité ia, audit site prix fixe',
       jsonLd: [
         {
           '@context': 'https://schema.org',
@@ -60,7 +60,7 @@ export const Route = createFileRoute('/audit-geo-seo')({
           '@context': 'https://schema.org',
           '@type': 'WebPage',
           url: URL,
-          name: 'Parmenion — Corrigez votre visibilité en ligne',
+          name: 'Audit GEO SEO local — Corrigez votre visibilité IA et Google Maps',
           speakable: {
             '@type': 'SpeakableSpecification',
             cssSelector: ['h1', '.citable-passage'],
