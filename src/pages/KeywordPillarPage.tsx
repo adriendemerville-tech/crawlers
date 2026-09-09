@@ -25,48 +25,17 @@ export default function KeywordPillarPage() {
 
   if (!data) return <Navigate to="/404" replace />;
 
-  const canonical = `https://crawlers.fr/${data.slug}`;
   const silo = siloForPath(`/${slug}`);
 
-  const articleJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: data.h1,
-    description: data.metaDesc,
-    keywords: data.primaryKeyword,
-    datePublished: data.datePublished,
-    dateModified: data.datePublished,
-    author: { '@type': 'Person', name: 'Adrien de Volontat', url: 'https://crawlers.fr/auteur/adrien-de-volontat' },
-    publisher: { '@type': 'Organization', name: 'Crawlers.fr', url: 'https://crawlers.fr' },
-    mainEntityOfPage: canonical,
-  };
-
-  const faqJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: data.faqs.map(f => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
-    })),
-  };
-
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://crawlers.fr/' },
-      { '@type': 'ListItem', position: 2, name: data.h1, item: canonical },
-    ],
-  };
+  // Passages citables : première phrase des 3 premières sections (visibilité LLM)
+  const citable = data.sections
+    .slice(0, 3)
+    .map(s => (s.body.split(/(?<=\.)\s/)[0] || '').trim())
+    .filter(Boolean);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(articleJsonLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
-      </Helmet>
+
 
       <Header />
 
