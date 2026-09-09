@@ -62,8 +62,8 @@ const ConversionOptimizerLanding = memo(() => {
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr", name: "Accueil" }" },
-          { "@type": "ListItem", "position": 2, "name": "Conversion Optimizer", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/conversion-optimizer", name: "Conversion Optimizer" }" },
+          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": { "@type": "Thing", "@id": "https://crawlers.fr", "name": "Accueil" } },
+          { "@type": "ListItem", "position": 2, "name": "Conversion Optimizer", "item": { "@type": "Thing", "@id": "https://crawlers.fr/conversion-optimizer", "name": "Conversion Optimizer" } },
         ]
       },
       {

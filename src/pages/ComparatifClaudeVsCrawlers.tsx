@@ -57,8 +57,8 @@ const breadcrumbSD = {
   "@type": "BreadcrumbList",
   "itemListElement": [
     { "@type": "ListItem", "position": 1, "name": "Accueil", "item": SITE_URL },
-    { "@type": "ListItem", "position": 2, "name": "Comparatifs", "item": `{ '@type': 'Thing', '@id': `${SITE_URL}/comparatif-plateforme-seo-ia`, name: `Comparatifs` }` },
-    { "@type": "ListItem", "position": 3, "name": "Claude vs Crawlers", "item": `{ '@type': 'Thing', '@id': `${SITE_URL}/comparatif-claude-vs-crawlers`, name: `Claude vs Crawlers` }` },
+    { "@type": "ListItem", "position": 2, "name": "Comparatifs", "item": { "@type": "Thing", "@id": `${SITE_URL}/comparatif-plateforme-seo-ia`, "name": `Comparatifs` } },
+    { "@type": "ListItem", "position": 3, "name": "Claude vs Crawlers", "item": { "@type": "Thing", "@id": `${SITE_URL}/comparatif-claude-vs-crawlers`, "name": `Claude vs Crawlers` } },
   ],
 };
 
