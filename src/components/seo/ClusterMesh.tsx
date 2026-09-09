@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { Link } from '@/lib/router-compat';
 import { ChevronRight } from 'lucide-react';
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
 
 export interface ClusterLink {
   href: string;
@@ -28,12 +29,11 @@ const BASE = 'https://crawlers.fr';
 export function ClusterMesh({ currentPath, currentLabel, pillar, sisters }: ClusterMeshProps) {
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${BASE}/` },
-      { '@type': 'ListItem', position: 2, name: pillar.label, item: `${BASE}${pillar.href}` },
-      { '@type': 'ListItem', position: 3, name: currentLabel, item: `${BASE}${currentPath}` },
-    ],
+    ...breadcrumbList([
+      { name: 'Accueil', url: `${BASE}/` },
+      { name: pillar.label, url: `${BASE}${pillar.href}` },
+      { name: currentLabel, url: `${BASE}${currentPath}` },
+    ]),
   };
 
   return (
