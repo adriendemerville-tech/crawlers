@@ -25,17 +25,17 @@ export function getOnboardingMessages(_persona: string | null): OnboardingMessag
   return [
     {
       role: 'assistant',
-      content: `Salut, moi c'est Félix ! Je peux vous aider à choisir. 👋`,
+      content: `Bonjour, je suis Félix, votre assistant SEO & GEO sur Crawlers.fr.`,
       timestamp: now,
     },
     {
       role: 'assistant',
-      content: `Moi c'est **Félix**, ton assistant SEO & GEO sur Crawlers.fr. Je suis là pour t'aider à comprendre tes audits, optimiser ta visibilité et répondre à toutes tes questions.`,
+      content: `Je suis là pour vous aider à comprendre vos audits, optimiser votre visibilité et répondre à vos questions.`,
       timestamp: now,
     },
     {
       role: 'assistant',
-      content: `Avant de commencer, j'aimerais mieux te connaître pour adapter mon accompagnement 👇`,
+      content: `Avant de commencer, j'aimerais mieux vous connaître pour adapter mon accompagnement.`,
       timestamp: now,
     },
   ];
