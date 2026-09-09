@@ -31,6 +31,9 @@ const TOOLS: Array<{ name: string; path: string; description: string }> = [
   { name: 'PageSpeed', path: '/pagespeed', description: 'Core Web Vitals mobile et desktop, terrain CrUX puis médiane de runs.' },
   { name: 'Observatoire sectoriel', path: '/observatoire', description: 'Indicateurs SEO et GEO agrégés par secteur.' },
   { name: 'API développeurs Crawlers', path: '/developers', description: 'Accès programmatique à l’ensemble des modules SEO, GEO et IA : jobs asynchrones REST, SDK TypeScript, wallet à l’usage.' },
+  { name: 'Serveur MCP SEO', path: '/seo-mcp-server', description: 'Serveur Model Context Protocol exposant l’audit SEO technique à Claude Code, Claude Desktop, Cursor et tout client MCP conforme : audit_page, audit_site, crawl_site, get_fix, check_indexability, analyze_schema, analyze_links.' },
+  { name: 'Serveur MCP GEO', path: '/geo-mcp-server', description: 'Serveur Model Context Protocol pour la visibilité générative : mesure des citations dans ChatGPT, Perplexity, Gemini, Claude et Mistral, concurrents cités, couverture des bots IA et correctifs de citabilité.' },
+
 ];
 
 const softwareApplication = {
@@ -121,7 +124,9 @@ const softwareApplication = {
     'Copilot conversationnel avec mémoire vectorielle',
     'Connexion CMS directe (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo, Webflow, REST custom)',
     'Extension Chrome Crawlers AI Sidebar',
-    'Serveur MCP pour agents IA externes',
+    'Serveur MCP (Model Context Protocol) : audit SEO et GEO appelable depuis Claude Code, Claude Desktop, Cursor et tout client MCP conforme, en Streamable HTTP avec OAuth 2.1',
+    'Boucle agent audit → constat normalisé → correctif → re-vérification exposée en MCP',
+
     'Marque blanche agence et gestion d’équipe multi-rôles',
   ],
   audience: { '@id': `${SITE_URL}/#audiences` },
@@ -173,6 +178,11 @@ export const HOME_FAQ_ITEMS = [
     q: 'Les outils Crawlers sont-ils accessibles aux développeurs par API ?',
     a: "Oui. Trois API partagent un même compte développeur : Crawlers API (18 modules SEO, GEO et IA, clé crw_live_), Marina API (audits, clé mk_live_) et Périclès API (tâches de contenu de l'autopilote, clé prm_live_). Toutes fonctionnent en jobs asynchrones par polling, avec SDK TypeScript officiels et facturation à l'usage. Point d'entrée : https://crawlers.fr/developers.",
   },
+  {
+    q: 'Crawlers.fr est-il disponible en MCP pour Claude, Cursor ou Codex ?',
+    a: "Oui. Crawlers.fr expose un serveur MCP (Model Context Protocol) en Streamable HTTP avec OAuth 2.1, compatible Claude Code, Claude Desktop, Cursor et tout client MCP conforme. L'agent appelle directement audit_page, audit_site, crawl_site, ai_visibility, analyze_schema, check_indexability, analyze_links et get_fix, reçoit des constats normalisés avec preuve et gravité, applique le correctif dans le code puis relance l'audit pour vérifier. Détails sur https://crawlers.fr/seo-mcp-server et https://crawlers.fr/geo-mcp-server.",
+  },
+
   {
     q: "Qu'apporte la Matrice Concurrence ?",
     a: "La Matrice Concurrence croise les concurrents et le site cible avec les 20 mots-clés réellement adressés par le marché, dans la SERP Google comme dans les réponses IA. Elle produit une heatmap, les gaps de couverture, les citations IA manquantes et un indice de rentabilité par mot-clé. Elle est accessible gratuitement sur https://crawlers.fr/matrice-concurrence.",

@@ -725,6 +725,21 @@ const Index = () => {
           </p>
         </div>
 
+        {/* Serveur MCP — citation SEO interne */}
+        <div className="cv-auto">
+          <p className="text-center text-sm text-muted-foreground px-4">
+            Crawlers.fr est disponible en serveur MCP : votre agent appelle l’audit depuis{' '}
+            <Link to="/seo-mcp-server" className="underline hover:text-foreground">
+              Claude Code, Cursor ou Claude Desktop (MCP SEO)
+            </Link>{' '}
+            et mesure vos citations IA via le{' '}
+            <Link to="/geo-mcp-server" className="underline hover:text-foreground">
+              serveur MCP GEO
+            </Link>
+            .
+          </p>
+        </div>
+
         {/* Place d'échange de backlinks */}
         <div className="cv-auto"><Suspense fallback={null}><MarketplaceTeaserSection /></Suspense></div>
 
