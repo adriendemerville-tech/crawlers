@@ -15182,6 +15182,7 @@ export type Database = {
           id: string
           intent_distribution: Json | null
           max_depth: number | null
+          ranked_keywords: Json | null
           status: string
           tone_consistency_score: number | null
           total_pages: number
@@ -15203,6 +15204,7 @@ export type Database = {
           id?: string
           intent_distribution?: Json | null
           max_depth?: number | null
+          ranked_keywords?: Json | null
           status?: string
           tone_consistency_score?: number | null
           total_pages?: number
@@ -15224,6 +15226,7 @@ export type Database = {
           id?: string
           intent_distribution?: Json | null
           max_depth?: number | null
+          ranked_keywords?: Json | null
           status?: string
           tone_consistency_score?: number | null
           total_pages?: number
