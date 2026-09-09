@@ -289,12 +289,20 @@ export default function GeoMcpServer() {
             <p className="text-foreground/80 mb-6">
               Lancez sur n’importe quelle URL le même moteur que celui que votre agent appellera.
             </p>
-            <Link to="/">
-              <Button variant="outline" size="lg" className="gap-2">
-                Auditer une URL
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link to="/audit-geo-seo">
+                <Button variant="outline" size="lg" className="gap-2">
+                  Auditer une URL
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button variant="outline" size="lg" className="gap-2">
+                  Créer un compte gratuit
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </section>
         </div>
       </main>
