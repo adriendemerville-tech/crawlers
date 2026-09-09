@@ -178,8 +178,31 @@ function ParmenionLandingComponent(): React.ReactElement {
   }, [user]);
 
 
+  // Mode clair forcé pour cette landing (audience non-tech), même si le site est en mode sombre.
+  // Les variables sont passées en inline : la cascade de thème du site repasserait sinon par-dessus.
+  const lightThemeVars = {
+    '--background': '43 10% 96%',
+    '--foreground': '222 47% 11%',
+    '--card': '0 0% 100%',
+    '--card-foreground': '222 47% 11%',
+    '--popover': '0 0% 100%',
+    '--popover-foreground': '222 47% 11%',
+    '--secondary': '210 40% 96%',
+    '--secondary-foreground': '222 47% 11%',
+    '--muted': '210 40% 96%',
+    '--muted-foreground': '215 20% 40%',
+    '--accent': '210 40% 96%',
+    '--accent-foreground': '222 47% 11%',
+    '--border': '214 32% 91%',
+    '--input': '214 32% 91%',
+    '--brand-violet': '262 83% 58%',
+    '--brand-violet-muted': '262 72% 96%',
+    '--brand-gold': '45 93% 47%',
+    '--brand-gold-muted': '45 90% 95%',
+  } as React.CSSProperties;
+
   return (
-    <>
+    <div className="light-scope" style={lightThemeVars}>
       <Header />
       <main className="min-h-screen bg-background text-foreground">
         {/* Hero */}
@@ -239,7 +262,7 @@ function ParmenionLandingComponent(): React.ReactElement {
               </ul>
             </div>
 
-            <Suspense fallback={<div className="h-72 rounded-xl border border-border bg-card" />}>
+            <Suspense fallback={<div className="h-72 rounded-3xl border border-border bg-card" />}>
               <AiAnswerDemo />
             </Suspense>
           </div>
@@ -289,7 +312,7 @@ function ParmenionLandingComponent(): React.ReactElement {
                   />
                 </Suspense>
               ) : teaser ? (
-                <div className="rounded-lg border-2 border-foreground p-6">
+                <div className="rounded-3xl border-2 border-foreground bg-card p-8 shadow-sm">
                   <h2 className="mb-2 text-xl font-bold">
                     {teaser.unreachable
                       ? `${teaser.host} n'a pas pu être analysé`
@@ -338,7 +361,7 @@ function ParmenionLandingComponent(): React.ReactElement {
             </h2>
             <ol className="grid list-none gap-8 sm:grid-cols-2">
               {STEPS.map((s, i) => (
-                <li key={s.title} className="relative rounded-xl border border-border p-6">
+                <li key={s.title} className="relative rounded-3xl border border-border bg-card p-8 shadow-sm">
                   <span className="mb-4 block text-sm font-semibold text-brand-violet">
                     {String(i + 1).padStart(2, '0')}
                   </span>
@@ -348,7 +371,7 @@ function ParmenionLandingComponent(): React.ReactElement {
                     {s.chips.map((c) => (
                       <span
                         key={c}
-                        className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground"
+                        className="rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground"
                       >
                         {c}
                       </span>
@@ -369,7 +392,7 @@ function ParmenionLandingComponent(): React.ReactElement {
             </p>
             <div className="grid gap-6 sm:grid-cols-3">
               {INCLUDED.map((item) => (
-                <div key={item.title} className="rounded-xl border border-border p-6">
+                <div key={item.title} className="rounded-3xl border border-border bg-card p-8 shadow-sm">
                   <item.icon className="mb-4 h-6 w-6 text-brand-violet" />
                   <h3 className="mb-2 font-semibold">{item.title}</h3>
                   <p className="text-sm text-muted-foreground">{item.description}</p>
@@ -383,7 +406,7 @@ function ParmenionLandingComponent(): React.ReactElement {
         {/* Price card */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
-            <div className="mx-auto max-w-xl rounded-lg border-2 border-foreground bg-card p-8 text-center">
+            <div className="mx-auto max-w-xl rounded-3xl border-2 border-foreground bg-card p-8 text-center shadow-sm">
               <h2 className="mb-2 text-2xl font-bold">Passe Parmenion</h2>
               <p className="mb-6 text-muted-foreground">Paiement unique. Aucun abonnement caché.</p>
               <div className="mb-6 flex items-baseline justify-center gap-2">
@@ -453,7 +476,7 @@ function ParmenionLandingComponent(): React.ReactElement {
             <h2 className="mb-10 text-2xl font-bold sm:text-3xl">Questions fréquentes</h2>
             <div className="space-y-4">
               {FAQ.map(([q, a]) => (
-                <details key={q} className="group rounded-lg border border-border p-4">
+                <details key={q} className="group rounded-2xl border border-border bg-card p-5 shadow-sm">
                   <summary className="flex cursor-pointer list-none items-center justify-between font-medium">
                     {q}
                     <span className="ml-4 transition group-open:rotate-180">▼</span>
@@ -506,7 +529,7 @@ function ParmenionLandingComponent(): React.ReactElement {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 
