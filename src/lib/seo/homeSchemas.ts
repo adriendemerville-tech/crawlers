@@ -121,7 +121,9 @@ const softwareApplication = {
     'Copilot conversationnel avec mémoire vectorielle',
     'Connexion CMS directe (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo, Webflow, REST custom)',
     'Extension Chrome Crawlers AI Sidebar',
-    'Serveur MCP pour agents IA externes',
+    'Serveur MCP (Model Context Protocol) : audit SEO et GEO appelable depuis Claude Code, Claude Desktop, Cursor et tout client MCP conforme, en Streamable HTTP avec OAuth 2.1',
+    'Boucle agent audit → constat normalisé → correctif → re-vérification exposée en MCP',
+
     'Marque blanche agence et gestion d’équipe multi-rôles',
   ],
   audience: { '@id': `${SITE_URL}/#audiences` },
