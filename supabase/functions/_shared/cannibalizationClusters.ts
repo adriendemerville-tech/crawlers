@@ -41,6 +41,15 @@ export function jaccard(a: Set<string>, b: Set<string>): number {
   return inter / (a.size + b.size - inter);
 }
 
+import { detectPillars, isPillarCannibalization, PILLAR_CANNIB_JACCARD } from './pillarWeighting.ts';
+
+export interface PillarConflict {
+  a: { url: string; path: string; title: string };
+  b: { url: string; path: string; title: string };
+  jaccard: number;
+  severity: 'critical';
+}
+
 export interface CannibCluster {
   theme: string;
   tokens: string[];
