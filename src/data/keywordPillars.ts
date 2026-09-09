@@ -393,8 +393,42 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
         ],
       },
       {
+        h2: "Ce qu'un audit mesuré contient, ce qu'un texte généré ne peut pas contenir",
+        body: "La différence se lit dans les données disponibles, pas dans le style du rapport. Le tableau ci-dessous liste ce qu'exige chaque contrôle.",
+        table: {
+          caption: "Contrôles d'audit SEO : ce qui exige une mesure réelle et ce qu'un modèle seul ne peut pas produire.",
+          columns: ["Contrôle", "Donnée nécessaire", "Modèle seul", "Audit mesuré"],
+          rows: [
+            ["Statut HTTP et redirections", "Requête réelle sur l'URL", "Non", "Oui"],
+            ["HTML servi aux robots", "Récupération sans exécution JavaScript", "Non", "Oui"],
+            ["Coquille JavaScript", "Comparaison HTML servi / rendu", "Non", "Oui"],
+            ["Core Web Vitals", "Données terrain CrUX ou laboratoire", "Non", "Oui"],
+            ["Canonical et indexabilité", "robots.txt, meta robots, chaîne HTTP", "Non", "Oui"],
+            ["Cannibalisation", "Crawl complet et comparaison lexicale", "Non", "Oui"],
+            ["Citations dans les moteurs IA", "Interrogation réelle des moteurs", "Non", "Oui"],
+            ["Rédaction du plan d'action", "Constats mesurés en entrée", "Oui", "Oui"],
+          ],
+        },
+      },
+      {
         h2: "Du constat à la correction vérifiée",
         body: "Chaque constat porte un identifiant stable, ce qui permet de suivre sa disparition après correction. C'est cette boucle qui rend l'audit utilisable par un agent de développement : audit, correction adaptée à votre pile, nouvel audit, comparaison. Le même mécanisme alimente l'espace développeurs, l'API et le serveur MCP.",
+        h3s: [
+          { title: "Priorisation par gain attendu", body: "Les constats bloquants passent devant les optimisations de confort. L'ordre du plan d'action suit l'impact estimé, pas l'ordre des règles." },
+          { title: "Comparaison entre deux audits", body: "Le rapport de vérification affiche l'écart de score et l'état de chaque identifiant : résolu, ouvert, ou apparu depuis." },
+          { title: "Automatisation par agent", body: "Les mêmes constats sont exposés par l'API REST et le serveur MCP, ce qui permet à un agent de développement de boucler sans interface." },
+        ],
+        table: {
+          caption: "Étapes de la boucle audit, correction et vérification, avec la preuve attendue à chaque étape.",
+          columns: ["Étape", "Sortie", "Preuve attendue", "Durée type"],
+          rows: [
+            ["Audit initial", "Constats normalisés et score", "Preuve par constat : URL, extrait, valeur", "90 secondes sur une page"],
+            ["Priorisation", "Plan d'action ordonné", "Gravité et gain estimé par constat", "Immédiate"],
+            ["Correction", "Patch adapté à la pile", "Fichier et modification proposés", "Variable"],
+            ["Vérification", "Comparaison de deux audits", "Disparition de l'identifiant de constat", "90 secondes"],
+            ["Suivi", "Historique de score", "Série datée, pas une capture isolée", "Mensuel"],
+          ],
+        },
       },
     ],
     faqs: [
@@ -403,14 +437,24 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       { q: "Comment savoir si un audit invente des données ?", a: "Demandez la preuve associée à chaque constat : URL, extrait, valeur mesurée, date. Un constat sans preuve n'est pas un constat." },
       { q: "L'audit détecte-t-il les sites en JavaScript non rendu côté serveur ?", a: "Oui, c'est un contrôle explicite : le rapport distingue une coquille JavaScript d'un contenu réellement insuffisant." },
       { q: "Peut-on relancer l'audit après correction ?", a: "Oui, et c'est l'usage recommandé : la comparaison entre deux audits est la seule preuve qu'une correction a produit un effet." },
+      { q: "Un agent de développement peut-il lancer l'audit lui-même ?", a: "Oui, via l'API REST ou le serveur MCP : l'agent audite, lit les constats, applique la correction et relance l'audit pour vérifier." },
     ],
     relatedLinks: [
       { label: "Méthode d’audit SEO GEO", to: "/audit-seo-geo" },
       { label: "SEO avec Claude via MCP", to: "/seo-avec-claude" },
       { label: "Visibilité IA : mesurer ses citations", to: "/visibilite-ia" },
+      { label: "Serveur MCP SEO (English)", to: "/seo-mcp-server" },
       { label: "Audit expert 200+ critères", to: "/audit-expert" },
     ],
+    externalRefs: [
+      { label: "Google Search Central — documentation", href: "https://developers.google.com/search/docs", note: "Référence officielle sur l'indexation, les canonicals et le rendu." },
+      { label: "Web Vitals", href: "https://web.dev/articles/vitals", note: "Définition et seuils de LCP, INP et CLS." },
+      { label: "Chrome UX Report", href: "https://developer.chrome.com/docs/crux", note: "Données terrain utilisées pour pondérer les Core Web Vitals." },
+      { label: "Schema.org", href: "https://schema.org/docs/schemas.html", note: "Vocabulaire des données structurées contrôlées par l'audit." },
+      { label: "Robots Exclusion Protocol (RFC 9309)", href: "https://www.rfc-editor.org/rfc/rfc9309.html", note: "Norme robots.txt appliquée aux contrôles d'indexabilité." },
+    ],
     datePublished: '2026-09-09',
+
   },
 };
 
