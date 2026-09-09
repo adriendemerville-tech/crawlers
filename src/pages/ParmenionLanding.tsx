@@ -4,6 +4,8 @@ import { Footer } from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/lib/router-compat';
+import { SiloNav } from '@/components/seo/SiloNav';
+
 import { useAuth } from '@/contexts/AuthContext';
 
 import { createParmenionOrder, runFreePasseDiagnostic } from '@/lib/parmenion/parmenion.functions';
