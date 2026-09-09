@@ -118,11 +118,7 @@ export function AudienceRouter() {
 
   // Client-only : jamais rendu en SSR, donc aucun impact sur le HTML indexé.
   useEffect(() => {
-    try {
-      if (localStorage.getItem(STORAGE_KEY)) return;
-    } catch {
-      /* stockage indisponible : on affiche l'aiguillage une fois */
-    }
+    if (getStoredChoice()) return;
     setVisible(true);
   }, []);
 
