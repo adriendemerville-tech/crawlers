@@ -32,15 +32,12 @@ function faqPage(items: Array<{ q: string; a: string }>) {
 }
 
 function breadcrumb(trail: Array<{ name: string; path: string }>) {
-  return {
-    '@type': 'BreadcrumbList',
-    itemListElement: trail.map((item, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
+  return breadcrumbList(
+    trail.map((item) => ({
       name: item.name,
-      item: `${SITE_URL}${item.path}`,
+      url: `${SITE_URL}${item.path}`,
     })),
-  };
+  );
 }
 
 /* ── /faq ─────────────────────────────────────────────────────────────── */

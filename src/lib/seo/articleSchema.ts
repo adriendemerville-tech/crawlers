@@ -70,13 +70,12 @@ export function buildBreadcrumbJsonLd(
 ) {
   return {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: trail.map((item, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: item.name,
-      item: `${SITE_URL}${item.path === '/' ? '' : item.path}` || SITE_URL,
-    })),
+    ...breadcrumbList(
+      trail.map((item) => ({
+        name: item.name,
+        url: `${SITE_URL}${item.path === '/' ? '' : item.path}` || SITE_URL,
+      })),
+    ),
   };
 }
 
