@@ -127,11 +127,7 @@ export function AudienceRouter() {
   }, [visible]);
 
   const remember = (choice: AudienceChoice) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, choice);
-    } catch {
-      /* ignore */
-    }
+    persistChoice(choice);
   };
 
   const apply = (choice: AudienceChoice) => {
