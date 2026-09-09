@@ -73,8 +73,8 @@ const GenerativeEngineOptimization = () => {
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-          { "@type": "ListItem", "position": 2, "name": "Generative Engine Optimization", "item": "https://crawlers.fr/generative-engine-optimization" }
+          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr", name: "Accueil" }" },
+          { "@type": "ListItem", "position": 2, "name": "Generative Engine Optimization", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/generative-engine-optimization", name: "Generative Engine Optimization" }" }
         ]
       },
       {
