@@ -1,4 +1,5 @@
 import { KEYWORD_PILLARS } from '@/data/keywordPillars';
+import { breadcrumbList } from './breadcrumb';
 
 /**
  * SSR-safe JSON-LD for pillar pages (Article + FAQPage + BreadcrumbList).
@@ -38,11 +39,10 @@ export function pillarJsonLd(slug: string): unknown[] {
     },
     {
       '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://crawlers.fr/' },
-        { '@type': 'ListItem', position: 2, name: data.h1, item: canonical },
-      ],
+      ...breadcrumbList([
+        { name: 'Accueil', url: 'https://crawlers.fr/' },
+        { name: data.h1, url: canonical },
+      ]),
     },
   ];
 }
