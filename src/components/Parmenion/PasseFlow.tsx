@@ -72,16 +72,27 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
     locations: { id: string; place_id: string | null; location_name: string | null; tracked_site_id: string | null }[];
   }>({ cms: [], locations: [] });
   const [gmbDescription, setGmbDescription] = useState('');
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const res = (await getPasseOrder({ data: { orderId } })) as {
-      error?: string;
-      order?: unknown;
-      contents?: unknown[];
-    };
-    if (res.error || !res.order) return;
-    setOrder(res.order as unknown as Order);
-    setContents((res.contents ?? []) as unknown as Content[]);
+    setLoadError(null);
+    try {
+      const res = (await getPasseOrder({ data: { orderId } })) as {
+        error?: string;
+        order?: unknown;
+        contents?: unknown[];
+      };
+      if (res.error || !res.order) {
+        // Sans commande lisible, on affiche un état terminal avec reprise plutôt
+        // qu'un chargement infini.
+        setLoadError(res.error === 'not_found' ? 'not_found' : (res.error ?? 'unavailable'));
+        return;
+      }
+      setOrder(res.order as unknown as Order);
+      setContents((res.contents ?? []) as unknown as Content[]);
+    } catch (e) {
+      setLoadError((e as Error).message || 'unavailable');
+    }
   }, [orderId]);
 
   useEffect(() => {
@@ -147,13 +158,14 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
     async (trackedSiteId?: string, gmbLocationId?: string) => {
       setBusy('link');
       try {
-        await linkPasseTargets({
+        const res = (await linkPasseTargets({
           data: {
             orderId,
             ...(trackedSiteId ? { trackedSiteId } : {}),
             ...(gmbLocationId ? { gmbLocationId } : {}),
           },
-        });
+        })) as { error?: string };
+        if (res?.error) toast.error('Rattachement impossible pour le moment.');
         await refresh();
       } finally {
         setBusy(null);
@@ -169,8 +181,14 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
     }
     setBusy('gmb');
     try {
-      await savePasseGmbPreview({ data: { orderId, fields: { description: gmbDescription.trim() } } });
-      toast.success('Aperçu de la fiche validé.');
+      const res = (await savePasseGmbPreview({
+        data: { orderId, fields: { description: gmbDescription.trim() } },
+      })) as { error?: string };
+      if (res?.error) {
+        toast.error('Enregistrement impossible pour le moment.');
+      } else {
+        toast.success('Aperçu de la fiche validé.');
+      }
       await refresh();
     } finally {
       setBusy(null);
@@ -203,6 +221,30 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
       setBusy(null);
     }
   }, [orderId, refresh]);
+
+  if (loadError) {
+    return (
+      <div className="space-y-3 rounded-lg border border-border p-5 text-sm">
+        <p className="font-semibold">Commande introuvable</p>
+        <p className="text-muted-foreground">
+          {loadError === 'not_found'
+            ? 'Cette commande n\'existe plus ou n\'est pas liée à votre compte. Si vous avez payé, écrivez-nous et nous la retrouvons.'
+            : 'Nous n\'arrivons pas à charger votre commande pour le moment. Réessayez dans un instant.'}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => void refresh()} className={btn}>
+            Réessayer
+          </Button>
+          <Button asChild className={btn}>
+            <a href="/audit-geo-seo">Recommencer une commande</a>
+          </Button>
+          <Button asChild className={btn}>
+            <a href="/contact">Nous contacter</a>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
