@@ -58,9 +58,35 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
   const [configId, setConfigId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
   const [status, setStatus] = useState<string>('idle');
+  const [pausedReason, setPausedReason] = useState<string | null>(null);
+  const [resuming, setResuming] = useState(false);
+
+  const isFrozen = status === 'paused';
+
+  // Reprise après gel automatique par le contrôleur (récompense négative).
+  // La RPC remet le compteur de mesure à la reprise pour éviter un re-gel immédiat.
+  const handleResume = async () => {
+    if (!configId) return;
+    setResuming(true);
+    try {
+      const { data, error } = await supabase.rpc('pericles_resume_config', { _config_id: configId });
+      if (error) throw error;
+      const v = (data ?? {}) as { resumed?: boolean; reason?: string };
+      if (!v.resumed) throw new Error(v.reason ?? 'refus');
+      setStatus('running');
+      setIsActive(true);
+      setPausedReason(null);
+      toast.success('Autopilote relancé — les mesures repartent de zéro');
+    } catch (e) {
+      toast.error(`Reprise impossible : ${(e as Error).message}`);
+    } finally {
+      setResuming(false);
+    }
+  };
 
   const handleToggleActive = async () => {
     if (!configId || !user) return;
+    if (isFrozen) return handleResume();
     setToggling(true);
     try {
       const newActive = !isActive;
@@ -79,6 +105,7 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
       setToggling(false);
     }
   };
+
 
   // Load existing config
   useEffect(() => {

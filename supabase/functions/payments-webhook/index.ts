@@ -179,7 +179,115 @@ Deno.serve(async (req) => {
       }
       console.log(`[payments-webhook] credited user=${userId} +${totalCents}c -> ${data}c`);
     }
+
+    // ═══ Remboursements (adjustment) ═══
+    // Paddle envoie un adjustment pour tout remboursement, total ou partiel. On révoque
+    // le pass Parmenion correspondant, on trace la commande, et pour une recharge wallet
+    // on redébite le montant remboursé.
+    if (event.eventType === "adjustment.created" || event.eventType === "adjustment.updated") {
+      const adj = event.data;
+      const action = String(adj.action ?? "");
+      const status = String(adj.status ?? "");
+      if (action !== "refund" && action !== "chargeback") {
+        return new Response("ok", { status: 200 });
+      }
+      if (status && !["approved", "pending_approval"].includes(status)) {
+        return new Response("ok", { status: 200 });
+      }
+      const txnId = String(adj.transactionId ?? adj.transaction_id ?? "");
+      if (!txnId) return new Response("ok", { status: 200 });
+
+      const refundCents = parseInt(adj.totals?.total ?? adj.payoutTotals?.total ?? "0", 10) || 0;
+      const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+      const now = new Date().toISOString();
+
+      // 1. Passe Parmenion
+      const { data: pass } = await admin
+        .from("passe_passes")
+        .select("id, order_id, user_id, amount_cents, status")
+        .eq("txn_id", txnId)
+        .maybeSingle();
+
+      if (pass) {
+        if (pass.status !== "revoked") {
+          await admin.from("passe_passes")
+            .update({ status: "revoked", revoked_at: now, revoke_reason: action })
+            .eq("id", pass.id);
+        }
+        await admin.from("passe_orders").update({
+          status: "refunded",
+          refunded_at: now,
+          refund_amount_cents: refundCents || pass.amount_cents,
+          refund_reason: action,
+          updated_at: now,
+        }).eq("id", pass.order_id).is("refunded_at", null);
+
+        const { data: dup } = await admin.from("passe_order_events")
+          .select("id").eq("order_id", pass.order_id).eq("event", "refunded")
+          .eq("payload->>adjustment_id", String(adj.id ?? "")).maybeSingle();
+        if (!dup) {
+          await admin.from("passe_order_events").insert({
+            order_id: pass.order_id,
+            user_id: pass.user_id,
+            event: "refunded",
+            payload: { adjustment_id: adj.id ?? null, txn_id: txnId, amount_cents: refundCents, action },
+          });
+        }
+        console.log(`[payments-webhook] parmenion refunded order=${String(pass.order_id).slice(0, 8)}…`);
+        return new Response("ok", { status: 200 });
+      }
+
+      // 2. Recharge wallet développeur : on redébite (idempotent via source_ref).
+      const { data: tx } = await admin
+        .from("dev_wallet_transactions")
+        .select("user_id")
+        .eq("source_ref", txnId)
+        .eq("type", "credit")
+        .maybeSingle();
+      if (tx?.user_id && refundCents > 0) {
+        const refKey = `refund:${adj.id ?? txnId}`;
+        const { data: already } = await admin
+          .from("dev_wallet_transactions")
+          .select("id").eq("source_ref", refKey).maybeSingle();
+        if (!already) {
+          const { error: debitErr } = await admin.rpc("dev_wallet_debit", {
+            _user_id: tx.user_id,
+            _amount_cents: refundCents,
+            _source_ref: refKey,
+            _description: `Remboursement Paddle (${(refundCents / 100).toFixed(2)} €)`,
+          });
+          if (debitErr) console.error("[payments-webhook] refund debit error", debitErr);
+        }
+      }
+      return new Response("ok", { status: 200 });
+    }
+
+    // ═══ Paiement échoué / transaction annulée ═══
+    if (event.eventType === "transaction.payment_failed" || event.eventType === "transaction.canceled") {
+      const txn = event.data;
+      const orderId = String(txn.customData?.orderId || "");
+      const userId = String(txn.customData?.userId || "");
+      if (txn.customData?.kind === "parmenion_pass" && orderId && userId) {
+        const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+        const now = new Date().toISOString();
+        await admin.from("passe_orders").update({
+          payment_failed_at: now,
+          updated_at: now,
+        }).eq("id", orderId).eq("user_id", userId).neq("status", "paid");
+
+        await admin.from("passe_order_events").insert({
+          order_id: orderId,
+          user_id: userId,
+          event: "payment_failed",
+          payload: { txn_id: txn.id, event: event.eventType },
+        });
+        console.log(`[payments-webhook] parmenion payment failed order=${orderId.slice(0, 8)}…`);
+      }
+      return new Response("ok", { status: 200 });
+    }
+
     return new Response("ok", { status: 200 });
+
   } catch (e) {
     console.error("[payments-webhook] handler error", e);
     return new Response("handler_error", { status: 500 });
