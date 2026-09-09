@@ -26,7 +26,7 @@ function ParmenionCtaComponent({ className = '', intro }: ParmenionCtaProps): Re
           asChild
           className="h-11 gap-2 border border-foreground bg-transparent px-5 text-foreground hover:bg-foreground hover:text-background"
         >
-          <Link to="/passe-visibilite">
+          <Link to="/audit-geo-seo">
             Découvrir la passe à 59 € TTC
             <ArrowRight className="h-4 w-4" />
           </Link>

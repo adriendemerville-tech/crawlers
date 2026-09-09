@@ -172,7 +172,7 @@ const HTML_CACHE_PATHS = new Set<string>([
   "/meilleurs-outils-seo-geo-2026",
   "/meilleurs-outils-seo-geo-2027",
   "/matrice-concurrence",
-  "/passe-visibilite",
+  "/audit-geo-seo",
 ]);
 // Les pages publiques changent peu : garder plus longtemps le rendu SSR
 // évite de payer un nouveau rendu à chaque réveil d'isolate.

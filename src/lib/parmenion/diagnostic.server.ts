@@ -31,7 +31,7 @@ export interface PasseFix {
 }
 
 const UA =
-  "Mozilla/5.0 (compatible; CrawlersBot/1.0; +https://crawlers.fr/passe-visibilite)";
+  "Mozilla/5.0 (compatible; CrawlersBot/1.0; +https://crawlers.fr/audit-geo-seo)";
 
 export function normalizeUrl(raw: string): string | null {
   const s = (raw || "").trim();

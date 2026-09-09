@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 const PasseFlow = lazy(() => import('@/components/Parmenion/PasseFlow'));
 
 
-const URL = 'https://crawlers.fr/passe-visibilite';
+const URL = 'https://crawlers.fr/audit-geo-seo';
 
 const INCLUDED = [
   {
@@ -100,7 +100,7 @@ function ParmenionLandingComponent(): React.ReactElement {
     }
     if (!user) {
       toast.info('Créez votre compte pour voir le détail de vos correctifs');
-      window.location.href = `/signup?redirect=${encodeURIComponent(`/passe-visibilite?url=${encodeURIComponent(url)}`)}`;
+      window.location.href = `/signup?redirect=${encodeURIComponent(`/audit-geo-seo?url=${encodeURIComponent(url)}`)}`;
       return;
     }
     setOrdering(true);

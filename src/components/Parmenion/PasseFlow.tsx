@@ -183,7 +183,7 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
       priceId,
       customerEmail: user.email,
       customData: { kind: 'parmenion_pass', orderId, userId: user.id, passToken },
-      successUrl: `${window.location.origin}/passe-visibilite?checkout=success&order=${orderId}`,
+      successUrl: `${window.location.origin}/audit-geo-seo?checkout=success&order=${orderId}`,
     });
   }, [user, openCheckout, priceId, orderId, passToken]);
 
