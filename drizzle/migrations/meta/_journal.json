@@ -211,6 +211,13 @@
       "when": 1788964014341,
       "tag": "0029_sitemap_refresh_missing_pages",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1788964209313,
+      "tag": "0030_sitemap_prune_redirects_and_404",
+      "breakpoints": true
     }
   ]
 }
