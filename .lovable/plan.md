@@ -69,7 +69,9 @@ Catégories, description, horaires, publications, réponses aux avis.
 Suppression de contenu existant, changement d'URL d'une page qui reçoit du trafic, modification du thème ou du code serveur, achat de liens. Ces points sont signalés mais jamais exécutés par la plateforme.
 
 ## Détails techniques
-- Nouvelle table de registre des correctifs de la passe : commande, page, type (référence au catalogue d'injections existant, 39 entrées), charge utile générée, état avant, statut (proposé / délégué / déployé / annulé / non applicable), horodatage de délégation, identifiant de retour.
+- Nouvelle table de registre des correctifs de la passe : commande, page, type (référence au catalogue d'injections existant, 39 entrées), charge utile générée, état avant, statut (proposé / autorisé / déployé / annulé / non applicable), identifiant de retour.
+- Une table de consentement par commande : horodatage unique, liste des correctifs couverts, version du récapitulatif affiché. Le déploiement lit ce consentement et n'interroge plus l'utilisateur.
 - Le déploiement de la passe branche, en plus de la publication d'articles et de la fiche Maps, les canaux de correctif de contenu, de code et de redirection déjà présents côté serveur.
 - Chaque type de correctif déclare les capacités CMS requises ; s'il manque une capacité, le correctif passe en « à copier » avec le code fourni.
-- Écran de délégation dans le parcours de la passe : liste groupée par famille, avant/après, sélection, récapitulatif, puis déploiement et suivi par correctif.
+- Écran unique de délégation dans le parcours de la passe : liste groupée par famille, avant/après, décochage possible, une validation, puis suivi de déploiement en lecture seule.
+
