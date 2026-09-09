@@ -122,6 +122,8 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
         setConfigId(data.id);
         setIsActive(data.is_active ?? false);
         setStatus(data.status ?? 'idle');
+        setPausedReason((data as { paused_reason?: string | null }).paused_reason ?? null);
+
         setDiagAudit(data.diag_audit_complet ?? true);
         setDiagCrawl(data.diag_crawl ?? true);
         setDiagStratege(data.diag_stratege_cocoon ?? false);
