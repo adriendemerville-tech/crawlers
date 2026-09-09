@@ -436,9 +436,16 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
         </div>
       </section>
 
-      {/* Étape 7 — récapitulatif et paiement */}
+      {/* Étape 7 — délégation unique des correctifs */}
+      <section className="rounded-lg border border-border p-6">
+        <StepTitle n={7}>Votre autorisation, demandée une seule fois</StepTitle>
+        <PasseDelegation orderId={order.id as string} />
+      </section>
+
+      {/* Étape 8 — récapitulatif et paiement */}
       <section className="rounded-lg border-2 border-foreground p-6">
-        <StepTitle n={7}>Récapitulatif et paiement</StepTitle>
+        <StepTitle n={8}>Récapitulatif et paiement</StepTitle>
+
         <ul className="mb-6 space-y-2 text-sm">
           <li>{findings.length} problèmes relevés, {fixes.length} correctifs inclus</li>
           <li>{contents.filter((c) => c.status === 'approved' || c.status === 'published').length}/3 contenus validés</li>
