@@ -92,6 +92,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SocialContentCreatorRouteImport } from './routes/social-content-creator'
 import { Route as StrategeCocoonRouteImport } from './routes/stratege-cocoon'
 import { Route as TarifsRouteImport } from './routes/tarifs'
+import { Route as VisibiliteIaRouteImport } from './routes/visibilite-ia'
 import { Route as VisibiliteLlmRouteImport } from './routes/visibilite-llm'
 import { Route as ApiExternalAuditImportRouteImport } from './routes/api/external-audit-import'
 import { Route as ApiRenderReportPdfRouteImport } from './routes/api/render-report-pdf'
@@ -587,6 +588,11 @@ const TarifsRoute = TarifsRouteImport.update({
   path: '/tarifs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VisibiliteIaRoute = VisibiliteIaRouteImport.update({
+  id: '/visibilite-ia',
+  path: '/visibilite-ia',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VisibiliteLlmRoute = VisibiliteLlmRouteImport.update({
   id: '/visibilite-llm',
   path: '/visibilite-llm',
@@ -1020,6 +1026,7 @@ export interface FileRoutesByFullPath {
   '/social-content-creator': typeof SocialContentCreatorRoute
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
+  '/visibilite-ia': typeof VisibiliteIaRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
   '/api/external-audit-import': typeof ApiExternalAuditImportRoute
   '/api/render-report-pdf': typeof ApiRenderReportPdfRoute
@@ -1173,6 +1180,7 @@ export interface FileRoutesByTo {
   '/social-content-creator': typeof SocialContentCreatorRoute
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
+  '/visibilite-ia': typeof VisibiliteIaRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
   '/api/external-audit-import': typeof ApiExternalAuditImportRoute
   '/api/render-report-pdf': typeof ApiRenderReportPdfRoute
@@ -1327,6 +1335,7 @@ export interface FileRoutesById {
   '/social-content-creator': typeof SocialContentCreatorRoute
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
+  '/visibilite-ia': typeof VisibiliteIaRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
   '/api/external-audit-import': typeof ApiExternalAuditImportRoute
   '/api/render-report-pdf': typeof ApiRenderReportPdfRoute
@@ -1482,6 +1491,7 @@ export interface FileRouteTypes {
     | '/social-content-creator'
     | '/stratege-cocoon'
     | '/tarifs'
+    | '/visibilite-ia'
     | '/visibilite-llm'
     | '/api/external-audit-import'
     | '/api/render-report-pdf'
@@ -1635,6 +1645,7 @@ export interface FileRouteTypes {
     | '/social-content-creator'
     | '/stratege-cocoon'
     | '/tarifs'
+    | '/visibilite-ia'
     | '/visibilite-llm'
     | '/api/external-audit-import'
     | '/api/render-report-pdf'
@@ -1788,6 +1799,7 @@ export interface FileRouteTypes {
     | '/social-content-creator'
     | '/stratege-cocoon'
     | '/tarifs'
+    | '/visibilite-ia'
     | '/visibilite-llm'
     | '/api/external-audit-import'
     | '/api/render-report-pdf'
@@ -1942,6 +1954,7 @@ export interface RootRouteChildren {
   SocialContentCreatorRoute: typeof SocialContentCreatorRoute
   StrategeCocoonRoute: typeof StrategeCocoonRoute
   TarifsRoute: typeof TarifsRoute
+  VisibiliteIaRoute: typeof VisibiliteIaRoute
   VisibiliteLlmRoute: typeof VisibiliteLlmRoute
   ApiExternalAuditImportRoute: typeof ApiExternalAuditImportRoute
   ApiRenderReportPdfRoute: typeof ApiRenderReportPdfRoute
@@ -2595,6 +2608,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TarifsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/visibilite-ia': {
+      id: '/visibilite-ia'
+      path: '/visibilite-ia'
+      fullPath: '/visibilite-ia'
+      preLoaderRoute: typeof VisibiliteIaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/visibilite-llm': {
       id: '/visibilite-llm'
       path: '/visibilite-llm'
@@ -3158,6 +3178,7 @@ const rootRouteChildren: RootRouteChildren = {
   SocialContentCreatorRoute: SocialContentCreatorRoute,
   StrategeCocoonRoute: StrategeCocoonRoute,
   TarifsRoute: TarifsRoute,
+  VisibiliteIaRoute: VisibiliteIaRoute,
   VisibiliteLlmRoute: VisibiliteLlmRoute,
   ApiExternalAuditImportRoute: ApiExternalAuditImportRoute,
   ApiRenderReportPdfRoute: ApiRenderReportPdfRoute,
