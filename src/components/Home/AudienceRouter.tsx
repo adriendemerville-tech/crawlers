@@ -134,12 +134,60 @@ function CrawlersLogoPulse() {
   );
 }
 
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognition;
+    webkitSpeechRecognition?: new () => SpeechRecognition;
+  }
+}
+
+function getSpeechRecognition(): (new () => SpeechRecognition) | null {
+  if (typeof window === 'undefined') return null;
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
 export function AudienceRouter() {
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
   const [answer, setAnswer] = useState('');
   const [thinking, setThinking] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   // Client-only : jamais rendu en SSR, donc aucun impact sur le HTML indexé.
   useEffect(() => {
@@ -148,8 +196,15 @@ export function AudienceRouter() {
   }, []);
 
   useEffect(() => {
-    if (visible && !thinking) inputRef.current?.focus();
-  }, [visible, thinking]);
+    if (visible && !thinking && !isListening) inputRef.current?.focus();
+  }, [visible, thinking, isListening]);
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+      recognitionRef.current = null;
+    };
+  }, []);
 
   const apply = (choice: AudienceChoice) => {
     persistChoice(choice);
@@ -162,9 +217,63 @@ export function AudienceRouter() {
 
   const submit = () => {
     if (!answer.trim() || thinking) return;
+    recognitionRef.current?.abort();
+    setIsListening(false);
     setThinking(true);
     const choice = classifyAudience(answer);
     window.setTimeout(() => apply(choice), THINKING_DELAY_MS);
+  };
+
+  const toggleVoice = () => {
+    const SpeechRecognitionCtor = getSpeechRecognition();
+    if (!SpeechRecognitionCtor) {
+      // API non disponible : on ne bloque pas la saisie manuelle.
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = 'fr-FR';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const results = event.results;
+      let interim = '';
+      let final = '';
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        const transcript = result[0]?.transcript || '';
+        if (result.isFinal) {
+          final += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+      setAnswer((prev) => {
+        const base = final ? `${prev ? prev + ' ' : ''}${final}`.trim() : prev;
+        return interim ? `${base}${base ? ' ' : ''}${interim}`.trim() : base;
+      });
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
   };
 
   const placeholder = useMemo(() => 'Poser une question', []);
