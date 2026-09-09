@@ -86,11 +86,105 @@ export const runFreePasseDiagnostic = createServerFn({ method: "POST" })
     };
   });
 
+/* ── Workbench : source partagée entre Marina et Parmenion ──
+ *
+ * Marina (gratuit ou payant) écrit déjà ses constats dans
+ * `architect_workbench`. Parmenion lit ces lignes pour éviter de refaire un
+ * audit déjà payé, puis y réinjecte ses propres constats afin que Périclès et
+ * le Content Architect travaillent sur la même vérité.
+ */
+
+const SEVERITY_TO_IMPACT: Record<string, PasseFinding["impact"]> = {
+  critical: "fort",
+  high: "fort",
+  medium: "moyen",
+  low: "faible",
+};
+
+async function findingsFromWorkbench(
+  supabase: { from: (t: string) => any },
+  domain: string,
+  userId: string,
+): Promise<PasseFinding[]> {
+  const { data } = await supabase
+    .from("architect_workbench")
+    .select("id, title, description, severity, finding_category, status")
+    .eq("user_id", userId)
+    .eq("domain", domain)
+    .in("status", ["pending", "assigned", "in_progress"])
+    .order("created_at", { ascending: false })
+    .limit(12);
+
+  const rows = (data ?? []) as Array<{
+    id: string; title: string | null; description: string | null; severity: string | null;
+  }>;
+  return rows
+    .filter((r) => r.title)
+    .map((r) => ({
+      id: `wb_${r.id}`,
+      label: r.title as string,
+      detail: r.description || "Constat repris de votre audit précédent.",
+      impact: SEVERITY_TO_IMPACT[(r.severity || "medium").toLowerCase()] ?? "moyen",
+      fixable: true,
+    }));
+}
+
+function scoreFromFindings(findings: PasseFinding[]): number {
+  const malus = findings.reduce(
+    (acc, f) => acc + (f.impact === "fort" ? 9 : f.impact === "moyen" ? 5 : 2),
+    0,
+  );
+  return Math.max(10, Math.min(95, 100 - malus));
+}
+
+/** Réinjecte les constats Parmenion dans le Workbench (idempotent). */
+async function pushFindingsToWorkbench(
+  userId: string,
+  domain: string,
+  target: string,
+  orderId: string,
+  findings: PasseFinding[],
+): Promise<void> {
+  if (!findings.length) return;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const rows = findings
+      .filter((f) => !f.id.startsWith("wb_"))
+      .map((f) => ({
+        user_id: userId,
+        domain,
+        title: f.label,
+        description: f.detail,
+        severity: f.impact === "fort" ? "high" : f.impact === "moyen" ? "medium" : "low",
+        finding_category: "seo",
+        source_type: "audit_tech" as const,
+        source_function: "parmenion-diagnostic",
+        source_record_id: `parmenion_${orderId}_${f.id}`,
+        target_url: target,
+        status: "pending" as const,
+      }));
+    if (!rows.length) return;
+    await supabaseAdmin
+      .from("architect_workbench")
+      .upsert(rows as never, { onConflict: "source_type,source_record_id" });
+  } catch (e) {
+    console.error("[parmenion] workbench push failed", e);
+  }
+}
+
 /* ── Lot 1 bis / 2 — commande + diagnostic détaillé + correctifs ─ */
 
 export const createParmenionOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ url: z.string().min(3) }).parse(data))
+  .inputValidator((data) =>
+    z
+      .object({
+        url: z.string().min(3),
+        /** true quand l'utilisateur arrive d'un audit Marina déjà réalisé */
+        reuseAudit: z.boolean().optional(),
+      })
+      .parse(data),
+  )
   .handler(async ({ data, context }) => {
     const supabase = context.supabase;
     const userId = context.userId;
@@ -98,6 +192,8 @@ export const createParmenionOrder = createServerFn({ method: "POST" })
 
     const target = normalizeUrl(data.url);
     if (!target) return { error: "invalid_url" as const };
+    const domain = new URL(target).hostname.replace(/^www\./, "");
+
 
     // Reprise : une commande non payée sur la même adresse est réutilisée.
     const { data: existing } = await supabase
