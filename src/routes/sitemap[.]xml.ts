@@ -101,16 +101,20 @@ async function buildSitemap(): Promise<{ xml: string; source: "db" | "fallback";
     // repli silencieux
   }
 
-  // Priorités du repli : la tête du silo GEO passe devant ses satellites.
+  // Priorités du repli : les 4 têtes de silo à 0.9, leurs satellites en dessous.
   const PRIORITY_BY_PATH: Record<string, number> = {
     "/": 1.0,
     "/audit-geo-seo": 0.9,
-    "/marina": 0.9,
+    "/crawl": 0.9,
+    "/comparatif-crawlers-semrush": 0.9,
+    "/blog/crawler-definition-seo-geo": 0.9,
     "/blog": 0.8,
+    "/marina": 0.8,
     "/generative-engine-optimization": 0.8,
     "/audit-geo": 0.8,
     "/audit-seo-geo": 0.7,
   };
+
 
   const rows: Entry[] = FALLBACK_PATHS.map((p) => ({
     loc: `${SITE}${p}`,

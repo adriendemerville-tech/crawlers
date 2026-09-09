@@ -183,6 +183,13 @@
       "when": 1788957801574,
       "tag": "0025_sitemap_priority_geo_head_09",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1788958200250,
+      "tag": "0026_sitemap_pillar_priority_alignment",
+      "breakpoints": true
     }
   ]
 }
