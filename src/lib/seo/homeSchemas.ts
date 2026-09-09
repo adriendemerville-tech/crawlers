@@ -12,6 +12,7 @@
 
 import { SITE_URL } from '@/lib/seo/pageHead';
 import { ORGANIZATION_REF } from '@/lib/seo/organization';
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
 
 const ORG = ORGANIZATION_REF;
 
@@ -203,22 +204,14 @@ const faqPage = {
   })),
 };
 
-const breadcrumbList = {
-  '@type': 'BreadcrumbList',
+const homeBreadcrumbList = {
   '@id': `${SITE_URL}/#breadcrumb`,
-  itemListElement: [
-    {
-      '@type': 'ListItem',
-      position: 1,
-      name: 'Accueil',
-      item: SITE_URL,
-    },
-  ],
+  ...breadcrumbList([{ name: 'Accueil', url: SITE_URL }]),
 };
 
 export const homeJsonLd = [
   {
     '@context': 'https://schema.org',
-    '@graph': [softwareApplication, toolsItemList, audiencesItemList, faqPage, breadcrumbList],
+    '@graph': [softwareApplication, toolsItemList, audiencesItemList, faqPage, homeBreadcrumbList],
   },
 ];

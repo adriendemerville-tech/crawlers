@@ -3,6 +3,7 @@ import CollabInstagramLanding from '@/pages/CollabInstagramLanding';
 import { COLLAB_INSTAGRAM_FAQ } from '@/pages/CollabInstagramLanding.faq';
 import { pageHead, SITE_URL } from '@/lib/seo/pageHead';
 import { ORGANIZATION_REF } from '@/lib/seo/organization';
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
 
 const URL = `${SITE_URL}/collab-instagram`;
 
@@ -29,17 +30,11 @@ const jsonLd = [
   },
   {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: SITE_URL },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Référencement IA & GEO',
-        item: `${SITE_URL}/generative-engine-optimization`,
-      },
-      { '@type': 'ListItem', position: 3, name: 'Collaborations Instagram', item: URL },
-    ],
+    ...breadcrumbList([
+      { name: 'Accueil', url: SITE_URL },
+      { name: 'Référencement IA & GEO', url: `${SITE_URL}/generative-engine-optimization` },
+      { name: 'Collaborations Instagram', url: URL },
+    ]),
   },
 ];
 

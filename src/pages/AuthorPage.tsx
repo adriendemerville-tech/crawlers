@@ -80,9 +80,9 @@ const breadcrumbJsonLd = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   itemListElement: [
-    { "@type": "ListItem", position: 1, name: "Accueil", item: "https://crawlers.fr/" },
-    { "@type": "ListItem", position: 2, name: "Auteurs", item: "https://crawlers.fr/auteur" },
-    { "@type": "ListItem", position: 3, name: FOUNDER.name, item: FOUNDER.url },
+    { "@type": "ListItem", position: 1, name: "Accueil", item: { "@type": "Thing", "@id": "https://crawlers.fr/", name: "Accueil" } },
+    { "@type": "ListItem", position: 2, name: "Auteurs", item: { "@type": "Thing", "@id": "https://crawlers.fr/auteur", name: "Auteurs" } },
+    { "@type": "ListItem", position: 3, name: FOUNDER.name, item: { "@type": "Thing", "@id": FOUNDER.url, name: FOUNDER.name } },
   ],
 };
 

@@ -45,8 +45,8 @@ const structuredData = {
     {
       "@type": "BreadcrumbList",
       "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-        { "@type": "ListItem", "position": 2, "name": "E-E-A-T", "item": "https://crawlers.fr/eeat" }
+        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr", name: "Accueil" }" },
+        { "@type": "ListItem", "position": 2, "name": "E-E-A-T", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/eeat", name: "E-E-A-T" }" }
       ]
     },
     {

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Contact from "@/pages/Contact";
 import { pageHead, SITE_URL } from "@/lib/seo/pageHead";
+import { breadcrumbList } from "@/lib/seo/breadcrumb";
 
 export const Route = createFileRoute("/contact")({
   head: () => pageHead({
@@ -33,11 +34,10 @@ export const Route = createFileRoute("/contact")({
       },
       {
         "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Accueil", item: SITE_URL },
-          { "@type": "ListItem", position: 2, name: "Contact", item: `${SITE_URL}/contact` },
-        ],
+        ...breadcrumbList([
+          { name: "Accueil", url: SITE_URL },
+          { name: "Contact", url: `${SITE_URL}/contact` },
+        ]),
       },
     ],
   }),

@@ -81,8 +81,8 @@ const AuditSeoGratuit = () => {
         "breadcrumb": {
           "@type": "BreadcrumbList",
           "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-            { "@type": "ListItem", "position": 2, "name": "Audit SEO Gratuit", "item": "https://crawlers.fr/audit-seo-gratuit" }
+            { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr", name: "Accueil" }" },
+            { "@type": "ListItem", "position": 2, "name": "Audit SEO Gratuit", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/audit-seo-gratuit", name: "Audit SEO Gratuit" }" }
           ]
         },
         "speakable": { "@type": "SpeakableSpecification", "cssSelector": ["h1", ".citable-passage"] }

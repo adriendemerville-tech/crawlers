@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import MarketplaceBacklinksLanding from '@/pages/MarketplaceBacklinksLanding';
 import { MARKETPLACE_FAQ } from '@/pages/MarketplaceBacklinksLanding.faq';
 import { pageHead, SITE_URL } from '@/lib/seo/pageHead';
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
 
 const URL = `${SITE_URL}/marketplace-backlinks`;
 
@@ -36,17 +37,11 @@ const jsonLd = [
   },
   {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: SITE_URL },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Référencement IA & GEO',
-        item: `${SITE_URL}/generative-engine-optimization`,
-      },
-      { '@type': 'ListItem', position: 3, name: 'Place d’échange de backlinks', item: URL },
-    ],
+    ...breadcrumbList([
+      { name: 'Accueil', url: SITE_URL },
+      { name: 'Référencement IA & GEO', url: `${SITE_URL}/generative-engine-optimization` },
+      { name: 'Place d’échange de backlinks', url: URL },
+    ]),
   },
 ];
 

@@ -8,6 +8,7 @@
 import { SITE_URL } from './pageHead';
 import { ORGANIZATION_REF } from './organization';
 import { resolveArticleDates } from '@/lib/blog/lastUpdated';
+import { breadcrumbList } from './breadcrumb';
 
 
 export interface ArticleJsonLdInput {
@@ -69,13 +70,12 @@ export function buildBreadcrumbJsonLd(
 ) {
   return {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: trail.map((item, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: item.name,
-      item: `${SITE_URL}${item.path === '/' ? '' : item.path}` || SITE_URL,
-    })),
+    ...breadcrumbList(
+      trail.map((item) => ({
+        name: item.name,
+        url: `${SITE_URL}${item.path === '/' ? '' : item.path}` || SITE_URL,
+      })),
+    ),
   };
 }
 

@@ -1,3 +1,5 @@
+import { breadcrumbList } from "@/lib/seo/breadcrumb";
+
 const SITE_URL = "https://crawlers.fr";
 const PATH = "/meilleurs-outils-seo-geo-2027";
 
@@ -44,12 +46,11 @@ export const OUTILS_JSONLD = [
   },
   {
     "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Accueil", item: SITE_URL },
-      { "@type": "ListItem", position: 2, name: "Comparatifs", item: `${SITE_URL}/comparatif-crawlers-semrush` },
-      { "@type": "ListItem", position: 3, name: "Meilleurs outils SEO GEO 2027", item: `${SITE_URL}${PATH}` },
-    ],
+    ...breadcrumbList([
+      { name: "Accueil", url: SITE_URL },
+      { name: "Comparatifs", url: `${SITE_URL}/comparatif-crawlers-semrush` },
+      { name: "Meilleurs outils SEO GEO 2027", url: `${SITE_URL}${PATH}` },
+    ]),
   },
   {
     "@context": "https://schema.org",

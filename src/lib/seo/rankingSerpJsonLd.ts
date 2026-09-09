@@ -48,8 +48,8 @@ export const rankingSerpJsonLd = {
     {
       "@type": "BreadcrumbList",
       "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-        { "@type": "ListItem", "position": 2, "name": "Benchmark Rank SERP", "item": "https://crawlers.fr/app/ranking-serp" }
+        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr", name: "Accueil" }" },
+        { "@type": "ListItem", "position": 2, "name": "Benchmark Rank SERP", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/app/ranking-serp", name: "Benchmark Rank SERP" }" }
       ]
     }
   ]

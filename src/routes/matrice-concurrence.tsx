@@ -3,6 +3,7 @@ import MatriceConcurrence from "@/pages/MatriceConcurrence";
 import { MATRIX_FAQS } from "@/pages/MatriceConcurrence.faq";
 import { pageHead } from "@/lib/seo/pageHead";
 import { ORGANIZATION_REF } from "@/lib/seo/organization";
+import { breadcrumbList } from "@/lib/seo/breadcrumb";
 
 const TITLE = "Matrice de concurrence gratuite — mots-clés Google et citations IA | Crawlers.fr";
 const DESC =
@@ -27,16 +28,10 @@ export const Route = createFileRoute("/matrice-concurrence")({
         },
         {
           "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Accueil", item: "https://crawlers.fr/" },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "Matrice de concurrence",
-              item: "https://crawlers.fr/matrice-concurrence",
-            },
-          ],
+          ...breadcrumbList([
+            { name: "Accueil", url: "https://crawlers.fr/" },
+            { name: "Matrice de concurrence", url: "https://crawlers.fr/matrice-concurrence" },
+          ]),
         },
         {
           "@context": "https://schema.org",

@@ -3,6 +3,7 @@
  * que le head() de la route n'entraîne pas le composant dans le chunk critique.
  */
 import { ORGANIZATION_REF } from '@/lib/seo/organization';
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
 
 export const CANONICAL = 'https://crawlers.fr/comparatif-crawlers-ahrefs';
 
@@ -52,16 +53,10 @@ export const AHREFS_JSONLD = [
   },
   {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://crawlers.fr/' },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Comparatifs',
-        item: 'https://crawlers.fr/comparatif-crawlers-semrush',
-      },
-      { '@type': 'ListItem', position: 3, name: 'Crawlers.fr vs Ahrefs', item: CANONICAL },
-    ],
+    ...breadcrumbList([
+      { name: 'Accueil', url: 'https://crawlers.fr/' },
+      { name: 'Comparatifs', url: 'https://crawlers.fr/comparatif-crawlers-semrush' },
+      { name: 'Crawlers.fr vs Ahrefs', url: CANONICAL },
+    ]),
   },
 ];

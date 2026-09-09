@@ -38,8 +38,8 @@ const AnalyseBotsIA = () => {
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-          { "@type": "ListItem", "position": 2, "name": "Analyse Bots IA", "item": "https://crawlers.fr/analyse-bots-ia" }
+          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr", name: "Accueil" }" },
+          { "@type": "ListItem", "position": 2, "name": "Analyse Bots IA", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/analyse-bots-ia", name: "Analyse Bots IA" }" }
         ]
       },
       {
