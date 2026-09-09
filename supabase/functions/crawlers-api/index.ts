@@ -163,11 +163,29 @@ async function authenticate(req: Request) {
   if (!token) return { error: "missing_api_key" };
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+  // Façade MCP : le jeton est un JWT utilisateur Supabase (OAuth 2.1), pas une clé crw_live_.
+  // La facturation passe alors par mcp_authorize_call et non par le débit legacy de 10 centimes.
+  if (req.headers.get("x-crawlers-auth") === "jwt") {
+    const { data: userData, error: userErr } = await admin.auth.getUser(token);
+    if (userErr || !userData?.user) return { error: "invalid_token" };
+    return {
+      userId: userData.user.id,
+      keyId: null as string | null,
+      scopes: ["mcp"],
+      admin,
+      viaJwt: true,
+      mcpTool: req.headers.get("x-mcp-tool"),
+      mcpKey: req.headers.get("x-mcp-idempotency-key"),
+    };
+  }
+
   const { data, error } = await admin.rpc("crawlers_api_verify_token", { _token: token });
   if (error || !data || data.length === 0) return { error: "invalid_api_key" };
 
-  return { userId: data[0].user_id, keyId: data[0].key_id, scopes: data[0].scopes, admin };
+  return { userId: data[0].user_id, keyId: data[0].key_id, scopes: data[0].scopes, admin, viaJwt: false };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
