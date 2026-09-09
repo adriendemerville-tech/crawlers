@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { callLovableAI, isLovableAIConfigured } from '../_shared/lovableAI.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { computeCrawlPageQuality, resolveBusinessProfile, type CrawlPageInput } from '../_shared/crawlPageQuality.ts';
+import { resolvePillarSet, isPillarUrl, linkPriorityMultiplier } from '../_shared/pillarWeighting.ts';
 
 interface AutoLinkRequest {
   tracked_site_id: string;
