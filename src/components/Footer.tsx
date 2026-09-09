@@ -63,6 +63,12 @@ function FooterComponent() {
       href: '/audit-geo-seo',
       description: t3(language, 'Passe unique : audit, 3 contenus et fiche Google Maps', 'One-off pass: audit, 3 contents and Google Maps listing', 'Pase único: auditoría, 3 contenidos y ficha de Google Maps')
     },
+    {
+      label: t3(language, 'Serveur MCP GEO', 'GEO MCP server', 'Servidor MCP GEO'),
+      href: '/geo-mcp-server',
+      description: t3(language, 'Mesurez votre visibilité IA depuis votre agent', 'Measure your AI visibility from your agent', 'Mida su visibilidad IA desde su agente')
+    },
+
     { 
       label: t3(language, 'Lexique SEO/GEO', 'SEO/GEO Glossary', 'Glosario SEO/GEO'),
       href: '/lexique',
