@@ -305,7 +305,7 @@ function ParmenionLandingComponent(): React.ReactElement {
                     {teaser.teaser.map((t) => (
                       <li key={t.id} className="flex items-center justify-between gap-3 rounded border border-border p-3">
                         <span>{t.label}</span>
-                        <span className="text-xs uppercase tracking-wide text-primary">{t.impact}</span>
+                        <span className="text-xs uppercase tracking-wide text-brand-gold">{t.impact}</span>
                       </li>
                     ))}
                   </ul>
@@ -399,7 +399,7 @@ function ParmenionLandingComponent(): React.ReactElement {
                   'Délai : 72 h après paiement',
                 ].map((line) => (
                   <li key={line} className="flex items-start gap-3">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
                     <span>{line}</span>
                   </li>
                 ))}
@@ -430,14 +430,14 @@ function ParmenionLandingComponent(): React.ReactElement {
             </p>
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="flex gap-4">
-                <Clock className="h-6 w-6 shrink-0 text-primary" />
+                <Clock className="h-6 w-6 shrink-0 text-brand-gold" />
                 <div>
                   <h3 className="mb-1 font-semibold">Délai maîtrisé</h3>
                   <p className="text-sm text-muted-foreground">Vous recevez un calendrier clair. Le déploiement n'intervient qu'après votre validation ferme.</p>
                 </div>
               </div>
               <div className="flex gap-4">
-                <Shield className="h-6 w-6 shrink-0 text-primary" />
+                <Shield className="h-6 w-6 shrink-0 text-brand-gold" />
                 <div>
                   <h3 className="mb-1 font-semibold">Garantie satisfait ou remboursé</h3>
                   <p className="text-sm text-muted-foreground">Tant qu'aucune modification n'est publiée sur votre site ou votre fiche, vous pouvez demander le remboursement intégral.</p>
