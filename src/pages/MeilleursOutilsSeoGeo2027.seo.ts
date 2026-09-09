@@ -1,3 +1,5 @@
+import { breadcrumbList } from "@/lib/seo/breadcrumb";
+
 const SITE_URL = "https://crawlers.fr";
 const PATH = "/meilleurs-outils-seo-geo-2027";
 
