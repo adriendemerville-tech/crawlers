@@ -1,4 +1,3 @@
-import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Link, useLocation, Navigate } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
@@ -25,48 +24,17 @@ export default function KeywordPillarPage() {
 
   if (!data) return <Navigate to="/404" replace />;
 
-  const canonical = `https://crawlers.fr/${data.slug}`;
   const silo = siloForPath(`/${slug}`);
 
-  const articleJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: data.h1,
-    description: data.metaDesc,
-    keywords: data.primaryKeyword,
-    datePublished: data.datePublished,
-    dateModified: data.datePublished,
-    author: { '@type': 'Person', name: 'Adrien de Volontat', url: 'https://crawlers.fr/auteur/adrien-de-volontat' },
-    publisher: { '@type': 'Organization', name: 'Crawlers.fr', url: 'https://crawlers.fr' },
-    mainEntityOfPage: canonical,
-  };
-
-  const faqJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: data.faqs.map(f => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
-    })),
-  };
-
-  const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://crawlers.fr/' },
-      { '@type': 'ListItem', position: 2, name: data.h1, item: canonical },
-    ],
-  };
+  // Passages citables : première phrase des 3 premières sections (visibilité LLM)
+  const citable = data.sections
+    .slice(0, 3)
+    .map(s => (s.body.split(/(?<=\.)\s/)[0] || '').trim())
+    .filter(Boolean);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(articleJsonLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
-      </Helmet>
+
 
       <Header />
 
@@ -78,7 +46,22 @@ export default function KeywordPillarPage() {
         </nav>
 
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">{data.h1}</h1>
-        <p className="text-lg text-foreground/80 leading-relaxed mb-10">{data.intro}</p>
+        <p className="text-lg text-foreground/80 leading-relaxed mb-8">{data.intro}</p>
+
+        <section aria-label="Réponse directe" className="mb-10 rounded-xl border border-border bg-card/40 p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/70 mb-3">
+            Réponse directe
+          </h2>
+          <div className="space-y-3">
+            {citable.map((passage, i) => (
+              <blockquote key={i} className="citable-passage text-base leading-relaxed text-foreground/90 border-l-2 border-primary/60 pl-4">
+                {passage}
+              </blockquote>
+            ))}
+          </div>
+        </section>
+
+
 
         <div className="prose prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-strong:text-foreground">
           {data.sections.map((section, si) => (
