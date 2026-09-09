@@ -13,7 +13,7 @@ export function CrawlersLogo({ size = 20, className = '' }: { size?: number; cla
           <stop offset="0%" style={{ stopColor: '#d4a853' }} />
           <stop offset="30%" style={{ stopColor: '#8b5cf6' }} />
           <stop offset="70%" style={{ stopColor: '#7c3aed' }} />
-          <stop offset="100%" style={{ stopColor: '#3b5998' }} />
+          <stop offset="100%" style={{ stopColor: '#000000' }} />
         </linearGradient>
       </defs>
       <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#chatBotGrad)" />

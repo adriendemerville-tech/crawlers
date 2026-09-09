@@ -1009,7 +1009,7 @@ export function generateExpertReportHTML(
   const brandColor = branding?.primaryColor || '#7c3aed';
   const headerGradient = isWhiteLabel
     ? `linear-gradient(135deg, ${brandColor}, ${brandColor}cc)`
-    : 'linear-gradient(135deg, #7c3aed, #2563eb)';
+    : 'linear-gradient(135deg, #7c3aed, #d4a853)';
 
   const crawlersLogoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="36" height="36" style="vertical-align: middle; margin-right: 8px;">
     <defs>
@@ -1017,7 +1017,7 @@ export function generateExpertReportHTML(
         <stop offset="0%" stop-color="#d4a853"/>
         <stop offset="30%" stop-color="#8b5cf6"/>
         <stop offset="70%" stop-color="#7c3aed"/>
-        <stop offset="100%" stop-color="#3b5998"/>
+        <stop offset="100%" stop-color="#000000"/>
       </linearGradient>
     </defs>
     <rect width="48" height="48" rx="10" fill="url(#rptBg)"/>

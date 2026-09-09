@@ -243,12 +243,12 @@ export function Header() {
                 {(
                   <svg className="h-8 w-8" viewBox="0 0 48 48" aria-hidden="true">
                     <defs>
-                      <linearGradient id="headerBgGradient" x1="100%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#d4a853"/>
-                        <stop offset="30%" stopColor="#8b5cf6"/>
-                        <stop offset="70%" stopColor="#7c3aed"/>
-                        <stop offset="100%" stopColor="#3b5998"/>
-                      </linearGradient>
+                        <linearGradient id="headerBgGradient" x1="100%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#d4a853"/>
+                          <stop offset="30%" stopColor="#8b5cf6"/>
+                          <stop offset="70%" stopColor="#7c3aed"/>
+                          <stop offset="100%" stopColor="#000000"/>
+                        </linearGradient>
                     </defs>
                     <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#headerBgGradient)"/>
                     <g transform="translate(9, 7.5) scale(1.25)" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
