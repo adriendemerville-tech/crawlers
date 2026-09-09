@@ -42,6 +42,7 @@ import { StrategicErrorBoundary } from './StrategicErrorBoundary';
 const TechnicalResultsSection = lazy(() => import('./TechnicalResultsSection').then(m => ({ default: m.TechnicalResultsSection })));
 const StrategicResultsSection = lazy(() => import('./StrategicResultsSection').then(m => ({ default: m.StrategicResultsSection })));
 import { GeoPillarsCard } from './GeoPillarsCard';
+import { RankedKeywordsCard } from '@/components/seo/RankedKeywordsCard';
 import { NextStepFloatingButton } from './NextStepFloatingButton';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
