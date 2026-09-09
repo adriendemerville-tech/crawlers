@@ -474,10 +474,11 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
         )}
       </section>
 
-      {/* Étape 8 / 9 — déploiement et compte rendu */}
+      {/* Étape 9 — déploiement et compte rendu */}
       {paid && (
         <section className="rounded-lg border border-border p-6">
-          <StepTitle n={8}>Déploiement et compte rendu</StepTitle>
+          <StepTitle n={9}>Déploiement et compte rendu</StepTitle>
+
           {order.deployed_at ? (
             <div className="space-y-2 text-sm">
               <p className="flex items-center gap-2 text-primary">
