@@ -204,6 +204,13 @@
       "when": 1788959228146,
       "tag": "0028_passe_fix_registry_and_consent",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1788964014341,
+      "tag": "0029_sitemap_refresh_missing_pages",
+      "breakpoints": true
     }
   ]
 }
