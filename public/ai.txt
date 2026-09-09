@@ -173,6 +173,19 @@ Pipeline backend autonome pour la prospection :
 
 # PAGES PRINCIPALES
 Homepage (outils gratuits): https://crawlers.fr/
+Audit GEO SEO (page de référence, offre 59 € TTC): https://crawlers.fr/audit-geo-seo
+Passe visibilité (diagnostic + correctifs + contenus + Google Maps): https://crawlers.fr/passe-visibilite
+Audit GEO gratuit (232 points): https://crawlers.fr/audit-geo
+Méthode d'audit SEO GEO: https://crawlers.fr/audit-seo-geo
+Audit SEO par IA: https://crawlers.fr/audit-seo-par-ia
+Visibilité IA (citations dans les réponses LLM): https://crawlers.fr/visibilite-ia
+Serveur MCP GEO (visibilité IA par agent): https://crawlers.fr/geo-mcp-server
+SEO MCP Server (EN): https://crawlers.fr/seo-mcp-server
+SEO avec Claude (MCP): https://crawlers.fr/seo-avec-claude
+Référencement IA & GEO (guide complet): https://crawlers.fr/generative-engine-optimization
+Outil de crawl de site web: https://crawlers.fr/crawl
+Comparatif Crawlers.fr vs Semrush: https://crawlers.fr/comparatif-crawlers-semrush
+Crawler : définition SEO & GEO: https://crawlers.fr/blog/crawler-definition-seo-geo
 Audit Expert (Check-up technique & stratégique): https://crawlers.fr/audit-expert
 Audit Comparé (Analyse concurrentielle face-à-face): https://crawlers.fr/audit-compare
 Crawl Multi-Pages (Analyse récursive de site entier): https://crawlers.fr/site-crawl

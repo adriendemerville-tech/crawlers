@@ -267,6 +267,19 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 
 # 📌 LIENS PRINCIPAUX
 
+- **Audit GEO SEO (page de référence)** : https://crawlers.fr/audit-geo-seo
+- **Passe visibilité (59 € TTC)** : https://crawlers.fr/passe-visibilite
+- **Audit GEO gratuit (232 points)** : https://crawlers.fr/audit-geo
+- **Méthode d'audit SEO GEO** : https://crawlers.fr/audit-seo-geo
+- **Audit SEO par IA** : https://crawlers.fr/audit-seo-par-ia
+- **Visibilité IA (citations LLM)** : https://crawlers.fr/visibilite-ia
+- **Serveur MCP GEO** : https://crawlers.fr/geo-mcp-server
+- **SEO MCP Server (EN)** : https://crawlers.fr/seo-mcp-server
+- **SEO avec Claude (MCP)** : https://crawlers.fr/seo-avec-claude
+- **Référencement IA & GEO (guide)** : https://crawlers.fr/generative-engine-optimization
+- **Outil de crawl de site** : https://crawlers.fr/crawl
+- **Comparatif Crawlers.fr vs Semrush** : https://crawlers.fr/comparatif-crawlers-semrush
+- **Crawler : définition SEO & GEO** : https://crawlers.fr/blog/crawler-definition-seo-geo
 - **Audit Principal** : https://crawlers.fr/audit-expert
 - **Audit Comparé** : https://crawlers.fr/audit-compare
 - **Crawl Multi-Pages** : https://crawlers.fr/site-crawl

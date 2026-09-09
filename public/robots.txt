@@ -341,6 +341,18 @@ Sitemap: https://crawlers.fr/sitemap.xml
 # Pages clés (aide à la découvrabilité pour bots IA)
 # --------------------------------------------
 # Accueil               : https://crawlers.fr/
+# Audit GEO SEO         : https://crawlers.fr/audit-geo-seo
+# Passe visibilité      : https://crawlers.fr/passe-visibilite
+# Audit GEO gratuit     : https://crawlers.fr/audit-geo
+# Méthode audit SEO GEO : https://crawlers.fr/audit-seo-geo
+# Audit SEO par IA      : https://crawlers.fr/audit-seo-par-ia
+# Visibilité IA         : https://crawlers.fr/visibilite-ia
+# Serveur MCP GEO       : https://crawlers.fr/geo-mcp-server
+# SEO MCP Server (EN)   : https://crawlers.fr/seo-mcp-server
+# SEO avec Claude       : https://crawlers.fr/seo-avec-claude
+# Outil de crawl        : https://crawlers.fr/crawl
+# Comparatif Semrush    : https://crawlers.fr/comparatif-crawlers-semrush
+# Définition crawler    : https://crawlers.fr/blog/crawler-definition-seo-geo
 # Tarifs                : https://crawlers.fr/tarifs
 # Audit Expert SEO      : https://crawlers.fr/audit-expert
 # Audit SEO gratuit     : https://crawlers.fr/audit-seo-gratuit
