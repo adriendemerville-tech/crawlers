@@ -218,6 +218,13 @@
       "when": 1788964209313,
       "tag": "0030_sitemap_prune_redirects_and_404",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1788966007926,
+      "tag": "0031_restrict_ga4_metric_writes_to_service_role",
+      "breakpoints": true
     }
   ]
 }
