@@ -326,10 +326,18 @@ export function AudienceRouter() {
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
-                  aria-label="Dictée vocale"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={toggleVoice}
+                  aria-label={isListening ? 'Arrêter la dictée vocale' : 'Dictée vocale'}
+                  className={`
+                    flex h-8 w-8 items-center justify-center rounded-full border transition-colors
+                    ${
+                      isListening
+                        ? 'border-violet-500 text-violet-500 hover:bg-violet-500/10'
+                        : 'border-foreground/30 text-foreground hover:border-foreground hover:bg-foreground/5'
+                    }
+                  `}
                 >
-                  <Mic className="h-5 w-5" />
+                  <Mic className={`h-5 w-5 ${isListening ? 'animate-pulse' : ''}`} />
                 </button>
                 <button
                   type="button"
