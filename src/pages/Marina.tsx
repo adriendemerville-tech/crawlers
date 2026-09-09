@@ -1020,6 +1020,7 @@ export default function Marina() {
                       intro="Votre audit est prêt. Comparez maintenant votre visibilité à celle de vos concurrents sur les 20 requêtes clés de votre marché, dans Google et dans les réponses des IA."
                     />
                     <ParmenionCta
+                      url={auditUrl || undefined}
                       className="max-w-md mx-auto mt-4 text-left"
                       intro="Votre audit identifie les points à corriger. Faites appliquer les correctifs, rédiger 3 pages et optimiser votre fiche Google Maps — une seule fois, à prix fixe."
                     />

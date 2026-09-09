@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useRef, lazy, Suspense } from 'react';
+import { memo, useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Input } from '@/components/ui/input';
@@ -120,6 +120,33 @@ function ParmenionLandingComponent(): React.ReactElement {
       setOrdering(false);
     }
   }, [url, user, focusInput]);
+
+  // Arrivée depuis un audit Marina déjà réalisé : on saute l'analyse gratuite
+  // et on démarre la passe directement sur les constats du Workbench.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (autoStarted.current || typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const incoming = params.get('url');
+    if (!incoming) return;
+    autoStarted.current = true;
+    setUrl(incoming);
+    if (params.get('from') === 'marina' && user) {
+      void (async () => {
+        setOrdering(true);
+        try {
+          const result = await createParmenionOrder({ data: { url: incoming, reuseAudit: true } });
+          if ('error' in result || !result.orderId) return;
+          setSession({ orderId: result.orderId, passToken: result.passToken, priceId: result.priceId });
+          requestAnimationFrame(() =>
+            resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+          );
+        } finally {
+          setOrdering(false);
+        }
+      })();
+    }
+  }, [user]);
 
 
   return (
