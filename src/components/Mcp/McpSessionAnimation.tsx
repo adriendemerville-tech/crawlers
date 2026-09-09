@@ -31,7 +31,8 @@ interface Props {
   caption: string;
 }
 
-const STEP_DELAY = 1000;
+const STEP_DELAY = 2000;
+const THINKING_DELAY = 1200;
 
 const toneClass: Record<McpTone, string> = {
   good: 'text-[#1a7f37] dark:text-[#4ac26b]',
