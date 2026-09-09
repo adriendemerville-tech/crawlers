@@ -209,6 +209,14 @@ export async function computeCannibalization(
     md.push('');
   }
   if (detailed.length > 12) md.push(`_… ${detailed.length - 12} autres clusters non détaillés._`);
+  if (pillarConflicts.length > 0) {
+    md.push('');
+    md.push(`### Alerte forte — ${pillarConflicts.length} conflit(s) entre pages piliers`);
+    md.push(`_Deux pages piliers partagent la même intention (recouvrement > ${Math.round(PILLAR_CANNIB_JACCARD * 100)} %) : le maillage se scinde entre deux hubs._`);
+    for (const c of pillarConflicts.slice(0, 8)) {
+      md.push(`- **${c.a.path}** vs **${c.b.path}** (recouvrement ${Math.round(c.jaccard * 100)} %) — garder un seul pilier, l'autre devient satellite.`);
+    }
+  }
 
   return {
     ok: true,
