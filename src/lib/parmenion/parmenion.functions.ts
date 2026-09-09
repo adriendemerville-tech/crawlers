@@ -695,7 +695,7 @@ export const deployPasseOrder = createServerFn({ method: "POST" })
         step: allDone ? 9 : 8,
         report: {
           before: { score: (order.diagnostic as { score?: number } | null)?.score ?? null, findings: order.findings },
-          after: { published, gmb: gmbStatus },
+          after: { published, gmb: gmbStatus, fixes: fixResults },
           at: new Date().toISOString(),
         } as never,
         updated_at: new Date().toISOString(),
@@ -703,9 +703,10 @@ export const deployPasseOrder = createServerFn({ method: "POST" })
       .eq("id", data.orderId)
       .eq("user_id", userId);
 
-    await log(allDone ? "deployed" : "deploy_partial", { published, gmb: gmbStatus });
+    await log(allDone ? "deployed" : "deploy_partial", { published, gmb: gmbStatus, fixes: fixResults });
 
-    return { deployed: allDone, published, gmb: gmbStatus };
+    return { deployed: allDone, published, gmb: gmbStatus, fixes: fixResults };
+
   });
 
 /* ── aperçu fiche Google Maps validé avant écriture ───────── */
