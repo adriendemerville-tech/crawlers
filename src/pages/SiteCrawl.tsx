@@ -837,6 +837,10 @@ export default function SiteCrawl() {
               {/* Intégrité du contenu : quasi-doublons + contenus pauvres */}
               <ContentIntegrityPanel crawlId={viewingCrawlId || crawlResult?.id} />
 
+              {/* Mots-clés positionnés du domaine (DataForSEO) */}
+              <RankedKeywordsCard data={crawlResult.ranked_keywords} />
+
+
 
 
               {/* Export & Actions bar */}
