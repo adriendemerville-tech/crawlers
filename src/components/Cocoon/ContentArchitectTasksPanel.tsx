@@ -42,7 +42,7 @@ export function ContentArchitectTasksPanel({ domain, trackedSiteId, onApplyTask 
 
     supabase
       .from('architect_workbench')
-      .select('id, title, description, severity, finding_category, status')
+      .select('id, title, description, severity, finding_category, status, payload')
       .eq('user_id', user.id)
       .eq('domain', domain)
       .in('status', ['pending', 'in_progress', 'assigned'])
