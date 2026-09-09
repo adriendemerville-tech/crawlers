@@ -10,6 +10,33 @@ import {
 } from "d3-force";
 import { Plus, Minus, Maximize2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { detectPillarPages } from "@/lib/cocoon/pillarPages";
+
+/**
+ * Les pages piliers sont rendues en carré (arrondi) plutôt qu'en cercle, pour
+ * les distinguer d'un coup d'œil dans le graphe.
+ */
+function nodeShapePath(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  rad: number,
+  square: boolean,
+) {
+  ctx.beginPath();
+  if (!square) {
+    ctx.arc(x, y, rad, 0, Math.PI * 2);
+    return;
+  }
+  const s = rad * 0.92;
+  const corner = Math.max(0.5, s * 0.22);
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(x - s, y - s, s * 2, s * 2, corner);
+  } else {
+    ctx.rect(x - s, y - s, s * 2, s * 2);
+  }
+}
+
 
 // ─── Types ───
 interface SemanticNode {
