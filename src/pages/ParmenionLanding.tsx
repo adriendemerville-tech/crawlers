@@ -560,17 +560,22 @@ function ParmenionLandingComponent(): React.ReactElement {
           </div>
         </section>
 
-        {/* Maillage interne */}
+        {/* Maillage interne — tête du silo GEO */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
-            <h2 className="mb-6 font-display text-xl font-bold sm:text-2xl">Pour aller <span className="text-brand-violet">plus loin</span></h2>
+            <h2 className="mb-6 font-display text-xl font-bold sm:text-2xl">Tout le silo <span className="text-brand-violet">visibilité IA</span></h2>
+            <Suspense fallback={null}>
+              <SiloNav
+                silo="geo"
+                currentPath="/audit-geo-seo"
+                heading="Les pages rattachées à cet audit"
+                className="mb-8 rounded-3xl bg-card"
+              />
+            </Suspense>
+            <h3 className="mb-4 font-display text-lg font-semibold">Autres ressources</h3>
             <ul className="grid gap-3 sm:grid-cols-2">
               {[
-                ['/marina', 'Audit de visibilité complet avec rapport détaillé'],
                 ['/audit-expert', 'Audit technique SEO en 200 points, gratuit'],
-                ['/audit-seo-geo', "La méthode d'audit SEO GEO en détail (guide)"],
-                ['/generative-engine-optimization', "Comprendre le GEO : être cité par les IA génératives"],
-
                 ['/matrice-concurrence', 'Comparer votre visibilité à celle de vos concurrents'],
                 ['/tarifs', 'Suivre votre visibilité dans le temps avec un abonnement'],
                 ['/lexique', 'Lexique des termes SEO et GEO'],
@@ -584,6 +589,7 @@ function ParmenionLandingComponent(): React.ReactElement {
             </ul>
           </div>
         </section>
+
 
         {/* Urgence */}
         <section className="border-b border-border">
