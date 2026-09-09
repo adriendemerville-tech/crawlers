@@ -29,17 +29,11 @@ export const Route = createFileRoute("/audit-geo")({
         },
         {
           "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Accueil", item: "https://crawlers.fr/" },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "Generative Engine Optimization",
-              item: "https://crawlers.fr/generative-engine-optimization",
-            },
-            { "@type": "ListItem", position: 3, name: "Audit GEO", item: "https://crawlers.fr/audit-geo" },
-          ],
+          ...breadcrumbList([
+            { name: "Accueil", url: "https://crawlers.fr/" },
+            { name: "Generative Engine Optimization", url: "https://crawlers.fr/generative-engine-optimization" },
+            { name: "Audit GEO", url: "https://crawlers.fr/audit-geo" },
+          ]),
         },
         {
           "@context": "https://schema.org",

@@ -55,10 +55,9 @@ export const OUTIL_CRAWL_JSONLD = [
   },
   {
     '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://crawlers.fr/' },
-      { '@type': 'ListItem', position: 2, name: 'Outil de crawl', item: CANONICAL },
-    ],
+    ...breadcrumbList([
+      { name: 'Accueil', url: 'https://crawlers.fr/' },
+      { name: 'Outil de crawl', url: CANONICAL },
+    ]),
   },
 ];

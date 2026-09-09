@@ -40,12 +40,11 @@ const articleSD = {
 
 const breadcrumbSD = {
   "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Accueil", "item": SITE_URL },
-    { "@type": "ListItem", "position": 2, "name": "Comparatifs", "item": `${SITE_URL}/comparatif-crawlers-semrush` },
-    { "@type": "ListItem", "position": 3, "name": "Crawlers.fr vs Semrush", "item": `${SITE_URL}/comparatif-crawlers-semrush` },
-  ],
+  ...breadcrumbList([
+    { name: "Accueil", url: SITE_URL },
+    { name: "Comparatifs", url: `${SITE_URL}/comparatif-crawlers-semrush` },
+    { name: "Crawlers.fr vs Semrush", url: `${SITE_URL}/comparatif-crawlers-semrush` },
+  ]),
 };
 
 const faqItems = [

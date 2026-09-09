@@ -70,16 +70,10 @@ export const Route = createFileRoute("/geo-mcp-server")({
         },
         {
           "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Accueil", item: "https://crawlers.fr/" },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "Serveur MCP GEO",
-              item: "https://crawlers.fr/geo-mcp-server",
-            },
-          ],
+          ...breadcrumbList([
+            { name: "Accueil", url: "https://crawlers.fr/" },
+            { name: "Serveur MCP GEO", url: "https://crawlers.fr/geo-mcp-server" },
+          ]),
         },
       ],
     }),

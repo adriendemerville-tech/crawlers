@@ -39,16 +39,10 @@ export const Route = createFileRoute("/seo-mcp-server")({
         },
         {
           "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://crawlers.fr/" },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "SEO MCP server",
-              item: "https://crawlers.fr/seo-mcp-server",
-            },
-          ],
+          ...breadcrumbList([
+            { name: "Home", url: "https://crawlers.fr/" },
+            { name: "SEO MCP server", url: "https://crawlers.fr/seo-mcp-server" },
+          ]),
         },
       ],
     }),
