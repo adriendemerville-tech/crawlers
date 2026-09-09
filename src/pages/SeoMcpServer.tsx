@@ -80,27 +80,39 @@ export default function SeoMcpServer() {
           windowTitle="Claude Code — Crawlers MCP server"
           caption="Typographic reproduction of a real session: audit, fix, re-audit."
           steps={[
-            { kind: 'user', text: 'Connect the Crawlers MCP server and audit /contact.' },
+            { kind: 'user', text: 'Connect the Crawlers.fr MCP server' },
+            { kind: 'assistant', text: 'Connecting to the Crawlers MCP server.' },
             {
-              kind: 'tool',
-              name: 'connect',
-              args: 'https://crawlers.fr/mcp  ·  Streamable HTTP  ·  OAuth 2.1\n→ connected: 14 tools, 3 resources',
+              kind: 'connect',
+              text: 'https://crawlers.fr/mcp · Streamable HTTP · OAuth 2.1 — connected: 14 tools, 3 resources',
             },
+            { kind: 'user', text: 'Audit the SEO of /contact.' },
+            { kind: 'assistant', text: 'I’ll use the audit_page tool to analyse the page.' },
             {
               kind: 'tool',
               name: 'audit_page',
               args: '{ "url": "https://example.com/contact" }',
             },
             {
-              kind: 'result',
-              lines: [
-                'score: 61/100',
-                'SEO-CANON-002  high    missing canonical',
-                'SEO-H1-001     high    no h1 in served HTML',
-                'SEO-META-007   medium  meta description too short',
+              kind: 'dashboard',
+              title: 'Results — audit_page',
+              metrics: [
+                { label: 'SEO score', value: '61/100', tone: 'warn' },
+                { label: 'Findings', value: '3', tone: 'warn' },
+                { label: 'Critical', value: '2', tone: 'bad' },
+                { label: 'Fixes available', value: '3/3', tone: 'good' },
+              ],
+              rows: [
+                { id: 'SEO-CANON-002', severity: 'high', label: 'Missing canonical' },
+                { id: 'SEO-H1-001', severity: 'high', label: 'No h1 in served HTML' },
+                { id: 'SEO-META-007', severity: 'medium', label: 'Meta description too short' },
               ],
             },
-            { kind: 'user', text: 'Fix the high severity findings for Next.js.' },
+            {
+              kind: 'assistant',
+              text: 'Want me to export these findings, or fix the two critical ones with get_fix?',
+            },
+            { kind: 'user', text: 'Fix the critical ones for Next.js.' },
             {
               kind: 'tool',
               name: 'get_fix',
@@ -119,17 +131,13 @@ export default function SeoMcpServer() {
               text: 'Patches applied. Re-auditing to confirm the findings are gone.',
             },
             {
-              kind: 'tool',
-              name: 'audit_page',
-              args: '{ "url": "https://example.com/contact", "compare_to": "run_4c07" }',
-            },
-            {
-              kind: 'result',
-              lines: [
-                'score: 61 → 94',
-                'SEO-CANON-002: resolved',
-                'SEO-H1-001: resolved',
-                'SEO-META-007: still open',
+              kind: 'dashboard',
+              title: 'Verification — audit_page (comparison)',
+              metrics: [
+                { label: 'SEO score', value: '61 → 94', tone: 'good' },
+                { label: 'SEO-CANON-002', value: 'Resolved', tone: 'good' },
+                { label: 'SEO-H1-001', value: 'Resolved', tone: 'good' },
+                { label: 'SEO-META-007', value: 'Open', tone: 'warn' },
               ],
             },
           ]}
