@@ -34,3 +34,6 @@
 - [Calibration du GEO par la citation réelle](mem://tech/audit/geo-citation-calibration-fr) — Modulation ±10 % du score des 10 sous-signaux par le benchmark LLM observé ; bandeau Marina sur le score déterministe, jamais la note LLM
 - [Matrice concurrence — leaders lus dans la SERP](mem://tech/competitor-matrix/serp-first-leader-detection-fr) — Deux passes SERP, type `leader`, requalification des goliaths, quick wins
 - [Diagnostic timeout Google OAuth](mem://tech/security/google-oauth-timeout-diagnosis-fr) — 504 sur /authorize, test discriminant provider non configuré, redémarrage backend
+- [MCP tarification hybride & tokens](knowledge/tech/mcp/tarification-hybride-et-tokens-fr.md) — Classes free/overflow/paid_only, micro-crédits, mcp_authorize_call, attribute_ai_tokens
+- [Pondération CrUX des Core Web Vitals](knowledge/tech/audit/crux-weighting-core-web-vitals-fr.md) — Multiplicateur 0,82–1,12, amorti 60 % sur origine, neutre sans donnée
+- [Périclès boucle fermée](knowledge/tech/autopilot/pericles-boucle-fermee-fr.md) — Récompense GSC T+14, exclusion validate_attempts >= 3, gel à −15 sur 5 mesures
