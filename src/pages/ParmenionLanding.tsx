@@ -420,6 +420,58 @@ function ParmenionLandingComponent(): React.ReactElement {
         </section>
 
 
+        {/* Aperçu du rapport */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
+            <h2 className="mb-3 font-display text-2xl font-bold sm:text-3xl">
+              Ce que vous recevez <span className="text-brand-violet">pour 59 €</span>
+            </h2>
+            <p className="mb-10 max-w-3xl text-muted-foreground">
+              Un rapport clair, chiffré et actionnable : vos scores avant / après, les mots-clés qui comptent pour votre activité, et chaque correctif expliqué ligne par ligne.
+            </p>
+            <Suspense fallback={<div className="h-96 rounded-3xl border border-border bg-card" />}>
+              <AuditReportPreview />
+            </Suspense>
+          </div>
+        </section>
+
+        {/* Comparatif agence vs Crawlers */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
+            <h2 className="mb-3 font-display text-2xl font-bold sm:text-3xl">
+              Une agence facture <span className="text-brand-violet">des milliers d'euros</span> pour la même chose
+            </h2>
+            <p className="mb-10 max-w-3xl text-muted-foreground">
+              Audit, contenus et fiche Google Maps : c'est le cœur de la prestation d'une agence SEO locale. La différence, c'est le prix et le délai.
+            </p>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+                <h3 className="mb-1 font-display text-lg font-semibold">Agence SEO classique</h3>
+                <p className="mb-6 text-sm text-muted-foreground">Prestation équivalente</p>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex justify-between gap-3 border-b border-border pb-2"><span>Audit technique</span><span className="font-semibold text-foreground">800 – 1 500 €</span></li>
+                  <li className="flex justify-between gap-3 border-b border-border pb-2"><span>3 contenus rédigés</span><span className="font-semibold text-foreground">450 – 900 €</span></li>
+                  <li className="flex justify-between gap-3 border-b border-border pb-2"><span>Fiche Google Maps</span><span className="font-semibold text-foreground">150 – 300 €</span></li>
+                  <li className="flex justify-between gap-3 border-b border-border pb-2"><span>Délai moyen</span><span className="font-semibold text-foreground">3 à 6 semaines</span></li>
+                  <li className="flex justify-between gap-3 pt-1"><span>Total</span><span className="font-semibold text-foreground">1 400 – 2 700 €</span></li>
+                </ul>
+              </div>
+              <div className="rounded-3xl border-2 border-brand-violet bg-card p-8 shadow-sm">
+                <h3 className="mb-1 font-display text-lg font-semibold text-brand-violet">Passe Crawlers</h3>
+                <p className="mb-6 text-sm text-muted-foreground">Le même périmètre, borné et transparent</p>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>Audit technique et GEO complet</span></li>
+                  <li className="flex items-start gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>3 contenus rédigés, relus et validés par vous</span></li>
+                  <li className="flex items-start gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>Fiche Google Maps optimisée</span></li>
+                  <li className="flex items-start gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>Déployé sous 72 h ouvrées, rien sans votre accord</span></li>
+                  <li className="flex items-start gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" /><span>Remboursé intégralement avant déploiement</span></li>
+                </ul>
+                <p className="mt-6 text-3xl font-bold">59 € <span className="text-base font-normal text-muted-foreground">TTC, une seule fois</span></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Price card */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
