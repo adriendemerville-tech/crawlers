@@ -361,6 +361,29 @@ function ParmenionLandingComponent(): React.ReactElement {
           </div>
         </section>
 
+        {/* Maillage interne */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+            <h2 className="mb-6 text-xl font-bold sm:text-2xl">Pour aller plus loin</h2>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {[
+                ['/marina', 'Audit de visibilité complet avec rapport détaillé'],
+                ['/audit-expert', 'Audit technique SEO en 200 points, gratuit'],
+                ['/generative-engine-optimization', "Comprendre le GEO : être cité par les IA génératives"],
+                ['/matrice-concurrence', 'Comparer votre visibilité à celle de vos concurrents'],
+                ['/tarifs', 'Suivre votre visibilité dans le temps avec un abonnement'],
+                ['/lexique', 'Lexique des termes SEO et GEO'],
+              ].map(([href, label]) => (
+                <li key={href}>
+                  <Link to={href} className="text-sm underline hover:no-underline">
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
         {/* Final CTA */}
         <section>
           <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:py-24">
