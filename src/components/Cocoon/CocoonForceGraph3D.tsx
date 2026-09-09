@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { Plus, Minus, Maximize2, CircleDot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { detectPillarPages } from "@/lib/cocoon/pillarPages";
 
 // ─── Types ───
 interface SemanticNode {
@@ -42,6 +43,7 @@ interface GraphNode3D {
   depth: number;
   pageType: string;
   isHome: boolean;
+  isPillar: boolean;
   pageAuthority: number;
   linksIn: number;
   linksOut: number;
@@ -376,7 +378,9 @@ function NodeSphere({
 
       {/* Opaque border ring — uses node color for all nodes */}
       <mesh ref={node.isHome ? glowRef : undefined}>
-        <sphereGeometry args={[r * (node.isHome ? 1.18 : 1.12), 24, 24]} />
+        {node.isPillar
+          ? <boxGeometry args={[r * 1.9, r * 1.9, r * 1.9]} />
+          : <sphereGeometry args={[r * (node.isHome ? 1.18 : 1.12), 24, 24]} />}
         <meshBasicMaterial
           color={color}
           transparent
@@ -391,7 +395,9 @@ function NodeSphere({
         onPointerOut={(e) => { e.stopPropagation(); onPointerOut(); }}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
       >
-        <sphereGeometry args={[r, 24, 24]} />
+        {node.isPillar
+          ? <boxGeometry args={[r * 1.7, r * 1.7, r * 1.7]} />
+          : <sphereGeometry args={[r, 24, 24]} />}
         <meshStandardMaterial
           color={color}
           emissive={color}
@@ -406,7 +412,9 @@ function NodeSphere({
       {/* Inner bright core — teinté, pour ne pas blanchir la couleur du type */}
       {!isGhost && (
         <mesh>
-          <sphereGeometry args={[r * (node.isHome ? 0.35 : 0.42), 16, 16]} />
+          {node.isPillar
+            ? <boxGeometry args={[r * 0.8, r * 0.8, r * 0.8]} />
+            : <sphereGeometry args={[r * (node.isHome ? 0.35 : 0.42), 16, 16]} />}
           <meshBasicMaterial
             color={node.isHome ? "#ffffff" : color}
             transparent
@@ -929,6 +937,8 @@ export function CocoonForceGraph3D({
     const minNodeRadius3D = 0.4;
     const maxNodeRadius3D = 2.0;
 
+    const pillarIds = detectPillarPages(nodes, homeId);
+
     const gNodes: GraphNode3D[] = nodes.map((n, i) => {
       const crawlDepth = n.crawl_depth ?? n.depth ?? 0;
       const isHome = n.id === homeId;
@@ -955,6 +965,7 @@ export function CocoonForceGraph3D({
         depth: crawlDepth,
         pageType: n.page_type || "unknown",
         isHome,
+        isPillar: !isHome && pillarIds.has(n.id),
         pageAuthority: n.page_authority ?? 0,
         linksIn: n.internal_links_in ?? 0,
         linksOut: n.internal_links_out ?? 0,
