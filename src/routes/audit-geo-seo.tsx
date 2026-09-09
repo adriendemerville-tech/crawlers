@@ -63,9 +63,9 @@ export const Route = createFileRoute('/audit-geo-seo')({
               '@type': 'BreadcrumbList',
               '@id': `${URL}#breadcrumb`,
               itemListElement: [
-                { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SITE_URL}/` },
-                { '@type': 'ListItem', position: 2, name: 'Tarifs', item: `${SITE_URL}/tarifs` },
-                { '@type': 'ListItem', position: 3, name: 'Audit GEO SEO local', item: URL },
+                { '@type': 'ListItem', position: 1, name: 'Accueil', item: { '@type': 'Thing', '@id': `${SITE_URL}/`, name: 'Accueil' } },
+                { '@type': 'ListItem', position: 2, name: 'Tarifs', item: { '@type': 'Thing', '@id': `${SITE_URL}/tarifs`, name: 'Tarifs' } },
+                { '@type': 'ListItem', position: 3, name: 'Audit GEO SEO local', item: { '@type': 'Thing', '@id': URL, name: 'Audit GEO SEO local' } },
               ],
             },
             {
@@ -86,6 +86,7 @@ export const Route = createFileRoute('/audit-geo-seo')({
                 name: 'Passe visibilité — paiement unique',
                 price: '59',
                 priceCurrency: 'EUR',
+                image: DEFAULT_OG_IMAGE,
                 priceSpecification: {
                   '@type': 'UnitPriceSpecification',
                   price: '59',
@@ -93,6 +94,7 @@ export const Route = createFileRoute('/audit-geo-seo')({
                   valueAddedTaxIncluded: true,
                 },
                 priceValidUntil: '2027-12-31',
+                validFrom: '2026-01-01',
                 availability: 'https://schema.org/InStock',
                 url: URL,
                 areaServed: { '@type': 'Country', name: 'France' },
@@ -101,6 +103,23 @@ export const Route = createFileRoute('/audit-geo-seo')({
                 acceptedPaymentMethod: {
                   '@type': 'PaymentMethod',
                   name: 'Carte bancaire',
+                },
+                shippingDetails: {
+                  '@type': 'OfferShippingDetails',
+                  shippingRate: { '@type': 'MonetaryAmount', value: '0', currency: 'EUR' },
+                  shippingDestination: { '@type': 'DefinedRegion', name: 'France' },
+                  deliveryTime: {
+                    '@type': 'ShippingDeliveryTime',
+                    handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'd' },
+                    transitTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 0, unitCode: 'd' },
+                  },
+                },
+                hasMerchantReturnPolicy: {
+                  '@type': 'MerchantReturnPolicy',
+                  returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted',
+                  merchantReturnDays: 0,
+                  returnMethod: 'https://schema.org/ReturnAtKiosk',
+                  returnFees: 'https://schema.org/FreeReturn',
                 },
               },
             },
