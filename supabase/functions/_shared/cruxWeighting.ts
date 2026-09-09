@@ -148,3 +148,48 @@ export function computeCruxWeighting(
     note,
   };
 }
+
+/**
+ * Bloc HTML pour les rapports (Marina) : dit toujours si le terrain CrUX a
+ * pondéré les Core Web Vitals, dans quel sens, et sinon pourquoi il ne l'a pas
+ * fait. Sans cette phrase, un score pondéré serait invérifiable par le lecteur.
+ */
+export function cruxWeightingBlockHTML(w: CruxWeighting | null | undefined, lang?: string): string {
+  if (!w) return '';
+  const isEn = lang === 'en';
+  const isEs = lang === 'es';
+  const t = (fr: string, en: string, es: string) => (isEn ? en : isEs ? es : fr);
+  const VIOLET = '#7C3AED';
+
+  const pct = Math.round((w.multiplier - 1) * 100);
+  const title = t(
+    'Core Web Vitals pondérés par les utilisateurs réels',
+    'Core Web Vitals weighted by real users',
+    'Core Web Vitals ponderados por usuarios reales',
+  );
+
+  const body = !w.available
+    ? t(
+        'Aucune donnée de terrain CrUX : le trafic Chrome de cette page est sous le seuil de publication. Les Core Web Vitals ne sont donc pas pondérés et le score repose sur la mesure laboratoire.',
+        'No CrUX field data: this page is below the Chrome traffic threshold. Core Web Vitals are not weighted and the score relies on lab measurement.',
+        'Sin datos de campo CrUX: el tráfico de Chrome está por debajo del umbral. No se ponderan los Core Web Vitals.',
+      )
+    : `${esc(w.note)} ${
+        pct === 0
+          ? t('Effet net nul sur le score.', 'Net effect on the score: none.', 'Efecto neto nulo.')
+          : t(
+              `Effet net sur l'axe performance : ${pct > 0 ? '+' : ''}${pct} %.`,
+              `Net effect on the performance axis: ${pct > 0 ? '+' : ''}${pct}%.`,
+              `Efecto neto: ${pct > 0 ? '+' : ''}${pct} %.`,
+            )
+      }`;
+
+  return `<div style="margin-top:12px;padding:12px 14px;border:1px solid #e5e7eb;border-left:3px solid ${VIOLET};border-radius:8px;background:#ffffff;page-break-inside:avoid;text-align:left;">
+    <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;margin:0 0 6px 0;">${title}</p>
+    <p style="font-size:12px;color:#374151;line-height:1.6;margin:0;">${body}</p>
+  </div>`;
+}
+
+function esc(s: string): string {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
