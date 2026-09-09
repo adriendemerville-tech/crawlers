@@ -775,5 +775,15 @@ export interface ExpertAuditResult {
     robotsAnalysis?: any;
     crawlersData?: CrawlersData;
   };
+  /** Mots-clés positionnés du domaine (DataForSEO Labs, cache 24 h). */
+  ranked_keywords?: {
+    domain: string;
+    total_ranked_keywords: number;
+    estimated_traffic: number;
+    average_position: number;
+    top3: number;
+    top10: number;
+    top_keywords: { keyword: string; position: number; volume: number; url: string }[];
+  } | null;
   strategicAnalysis?: StrategicAnalysis;
 }

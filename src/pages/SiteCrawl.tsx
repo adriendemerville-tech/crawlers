@@ -25,6 +25,7 @@ import { MaillageIPRCard, computeMaillageFromCrawlPages } from '@/components/Exp
 import { FairUseLimitModal } from '@/components/SiteCrawl/FairUseLimitModal';
 import { ContentIntegrityPanel } from '@/components/SiteCrawl/ContentIntegrityPanel';
 import { CrawlCoverageBanner } from '@/components/SiteCrawl/CrawlCoverageBanner';
+import { RankedKeywordsCard } from '@/components/seo/RankedKeywordsCard';
 
 
 import { getScoreColor, getScoreBg } from '@/components/SiteCrawl/types';
@@ -836,6 +837,10 @@ export default function SiteCrawl() {
 
               {/* Intégrité du contenu : quasi-doublons + contenus pauvres */}
               <ContentIntegrityPanel crawlId={viewingCrawlId || crawlResult?.id} />
+
+              {/* Mots-clés positionnés du domaine (DataForSEO) */}
+              <RankedKeywordsCard data={crawlResult.ranked_keywords} />
+
 
 
 

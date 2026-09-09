@@ -42,6 +42,7 @@ import { StrategicErrorBoundary } from './StrategicErrorBoundary';
 const TechnicalResultsSection = lazy(() => import('./TechnicalResultsSection').then(m => ({ default: m.TechnicalResultsSection })));
 const StrategicResultsSection = lazy(() => import('./StrategicResultsSection').then(m => ({ default: m.StrategicResultsSection })));
 import { GeoPillarsCard } from './GeoPillarsCard';
+import { RankedKeywordsCard } from '@/components/seo/RankedKeywordsCard';
 import { NextStepFloatingButton } from './NextStepFloatingButton';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
@@ -1538,6 +1539,7 @@ export function ExpertAuditDashboard({ onLoadingChange }: { onLoadingChange?: (l
                 <TechnicalResultsSection result={result} url={url} t={t} onReportClick={handleReportButtonClick} />
               </Suspense>
               <GeoPillarsCard technicalResult={technicalResult ?? result} strategicResult={strategicResult} />
+              <RankedKeywordsCard data={(technicalResult ?? result)?.ranked_keywords} />
 
               <NextStepFloatingButton
                 nextStepLabel={language === 'en' ? 'Next: AI Visibility Audit' : language === 'es' ? 'Siguiente: Auditoría GEO' : 'Étape suivante : Audit GEO'}

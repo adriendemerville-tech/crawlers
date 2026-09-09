@@ -2686,6 +2686,16 @@ Deno.serve(handleRequest(async (req) => {
       console.error('[AUDIT-EXPERT-SEO] GEO pillars non calculés:', e);
     }
 
+    // Mots-clés positionnés (DataForSEO Labs, cache 24 h par domaine).
+    // Donnée externe : jamais bloquante pour l'audit technique.
+    try {
+      const { fetchRankedKeywordsSnapshot } = await import('../_shared/rankedKeywords.ts');
+      const rankedKeywords = await fetchRankedKeywordsSnapshot(domain);
+      if (rankedKeywords) responseData.data['ranked_keywords'] = rankedKeywords;
+    } catch (e) {
+      console.error('[AUDIT-EXPERT-SEO] Mots-clés positionnés non récupérés:', e);
+    }
+
 
     // Save raw audit data (fire-and-forget)
     try {
