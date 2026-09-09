@@ -227,6 +227,7 @@ export async function computeCannibalization(
     clusters_count: detailed.length,
     redundant_pages: redundant,
     clusters: detailed.slice(0, maxClusters),
+    pillar_conflicts: pillarConflicts.slice(0, 20),
     report_markdown: md.join('\n'),
   };
 }
