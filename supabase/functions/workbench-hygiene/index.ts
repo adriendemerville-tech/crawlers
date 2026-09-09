@@ -30,9 +30,20 @@ function keepScore(i: any): number {
 }
 
 async function updateInBatches(supabase: any, ids: string[], patch: Record<string, unknown>) {
+  let failed = 0;
   for (let i = 0; i < ids.length; i += 100) {
-    await supabase.from("architect_workbench").update(patch as any).in("id", ids.slice(i, i + 100));
+    const { error } = await supabase
+      .from("architect_workbench")
+      .update(patch as any)
+      .in("id", ids.slice(i, i + 100));
+    // Sans ce log, une valeur de statut invalide faisait échouer l'archivage
+    // en silence et la file grossissait indéfiniment.
+    if (error) {
+      failed += 1;
+      console.error("[workbench-hygiene] update failed:", patch, error.message);
+    }
   }
+  return failed;
 }
 
 Deno.serve(async (req) => {

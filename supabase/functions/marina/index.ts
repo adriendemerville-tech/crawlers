@@ -4924,7 +4924,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             .select('id, title, description, severity, finding_category, status, source_type, source_function, payload, target_url')
             .eq('domain', domain)
             .eq('user_id', parentJob.user_id)
-            .neq('status', 'done')
+            .in('status', ['pending', 'assigned', 'in_progress', 'deployed'])
             .order('created_at', { ascending: false })
             .limit(50);
           // Lot 1 — le rapport d'une URL ne doit jamais importer les actions
