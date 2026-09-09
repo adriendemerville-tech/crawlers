@@ -300,6 +300,33 @@ export default function GeoMcpServer() {
                 </li>
               ))}
             </ul>
+            <DataTable
+              caption="Outils du serveur MCP GEO : données renvoyées, mode d'exécution et facturation."
+              columns={['Outil', 'Données renvoyées', 'Exécution', 'Facturation']}
+              rows={[
+                ['ai_visibility', 'Citations observées par moteur, concurrents cités, sources retenues', 'Asynchrone', 'Décompté'],
+                ['audit_page', 'Statut HTTP, canonical, titres, JSON-LD, texte extrait, coquille JavaScript', 'Synchrone', 'Décompté'],
+                ['audit_site', 'Constats techniques et GEO agrégés par gravité sur un domaine', 'Asynchrone', 'Décompté'],
+                ['crawl_site', 'Identifiant de job, URL crawlées, statut et profondeur de clic', 'Asynchrone', 'Décompté'],
+                ['list_findings', 'Constats normalisés : identifiant, gravité, preuve, correction', 'Synchrone', 'Gratuit'],
+                ['get_fix', 'Patch adapté à la pile : HTML, WordPress, Next.js, TanStack Start', 'Synchrone', 'Décompté'],
+                ['analyze_schema', 'Écarts entre JSON-LD et contenu visible', 'Synchrone', 'Décompté'],
+                ['check_indexability', 'robots.txt, meta robots, canonical, chaîne de redirections', 'Synchrone', 'Décompté'],
+                ['analyze_links', 'Liens entrants, profondeur, pages orphelines, liens cassés', 'Synchrone', 'Décompté'],
+                ['get_job', 'Statut et résultat de tout job asynchrone', 'Synchrone', 'Gratuit'],
+              ]}
+            />
+            <DataTable
+              caption="Compatibilité des clients MCP avec le serveur GEO Crawlers.fr."
+              columns={['Client', 'Transport', 'Authentification', 'Usage typique']}
+              rows={[
+                ['Claude Code', 'Streamable HTTP', 'OAuth 2.1', 'Mesure et correction dans le dépôt'],
+                ['Claude Desktop', 'Streamable HTTP', 'OAuth 2.1', 'Diagnostic conversationnel'],
+                ['Cursor', 'Streamable HTTP', 'OAuth 2.1', 'Correction pendant l’édition'],
+                ['Client MCP conforme', 'Streamable HTTP', 'OAuth 2.1', 'Automatisation sur mesure'],
+              ]}
+            />
+
           </section>
 
           <section className="mb-12">
