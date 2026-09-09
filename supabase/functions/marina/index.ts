@@ -40,6 +40,7 @@ import {
   sortWorkbenchByGatePriority,
   type AuditGate,
 } from '../_shared/auditGates.ts';
+import { cruxWeightingBlockHTML } from '../_shared/cruxWeighting.ts';
 
 import { verdictsFromCocoonRisks, pillarSatelliteBlockHTML, pageAuthority } from '../_shared/pillarSatelliteVerdict.ts';
 import { buildBacklinkSectionHTML } from '../_shared/backlinkSection.ts';
