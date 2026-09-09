@@ -1,4 +1,5 @@
 import { fingerprintFinding } from './actionPlanDiscrimination.ts';
+import { pillarPriorityMultiplier } from './pillarWeighting.ts';
 
 /**
  * roiWeighting.ts — Couche ROI diffuse (impact × effort) appliquée aux plans
