@@ -3,6 +3,7 @@ import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { lazy, Suspense } from 'react';
+import { McpSessionAnimation } from '@/components/Mcp/McpSessionAnimation';
 
 const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
 
@@ -74,6 +75,65 @@ export default function SeoMcpServer() {
           Code, Claude Desktop and Cursor can call it to audit a URL, receive normalised findings,
           request a stack-specific fix, apply it, then re-audit to prove the problem is gone.
         </blockquote>
+
+        <McpSessionAnimation
+          windowTitle="Claude Code — Crawlers MCP server"
+          caption="Typographic reproduction of a real session: audit, fix, re-audit."
+          steps={[
+            { kind: 'user', text: 'Connect the Crawlers MCP server and audit /contact.' },
+            {
+              kind: 'tool',
+              name: 'connect',
+              args: 'https://crawlers.fr/mcp  ·  Streamable HTTP  ·  OAuth 2.1\n→ connected: 14 tools, 3 resources',
+            },
+            {
+              kind: 'tool',
+              name: 'audit_page',
+              args: '{ "url": "https://example.com/contact" }',
+            },
+            {
+              kind: 'result',
+              lines: [
+                'score: 61/100',
+                'SEO-CANON-002  high    missing canonical',
+                'SEO-H1-001     high    no h1 in served HTML',
+                'SEO-META-007   medium  meta description too short',
+              ],
+            },
+            { kind: 'user', text: 'Fix the high severity findings for Next.js.' },
+            {
+              kind: 'tool',
+              name: 'get_fix',
+              args: '{ "finding_ids": ["SEO-CANON-002", "SEO-H1-001"], "framework": "nextjs" }',
+            },
+            {
+              kind: 'result',
+              lines: [
+                'patch: metadata.alternates.canonical in app/contact/page.tsx',
+                'patch: promote section title to h1',
+                'files touched: 1',
+              ],
+            },
+            {
+              kind: 'assistant',
+              text: 'Patches applied. Re-auditing to confirm the findings are gone.',
+            },
+            {
+              kind: 'tool',
+              name: 'audit_page',
+              args: '{ "url": "https://example.com/contact", "compare_to": "run_4c07" }',
+            },
+            {
+              kind: 'result',
+              lines: [
+                'score: 61 → 94',
+                'SEO-CANON-002: resolved',
+                'SEO-H1-001: resolved',
+                'SEO-META-007: still open',
+              ],
+            },
+          ]}
+        />
 
         <div className="prose prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-strong:text-foreground">
           <section className="mb-12">
