@@ -183,51 +183,92 @@ function ParmenionLandingComponent(): React.ReactElement {
       <Header />
       <main className="min-h-screen bg-background text-foreground">
         {/* Hero */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-5xl px-4 py-16 sm:py-24">
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/30 px-3 py-1 text-xs font-medium text-primary">
-              <span className="h-2 w-2 rounded-full bg-primary" />
-              Passe unique à prix fixe
-            </div>
-            <h1 className="mb-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
-              Faites corriger votre visibilité en ligne, une fois, à prix fixe
-            </h1>
-            <p className="citable-passage mb-8 max-w-2xl text-lg text-muted-foreground">
-              Parmenion audit votre site, rédige 3 pages de contenu et optimise votre fiche Google Maps. Vous relisez et validez chaque élément avant le moindre déploiement.
-            </p>
-
-            {/* Direct answer block */}
-            <div className="mb-10 rounded-lg border border-border bg-card p-6">
-              <h3 className="mb-3 text-lg font-semibold">Qu'est-ce que Parmenion et combien ça coûte ?</h3>
-              <p className="citable-passage text-muted-foreground">
-                Parmenion est une passe unique proposée par Crawlers.fr à 59 € TTC. Elle comprend un audit de site, la rédaction de 3 contenus, l'optimisation de la fiche Google Maps et un compte rendu avant / après. Le délai annoncé est de 72 heures après paiement, et le remboursement est intégral tant qu'aucun déploiement n'a eu lieu.
+        <section className="relative overflow-hidden border-b border-border">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-40 -right-32 h-80 w-80 rounded-full bg-brand-violet/10 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-40 -left-32 h-80 w-80 rounded-full bg-brand-gold/10 blur-3xl"
+          />
+          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:py-24 lg:grid-cols-2">
+            <div>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-violet/40 px-3 py-1 text-xs font-medium text-brand-violet">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-violet" />
+                Passe unique · 59 € TTC · sans abonnement
+              </div>
+              <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+                Faites venir vos clients depuis{' '}
+                <span className="text-brand-violet">les moteurs IA</span> et Google Maps
+              </h1>
+              <p className="citable-passage mb-8 max-w-xl text-lg text-muted-foreground">
+                Crawlers audite votre site, rédige 3 pages de contenu et optimise votre fiche Google Maps. Vous relisez et validez chaque élément avant le moindre déploiement.
               </p>
+
+              {/* URL input */}
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Input
+                  ref={inputRef}
+                  type="url"
+                  placeholder="https://votre-site.fr"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  className="h-12 flex-1 border-border bg-background text-foreground placeholder:text-muted-foreground"
+                />
+                <Button
+                  onClick={startAnalysis}
+                  disabled={analyzing || !url.trim()}
+                  className="h-12 gap-2 border border-foreground bg-transparent px-6 text-foreground hover:bg-foreground hover:text-background"
+                >
+                  {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Analyser mon site gratuitement'}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
+                {[
+                  'Analyse gratuite et immédiate, sans carte bancaire.',
+                  'Remboursement intégral tant que rien n\'est déployé.',
+                  'Déploiement complet sous 72 heures ouvrées après paiement.',
+                ].map((line) => (
+                  <li key={line} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            {/* URL input */}
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Input
-                ref={inputRef}
-                type="url"
-                placeholder="https://votre-site.fr"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="h-12 flex-1 border-border bg-background text-foreground placeholder:text-muted-foreground"
-              />
-              <Button
-                onClick={startAnalysis}
-                disabled={analyzing || !url.trim()}
-                className="h-12 gap-2 border border-foreground bg-transparent px-6 text-foreground hover:bg-foreground hover:text-background"
-              >
-                {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Lancer mon analyse gratuite'}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Analyse gratuite, sans carte bancaire. L'inscription n'est requise que pour débloquer le détail des correctifs.
+            <Suspense fallback={<div className="h-72 rounded-xl border border-border bg-card" />}>
+              <AiAnswerDemo />
+            </Suspense>
+          </div>
+        </section>
+
+        {/* Secteurs */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-10">
+            <p className="mb-5 text-center text-sm font-medium tracking-wide text-muted-foreground">
+              Conçu pour les TPE, PME et commerces locaux, dans tous les secteurs
+            </p>
+            <Suspense fallback={<div className="h-12" />}>
+              <SectorMarquee />
+            </Suspense>
+          </div>
+        </section>
+
+        {/* Réponse directe */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-3xl px-4 py-14">
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
+              Qu'est-ce que la passe Crawlers et combien ça coûte ?
+            </h2>
+            <p className="citable-passage text-muted-foreground">
+              La passe Crawlers est une prestation unique à 59 € TTC. Elle comprend un audit de site, la rédaction de 3 contenus, l'optimisation de la fiche Google Maps et un compte rendu avant / après. Le délai annoncé est de 72 heures après paiement, et le remboursement est intégral tant qu'aucun déploiement n'a eu lieu.
             </p>
           </div>
         </section>
+
 
         {/* Résultat de l'analyse gratuite, puis parcours complet */}
         {(teaser || session) && (
