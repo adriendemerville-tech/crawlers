@@ -306,7 +306,7 @@ export function FloatingChatBubble() {
           >
             <X className="h-3 w-3" />
           </button>
-          En quoi puis-je t'être utile&nbsp;?
+          Je peux vous aider à choisir.
         </div>
       )}
 
