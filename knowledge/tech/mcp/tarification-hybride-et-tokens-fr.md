@@ -56,9 +56,19 @@ connue.
 
 ## Dettes ouvertes
 
-- Pas de **remboursement wallet** si un job échoue (débit avant exécution).
 - Plafond journalier non atomique (race condition possible).
 - `get_fix`, `keyword_research`, `backlink_snapshot` tarifés mais moteurs non
   branchés (outils désactivés côté enregistrement).
 - `/v1/wallet/balance` estime les jobs restants avec un coût fixe, incohérent
   avec la grille réelle.
+
+## Évolutions récentes
+
+- **Remboursement wallet** : migration `0022_refunds_and_pause_recovery.sql` +
+  edge function `crawlers-api`. En cas d'échec plateforme (`failed`), un crédit
+  est recrédité sur le wallet si le débit avait eu lieu. Idempotence via
+  `dev_wallet_transactions.reference_id`.
+- **Remboursements Paddle** : le webhook `payments-webhook` gère `payment_failed`,
+  `canceled`, `adjustment.created` et `refund.created` pour le passe 59 €.
+- **Pause/reprise Périclès** : état `paused` visible et réversible depuis
+  `AutopilotModal.tsx`.
