@@ -1,0 +1,1 @@
+ALTER TYPE public.workbench_item_status ADD VALUE IF NOT EXISTS 'failed';
