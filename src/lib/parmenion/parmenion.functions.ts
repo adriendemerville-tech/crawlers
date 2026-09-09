@@ -225,8 +225,26 @@ export const createParmenionOrder = createServerFn({ method: "POST" })
       });
     }
 
-    // Diagnostic détaillé + correctifs figés sur la commande.
-    const diag = await cachedDiagnostic(target);
+    // Diagnostic : on réutilise les constats déjà présents dans le Workbench
+    // (audit Marina récent) plutôt que de refaire une analyse payée deux fois.
+    const reused = await findingsFromWorkbench(supabase as never, domain, userId);
+    let diag: PasseDiagnostic;
+    let source: "workbench" | "diagnostic" = "diagnostic";
+
+    if (data.reuseAudit !== false && reused.length >= 3) {
+      source = "workbench";
+      diag = {
+        url: target,
+        host: new URL(target).hostname,
+        brand: brandFromHost(new URL(target).hostname),
+        score: scoreFromFindings(reused),
+        findings: reused,
+        fetchedAt: new Date().toISOString(),
+      };
+    } else {
+      diag = await cachedDiagnostic(target);
+    }
+
     const fixes = deriveFixes(diag);
     const topics = deriveTopics(diag);
 
@@ -241,6 +259,13 @@ export const createParmenionOrder = createServerFn({ method: "POST" })
       })
       .eq("id", orderId)
       .eq("user_id", userId);
+
+    await pushFindingsToWorkbench(userId, domain, target, orderId, diag.findings);
+    await supabase.from("passe_order_events").insert({
+      order_id: orderId, user_id: userId, event: "diagnostic",
+      payload: { source, findings: diag.findings.length, score: diag.score },
+    });
+
 
     // Pass à usage unique, créé une seule fois par commande.
     const { data: pass } = await supabase
