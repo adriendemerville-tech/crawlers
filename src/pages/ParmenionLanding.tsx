@@ -13,6 +13,8 @@ import { toast } from 'sonner';
 const PasseFlow = lazy(() => import('@/components/Parmenion/PasseFlow'));
 const AiAnswerDemo = lazy(() => import('@/components/Parmenion/AiAnswerDemo'));
 const SectorMarquee = lazy(() => import('@/components/Parmenion/SectorMarquee'));
+const QuestionsMarquee = lazy(() => import('@/components/Parmenion/QuestionsMarquee'));
+const AuditReportPreview = lazy(() => import('@/components/Parmenion/AuditReportPreview'));
 
 const STEPS = [
   {
