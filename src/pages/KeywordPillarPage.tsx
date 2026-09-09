@@ -8,6 +8,8 @@ import { KEYWORD_PILLARS } from '@/data/keywordPillars';
 import { siloForPath } from '@/data/silos';
 import { SiloNav } from '@/components/seo/SiloNav';
 import { McpSessionAnimation, type McpStep } from '@/components/Mcp/McpSessionAnimation';
+import { DataTable } from '@/components/seo/DataTable';
+
 
 /**
  * Démonstrations MCP par page satellite : reproduction d'une session d'agent
