@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import MarketplaceBacklinksLanding from '@/pages/MarketplaceBacklinksLanding';
 import { MARKETPLACE_FAQ } from '@/pages/MarketplaceBacklinksLanding.faq';
 import { pageHead, SITE_URL } from '@/lib/seo/pageHead';
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
 
 const URL = `${SITE_URL}/marketplace-backlinks`;
 

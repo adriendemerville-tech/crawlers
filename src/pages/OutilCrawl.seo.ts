@@ -3,6 +3,7 @@
  * ce module dans son head(), le composant reste dans son chunk différé.
  */
 import { ORGANIZATION_REF } from '@/lib/seo/organization';
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
 
 export const CANONICAL = 'https://crawlers.fr/crawl';
 

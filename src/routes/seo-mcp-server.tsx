@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import SeoMcpServer from "@/pages/SeoMcpServer";
 import { pageHead } from "@/lib/seo/pageHead";
+import { breadcrumbList } from "@/lib/seo/breadcrumb";
 
 const TITLE = "SEO MCP Server for Claude & Cursor | Crawlers";
 const DESCRIPTION =

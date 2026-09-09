@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import GeoMcpServer from "@/pages/GeoMcpServer";
 import { pageHead } from "@/lib/seo/pageHead";
+import { breadcrumbList } from "@/lib/seo/breadcrumb";
 
 const TITLE = "Serveur MCP GEO : mesurez votre visibilité IA | Crawlers";
 const DESCRIPTION =

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Badge } from '@/components/ui/badge';

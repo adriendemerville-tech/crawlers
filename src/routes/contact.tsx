@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Contact from "@/pages/Contact";
 import { pageHead, SITE_URL } from "@/lib/seo/pageHead";
+import { breadcrumbList } from "@/lib/seo/breadcrumb";
 
 export const Route = createFileRoute("/contact")({
   head: () => pageHead({

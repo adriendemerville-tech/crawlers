@@ -3,6 +3,7 @@ import AuditGeo from "@/pages/AuditGeo";
 import { pageHead } from "@/lib/seo/pageHead";
 import { marinaMentionJsonLd } from "@/lib/seo/marinaMentions";
 import { ORGANIZATION_REF } from "@/lib/seo/organization";
+import { breadcrumbList } from "@/lib/seo/breadcrumb";
 
 const TITLE = "Audit GEO gratuit — 232 points de contrôle | Crawlers.fr";
 const DESC =

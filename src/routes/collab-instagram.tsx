@@ -3,6 +3,7 @@ import CollabInstagramLanding from '@/pages/CollabInstagramLanding';
 import { COLLAB_INSTAGRAM_FAQ } from '@/pages/CollabInstagramLanding.faq';
 import { pageHead, SITE_URL } from '@/lib/seo/pageHead';
 import { ORGANIZATION_REF } from '@/lib/seo/organization';
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
 
 const URL = `${SITE_URL}/collab-instagram`;
 

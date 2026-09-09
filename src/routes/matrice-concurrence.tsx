@@ -3,6 +3,7 @@ import MatriceConcurrence from "@/pages/MatriceConcurrence";
 import { MATRIX_FAQS } from "@/pages/MatriceConcurrence.faq";
 import { pageHead } from "@/lib/seo/pageHead";
 import { ORGANIZATION_REF } from "@/lib/seo/organization";
+import { breadcrumbList } from "@/lib/seo/breadcrumb";
 
 const TITLE = "Matrice de concurrence gratuite — mots-clés Google et citations IA | Crawlers.fr";
 const DESC =
