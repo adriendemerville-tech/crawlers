@@ -201,6 +201,7 @@ export function AudienceRouter() {
   const [visible, setVisible] = useState(false);
   const [answer, setAnswer] = useState('');
   const [thinking, setThinking] = useState(false);
+  const [clarify, setClarify] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -212,8 +213,8 @@ export function AudienceRouter() {
   }, []);
 
   useEffect(() => {
-    if (visible && !thinking && !isListening) inputRef.current?.focus();
-  }, [visible, thinking, isListening]);
+    if (visible && !thinking && !clarify && !isListening) inputRef.current?.focus();
+  }, [visible, thinking, clarify, isListening]);
 
   useEffect(() => {
     return () => {
@@ -236,9 +237,17 @@ export function AudienceRouter() {
     recognitionRef.current?.abort();
     setIsListening(false);
     setThinking(true);
-    const choice = classifyAudience(answer);
-    window.setTimeout(() => apply(choice), THINKING_DELAY_MS);
+    const verdict = classifyAudienceOrAsk(answer);
+    window.setTimeout(() => {
+      setThinking(false);
+      if (verdict === 'unknown') {
+        setClarify(true);
+        return;
+      }
+      apply(verdict);
+    }, THINKING_DELAY_MS);
   };
+
 
   const toggleVoice = () => {
     const SpeechRecognitionCtor = getSpeechRecognition();
