@@ -296,8 +296,40 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
         ],
       },
       {
+        h2: "Moteurs génératifs : ce qui change d'un moteur à l'autre",
+        body: "Les moteurs ne se comportent pas de la même façon : certains affichent des liens cliquables, d'autres résument sans attribution nette. La stratégie de citabilité doit tenir compte de ces différences.",
+        table: {
+          caption: "Comportement des principaux moteurs génératifs vis-à-vis des sources citées.",
+          columns: ["Moteur", "Robot d'exploration", "Liens visibles dans la réponse", "Ce qui déclenche la citation"],
+          rows: [
+            ["ChatGPT", "GPTBot, OAI-SearchBot", "Souvent, en recherche activée", "Passage autonome, entité claire, page accessible sans JavaScript"],
+            ["Perplexity", "PerplexityBot", "Oui, systématiquement", "Correspondance directe question / passage, fraîcheur"],
+            ["Gemini", "Google-Extended", "Parfois", "Autorité du domaine, données structurées cohérentes"],
+            ["Claude", "ClaudeBot", "Parfois", "Contenu factuel daté et attribuable"],
+            ["Mistral", "MistralAI-User", "Parfois", "Sources francophones structurées"],
+          ],
+        },
+      },
+      {
         h2: "Ce que Crawlers.fr mesure",
         body: "L'audit Crawlers.fr interroge réellement les moteurs génératifs sur un jeu de questions construit à partir de la page auditée, mesure les passages de robots IA dans vos logs, et plafonne le score de visibilité quand les faits techniques le contredisent : un texte extrait quasi nul ne peut pas produire un bon score, quelle que soit la qualité apparente du contenu.",
+        h3s: [
+          { title: "Taux de citation", body: "Part des questions du jeu de benchmark où votre marque apparaît dans la réponse. C'est l'indicateur principal, suivi dans le temps." },
+          { title: "Part de voix concurrentielle", body: "Qui est cité à votre place, sur quelles questions, et avec quelle source. La comparaison vaut plus que la valeur absolue." },
+          { title: "Passages de robots IA", body: "Volume et couverture d'URL par GPTBot, PerplexityBot, ClaudeBot et Google-Extended, vérifiés par rDNS et ASN." },
+          { title: "Plafonds de cohérence", body: "Un score GEO est plafonné par les faits mesurés : coquille JavaScript, texte extrait quasi nul, contenu inaccessible aux robots." },
+        ],
+        table: {
+          caption: "Indicateurs de visibilité IA suivis par Crawlers.fr et leur mode de mesure.",
+          columns: ["Indicateur", "Unité", "Source de la mesure", "Fréquence recommandée"],
+          rows: [
+            ["Taux de citation", "% des questions", "Interrogation réelle des moteurs", "Mensuelle"],
+            ["Citations par moteur", "Nombre", "Interrogation réelle des moteurs", "Mensuelle"],
+            ["Concurrents cités", "Nombre de domaines", "Analyse des sources de la réponse", "Mensuelle"],
+            ["Couverture bots IA", "% du sitemap", "Logs serveur vérifiés", "Hebdomadaire"],
+            ["Passages citables", "Nombre par page", "Analyse du HTML servi", "À chaque audit"],
+          ],
+        },
       },
     ],
     faqs: [
@@ -306,14 +338,24 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       { q: "Pourquoi mes concurrents sont-ils cités et pas moi ?", a: "Le plus souvent pour une raison mesurable : contenu inaccessible aux robots, absence de passages autonomes, ou aucune donnée propre à reprendre. L'audit indique laquelle s'applique." },
       { q: "Combien de temps pour voir un effet ?", a: "Les corrections d'accessibilité produisent un effet en quelques jours, le temps que les robots repassent. Les gains de citabilité se constatent plutôt sur quatre à huit semaines." },
       { q: "Les citations IA génèrent-elles du trafic ?", a: "Partiellement, et de façon inégale selon les moteurs. Certains affichent des liens cliquables, d'autres non : la citation vaut alors surtout comme recommandation." },
+      { q: "Combien de questions faut-il pour une mesure fiable ?", a: "Une vingtaine de questions au minimum, réparties entre marque, catégorie et comparatif, répétées dans le temps : une mesure isolée ne vaut rien." },
     ],
     relatedLinks: [
       { label: "Référencement IA et GEO : le guide pilier", to: "/generative-engine-optimization" },
       { label: "Audit GEO gratuit", to: "/audit-geo" },
       { label: "Monitoring GPTBot et PerplexityBot", to: "/monitoring-gptbot-perplexity" },
+      { label: "Serveur MCP GEO", to: "/geo-mcp-server" },
       { label: "E-E-A-T et citations IA", to: "/eeat" },
     ],
+    externalRefs: [
+      { label: "OpenAI — GPTBot et robots.txt", href: "https://platform.openai.com/docs/bots", note: "Robots officiels d'OpenAI et règles d'accès." },
+      { label: "Perplexity — PerplexityBot", href: "https://docs.perplexity.ai/guides/bots", note: "Identification et vérification du robot Perplexity." },
+      { label: "Anthropic — ClaudeBot", href: "https://support.anthropic.com/en/articles/8896518", note: "Comportement du robot Claude et contrôle d'accès." },
+      { label: "Google — Google-Extended", href: "https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers", note: "Contrôle de l'usage du contenu par les modèles Google." },
+      { label: "Schema.org FAQPage", href: "https://schema.org/FAQPage", note: "Balisage des questions-réponses reprises par les moteurs." },
+    ],
     datePublished: '2026-09-09',
+
   },
   'audit-seo-par-ia': {
     slug: 'audit-seo-par-ia',
