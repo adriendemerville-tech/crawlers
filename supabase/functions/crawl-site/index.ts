@@ -518,6 +518,22 @@ Deno.serve(handleRequest(async (req) => {
       });
     }
 
+    // Mots-clés positionnés du domaine (DataForSEO Labs, cache 24 h).
+    // Fire-and-forget : jamais bloquant pour le lancement du crawl.
+    (async () => {
+      try {
+        const { fetchRankedKeywordsSnapshot } = await import('../_shared/rankedKeywords.ts');
+        const snapshot = await fetchRankedKeywordsSnapshot(domain);
+        if (snapshot) {
+          await supabase.from('site_crawls').update({ ranked_keywords: snapshot }).eq('id', crawl.id);
+        }
+      } catch (e) {
+        console.warn('[crawl-site] ranked keywords indisponibles', e);
+      }
+    })();
+
+
+
     const crawlId = crawl.id;
     console.log(`[${crawlId}] Mapping démarré: ${domain} (max ${pageLimit} pages, depth: ${maxDepth || '∞'}, filter: ${urlFilter || 'none'})`);
 
