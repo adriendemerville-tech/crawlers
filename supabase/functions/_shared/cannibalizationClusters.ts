@@ -160,6 +160,35 @@ export async function computeCannibalization(
     };
   });
 
+  // Deux pages piliers sur la même intention : alerte forte, pas un simple
+  // avertissement de cluster (le maillage se scinde entre deux hubs).
+  const pillarSet = detectPillars(
+    list.map((p) => ({
+      url: String(p.url),
+      crawl_depth: Number(p.crawl_depth ?? 0),
+      page_type: p.page_intent ?? null,
+      page_authority: Number(p.seo_score ?? 0),
+      internal_links_in: inbound.get(norm(p.url)) || 0,
+    })),
+  );
+  const pillarNodes = nodes.filter((n) => pillarSet.urls.has(norm(n.url)));
+  const pillarConflicts: PillarConflict[] = [];
+  for (let i = 0; i < pillarNodes.length; i++) {
+    for (let j = i + 1; j < pillarNodes.length; j++) {
+      const score = jaccard(pillarNodes[i].tokens, pillarNodes[j].tokens);
+      if (!isPillarCannibalization(score)) continue;
+      const a = pillarNodes[i];
+      const b = pillarNodes[j];
+      pillarConflicts.push({
+        a: { url: a.url, path: a.path, title: a.title },
+        b: { url: b.url, path: b.path, title: b.title },
+        jaccard: Math.round(score * 100) / 100,
+        severity: 'critical',
+      });
+    }
+  }
+  pillarConflicts.sort((x, y) => y.jaccard - x.jaccard);
+
   const redundant = detailed.reduce((s, c) => s + c.duplicates.length, 0);
   const md: string[] = [
     `## Cannibalisation — ${crawl.domain}${prefix ? ` (${prefix})` : ''}`,
