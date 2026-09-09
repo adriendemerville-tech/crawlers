@@ -40,6 +40,7 @@ import {
   sortWorkbenchByGatePriority,
   type AuditGate,
 } from '../_shared/auditGates.ts';
+import { cruxWeightingBlockHTML } from '../_shared/cruxWeighting.ts';
 
 import { verdictsFromCocoonRisks, pillarSatelliteBlockHTML, pageAuthority } from '../_shared/pillarSatelliteVerdict.ts';
 import { buildBacklinkSectionHTML } from '../_shared/backlinkSection.ts';
@@ -2408,6 +2409,9 @@ function buildExecutiveSummaryHTML(
     { lcpMs: ctx.expertData?.scores?.performance?.lcp ?? null, techMax },
   );
 
+  // Pondération de terrain CrUX : toujours dite, y compris son absence.
+  const cruxHTML = cruxWeightingBlockHTML(ctx.expertData?.scores?.performance?.cruxWeighting ?? null, lang);
+
 
 
   const parts = [tech100, geo100].filter((v): v is number => typeof v === 'number' && v > 0);
@@ -2506,6 +2510,7 @@ function buildExecutiveSummaryHTML(
     </div>
     ${ctx.roi ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;">${ctx.roi.sentence}${ctx.roi.topQuickWins.length ? ` ${t('À traiter en premier', 'Start with', 'Empezar por')} : ${ctx.roi.topQuickWins.join(' ; ')}.` : ''}</p>` : ''}
     ${penaltyHTML}
+    ${cruxHTML}
     ${calibrationHTML}
     ${backlinkVigilanceHTML}
 

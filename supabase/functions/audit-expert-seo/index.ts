@@ -12,6 +12,7 @@ import { resolveSocialProof, fetchPlacesSocialProof, formatSocialProofForPrompt,
 import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
 import { classifyLink, isFalsePositiveDomain, type LinkVerdict } from '../_shared/linkVerdictShared.ts';
 import { measurePerformance, measureTtfbDirect } from '../_shared/perfMeasurement.ts';
+import { computeCruxWeighting } from '../_shared/cruxWeighting.ts';
 import { geoFactsFromExpertAudit, expertFactsFromAuditPayload } from '../_shared/geoFactsFromExpertAudit.ts';
 import { buildGeoSubSignals } from '../_shared/geoSubSignals.ts';
 
@@ -2336,6 +2337,33 @@ Deno.serve(handleRequest(async (req) => {
       console.warn(`[PERF] LCP ${lcpMsMeasured}ms non confirmé (run unique) → aucune pénalité appliquée`);
     }
 
+    // ─── Pondération de terrain CrUX ───
+    // Le labo ne dit pas ce que vivent les utilisateurs. Quand CrUX expose un
+    // p75 réel (LCP/INP/CLS), il pondère l'axe performance à la hausse ou à la
+    // baisse. Sans terrain, pondération neutre : on n'invente rien.
+    const cruxWeighting = computeCruxWeighting(perf.field, perf.labLcpMs);
+    if (cruxWeighting.available && cruxWeighting.multiplier !== 1) {
+      const before = performanceScore;
+      const after = Math.max(8, Math.min(40, Math.round(before * cruxWeighting.multiplier)));
+      if (after !== before) {
+        const delta = after - before;
+        performanceScore = after;
+        if (delta < 0) {
+          scoreGates.push({
+            axis: 'performance',
+            reason: `Core Web Vitals dégradés sur les utilisateurs réels (terrain CrUX ${cruxWeighting.scope === 'url' ? 'URL' : 'domaine'})`,
+            evidence: `${cruxWeighting.note} (${delta} points sur 40)`,
+            pointsLost: -delta,
+            measured: cruxWeighting.metrics.lcp.valueMs !== null ? `${(cruxWeighting.metrics.lcp.valueMs / 1000).toFixed(2)}s` : null,
+            target: '2,50s',
+          });
+        }
+        console.log(`[CrUX] pondération ${cruxWeighting.multiplier} → performance ${before} → ${after} (${cruxWeighting.verdict})`);
+      }
+    }
+
+
+
 
 
     // Contenu non extractible : le HTML est servi mais le texte visible est
@@ -2539,6 +2567,9 @@ Deno.serve(handleRequest(async (req) => {
           confirmed: lcpIsConfirmed,
           note: perf.methodNote,
         },
+        // Pondération de terrain : de combien le vécu réel (CrUX) a remonté ou
+        // abaissé l'axe performance, et pourquoi.
+        cruxWeighting,
         // TTFB : attente d'un robot avant le premier octet. Exposé pour décoter
         // l'accessibilité machine du GEO (cf. geoSubSignals), pas le /200.
         ttfb: ttfbMeasurement.ttfbMs,
