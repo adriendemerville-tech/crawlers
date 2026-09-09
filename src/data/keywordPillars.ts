@@ -9,10 +9,23 @@ export interface PillarFAQ {
   a: string;
 }
 
+export interface PillarTable {
+  caption: string;
+  columns: string[];
+  rows: string[][];
+}
+
 export interface PillarSection {
   h2: string;
   body: string;
   h3s?: { title: string; body: string }[];
+  table?: PillarTable;
+}
+
+export interface PillarExternalRef {
+  label: string;
+  href: string;
+  note: string;
 }
 
 export interface KeywordPillar {
@@ -25,8 +38,10 @@ export interface KeywordPillar {
   sections: PillarSection[];
   faqs: PillarFAQ[];
   relatedLinks: { label: string; to: string }[];
+  externalRefs?: PillarExternalRef[];
   datePublished: string;
 }
+
 
 export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
   'audit-seo-geo': {
