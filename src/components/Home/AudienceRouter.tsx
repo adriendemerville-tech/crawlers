@@ -283,7 +283,7 @@ export function AudienceRouter() {
   return (
     <section
       aria-label="Orientation du visiteur"
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-background px-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-4 animate-fade-in"
     >
       {thinking ? (
         <div className="flex flex-col items-center justify-center">
