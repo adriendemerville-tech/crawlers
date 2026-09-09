@@ -73,26 +73,31 @@ const MCP_DEMOS: Record<string, { windowTitle: string; caption: string; steps: M
     windowTitle: 'Claude — serveur MCP Crawlers (visibilité IA)',
     caption: 'Reproduction d’une session réelle : mesure des citations dans les réponses IA, puis correction.',
     steps: [
+      { kind: 'user', text: 'Connecte le MCP Crawlers.fr' },
+      { kind: 'assistant', text: 'Je me connecte au serveur MCP Crawlers.' },
+      { kind: 'connect', text: 'https://crawlers.fr/mcp · Streamable HTTP · OAuth 2.1 — connecté : 14 outils, 3 ressources' },
       { kind: 'user', text: 'Est-ce que ChatGPT et Perplexity citent mon site sur mes requêtes clés ?' },
-      {
-        kind: 'tool',
-        name: 'connect',
-        args: 'https://crawlers.fr/mcp  ·  Streamable HTTP  ·  OAuth 2.1\n→ connecté : 14 outils, 3 ressources',
-      },
+      { kind: 'assistant', text: 'J’utilise l’outil ai_visibility pour mesurer tes citations dans les réponses IA.' },
       {
         kind: 'tool',
         name: 'ai_visibility',
         args: '{ "url": "https://exemple.fr", "engines": ["chatgpt", "gemini", "perplexity", "claude"] }',
       },
       {
-        kind: 'result',
-        lines: [
-          'citation_rate: 8% (2/25 questions)',
-          'chatgpt: 0   gemini: 1   perplexity: 1   claude: 0',
-          'sources citées à votre place : 2 concurrents',
-          'findings: GEO-ANSWER-001 (high), GEO-FANOUT-004 (medium)',
+        kind: 'dashboard',
+        title: 'Résultats — ai_visibility (25 questions)',
+        metrics: [
+          { label: 'Taux de citation', value: '8%', tone: 'bad' },
+          { label: 'ChatGPT', value: '0', tone: 'bad' },
+          { label: 'Perplexity', value: '1', tone: 'warn' },
+          { label: 'Concurrents cités', value: '2', tone: 'bad' },
+        ],
+        rows: [
+          { id: 'GEO-ANSWER-001', severity: 'high', label: 'Aucune réponse directe citable' },
+          { id: 'GEO-FANOUT-004', severity: 'medium', label: 'Requêtes fan-out non couvertes' },
         ],
       },
+      { kind: 'assistant', text: 'Veux-tu exporter ces données, ou que je corrige GEO-ANSWER-001 ?' },
       { kind: 'user', text: 'Corrige GEO-ANSWER-001.' },
       {
         kind: 'tool',
@@ -105,11 +110,13 @@ const MCP_DEMOS: Record<string, { windowTitle: string; caption: string; steps: M
       },
       { kind: 'assistant', text: 'Correctif appliqué. Je re-mesure la visibilité.' },
       {
-        kind: 'tool',
-        name: 'ai_visibility',
-        args: '{ "url": "https://exemple.fr", "compare_to": "run_7b30" }',
+        kind: 'dashboard',
+        title: 'Vérification — ai_visibility (comparaison)',
+        metrics: [
+          { label: 'Taux de citation', value: '8 → 29%', tone: 'good' },
+          { label: 'GEO-ANSWER-001', value: 'Résolu', tone: 'good' },
+        ],
       },
-      { kind: 'result', lines: ['citation_rate: 8% → 29%', 'GEO-ANSWER-001: résolu'] },
     ],
   },
   'audit-seo-par-ia': {
