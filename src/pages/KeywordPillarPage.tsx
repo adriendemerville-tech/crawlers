@@ -123,25 +123,32 @@ const MCP_DEMOS: Record<string, { windowTitle: string; caption: string; steps: M
     windowTitle: 'Claude Code — audit SEO piloté par MCP',
     caption: 'Reproduction d’une session réelle : audit complet, corrections, vérification — sans ouvrir l’interface.',
     steps: [
-      { kind: 'user', text: 'Lance un audit SEO complet de mon site et corrige ce qui est critique.' },
-      {
-        kind: 'tool',
-        name: 'connect',
-        args: 'https://crawlers.fr/mcp  ·  Streamable HTTP  ·  OAuth 2.1\n→ connecté : 14 outils, 3 ressources',
-      },
+      { kind: 'user', text: 'Connecte le MCP Crawlers.fr' },
+      { kind: 'assistant', text: 'Je me connecte au serveur MCP Crawlers.' },
+      { kind: 'connect', text: 'https://crawlers.fr/mcp · Streamable HTTP · OAuth 2.1 — connecté : 14 outils, 3 ressources' },
+      { kind: 'user', text: 'Audit le SEO du site exemple.fr' },
+      { kind: 'assistant', text: 'J’utilise l’outil audit_site pour crawler le domaine.' },
       {
         kind: 'tool',
         name: 'audit_site',
         args: '{ "domain": "exemple.fr", "max_pages": 200 }',
       },
       {
-        kind: 'result',
-        lines: [
-          '198 pages crawlées · score global 64/100',
-          'critiques: 7 (canonicals, h1, pages orphelines)',
-          'findings normalisés: SEO-CANON-002 ×4, SEO-ORPHAN-010 ×2…',
+        kind: 'dashboard',
+        title: 'Résultats — audit_site',
+        metrics: [
+          { label: 'Pages crawlées', value: '198', tone: 'neutral' },
+          { label: 'Score global', value: '64/100', tone: 'warn' },
+          { label: 'Critiques', value: '7', tone: 'bad' },
+          { label: 'Pages orphelines', value: '2', tone: 'warn' },
+        ],
+        rows: [
+          { id: 'SEO-CANON-002', severity: 'high', label: 'Canonical manquante (×4)' },
+          { id: 'SEO-ORPHAN-010', severity: 'medium', label: 'Pages orphelines (×2)' },
         ],
       },
+      { kind: 'assistant', text: 'Veux-tu exporter ces données, ou que je corrige les canonicals avec get_fix ?' },
+      { kind: 'user', text: 'Corrige les canonicals.' },
       {
         kind: 'tool',
         name: 'get_fix',
@@ -151,13 +158,15 @@ const MCP_DEMOS: Record<string, { windowTitle: string; caption: string; steps: M
         kind: 'result',
         lines: ['patch: metadata.alternates.canonical sur 4 pages', 'fichiers touchés: 4'],
       },
-      { kind: 'assistant', text: 'Corrections appliquées. Je relance l’audit sur les pages touchées.' },
+      { kind: 'assistant', text: 'Corrections appliquées. Je relance audit_page pour vérifier.' },
       {
-        kind: 'tool',
-        name: 'audit_page',
-        args: '{ "url": "https://exemple.fr/contact", "compare_to": "run_5d12" }',
+        kind: 'dashboard',
+        title: 'Vérification — audit_page (comparaison)',
+        metrics: [
+          { label: 'Score', value: '64 → 92', tone: 'good' },
+          { label: 'SEO-CANON-002', value: 'Résolu 4/4', tone: 'good' },
+        ],
       },
-      { kind: 'result', lines: ['score: 64 → 92', 'SEO-CANON-002: résolu sur 4/4 pages'] },
     ],
   },
 };
