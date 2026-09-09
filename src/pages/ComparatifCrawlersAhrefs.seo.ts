@@ -3,6 +3,7 @@
  * que le head() de la route n'entraîne pas le composant dans le chunk critique.
  */
 import { ORGANIZATION_REF } from '@/lib/seo/organization';
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
 
 export const CANONICAL = 'https://crawlers.fr/comparatif-crawlers-ahrefs';
 

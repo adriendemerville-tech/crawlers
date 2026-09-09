@@ -1,3 +1,5 @@
+import { breadcrumbList } from '@/lib/seo/breadcrumb';
+
 export const FAQS = [
   {
     q: 'Quelle est la meilleure alternative à Screaming Frog en 2026 ?',
