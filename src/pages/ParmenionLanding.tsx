@@ -378,7 +378,7 @@ function ParmenionLandingComponent(): React.ReactElement {
             </h2>
             <ol className="grid list-none gap-8 sm:grid-cols-2">
               {STEPS.map((s, i) => (
-                <li key={s.title} className="relative rounded-3xl border border-border bg-card p-8 shadow-sm">
+                <li key={s.title} id={`etape-${i + 1}`} className="relative rounded-3xl border border-border bg-card p-8 shadow-sm">
                   <span className="mb-4 block text-sm font-semibold text-brand-violet">
                     {String(i + 1).padStart(2, '0')}
                   </span>
