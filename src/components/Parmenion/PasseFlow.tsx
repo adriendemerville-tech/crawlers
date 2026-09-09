@@ -357,13 +357,14 @@ function PasseFlowComponent({ orderId, passToken, priceId }: Props): React.React
           <div>
             <p className="mb-3 text-sm font-medium">Votre site</p>
             {connections.cms.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Aucun site connecté.{' '}
-                <a href="/app/console" className="underline">
-                  Connecter mon site
-                </a>
-              </p>
+              <CmsPlatformDetector
+                siteUrl={(order['url'] as string | null) ?? null}
+                onConnected={() => {
+                  void getPasseConnections().then((r) => setConnections(r as unknown as typeof connections));
+                }}
+              />
             ) : (
+
               <ul className="space-y-2">
                 {connections.cms.map((c) => (
                   <li key={c.id} className="flex items-center justify-between gap-3 rounded border border-border p-3 text-sm">
