@@ -209,9 +209,10 @@ function ParmenionLandingComponent(): React.ReactElement {
   } as React.CSSProperties;
 
   return (
-    <div className="light-scope" style={lightThemeVars}>
+    <div className="light-scope min-h-screen bg-background text-foreground" style={lightThemeVars}>
       <Header />
       <main className="min-h-screen bg-background text-foreground">
+
         {/* Hero */}
         <section className="relative overflow-hidden border-b border-border">
           <div
