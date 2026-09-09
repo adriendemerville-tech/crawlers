@@ -46,7 +46,22 @@ export default function KeywordPillarPage() {
         </nav>
 
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">{data.h1}</h1>
-        <p className="text-lg text-foreground/80 leading-relaxed mb-10">{data.intro}</p>
+        <p className="text-lg text-foreground/80 leading-relaxed mb-8">{data.intro}</p>
+
+        <section aria-label="Réponse directe" className="mb-10 rounded-xl border border-border bg-card/40 p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/70 mb-3">
+            Réponse directe
+          </h2>
+          <div className="space-y-3">
+            {citable.map((passage, i) => (
+              <blockquote key={i} className="citable-passage text-base leading-relaxed text-foreground/90 border-l-2 border-primary/60 pl-4">
+                {passage}
+              </blockquote>
+            ))}
+          </div>
+        </section>
+
+
 
         <div className="prose prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-strong:text-foreground">
           {data.sections.map((section, si) => (
