@@ -1534,9 +1534,12 @@ export type Database = {
           is_active: boolean | null
           last_cycle_at: string | null
           max_pages_per_cycle: number | null
+          paused_at: string | null
+          paused_reason: string | null
           presc_architect: boolean | null
           presc_content_architect: boolean | null
           presc_stratege_cocoon: boolean | null
+          resumed_at: string | null
           status: string | null
           total_cycles_run: number | null
           tracked_site_id: string
@@ -1563,9 +1566,12 @@ export type Database = {
           is_active?: boolean | null
           last_cycle_at?: string | null
           max_pages_per_cycle?: number | null
+          paused_at?: string | null
+          paused_reason?: string | null
           presc_architect?: boolean | null
           presc_content_architect?: boolean | null
           presc_stratege_cocoon?: boolean | null
+          resumed_at?: string | null
           status?: string | null
           total_cycles_run?: number | null
           tracked_site_id: string
@@ -1592,9 +1598,12 @@ export type Database = {
           is_active?: boolean | null
           last_cycle_at?: string | null
           max_pages_per_cycle?: number | null
+          paused_at?: string | null
+          paused_reason?: string | null
           presc_architect?: boolean | null
           presc_content_architect?: boolean | null
           presc_stratege_cocoon?: boolean | null
+          resumed_at?: string | null
           status?: string | null
           total_cycles_run?: number | null
           tracked_site_id?: string
@@ -11398,6 +11407,8 @@ export type Database = {
           input_tokens: number
           metadata: Json
           output_tokens: number
+          refund_reason: string | null
+          refunded_at: string | null
           tool_name: string
           total_tokens: number
           user_id: string
@@ -11412,6 +11423,8 @@ export type Database = {
           input_tokens?: number
           metadata?: Json
           output_tokens?: number
+          refund_reason?: string | null
+          refunded_at?: string | null
           tool_name: string
           total_tokens?: number
           user_id: string
@@ -11426,6 +11439,8 @@ export type Database = {
           input_tokens?: number
           metadata?: Json
           output_tokens?: number
+          refund_reason?: string | null
+          refunded_at?: string | null
           tool_name?: string
           total_tokens?: number
           user_id?: string
@@ -12355,6 +12370,10 @@ export type Database = {
           id: string
           normalized_url: string | null
           paid_at: string | null
+          payment_failed_at: string | null
+          refund_amount_cents: number | null
+          refund_reason: string | null
+          refunded_at: string | null
           report: Json | null
           site_deploy_status: string | null
           snapshot: Json | null
@@ -12378,6 +12397,10 @@ export type Database = {
           id?: string
           normalized_url?: string | null
           paid_at?: string | null
+          payment_failed_at?: string | null
+          refund_amount_cents?: number | null
+          refund_reason?: string | null
+          refunded_at?: string | null
           report?: Json | null
           site_deploy_status?: string | null
           snapshot?: Json | null
@@ -12401,6 +12424,10 @@ export type Database = {
           id?: string
           normalized_url?: string | null
           paid_at?: string | null
+          payment_failed_at?: string | null
+          refund_amount_cents?: number | null
+          refund_reason?: string | null
+          refunded_at?: string | null
           report?: Json | null
           site_deploy_status?: string | null
           snapshot?: Json | null
@@ -12421,6 +12448,8 @@ export type Database = {
           id: string
           order_id: string | null
           pass_token: string
+          revoke_reason: string | null
+          revoked_at: string | null
           status: string
           txn_id: string | null
           used_at: string | null
@@ -12433,6 +12462,8 @@ export type Database = {
           id?: string
           order_id?: string | null
           pass_token: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
           status?: string
           txn_id?: string | null
           used_at?: string | null
@@ -12445,6 +12476,8 @@ export type Database = {
           id?: string
           order_id?: string | null
           pass_token?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
           status?: string
           txn_id?: string | null
           used_at?: string | null
@@ -18429,6 +18462,10 @@ export type Database = {
         Returns: Json
       }
       mcp_plan_rank: { Args: { _plan: string }; Returns: number }
+      mcp_refund_call: {
+        Args: { _idempotency_key: string; _reason?: string; _user_id: string }
+        Returns: Json
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -18517,7 +18554,10 @@ export type Database = {
           risk_predicted: number
         }[]
       }
-      pericles_reward_health: { Args: { p_domain: string }; Returns: Json }
+      pericles_resume_config: { Args: { _config_id: string }; Returns: Json }
+      pericles_reward_health:
+        | { Args: { p_domain: string }; Returns: Json }
+        | { Args: { p_domain: string; p_since: string }; Returns: Json }
       pericles_rotate_pull_token: {
         Args: { _target_id: string }
         Returns: {

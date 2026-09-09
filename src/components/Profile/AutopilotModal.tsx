@@ -58,9 +58,35 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
   const [configId, setConfigId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
   const [status, setStatus] = useState<string>('idle');
+  const [pausedReason, setPausedReason] = useState<string | null>(null);
+  const [resuming, setResuming] = useState(false);
+
+  const isFrozen = status === 'paused';
+
+  // Reprise après gel automatique par le contrôleur (récompense négative).
+  // La RPC remet le compteur de mesure à la reprise pour éviter un re-gel immédiat.
+  const handleResume = async () => {
+    if (!configId) return;
+    setResuming(true);
+    try {
+      const { data, error } = await supabase.rpc('pericles_resume_config', { _config_id: configId });
+      if (error) throw error;
+      const v = (data ?? {}) as { resumed?: boolean; reason?: string };
+      if (!v.resumed) throw new Error(v.reason ?? 'refus');
+      setStatus('running');
+      setIsActive(true);
+      setPausedReason(null);
+      toast.success('Autopilote relancé — les mesures repartent de zéro');
+    } catch (e) {
+      toast.error(`Reprise impossible : ${(e as Error).message}`);
+    } finally {
+      setResuming(false);
+    }
+  };
 
   const handleToggleActive = async () => {
     if (!configId || !user) return;
+    if (isFrozen) return handleResume();
     setToggling(true);
     try {
       const newActive = !isActive;
@@ -80,6 +106,7 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
     }
   };
 
+
   // Load existing config
   useEffect(() => {
     if (!open || !user) return;
@@ -95,6 +122,8 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
         setConfigId(data.id);
         setIsActive(data.is_active ?? false);
         setStatus(data.status ?? 'idle');
+        setPausedReason((data as { paused_reason?: string | null }).paused_reason ?? null);
+
         setDiagAudit(data.diag_audit_complet ?? true);
         setDiagCrawl(data.diag_crawl ?? true);
         setDiagStratege(data.diag_stratege_cocoon ?? false);
@@ -350,23 +379,43 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
             </div>
           </section>
 
+          {/* ── GEL AUTOMATIQUE ── */}
+          {isFrozen && (
+            <div className="rounded-md border border-amber-500/50 bg-amber-500/5 p-3 text-xs space-y-1">
+              <div className="flex items-center gap-1.5 font-semibold">
+                <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
+                Cycles gelés par le contrôleur
+              </div>
+              <p className="text-muted-foreground">
+                {pausedReason ?? 'Les dernières actions mesurées ont fait baisser les résultats. Les cycles sont suspendus jusqu\'à une reprise manuelle.'}
+              </p>
+            </div>
+          )}
+
           {/* ── ACTIONS ── */}
           <div className="flex items-center gap-2 pt-2">
             {configId && (
               <Button
-                variant={isActive ? 'destructive' : 'default'}
+                variant={isFrozen ? 'outline' : isActive ? 'destructive' : 'default'}
                 size="sm"
-                disabled={toggling}
+                disabled={toggling || resuming}
                 onClick={handleToggleActive}
                 className={`gap-1.5 transition-all duration-500 ${
-                  isActive
+                  !isFrozen && isActive
                     ? 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400 animate-autopilot-glow'
                     : ''
                 }`}
               >
-                {toggling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isActive ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                {isActive ? 'Actif : mettre sur pause' : 'Inactif : cliquer pour activer'}
+                {toggling || resuming
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : isFrozen
+                    ? <RotateCcw className="h-3.5 w-3.5" />
+                    : isActive ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                {isFrozen
+                  ? 'Gelé : relancer l\'autopilote'
+                  : isActive ? 'Actif : mettre sur pause' : 'Inactif : cliquer pour activer'}
               </Button>
+
             )}
             <div className="ml-auto flex gap-2">
               <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Annuler</Button>

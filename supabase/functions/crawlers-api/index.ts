@@ -110,12 +110,56 @@ async function attributeTokens(admin: any, jobId: string, fn: string | null, sin
   return data ?? { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
 }
 
+// Contexte de facturation transmis au runner pour permettre le remboursement sur échec.
+type BillingRef = {
+  viaJwt: boolean;
+  idemKey: string;
+  costCents: number;
+  billedSource: string;
+};
+
+// Rembourse ce qui a été débité avant l'exécution quand le job échoue.
+// Un job qui n'a rien produit ne doit rien coûter : même juge à l'aller (mcp_authorize_call
+// ou dev_wallet_debit) et au retour (mcp_refund_call ou dev_wallet_credit).
+async function refundJob(admin: any, userId: string, billing: BillingRef | undefined, jobId: string, reason: string) {
+  if (!billing) return null;
+  try {
+    if (billing.viaJwt) {
+      const { data, error } = await admin.rpc("mcp_refund_call", {
+        _user_id: userId,
+        _idempotency_key: billing.idemKey,
+        _reason: reason,
+      });
+      if (error) throw new Error(error.message);
+      console.log(`[crawlers-api] refund mcp job=${jobId}`, data);
+      return data;
+    }
+    if (billing.costCents > 0) {
+      const { error } = await admin.rpc("dev_wallet_credit", {
+        _user_id: userId,
+        _amount_cents: billing.costCents,
+        _source: "refund",
+        _source_ref: `refund:${jobId}`,
+        _description: `Remboursement job échoué (${reason})`,
+      });
+      if (error) throw new Error(error.message);
+      console.log(`[crawlers-api] refund legacy job=${jobId} +${billing.costCents}c`);
+      return { refunded: true, cost_cents: billing.costCents };
+    }
+    return { refunded: false, reason: "nothing_billed" };
+  } catch (e) {
+    console.error(`[crawlers-api] refund failed job=${jobId}`, e);
+    return { refunded: false, reason: (e as Error).message };
+  }
+}
+
 // Exécute une feature en background et met à jour le job en DB.
 
-async function runFeature(admin: any, jobId: string, userId: string, feature: string, input: any) {
+async function runFeature(admin: any, jobId: string, userId: string, feature: string, input: any, billing?: BillingRef) {
   const f = FEATURE_MAP.get(feature);
   const startedAt = new Date().toISOString();
   try {
+
     await admin.from("crawlers_api_jobs")
       .update({ status: "running", started_at: startedAt })
       .eq("id", jobId);
@@ -157,10 +201,12 @@ async function runFeature(admin: any, jobId: string, userId: string, feature: st
 
   } catch (e) {
     console.error(`[crawlers-api] feature ${feature} failed`, e);
+    const refund = await refundJob(admin, userId, billing, jobId, (e as Error).message.slice(0, 120));
+
     await admin.from("crawlers_api_jobs")
       .update({
         status: "failed",
-        error: { message: (e as Error).message },
+        error: { message: (e as Error).message, refund },
         completed_at: new Date().toISOString(),
       })
       .eq("id", jobId);
@@ -168,8 +214,10 @@ async function runFeature(admin: any, jobId: string, userId: string, feature: st
     await attributeTokens(admin, jobId, f?.fn ?? null, startedAt);
 
     await dispatchWebhooks(admin, userId, "job.failed", {
-      id: jobId, feature, status: "failed", error: (e as Error).message,
+      id: jobId, feature, status: "failed", error: (e as Error).message, refund,
     }).catch(err => console.error("[crawlers-api] webhook dispatch failed", err));
+
+
 
   }
 }
@@ -264,6 +312,7 @@ Deno.serve(async (req) => {
       // journalier, idempotence). Via clé crw_live_ : débit legacy de 10 centimes.
       let costCents = 10;
       let billedSource = "wallet";
+      let billingRef: BillingRef;
       if ((ctx as any).viaJwt) {
         const tool = (ctx as any).mcpTool || `start_${feature}`;
         const idemKey = (ctx as any).mcpKey || job.id;
@@ -288,6 +337,7 @@ Deno.serve(async (req) => {
         }
         costCents = Math.round(Number(v.cost_micro ?? 0) / 10);
         billedSource = String(v.billed_source ?? "free");
+        billingRef = { viaJwt: true, idemKey, costCents, billedSource };
       } else {
         const { error: debitErr } = await ctx.admin.rpc("dev_wallet_debit", {
           _user_id: ctx.userId,
@@ -305,11 +355,13 @@ Deno.serve(async (req) => {
             job_id: job.id,
           });
         }
+        billingRef = { viaJwt: false, idemKey: job.id, costCents: 10, billedSource: "wallet" };
       }
 
       // Exécution background — le client poll /v1/jobs/{id}
       // @ts-ignore EdgeRuntime is provided by Supabase Edge runtime
-      EdgeRuntime.waitUntil(runFeature(ctx.admin, job.id, ctx.userId, feature, input));
+      EdgeRuntime.waitUntil(runFeature(ctx.admin, job.id, ctx.userId, feature, input, billingRef));
+
 
       return new Response(JSON.stringify({
         id: job.id,

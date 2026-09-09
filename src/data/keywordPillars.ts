@@ -59,7 +59,7 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       },
       {
         h2: "Combien coûte un audit SEO GEO ?",
-        body: "L'audit SEO GEO gratuit de Crawlers.fr couvre les 6 axes sur 1 page en moins de 90 secondes. Pour un site complet (jusqu'à 5 000 pages), l'audit avancé démarre à 49 € et inclut le plan d'action priorisé.",
+        body: "L'audit SEO GEO gratuit de Crawlers.fr couvre les 6 axes sur 1 page en moins de 90 secondes. Pour un site complet (jusqu'à 5 000 pages), l'audit avancé démarre à 49 € et inclut le plan d'action priorisé. Cette page décrit la méthode ; pour l'offre clé en main à prix fixe (audit, 3 contenus rédigés et fiche Google Maps), voir la passe visibilité sur /audit-geo-seo.",
       },
     ],
     faqs: [
@@ -71,6 +71,7 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       { q: "L'audit détecte-t-il la cannibalisation ?", a: "Oui, le module Cocoon Sémantique 3D repère automatiquement les pages en concurrence lexicale et propose une fusion ou une déprécation." },
     ],
     relatedLinks: [
+      { label: "Passe visibilité : l'offre d'audit GEO SEO clé en main", to: "/audit-geo-seo" },
       { label: "Score GEO : comment il est calculé", to: "/generative-engine-optimization" },
       { label: "Comparatif Crawlers vs Semrush", to: "/comparatif-crawlers-semrush" },
       { label: "Guide GEO vs SEO", to: "/generative-engine-optimization" },

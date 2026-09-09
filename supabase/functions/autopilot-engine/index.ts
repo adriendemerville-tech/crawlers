@@ -213,7 +213,7 @@ try {
     // ═══ Fetch active autopilot configs ═══
     let query = supabase
       .from('autopilot_configs')
-      .select('id, tracked_site_id, user_id, implementation_mode, max_pages_per_cycle, cooldown_hours, auto_pause_threshold, last_cycle_at, total_cycles_run, status, force_content_cycle, content_budget_pct, force_iktracker_article')
+      .select('id, tracked_site_id, user_id, implementation_mode, max_pages_per_cycle, cooldown_hours, auto_pause_threshold, last_cycle_at, total_cycles_run, status, force_content_cycle, content_budget_pct, force_iktracker_article, resumed_at')
       .eq('is_active', true);
 
     if (targetSiteId) {
@@ -265,15 +265,20 @@ try {
         // Reprise = action humaine (remise en 'idle' depuis l'admin).
         if (!bypassCooldown && config.status !== 'paused') {
           const pauseThreshold = Number(config.auto_pause_threshold ?? 15);
-          const { data: health } = await supabase.rpc('pericles_reward_health', { p_domain: siteInfo.domain });
+          const { data: health } = await supabase.rpc('pericles_reward_health', {
+            p_domain: siteInfo.domain,
+            p_since: (config as any).resumed_at ?? null,
+          });
           const measured = Number((health as any)?.measured ?? 0);
           const avgReward = Number((health as any)?.avg_reward ?? 0);
 
           if (measured >= 5 && avgReward <= -pauseThreshold) {
             const reason = `Récompense moyenne ${avgReward} sur ${measured} décisions mesurées (seuil -${pauseThreshold}) — cycles gelés`;
             await supabase.from('autopilot_configs').update({
-              status: 'paused', updated_at: new Date().toISOString(),
+              status: 'paused', paused_at: new Date().toISOString(), paused_reason: reason,
+              updated_at: new Date().toISOString(),
             }).eq('id', config.id);
+
 
             await supabase.from('autopilot_modification_log').insert({
               tracked_site_id: config.tracked_site_id, config_id: config.id, user_id: config.user_id,
