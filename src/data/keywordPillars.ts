@@ -174,8 +174,64 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
         ],
       },
       {
+        h2: "Les outils MCP appelables par Claude",
+        body: "Chaque outil renvoie une réponse structurée, directement exploitable par du code. Les lectures et les statuts de job sont gratuits ; les outils qui déclenchent un crawl ou une interrogation de moteur sont facturés.",
+        table: {
+          caption: "Outils du serveur MCP Crawlers.fr appelables depuis Claude : rôle, mode d'exécution et facturation.",
+          columns: ["Outil", "Ce qu'il retourne", "Exécution", "Facturation"],
+          rows: [
+            ["audit_page", "Statut HTTP, canonical, titres, métadonnées, JSON-LD, texte extrait, détection de coquille JavaScript", "Synchrone", "Décompté"],
+            ["audit_site", "Audit technique et GEO sur un domaine crawlé, constats agrégés par gravité", "Asynchrone", "Décompté"],
+            ["crawl_site", "Identifiant de job, puis liste des URL crawlées avec statut et profondeur", "Asynchrone", "Décompté"],
+            ["list_findings", "Constats normalisés : identifiant de règle, gravité, preuve, correction disponible", "Synchrone", "Gratuit"],
+            ["get_fix", "Patch adapté à la pile : HTML, WordPress, Next.js, TanStack Start", "Synchrone", "Décompté"],
+            ["check_indexability", "robots.txt, meta robots, cible canonical, chaîne de redirections", "Synchrone", "Décompté"],
+            ["analyze_schema", "Écarts entre le JSON-LD et le contenu visible, pas seulement la syntaxe", "Synchrone", "Décompté"],
+            ["analyze_links", "Liens entrants, profondeur de clic, pages orphelines, verdicts de liens cassés", "Synchrone", "Décompté"],
+            ["ai_visibility", "Citations observées par moteur (ChatGPT, Gemini, Perplexity, Claude) sur un jeu de questions", "Asynchrone", "Décompté"],
+            ["get_job", "Statut et résultat de n'importe quel job asynchrone", "Synchrone", "Gratuit"],
+          ],
+        },
+      },
+      {
+        h2: "Anatomie d'un constat renvoyé à Claude",
+        body: "Un constat est une unité stable : c'est ce qui permet à l'agent de corriger puis de prouver la correction. Sans identifiant stable, une re-mesure ne compare rien.",
+        h3s: [
+          { title: "Identifiant de règle", body: "Un code du type SEO-H1-001 ou GEO-ANSWER-001, invariant d'un audit à l'autre. C'est la clé qui rend la vérification possible." },
+          { title: "Preuve", body: "L'extrait, la valeur mesurée et l'URL concernée. Un constat sans preuve n'est pas transmis à l'agent." },
+          { title: "Gravité", body: "Critique, moyenne ou faible, calculée sur l'impact attendu et non sur l'ordre des règles. Claude traite d'abord les critiques." },
+          { title: "Correction disponible", body: "Un booléen et la liste des piles supportées. L'agent sait immédiatement s'il peut appliquer un patch ou s'il doit arbitrer." },
+        ],
+        table: {
+          caption: "Exemples de constats normalisés : gravité, preuve et piles couvertes par la correction.",
+          columns: ["Identifiant", "Règle", "Gravité", "Preuve type", "Piles couvertes"],
+          rows: [
+            ["SEO-H1-001", "Un seul h1 par page", "Critique", "Aucun h1 dans le HTML servi", "HTML, WordPress, Next.js"],
+            ["SEO-CANON-002", "Canonical présente et cohérente", "Critique", "Aucune balise canonical, page dupliquée en /?ref=", "HTML, WordPress, Next.js"],
+            ["SEO-META-007", "Meta description utile", "Moyenne", "62 caractères, sous le seuil d'affichage", "HTML, WordPress, Next.js"],
+            ["GEO-ANSWER-001", "Réponse directe citable", "Critique", "Aucun passage autonome de 2 à 4 phrases", "HTML, WordPress, Next.js"],
+            ["GEO-FANOUT-004", "Couverture des sous-questions", "Moyenne", "7 sous-requêtes sans contenu correspondant", "Éditorial"],
+          ],
+        },
+      },
+      {
         h2: "Comment connecter Claude à Crawlers.fr",
         body: "Le serveur MCP de Crawlers.fr parle Streamable HTTP avec authentification OAuth 2.1, le standard attendu par Claude Desktop, Claude Code et les autres clients compatibles. Vous ajoutez le serveur dans votre client, vous autorisez votre compte Crawlers.fr, et les outils apparaissent dans la conversation. La facturation suit votre plan : les outils inclus consomment votre quota, le reste est décompté en pay-as-you-go depuis votre portefeuille développeur.",
+        h3s: [
+          { title: "Prérequis", body: "Un compte Crawlers.fr, un client MCP compatible Streamable HTTP, et l'autorisation OAuth accordée une fois depuis le client." },
+          { title: "Plafond journalier", body: "Un plafond par compte arrête les boucles d'agent coûteuses. Chaque appel facturé est journalisé avec son coût dans l'espace développeurs." },
+          { title: "Remboursement en cas d'échec", body: "Un job facturé qui échoue est recrédité automatiquement sur le portefeuille, avec la clé d'idempotence correspondante." },
+        ],
+        table: {
+          caption: "Compatibilité des clients MCP avec le serveur Crawlers.fr.",
+          columns: ["Client", "Transport", "Authentification", "Usage typique"],
+          rows: [
+            ["Claude Code", "Streamable HTTP", "OAuth 2.1", "Audit et correction dans le dépôt"],
+            ["Claude Desktop", "Streamable HTTP", "OAuth 2.1", "Diagnostic conversationnel"],
+            ["Cursor", "Streamable HTTP", "OAuth 2.1", "Audit pendant l'édition"],
+            ["Client MCP conforme", "Streamable HTTP", "OAuth 2.1", "Automatisation sur mesure"],
+          ],
+        },
       },
     ],
     faqs: [
@@ -184,14 +240,24 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       { q: "Claude modifie-t-il mon site directement ?", a: "Non. Crawlers.fr fournit les constats et les corrections proposées ; c'est votre agent, dans votre dépôt ou via votre CMS connecté, qui applique la modification." },
       { q: "Est-ce du SEO ou du GEO ?", a: "Les deux. Les outils mesurent la performance classique (technique, balises, maillage) et la citabilité par les moteurs génératifs comme ChatGPT, Gemini, Perplexity et Claude." },
       { q: "Comment éviter les boucles d'appels coûteuses ?", a: "Un plafond journalier s'applique par compte, et chaque appel facturé est journalisé avec son coût dans l'espace développeurs." },
+      { q: "Que se passe-t-il si un appel échoue ?", a: "Le job est marqué en échec et le montant débité est recrédité sur le portefeuille développeur, sans intervention." },
     ],
     relatedLinks: [
       { label: "Serveur MCP SEO (page anglaise)", to: "/seo-mcp-server" },
+      { label: "Serveur MCP GEO", to: "/geo-mcp-server" },
       { label: "Audit SEO par IA : ce qui est mesuré", to: "/audit-seo-par-ia" },
       { label: "Crawlers.fr vs Claude : comparatif", to: "/comparatif-claude-vs-crawlers" },
       { label: "API SEO REST et tarifs", to: "/api-seo" },
     ],
+    externalRefs: [
+      { label: "Spécification du Model Context Protocol", href: "https://modelcontextprotocol.io/specification", note: "Transport Streamable HTTP, outils, ressources et prompts." },
+      { label: "Documentation MCP d'Anthropic", href: "https://docs.anthropic.com/en/docs/mcp", note: "Ajout d'un serveur MCP dans Claude Desktop et Claude Code." },
+      { label: "Google Search Central — bonnes pratiques", href: "https://developers.google.com/search/docs", note: "Règles officielles sur canonical, indexation et données structurées." },
+      { label: "Schema.org", href: "https://schema.org/docs/schemas.html", note: "Vocabulaire des données structurées vérifiées par analyze_schema." },
+      { label: "Web Vitals", href: "https://web.dev/articles/vitals", note: "Définition de LCP, INP et CLS utilisés dans le score de performance." },
+    ],
     datePublished: '2026-09-09',
+
   },
   'visibilite-ia': {
     slug: 'visibilite-ia',
