@@ -78,12 +78,23 @@ function computeRewardSignal(
 
 Deno.serve(handleRequest(async (req) => {
 try {
-    const auth = await getAuthenticatedUser(req);
-    if (!auth) return jsonError('Unauthorized', 401);
-    if (!auth.isAdmin) return jsonError('Admin only', 403);
+    // Le cron appelle cette fonction avec la clé service_role : sans cette porte,
+    // la boucle de récompense ne tournait jamais (403 Admin only) et reward_signal
+    // restait vide, donc jamais réinjecté dans la priorisation.
+    const authHeader = req.headers.get('Authorization') || '';
+    const isServiceRole = !!SERVICE_ROLE_KEY && authHeader.includes(SERVICE_ROLE_KEY);
 
-    const { domain, decision_id } = await req.json();
+    if (!isServiceRole) {
+      const auth = await getAuthenticatedUser(req);
+      if (!auth) return jsonError('Unauthorized', 401);
+      if (!auth.isAdmin) return jsonError('Admin only', 403);
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const domain: string | undefined = body?.domain;
+    const decision_id: string | undefined = body?.decision_id;
     const supabase = getServiceClient();
+
 
     // Find decisions ready for feedback (completed, no measurement yet, > 30 days old)
     let query = supabase
