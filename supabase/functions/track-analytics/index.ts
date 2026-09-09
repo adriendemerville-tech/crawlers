@@ -13,11 +13,46 @@ Deno.serve(handleRequest(async (req) => {
       'unknown';
 
     const body = await req.json();
-    const { event_type, session_id, url, user_id, event_data, target_url } = body;
+    const { event_type, session_id, url, user_id, event_data, target_url, analyzed_url } = body;
+
+    // Enregistrement serveur des URLs analysées (jamais écrit depuis le navigateur)
+    if (typeof analyzed_url === 'string' && analyzed_url.length > 0) {
+      try {
+        const parsed = new URL(analyzed_url);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          const { data: existing } = await supabase
+            .from('analyzed_urls')
+            .select('id, analysis_count')
+            .eq('url', analyzed_url)
+            .maybeSingle();
+
+          if (existing) {
+            await supabase
+              .from('analyzed_urls')
+              .update({
+                analysis_count: (existing.analysis_count || 1) + 1,
+                last_analyzed_at: new Date().toISOString(),
+              })
+              .eq('id', existing.id);
+          } else {
+            await supabase.from('analyzed_urls').upsert({
+              url: analyzed_url,
+              domain: parsed.hostname,
+              analysis_count: 1,
+              last_analyzed_at: new Date().toISOString(),
+            }, { onConflict: 'url' });
+          }
+        }
+      } catch {
+        // best-effort
+      }
+      if (!event_type) return jsonOk({ success: true });
+    }
 
     if (!event_type) {
       return jsonError('event_type is required', 400);
     }
+
 
     // Merge IP into event_data
     const enrichedEventData = {

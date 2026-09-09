@@ -225,6 +225,13 @@
       "when": 1788966007926,
       "tag": "0031_restrict_ga4_metric_writes_to_service_role",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1788966171447,
+      "tag": "0032_restrict_analyzed_urls_writes_to_service_role",
+      "breakpoints": true
     }
   ]
 }

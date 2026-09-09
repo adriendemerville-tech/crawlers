@@ -115,37 +115,27 @@ export async function trackAnalyticsEvent(
   await trackEventViaEdge(eventType, user?.id || null, options);
 }
 
-// Store analyzed URL if new
+// Store analyzed URL if new — écriture serveur uniquement (service role)
 export async function storeAnalyzedUrl(url: string) {
   try {
-    const domain = new URL(url).hostname;
-    
-    // Upsert: insert or increment count on conflict
-    const { data: existing } = await supabase
-      .from('analyzed_urls')
-      .select('id, analysis_count')
-      .eq('url', url)
-      .maybeSingle();
-
-    if (existing) {
-      await supabase
-        .from('analyzed_urls')
-        .update({
-          analysis_count: (existing.analysis_count || 1) + 1,
-          last_analyzed_at: new Date().toISOString(),
-        })
-        .eq('id', existing.id);
-    } else {
-      await supabase
-        .from('analyzed_urls')
-        .upsert({
-          url,
-          domain,
-          analysis_count: 1,
-          last_analyzed_at: new Date().toISOString(),
-        }, { onConflict: 'url' });
-    }
+    const endpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-analytics`;
+    const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+    void fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey,
+        Authorization: `Bearer ${apikey}`,
+      },
+      body: JSON.stringify({ analyzed_url: url }),
+      keepalive: true,
+      mode: 'cors',
+      signal: AbortSignal.timeout(5000),
+    }).catch(() => {
+      // best-effort
+    });
   } catch {
     // best-effort
   }
 }
+
