@@ -231,6 +231,8 @@ export function CocoonForceGraph({
       }
     }
 
+    const pillarIds = detectPillarPages(nodes, homeId);
+
     const gNodes: GraphNode[] = nodes.map((n, i) => {
       const crawlDepth = n.crawl_depth ?? n.depth ?? 0;
       const pageType = n.page_type || "unknown";
@@ -249,6 +251,8 @@ export function CocoonForceGraph({
         depth: crawlDepth,
         pageType,
         isHome,
+        isPillar: !isHome && pillarIds.has(n.id),
+
         pageAuthority: n.page_authority ?? 0,
         linksIn: n.internal_links_in ?? 0,
         linksOut: n.internal_links_out ?? 0,
