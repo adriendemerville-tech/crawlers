@@ -2409,6 +2409,9 @@ function buildExecutiveSummaryHTML(
     { lcpMs: ctx.expertData?.scores?.performance?.lcp ?? null, techMax },
   );
 
+  // Pondération de terrain CrUX : toujours dite, y compris son absence.
+  const cruxHTML = cruxWeightingBlockHTML(ctx.expertData?.scores?.performance?.cruxWeighting ?? null, lang);
+
 
 
   const parts = [tech100, geo100].filter((v): v is number => typeof v === 'number' && v > 0);
