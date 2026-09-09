@@ -112,6 +112,11 @@ export function ContentArchitectTasksPanel({ domain, trackedSiteId, onApplyTask 
                   <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-mono ${priorityColor(task.priority)}`}>
                     {task.priority === 'important' || task.priority === 'high' ? 'Haute' : task.priority === 'low' ? 'Basse' : 'Moyenne'}
                   </span>
+                  {task.isPillar && (
+                    <span className="text-[8px] px-1.5 py-0.5 rounded-full font-mono text-violet-300 bg-violet-400/10">
+                      Pilier ×{(task.pillarBoost || 1.3).toFixed(1)}
+                    </span>
+                  )}
                   <span className="text-[8px] text-white/20 font-mono">{task.category}</span>
                 </div>
               </div>
