@@ -15,6 +15,7 @@ const sections = [
   { id: 'code', title: '5. Responsabilité sur l\'Implémentation du Code' },
   { id: 'injection', title: '5 bis. Injection de Code — API CMS, Plugin WordPress, GTM' },
   { id: 'usage-malveillant', title: '5 ter. Interdiction des Usages Malveillants' },
+  { id: 'mcp', title: '5 quater. Serveur MCP — Conditions d\'Usage' },
   { id: 'credits', title: '6. Système de Crédits' },
   { id: 'abonnement', title: '7. Abonnement Pro Agency' },
   { id: 'paiement', title: '7 bis. Paiement, facturation et revendeur (Paddle)' },
@@ -100,7 +101,7 @@ const CGVU = () => {
                 <li>Les <strong>intégrations API tierces</strong> : Google Search Console (OAuth), Google Analytics 4 (OAuth), Google My Business (OAuth), Google Ads (OAuth), Matomo (token API), CMS REST API (WordPress, Shopify, Webflow, Drupal, Wix, Odoo, PrestaShop), Rank Math SEO. Les données importées via ces intégrations sont <strong>anonymisées et agrégées</strong> avant toute utilisation par les modèles IA pour les prédictions et recommandations. Chaque intégration est <strong>déconnectable en un clic</strong> depuis Console → API Externes. La page <a href="/api-integrations" className="text-primary underline">API & Intégrations</a> détaille l'ensemble des API disponibles et leur utilisation des données ;</li>
                 <li>L'<strong>Conversion Optimizer</strong> : audit UX/CRO contextuel par IA combinant diagnostic visuel LLM et données comportementales GA4 (scroll, clics CTA, conversions, taux de sortie). Les suggestions apparaissent sous forme de bulles reliées aux éléments de la page. Analyse sur 7 axes : ton, CTAs, lisibilité, potentiel de conversion, expérience mobile, mots-clés, engagement utilisateur. Les suggestions critiques alimentent automatiquement le Workbench Architect. Réservé aux abonnés Pro Agency et Pro Agency+ ;</li>
                 <li>Le <strong>Social Content Hub</strong> : génération, traduction et publication de contenus sociaux multi-plateformes via IA, avec génération de visuels. Limite de 5 contenus/mois en Freemium, illimité en Pro Agency ;</li>
-                <li>Le <strong>serveur MCP</strong> (Model Context Protocol) : exposition de 12 outils Crawlers aux clients IA tiers (Claude Desktop, etc.) via des API keys persistantes. 3 outils gratuits pour l'acquisition, 9 réservés aux abonnés Pro Agency ;</li>
+                <li>Le <strong>serveur MCP</strong> (Model Context Protocol) : exposition des outils Crawlers aux clients IA tiers (Claude Code, Claude Desktop, Cursor, Codex, etc.) via le protocole Streamable HTTP et une authentification OAuth 2.1 rattachée au compte utilisateur. Facturation hybride détaillée à l'article 5 quater ;</li>
                 <li>L'<strong>analyse de logs serveur</strong> : ingestion et analyse des fichiers de logs HTTP pour comprendre le comportement de Googlebot, Bingbot et des bots IA (GPTBot, ClaudeBot, PerplexityBot). Détection du budget crawl gaspillé, des pages orphelines et monitoring continu via connecteur Cloudflare ;</li>
                 <li>Le <strong>diagnostic de chute</strong> : détection réactive et prédictive des baisses de trafic via régression linéaire sur 8 semaines, croisée avec les données GSC, les audits techniques et E-E-A-T ;</li>
                 <li>Le <strong>Benchmark Rank SERP</strong> : outil gratuit de comparaison des positions Google via 3 providers SERP simultanés (DataForSEO, SerpApi, Serper.dev). Le classement croisé avec pénalité single-hit (+20 positions) élimine les faux positifs et produit un ranking fiable. Accessible à tous les utilisateurs, inscrits ou non (<a href="/app/ranking-serp" className="text-primary underline">/app/ranking-serp</a>) ;</li>
@@ -252,6 +253,47 @@ const CGVU = () => {
               </p>
               <p>
                 L'utilisateur s'engage à <strong>indemniser et garantir l'Éditeur</strong> contre toute réclamation, action ou poursuite de tiers résultant directement ou indirectement de l'utilisation malveillante des services de la Plateforme.
+              </p>
+            </section>
+
+            {/* Article 5 quater */}
+            <section id="mcp">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">5 quater. Serveur MCP (Model Context Protocol) — Conditions d'Usage</h2>
+              <p>
+                La Plateforme expose un <strong>serveur MCP</strong> accessible à l'adresse <code>https://crawlers.fr/mcp</code>, conforme au protocole Model Context Protocol (transport Streamable HTTP). Il permet à des agents IA tiers (Claude Code, Claude Desktop, Cursor, Codex, ou tout client compatible) d'appeler les outils d'audit, d'analyse et de correction de Crawlers.fr dans le cadre d'une boucle <strong>audit → constat → correction → vérification</strong>.
+              </p>
+
+              <h3 className="text-lg font-semibold mt-6 mb-2">Accès et authentification</h3>
+              <ul>
+                <li>L'accès au serveur MCP requiert un <strong>compte Crawlers.fr actif</strong> et une authentification <strong>OAuth 2.1</strong> ; le token est rattaché au compte et au wallet de l'utilisateur ;</li>
+                <li>L'utilisateur est seul responsable des actions effectuées par les agents IA qu'il a connectés au serveur MCP avec ses identifiants ;</li>
+                <li>La connexion d'un client IA tiers emporte acceptation des présentes CGVU ; l'utilisateur peut révoquer l'accès à tout moment depuis son espace développeur.</li>
+              </ul>
+
+              <h3 className="text-lg font-semibold mt-6 mb-2">Facturation hybride des appels MCP</h3>
+              <ul>
+                <li><strong>Outils gratuits</strong> : la lecture de statuts, de résultats de jobs et de ressources documentaires n'est jamais facturée ;</li>
+                <li><strong>Outils inclus au plan</strong> : certains outils consomment le quota mensuel de la formule souscrite ; en cas de dépassement, le dépassement est débité du <strong>wallet développeur</strong> en fractions de crédit (micro-crédits) ;</li>
+                <li><strong>Outils exclusifs MCP ou à coût externe</strong> (ex. données SERP, DataForSEO, appels LLM) : toujours débités du wallet développeur, quel que soit le plan, au tarif unitaire affiché dans l'espace développeur au moment de l'appel ;</li>
+                <li><strong>Asynchrone</strong> : les traitements longs sont lancés via des outils <code>start_*</code> qui créent un job ; le débit intervient à la création du job, la consultation du résultat est gratuite ;</li>
+                <li><strong>Remboursement automatique</strong> : tout job MCP qui échoue pour une cause imputable à la Plateforme est intégralement et automatiquement recrédité sur le wallet, sans demande de l'utilisateur ;</li>
+                <li><strong>Plafond de sécurité</strong> : un plafond de dépense journalier s'applique aux appels MCP pour prévenir les boucles d'agents ; il est configurable dans l'espace développeur.</li>
+              </ul>
+
+              <h3 className="text-lg font-semibold mt-6 mb-2">Usages interdits spécifiques au MCP</h3>
+              <ul>
+                <li>Partager ou revendre son token OAuth, ou laisser un agent non autorisé consommer le wallet d'autrui ;</li>
+                <li>Utiliser le serveur MCP pour auditer, crawler ou analyser un site dont l'utilisateur n'est pas le propriétaire légitime ou mandaté, à des fins hostiles (déni de service, collecte abusive, déstabilisation concurrentielle) ;</li>
+                <li>Mettre en place des boucles automatisées d'appels destinées à contourner les plafonds, extraire la base de règles ou reconstituer le service en concurrence de la Plateforme ;</li>
+                <li>Présenter les résultats d'audit Crawlers obtenus via MCP comme un service propre sans mention de la source, hors offre Marque Blanche (article 8).</li>
+              </ul>
+              <p>
+                Tout manquement expose l'utilisateur aux sanctions de l'article 5 ter (suspension, suppression, conservation des logs).
+              </p>
+
+              <h3 className="text-lg font-semibold mt-6 mb-2">Données et responsabilité</h3>
+              <p>
+                Les appels MCP sont journalisés (outil appelé, horodatage, tokens consommés en entrée/sortie, montant débité) et consultables dans l'espace développeur. Crawlers.fr ne saurait être tenu responsable des modifications de code effectuées par un agent IA tiers à la suite d'un constat remonté par la Plateforme : la correction proposée est une recommandation dont l'implémentation reste sous la responsabilité de l'utilisateur (article 5).
               </p>
             </section>
 
