@@ -221,7 +221,7 @@ function ParmenionLandingComponent(): React.ReactElement {
                 <span className="h-1.5 w-1.5 rounded-full bg-brand-violet" />
                 Passe unique · 59 € TTC · sans abonnement
               </div>
-              <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+              <h1 className="mb-6 font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
                 Faites venir vos clients depuis{' '}
                 <span className="text-brand-violet">les moteurs IA</span> et Google Maps
               </h1>
@@ -283,8 +283,8 @@ function ParmenionLandingComponent(): React.ReactElement {
         {/* Réponse directe */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-3xl px-4 py-14">
-            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
-              Qu'est-ce que la passe Crawlers et combien ça coûte ?
+            <h2 className="mb-4 font-display text-2xl font-bold sm:text-3xl">
+              Qu'est-ce que la <span className="text-brand-violet">passe Crawlers</span> et combien ça coûte ?
             </h2>
             <p className="citable-passage text-muted-foreground">
               La passe Crawlers est une prestation unique à 59 € TTC. Elle comprend un audit de site, la rédaction de 3 contenus, l'optimisation de la fiche Google Maps et un compte rendu avant / après. Le délai annoncé est de 72 heures après paiement, et le remboursement est intégral tant qu'aucun déploiement n'a eu lieu.
@@ -313,7 +313,7 @@ function ParmenionLandingComponent(): React.ReactElement {
                 </Suspense>
               ) : teaser ? (
                 <div className="rounded-3xl border-2 border-foreground bg-card p-8 shadow-sm">
-                  <h2 className="mb-2 text-xl font-bold">
+                  <h2 className="mb-2 font-display text-xl font-bold">
                     {teaser.unreachable
                       ? `${teaser.host} n'a pas pu être analysé`
                       : `Résultat pour ${teaser.host}`}
@@ -356,8 +356,8 @@ function ParmenionLandingComponent(): React.ReactElement {
             <p className="mb-3 text-sm font-medium uppercase tracking-wider text-brand-gold">
               Comment ça marche
             </p>
-            <h2 className="mb-12 max-w-2xl text-3xl font-bold sm:text-4xl">
-              Quatre étapes, de l'analyse au déploiement validé
+            <h2 className="mb-12 max-w-2xl font-display text-3xl font-bold sm:text-4xl">
+              <span className="text-brand-violet">Quatre étapes</span>, de l'analyse au déploiement validé
             </h2>
             <ol className="grid list-none gap-8 sm:grid-cols-2">
               {STEPS.map((s, i) => (
@@ -386,7 +386,7 @@ function ParmenionLandingComponent(): React.ReactElement {
         {/* What's included */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
-            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Ce qui est corrigé en une seule passe</h2>
+            <h2 className="mb-4 font-display text-2xl font-bold sm:text-3xl">Ce qui est corrigé <span className="text-brand-violet">en une seule passe</span></h2>
             <p className="citable-passage mb-10 max-w-3xl text-muted-foreground">
               Une passe Crawlers corrige trois familles de problèmes de référencement local et de visibilité IA : les erreurs techniques et sémantiques de vos pages (titres, métadonnées, hiérarchie de titres, données structurées), le manque de contenu répondant aux questions réelles de vos clients, et une fiche Google Maps incomplète ou non optimisée. Le périmètre est volontairement borné : un site, une fiche, trois contenus.
             </p>
@@ -407,7 +407,7 @@ function ParmenionLandingComponent(): React.ReactElement {
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
             <div className="mx-auto max-w-xl rounded-3xl border-2 border-foreground bg-card p-8 text-center shadow-sm">
-              <h2 className="mb-2 text-2xl font-bold">Passe Parmenion</h2>
+              <h2 className="mb-2 font-display text-2xl font-bold text-brand-violet">Passe Parmenion</h2>
               <p className="mb-6 text-muted-foreground">Paiement unique. Aucun abonnement caché.</p>
               <div className="mb-6 flex items-baseline justify-center gap-2">
                 <span className="text-5xl font-bold">59 €</span>
@@ -447,7 +447,7 @@ function ParmenionLandingComponent(): React.ReactElement {
         {/* Guarantee / trust */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
-            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Rien n'est déployé avant votre validation</h2>
+            <h2 className="mb-4 font-display text-2xl font-bold sm:text-3xl">Rien n'est déployé avant <span className="text-brand-violet">votre validation</span></h2>
             <p className="citable-passage mb-10 max-w-3xl text-muted-foreground">
               Aucune modification n'est publiée sur votre site ou votre fiche Google Maps avant votre accord écrit et le paiement des 59 € TTC. Chaque déploiement est journalisé et réversible : vous savez quoi a été changé, quand, et vous pouvez revenir à l'état précédent. Tant que rien n'est publié, le remboursement est intégral.
             </p>
@@ -473,7 +473,7 @@ function ParmenionLandingComponent(): React.ReactElement {
         {/* FAQ */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-3xl px-4 py-16 sm:py-20">
-            <h2 className="mb-10 text-2xl font-bold sm:text-3xl">Questions fréquentes</h2>
+            <h2 className="mb-10 font-display text-2xl font-bold sm:text-3xl">Questions <span className="text-brand-violet">fréquentes</span></h2>
             <div className="space-y-4">
               {FAQ.map(([q, a]) => (
                 <details key={q} className="group rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -491,7 +491,7 @@ function ParmenionLandingComponent(): React.ReactElement {
         {/* Maillage interne */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
-            <h2 className="mb-6 text-xl font-bold sm:text-2xl">Pour aller plus loin</h2>
+            <h2 className="mb-6 font-display text-xl font-bold sm:text-2xl">Pour aller <span className="text-brand-violet">plus loin</span></h2>
             <ul className="grid gap-3 sm:grid-cols-2">
               {[
                 ['/marina', 'Audit de visibilité complet avec rapport détaillé'],
@@ -516,7 +516,7 @@ function ParmenionLandingComponent(): React.ReactElement {
         {/* Final CTA */}
         <section>
           <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:py-24">
-            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Prêt à corriger votre visibilité ?</h2>
+            <h2 className="mb-4 font-display text-2xl font-bold sm:text-3xl">Prêt à corriger <span className="text-brand-violet">votre visibilité</span> ?</h2>
             <p className="mb-8 text-muted-foreground">Lancez l'analyse gratuite. Vous ne payez que lorsque vous décidez de déployer les correctifs.</p>
             <Button
               onClick={focusInput}
