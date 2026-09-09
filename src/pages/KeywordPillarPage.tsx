@@ -243,8 +243,39 @@ export default function KeywordPillarPage() {
                   <p className="text-base leading-relaxed">{h3.body}</p>
                 </article>
               ))}
+              {section.table && (
+                <DataTable
+                  caption={section.table.caption}
+                  columns={section.table.columns}
+                  rows={section.table.rows}
+                />
+              )}
             </section>
           ))}
+
+          {data.externalRefs && data.externalRefs.length > 0 && (
+            <section className="mt-16 pt-10 border-t border-border">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">
+                Sources et références
+              </h2>
+              <ul className="space-y-3 list-none p-0">
+                {data.externalRefs.map((ref) => (
+                  <li key={ref.href} className="rounded-lg border border-border bg-card/30 p-4 not-prose">
+                    <a
+                      href={ref.href}
+                      target="_blank"
+                      rel="noopener nofollow"
+                      className="font-medium text-foreground underline underline-offset-4"
+                    >
+                      {ref.label}
+                    </a>
+                    <p className="mt-1 text-sm text-foreground/70 leading-relaxed">{ref.note}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
 
           <section className="mt-16 pt-10 border-t border-border">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">Questions fréquentes</h2>
