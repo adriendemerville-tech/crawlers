@@ -25,6 +25,7 @@ import { MaillageIPRCard, computeMaillageFromCrawlPages } from '@/components/Exp
 import { FairUseLimitModal } from '@/components/SiteCrawl/FairUseLimitModal';
 import { ContentIntegrityPanel } from '@/components/SiteCrawl/ContentIntegrityPanel';
 import { CrawlCoverageBanner } from '@/components/SiteCrawl/CrawlCoverageBanner';
+import { RankedKeywordsCard } from '@/components/seo/RankedKeywordsCard';
 
 
 import { getScoreColor, getScoreBg } from '@/components/SiteCrawl/types';
