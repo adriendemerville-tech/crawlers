@@ -112,18 +112,364 @@ var get_site_audit_default = defineTool3({
   }
 });
 
+// src/lib/mcp/tools/get_job.ts
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z2 } from "npm:zod@^3.24.2";
+
+// src/lib/mcp/supabase.ts
+import { createClient as createClient3 } from "npm:@supabase/supabase-js@^2.90.1";
+function runtimeEnv(name) {
+  const runtime = globalThis;
+  return runtime.Deno?.env?.get?.(name) ?? runtime.process?.env?.[name];
+}
+function configuredEnv(names) {
+  for (const name of names) {
+    const value = runtimeEnv(name)?.trim();
+    if (value) return value;
+  }
+  return void 0;
+}
+function supabaseProjectUrl() {
+  const url = configuredEnv(["SUPABASE_URL", "VITE_SUPABASE_URL"]);
+  if (!url) throw new Error("SUPABASE_URL requis");
+  return url;
+}
+function supabasePublishableKey() {
+  const direct = configuredEnv(["SUPABASE_PUBLISHABLE_KEY", "VITE_SUPABASE_PUBLISHABLE_KEY"]);
+  if (direct) return direct;
+  const keyset = runtimeEnv("SUPABASE_PUBLISHABLE_KEYS");
+  if (keyset) {
+    try {
+      const parsed = JSON.parse(keyset);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const keys = parsed;
+        const key = [keys.default, ...Object.values(keys)].find((v) => typeof v === "string" && v.trim().startsWith("sb_publishable_"))?.trim();
+        if (key) return key;
+      }
+    } catch {
+    }
+  }
+  const legacy = configuredEnv(["SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY"]);
+  if (legacy) return legacy;
+  throw new Error("Cl\xE9 publique Supabase requise");
+}
+function supabaseForUser3(ctx) {
+  const token = ctx.getToken();
+  if (!token) throw new Error("Jeton OAuth manquant");
+  return createClient3(supabaseProjectUrl(), supabasePublishableKey(), {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+async function crawlersApi(ctx, path, init = {}) {
+  const token = ctx.getToken();
+  if (!token) throw new Error("Jeton OAuth manquant");
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+    "x-crawlers-auth": "jwt"
+  };
+  if (init.tool) headers["x-mcp-tool"] = init.tool;
+  if (init.idempotencyKey) headers["x-mcp-idempotency-key"] = init.idempotencyKey;
+  const res = await fetch(`${supabaseProjectUrl()}/functions/v1/crawlers-api${path}`, {
+    method: init.method ?? "GET",
+    headers,
+    body: init.body === void 0 ? void 0 : JSON.stringify(init.body)
+  });
+  let body = null;
+  try {
+    body = await res.json();
+  } catch {
+    body = null;
+  }
+  return { status: res.status, body };
+}
+
+// src/lib/mcp/billing.ts
+var err = (text) => ({
+  content: [{ type: "text", text }],
+  isError: true
+});
+var ok = (text, structured) => ({
+  content: [{ type: "text", text }],
+  ...structured ? { structuredContent: structured } : {}
+});
+var euros = (micro) => `${(micro / 1e3).toFixed(3)} \u20AC`;
+function idempotencyKey(tool, input) {
+  const stable = JSON.stringify(input ?? {}, Object.keys(input ?? {}).sort());
+  const window = Math.floor(Date.now() / 3e5);
+  return `${tool}:${window}:${stable}`;
+}
+
+// src/lib/mcp/tools/get_job.ts
+var get_job_default = defineTool4({
+  name: "get_job",
+  title: "Statut d'un job",
+  description: "R\xE9cup\xE8re l'\xE9tat et le r\xE9sultat d'un job Crawlers lanc\xE9 par un outil `start_*` ou `audit_page`. Gratuit, \xE0 appeler en boucle jusqu'\xE0 `completed`.",
+  inputSchema: {
+    job_id: z2.string().uuid().describe("Identifiant du job renvoy\xE9 au lancement")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ job_id }, ctx) => {
+    if (!ctx.isAuthenticated()) return err("Non authentifi\xE9.");
+    const { status, body } = await crawlersApi(ctx, `/v1/jobs/${job_id}`);
+    if (status !== 200) return err(`Job introuvable ou inaccessible (${status}).`);
+    return ok(
+      `Job ${body.id} \xB7 ${body.feature} \xB7 ${body.status}` + (body.error ? ` \xB7 erreur : ${body.error?.message ?? "inconnue"}` : ""),
+      body
+    );
+  }
+});
+
+// src/lib/mcp/tools/get_wallet_balance.ts
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.24.0";
+var get_wallet_balance_default = defineTool5({
+  name: "get_wallet_balance",
+  title: "Solde du wallet",
+  description: "Retourne le solde du wallet d\xE9veloppeur (en micro-cr\xE9dits et en euros), la consommation MCP du jour et le plafond journalier.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async (_input, ctx) => {
+    if (!ctx.isAuthenticated()) return err("Non authentifi\xE9.");
+    const supabase = supabaseForUser3(ctx);
+    const userId = ctx.getUserId();
+    const [{ data: wallet }, { data: usage }, { data: limit }, { data: settings }] = await Promise.all([
+      supabase.from("dev_wallets").select("balance_micro, currency, updated_at").eq("user_id", userId).maybeSingle(),
+      supabase.from("mcp_daily_usage").select("spent_micro, calls").eq("user_id", userId).eq("day", (/* @__PURE__ */ new Date()).toISOString().slice(0, 10)).maybeSingle(),
+      supabase.from("mcp_user_limits").select("daily_cap_micro").eq("user_id", userId).maybeSingle(),
+      supabase.from("mcp_billing_settings").select("default_daily_cap_micro").maybeSingle()
+    ]);
+    const balanceMicro = Number(wallet?.balance_micro ?? 0);
+    const spentMicro = Number(usage?.spent_micro ?? 0);
+    const capMicro = Number(limit?.daily_cap_micro ?? settings?.default_daily_cap_micro ?? 0);
+    const payload = {
+      balance_micro: balanceMicro,
+      balance_eur: balanceMicro / 1e3,
+      currency: wallet?.currency ?? "EUR",
+      today_spent_micro: spentMicro,
+      today_calls: Number(usage?.calls ?? 0),
+      daily_cap_micro: capMicro,
+      topup_url: "/developers/profile?tab=facturation"
+    };
+    return ok(
+      `Solde ${euros(balanceMicro)} \xB7 consomm\xE9 aujourd'hui ${euros(spentMicro)} sur un plafond de ${euros(capMicro)}.`,
+      payload
+    );
+  }
+});
+
+// src/lib/mcp/tools/list_tools_pricing.ts
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.24.0";
+var list_tools_pricing_default = defineTool6({
+  name: "list_tools_pricing",
+  title: "Grille tarifaire MCP",
+  description: "Liste le co\xFBt de chaque outil MCP : gratuit, inclus dans le plan, d\xE9bordement factur\xE9 au wallet, ou exclusivement payant.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async (_input, ctx) => {
+    if (!ctx.isAuthenticated()) return err("Non authentifi\xE9.");
+    const supabase = supabaseForUser3(ctx);
+    const { data, error } = await supabase.from("mcp_tool_pricing").select("tool_name, class, cost_micro, min_plan, monthly_included, label, enabled").eq("enabled", true).order("cost_micro", { ascending: true });
+    if (error) return err(`Erreur: ${error.message}`);
+    const rows = data ?? [];
+    const summary = rows.map(
+      (r) => `- ${r.tool_name} \xB7 ${r.class} \xB7 ${r.cost_micro === 0 ? "gratuit" : euros(r.cost_micro)}` + (r.monthly_included ? ` \xB7 ${r.monthly_included}/mois inclus \xE0 partir de ${r.min_plan}` : "")
+    ).join("\n");
+    return ok(summary || "Aucun outil factur\xE9.", { tools: rows, unit: "micro-cr\xE9dit = 0,001 \u20AC" });
+  }
+});
+
+// src/lib/mcp/tools/audit_page.ts
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z3 } from "npm:zod@^3.24.2";
+
+// src/lib/mcp/jobs.ts
+async function startJob(ctx, tool, feature, input) {
+  if (!ctx.isAuthenticated()) return err("Non authentifi\xE9.");
+  const { status, body } = await crawlersApi(ctx, "/v1/jobs", {
+    method: "POST",
+    body: { feature, input },
+    tool,
+    idempotencyKey: idempotencyKey(tool, { feature, ...input })
+  });
+  if (status === 402) {
+    return err(
+      `Solde insuffisant. Rechargez votre wallet sur ${body?.topup_url ?? "/developers/profile?tab=facturation"}`
+    );
+  }
+  if (status === 403) {
+    const reason = body?.error ?? "refus\xE9";
+    if (reason === "daily_cap_reached") return err("Plafond journalier de d\xE9pense MCP atteint.");
+    if (reason === "plan_quota_exhausted") return err("Quota du plan \xE9puis\xE9 pour cet outil ce mois-ci.");
+    return err(`Appel refus\xE9 : ${reason}`);
+  }
+  if (status !== 202) {
+    return err(`\xC9chec du lancement (${status}) : ${body?.error ?? "erreur inconnue"}`);
+  }
+  const costMicro = Number(body?.cost_cents ?? 0) * 10;
+  const note = body?.billed_source === "plan" ? "Inclus dans votre plan." : body?.billed_source === "free" ? "Gratuit." : `D\xE9bit\xE9 du wallet : ${euros(costMicro)}.`;
+  return ok(
+    `Job ${body.id} lanc\xE9 (${feature}). ${note} Appelez \`get_job\` avec ce job_id jusqu'au statut \`completed\`.`,
+    { job_id: body.id, feature, status: body.status, billed_source: body.billed_source ?? null, cost_micro: costMicro }
+  );
+}
+
+// src/lib/mcp/tools/audit_page.ts
+var audit_page_default = defineTool7({
+  name: "audit_page",
+  title: "Audit d'une page",
+  description: "Lance l'audit expert d'une page (technique, s\xE9mantique, E-E-A-T) et renvoie un job_id \xE0 interroger avec `get_job`. Inclus dans le plan jusqu'au quota mensuel, puis factur\xE9 au wallet.",
+  inputSchema: {
+    url: z3.string().url().describe("URL compl\xE8te de la page \xE0 auditer")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+  handler: ({ url }, ctx) => startJob(ctx, "audit_page", "audit_expert", { url })
+});
+
+// src/lib/mcp/tools/analyze_schema.ts
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z4 } from "npm:zod@^3.24.2";
+var analyze_schema_default = defineTool8({
+  name: "analyze_schema",
+  title: "Analyse des donn\xE9es structur\xE9es",
+  description: "Analyse la couche machine d'une page (JSON-LD, balisage, m\xE9tadonn\xE9es lisibles par les agents) et renvoie un job_id \xE0 interroger avec `get_job`.",
+  inputSchema: {
+    url: z4.string().url().describe("URL compl\xE8te de la page")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+  handler: ({ url }, ctx) => startJob(ctx, "analyze_schema", "machine_layer", { url })
+});
+
+// src/lib/mcp/tools/check_indexability.ts
+import { defineTool as defineTool9 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z5 } from "npm:zod@^3.24.2";
+var check_indexability_default = defineTool9({
+  name: "check_indexability",
+  title: "Indexabilit\xE9 d'une page",
+  description: "V\xE9rifie l'acc\xE8s des robots \xE0 une page (robots, canonique, rendu, coquille JavaScript) et renvoie un job_id \xE0 interroger avec `get_job`.",
+  inputSchema: {
+    url: z5.string().url().describe("URL compl\xE8te de la page")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+  handler: ({ url }, ctx) => startJob(ctx, "check_indexability", "machine_layer", { url })
+});
+
+// src/lib/mcp/tools/analyze_links.ts
+import { defineTool as defineTool10 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z6 } from "npm:zod@^3.24.2";
+var analyze_links_default = defineTool10({
+  name: "analyze_links",
+  title: "Analyse du maillage interne",
+  description: "Analyse le maillage interne d'un domaine (profondeur, cocons, cannibalisation) et renvoie un job_id \xE0 interroger avec `get_job`.",
+  inputSchema: {
+    domain: z6.string().min(3).describe("Domaine \xE0 analyser")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+  handler: ({ domain }, ctx) => startJob(ctx, "analyze_links", "cocoon", { domain })
+});
+
+// src/lib/mcp/tools/start_site_crawl.ts
+import { defineTool as defineTool11 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z7 } from "npm:zod@^3.24.2";
+var start_site_crawl_default = defineTool11({
+  name: "start_site_crawl",
+  title: "Crawl de site",
+  description: "Lance un crawl du site (parcours en largeur, profondeur 3 maximum) et renvoie un job_id \xE0 interroger avec `get_job`. Op\xE9ration longue.",
+  inputSchema: {
+    domain: z7.string().min(3).describe("Domaine \xE0 crawler (ex: crawlers.fr)"),
+    depth: z7.number().int().min(1).max(3).optional().describe("Profondeur de crawl"),
+    limit: z7.number().int().min(1).max(500).optional().describe("Nombre maximum de pages")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+  handler: ({ domain, depth, limit }, ctx) => startJob(ctx, "start_site_crawl", "site_crawl", {
+    domain,
+    ...depth ? { depth } : {},
+    ...limit ? { limit } : {}
+  })
+});
+
+// src/lib/mcp/tools/start_geo_audit.ts
+import { defineTool as defineTool12 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z8 } from "npm:zod@^3.24.2";
+var start_geo_audit_default = defineTool12({
+  name: "start_geo_audit",
+  title: "Audit GEO",
+  description: "Lance le calcul du score GEO d'une page (lisibilit\xE9 par les moteurs g\xE9n\xE9ratifs, passages citables, r\xE9ponses directes) et renvoie un job_id.",
+  inputSchema: {
+    url: z8.string().url().describe("URL compl\xE8te de la page \xE0 \xE9valuer")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+  handler: ({ url }, ctx) => startJob(ctx, "start_geo_audit", "geo_score", { url })
+});
+
+// src/lib/mcp/tools/start_competitor_matrix.ts
+import { defineTool as defineTool13 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z9 } from "npm:zod@^3.24.2";
+var start_competitor_matrix_default = defineTool13({
+  name: "start_competitor_matrix",
+  title: "Matrice de concurrence",
+  description: "Compare votre domaine \xE0 1 \xE0 3 concurrents (SEO, GEO, \xE9cart SERP) et renvoie un job_id \xE0 interroger avec `get_job`.",
+  inputSchema: {
+    domain: z9.string().min(3).describe("Votre domaine"),
+    competitors: z9.array(z9.string().min(3)).min(1).max(3).describe("Domaines concurrents")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+  handler: ({ domain, competitors }, ctx) => startJob(ctx, "start_competitor_matrix", "competitors", { domain, competitors })
+});
+
+// src/lib/mcp/tools/serp_ranking.ts
+import { defineTool as defineTool14 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z10 } from "npm:zod@^3.24.2";
+var serp_ranking_default = defineTool14({
+  name: "serp_ranking",
+  title: "Positions SERP",
+  description: "Rel\xE8ve les positions SERP d'un mot-cl\xE9 aupr\xE8s de plusieurs fournisseurs de donn\xE9es. Toujours factur\xE9 au wallet (donn\xE9e tierce payante).",
+  inputSchema: {
+    keyword: z10.string().min(2).describe("Mot-cl\xE9 \xE0 relever"),
+    domain: z10.string().min(3).optional().describe("Domaine \xE0 rep\xE9rer dans les r\xE9sultats"),
+    location: z10.string().optional().describe("Localisation (ex: France)")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
+  handler: ({ keyword, domain, location }, ctx) => startJob(ctx, "serp_ranking", "serp_ranking", {
+    keyword,
+    ...domain ? { domain } : {},
+    ...location ? { location } : {}
+  })
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "tutlimtasnjabdfhpewu";
 var mcp_default = defineMcp({
   name: "crawlers-mcp",
   title: "Crawlers \u2014 Agent Int\xE9grations",
-  version: "0.1.0",
-  instructions: "Serveur MCP officiel de Crawlers.fr. Utilise `whoami` pour v\xE9rifier la connexion, `list_my_sites` pour lister les sites suivis de l'utilisateur, et `get_site_audit` pour r\xE9cup\xE9rer le dernier audit SEO/GEO d'un site donn\xE9.",
+  version: "0.2.0",
+  instructions: [
+    "Serveur MCP officiel de Crawlers.fr \u2014 moteur de v\xE9rification SEO/GEO appelable par un agent.",
+    "Boucle recommand\xE9e : audit \u2192 probl\xE8mes \u2192 correction du code \u2192 nouvel audit.",
+    "Outils gratuits : whoami, list_my_sites, get_site_audit, get_job, get_wallet_balance, list_tools_pricing.",
+    "Les outils d'analyse lancent un job asynchrone : ils renvoient un job_id, puis get_job livre le r\xE9sultat.",
+    "Facturation hybride : selon l'outil, l'appel est inclus dans le plan de l'utilisateur, d\xE9bit\xE9 en micro-cr\xE9dits du wallet en cas de d\xE9passement, ou toujours payant (donn\xE9e tierce). list_tools_pricing donne la grille et get_wallet_balance le solde et le plafond journalier."
+  ].join(" "),
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
-  tools: [whoami_default, list_my_sites_default, get_site_audit_default]
+  tools: [
+    whoami_default,
+    list_my_sites_default,
+    get_site_audit_default,
+    get_job_default,
+    get_wallet_balance_default,
+    list_tools_pricing_default,
+    audit_page_default,
+    analyze_schema_default,
+    check_indexability_default,
+    analyze_links_default,
+    start_site_crawl_default,
+    start_geo_audit_default,
+    start_competitor_matrix_default,
+    serp_ranking_default
+  ]
 });
 
 // lovable-mcp-supabase-entry.ts
