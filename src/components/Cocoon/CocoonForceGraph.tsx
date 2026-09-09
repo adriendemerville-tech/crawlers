@@ -716,9 +716,9 @@ export function CocoonForceGraph({
           ctx.fill();
         }
 
-        // ─── Core dot ───
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+        // ─── Core dot (carré pour les pages piliers) ───
+        nodeShapePath(ctx, node.x, node.y, r, node.isPillar);
+
         if (node.isHome) {
           const coreGrad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r);
           if (isXRayMode) {
