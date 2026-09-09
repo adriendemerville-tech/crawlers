@@ -255,7 +255,31 @@ export default function GeoMcpServer() {
                 identifiant stable que le reste de l’audit.
               </p>
             </article>
+            <DataTable
+              caption="Comportement des principaux moteurs génératifs vis-à-vis des sources citées."
+              columns={['Moteur', 'Robot', 'Liens visibles', 'Ce qui déclenche la citation']}
+              rows={[
+                ['ChatGPT', 'GPTBot, OAI-SearchBot', 'Souvent', 'Passage autonome, entité claire, page servie sans JavaScript'],
+                ['Perplexity', 'PerplexityBot', 'Oui', 'Correspondance directe question / passage, fraîcheur'],
+                ['Gemini', 'Google-Extended', 'Parfois', 'Autorité du domaine, données structurées cohérentes'],
+                ['Claude', 'ClaudeBot', 'Parfois', 'Contenu factuel daté et attribuable'],
+                ['Mistral', 'MistralAI-User', 'Parfois', 'Sources francophones structurées'],
+              ]}
+            />
+            <DataTable
+              caption="Indicateurs GEO mesurés par le serveur MCP et fréquence de mesure recommandée."
+              columns={['Indicateur', 'Unité', 'Source de la mesure', 'Fréquence']}
+              rows={[
+                ['Taux de citation', '% des questions', 'Interrogation réelle des moteurs', 'Mensuelle'],
+                ['Citations par moteur', 'Nombre', 'Interrogation réelle des moteurs', 'Mensuelle'],
+                ['Concurrents cités', 'Nombre de domaines', 'Sources de la réponse', 'Mensuelle'],
+                ['Couverture bots IA', '% du sitemap', 'Logs serveur vérifiés (rDNS, ASN)', 'Hebdomadaire'],
+                ['Passages citables', 'Nombre par page', 'Analyse du HTML servi', 'À chaque audit'],
+                ['Sous-questions couvertes', '% du fan-out', 'Décomposition des requêtes', 'Mensuelle'],
+              ]}
+            />
           </section>
+
 
           <section className="mb-12">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
