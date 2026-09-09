@@ -14,7 +14,7 @@ const FAQ: Array<[string, string]> = [
   ['Les 3 contenus sont-ils écrits par une IA ?', 'Les premiers brouillons sont produits par notre moteur éditorial, puis relus, ajustés et validés par vos soins avant publication.'],
 ];
 
-export const Route = createFileRoute('/passe-visibilite')({
+export const Route = createFileRoute('/audit-geo-seo')({
   head: () =>
     pageHead({
       title: 'Parmenion — Corrigez votre visibilité en ligne, une fois, à 59 € TTC',

@@ -23,6 +23,7 @@ import { Route as ArchitectureMapRouteImport } from './routes/architecture-map'
 import { Route as AuditCompareRouteImport } from './routes/audit-compare'
 import { Route as AuditExpertRouteImport } from './routes/audit-expert'
 import { Route as AuditGeoRouteImport } from './routes/audit-geo'
+import { Route as AuditGeoSeoRouteImport } from './routes/audit-geo-seo'
 import { Route as AuditSemantiqueRouteImport } from './routes/audit-semantique'
 import { Route as AuditSeoGeoRouteImport } from './routes/audit-seo-geo'
 import { Route as AuditSeoGratuitRouteImport } from './routes/audit-seo-gratuit'
@@ -72,7 +73,6 @@ import { Route as OffreJeuneEntrepriseRouteImport } from './routes/offre-jeune-e
 import { Route as OptimisationLlmSeoRouteImport } from './routes/optimisation-llm-seo'
 import { Route as OutilGeoIaRouteImport } from './routes/outil-geo-ia'
 import { Route as PagespeedRouteImport } from './routes/pagespeed'
-import { Route as PasseVisibiliteRouteImport } from './routes/passe-visibilite'
 import { Route as PolitiqueConfidentialiteRouteImport } from './routes/politique-confidentialite'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivacyGoogleAdsRouteImport } from './routes/privacy-google-ads'
@@ -227,6 +227,11 @@ const AuditExpertRoute = AuditExpertRouteImport.update({
 const AuditGeoRoute = AuditGeoRouteImport.update({
   id: '/audit-geo',
   path: '/audit-geo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditGeoSeoRoute = AuditGeoSeoRouteImport.update({
+  id: '/audit-geo-seo',
+  path: '/audit-geo-seo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuditSemantiqueRoute = AuditSemantiqueRouteImport.update({
@@ -482,11 +487,6 @@ const OutilGeoIaRoute = OutilGeoIaRouteImport.update({
 const PagespeedRoute = PagespeedRouteImport.update({
   id: '/pagespeed',
   path: '/pagespeed',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PasseVisibiliteRoute = PasseVisibiliteRouteImport.update({
-  id: '/passe-visibilite',
-  path: '/passe-visibilite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PolitiqueConfidentialiteRoute =
@@ -939,6 +939,7 @@ export interface FileRoutesByFullPath {
   '/audit-compare': typeof AuditCompareRoute
   '/audit-expert': typeof AuditExpertRoute
   '/audit-geo': typeof AuditGeoRoute
+  '/audit-geo-seo': typeof AuditGeoSeoRoute
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
@@ -988,7 +989,6 @@ export interface FileRoutesByFullPath {
   '/optimisation-llm-seo': typeof OptimisationLlmSeoRoute
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
-  '/passe-visibilite': typeof PasseVisibiliteRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
@@ -1090,6 +1090,7 @@ export interface FileRoutesByTo {
   '/audit-compare': typeof AuditCompareRoute
   '/audit-expert': typeof AuditExpertRoute
   '/audit-geo': typeof AuditGeoRoute
+  '/audit-geo-seo': typeof AuditGeoSeoRoute
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
@@ -1139,7 +1140,6 @@ export interface FileRoutesByTo {
   '/optimisation-llm-seo': typeof OptimisationLlmSeoRoute
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
-  '/passe-visibilite': typeof PasseVisibiliteRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
@@ -1242,6 +1242,7 @@ export interface FileRoutesById {
   '/audit-compare': typeof AuditCompareRoute
   '/audit-expert': typeof AuditExpertRoute
   '/audit-geo': typeof AuditGeoRoute
+  '/audit-geo-seo': typeof AuditGeoSeoRoute
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
@@ -1291,7 +1292,6 @@ export interface FileRoutesById {
   '/optimisation-llm-seo': typeof OptimisationLlmSeoRoute
   '/outil-geo-ia': typeof OutilGeoIaRoute
   '/pagespeed': typeof PagespeedRoute
-  '/passe-visibilite': typeof PasseVisibiliteRoute
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
@@ -1395,6 +1395,7 @@ export interface FileRouteTypes {
     | '/audit-compare'
     | '/audit-expert'
     | '/audit-geo'
+    | '/audit-geo-seo'
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
@@ -1444,7 +1445,6 @@ export interface FileRouteTypes {
     | '/optimisation-llm-seo'
     | '/outil-geo-ia'
     | '/pagespeed'
-    | '/passe-visibilite'
     | '/politique-confidentialite'
     | '/privacy'
     | '/privacy-google-ads'
@@ -1546,6 +1546,7 @@ export interface FileRouteTypes {
     | '/audit-compare'
     | '/audit-expert'
     | '/audit-geo'
+    | '/audit-geo-seo'
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
@@ -1595,7 +1596,6 @@ export interface FileRouteTypes {
     | '/optimisation-llm-seo'
     | '/outil-geo-ia'
     | '/pagespeed'
-    | '/passe-visibilite'
     | '/politique-confidentialite'
     | '/privacy'
     | '/privacy-google-ads'
@@ -1697,6 +1697,7 @@ export interface FileRouteTypes {
     | '/audit-compare'
     | '/audit-expert'
     | '/audit-geo'
+    | '/audit-geo-seo'
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
@@ -1746,7 +1747,6 @@ export interface FileRouteTypes {
     | '/optimisation-llm-seo'
     | '/outil-geo-ia'
     | '/pagespeed'
-    | '/passe-visibilite'
     | '/politique-confidentialite'
     | '/privacy'
     | '/privacy-google-ads'
@@ -1849,6 +1849,7 @@ export interface RootRouteChildren {
   AuditCompareRoute: typeof AuditCompareRoute
   AuditExpertRoute: typeof AuditExpertRoute
   AuditGeoRoute: typeof AuditGeoRoute
+  AuditGeoSeoRoute: typeof AuditGeoSeoRoute
   AuditSemantiqueRoute: typeof AuditSemantiqueRoute
   AuditSeoGeoRoute: typeof AuditSeoGeoRoute
   AuditSeoGratuitRoute: typeof AuditSeoGratuitRoute
@@ -1898,7 +1899,6 @@ export interface RootRouteChildren {
   OptimisationLlmSeoRoute: typeof OptimisationLlmSeoRoute
   OutilGeoIaRoute: typeof OutilGeoIaRoute
   PagespeedRoute: typeof PagespeedRoute
-  PasseVisibiliteRoute: typeof PasseVisibiliteRoute
   PolitiqueConfidentialiteRoute: typeof PolitiqueConfidentialiteRoute
   PrivacyRoute: typeof PrivacyRoute
   PrivacyGoogleAdsRoute: typeof PrivacyGoogleAdsRoute
@@ -2084,6 +2084,13 @@ declare module '@tanstack/react-router' {
       path: '/audit-geo'
       fullPath: '/audit-geo'
       preLoaderRoute: typeof AuditGeoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit-geo-seo': {
+      id: '/audit-geo-seo'
+      path: '/audit-geo-seo'
+      fullPath: '/audit-geo-seo'
+      preLoaderRoute: typeof AuditGeoSeoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/audit-semantique': {
@@ -2427,13 +2434,6 @@ declare module '@tanstack/react-router' {
       path: '/pagespeed'
       fullPath: '/pagespeed'
       preLoaderRoute: typeof PagespeedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/passe-visibilite': {
-      id: '/passe-visibilite'
-      path: '/passe-visibilite'
-      fullPath: '/passe-visibilite'
-      preLoaderRoute: typeof PasseVisibiliteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/politique-confidentialite': {
@@ -3049,6 +3049,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuditCompareRoute: AuditCompareRoute,
   AuditExpertRoute: AuditExpertRoute,
   AuditGeoRoute: AuditGeoRoute,
+  AuditGeoSeoRoute: AuditGeoSeoRoute,
   AuditSemantiqueRoute: AuditSemantiqueRoute,
   AuditSeoGeoRoute: AuditSeoGeoRoute,
   AuditSeoGratuitRoute: AuditSeoGratuitRoute,
@@ -3098,7 +3099,6 @@ const rootRouteChildren: RootRouteChildren = {
   OptimisationLlmSeoRoute: OptimisationLlmSeoRoute,
   OutilGeoIaRoute: OutilGeoIaRoute,
   PagespeedRoute: PagespeedRoute,
-  PasseVisibiliteRoute: PasseVisibiliteRoute,
   PolitiqueConfidentialiteRoute: PolitiqueConfidentialiteRoute,
   PrivacyRoute: PrivacyRoute,
   PrivacyGoogleAdsRoute: PrivacyGoogleAdsRoute,
