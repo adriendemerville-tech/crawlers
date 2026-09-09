@@ -39,6 +39,36 @@ export const Route = createFileRoute("/geo-mcp-server")({
         },
         {
           "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "Qu’est-ce qu’un serveur MCP pour le GEO ?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Un serveur Model Context Protocol qui expose la mesure de la visibilité IA sous forme d’outils appelables : un agent de développement peut vérifier si ChatGPT, Gemini, Perplexity ou Claude citent vos pages, puis demander les corrections et re-mesurer.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Quelle différence avec un audit GEO classique ?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "L’audit classique produit un rapport ponctuel. Le serveur MCP rend la mesure appelable en boucle par un agent : mesurer, corriger, re-mesurer, avec un identifiant de constat stable dont la disparition prouve la résolution.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Comment est-ce facturé ?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Les lectures et les statuts de jobs sont gratuits. Les outils qui déclenchent un crawl ou un calcul consomment d’abord le quota de votre plan, puis votre portefeuille développeur en paiement à l’usage, avec un plafond journalier.",
+              },
+            },
+          ],
+        },
+        {
+          "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           itemListElement: [
             { "@type": "ListItem", position: 1, name: "Accueil", item: "https://crawlers.fr/" },
