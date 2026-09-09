@@ -42,6 +42,10 @@ export interface RoiScorable {
   keyword_volume?: number;
   /** Lot 5 : position moyenne mesurée sur la requête / le cluster visé. */
   current_position?: number;
+  /** La page visée est un pilier du site (hub de maillage interne). */
+  is_pillar?: boolean;
+  /** Pilier également à fort trafic / forte autorité interne → boost renforcé. */
+  pillar_high_value?: boolean;
 }
 
 export interface RoiContext {
