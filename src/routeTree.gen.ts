@@ -87,6 +87,7 @@ import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
 import { Route as ScoreGeoRouteImport } from './routes/score-geo'
 import { Route as SeaSeoBridgeRouteImport } from './routes/sea-seo-bridge'
 import { Route as SeoAvecClaudeRouteImport } from './routes/seo-avec-claude'
+import { Route as SeoMcpServerRouteImport } from './routes/seo-mcp-server'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SiteCrawlRouteImport } from './routes/site-crawl'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -564,6 +565,11 @@ const SeoAvecClaudeRoute = SeoAvecClaudeRouteImport.update({
   path: '/seo-avec-claude',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SeoMcpServerRoute = SeoMcpServerRouteImport.update({
+  id: '/seo-mcp-server',
+  path: '/seo-mcp-server',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -1027,6 +1033,7 @@ export interface FileRoutesByFullPath {
   '/score-geo': typeof ScoreGeoRoute
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
   '/seo-avec-claude': typeof SeoAvecClaudeRoute
+  '/seo-mcp-server': typeof SeoMcpServerRoute
   '/signup': typeof SignupRoute
   '/site-crawl': typeof SiteCrawlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -1182,6 +1189,7 @@ export interface FileRoutesByTo {
   '/score-geo': typeof ScoreGeoRoute
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
   '/seo-avec-claude': typeof SeoAvecClaudeRoute
+  '/seo-mcp-server': typeof SeoMcpServerRoute
   '/signup': typeof SignupRoute
   '/site-crawl': typeof SiteCrawlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -1338,6 +1346,7 @@ export interface FileRoutesById {
   '/score-geo': typeof ScoreGeoRoute
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
   '/seo-avec-claude': typeof SeoAvecClaudeRoute
+  '/seo-mcp-server': typeof SeoMcpServerRoute
   '/signup': typeof SignupRoute
   '/site-crawl': typeof SiteCrawlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -1495,6 +1504,7 @@ export interface FileRouteTypes {
     | '/score-geo'
     | '/sea-seo-bridge'
     | '/seo-avec-claude'
+    | '/seo-mcp-server'
     | '/signup'
     | '/site-crawl'
     | '/sitemap.xml'
@@ -1650,6 +1660,7 @@ export interface FileRouteTypes {
     | '/score-geo'
     | '/sea-seo-bridge'
     | '/seo-avec-claude'
+    | '/seo-mcp-server'
     | '/signup'
     | '/site-crawl'
     | '/sitemap.xml'
@@ -1805,6 +1816,7 @@ export interface FileRouteTypes {
     | '/score-geo'
     | '/sea-seo-bridge'
     | '/seo-avec-claude'
+    | '/seo-mcp-server'
     | '/signup'
     | '/site-crawl'
     | '/sitemap.xml'
@@ -1961,6 +1973,7 @@ export interface RootRouteChildren {
   ScoreGeoRoute: typeof ScoreGeoRoute
   SeaSeoBridgeRoute: typeof SeaSeoBridgeRoute
   SeoAvecClaudeRoute: typeof SeoAvecClaudeRoute
+  SeoMcpServerRoute: typeof SeoMcpServerRoute
   SignupRoute: typeof SignupRoute
   SiteCrawlRoute: typeof SiteCrawlRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -2586,6 +2599,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SeoAvecClaudeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seo-mcp-server': {
+      id: '/seo-mcp-server'
+      path: '/seo-mcp-server'
+      fullPath: '/seo-mcp-server'
+      preLoaderRoute: typeof SeoMcpServerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -3193,6 +3213,7 @@ const rootRouteChildren: RootRouteChildren = {
   ScoreGeoRoute: ScoreGeoRoute,
   SeaSeoBridgeRoute: SeaSeoBridgeRoute,
   SeoAvecClaudeRoute: SeoAvecClaudeRoute,
+  SeoMcpServerRoute: SeoMcpServerRoute,
   SignupRoute: SignupRoute,
   SiteCrawlRoute: SiteCrawlRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
