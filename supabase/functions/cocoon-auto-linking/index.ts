@@ -113,11 +113,18 @@ try {
 
       candidatePages = candidates || [];
 
-      // Re-rank by composite quality score (deterministic, business-aware)
-      const scored = candidatePages.map(cp => ({
-        ...cp,
-        quality: computeCrawlPageQuality(cp as CrawlPageInput, bizProfile).overall,
-      }));
+      // Re-rank by composite quality score (deterministic, business-aware),
+      // pondéré par le rôle de pilier : un lien satellite → pilier vaut plus.
+      const pillars = await resolvePillarSet(supabase, tracked_site_id);
+      const sourceIsPillar = isPillarUrl(pillars, source_url);
+      const scored = candidatePages.map(cp => {
+        const base = computeCrawlPageQuality(cp as CrawlPageInput, bizProfile).overall;
+        const boost = linkPriorityMultiplier({
+          targetIsPillar: isPillarUrl(pillars, cp.url),
+          sourceIsPillar,
+        });
+        return { ...cp, quality: Math.round(base * boost) };
+      });
       scored.sort((a, b) => b.quality - a.quality);
       targetUrls = scored.slice(0, 20).map(c => c.url);
       console.log(`[auto-linking] 📊 Re-ranked ${scored.length} candidates by quality (profile: ${bizProfile}, top: ${scored[0]?.quality || 0})`);
