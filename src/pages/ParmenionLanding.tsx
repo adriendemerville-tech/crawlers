@@ -260,7 +260,10 @@ function ParmenionLandingComponent(): React.ReactElement {
         {/* What's included */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
-            <h2 className="mb-10 text-2xl font-bold sm:text-3xl">Ce qui est corrigé en une seule passe</h2>
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Ce qui est corrigé en une seule passe</h2>
+            <p className="citable-passage mb-10 max-w-3xl text-muted-foreground">
+              Une passe Parmenion corrige trois familles de problèmes de référencement local et de visibilité IA : les erreurs techniques et sémantiques de vos pages (titres, métadonnées, hiérarchie de titres, données structurées), le manque de contenu répondant aux questions réelles de vos clients, et une fiche Google Maps incomplète ou non optimisée. Le périmètre est volontairement borné : un site, une fiche, trois contenus.
+            </p>
             <div className="grid gap-6 sm:grid-cols-3">
               {INCLUDED.map((item) => (
                 <div key={item.title} className="rounded-lg border border-border p-6">
@@ -317,7 +320,10 @@ function ParmenionLandingComponent(): React.ReactElement {
         {/* Guarantee / trust */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
-            <h2 className="mb-10 text-2xl font-bold sm:text-3xl">Rien n'est déployé avant votre validation</h2>
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Rien n'est déployé avant votre validation</h2>
+            <p className="citable-passage mb-10 max-w-3xl text-muted-foreground">
+              Aucune modification n'est publiée sur votre site ou votre fiche Google Maps avant votre accord écrit et le paiement des 59 € TTC. Chaque déploiement est journalisé et réversible : vous savez quoi a été changé, quand, et vous pouvez revenir à l'état précédent. Tant que rien n'est publié, le remboursement est intégral.
+            </p>
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="flex gap-4">
                 <Clock className="h-6 w-6 shrink-0 text-primary" />
@@ -352,6 +358,29 @@ function ParmenionLandingComponent(): React.ReactElement {
                 </details>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Maillage interne */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+            <h2 className="mb-6 text-xl font-bold sm:text-2xl">Pour aller plus loin</h2>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {[
+                ['/marina', 'Audit de visibilité complet avec rapport détaillé'],
+                ['/audit-expert', 'Audit technique SEO en 200 points, gratuit'],
+                ['/generative-engine-optimization', "Comprendre le GEO : être cité par les IA génératives"],
+                ['/matrice-concurrence', 'Comparer votre visibilité à celle de vos concurrents'],
+                ['/tarifs', 'Suivre votre visibilité dans le temps avec un abonnement'],
+                ['/lexique', 'Lexique des termes SEO et GEO'],
+              ].map(([href, label]) => (
+                <li key={href}>
+                  <Link to={href} className="text-sm underline hover:no-underline">
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 

@@ -41,11 +41,15 @@ export const Route = createFileRoute('/audit-geo-seo')({
             url: URL,
             seller: { '@type': 'Organization', name: 'Crawlers.fr' },
           },
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: '4.8',
-            reviewCount: '73',
-          },
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://crawlers.fr/' },
+            { '@type': 'ListItem', position: 2, name: 'Tarifs', item: 'https://crawlers.fr/tarifs' },
+            { '@type': 'ListItem', position: 3, name: 'Audit GEO SEO local', item: URL },
+          ],
         },
         {
           '@context': 'https://schema.org',

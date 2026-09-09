@@ -58,6 +58,11 @@ function FooterComponent() {
       href: '/offre-jeune-entreprise',
       description: t3(language, 'Pro Agency gratuit 12 mois pour les moins de 12 mois', 'Free 12-month Pro Agency for businesses under 12 months', 'Pro Agency gratis 12 meses para empresas de menos de 12 meses')
     },
+    {
+      label: t3(language, 'Audit GEO SEO — 59 € TTC', 'GEO SEO audit — €59', 'Auditoría GEO SEO — 59 €'),
+      href: '/audit-geo-seo',
+      description: t3(language, 'Passe unique : audit, 3 contenus et fiche Google Maps', 'One-off pass: audit, 3 contents and Google Maps listing', 'Pase único: auditoría, 3 contenidos y ficha de Google Maps')
+    },
     { 
       label: t3(language, 'Lexique SEO/GEO', 'SEO/GEO Glossary', 'Glosario SEO/GEO'),
       href: '/lexique',

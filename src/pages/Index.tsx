@@ -716,6 +716,15 @@ const Index = () => {
           </p>
         </div>
 
+        {/* Passe Parmenion — citation SEO interne */}
+        <div className="cv-auto">
+          <p className="text-center text-sm text-muted-foreground px-4">
+            <Link to="/audit-geo-seo" className="underline hover:text-foreground">
+              Pas le temps de corriger vous-même ? Audit GEO SEO, 3 contenus et fiche Google Maps optimisée pour 59 € TTC
+            </Link>
+          </p>
+        </div>
+
         {/* Place d'échange de backlinks */}
         <div className="cv-auto"><Suspense fallback={null}><MarketplaceTeaserSection /></Suspense></div>
 

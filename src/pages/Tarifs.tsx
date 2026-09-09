@@ -1129,6 +1129,23 @@ export default function Tarifs() {
               </CardContent>
             </Card>
 
+            {/* Passe unique Parmenion — alternative à l'abonnement */}
+            <Card className="border-muted">
+              <CardContent className="pt-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {language === 'fr'
+                    ? 'Vous préférez une intervention unique sans abonnement : audit GEO SEO, 3 contenus rédigés et optimisation de votre fiche Google Maps pour 59 € TTC, remboursables tant que rien n’est déployé.'
+                    : 'Prefer a one-off intervention with no subscription: GEO SEO audit, 3 written contents and Google Maps optimization for €59 incl. VAT, refundable until nothing is deployed.'}
+                </p>
+                <Link
+                  to="/audit-geo-seo"
+                  className="mt-3 inline-block text-sm font-medium underline hover:no-underline"
+                >
+                  {language === 'fr' ? 'Découvrir l’audit GEO SEO à 59 € TTC' : 'Discover the €59 GEO SEO audit'}
+                </Link>
+              </CardContent>
+            </Card>
+
             {/* Proof: case study */}
 
             <Card className="border-muted">

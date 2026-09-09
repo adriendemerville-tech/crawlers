@@ -392,6 +392,7 @@ const GenerativeEngineOptimization = () => {
                 <li><Link to="/blog/paradoxe-google-geo-2026" className="text-sm text-primary hover:underline">Le paradoxe Google et l'avènement du GEO en 2026</Link></li>
                 <li><Link to="/lexique" className="text-sm text-primary hover:underline">Lexique SEO & GEO — Toutes les définitions</Link></li>
                 <li><Link to="/methodologie" className="text-sm text-primary hover:underline">Méthodologie d'audit : 50+ points analysés</Link></li>
+                <li><Link to="/audit-geo-seo" className="text-sm text-primary hover:underline">Audit GEO SEO à 59 € TTC : correctifs, 3 contenus et fiche Google Maps</Link></li>
               </ul>
             </div>
           </div>
