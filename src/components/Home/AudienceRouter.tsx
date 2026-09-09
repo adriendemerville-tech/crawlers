@@ -165,9 +165,6 @@ export function AudienceRouter() {
         <h2 className="text-2xl font-semibold leading-tight text-foreground sm:text-4xl">
           Pourquoi avez-vous besoin de Crawlers&nbsp;?
         </h2>
-        <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-          Répondez en une phrase. On vous montre directement ce qui vous concerne.
-        </p>
 
         <div className="mt-8 rounded-2xl border border-border bg-card/60 p-3 backdrop-blur-sm">
           <textarea
@@ -201,29 +198,6 @@ export function AudienceRouter() {
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-          <button
-            type="button"
-            onClick={() => apply('business')}
-            className="flex-1 rounded-xl border border-border px-4 py-3 text-left text-sm text-foreground transition-colors hover:border-foreground/60"
-          >
-            <span className="block font-medium">Je dirige une entreprise</span>
-            <span className="mt-0.5 block text-xs text-muted-foreground">
-              Je veux plus de clients via Google et les IA
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => apply('pro')}
-            className="flex-1 rounded-xl border border-border px-4 py-3 text-left text-sm text-foreground transition-colors hover:border-foreground/60"
-          >
-            <span className="block font-medium">Je fais du SEO / GEO</span>
-            <span className="mt-0.5 block text-xs text-muted-foreground">
-              Agence, consultant, équipe interne : je veux la plateforme
-            </span>
-          </button>
         </div>
 
         <button
