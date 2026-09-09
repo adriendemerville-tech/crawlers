@@ -53,11 +53,13 @@ interface GraphNode extends SimulationNodeDatum {
   depth: number;
   pageType: string;
   isHome: boolean;
+  isPillar: boolean;
   pageAuthority: number;
   linksIn: number;
   linksOut: number;
   hasBacklinks: boolean;
   backlinkDomains: number;
+
 }
 
 interface GraphLink extends SimulationLinkDatum<GraphNode> {
