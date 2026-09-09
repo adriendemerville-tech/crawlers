@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Plus, Minus, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { detectPillarPages } from "@/lib/cocoon/pillarPages";
 
 // ─── Types ───
 interface SemanticNode {
@@ -39,6 +40,7 @@ interface RadialNode {
   depth: number;
   pageAuthority: number;
   isHome: boolean;
+  isPillar: boolean;
   pageType: string;
   linksIn: number;
   linksOut: number;
@@ -135,6 +137,7 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
     return a.depth - b.depth;
   });
   const homeNode = sorted[0];
+  const pillarIds = detectPillarPages(nodes, homeNode?.id ?? null);
 
   const urlMap = new Map<string, SemanticNode>();
   nodes.forEach(n => urlMap.set(n.url, n));
@@ -151,6 +154,7 @@ function buildSpanningTree(nodes: SemanticNode[]): RadialNode | null {
       depth: sn.crawl_depth ?? sn.depth,
       pageAuthority: sn.page_authority ?? 0,
       isHome: sn.depth === 0,
+      isPillar: sn.id !== homeNode.id && pillarIds.has(sn.id),
       pageType: sn.page_type || 'page',
       linksIn: sn.internal_links_in ?? 0,
       linksOut: sn.internal_links_out ?? 0,
@@ -771,9 +775,16 @@ export function CocoonRadialGraph({
         ctx.fill();
       }
 
-      // Node circle
+      // Node shape — carré (arrondi) pour les pages piliers, cercle sinon
       ctx.beginPath();
-      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      if (node.isPillar) {
+        const s = node.radius * 0.92;
+        const corner = Math.max(0.5, s * 0.22);
+        if (typeof ctx.roundRect === 'function') ctx.roundRect(node.x - s, node.y - s, s * 2, s * 2, corner);
+        else ctx.rect(node.x - s, node.y - s, s * 2, s * 2);
+      } else {
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      }
       ctx.fillStyle = getNodeColor(node.pageType, nodeColors);
       ctx.fill();
 
