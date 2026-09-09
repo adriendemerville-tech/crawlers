@@ -15,6 +15,14 @@
  *   - Always non-fatal: a strategy plan must never fail because of a workbench write.
  */
 
+import {
+  resolvePillarSet,
+  isPillarUrl,
+  isStrongPillarUrl,
+  pillarPriorityMultiplier,
+  type PillarSet,
+} from './pillarWeighting.ts';
+
 export interface CocoonFindingLike {
   id?: string;
   category?: string;
@@ -157,6 +165,10 @@ export async function writeCocoonFindingsToWorkbench(
 
     if (actionable.length === 0) return { attempted: 0, written: 0 };
 
+    // Pages piliers : un correctif sur un pilier profite à tous ses satellites,
+    // donc il passe devant (boost plafonné, cf. pillarWeighting.ts).
+    const pillars: PillarSet = await resolvePillarSet(sb, opts.trackedSiteId);
+
     // Deduplicate on the idempotency key (same finding id can come from 2 diags)
     const rows = new Map<string, Record<string, unknown>>();
 
@@ -168,6 +180,10 @@ export async function writeCocoonFindingsToWorkbench(
       const isOffsite = OFFSITE_CATEGORIES.has(f.category || '') || OFFSITE_CATEGORIES.has(f.id || '');
       const anchors = isOffsite ? suggestedAnchors(f) : [];
       const recordId = `cocoon_${opts.domain}_${findingKey}${primaryUrl ? `_${shortHash(primaryUrl)}` : ''}`;
+      const pillarUrls = urls.filter((u) => isPillarUrl(pillars, u));
+      const touchesPillar = pillarUrls.length > 0;
+      const highValuePillar = pillarUrls.some((u) => isStrongPillarUrl(pillars, u));
+      const pillarBoost = pillarPriorityMultiplier({ isPillar: touchesPillar, highValue: highValuePillar });
 
       rows.set(recordId, {
         domain: opts.domain,
@@ -178,7 +194,7 @@ export async function writeCocoonFindingsToWorkbench(
         source_record_id: recordId,
         finding_category: f.category || findingKey,
         severity: mapSeverity(f.severity),
-        title: `Cocoon — ${f.title || findingKey}`.slice(0, 280),
+        title: `Cocoon — ${touchesPillar ? '[Pilier] ' : ''}${f.title || findingKey}`.slice(0, 280),
         description: (f.description || '').slice(0, 2000),
         target_url: primaryUrl,
         target_selector: target?.selector ?? null,
@@ -189,6 +205,9 @@ export async function writeCocoonFindingsToWorkbench(
           diagnostic_source: f.source_type ?? null,
           affected_urls: urls.slice(0, 50),
           affected_count: urls.length,
+          is_pillar: touchesPillar,
+          pillar_urls: pillarUrls.slice(0, 10),
+          pillar_boost: pillarBoost,
           strategy_plan_id: opts.strategyPlanId ?? null,
           spiral_phase: opts.spiralPhase ?? null,
           ...(isOffsite

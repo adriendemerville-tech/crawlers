@@ -41,6 +41,15 @@ export function jaccard(a: Set<string>, b: Set<string>): number {
   return inter / (a.size + b.size - inter);
 }
 
+import { detectPillars, isPillarCannibalization, PILLAR_CANNIB_JACCARD } from './pillarWeighting.ts';
+
+export interface PillarConflict {
+  a: { url: string; path: string; title: string };
+  b: { url: string; path: string; title: string };
+  jaccard: number;
+  severity: 'critical';
+}
+
 export interface CannibCluster {
   theme: string;
   tokens: string[];
@@ -58,6 +67,8 @@ export interface CannibResult {
   clusters_count: number;
   redundant_pages: number;
   clusters: CannibCluster[];
+  /** Conflits entre deux pages piliers sur la même intention (alerte forte). */
+  pillar_conflicts: PillarConflict[];
   report_markdown: string;
 }
 
@@ -151,6 +162,35 @@ export async function computeCannibalization(
     };
   });
 
+  // Deux pages piliers sur la même intention : alerte forte, pas un simple
+  // avertissement de cluster (le maillage se scinde entre deux hubs).
+  const pillarSet = detectPillars(
+    list.map((p) => ({
+      url: String(p.url),
+      crawl_depth: Number(p.crawl_depth ?? 0),
+      page_type: p.page_intent ?? null,
+      page_authority: Number(p.seo_score ?? 0),
+      internal_links_in: inbound.get(norm(p.url)) || 0,
+    })),
+  );
+  const pillarNodes = nodes.filter((n) => pillarSet.urls.has(norm(n.url)));
+  const pillarConflicts: PillarConflict[] = [];
+  for (let i = 0; i < pillarNodes.length; i++) {
+    for (let j = i + 1; j < pillarNodes.length; j++) {
+      const score = jaccard(pillarNodes[i].tokens, pillarNodes[j].tokens);
+      if (!isPillarCannibalization(score)) continue;
+      const a = pillarNodes[i];
+      const b = pillarNodes[j];
+      pillarConflicts.push({
+        a: { url: a.url, path: a.path, title: a.title },
+        b: { url: b.url, path: b.path, title: b.title },
+        jaccard: Math.round(score * 100) / 100,
+        severity: 'critical',
+      });
+    }
+  }
+  pillarConflicts.sort((x, y) => y.jaccard - x.jaccard);
+
   const redundant = detailed.reduce((s, c) => s + c.duplicates.length, 0);
   const md: string[] = [
     `## Cannibalisation — ${crawl.domain}${prefix ? ` (${prefix})` : ''}`,
@@ -169,6 +209,14 @@ export async function computeCannibalization(
     md.push('');
   }
   if (detailed.length > 12) md.push(`_… ${detailed.length - 12} autres clusters non détaillés._`);
+  if (pillarConflicts.length > 0) {
+    md.push('');
+    md.push(`### Alerte forte — ${pillarConflicts.length} conflit(s) entre pages piliers`);
+    md.push(`_Deux pages piliers partagent la même intention (recouvrement > ${Math.round(PILLAR_CANNIB_JACCARD * 100)} %) : le maillage se scinde entre deux hubs._`);
+    for (const c of pillarConflicts.slice(0, 8)) {
+      md.push(`- **${c.a.path}** vs **${c.b.path}** (recouvrement ${Math.round(c.jaccard * 100)} %) — garder un seul pilier, l'autre devient satellite.`);
+    }
+  }
 
   return {
     ok: true,
@@ -179,6 +227,7 @@ export async function computeCannibalization(
     clusters_count: detailed.length,
     redundant_pages: redundant,
     clusters: detailed.slice(0, maxClusters),
+    pillar_conflicts: pillarConflicts.slice(0, 20),
     report_markdown: md.join('\n'),
   };
 }

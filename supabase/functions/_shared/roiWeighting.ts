@@ -1,4 +1,5 @@
 import { fingerprintFinding } from './actionPlanDiscrimination.ts';
+import { pillarPriorityMultiplier } from './pillarWeighting.ts';
 
 /**
  * roiWeighting.ts — Couche ROI diffuse (impact × effort) appliquée aux plans
@@ -28,6 +29,8 @@ export interface RoiAnnotation {
   tier_label: string;
   effort_label: string;
   roi_note: string;
+  /** Multiplicateur appliqué si l'action touche une page pilier (1 sinon). */
+  pillar_boost?: number;
 }
 
 export interface RoiScorable {
@@ -42,6 +45,10 @@ export interface RoiScorable {
   keyword_volume?: number;
   /** Lot 5 : position moyenne mesurée sur la requête / le cluster visé. */
   current_position?: number;
+  /** La page visée est un pilier du site (hub de maillage interne). */
+  is_pillar?: boolean;
+  /** Pilier également à fort trafic / forte autorité interne → boost renforcé. */
+  pillar_high_value?: boolean;
 }
 
 export interface RoiContext {
@@ -184,14 +191,22 @@ const TIER_LABEL: Record<RoiTier, string> = {
 export function scoreRoi(item: RoiScorable, ctx: RoiContext = {}): RoiAnnotation {
   const impact = estimateImpact(item, ctx);
   const effort = estimateEffort(item);
-  const roi = Math.round((impact / effort) * 10) / 10;
+  // Pondération pilier : un correctif sur un hub de maillage se propage à tous
+  // ses satellites. Boost plafonné (cf. pillarWeighting.ts) pour ne pas écraser
+  // le reste de la file d'actions.
+  const pillarBoost = pillarPriorityMultiplier({
+    isPillar: item.is_pillar === true,
+    highValue: item.pillar_high_value === true,
+  });
+  const roi = Math.round((impact / effort) * pillarBoost * 10) / 10;
   const tier: RoiTier = roi >= 45 ? 'quick_win' : roi >= 18 ? 'structural' : 'foundation';
+  const pillarNote = pillarBoost > 1 ? ` Page pilier : priorité relevée ×${pillarBoost}.` : '';
   const note =
-    tier === 'quick_win'
+    (tier === 'quick_win'
       ? `Rendement élevé : impact ${impact}/100 pour un effort d'environ ${effort} j.`
       : tier === 'structural'
       ? `Rendement correct : impact ${impact}/100 pour environ ${effort} j de travail.`
-      : `Rendement différé : impact ${impact}/100 mais environ ${effort} j de travail, à planifier.`;
+      : `Rendement différé : impact ${impact}/100 mais environ ${effort} j de travail, à planifier.`) + pillarNote;
   return {
     impact,
     effort,
@@ -200,6 +215,7 @@ export function scoreRoi(item: RoiScorable, ctx: RoiContext = {}): RoiAnnotation
     tier_label: TIER_LABEL[tier],
     effort_label: effortLabel(effort),
     roi_note: note,
+    pillar_boost: pillarBoost,
   };
 }
 

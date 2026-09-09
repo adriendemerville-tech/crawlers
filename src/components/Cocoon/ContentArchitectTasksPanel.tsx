@@ -31,9 +31,11 @@ interface ContentArchitectTasksPanelProps {
   onApplyTask?: (task: QuickWinTask) => void;
 }
 
+type PillarAwareTask = QuickWinTask & { isPillar?: boolean; pillarBoost?: number };
+
 export function ContentArchitectTasksPanel({ domain, trackedSiteId, onApplyTask }: ContentArchitectTasksPanelProps) {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState<QuickWinTask[]>([]);
+  const [tasks, setTasks] = useState<PillarAwareTask[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,21 +44,26 @@ export function ContentArchitectTasksPanel({ domain, trackedSiteId, onApplyTask 
 
     supabase
       .from('architect_workbench')
-      .select('id, title, description, severity, finding_category, status')
+      .select('id, title, description, severity, finding_category, status, payload')
       .eq('user_id', user.id)
       .eq('domain', domain)
       .in('status', ['pending', 'in_progress', 'assigned'])
       .order('spiral_score', { ascending: false })
       .limit(20)
       .then(({ data }) => {
-        const allTasks: QuickWinTask[] = (data || []).map((item: any) => ({
+        const allTasks: PillarAwareTask[] = (data || []).map((item: any) => ({
           id: item.id,
           title: item.title,
           description: item.description || '',
           priority: item.severity === 'critical' ? 'high' : item.severity === 'high' ? 'important' : 'optional',
           category: item.finding_category || 'seo',
           completed: false,
+          isPillar: Boolean(item.payload?.is_pillar),
+          pillarBoost: Number(item.payload?.pillar_boost) || 1,
         }));
+        // Un correctif sur une page pilier profite à tous ses satellites :
+        // il remonte devant, à gravité comparable (boost plafonné côté serveur).
+        allTasks.sort((a, b) => (b.pillarBoost || 1) - (a.pillarBoost || 1));
         setTasks(allTasks);
         setLoading(false);
       });
@@ -105,6 +112,11 @@ export function ContentArchitectTasksPanel({ domain, trackedSiteId, onApplyTask 
                   <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-mono ${priorityColor(task.priority)}`}>
                     {task.priority === 'important' || task.priority === 'high' ? 'Haute' : task.priority === 'low' ? 'Basse' : 'Moyenne'}
                   </span>
+                  {task.isPillar && (
+                    <span className="text-[8px] px-1.5 py-0.5 rounded-full font-mono text-violet-300 bg-violet-400/10">
+                      Pilier ×{(task.pillarBoost || 1.3).toFixed(1)}
+                    </span>
+                  )}
                   <span className="text-[8px] text-white/20 font-mono">{task.category}</span>
                 </div>
               </div>
