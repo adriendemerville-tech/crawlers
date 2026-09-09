@@ -2567,6 +2567,9 @@ Deno.serve(handleRequest(async (req) => {
           confirmed: lcpIsConfirmed,
           note: perf.methodNote,
         },
+        // Pondération de terrain : de combien le vécu réel (CrUX) a remonté ou
+        // abaissé l'axe performance, et pourquoi.
+        cruxWeighting,
         // TTFB : attente d'un robot avant le premier octet. Exposé pour décoter
         // l'accessibilité machine du GEO (cf. geoSubSignals), pas le /200.
         ttfb: ttfbMeasurement.ttfbMs,
