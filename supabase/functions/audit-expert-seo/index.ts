@@ -2336,6 +2336,33 @@ Deno.serve(handleRequest(async (req) => {
       console.warn(`[PERF] LCP ${lcpMsMeasured}ms non confirmé (run unique) → aucune pénalité appliquée`);
     }
 
+    // ─── Pondération de terrain CrUX ───
+    // Le labo ne dit pas ce que vivent les utilisateurs. Quand CrUX expose un
+    // p75 réel (LCP/INP/CLS), il pondère l'axe performance à la hausse ou à la
+    // baisse. Sans terrain, pondération neutre : on n'invente rien.
+    const cruxWeighting = computeCruxWeighting(perf.field, perf.labLcpMs);
+    if (cruxWeighting.available && cruxWeighting.multiplier !== 1) {
+      const before = performanceScore;
+      const after = Math.max(8, Math.min(40, Math.round(before * cruxWeighting.multiplier)));
+      if (after !== before) {
+        const delta = after - before;
+        performanceScore = after;
+        if (delta < 0) {
+          scoreGates.push({
+            axis: 'performance',
+            reason: `Core Web Vitals dégradés sur les utilisateurs réels (terrain CrUX ${cruxWeighting.scope === 'url' ? 'URL' : 'domaine'})`,
+            evidence: `${cruxWeighting.note} (${delta} points sur 40)`,
+            pointsLost: -delta,
+            measured: cruxWeighting.metrics.lcp.valueMs !== null ? `${(cruxWeighting.metrics.lcp.valueMs / 1000).toFixed(2)}s` : null,
+            target: '2,50s',
+          });
+        }
+        console.log(`[CrUX] pondération ${cruxWeighting.multiplier} → performance ${before} → ${after} (${cruxWeighting.verdict})`);
+      }
+    }
+
+
+
 
 
     // Contenu non extractible : le HTML est servi mais le texte visible est
