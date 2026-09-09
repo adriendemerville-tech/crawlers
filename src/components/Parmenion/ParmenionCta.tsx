@@ -7,9 +7,11 @@ import { Link } from '@/lib/router-compat';
 interface ParmenionCtaProps {
   className?: string;
   intro?: string;
+  /** Adresse déjà auditée : Parmenion reprend l'audit au lieu de le refaire. */
+  url?: string;
 }
 
-function ParmenionCtaComponent({ className = '', intro }: ParmenionCtaProps): React.ReactElement {
+function ParmenionCtaComponent({ className = '', intro, url }: ParmenionCtaProps): React.ReactElement {
   return (
     <Card className={`border border-border bg-card ${className}`}>
       <CardContent className="p-6">
@@ -26,8 +28,8 @@ function ParmenionCtaComponent({ className = '', intro }: ParmenionCtaProps): Re
           asChild
           className="h-11 gap-2 border border-foreground bg-transparent px-5 text-foreground hover:bg-foreground hover:text-background"
         >
-          <Link to="/audit-geo-seo">
-            Découvrir la passe à 59 € TTC
+          <Link to={url ? `/audit-geo-seo?url=${encodeURIComponent(url)}&from=marina` : '/audit-geo-seo'}>
+            {url ? 'Corriger avec Parmenion — 59 € TTC' : 'Découvrir la passe à 59 € TTC'}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>

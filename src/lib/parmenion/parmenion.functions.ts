@@ -7,7 +7,9 @@ import {
   deriveFixes,
   deriveTopics,
   normalizeUrl,
+  brandFromHost,
   type PasseDiagnostic,
+  type PasseFinding,
 } from "./diagnostic.server";
 
 const PARMENION_PRICE_ID = "parmenion_59_eur";
