@@ -18499,6 +18499,10 @@ export type Database = {
         Args: { p_domain: string; p_last_n?: number }
         Returns: Json
       }
+      pericles_measure_rewards: {
+        Args: { p_domain?: string; p_limit?: number; p_window_days?: number }
+        Returns: Json
+      }
       pericles_recent_errors: {
         Args: { p_domain: string; p_limit?: number }
         Returns: {
