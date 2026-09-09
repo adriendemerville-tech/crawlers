@@ -19,7 +19,7 @@ import {
   finalPriority,
   type DebtRegime,
   type PruningDebt,
-} from './parmenionPriority.ts';
+} from './periclesPriority.ts';
 
 const ACTIVE_STATUSES = ['pending', 'in_progress', 'assigned'];
 const CREATION_HINTS = ['create_content', 'publish_draft', 'create_page', 'new_content'];
