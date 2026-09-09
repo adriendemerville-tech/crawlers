@@ -2,6 +2,9 @@ import { getAuthenticatedUser } from '../_shared/auth.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 
+const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+
+
 /**
  * Périclès Feedback Loop
  * 
