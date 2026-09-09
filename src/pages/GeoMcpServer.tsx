@@ -146,6 +146,47 @@ export default function GeoMcpServer() {
 
           <section className="mb-12">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
+              Ce que le serveur mesure en GEO
+            </h2>
+            <p className="text-base leading-relaxed mb-6">
+              La visibilité générative n’est pas un classement : c’est la capacité d’un moteur IA à
+              vous citer quand votre marché pose une question. Le serveur la décompose en signaux
+              mesurables.
+            </p>
+            <article className="mb-5">
+              <h3 className="text-xl font-semibold mt-6 mb-2">Citations observées par moteur</h3>
+              <p className="text-base leading-relaxed">
+                Pour chaque question du jeu de benchmark, le serveur rapporte si ChatGPT, Gemini,
+                Perplexity et Claude citent votre marque, et à quelle position dans la réponse.
+              </p>
+            </article>
+            <article className="mb-5">
+              <h3 className="text-xl font-semibold mt-6 mb-2">Sources citées et concurrents</h3>
+              <p className="text-base leading-relaxed">
+                Quand un moteur cite un concurrent ou un média à votre place, la source est
+                enregistrée. Vous savez qui capte la citation et pourquoi il est préféré.
+              </p>
+            </article>
+            <article className="mb-5">
+              <h3 className="text-xl font-semibold mt-6 mb-2">Détection du fan-out</h3>
+              <p className="text-base leading-relaxed">
+                Les moteurs génératifs décomposent une question en sous-requêtes. Le serveur détecte
+                ce fan-out pour identifier les angles où votre contenu est absent, pas seulement la
+                requête principale.
+              </p>
+            </article>
+            <article className="mb-5">
+              <h3 className="text-xl font-semibold mt-6 mb-2">Prérequis techniques GEO</h3>
+              <p className="text-base leading-relaxed">
+                Contenu servi sans JavaScript, passages citables, données structurées cohérentes,
+                FAQ : les constats techniques qui bloquent la citation sont rattachés au même
+                identifiant stable que le reste de l’audit.
+              </p>
+            </article>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
               Les outils exposés par le serveur
             </h2>
             <p className="text-base leading-relaxed mb-6">
