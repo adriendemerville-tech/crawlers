@@ -1,5 +1,6 @@
 import { Header } from '@/components/Header';
-import { Header } from '@/components/Header';
+import { Link, useLocation, Navigate } from '@/lib/router-compat';
+
 import { Link, useLocation, Navigate } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
