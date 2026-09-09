@@ -12,7 +12,7 @@
   "mcp": {
     "server": {
       "name": "crawlers-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "Crawlers — Agent Intégrations"
     },
     "tools": [
@@ -68,6 +68,304 @@
           },
           "required": [
             "domain"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_job",
+        "title": "Statut d'un job",
+        "description": "Récupère l'état et le résultat d'un job Crawlers lancé par un outil `start_*` ou `audit_page`. Gratuit, à appeler en boucle jusqu'à `completed`.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "job_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Identifiant du job renvoyé au lancement"
+            }
+          },
+          "required": [
+            "job_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_wallet_balance",
+        "title": "Solde du wallet",
+        "description": "Retourne le solde du wallet développeur (en micro-crédits et en euros), la consommation MCP du jour et le plafond journalier.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_tools_pricing",
+        "title": "Grille tarifaire MCP",
+        "description": "Liste le coût de chaque outil MCP : gratuit, inclus dans le plan, débordement facturé au wallet, ou exclusivement payant.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "audit_page",
+        "title": "Audit d'une page",
+        "description": "Lance l'audit expert d'une page (technique, sémantique, E-E-A-T) et renvoie un job_id à interroger avec `get_job`. Inclus dans le plan jusqu'au quota mensuel, puis facturé au wallet.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "URL complète de la page à auditer"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "analyze_schema",
+        "title": "Analyse des données structurées",
+        "description": "Analyse la couche machine d'une page (JSON-LD, balisage, métadonnées lisibles par les agents) et renvoie un job_id à interroger avec `get_job`.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "URL complète de la page"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "check_indexability",
+        "title": "Indexabilité d'une page",
+        "description": "Vérifie l'accès des robots à une page (robots, canonique, rendu, coquille JavaScript) et renvoie un job_id à interroger avec `get_job`.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "URL complète de la page"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "analyze_links",
+        "title": "Analyse du maillage interne",
+        "description": "Analyse le maillage interne d'un domaine (profondeur, cocons, cannibalisation) et renvoie un job_id à interroger avec `get_job`.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string",
+              "minLength": 3,
+              "description": "Domaine à analyser"
+            }
+          },
+          "required": [
+            "domain"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "start_site_crawl",
+        "title": "Crawl de site",
+        "description": "Lance un crawl du site (parcours en largeur, profondeur 3 maximum) et renvoie un job_id à interroger avec `get_job`. Opération longue.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string",
+              "minLength": 3,
+              "description": "Domaine à crawler (ex: crawlers.fr)"
+            },
+            "depth": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3,
+              "description": "Profondeur de crawl"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "description": "Nombre maximum de pages"
+            }
+          },
+          "required": [
+            "domain"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "start_geo_audit",
+        "title": "Audit GEO",
+        "description": "Lance le calcul du score GEO d'une page (lisibilité par les moteurs génératifs, passages citables, réponses directes) et renvoie un job_id.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "URL complète de la page à évaluer"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "start_competitor_matrix",
+        "title": "Matrice de concurrence",
+        "description": "Compare votre domaine à 1 à 3 concurrents (SEO, GEO, écart SERP) et renvoie un job_id à interroger avec `get_job`.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string",
+              "minLength": 3,
+              "description": "Votre domaine"
+            },
+            "competitors": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3
+              },
+              "minItems": 1,
+              "maxItems": 3,
+              "description": "Domaines concurrents"
+            }
+          },
+          "required": [
+            "domain",
+            "competitors"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "serp_ranking",
+        "title": "Positions SERP",
+        "description": "Relève les positions SERP d'un mot-clé auprès de plusieurs fournisseurs de données. Toujours facturé au wallet (donnée tierce payante).",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "keyword": {
+              "type": "string",
+              "minLength": 2,
+              "description": "Mot-clé à relever"
+            },
+            "domain": {
+              "type": "string",
+              "minLength": 3,
+              "description": "Domaine à repérer dans les résultats"
+            },
+            "location": {
+              "type": "string",
+              "description": "Localisation (ex: France)"
+            }
+          },
+          "required": [
+            "keyword"
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
