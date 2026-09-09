@@ -120,12 +120,20 @@ export default function KeywordPillarPage() {
             </div>
             <h2 className="text-2xl md:text-3xl font-bold mb-3">Lancez votre audit maintenant</h2>
             <p className="text-foreground/80 mb-6">Diagnostic SEO et GEO complet sur votre URL, avec plan d'action priorisé.</p>
-            <Link to="/">
-              <Button variant="outline" size="lg" className="gap-2">
-                Auditer mon site
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link to="/audit-geo-seo">
+                <Button variant="outline" size="lg" className="gap-2">
+                  Auditer mon site
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button variant="outline" size="lg" className="gap-2">
+                  Créer un compte gratuit
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </section>
         </div>
       </main>
