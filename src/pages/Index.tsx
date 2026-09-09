@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { AuditedDomainsCounter } from '@/components/AuditedDomainsCounter';
 import { HeroSection } from '@/components/HeroSection';
+import { AudienceRouter } from '@/components/Home/AudienceRouter';
 import { ToolTabs, ToolTab } from '@/components/ToolTabs';
 import { MobileLexiqueButton } from '@/components/MobileLexiqueButton';
 import { CrawlResult } from '@/types/crawler';
@@ -559,6 +560,7 @@ const Index = () => {
     <div className="home-root flex min-h-screen flex-col bg-background">
       {/* FAQPage + SoftwareApplication : déjà émis en SSR par le head() de la
           route (src/lib/seo/homeSchemas.ts) — aucun doublon client ici. */}
+      <AudienceRouter />
       <Header />
       <main className="flex-1 relative" role="main" aria-label={language === 'fr' ? 'Contenu principal' : language === 'es' ? 'Contenido principal' : 'Main content'}>
         {/* Global premium gradient overlay */}

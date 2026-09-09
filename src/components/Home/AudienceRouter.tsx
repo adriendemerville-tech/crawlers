@@ -128,7 +128,7 @@ export function AudienceRouter() {
   return (
     <section
       aria-label="Orientation du visiteur"
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-background px-5 py-10 animate-in fade-in duration-300"
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-background px-5 py-10 animate-fade-in"
     >
       <div className="w-full max-w-2xl">
         <p className="mb-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">Crawlers</p>
