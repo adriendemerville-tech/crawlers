@@ -260,7 +260,10 @@ function ParmenionLandingComponent(): React.ReactElement {
         {/* What's included */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
-            <h2 className="mb-10 text-2xl font-bold sm:text-3xl">Ce qui est corrigé en une seule passe</h2>
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Ce qui est corrigé en une seule passe</h2>
+            <p className="citable-passage mb-10 max-w-3xl text-muted-foreground">
+              Une passe Parmenion corrige trois familles de problèmes de référencement local et de visibilité IA : les erreurs techniques et sémantiques de vos pages (titres, métadonnées, hiérarchie de titres, données structurées), le manque de contenu répondant aux questions réelles de vos clients, et une fiche Google Maps incomplète ou non optimisée. Le périmètre est volontairement borné : un site, une fiche, trois contenus.
+            </p>
             <div className="grid gap-6 sm:grid-cols-3">
               {INCLUDED.map((item) => (
                 <div key={item.title} className="rounded-lg border border-border p-6">
