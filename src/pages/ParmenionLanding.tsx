@@ -566,14 +566,12 @@ function ParmenionLandingComponent(): React.ReactElement {
         <section className="border-b border-border">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
             <h2 className="mb-6 font-display text-xl font-bold sm:text-2xl">Tout le silo <span className="text-brand-violet">visibilité IA</span></h2>
-            <Suspense fallback={null}>
               <SiloNav
                 silo="geo"
                 currentPath="/audit-geo-seo"
                 heading="Les pages rattachées à cet audit"
                 className="mb-8 rounded-3xl bg-card"
               />
-            </Suspense>
             <h3 className="mb-4 font-display text-lg font-semibold">Autres ressources</h3>
             <ul className="grid gap-3 sm:grid-cols-2">
               {[
