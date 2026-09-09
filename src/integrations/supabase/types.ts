@@ -18513,6 +18513,7 @@ export type Database = {
           risk_predicted: number
         }[]
       }
+      pericles_reward_health: { Args: { p_domain: string }; Returns: Json }
       pericles_rotate_pull_token: {
         Args: { _target_id: string }
         Returns: {
