@@ -2,7 +2,11 @@
 
 Doc technique du JSON-LD de `/` et de la découvrabilité machine (sitemap, `llms.txt`).
 
-Dernière mise à jour : 2026-08-28.
+Dernière mise à jour : 2026-09-09.
+
+> Note : un overlay client-only `AudienceRouter` s'affiche au premier passage pour
+> orienter les visiteurs vers `/audit-geo-seo` ou la home. Il ne modifie pas le
+> HTML servi ni les métadonnées SSR. Voir `knowledge/tech/seo/home-audience-router-fr.md`.
 
 ---
 
