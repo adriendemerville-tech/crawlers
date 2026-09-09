@@ -2,13 +2,15 @@
 
 Objectif : aucun correctif n'est appliqué sur le site du client sans une case cochée par lui, correctif par correctif, avec avant/après visible et possibilité d'annuler. Cela inclut les plus simples (titre, meta description, JSON-LD, redirection 301).
 
-## Principe de délégation
+## Principe de délégation — une seule fois
 
-1. L'audit produit une liste de correctifs proposés, chacun avec : ce qui est constaté, ce qui sera écrit, la page concernée, l'impact attendu, le niveau de risque.
-2. Le client coche ce qu'il délègue. Rien de coché = rien de déployé.
-3. Une seule case globale « je délègue tout ce qui est coché » avec horodatage, conservée comme preuve de consentement.
-4. Chaque correctif déployé garde son état d'avant, pour être annulé en un clic.
-5. Ce que la plateforme technique ne peut pas appliquer sur le site du client est livré en mode « à copier », pas silencieusement ignoré.
+1. L'audit produit la liste complète des correctifs proposés, chacun avec : ce qui est constaté, ce qui sera écrit, la page concernée, l'impact attendu.
+2. Le client lit cette liste et donne **une seule autorisation**, une fois, pour l'ensemble. Pas de validation correctif par correctif, pas de relance à chaque déploiement.
+3. Cette autorisation est horodatée et conservée comme preuve de consentement, avec la liste exacte des correctifs couverts.
+4. Il peut, avant de valider, décocher les correctifs qu'il ne veut pas ; ce qui reste coché est déployé sans lui redemander.
+5. Chaque correctif déployé garde son état d'avant, annulable en un clic à tout moment.
+6. Ce que la plateforme ne peut pas appliquer sur son site est livré en mode « à copier », pas silencieusement ignoré.
+
 
 ## Liste des correctifs proposables
 
