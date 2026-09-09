@@ -103,12 +103,28 @@ function countSignals(text: string, signals: string[]): number {
 
 export type AudienceChoice = 'business' | 'pro';
 
+/** Écart minimal de signaux pour trancher sans reposer de question. */
+const MIN_MARGIN = 2;
+
 export function classifyAudience(answer: string): AudienceChoice {
   const business = countSignals(answer, BUSINESS_SIGNALS);
   const pro = countSignals(answer, PRO_SIGNALS);
   // Égalité ou réponse vide : on garde la home complète (aucune perte de contenu).
   return business > pro ? 'business' : 'pro';
 }
+
+/**
+ * Classification prudente : renvoie 'unknown' quand la réponse ne tranche pas
+ * (ex. « le site de mon garage auto »), pour reposer une question de lever de doute
+ * au lieu d'aiguiller à tort vers la landing agences.
+ */
+export function classifyAudienceOrAsk(answer: string): AudienceChoice | 'unknown' {
+  const business = countSignals(answer, BUSINESS_SIGNALS);
+  const pro = countSignals(answer, PRO_SIGNALS);
+  if (Math.abs(business - pro) < MIN_MARGIN) return 'unknown';
+  return business > pro ? 'business' : 'pro';
+}
+
 
 function SendIcon() {
   return (
