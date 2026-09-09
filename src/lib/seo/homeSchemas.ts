@@ -31,6 +31,9 @@ const TOOLS: Array<{ name: string; path: string; description: string }> = [
   { name: 'PageSpeed', path: '/pagespeed', description: 'Core Web Vitals mobile et desktop, terrain CrUX puis médiane de runs.' },
   { name: 'Observatoire sectoriel', path: '/observatoire', description: 'Indicateurs SEO et GEO agrégés par secteur.' },
   { name: 'API développeurs Crawlers', path: '/developers', description: 'Accès programmatique à l’ensemble des modules SEO, GEO et IA : jobs asynchrones REST, SDK TypeScript, wallet à l’usage.' },
+  { name: 'Serveur MCP SEO', path: '/seo-mcp-server', description: 'Serveur Model Context Protocol exposant l’audit SEO technique à Claude Code, Claude Desktop, Cursor et tout client MCP conforme : audit_page, audit_site, crawl_site, get_fix, check_indexability, analyze_schema, analyze_links.' },
+  { name: 'Serveur MCP GEO', path: '/geo-mcp-server', description: 'Serveur Model Context Protocol pour la visibilité générative : mesure des citations dans ChatGPT, Perplexity, Gemini, Claude et Mistral, concurrents cités, couverture des bots IA et correctifs de citabilité.' },
+
 ];
 
 const softwareApplication = {
