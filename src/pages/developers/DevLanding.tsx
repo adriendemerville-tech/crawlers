@@ -8,8 +8,8 @@ const DEVELOPERS_JSON_LD = [
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Accueil", item: "https://crawlers.fr/" },
-      { "@type": "ListItem", position: 2, name: "Développeurs", item: "https://crawlers.fr/developers" },
+      { "@type": "ListItem", position: 1, name: "Accueil", item: { "@type": "Thing", "@id": "https://crawlers.fr/", name: "Accueil" } },
+      { "@type": "ListItem", position: 2, name: "Développeurs", item: { "@type": "Thing", "@id": "https://crawlers.fr/developers", name: "Développeurs" } },
     ],
   },
   {

@@ -55,9 +55,9 @@ export default function MarinaApiDoc() {
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://crawlers.fr/' },
-          { '@type': 'ListItem', position: 2, name: 'API & Intégrations', item: 'https://crawlers.fr/api-integrations' },
-          { '@type': 'ListItem', position: 3, name: 'API Marina', item: 'https://crawlers.fr/docs/api/marina' },
+          { '@type': 'ListItem', position: 1, name: 'Accueil', item: { '@type': 'Thing', '@id': 'https://crawlers.fr/', name: 'Accueil' } },
+          { '@type': 'ListItem', position: 2, name: 'API & Intégrations', item: { '@type': 'Thing', '@id': 'https://crawlers.fr/api-integrations', name: 'API & Intégrations' } },
+          { '@type': 'ListItem', position: 3, name: 'API Marina', item: { '@type': 'Thing', '@id': 'https://crawlers.fr/docs/api/marina', name: 'API Marina' } },
         ],
       },
     ],

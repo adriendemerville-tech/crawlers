@@ -76,9 +76,9 @@ export default function CrawlersApiDoc() {
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://crawlers.fr/' },
-          { '@type': 'ListItem', position: 2, name: 'API & Intégrations', item: 'https://crawlers.fr/api-integrations' },
-          { '@type': 'ListItem', position: 3, name: 'API Crawlers', item: 'https://crawlers.fr/docs/api/crawlers' },
+          { '@type': 'ListItem', position: 1, name: 'Accueil', item: { '@type': 'Thing', '@id': 'https://crawlers.fr/', name: 'Accueil' } },
+          { '@type': 'ListItem', position: 2, name: 'API & Intégrations', item: { '@type': 'Thing', '@id': 'https://crawlers.fr/api-integrations', name: 'API & Intégrations' } },
+          { '@type': 'ListItem', position: 3, name: 'API Crawlers', item: { '@type': 'Thing', '@id': 'https://crawlers.fr/docs/api/crawlers', name: 'API Crawlers' } },
         ],
       },
     ],
