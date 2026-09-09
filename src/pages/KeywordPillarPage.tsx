@@ -7,6 +7,142 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { KEYWORD_PILLARS } from '@/data/keywordPillars';
 import { siloForPath } from '@/data/silos';
 import { SiloNav } from '@/components/seo/SiloNav';
+import { McpSessionAnimation, type McpStep } from '@/components/Mcp/McpSessionAnimation';
+
+/**
+ * Démonstrations MCP par page satellite : reproduction d'une session d'agent
+ * (fenêtre type Claude Code) qui connecte le serveur MCP Crawlers, appelle un
+ * outil, corrige et re-mesure. Rassure le visiteur sur l'usage réel.
+ */
+const MCP_DEMOS: Record<string, { windowTitle: string; caption: string; steps: McpStep[] }> = {
+  'seo-avec-claude': {
+    windowTitle: 'Claude Code — serveur MCP Crawlers',
+    caption: 'Reproduction d’une session réelle : Claude Code pilote Crawlers via le MCP.',
+    steps: [
+      { kind: 'user', text: 'Connecte le serveur MCP Crawlers et optimise le SEO de ma page produit.' },
+      {
+        kind: 'tool',
+        name: 'connect',
+        args: 'https://crawlers.fr/mcp  ·  Streamable HTTP  ·  OAuth 2.1\n→ connecté : 14 outils, 3 ressources',
+      },
+      {
+        kind: 'tool',
+        name: 'audit_page',
+        args: '{ "url": "https://exemple.fr/produit" }',
+      },
+      {
+        kind: 'result',
+        lines: [
+          'score: 58/100',
+          'SEO-H1-001    high    aucun h1 dans le HTML servi',
+          'SEO-SCHEMA-003 high   schema Product absent',
+          'SEO-META-007  medium  meta description trop courte',
+        ],
+      },
+      { kind: 'user', text: 'Corrige les deux constats critiques.' },
+      {
+        kind: 'tool',
+        name: 'get_fix',
+        args: '{ "finding_ids": ["SEO-H1-001", "SEO-SCHEMA-003"], "framework": "nextjs" }',
+      },
+      {
+        kind: 'result',
+        lines: ['patch: h1 unique + schema Product/Offer', 'fichier: app/produit/page.tsx'],
+      },
+      { kind: 'assistant', text: 'Patch appliqué. Je relance l’audit pour vérifier.' },
+      {
+        kind: 'tool',
+        name: 'audit_page',
+        args: '{ "url": "https://exemple.fr/produit", "compare_to": "run_2a91" }',
+      },
+      { kind: 'result', lines: ['score: 58 → 91', 'SEO-H1-001: résolu', 'SEO-SCHEMA-003: résolu'] },
+    ],
+  },
+  'visibilite-ia': {
+    windowTitle: 'Claude — serveur MCP Crawlers (visibilité IA)',
+    caption: 'Reproduction d’une session réelle : mesure des citations dans les réponses IA, puis correction.',
+    steps: [
+      { kind: 'user', text: 'Est-ce que ChatGPT et Perplexity citent mon site sur mes requêtes clés ?' },
+      {
+        kind: 'tool',
+        name: 'connect',
+        args: 'https://crawlers.fr/mcp  ·  Streamable HTTP  ·  OAuth 2.1\n→ connecté : 14 outils, 3 ressources',
+      },
+      {
+        kind: 'tool',
+        name: 'ai_visibility',
+        args: '{ "url": "https://exemple.fr", "engines": ["chatgpt", "gemini", "perplexity", "claude"] }',
+      },
+      {
+        kind: 'result',
+        lines: [
+          'citation_rate: 8% (2/25 questions)',
+          'chatgpt: 0   gemini: 1   perplexity: 1   claude: 0',
+          'sources citées à votre place : 2 concurrents',
+          'findings: GEO-ANSWER-001 (high), GEO-FANOUT-004 (medium)',
+        ],
+      },
+      { kind: 'user', text: 'Corrige GEO-ANSWER-001.' },
+      {
+        kind: 'tool',
+        name: 'get_fix',
+        args: '{ "finding_id": "GEO-ANSWER-001" }',
+      },
+      {
+        kind: 'result',
+        lines: ['patch: bloc réponse directe + 3 passages citables + schema FAQPage'],
+      },
+      { kind: 'assistant', text: 'Correctif appliqué. Je re-mesure la visibilité.' },
+      {
+        kind: 'tool',
+        name: 'ai_visibility',
+        args: '{ "url": "https://exemple.fr", "compare_to": "run_7b30" }',
+      },
+      { kind: 'result', lines: ['citation_rate: 8% → 29%', 'GEO-ANSWER-001: résolu'] },
+    ],
+  },
+  'audit-seo-par-ia': {
+    windowTitle: 'Claude Code — audit SEO piloté par MCP',
+    caption: 'Reproduction d’une session réelle : audit complet, corrections, vérification — sans ouvrir l’interface.',
+    steps: [
+      { kind: 'user', text: 'Lance un audit SEO complet de mon site et corrige ce qui est critique.' },
+      {
+        kind: 'tool',
+        name: 'connect',
+        args: 'https://crawlers.fr/mcp  ·  Streamable HTTP  ·  OAuth 2.1\n→ connecté : 14 outils, 3 ressources',
+      },
+      {
+        kind: 'tool',
+        name: 'audit_site',
+        args: '{ "domain": "exemple.fr", "max_pages": 200 }',
+      },
+      {
+        kind: 'result',
+        lines: [
+          '198 pages crawlées · score global 64/100',
+          'critiques: 7 (canonicals, h1, pages orphelines)',
+          'findings normalisés: SEO-CANON-002 ×4, SEO-ORPHAN-010 ×2…',
+        ],
+      },
+      {
+        kind: 'tool',
+        name: 'get_fix',
+        args: '{ "finding_id": "SEO-CANON-002", "framework": "nextjs" }',
+      },
+      {
+        kind: 'result',
+        lines: ['patch: metadata.alternates.canonical sur 4 pages', 'fichiers touchés: 4'],
+      },
+      { kind: 'assistant', text: 'Corrections appliquées. Je relance l’audit sur les pages touchées.' },
+      {
+        kind: 'tool',
+        name: 'audit_page',
+        args: '{ "url": "https://exemple.fr/contact", "compare_to": "run_5d12" }',
+      },
+      { kind: 'result', lines: ['score: 64 → 92', 'SEO-CANON-002: résolu sur 4/4 pages'] },
+    ],
+  },
+};
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -61,7 +197,13 @@ export default function KeywordPillarPage() {
           </div>
         </section>
 
-
+        {MCP_DEMOS[slug] && (
+          <McpSessionAnimation
+            windowTitle={MCP_DEMOS[slug].windowTitle}
+            caption={MCP_DEMOS[slug].caption}
+            steps={MCP_DEMOS[slug].steps}
+          />
+        )}
 
         <div className="prose prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-strong:text-foreground">
           {data.sections.map((section, si) => (
