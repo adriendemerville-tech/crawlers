@@ -251,6 +251,8 @@ export function McpSessionAnimation({ windowTitle, steps, caption }: Props) {
             );
           })}
 
+          {thinkingRow}
+
           <p className="pt-2 text-center text-xs text-muted-foreground">{caption}</p>
         </div>
       </div>
