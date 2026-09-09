@@ -15,6 +15,8 @@ import {
   savePasseGmbPreview,
   deployPasseOrder,
 } from '@/lib/parmenion/parmenion.functions';
+import { CmsPlatformDetector } from './CmsPlatformDetector';
+
 
 interface Props {
   orderId: string;
