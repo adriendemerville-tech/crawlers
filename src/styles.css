@@ -274,51 +274,6 @@
   --sidebar-ring: 217.2 91.2% 59.8%;
 }
 
-/* Force le thème clair sur une page précise (ex : landing /audit-geo-seo),
-   même quand le site est en mode sombre. */
-.light-scope {
-  --background: 43 10% 96%;
-  --foreground: 222 47% 11%;
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --brand-violet: 262 83% 58%;
-  --brand-violet-muted: 262 72% 96%;
-  --brand-gold: 45 93% 47%;
-  --brand-gold-muted: 45 90% 95%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222 47% 11%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 20% 40%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222 47% 11%;
-  --destructive-muted: 0 70% 95%;
-  --warning-muted: 38 90% 92%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  /* Re-déclarer les mappings Tailwind v4 : un var() dans une propriété custom
-     est résolu là où elle est déclarée, donc il faut les refaire ici. */
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-brand-violet: hsl(var(--brand-violet));
-  --color-brand-gold: hsl(var(--brand-gold));
-  --color-brand-violet-muted: hsl(var(--brand-violet-muted));
-  --color-brand-gold-muted: hsl(var(--brand-gold-muted));
-}
-
 @layer base {
   * {
     border-color: hsl(var(--border));
