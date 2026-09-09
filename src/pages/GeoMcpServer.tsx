@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import { McpSessionAnimation } from '@/components/Mcp/McpSessionAnimation';
+import { DataTable } from '@/components/seo/DataTable';
+
 
 const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
 
