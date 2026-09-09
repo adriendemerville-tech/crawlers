@@ -121,6 +121,173 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
     ],
     datePublished: '2026-07-25',
   },
+  'seo-avec-claude': {
+    slug: 'seo-avec-claude',
+    h1: 'SEO avec Claude : brancher un moteur d’audit sur Claude Code et Claude Desktop',
+    title: 'SEO avec Claude — Audit et corrections via MCP | Crawlers.fr',
+    metaDesc: "Faire du SEO avec Claude : connecter Claude Code ou Claude Desktop au serveur MCP Crawlers pour auditer, corriger et vérifier une page sans quitter l'éditeur.",
+    primaryKeyword: 'SEO avec Claude',
+    intro: "Claude ne mesure pas un site : il lit ce qu'on lui donne. Sans source de vérité, une demande du type « optimise cette page pour le SEO » produit des suppositions. Branché sur le serveur MCP de Crawlers.fr, Claude appelle un vrai moteur d'audit, reçoit des constats normalisés, applique les corrections dans le code, puis relance l'audit pour vérifier.",
+    sections: [
+      {
+        h2: "Pourquoi Claude seul ne suffit pas pour le SEO",
+        body: "Un modèle de langage raisonne sur du texte, pas sur des mesures. Il ne connaît ni votre HTML servi, ni vos temps de chargement, ni vos balises réelles après rendu JavaScript. D'où trois limites concrètes.",
+        h3s: [
+          { title: "Pas d'accès aux faits", body: "Claude ne voit ni le HTML réellement servi aux robots, ni le statut HTTP, ni les canonicals en place. Il propose donc des corrections plausibles mais non vérifiées." },
+          { title: "Pas de vérification", body: "Sans re-mesure après modification, rien ne prouve que la correction a fonctionné. La boucle reste ouverte." },
+          { title: "Pas de priorisation", body: "Vingt remarques SEO sans gravité mesurée se valent toutes. Un moteur d'audit, lui, hiérarchise par gravité et par impact attendu." },
+        ],
+      },
+      {
+        h2: "La boucle audit → constat → correction → vérification",
+        body: "Le serveur MCP de Crawlers.fr expose l'audit comme des outils appelables par l'agent. C'est cette boucle, et non la génération de texte, qui fait progresser un score.",
+        h3s: [
+          { title: "1. Audit", body: "Claude appelle l'outil d'audit sur une URL ou un domaine. Le moteur crawle, rend la page comme un robot et mesure." },
+          { title: "2. Constats normalisés", body: "Chaque problème revient sous forme structurée : identifiant de règle, gravité, preuve, explication, correction disponible ou non." },
+          { title: "3. Correction", body: "L'agent demande la correction adaptée à votre pile (HTML, WordPress, Next.js, TanStack Start) et modifie les fichiers." },
+          { title: "4. Vérification", body: "Nouvel appel d'audit sur la même URL. Le constat disparaît ou non : la preuve est mesurée, pas déclarée." },
+        ],
+      },
+      {
+        h2: "Ce que Claude peut faire avec Crawlers.fr",
+        body: "Les outils MCP couvrent le crawl, l'audit d'une page, la citabilité par les moteurs génératifs, les données structurées, le maillage interne et le suivi de position, selon le plan et le portefeuille pay-as-you-go du compte.",
+        h3s: [
+          { title: "Auditer sans quitter l'éditeur", body: "Dans Claude Code, l'audit tourne pendant que vous codez : les constats arrivent dans la conversation, avec la ligne ou la balise concernée." },
+          { title: "Corriger en connaissance de cause", body: "Les règles d'audit sont exposées comme ressources MCP. Claude peut lire la règle avant de proposer un correctif, au lieu de l'inventer." },
+          { title: "Travailler sur un site entier", body: "Les opérations longues (crawl complet, audit de site) sont asynchrones : l'agent lance le travail, récupère un identifiant, puis relit le résultat." },
+        ],
+      },
+      {
+        h2: "Comment connecter Claude à Crawlers.fr",
+        body: "Le serveur MCP de Crawlers.fr parle Streamable HTTP avec authentification OAuth 2.1, le standard attendu par Claude Desktop, Claude Code et les autres clients compatibles. Vous ajoutez le serveur dans votre client, vous autorisez votre compte Crawlers.fr, et les outils apparaissent dans la conversation. La facturation suit votre plan : les outils inclus consomment votre quota, le reste est décompté en pay-as-you-go depuis votre portefeuille développeur.",
+      },
+    ],
+    faqs: [
+      { q: "Faut-il un abonnement Crawlers.fr pour utiliser Claude avec le MCP ?", a: "Il faut un compte Crawlers.fr. Les lectures et les statuts de tâche sont gratuits, les outils qui déclenchent un crawl ou un calcul sont décomptés du quota de votre plan puis, au-delà, de votre portefeuille pay-as-you-go." },
+      { q: "Quels clients sont compatibles ?", a: "Tout client conforme au Model Context Protocol en transport Streamable HTTP avec OAuth 2.1 : Claude Desktop, Claude Code, Cursor et les environnements équivalents." },
+      { q: "Claude modifie-t-il mon site directement ?", a: "Non. Crawlers.fr fournit les constats et les corrections proposées ; c'est votre agent, dans votre dépôt ou via votre CMS connecté, qui applique la modification." },
+      { q: "Est-ce du SEO ou du GEO ?", a: "Les deux. Les outils mesurent la performance classique (technique, balises, maillage) et la citabilité par les moteurs génératifs comme ChatGPT, Gemini, Perplexity et Claude." },
+      { q: "Comment éviter les boucles d'appels coûteuses ?", a: "Un plafond journalier s'applique par compte, et chaque appel facturé est journalisé avec son coût dans l'espace développeurs." },
+    ],
+    relatedLinks: [
+      { label: "Serveur MCP SEO (page anglaise)", to: "/seo-mcp-server" },
+      { label: "Audit SEO par IA : ce qui est mesuré", to: "/audit-seo-par-ia" },
+      { label: "Crawlers.fr vs Claude : comparatif", to: "/comparatif-claude-vs-crawlers" },
+      { label: "API SEO REST et tarifs", to: "/api-seo" },
+    ],
+    datePublished: '2026-09-09',
+  },
+  'visibilite-ia': {
+    slug: 'visibilite-ia',
+    h1: 'Visibilité IA : mesurer si ChatGPT, Gemini et Perplexity citent votre marque',
+    title: 'Visibilité IA — Mesurer vos citations dans les LLM | Crawlers.fr',
+    metaDesc: "Visibilité IA : comment mesurer les citations de votre marque dans ChatGPT, Gemini, Perplexity, Claude et Mistral, et comment les faire progresser.",
+    primaryKeyword: 'visibilité IA',
+    intro: "La visibilité IA désigne la présence d'une marque dans les réponses des moteurs génératifs, là où le SEO classique mesure une position dans une page de résultats. Elle ne se déduit pas du classement Google : une page première sur un mot-clé peut n'être jamais citée par ChatGPT, et l'inverse arrive aussi.",
+    sections: [
+      {
+        h2: "Visibilité IA, position Google : deux mesures distinctes",
+        body: "Un moteur génératif ne renvoie pas dix liens mais une réponse, construite à partir de quelques sources. La question n'est plus « à quelle place suis-je ? » mais « suis-je la source retenue, et sur quelles questions ? ».",
+        h3s: [
+          { title: "L'unité de mesure change", body: "En SEO, on suit un mot-clé et un rang. En visibilité IA, on suit une question posée par un utilisateur et la présence, ou l'absence, de votre marque dans la réponse." },
+          { title: "Le fan-out multiplie les questions", body: "Une demande utilisateur est éclatée par le modèle en plusieurs sous-questions. Être cité sur une seule d'entre elles suffit parfois, et manque parfois l'essentiel." },
+          { title: "La citation se gagne sur des faits", body: "Les passages courts, datés, chiffrés et attribuables sont réutilisés plus souvent que les paragraphes promotionnels." },
+        ],
+      },
+      {
+        h2: "Comment mesurer sa visibilité IA sans se raconter d'histoires",
+        body: "Une mesure crédible repose sur des interrogations réelles des moteurs, répétées dans le temps, sur un jeu de questions stable. Trois précautions comptent.",
+        h3s: [
+          { title: "Un jeu de questions représentatif", body: "Questions de marque, questions de catégorie, questions comparatives et, quand le périmètre local est prouvé, questions localisées. Un lieu n'est jamais supposé." },
+          { title: "La répétition", body: "Les réponses des modèles varient. Une mesure isolée ne vaut rien ; c'est la fréquence de citation sur plusieurs passages qui fait signal." },
+          { title: "Le croisement avec les faits techniques", body: "Un site rendu uniquement en JavaScript peut être quasi vide pour un robot. Dans ce cas, la cause d'une visibilité nulle est structurelle, pas éditoriale." },
+        ],
+      },
+      {
+        h2: "Les leviers qui font bouger la visibilité IA",
+        body: "Aucun levier n'agit seul, mais leur ordre compte : rendre le contenu lisible par les robots, puis le rendre citable, puis le rendre reconnaissable.",
+        h3s: [
+          { title: "Accessibilité aux robots IA", body: "robots.txt, pare-feu, rendu serveur : si GPTBot, ClaudeBot ou PerplexityBot n'accèdent pas au contenu, rien d'autre ne compte." },
+          { title: "Citabilité", body: "Réponse directe en tête de page, passages autonomes de deux à quatre phrases, données structurées cohérentes avec le texte visible." },
+          { title: "Autorité vérifiable", body: "Auteur identifié, sources externes, dates de mise à jour, données propriétaires. Ce sont les signaux qu'un modèle peut reprendre sans risque." },
+          { title: "Suivi des passages de bots", body: "Les logs montrent quels robots IA lisent quoi. Une hausse de passages précède souvent une hausse de citations." },
+        ],
+      },
+      {
+        h2: "Ce que Crawlers.fr mesure",
+        body: "L'audit Crawlers.fr interroge réellement les moteurs génératifs sur un jeu de questions construit à partir de la page auditée, mesure les passages de robots IA dans vos logs, et plafonne le score de visibilité quand les faits techniques le contredisent : un texte extrait quasi nul ne peut pas produire un bon score, quelle que soit la qualité apparente du contenu.",
+      },
+    ],
+    faqs: [
+      { q: "La visibilité IA remplace-t-elle le SEO ?", a: "Non. Le trafic de recherche classique reste majoritaire pour la plupart des sites. La visibilité IA est une seconde surface, qui se dégrade ou progresse indépendamment." },
+      { q: "Peut-on mesurer la visibilité IA gratuitement ?", a: "Oui, l'audit gratuit de Crawlers.fr interroge les principaux moteurs génératifs sur une page et restitue les citations observées." },
+      { q: "Pourquoi mes concurrents sont-ils cités et pas moi ?", a: "Le plus souvent pour une raison mesurable : contenu inaccessible aux robots, absence de passages autonomes, ou aucune donnée propre à reprendre. L'audit indique laquelle s'applique." },
+      { q: "Combien de temps pour voir un effet ?", a: "Les corrections d'accessibilité produisent un effet en quelques jours, le temps que les robots repassent. Les gains de citabilité se constatent plutôt sur quatre à huit semaines." },
+      { q: "Les citations IA génèrent-elles du trafic ?", a: "Partiellement, et de façon inégale selon les moteurs. Certains affichent des liens cliquables, d'autres non : la citation vaut alors surtout comme recommandation." },
+    ],
+    relatedLinks: [
+      { label: "Référencement IA et GEO : le guide pilier", to: "/generative-engine-optimization" },
+      { label: "Audit GEO gratuit", to: "/audit-geo" },
+      { label: "Monitoring GPTBot et PerplexityBot", to: "/monitoring-gptbot-perplexity" },
+      { label: "E-E-A-T et citations IA", to: "/eeat" },
+    ],
+    datePublished: '2026-09-09',
+  },
+  'audit-seo-par-ia': {
+    slug: 'audit-seo-par-ia',
+    h1: 'Audit SEO par IA : ce que la machine mesure, ce qu’elle invente',
+    title: 'Audit SEO par IA — Ce qui est mesuré | Crawlers.fr',
+    metaDesc: "Audit SEO par IA : différence entre constats mesurés et texte généré, méthode Crawlers.fr, garde-fous anti-hallucination et plan d'action priorisé.",
+    primaryKeyword: 'audit SEO par IA',
+    intro: "Un audit SEO par IA n'a de valeur que si le diagnostic vient de mesures et non du modèle. Chez Crawlers.fr, les constats sont produits par un crawl et des règles déterministes ; l'IA sert à expliquer, prioriser et rédiger les corrections, jamais à inventer un chiffre.",
+    sections: [
+      {
+        h2: "Deux choses très différentes appelées « audit SEO par IA »",
+        body: "La confusion est fréquente et coûteuse : un rapport bien écrit peut être entièrement faux.",
+        h3s: [
+          { title: "Le rapport rédigé par un modèle", body: "Un modèle reçoit une URL, produit un texte crédible. Sans crawl, il ne peut ni compter les pages, ni mesurer un temps de chargement, ni vérifier un canonical." },
+          { title: "L'audit mesuré, expliqué par un modèle", body: "Le crawl et les règles produisent les faits. Le modèle les met en récit, les hiérarchise et propose les correctifs. C'est l'approche de Crawlers.fr." },
+        ],
+      },
+      {
+        h2: "Ce qui est réellement mesuré",
+        body: "Chaque constat est rattaché à une règle, une preuve et une gravité. Sans preuve, pas de constat.",
+        h3s: [
+          { title: "Technique", body: "Statuts HTTP, canonicals, robots.txt, sitemap, redirections, hreflang, poids et format des images, Core Web Vitals sur données réelles quand elles existent." },
+          { title: "Rendu robot", body: "Comparaison du HTML servi et du contenu après rendu. Une page dont le texte n'existe qu'après exécution JavaScript est signalée comme cause racine, pas comme contenu pauvre." },
+          { title: "Sémantique et maillage", body: "Structure des titres, intention de page, cannibalisation entre pages proches, profondeur de clic, liens internes entrants." },
+          { title: "Citabilité et autorité", body: "Passages citables, données structurées, signaux E-E-A-T vérifiables, citations observées dans les moteurs génératifs." },
+        ],
+      },
+      {
+        h2: "Les garde-fous",
+        body: "Un audit automatisé se juge autant sur ce qu'il refuse d'affirmer que sur ce qu'il détecte.",
+        h3s: [
+          { title: "Aucun chiffre non mesuré", body: "La synthèse ne peut citer que des valeurs issues des mesures. Un chiffre absent des données ne peut pas apparaître dans le rapport." },
+          { title: "Plafonds de cohérence", body: "Les scores sont plafonnés par les faits : un site dont le texte extrait est quasi nul ne peut pas afficher un bon score, même si le reste semble propre." },
+          { title: "Priorisation par impact", body: "Les problèmes bloquants passent devant les optimisations de confort, et le plan d'action est ordonné par gain attendu, pas par ordre alphabétique des règles." },
+        ],
+      },
+      {
+        h2: "Du constat à la correction vérifiée",
+        body: "Chaque constat porte un identifiant stable, ce qui permet de suivre sa disparition après correction. C'est cette boucle qui rend l'audit utilisable par un agent de développement : audit, correction adaptée à votre pile, nouvel audit, comparaison. Le même mécanisme alimente l'espace développeurs, l'API et le serveur MCP.",
+      },
+    ],
+    faqs: [
+      { q: "Un audit SEO par IA remplace-t-il un consultant ?", a: "Il remplace la collecte et le tri, pas l'arbitrage. Le choix de ce qu'on corrige d'abord dépend d'objectifs commerciaux que l'outil ne connaît pas." },
+      { q: "L'audit gratuit est-il limité ?", a: "Il porte sur une page et un jeu de questions réduit. L'audit complet couvre le site, les logs et le suivi dans le temps." },
+      { q: "Comment savoir si un audit invente des données ?", a: "Demandez la preuve associée à chaque constat : URL, extrait, valeur mesurée, date. Un constat sans preuve n'est pas un constat." },
+      { q: "L'audit détecte-t-il les sites en JavaScript non rendu côté serveur ?", a: "Oui, c'est un contrôle explicite : le rapport distingue une coquille JavaScript d'un contenu réellement insuffisant." },
+      { q: "Peut-on relancer l'audit après correction ?", a: "Oui, et c'est l'usage recommandé : la comparaison entre deux audits est la seule preuve qu'une correction a produit un effet." },
+    ],
+    relatedLinks: [
+      { label: "Méthode d’audit SEO GEO", to: "/audit-seo-geo" },
+      { label: "SEO avec Claude via MCP", to: "/seo-avec-claude" },
+      { label: "Visibilité IA : mesurer ses citations", to: "/visibilite-ia" },
+      { label: "Audit expert 200+ critères", to: "/audit-expert" },
+    ],
+    datePublished: '2026-09-09',
+  },
 };
 
 export const PILLAR_SLUGS = Object.keys(KEYWORD_PILLARS);

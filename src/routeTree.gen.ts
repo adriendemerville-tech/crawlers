@@ -27,6 +27,7 @@ import { Route as AuditGeoSeoRouteImport } from './routes/audit-geo-seo'
 import { Route as AuditSemantiqueRouteImport } from './routes/audit-semantique'
 import { Route as AuditSeoGeoRouteImport } from './routes/audit-seo-geo'
 import { Route as AuditSeoGratuitRouteImport } from './routes/audit-seo-gratuit'
+import { Route as AuditSeoParIaRouteImport } from './routes/audit-seo-par-ia'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BreathingSpiralRouteImport } from './routes/breathing-spiral'
 import { Route as CfShieldRouteImport } from './routes/cf-shield'
@@ -85,12 +86,15 @@ import { Route as RgpdRouteImport } from './routes/rgpd'
 import { Route as RssDotxmlRouteImport } from './routes/rss[.]xml'
 import { Route as ScoreGeoRouteImport } from './routes/score-geo'
 import { Route as SeaSeoBridgeRouteImport } from './routes/sea-seo-bridge'
+import { Route as SeoAvecClaudeRouteImport } from './routes/seo-avec-claude'
+import { Route as SeoMcpServerRouteImport } from './routes/seo-mcp-server'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SiteCrawlRouteImport } from './routes/site-crawl'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SocialContentCreatorRouteImport } from './routes/social-content-creator'
 import { Route as StrategeCocoonRouteImport } from './routes/stratege-cocoon'
 import { Route as TarifsRouteImport } from './routes/tarifs'
+import { Route as VisibiliteIaRouteImport } from './routes/visibilite-ia'
 import { Route as VisibiliteLlmRouteImport } from './routes/visibilite-llm'
 import { Route as ApiExternalAuditImportRouteImport } from './routes/api/external-audit-import'
 import { Route as ApiRenderReportPdfRouteImport } from './routes/api/render-report-pdf'
@@ -248,6 +252,11 @@ const AuditSeoGeoRoute = AuditSeoGeoRouteImport.update({
 const AuditSeoGratuitRoute = AuditSeoGratuitRouteImport.update({
   id: '/audit-seo-gratuit',
   path: '/audit-seo-gratuit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditSeoParIaRoute = AuditSeoParIaRouteImport.update({
+  id: '/audit-seo-par-ia',
+  path: '/audit-seo-par-ia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -551,6 +560,16 @@ const SeaSeoBridgeRoute = SeaSeoBridgeRouteImport.update({
   path: '/sea-seo-bridge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SeoAvecClaudeRoute = SeoAvecClaudeRouteImport.update({
+  id: '/seo-avec-claude',
+  path: '/seo-avec-claude',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeoMcpServerRoute = SeoMcpServerRouteImport.update({
+  id: '/seo-mcp-server',
+  path: '/seo-mcp-server',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -579,6 +598,11 @@ const StrategeCocoonRoute = StrategeCocoonRouteImport.update({
 const TarifsRoute = TarifsRouteImport.update({
   id: '/tarifs',
   path: '/tarifs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VisibiliteIaRoute = VisibiliteIaRouteImport.update({
+  id: '/visibilite-ia',
+  path: '/visibilite-ia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VisibiliteLlmRoute = VisibiliteLlmRouteImport.update({
@@ -949,6 +973,7 @@ export interface FileRoutesByFullPath {
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
+  '/audit-seo-par-ia': typeof AuditSeoParIaRoute
   '/auth': typeof AuthRoute
   '/breathing-spiral': typeof BreathingSpiralRoute
   '/cf-shield': typeof CfShieldRoute
@@ -1007,12 +1032,15 @@ export interface FileRoutesByFullPath {
   '/rss.xml': typeof RssDotxmlRoute
   '/score-geo': typeof ScoreGeoRoute
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
+  '/seo-avec-claude': typeof SeoAvecClaudeRoute
+  '/seo-mcp-server': typeof SeoMcpServerRoute
   '/signup': typeof SignupRoute
   '/site-crawl': typeof SiteCrawlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/social-content-creator': typeof SocialContentCreatorRoute
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
+  '/visibilite-ia': typeof VisibiliteIaRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
   '/api/external-audit-import': typeof ApiExternalAuditImportRoute
   '/api/render-report-pdf': typeof ApiRenderReportPdfRoute
@@ -1101,6 +1129,7 @@ export interface FileRoutesByTo {
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
+  '/audit-seo-par-ia': typeof AuditSeoParIaRoute
   '/auth': typeof AuthRoute
   '/breathing-spiral': typeof BreathingSpiralRoute
   '/cf-shield': typeof CfShieldRoute
@@ -1159,12 +1188,15 @@ export interface FileRoutesByTo {
   '/rss.xml': typeof RssDotxmlRoute
   '/score-geo': typeof ScoreGeoRoute
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
+  '/seo-avec-claude': typeof SeoAvecClaudeRoute
+  '/seo-mcp-server': typeof SeoMcpServerRoute
   '/signup': typeof SignupRoute
   '/site-crawl': typeof SiteCrawlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/social-content-creator': typeof SocialContentCreatorRoute
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
+  '/visibilite-ia': typeof VisibiliteIaRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
   '/api/external-audit-import': typeof ApiExternalAuditImportRoute
   '/api/render-report-pdf': typeof ApiRenderReportPdfRoute
@@ -1254,6 +1286,7 @@ export interface FileRoutesById {
   '/audit-semantique': typeof AuditSemantiqueRoute
   '/audit-seo-geo': typeof AuditSeoGeoRoute
   '/audit-seo-gratuit': typeof AuditSeoGratuitRoute
+  '/audit-seo-par-ia': typeof AuditSeoParIaRoute
   '/auth': typeof AuthRoute
   '/breathing-spiral': typeof BreathingSpiralRoute
   '/cf-shield': typeof CfShieldRoute
@@ -1312,12 +1345,15 @@ export interface FileRoutesById {
   '/rss.xml': typeof RssDotxmlRoute
   '/score-geo': typeof ScoreGeoRoute
   '/sea-seo-bridge': typeof SeaSeoBridgeRoute
+  '/seo-avec-claude': typeof SeoAvecClaudeRoute
+  '/seo-mcp-server': typeof SeoMcpServerRoute
   '/signup': typeof SignupRoute
   '/site-crawl': typeof SiteCrawlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/social-content-creator': typeof SocialContentCreatorRoute
   '/stratege-cocoon': typeof StrategeCocoonRoute
   '/tarifs': typeof TarifsRoute
+  '/visibilite-ia': typeof VisibiliteIaRoute
   '/visibilite-llm': typeof VisibiliteLlmRoute
   '/api/external-audit-import': typeof ApiExternalAuditImportRoute
   '/api/render-report-pdf': typeof ApiRenderReportPdfRoute
@@ -1408,6 +1444,7 @@ export interface FileRouteTypes {
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
+    | '/audit-seo-par-ia'
     | '/auth'
     | '/breathing-spiral'
     | '/cf-shield'
@@ -1466,12 +1503,15 @@ export interface FileRouteTypes {
     | '/rss.xml'
     | '/score-geo'
     | '/sea-seo-bridge'
+    | '/seo-avec-claude'
+    | '/seo-mcp-server'
     | '/signup'
     | '/site-crawl'
     | '/sitemap.xml'
     | '/social-content-creator'
     | '/stratege-cocoon'
     | '/tarifs'
+    | '/visibilite-ia'
     | '/visibilite-llm'
     | '/api/external-audit-import'
     | '/api/render-report-pdf'
@@ -1560,6 +1600,7 @@ export interface FileRouteTypes {
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
+    | '/audit-seo-par-ia'
     | '/auth'
     | '/breathing-spiral'
     | '/cf-shield'
@@ -1618,12 +1659,15 @@ export interface FileRouteTypes {
     | '/rss.xml'
     | '/score-geo'
     | '/sea-seo-bridge'
+    | '/seo-avec-claude'
+    | '/seo-mcp-server'
     | '/signup'
     | '/site-crawl'
     | '/sitemap.xml'
     | '/social-content-creator'
     | '/stratege-cocoon'
     | '/tarifs'
+    | '/visibilite-ia'
     | '/visibilite-llm'
     | '/api/external-audit-import'
     | '/api/render-report-pdf'
@@ -1712,6 +1756,7 @@ export interface FileRouteTypes {
     | '/audit-semantique'
     | '/audit-seo-geo'
     | '/audit-seo-gratuit'
+    | '/audit-seo-par-ia'
     | '/auth'
     | '/breathing-spiral'
     | '/cf-shield'
@@ -1770,12 +1815,15 @@ export interface FileRouteTypes {
     | '/rss.xml'
     | '/score-geo'
     | '/sea-seo-bridge'
+    | '/seo-avec-claude'
+    | '/seo-mcp-server'
     | '/signup'
     | '/site-crawl'
     | '/sitemap.xml'
     | '/social-content-creator'
     | '/stratege-cocoon'
     | '/tarifs'
+    | '/visibilite-ia'
     | '/visibilite-llm'
     | '/api/external-audit-import'
     | '/api/render-report-pdf'
@@ -1865,6 +1913,7 @@ export interface RootRouteChildren {
   AuditSemantiqueRoute: typeof AuditSemantiqueRoute
   AuditSeoGeoRoute: typeof AuditSeoGeoRoute
   AuditSeoGratuitRoute: typeof AuditSeoGratuitRoute
+  AuditSeoParIaRoute: typeof AuditSeoParIaRoute
   AuthRoute: typeof AuthRoute
   BreathingSpiralRoute: typeof BreathingSpiralRoute
   CfShieldRoute: typeof CfShieldRoute
@@ -1923,12 +1972,15 @@ export interface RootRouteChildren {
   RssDotxmlRoute: typeof RssDotxmlRoute
   ScoreGeoRoute: typeof ScoreGeoRoute
   SeaSeoBridgeRoute: typeof SeaSeoBridgeRoute
+  SeoAvecClaudeRoute: typeof SeoAvecClaudeRoute
+  SeoMcpServerRoute: typeof SeoMcpServerRoute
   SignupRoute: typeof SignupRoute
   SiteCrawlRoute: typeof SiteCrawlRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SocialContentCreatorRoute: typeof SocialContentCreatorRoute
   StrategeCocoonRoute: typeof StrategeCocoonRoute
   TarifsRoute: typeof TarifsRoute
+  VisibiliteIaRoute: typeof VisibiliteIaRoute
   VisibiliteLlmRoute: typeof VisibiliteLlmRoute
   ApiExternalAuditImportRoute: typeof ApiExternalAuditImportRoute
   ApiRenderReportPdfRoute: typeof ApiRenderReportPdfRoute
@@ -2125,6 +2177,13 @@ declare module '@tanstack/react-router' {
       path: '/audit-seo-gratuit'
       fullPath: '/audit-seo-gratuit'
       preLoaderRoute: typeof AuditSeoGratuitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit-seo-par-ia': {
+      id: '/audit-seo-par-ia'
+      path: '/audit-seo-par-ia'
+      fullPath: '/audit-seo-par-ia'
+      preLoaderRoute: typeof AuditSeoParIaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -2533,6 +2592,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SeaSeoBridgeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seo-avec-claude': {
+      id: '/seo-avec-claude'
+      path: '/seo-avec-claude'
+      fullPath: '/seo-avec-claude'
+      preLoaderRoute: typeof SeoAvecClaudeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seo-mcp-server': {
+      id: '/seo-mcp-server'
+      path: '/seo-mcp-server'
+      fullPath: '/seo-mcp-server'
+      preLoaderRoute: typeof SeoMcpServerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -2573,6 +2646,13 @@ declare module '@tanstack/react-router' {
       path: '/tarifs'
       fullPath: '/tarifs'
       preLoaderRoute: typeof TarifsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/visibilite-ia': {
+      id: '/visibilite-ia'
+      path: '/visibilite-ia'
+      fullPath: '/visibilite-ia'
+      preLoaderRoute: typeof VisibiliteIaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/visibilite-llm': {
@@ -3073,6 +3153,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuditSemantiqueRoute: AuditSemantiqueRoute,
   AuditSeoGeoRoute: AuditSeoGeoRoute,
   AuditSeoGratuitRoute: AuditSeoGratuitRoute,
+  AuditSeoParIaRoute: AuditSeoParIaRoute,
   AuthRoute: AuthRoute,
   BreathingSpiralRoute: BreathingSpiralRoute,
   CfShieldRoute: CfShieldRoute,
@@ -3131,12 +3212,15 @@ const rootRouteChildren: RootRouteChildren = {
   RssDotxmlRoute: RssDotxmlRoute,
   ScoreGeoRoute: ScoreGeoRoute,
   SeaSeoBridgeRoute: SeaSeoBridgeRoute,
+  SeoAvecClaudeRoute: SeoAvecClaudeRoute,
+  SeoMcpServerRoute: SeoMcpServerRoute,
   SignupRoute: SignupRoute,
   SiteCrawlRoute: SiteCrawlRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SocialContentCreatorRoute: SocialContentCreatorRoute,
   StrategeCocoonRoute: StrategeCocoonRoute,
   TarifsRoute: TarifsRoute,
+  VisibiliteIaRoute: VisibiliteIaRoute,
   VisibiliteLlmRoute: VisibiliteLlmRoute,
   ApiExternalAuditImportRoute: ApiExternalAuditImportRoute,
   ApiRenderReportPdfRoute: ApiRenderReportPdfRoute,
