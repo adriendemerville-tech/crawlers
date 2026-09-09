@@ -29,8 +29,8 @@ export function FloatingChatBubble() {
   const [notifDismissedThisSession, setNotifDismissedThisSession] = useState(false);
   const [triggerOnboarding, setTriggerOnboarding] = useState(false);
   const [showBounce, setShowBounce] = useState(false);
-  const [showGuestQuizSuggestion, setShowGuestQuizSuggestion] = useState(false);
   const [autoStartCrawlersQuiz, setAutoStartCrawlersQuiz] = useState(false);
+
   const [autoEnterpriseContact, setAutoEnterpriseContact] = useState(false);
   const [isMuted, setIsMuted] = useClientInitialState(() => localStorage.getItem('felix_muted') === '1', false);
   const onboardingSoundPlayed = useRef(false);
