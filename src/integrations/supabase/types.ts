@@ -4822,35 +4822,44 @@ export type Database = {
       dev_wallet_transactions: {
         Row: {
           amount_cents: number
+          amount_micro: number | null
           balance_after_cents: number
+          balance_after_micro: number | null
           created_at: string
           description: string | null
           id: string
           source: string
           source_ref: string | null
           type: string
+          unit: string
           user_id: string
         }
         Insert: {
           amount_cents: number
+          amount_micro?: number | null
           balance_after_cents: number
+          balance_after_micro?: number | null
           created_at?: string
           description?: string | null
           id?: string
           source: string
           source_ref?: string | null
           type: string
+          unit?: string
           user_id: string
         }
         Update: {
           amount_cents?: number
+          amount_micro?: number | null
           balance_after_cents?: number
+          balance_after_micro?: number | null
           created_at?: string
           description?: string | null
           id?: string
           source?: string
           source_ref?: string | null
           type?: string
+          unit?: string
           user_id?: string
         }
         Relationships: []
@@ -4858,6 +4867,7 @@ export type Database = {
       dev_wallets: {
         Row: {
           balance_cents: number
+          balance_micro: number
           created_at: string
           currency: string
           updated_at: string
@@ -4865,6 +4875,7 @@ export type Database = {
         }
         Insert: {
           balance_cents?: number
+          balance_micro?: number
           created_at?: string
           currency?: string
           updated_at?: string
@@ -4872,6 +4883,7 @@ export type Database = {
         }
         Update: {
           balance_cents?: number
+          balance_micro?: number
           created_at?: string
           currency?: string
           updated_at?: string
@@ -11345,6 +11357,117 @@ export type Database = {
           },
         ]
       }
+      mcp_billing_settings: {
+        Row: {
+          default_daily_cap_micro: number
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          default_daily_cap_micro?: number
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          default_daily_cap_micro?: number
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mcp_call_log: {
+        Row: {
+          billed_source: string
+          client_id: string | null
+          cost_micro: number
+          created_at: string
+          id: string
+          idempotency_key: string
+          metadata: Json
+          tool_name: string
+          user_id: string
+        }
+        Insert: {
+          billed_source: string
+          client_id?: string | null
+          cost_micro?: number
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          tool_name: string
+          user_id: string
+        }
+        Update: {
+          billed_source?: string
+          client_id?: string | null
+          cost_micro?: number
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          tool_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mcp_daily_usage: {
+        Row: {
+          calls: number
+          day: string
+          spent_micro: number
+          user_id: string
+        }
+        Insert: {
+          calls?: number
+          day?: string
+          spent_micro?: number
+          user_id: string
+        }
+        Update: {
+          calls?: number
+          day?: string
+          spent_micro?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mcp_tool_pricing: {
+        Row: {
+          class: string
+          cost_micro: number
+          enabled: boolean
+          label: string | null
+          min_plan: string | null
+          monthly_included: number | null
+          quota_key: string | null
+          tool_name: string
+          updated_at: string
+        }
+        Insert: {
+          class: string
+          cost_micro?: number
+          enabled?: boolean
+          label?: string | null
+          min_plan?: string | null
+          monthly_included?: number | null
+          quota_key?: string | null
+          tool_name: string
+          updated_at?: string
+        }
+        Update: {
+          class?: string
+          cost_micro?: number
+          enabled?: boolean
+          label?: string | null
+          min_plan?: string | null
+          monthly_included?: number | null
+          quota_key?: string | null
+          tool_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mcp_usage_logs: {
         Row: {
           created_at: string
@@ -11375,6 +11498,24 @@ export type Database = {
           status?: string
           tool_name?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      mcp_user_limits: {
+        Row: {
+          daily_cap_micro: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          daily_cap_micro: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          daily_cap_micro?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -18252,6 +18393,17 @@ export type Database = {
         Args: { p_text: string; p_tracked_site_id: string }
         Returns: string
       }
+      mcp_authorize_call: {
+        Args: {
+          _client_id?: string
+          _idempotency_key: string
+          _metadata?: Json
+          _tool_name: string
+          _user_id: string
+        }
+        Returns: Json
+      }
+      mcp_plan_rank: { Args: { _plan: string }; Returns: number }
       move_to_dlq: {
         Args: {
           dlq_name: string
