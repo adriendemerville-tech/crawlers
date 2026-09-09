@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
 
     if (uniqueIds.length > 0) {
       // `dismissed` et non `done` : rien n'a été exécuté, il ne faut pas le compter comme fait.
-      await updateInBatches(supabase, uniqueIds, { status: "dismissed" });
+      results.archive_errors = await updateInBatches(supabase, uniqueIds, { status: "dismissed" });
     }
     results.archived = uniqueIds.length;
   }
@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
     }
 
     if (overflow.length > 0) {
-      await updateInBatches(supabase, overflow, { status: "dismissed" });
+      results.cap_errors = await updateInBatches(supabase, overflow, { status: "dismissed" });
     }
     results.capped = overflow.length;
   }
