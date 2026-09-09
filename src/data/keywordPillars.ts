@@ -9,10 +9,23 @@ export interface PillarFAQ {
   a: string;
 }
 
+export interface PillarTable {
+  caption: string;
+  columns: string[];
+  rows: string[][];
+}
+
 export interface PillarSection {
   h2: string;
   body: string;
   h3s?: { title: string; body: string }[];
+  table?: PillarTable;
+}
+
+export interface PillarExternalRef {
+  label: string;
+  href: string;
+  note: string;
 }
 
 export interface KeywordPillar {
@@ -25,8 +38,10 @@ export interface KeywordPillar {
   sections: PillarSection[];
   faqs: PillarFAQ[];
   relatedLinks: { label: string; to: string }[];
+  externalRefs?: PillarExternalRef[];
   datePublished: string;
 }
+
 
 export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
   'audit-seo-geo': {
@@ -159,8 +174,64 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
         ],
       },
       {
+        h2: "Les outils MCP appelables par Claude",
+        body: "Chaque outil renvoie une réponse structurée, directement exploitable par du code. Les lectures et les statuts de job sont gratuits ; les outils qui déclenchent un crawl ou une interrogation de moteur sont facturés.",
+        table: {
+          caption: "Outils du serveur MCP Crawlers.fr appelables depuis Claude : rôle, mode d'exécution et facturation.",
+          columns: ["Outil", "Ce qu'il retourne", "Exécution", "Facturation"],
+          rows: [
+            ["audit_page", "Statut HTTP, canonical, titres, métadonnées, JSON-LD, texte extrait, détection de coquille JavaScript", "Synchrone", "Décompté"],
+            ["audit_site", "Audit technique et GEO sur un domaine crawlé, constats agrégés par gravité", "Asynchrone", "Décompté"],
+            ["crawl_site", "Identifiant de job, puis liste des URL crawlées avec statut et profondeur", "Asynchrone", "Décompté"],
+            ["list_findings", "Constats normalisés : identifiant de règle, gravité, preuve, correction disponible", "Synchrone", "Gratuit"],
+            ["get_fix", "Patch adapté à la pile : HTML, WordPress, Next.js, TanStack Start", "Synchrone", "Décompté"],
+            ["check_indexability", "robots.txt, meta robots, cible canonical, chaîne de redirections", "Synchrone", "Décompté"],
+            ["analyze_schema", "Écarts entre le JSON-LD et le contenu visible, pas seulement la syntaxe", "Synchrone", "Décompté"],
+            ["analyze_links", "Liens entrants, profondeur de clic, pages orphelines, verdicts de liens cassés", "Synchrone", "Décompté"],
+            ["ai_visibility", "Citations observées par moteur (ChatGPT, Gemini, Perplexity, Claude) sur un jeu de questions", "Asynchrone", "Décompté"],
+            ["get_job", "Statut et résultat de n'importe quel job asynchrone", "Synchrone", "Gratuit"],
+          ],
+        },
+      },
+      {
+        h2: "Anatomie d'un constat renvoyé à Claude",
+        body: "Un constat est une unité stable : c'est ce qui permet à l'agent de corriger puis de prouver la correction. Sans identifiant stable, une re-mesure ne compare rien.",
+        h3s: [
+          { title: "Identifiant de règle", body: "Un code du type SEO-H1-001 ou GEO-ANSWER-001, invariant d'un audit à l'autre. C'est la clé qui rend la vérification possible." },
+          { title: "Preuve", body: "L'extrait, la valeur mesurée et l'URL concernée. Un constat sans preuve n'est pas transmis à l'agent." },
+          { title: "Gravité", body: "Critique, moyenne ou faible, calculée sur l'impact attendu et non sur l'ordre des règles. Claude traite d'abord les critiques." },
+          { title: "Correction disponible", body: "Un booléen et la liste des piles supportées. L'agent sait immédiatement s'il peut appliquer un patch ou s'il doit arbitrer." },
+        ],
+        table: {
+          caption: "Exemples de constats normalisés : gravité, preuve et piles couvertes par la correction.",
+          columns: ["Identifiant", "Règle", "Gravité", "Preuve type", "Piles couvertes"],
+          rows: [
+            ["SEO-H1-001", "Un seul h1 par page", "Critique", "Aucun h1 dans le HTML servi", "HTML, WordPress, Next.js"],
+            ["SEO-CANON-002", "Canonical présente et cohérente", "Critique", "Aucune balise canonical, page dupliquée en /?ref=", "HTML, WordPress, Next.js"],
+            ["SEO-META-007", "Meta description utile", "Moyenne", "62 caractères, sous le seuil d'affichage", "HTML, WordPress, Next.js"],
+            ["GEO-ANSWER-001", "Réponse directe citable", "Critique", "Aucun passage autonome de 2 à 4 phrases", "HTML, WordPress, Next.js"],
+            ["GEO-FANOUT-004", "Couverture des sous-questions", "Moyenne", "7 sous-requêtes sans contenu correspondant", "Éditorial"],
+          ],
+        },
+      },
+      {
         h2: "Comment connecter Claude à Crawlers.fr",
         body: "Le serveur MCP de Crawlers.fr parle Streamable HTTP avec authentification OAuth 2.1, le standard attendu par Claude Desktop, Claude Code et les autres clients compatibles. Vous ajoutez le serveur dans votre client, vous autorisez votre compte Crawlers.fr, et les outils apparaissent dans la conversation. La facturation suit votre plan : les outils inclus consomment votre quota, le reste est décompté en pay-as-you-go depuis votre portefeuille développeur.",
+        h3s: [
+          { title: "Prérequis", body: "Un compte Crawlers.fr, un client MCP compatible Streamable HTTP, et l'autorisation OAuth accordée une fois depuis le client." },
+          { title: "Plafond journalier", body: "Un plafond par compte arrête les boucles d'agent coûteuses. Chaque appel facturé est journalisé avec son coût dans l'espace développeurs." },
+          { title: "Remboursement en cas d'échec", body: "Un job facturé qui échoue est recrédité automatiquement sur le portefeuille, avec la clé d'idempotence correspondante." },
+        ],
+        table: {
+          caption: "Compatibilité des clients MCP avec le serveur Crawlers.fr.",
+          columns: ["Client", "Transport", "Authentification", "Usage typique"],
+          rows: [
+            ["Claude Code", "Streamable HTTP", "OAuth 2.1", "Audit et correction dans le dépôt"],
+            ["Claude Desktop", "Streamable HTTP", "OAuth 2.1", "Diagnostic conversationnel"],
+            ["Cursor", "Streamable HTTP", "OAuth 2.1", "Audit pendant l'édition"],
+            ["Client MCP conforme", "Streamable HTTP", "OAuth 2.1", "Automatisation sur mesure"],
+          ],
+        },
       },
     ],
     faqs: [
@@ -169,14 +240,24 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       { q: "Claude modifie-t-il mon site directement ?", a: "Non. Crawlers.fr fournit les constats et les corrections proposées ; c'est votre agent, dans votre dépôt ou via votre CMS connecté, qui applique la modification." },
       { q: "Est-ce du SEO ou du GEO ?", a: "Les deux. Les outils mesurent la performance classique (technique, balises, maillage) et la citabilité par les moteurs génératifs comme ChatGPT, Gemini, Perplexity et Claude." },
       { q: "Comment éviter les boucles d'appels coûteuses ?", a: "Un plafond journalier s'applique par compte, et chaque appel facturé est journalisé avec son coût dans l'espace développeurs." },
+      { q: "Que se passe-t-il si un appel échoue ?", a: "Le job est marqué en échec et le montant débité est recrédité sur le portefeuille développeur, sans intervention." },
     ],
     relatedLinks: [
       { label: "Serveur MCP SEO (page anglaise)", to: "/seo-mcp-server" },
+      { label: "Serveur MCP GEO", to: "/geo-mcp-server" },
       { label: "Audit SEO par IA : ce qui est mesuré", to: "/audit-seo-par-ia" },
       { label: "Crawlers.fr vs Claude : comparatif", to: "/comparatif-claude-vs-crawlers" },
       { label: "API SEO REST et tarifs", to: "/api-seo" },
     ],
+    externalRefs: [
+      { label: "Spécification du Model Context Protocol", href: "https://modelcontextprotocol.io/specification", note: "Transport Streamable HTTP, outils, ressources et prompts." },
+      { label: "Documentation MCP d'Anthropic", href: "https://docs.anthropic.com/en/docs/mcp", note: "Ajout d'un serveur MCP dans Claude Desktop et Claude Code." },
+      { label: "Google Search Central — bonnes pratiques", href: "https://developers.google.com/search/docs", note: "Règles officielles sur canonical, indexation et données structurées." },
+      { label: "Schema.org", href: "https://schema.org/docs/schemas.html", note: "Vocabulaire des données structurées vérifiées par analyze_schema." },
+      { label: "Web Vitals", href: "https://web.dev/articles/vitals", note: "Définition de LCP, INP et CLS utilisés dans le score de performance." },
+    ],
     datePublished: '2026-09-09',
+
   },
   'visibilite-ia': {
     slug: 'visibilite-ia',
@@ -215,8 +296,40 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
         ],
       },
       {
+        h2: "Moteurs génératifs : ce qui change d'un moteur à l'autre",
+        body: "Les moteurs ne se comportent pas de la même façon : certains affichent des liens cliquables, d'autres résument sans attribution nette. La stratégie de citabilité doit tenir compte de ces différences.",
+        table: {
+          caption: "Comportement des principaux moteurs génératifs vis-à-vis des sources citées.",
+          columns: ["Moteur", "Robot d'exploration", "Liens visibles dans la réponse", "Ce qui déclenche la citation"],
+          rows: [
+            ["ChatGPT", "GPTBot, OAI-SearchBot", "Souvent, en recherche activée", "Passage autonome, entité claire, page accessible sans JavaScript"],
+            ["Perplexity", "PerplexityBot", "Oui, systématiquement", "Correspondance directe question / passage, fraîcheur"],
+            ["Gemini", "Google-Extended", "Parfois", "Autorité du domaine, données structurées cohérentes"],
+            ["Claude", "ClaudeBot", "Parfois", "Contenu factuel daté et attribuable"],
+            ["Mistral", "MistralAI-User", "Parfois", "Sources francophones structurées"],
+          ],
+        },
+      },
+      {
         h2: "Ce que Crawlers.fr mesure",
         body: "L'audit Crawlers.fr interroge réellement les moteurs génératifs sur un jeu de questions construit à partir de la page auditée, mesure les passages de robots IA dans vos logs, et plafonne le score de visibilité quand les faits techniques le contredisent : un texte extrait quasi nul ne peut pas produire un bon score, quelle que soit la qualité apparente du contenu.",
+        h3s: [
+          { title: "Taux de citation", body: "Part des questions du jeu de benchmark où votre marque apparaît dans la réponse. C'est l'indicateur principal, suivi dans le temps." },
+          { title: "Part de voix concurrentielle", body: "Qui est cité à votre place, sur quelles questions, et avec quelle source. La comparaison vaut plus que la valeur absolue." },
+          { title: "Passages de robots IA", body: "Volume et couverture d'URL par GPTBot, PerplexityBot, ClaudeBot et Google-Extended, vérifiés par rDNS et ASN." },
+          { title: "Plafonds de cohérence", body: "Un score GEO est plafonné par les faits mesurés : coquille JavaScript, texte extrait quasi nul, contenu inaccessible aux robots." },
+        ],
+        table: {
+          caption: "Indicateurs de visibilité IA suivis par Crawlers.fr et leur mode de mesure.",
+          columns: ["Indicateur", "Unité", "Source de la mesure", "Fréquence recommandée"],
+          rows: [
+            ["Taux de citation", "% des questions", "Interrogation réelle des moteurs", "Mensuelle"],
+            ["Citations par moteur", "Nombre", "Interrogation réelle des moteurs", "Mensuelle"],
+            ["Concurrents cités", "Nombre de domaines", "Analyse des sources de la réponse", "Mensuelle"],
+            ["Couverture bots IA", "% du sitemap", "Logs serveur vérifiés", "Hebdomadaire"],
+            ["Passages citables", "Nombre par page", "Analyse du HTML servi", "À chaque audit"],
+          ],
+        },
       },
     ],
     faqs: [
@@ -225,14 +338,24 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       { q: "Pourquoi mes concurrents sont-ils cités et pas moi ?", a: "Le plus souvent pour une raison mesurable : contenu inaccessible aux robots, absence de passages autonomes, ou aucune donnée propre à reprendre. L'audit indique laquelle s'applique." },
       { q: "Combien de temps pour voir un effet ?", a: "Les corrections d'accessibilité produisent un effet en quelques jours, le temps que les robots repassent. Les gains de citabilité se constatent plutôt sur quatre à huit semaines." },
       { q: "Les citations IA génèrent-elles du trafic ?", a: "Partiellement, et de façon inégale selon les moteurs. Certains affichent des liens cliquables, d'autres non : la citation vaut alors surtout comme recommandation." },
+      { q: "Combien de questions faut-il pour une mesure fiable ?", a: "Une vingtaine de questions au minimum, réparties entre marque, catégorie et comparatif, répétées dans le temps : une mesure isolée ne vaut rien." },
     ],
     relatedLinks: [
       { label: "Référencement IA et GEO : le guide pilier", to: "/generative-engine-optimization" },
       { label: "Audit GEO gratuit", to: "/audit-geo" },
       { label: "Monitoring GPTBot et PerplexityBot", to: "/monitoring-gptbot-perplexity" },
+      { label: "Serveur MCP GEO", to: "/geo-mcp-server" },
       { label: "E-E-A-T et citations IA", to: "/eeat" },
     ],
+    externalRefs: [
+      { label: "OpenAI — GPTBot et robots.txt", href: "https://platform.openai.com/docs/bots", note: "Robots officiels d'OpenAI et règles d'accès." },
+      { label: "Perplexity — PerplexityBot", href: "https://docs.perplexity.ai/guides/bots", note: "Identification et vérification du robot Perplexity." },
+      { label: "Anthropic — ClaudeBot", href: "https://support.anthropic.com/en/articles/8896518", note: "Comportement du robot Claude et contrôle d'accès." },
+      { label: "Google — Google-Extended", href: "https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers", note: "Contrôle de l'usage du contenu par les modèles Google." },
+      { label: "Schema.org FAQPage", href: "https://schema.org/FAQPage", note: "Balisage des questions-réponses reprises par les moteurs." },
+    ],
     datePublished: '2026-09-09',
+
   },
   'audit-seo-par-ia': {
     slug: 'audit-seo-par-ia',
@@ -270,8 +393,42 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
         ],
       },
       {
+        h2: "Ce qu'un audit mesuré contient, ce qu'un texte généré ne peut pas contenir",
+        body: "La différence se lit dans les données disponibles, pas dans le style du rapport. Le tableau ci-dessous liste ce qu'exige chaque contrôle.",
+        table: {
+          caption: "Contrôles d'audit SEO : ce qui exige une mesure réelle et ce qu'un modèle seul ne peut pas produire.",
+          columns: ["Contrôle", "Donnée nécessaire", "Modèle seul", "Audit mesuré"],
+          rows: [
+            ["Statut HTTP et redirections", "Requête réelle sur l'URL", "Non", "Oui"],
+            ["HTML servi aux robots", "Récupération sans exécution JavaScript", "Non", "Oui"],
+            ["Coquille JavaScript", "Comparaison HTML servi / rendu", "Non", "Oui"],
+            ["Core Web Vitals", "Données terrain CrUX ou laboratoire", "Non", "Oui"],
+            ["Canonical et indexabilité", "robots.txt, meta robots, chaîne HTTP", "Non", "Oui"],
+            ["Cannibalisation", "Crawl complet et comparaison lexicale", "Non", "Oui"],
+            ["Citations dans les moteurs IA", "Interrogation réelle des moteurs", "Non", "Oui"],
+            ["Rédaction du plan d'action", "Constats mesurés en entrée", "Oui", "Oui"],
+          ],
+        },
+      },
+      {
         h2: "Du constat à la correction vérifiée",
         body: "Chaque constat porte un identifiant stable, ce qui permet de suivre sa disparition après correction. C'est cette boucle qui rend l'audit utilisable par un agent de développement : audit, correction adaptée à votre pile, nouvel audit, comparaison. Le même mécanisme alimente l'espace développeurs, l'API et le serveur MCP.",
+        h3s: [
+          { title: "Priorisation par gain attendu", body: "Les constats bloquants passent devant les optimisations de confort. L'ordre du plan d'action suit l'impact estimé, pas l'ordre des règles." },
+          { title: "Comparaison entre deux audits", body: "Le rapport de vérification affiche l'écart de score et l'état de chaque identifiant : résolu, ouvert, ou apparu depuis." },
+          { title: "Automatisation par agent", body: "Les mêmes constats sont exposés par l'API REST et le serveur MCP, ce qui permet à un agent de développement de boucler sans interface." },
+        ],
+        table: {
+          caption: "Étapes de la boucle audit, correction et vérification, avec la preuve attendue à chaque étape.",
+          columns: ["Étape", "Sortie", "Preuve attendue", "Durée type"],
+          rows: [
+            ["Audit initial", "Constats normalisés et score", "Preuve par constat : URL, extrait, valeur", "90 secondes sur une page"],
+            ["Priorisation", "Plan d'action ordonné", "Gravité et gain estimé par constat", "Immédiate"],
+            ["Correction", "Patch adapté à la pile", "Fichier et modification proposés", "Variable"],
+            ["Vérification", "Comparaison de deux audits", "Disparition de l'identifiant de constat", "90 secondes"],
+            ["Suivi", "Historique de score", "Série datée, pas une capture isolée", "Mensuel"],
+          ],
+        },
       },
     ],
     faqs: [
@@ -280,14 +437,24 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       { q: "Comment savoir si un audit invente des données ?", a: "Demandez la preuve associée à chaque constat : URL, extrait, valeur mesurée, date. Un constat sans preuve n'est pas un constat." },
       { q: "L'audit détecte-t-il les sites en JavaScript non rendu côté serveur ?", a: "Oui, c'est un contrôle explicite : le rapport distingue une coquille JavaScript d'un contenu réellement insuffisant." },
       { q: "Peut-on relancer l'audit après correction ?", a: "Oui, et c'est l'usage recommandé : la comparaison entre deux audits est la seule preuve qu'une correction a produit un effet." },
+      { q: "Un agent de développement peut-il lancer l'audit lui-même ?", a: "Oui, via l'API REST ou le serveur MCP : l'agent audite, lit les constats, applique la correction et relance l'audit pour vérifier." },
     ],
     relatedLinks: [
       { label: "Méthode d’audit SEO GEO", to: "/audit-seo-geo" },
       { label: "SEO avec Claude via MCP", to: "/seo-avec-claude" },
       { label: "Visibilité IA : mesurer ses citations", to: "/visibilite-ia" },
+      { label: "Serveur MCP SEO (English)", to: "/seo-mcp-server" },
       { label: "Audit expert 200+ critères", to: "/audit-expert" },
     ],
+    externalRefs: [
+      { label: "Google Search Central — documentation", href: "https://developers.google.com/search/docs", note: "Référence officielle sur l'indexation, les canonicals et le rendu." },
+      { label: "Web Vitals", href: "https://web.dev/articles/vitals", note: "Définition et seuils de LCP, INP et CLS." },
+      { label: "Chrome UX Report", href: "https://developer.chrome.com/docs/crux", note: "Données terrain utilisées pour pondérer les Core Web Vitals." },
+      { label: "Schema.org", href: "https://schema.org/docs/schemas.html", note: "Vocabulaire des données structurées contrôlées par l'audit." },
+      { label: "Robots Exclusion Protocol (RFC 9309)", href: "https://www.rfc-editor.org/rfc/rfc9309.html", note: "Norme robots.txt appliquée aux contrôles d'indexabilité." },
+    ],
     datePublished: '2026-09-09',
+
   },
 };
 

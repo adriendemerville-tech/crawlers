@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import { McpSessionAnimation } from '@/components/Mcp/McpSessionAnimation';
+import { DataTable } from '@/components/seo/DataTable';
+
 
 const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
 
@@ -253,7 +255,31 @@ export default function GeoMcpServer() {
                 identifiant stable que le reste de l’audit.
               </p>
             </article>
+            <DataTable
+              caption="Comportement des principaux moteurs génératifs vis-à-vis des sources citées."
+              columns={['Moteur', 'Robot', 'Liens visibles', 'Ce qui déclenche la citation']}
+              rows={[
+                ['ChatGPT', 'GPTBot, OAI-SearchBot', 'Souvent', 'Passage autonome, entité claire, page servie sans JavaScript'],
+                ['Perplexity', 'PerplexityBot', 'Oui', 'Correspondance directe question / passage, fraîcheur'],
+                ['Gemini', 'Google-Extended', 'Parfois', 'Autorité du domaine, données structurées cohérentes'],
+                ['Claude', 'ClaudeBot', 'Parfois', 'Contenu factuel daté et attribuable'],
+                ['Mistral', 'MistralAI-User', 'Parfois', 'Sources francophones structurées'],
+              ]}
+            />
+            <DataTable
+              caption="Indicateurs GEO mesurés par le serveur MCP et fréquence de mesure recommandée."
+              columns={['Indicateur', 'Unité', 'Source de la mesure', 'Fréquence']}
+              rows={[
+                ['Taux de citation', '% des questions', 'Interrogation réelle des moteurs', 'Mensuelle'],
+                ['Citations par moteur', 'Nombre', 'Interrogation réelle des moteurs', 'Mensuelle'],
+                ['Concurrents cités', 'Nombre de domaines', 'Sources de la réponse', 'Mensuelle'],
+                ['Couverture bots IA', '% du sitemap', 'Logs serveur vérifiés (rDNS, ASN)', 'Hebdomadaire'],
+                ['Passages citables', 'Nombre par page', 'Analyse du HTML servi', 'À chaque audit'],
+                ['Sous-questions couvertes', '% du fan-out', 'Décomposition des requêtes', 'Mensuelle'],
+              ]}
+            />
           </section>
+
 
           <section className="mb-12">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
@@ -274,6 +300,33 @@ export default function GeoMcpServer() {
                 </li>
               ))}
             </ul>
+            <DataTable
+              caption="Outils du serveur MCP GEO : données renvoyées, mode d'exécution et facturation."
+              columns={['Outil', 'Données renvoyées', 'Exécution', 'Facturation']}
+              rows={[
+                ['ai_visibility', 'Citations observées par moteur, concurrents cités, sources retenues', 'Asynchrone', 'Décompté'],
+                ['audit_page', 'Statut HTTP, canonical, titres, JSON-LD, texte extrait, coquille JavaScript', 'Synchrone', 'Décompté'],
+                ['audit_site', 'Constats techniques et GEO agrégés par gravité sur un domaine', 'Asynchrone', 'Décompté'],
+                ['crawl_site', 'Identifiant de job, URL crawlées, statut et profondeur de clic', 'Asynchrone', 'Décompté'],
+                ['list_findings', 'Constats normalisés : identifiant, gravité, preuve, correction', 'Synchrone', 'Gratuit'],
+                ['get_fix', 'Patch adapté à la pile : HTML, WordPress, Next.js, TanStack Start', 'Synchrone', 'Décompté'],
+                ['analyze_schema', 'Écarts entre JSON-LD et contenu visible', 'Synchrone', 'Décompté'],
+                ['check_indexability', 'robots.txt, meta robots, canonical, chaîne de redirections', 'Synchrone', 'Décompté'],
+                ['analyze_links', 'Liens entrants, profondeur, pages orphelines, liens cassés', 'Synchrone', 'Décompté'],
+                ['get_job', 'Statut et résultat de tout job asynchrone', 'Synchrone', 'Gratuit'],
+              ]}
+            />
+            <DataTable
+              caption="Compatibilité des clients MCP avec le serveur GEO Crawlers.fr."
+              columns={['Client', 'Transport', 'Authentification', 'Usage typique']}
+              rows={[
+                ['Claude Code', 'Streamable HTTP', 'OAuth 2.1', 'Mesure et correction dans le dépôt'],
+                ['Claude Desktop', 'Streamable HTTP', 'OAuth 2.1', 'Diagnostic conversationnel'],
+                ['Cursor', 'Streamable HTTP', 'OAuth 2.1', 'Correction pendant l’édition'],
+                ['Client MCP conforme', 'Streamable HTTP', 'OAuth 2.1', 'Automatisation sur mesure'],
+              ]}
+            />
+
           </section>
 
           <section className="mb-12">
@@ -327,6 +380,35 @@ export default function GeoMcpServer() {
           </section>
 
           <section className="mt-16 pt-10 border-t border-border">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">
+              Sources et références
+            </h2>
+            <ul className="space-y-3 list-none p-0">
+              {[
+                { label: 'Spécification du Model Context Protocol', href: 'https://modelcontextprotocol.io/specification', note: 'Transport Streamable HTTP, outils, ressources et prompts.' },
+                { label: 'Documentation MCP d’Anthropic', href: 'https://docs.anthropic.com/en/docs/mcp', note: 'Ajout d’un serveur MCP dans Claude Desktop et Claude Code.' },
+                { label: 'OpenAI — GPTBot et robots.txt', href: 'https://platform.openai.com/docs/bots', note: 'Robots officiels d’OpenAI et règles d’accès.' },
+                { label: 'Perplexity — PerplexityBot', href: 'https://docs.perplexity.ai/guides/bots', note: 'Identification et vérification du robot Perplexity.' },
+                { label: 'Google — robots d’exploration', href: 'https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers', note: 'Google-Extended et contrôle de l’usage par les modèles.' },
+                { label: 'Schema.org FAQPage', href: 'https://schema.org/FAQPage', note: 'Balisage des questions-réponses reprises par les moteurs.' },
+              ].map((ref) => (
+                <li key={ref.href} className="rounded-lg border border-border bg-card/30 p-4 not-prose">
+                  <a
+                    href={ref.href}
+                    target="_blank"
+                    rel="noopener nofollow"
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    {ref.label}
+                  </a>
+                  <p className="mt-1 text-sm text-foreground/70 leading-relaxed">{ref.note}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="mt-16 pt-10 border-t border-border">
+
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">Pages liées</h2>
             <ul className="grid gap-3 sm:grid-cols-2 list-none p-0">
               {[

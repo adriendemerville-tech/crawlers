@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import { McpSessionAnimation } from '@/components/Mcp/McpSessionAnimation';
+import { DataTable } from '@/components/seo/DataTable';
+
 
 const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
 
@@ -197,7 +199,86 @@ export default function SeoMcpServer() {
                 </li>
               ))}
             </ul>
+            <DataTable
+              caption="Crawlers MCP tools: returned data, execution mode and billing class."
+              columns={['Tool', 'Returns', 'Execution', 'Billing']}
+              rows={[
+                ['audit_page', 'HTTP status, canonical, headings, metadata, JSON-LD, extracted text, render-shell verdict', 'Synchronous', 'Metered'],
+                ['audit_site', 'Site-wide technical and generative-visibility findings, grouped by severity', 'Asynchronous', 'Metered'],
+                ['crawl_site', 'Job id, then crawled URLs with status and click depth', 'Asynchronous', 'Metered'],
+                ['list_findings', 'Normalised findings: rule id, severity, evidence, fix availability', 'Synchronous', 'Free'],
+                ['get_fix', 'Stack-specific patch: HTML, WordPress, Next.js, TanStack Start', 'Synchronous', 'Metered'],
+                ['check_indexability', 'robots.txt, meta robots, canonical target, redirect chain', 'Synchronous', 'Metered'],
+                ['analyze_schema', 'Mismatches between JSON-LD and visible content', 'Synchronous', 'Metered'],
+                ['analyze_links', 'Inbound links, click depth, orphan pages, broken-link verdicts', 'Synchronous', 'Metered'],
+                ['ai_visibility', 'Observed brand citations per engine across a generated question set', 'Asynchronous', 'Metered'],
+                ['get_job', 'Status and payload of any asynchronous job', 'Synchronous', 'Free'],
+              ]}
+            />
           </section>
+
+          <section className="mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
+              Anatomy of a finding
+            </h2>
+            <p className="text-base leading-relaxed mb-6">
+              A finding is a stable unit, which is exactly what makes verification possible. Without
+              a stable rule id, re-auditing compares nothing.
+            </p>
+            <article className="mb-5">
+              <h3 className="text-xl font-semibold mt-6 mb-2">Rule id</h3>
+              <p className="text-base leading-relaxed">
+                A code such as SEO-H1-001, invariant across audits. Its disappearance after a patch
+                is the proof the fix worked.
+              </p>
+            </article>
+            <article className="mb-5">
+              <h3 className="text-xl font-semibold mt-6 mb-2">Evidence</h3>
+              <p className="text-base leading-relaxed">
+                The measured value, the excerpt and the URL. A finding with no evidence is never
+                handed to the agent.
+              </p>
+            </article>
+            <article className="mb-5">
+              <h3 className="text-xl font-semibold mt-6 mb-2">Severity and fix availability</h3>
+              <p className="text-base leading-relaxed">
+                Severity reflects expected impact, not rule order. Fix availability lists the stacks
+                a patch exists for, so the agent knows whether it can act.
+              </p>
+            </article>
+            <DataTable
+              caption="Sample normalised findings with severity, typical evidence and covered stacks."
+              columns={['Finding id', 'Rule', 'Severity', 'Typical evidence', 'Covered stacks']}
+              rows={[
+                ['SEO-H1-001', 'Exactly one h1', 'Critical', 'No h1 in served HTML', 'HTML, WordPress, Next.js'],
+                ['SEO-CANON-002', 'Canonical present and consistent', 'Critical', 'No canonical tag, duplicate on /?ref=', 'HTML, WordPress, Next.js'],
+                ['SEO-META-007', 'Useful meta description', 'Medium', '62 characters, below display threshold', 'HTML, WordPress, Next.js'],
+                ['SEO-RENDER-005', 'Content served without JavaScript', 'Critical', 'Extracted text under 200 characters before hydration', 'Next.js, TanStack Start'],
+                ['GEO-ANSWER-001', 'Citable direct answer', 'Critical', 'No standalone 2-4 sentence passage', 'HTML, WordPress, Next.js'],
+              ]}
+            />
+          </section>
+
+          <section className="mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
+              MCP client compatibility
+            </h2>
+            <p className="text-base leading-relaxed mb-6">
+              The server implements the Model Context Protocol over Streamable HTTP with OAuth 2.1,
+              so any conformant client can call it.
+            </p>
+            <DataTable
+              caption="Compatibility of MCP clients with the Crawlers audit server."
+              columns={['Client', 'Transport', 'Auth', 'Typical use']}
+              rows={[
+                ['Claude Code', 'Streamable HTTP', 'OAuth 2.1', 'Audit and fix inside the repository'],
+                ['Claude Desktop', 'Streamable HTTP', 'OAuth 2.1', 'Conversational diagnosis'],
+                ['Cursor', 'Streamable HTTP', 'OAuth 2.1', 'Audit while editing'],
+                ['Any conformant client', 'Streamable HTTP', 'OAuth 2.1', 'Custom automation'],
+              ]}
+            />
+          </section>
+
 
           <section className="mb-12">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
@@ -246,6 +327,35 @@ export default function SeoMcpServer() {
               ))}
             </div>
           </section>
+
+          <section className="mt-16 pt-10 border-t border-border">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">
+              Sources and references
+            </h2>
+            <ul className="space-y-3 list-none p-0">
+              {[
+                { label: 'Model Context Protocol specification', href: 'https://modelcontextprotocol.io/specification', note: 'Streamable HTTP transport, tools, resources and prompts.' },
+                { label: 'Anthropic MCP documentation', href: 'https://docs.anthropic.com/en/docs/mcp', note: 'Adding an MCP server to Claude Desktop and Claude Code.' },
+                { label: 'Google Search Central', href: 'https://developers.google.com/search/docs', note: 'Official guidance on canonicals, indexing and rendering.' },
+                { label: 'Schema.org', href: 'https://schema.org/docs/schemas.html', note: 'Structured-data vocabulary validated by analyze_schema.' },
+                { label: 'Web Vitals', href: 'https://web.dev/articles/vitals', note: 'LCP, INP and CLS thresholds used in performance scoring.' },
+                { label: 'Robots Exclusion Protocol (RFC 9309)', href: 'https://www.rfc-editor.org/rfc/rfc9309.html', note: 'robots.txt standard applied by check_indexability.' },
+              ].map((ref) => (
+                <li key={ref.href} className="rounded-lg border border-border bg-card/30 p-4 not-prose">
+                  <a
+                    href={ref.href}
+                    target="_blank"
+                    rel="noopener nofollow"
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    {ref.label}
+                  </a>
+                  <p className="mt-1 text-sm text-foreground/70 leading-relaxed">{ref.note}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
 
           <section className="mt-16 pt-10 border-t border-border">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">Related pages</h2>
