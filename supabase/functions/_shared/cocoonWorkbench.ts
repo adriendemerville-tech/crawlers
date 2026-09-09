@@ -15,6 +15,14 @@
  *   - Always non-fatal: a strategy plan must never fail because of a workbench write.
  */
 
+import {
+  resolvePillarSet,
+  isPillarUrl,
+  isStrongPillarUrl,
+  pillarPriorityMultiplier,
+  type PillarSet,
+} from './pillarWeighting.ts';
+
 export interface CocoonFindingLike {
   id?: string;
   category?: string;
