@@ -236,22 +236,51 @@ Deno.serve(async (req) => {
         .single();
       if (error) return json(500, { error: "db_error", detail: error.message });
 
-      // Débit wallet 10c — si solde insuffisant, on annule le job et renvoie 402
-      const { error: debitErr } = await ctx.admin.rpc("dev_wallet_debit", {
-        _user_id: ctx.userId,
-        _amount_cents: 10,
-        _source_ref: job.id,
-        _description: `Job ${feature}`,
-      });
-      if (debitErr) {
-        await ctx.admin.from("crawlers_api_jobs")
-          .update({ status: "failed", error: { message: "insufficient_balance" }, completed_at: new Date().toISOString() })
-          .eq("id", job.id);
-        return json(402, {
-          error: "insufficient_balance",
-          message: "Recharge ton wallet sur /developers/profil?tab=facturation",
-          job_id: job.id,
+      // Facturation. Via MCP (JWT) : juge unique mcp_authorize_call (plan → wallet, plafond
+      // journalier, idempotence). Via clé crw_live_ : débit legacy de 10 centimes.
+      let costCents = 10;
+      let billedSource = "wallet";
+      if ((ctx as any).viaJwt) {
+        const tool = (ctx as any).mcpTool || `start_${feature}`;
+        const idemKey = (ctx as any).mcpKey || job.id;
+        const { data: verdict, error: authErr } = await ctx.admin.rpc("mcp_authorize_call", {
+          _user_id: ctx.userId,
+          _tool_name: tool,
+          _idempotency_key: idemKey,
+          _client_id: null,
+          _metadata: { job_id: job.id, feature },
         });
+        const v = (verdict ?? {}) as Record<string, any>;
+        if (authErr || !v.allowed) {
+          await ctx.admin.from("crawlers_api_jobs")
+            .update({ status: "failed", error: { message: v.reason ?? authErr?.message ?? "billing_refused" }, completed_at: new Date().toISOString() })
+            .eq("id", job.id);
+          return json(v.reason === "insufficient_balance" ? 402 : 403, {
+            error: v.reason ?? "billing_refused",
+            detail: authErr?.message ?? null,
+            topup_url: v.topup_url ?? null,
+            job_id: job.id,
+          });
+        }
+        costCents = Math.round(Number(v.cost_micro ?? 0) / 10);
+        billedSource = String(v.billed_source ?? "free");
+      } else {
+        const { error: debitErr } = await ctx.admin.rpc("dev_wallet_debit", {
+          _user_id: ctx.userId,
+          _amount_cents: 10,
+          _source_ref: job.id,
+          _description: `Job ${feature}`,
+        });
+        if (debitErr) {
+          await ctx.admin.from("crawlers_api_jobs")
+            .update({ status: "failed", error: { message: "insufficient_balance" }, completed_at: new Date().toISOString() })
+            .eq("id", job.id);
+          return json(402, {
+            error: "insufficient_balance",
+            message: "Recharge ton wallet sur /developers/profil?tab=facturation",
+            job_id: job.id,
+          });
+        }
       }
 
       // Exécution background — le client poll /v1/jobs/{id}
@@ -263,9 +292,12 @@ Deno.serve(async (req) => {
         feature: job.feature,
         status: job.status,
         created_at: job.created_at,
-        cost_cents: 10,
+        cost_cents: costCents,
+        billed_source: billedSource,
         poll_url: `/v1/jobs/${job.id}`,
       }), {
+        status: 202,
+
         status: 202,
         headers: { ...corsHeaders, "Content-Type": "application/json", "Location": `/v1/jobs/${job.id}` },
       });
