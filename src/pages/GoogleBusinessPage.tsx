@@ -520,8 +520,8 @@ export default function GoogleBusinessPage() {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/", name: "Accueil" }" },
-          { "@type": "ListItem", "position": 2, "name": "Google Business", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/google-business", name: "Google Business" }" }
+          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": { "@type": "Thing", "@id": "https://crawlers.fr/", "name": "Accueil" } },
+          { "@type": "ListItem", "position": 2, "name": "Google Business", "item": { "@type": "Thing", "@id": "https://crawlers.fr/google-business", "name": "Google Business" } }
         ]
       })}} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({

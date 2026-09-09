@@ -79,8 +79,8 @@ const SocialContentCreator = memo(() => {
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr", name: "Accueil" }" },
-          { "@type": "ListItem", "position": 2, "name": "Social Content Hub", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/social-content-creator", name: "Social Content Hub" }" },
+          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": { "@type": "Thing", "@id": "https://crawlers.fr", "name": "Accueil" } },
+          { "@type": "ListItem", "position": 2, "name": "Social Content Hub", "item": { "@type": "Thing", "@id": "https://crawlers.fr/social-content-creator", "name": "Social Content Hub" } },
         ]
       },
       {

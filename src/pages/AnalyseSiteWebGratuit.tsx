@@ -40,9 +40,9 @@ const AnalyseSiteWebGratuit = () => {
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr", name: "Accueil" }" },
-          { "@type": "ListItem", "position": 2, "name": "Blog", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/blog", name: "Blog" }" },
-          { "@type": "ListItem", "position": 3, "name": "Analyse de site web gratuite", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/analyse-site-web-gratuit", name: "Analyse de site web gratuite" }" }
+          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": { "@type": "Thing", "@id": "https://crawlers.fr", "name": "Accueil" } },
+          { "@type": "ListItem", "position": 2, "name": "Blog", "item": { "@type": "Thing", "@id": "https://crawlers.fr/blog", "name": "Blog" } },
+          { "@type": "ListItem", "position": 3, "name": "Analyse de site web gratuite", "item": { "@type": "Thing", "@id": "https://crawlers.fr/analyse-site-web-gratuit", "name": "Analyse de site web gratuite" } }
         ]
       },
       {

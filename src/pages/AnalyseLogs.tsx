@@ -37,8 +37,8 @@ const AnalyseLogs = () => {
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr", name: "Accueil" }" },
-          { "@type": "ListItem", "position": 2, "name": "Analyse de Logs", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/analyse-logs", name: "Analyse de Logs" }" }
+          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": { "@type": "Thing", "@id": "https://crawlers.fr", "name": "Accueil" } },
+          { "@type": "ListItem", "position": 2, "name": "Analyse de Logs", "item": { "@type": "Thing", "@id": "https://crawlers.fr/analyse-logs", "name": "Analyse de Logs" } }
         ]
       },
       {

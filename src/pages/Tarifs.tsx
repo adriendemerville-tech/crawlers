@@ -743,8 +743,8 @@ export default function Tarifs() {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/", name: "Accueil" }" },
-      { "@type": "ListItem", "position": 2, "name": "Tarifs & Offres", "item": "{ '@type': 'Thing', '@id': "https://crawlers.fr/tarifs", name: "Tarifs & Offres" }" }
+      { "@type": "ListItem", "position": 1, "name": "Accueil", "item": { "@type": "Thing", "@id": "https://crawlers.fr/", "name": "Accueil" } },
+      { "@type": "ListItem", "position": 2, "name": "Tarifs & Offres", "item": { "@type": "Thing", "@id": "https://crawlers.fr/tarifs", "name": "Tarifs & Offres" } }
     ]
   };
 

@@ -103,12 +103,28 @@ function countSignals(text: string, signals: string[]): number {
 
 export type AudienceChoice = 'business' | 'pro';
 
+/** Écart minimal de signaux pour trancher sans reposer de question. */
+const MIN_MARGIN = 2;
+
 export function classifyAudience(answer: string): AudienceChoice {
   const business = countSignals(answer, BUSINESS_SIGNALS);
   const pro = countSignals(answer, PRO_SIGNALS);
   // Égalité ou réponse vide : on garde la home complète (aucune perte de contenu).
   return business > pro ? 'business' : 'pro';
 }
+
+/**
+ * Classification prudente : renvoie 'unknown' quand la réponse ne tranche pas
+ * (ex. « le site de mon garage auto »), pour reposer une question de lever de doute
+ * au lieu d'aiguiller à tort vers la landing agences.
+ */
+export function classifyAudienceOrAsk(answer: string): AudienceChoice | 'unknown' {
+  const business = countSignals(answer, BUSINESS_SIGNALS);
+  const pro = countSignals(answer, PRO_SIGNALS);
+  if (Math.abs(business - pro) < MIN_MARGIN) return 'unknown';
+  return business > pro ? 'business' : 'pro';
+}
+
 
 function SendIcon() {
   return (
@@ -185,6 +201,7 @@ export function AudienceRouter() {
   const [visible, setVisible] = useState(false);
   const [answer, setAnswer] = useState('');
   const [thinking, setThinking] = useState(false);
+  const [clarify, setClarify] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -196,8 +213,8 @@ export function AudienceRouter() {
   }, []);
 
   useEffect(() => {
-    if (visible && !thinking && !isListening) inputRef.current?.focus();
-  }, [visible, thinking, isListening]);
+    if (visible && !thinking && !clarify && !isListening) inputRef.current?.focus();
+  }, [visible, thinking, clarify, isListening]);
 
   useEffect(() => {
     return () => {
@@ -220,9 +237,17 @@ export function AudienceRouter() {
     recognitionRef.current?.abort();
     setIsListening(false);
     setThinking(true);
-    const choice = classifyAudience(answer);
-    window.setTimeout(() => apply(choice), THINKING_DELAY_MS);
+    const verdict = classifyAudienceOrAsk(answer);
+    window.setTimeout(() => {
+      setThinking(false);
+      if (verdict === 'unknown') {
+        setClarify(true);
+        return;
+      }
+      apply(verdict);
+    }, THINKING_DELAY_MS);
   };
+
 
   const toggleVoice = () => {
     const SpeechRecognitionCtor = getSpeechRecognition();
@@ -289,7 +314,31 @@ export function AudienceRouter() {
         <div className="flex flex-col items-center justify-center">
           <CrawlersLogoPulse />
         </div>
+      ) : clarify ? (
+        <div className="flex w-full max-w-2xl flex-col items-center gap-8 px-2 text-center">
+          <h2 className="text-2xl font-medium leading-snug text-foreground sm:text-3xl">
+            Vous occupez-vous vous-même de votre site internet ou êtes-vous
+            professionnel du référencement&nbsp;?
+          </h2>
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
+            <button
+              type="button"
+              onClick={() => apply('business')}
+              className="rounded-full border border-foreground/40 px-6 py-3 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
+            >
+              Je m'occupe moi-même de mon site
+            </button>
+            <button
+              type="button"
+              onClick={() => apply('pro')}
+              className="rounded-full border border-foreground/40 px-6 py-3 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
+            >
+              Je suis professionnel du référencement
+            </button>
+          </div>
+        </div>
       ) : (
+
         <div className="flex w-full max-w-3xl flex-col items-center gap-8 px-2 text-center">
           <h2 className="max-w-3xl text-2xl font-medium leading-snug text-foreground sm:text-4xl">
             Pourquoi avez-vous besoin de Crawlers&nbsp;?
