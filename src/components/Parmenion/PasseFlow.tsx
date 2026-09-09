@@ -16,6 +16,8 @@ import {
   deployPasseOrder,
 } from '@/lib/parmenion/parmenion.functions';
 import { CmsPlatformDetector } from './CmsPlatformDetector';
+import { PasseDelegation } from './PasseDelegation';
+
 
 
 interface Props {
