@@ -11,6 +11,35 @@ import { ArrowRight, Check, Shield, Clock, FileText, MapPin, Loader2 } from 'luc
 import { toast } from 'sonner';
 
 const PasseFlow = lazy(() => import('@/components/Parmenion/PasseFlow'));
+const AiAnswerDemo = lazy(() => import('@/components/Parmenion/AiAnswerDemo'));
+const SectorMarquee = lazy(() => import('@/components/Parmenion/SectorMarquee'));
+
+const STEPS = [
+  {
+    title: 'On lit votre site comme un moteur IA',
+    description:
+      'Crawl du site, extraction du contenu réellement servi, détection de votre activité, de votre zone et de vos concurrents directs.',
+    chips: ['Activité détectée', 'Zone locale', 'Concurrents'],
+  },
+  {
+    title: 'On mesure ce qui bloque',
+    description:
+      'Titres, métadonnées, hiérarchie, données structurées, vitesse, maillage, citabilité des passages : chaque constat est chiffré et priorisé.',
+    chips: ['JSON-LD', 'Core Web Vitals', 'Citabilité'],
+  },
+  {
+    title: 'On rédige et on corrige',
+    description:
+      'Trois pages de contenu sur les sujets qui rapportent des clients, plus les correctifs techniques et votre fiche Google Maps.',
+    chips: ['3 contenus', 'Correctifs', 'Google Maps'],
+  },
+  {
+    title: 'Vous validez, puis on déploie',
+    description:
+      'Rien n\'est publié avant votre accord. Chaque déploiement est journalisé et réversible, avec un compte rendu avant / après.',
+    chips: ['Validation', 'Journalisé', 'Réversible'],
+  },
+];
 
 
 const URL = 'https://crawlers.fr/audit-geo-seo';
