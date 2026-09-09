@@ -380,6 +380,35 @@ export default function GeoMcpServer() {
           </section>
 
           <section className="mt-16 pt-10 border-t border-border">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">
+              Sources et références
+            </h2>
+            <ul className="space-y-3 list-none p-0">
+              {[
+                { label: 'Spécification du Model Context Protocol', href: 'https://modelcontextprotocol.io/specification', note: 'Transport Streamable HTTP, outils, ressources et prompts.' },
+                { label: 'Documentation MCP d’Anthropic', href: 'https://docs.anthropic.com/en/docs/mcp', note: 'Ajout d’un serveur MCP dans Claude Desktop et Claude Code.' },
+                { label: 'OpenAI — GPTBot et robots.txt', href: 'https://platform.openai.com/docs/bots', note: 'Robots officiels d’OpenAI et règles d’accès.' },
+                { label: 'Perplexity — PerplexityBot', href: 'https://docs.perplexity.ai/guides/bots', note: 'Identification et vérification du robot Perplexity.' },
+                { label: 'Google — robots d’exploration', href: 'https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers', note: 'Google-Extended et contrôle de l’usage par les modèles.' },
+                { label: 'Schema.org FAQPage', href: 'https://schema.org/FAQPage', note: 'Balisage des questions-réponses reprises par les moteurs.' },
+              ].map((ref) => (
+                <li key={ref.href} className="rounded-lg border border-border bg-card/30 p-4 not-prose">
+                  <a
+                    href={ref.href}
+                    target="_blank"
+                    rel="noopener nofollow"
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    {ref.label}
+                  </a>
+                  <p className="mt-1 text-sm text-foreground/70 leading-relaxed">{ref.note}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="mt-16 pt-10 border-t border-border">
+
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">Pages liées</h2>
             <ul className="grid gap-3 sm:grid-cols-2 list-none p-0">
               {[
