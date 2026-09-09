@@ -111,30 +111,42 @@ export default function GeoMcpServer() {
           windowTitle="Claude Code — serveur MCP Crawlers (GEO)"
           caption="Reproduction d’une session réelle : mesure des citations IA, correction, re-mesure."
           steps={[
-            { kind: 'user', text: 'Connecte le serveur MCP Crawlers et dis-moi si ChatGPT cite ma page tarifs.' },
+            { kind: 'user', text: 'Connecte le MCP Crawlers.fr' },
+            { kind: 'assistant', text: 'Je me connecte au serveur MCP Crawlers.' },
             {
-              kind: 'tool',
-              name: 'connect',
-              args: 'https://crawlers.fr/mcp  ·  Streamable HTTP  ·  OAuth 2.1\n→ connecté : 14 outils, 3 ressources',
+              kind: 'connect',
+              text: 'https://crawlers.fr/mcp · Streamable HTTP · OAuth 2.1 — connecté : 14 outils, 3 ressources',
             },
+            { kind: 'user', text: 'Dis-moi si ChatGPT cite ma page tarifs.' },
+            { kind: 'assistant', text: 'J’utilise l’outil ai_visibility pour mesurer tes citations dans les moteurs génératifs.' },
             {
               kind: 'tool',
               name: 'ai_visibility',
               args: '{ "url": "https://exemple.fr/tarifs", "engines": ["chatgpt", "gemini", "perplexity", "claude"] }',
             },
             {
-              kind: 'result',
-              lines: [
-                'citation_rate: 12% (3/25 questions)',
-                'chatgpt: 0 citation   gemini: 1   perplexity: 2   claude: 0',
-                'sources citées à votre place : 2 concurrents, 1 annuaire',
-                'findings: GEO-ANSWER-001 (high), GEO-SCHEMA-014 (medium)',
+              kind: 'dashboard',
+              title: 'Résultats — ai_visibility (25 questions)',
+              metrics: [
+                { label: 'Taux de citation', value: '12%', tone: 'bad' },
+                { label: 'ChatGPT', value: '0', tone: 'bad' },
+                { label: 'Perplexity', value: '2', tone: 'warn' },
+                { label: 'Concurrents cités', value: '3', tone: 'bad' },
+              ],
+              rows: [
+                { id: 'GEO-ANSWER-001', severity: 'high', label: 'Aucune réponse directe citable' },
+                { id: 'GEO-SCHEMA-014', severity: 'medium', label: 'Schema Offer/FAQPage absent' },
               ],
             },
             {
-              kind: 'user',
-              text: 'Corrige GEO-ANSWER-001 dans mon projet.',
+              kind: 'assistant',
+              text: 'Veux-tu exporter ces données, ou que je corrige GEO-ANSWER-001 dans ton projet ?',
             },
+            {
+              kind: 'user',
+              text: 'Corrige GEO-ANSWER-001.',
+            },
+            { kind: 'assistant', text: 'J’utilise l’outil get_fix pour générer le patch adapté à ta stack.' },
             {
               kind: 'tool',
               name: 'get_fix',
@@ -150,19 +162,15 @@ export default function GeoMcpServer() {
             },
             {
               kind: 'assistant',
-              text: 'Patch appliqué. Je relance la mesure pour vérifier que le constat disparaît.',
+              text: 'Patch appliqué. Je relance ai_visibility pour vérifier que le constat disparaît.',
             },
             {
-              kind: 'tool',
-              name: 'ai_visibility',
-              args: '{ "url": "https://exemple.fr/tarifs", "compare_to": "run_8f21" }',
-            },
-            {
-              kind: 'result',
-              lines: [
-                'citation_rate: 12% → 34% (8/25)',
-                'GEO-ANSWER-001: résolu',
-                'GEO-SCHEMA-014: encore ouvert',
+              kind: 'dashboard',
+              title: 'Vérification — ai_visibility (comparaison)',
+              metrics: [
+                { label: 'Taux de citation', value: '12 → 34%', tone: 'good' },
+                { label: 'GEO-ANSWER-001', value: 'Résolu', tone: 'good' },
+                { label: 'GEO-SCHEMA-014', value: 'Ouvert', tone: 'warn' },
               ],
             },
           ]}
