@@ -329,6 +329,35 @@ export default function SeoMcpServer() {
           </section>
 
           <section className="mt-16 pt-10 border-t border-border">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">
+              Sources and references
+            </h2>
+            <ul className="space-y-3 list-none p-0">
+              {[
+                { label: 'Model Context Protocol specification', href: 'https://modelcontextprotocol.io/specification', note: 'Streamable HTTP transport, tools, resources and prompts.' },
+                { label: 'Anthropic MCP documentation', href: 'https://docs.anthropic.com/en/docs/mcp', note: 'Adding an MCP server to Claude Desktop and Claude Code.' },
+                { label: 'Google Search Central', href: 'https://developers.google.com/search/docs', note: 'Official guidance on canonicals, indexing and rendering.' },
+                { label: 'Schema.org', href: 'https://schema.org/docs/schemas.html', note: 'Structured-data vocabulary validated by analyze_schema.' },
+                { label: 'Web Vitals', href: 'https://web.dev/articles/vitals', note: 'LCP, INP and CLS thresholds used in performance scoring.' },
+                { label: 'Robots Exclusion Protocol (RFC 9309)', href: 'https://www.rfc-editor.org/rfc/rfc9309.html', note: 'robots.txt standard applied by check_indexability.' },
+              ].map((ref) => (
+                <li key={ref.href} className="rounded-lg border border-border bg-card/30 p-4 not-prose">
+                  <a
+                    href={ref.href}
+                    target="_blank"
+                    rel="noopener nofollow"
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    {ref.label}
+                  </a>
+                  <p className="mt-1 text-sm text-foreground/70 leading-relaxed">{ref.note}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+
+          <section className="mt-16 pt-10 border-t border-border">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">Related pages</h2>
             <ul className="grid gap-3 sm:grid-cols-2 list-none p-0">
               {[
