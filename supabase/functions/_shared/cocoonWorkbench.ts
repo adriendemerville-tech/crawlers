@@ -205,6 +205,9 @@ export async function writeCocoonFindingsToWorkbench(
           diagnostic_source: f.source_type ?? null,
           affected_urls: urls.slice(0, 50),
           affected_count: urls.length,
+          is_pillar: touchesPillar,
+          pillar_urls: pillarUrls.slice(0, 10),
+          pillar_boost: pillarBoost,
           strategy_plan_id: opts.strategyPlanId ?? null,
           spiral_phase: opts.spiralPhase ?? null,
           ...(isOffsite
