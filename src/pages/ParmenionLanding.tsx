@@ -369,7 +369,9 @@ function ParmenionLandingComponent(): React.ReactElement {
               {[
                 ['/marina', 'Audit de visibilité complet avec rapport détaillé'],
                 ['/audit-expert', 'Audit technique SEO en 200 points, gratuit'],
+                ['/audit-seo-geo', "La méthode d'audit SEO GEO en détail (guide)"],
                 ['/generative-engine-optimization', "Comprendre le GEO : être cité par les IA génératives"],
+
                 ['/matrice-concurrence', 'Comparer votre visibilité à celle de vos concurrents'],
                 ['/tarifs', 'Suivre votre visibilité dans le temps avec un abonnement'],
                 ['/lexique', 'Lexique des termes SEO et GEO'],
