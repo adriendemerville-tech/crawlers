@@ -582,6 +582,27 @@ function ParmenionLandingComponent(): React.ReactElement {
           </div>
         </section>
 
+        {/* Urgence */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-5xl px-4 py-14 sm:py-16">
+            <div className="rounded-3xl border-2 border-foreground bg-card p-8 text-center shadow-sm sm:p-10">
+              <h2 className="mb-3 font-display text-2xl font-bold sm:text-3xl">
+                Pendant que vous attendez, <span className="text-brand-violet">vos concurrents sont cités à votre place</span>
+              </h2>
+              <p className="mx-auto mb-8 max-w-2xl text-muted-foreground">
+                Chaque jour, des clients de votre ville demandent une recommandation à une IA. Les entreprises citées aujourd'hui prennent une avance difficile à rattraper. L'analyse est gratuite et prend moins d'une minute.
+              </p>
+              <Button
+                onClick={focusInput}
+                className="h-12 gap-2 border border-foreground bg-transparent px-8 text-foreground hover:bg-foreground hover:text-background"
+              >
+                Vérifier ma visibilité maintenant
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </section>
+
         {/* Final CTA */}
         <section>
           <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:py-24">
