@@ -80,7 +80,7 @@ export function FloatingChatBubble() {
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      setFelixGreeting(detail?.message || "Que puis-je faire pour t'aider ?");
+      setFelixGreeting(detail?.message || "Bonjour, je suis Félix. Comment puis-je vous aider ?");
       setFelixExpandedGreeting(detail?.expandedMessage || null);
       setIsOpen(true);
     };
