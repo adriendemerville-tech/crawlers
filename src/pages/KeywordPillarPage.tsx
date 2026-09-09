@@ -197,7 +197,13 @@ export default function KeywordPillarPage() {
           </div>
         </section>
 
-
+        {MCP_DEMOS[slug] && (
+          <McpSessionAnimation
+            windowTitle={MCP_DEMOS[slug].windowTitle}
+            caption={MCP_DEMOS[slug].caption}
+            steps={MCP_DEMOS[slug].steps}
+          />
+        )}
 
         <div className="prose prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-strong:text-foreground">
           {data.sections.map((section, si) => (
