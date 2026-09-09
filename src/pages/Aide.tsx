@@ -807,7 +807,7 @@ export default function Aide() {
               size="lg"
               className="gap-2"
               onClick={() => {
-                window.dispatchEvent(new CustomEvent('felix-open-with-message', { detail: { message: "Que puis-je faire pour t'aider ?" } }));
+                window.dispatchEvent(new CustomEvent('felix-open-with-message', { detail: { message: "Bonjour, je suis Félix. Comment puis-je vous aider ?" } }));
               }}
             >
               <MessageCircle className="h-4 w-4" />
