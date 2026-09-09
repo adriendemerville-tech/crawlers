@@ -10,6 +10,33 @@ import {
 } from "d3-force";
 import { Plus, Minus, Maximize2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { detectPillarPages } from "@/lib/cocoon/pillarPages";
+
+/**
+ * Les pages piliers sont rendues en carré (arrondi) plutôt qu'en cercle, pour
+ * les distinguer d'un coup d'œil dans le graphe.
+ */
+function nodeShapePath(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  rad: number,
+  square: boolean,
+) {
+  ctx.beginPath();
+  if (!square) {
+    ctx.arc(x, y, rad, 0, Math.PI * 2);
+    return;
+  }
+  const s = rad * 0.92;
+  const corner = Math.max(0.5, s * 0.22);
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(x - s, y - s, s * 2, s * 2, corner);
+  } else {
+    ctx.rect(x - s, y - s, s * 2, s * 2);
+  }
+}
+
 
 // ─── Types ───
 interface SemanticNode {
@@ -53,11 +80,13 @@ interface GraphNode extends SimulationNodeDatum {
   depth: number;
   pageType: string;
   isHome: boolean;
+  isPillar: boolean;
   pageAuthority: number;
   linksIn: number;
   linksOut: number;
   hasBacklinks: boolean;
   backlinkDomains: number;
+
 }
 
 interface GraphLink extends SimulationLinkDatum<GraphNode> {
@@ -229,6 +258,8 @@ export function CocoonForceGraph({
       }
     }
 
+    const pillarIds = detectPillarPages(nodes, homeId);
+
     const gNodes: GraphNode[] = nodes.map((n, i) => {
       const crawlDepth = n.crawl_depth ?? n.depth ?? 0;
       const pageType = n.page_type || "unknown";
@@ -247,6 +278,8 @@ export function CocoonForceGraph({
         depth: crawlDepth,
         pageType,
         isHome,
+        isPillar: !isHome && pillarIds.has(n.id),
+
         pageAuthority: n.page_authority ?? 0,
         linksIn: n.internal_links_in ?? 0,
         linksOut: n.internal_links_out ?? 0,
@@ -710,9 +743,9 @@ export function CocoonForceGraph({
           ctx.fill();
         }
 
-        // ─── Core dot ───
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+        // ─── Core dot (carré pour les pages piliers) ───
+        nodeShapePath(ctx, node.x, node.y, r, node.isPillar);
+
         if (node.isHome) {
           const coreGrad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r);
           if (isXRayMode) {
@@ -755,14 +788,13 @@ export function CocoonForceGraph({
         ctx.fill();
 
         // Inner bright core (highlight)
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, r * (node.isHome ? 0.35 : 0.5), 0, Math.PI * 2);
+        nodeShapePath(ctx, node.x, node.y, r * (node.isHome ? 0.35 : node.isPillar ? 0.45 : 0.5), node.isPillar);
         ctx.fillStyle = `rgba(255, 255, 255, ${baseAlpha * (node.isHome ? 0.7 : 0.5)})`;
         ctx.fill();
 
         // Thin rim
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+        nodeShapePath(ctx, node.x, node.y, r, node.isPillar);
+
         ctx.strokeStyle = isSelected
           ? `rgba(255, 200, 60, 0.9)`
           : isHovered
