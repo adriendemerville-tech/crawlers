@@ -283,21 +283,19 @@ export function AudienceRouter() {
   return (
     <section
       aria-label="Orientation du visiteur"
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-between bg-background px-4 pb-6 pt-16 animate-fade-in"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-4 animate-fade-in"
     >
       {thinking ? (
-        <div className="flex flex-1 flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center">
           <CrawlersLogoPulse />
         </div>
       ) : (
-        <>
-          <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
-            <h2 className="max-w-3xl text-2xl font-medium leading-snug text-foreground sm:text-4xl">
-              Pourquoi avez-vous besoin de Crawlers&nbsp;?
-            </h2>
-          </div>
+        <div className="flex w-full max-w-3xl flex-col items-center gap-8 px-2 text-center">
+          <h2 className="max-w-3xl text-2xl font-medium leading-snug text-foreground sm:text-4xl">
+            Pourquoi avez-vous besoin de Crawlers&nbsp;?
+          </h2>
 
-          <div className="w-full max-w-3xl px-2">
+          <div className="w-full">
             <div className="flex items-end gap-2 rounded-3xl border border-border bg-secondary/40 px-3 py-3 backdrop-blur-sm">
               <button
                 type="button"
@@ -361,10 +359,11 @@ export function AudienceRouter() {
               </button>
             </div>
           </div>
-        </>
+        </div>
       )}
     </section>
   );
+
 }
 
 export default AudienceRouter;

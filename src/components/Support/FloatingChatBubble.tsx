@@ -29,8 +29,8 @@ export function FloatingChatBubble() {
   const [notifDismissedThisSession, setNotifDismissedThisSession] = useState(false);
   const [triggerOnboarding, setTriggerOnboarding] = useState(false);
   const [showBounce, setShowBounce] = useState(false);
-  const [showGuestQuizSuggestion, setShowGuestQuizSuggestion] = useState(false);
   const [autoStartCrawlersQuiz, setAutoStartCrawlersQuiz] = useState(false);
+
   const [autoEnterpriseContact, setAutoEnterpriseContact] = useState(false);
   const [isMuted, setIsMuted] = useClientInitialState(() => localStorage.getItem('felix_muted') === '1', false);
   const onboardingSoundPlayed = useRef(false);
@@ -102,25 +102,6 @@ export function FloatingChatBubble() {
     return () => window.removeEventListener('felix-hallucination-diagnosis', handler);
   }, [isMuted]);
 
-  // Suggest Crawlers quiz to non-logged users on home after 5s
-  // Auto-hide the bubble after 10s but keep the notification badge
-  const [guestBubbleVisible, setGuestBubbleVisible] = useState(false);
-  useEffect(() => {
-    if (isMuted) return;
-    if (user) return;
-    if (location.pathname !== '/') return;
-    const key = 'felix_guest_quiz_suggested';
-    if (sessionStorage.getItem(key)) return;
-    const showTimer = setTimeout(() => {
-      sessionStorage.setItem(key, '1');
-      setShowGuestQuizSuggestion(true);
-      setGuestBubbleVisible(true);
-      if (!isSilentPage) playNotificationSound();
-      // Auto-hide bubble text after 10s, keep notification dot
-      setTimeout(() => setGuestBubbleVisible(false), 10000);
-    }, 5000);
-    return () => clearTimeout(showTimer);
-  }, [user, location.pathname, isMuted]);
 
   // Show notification only every 3 visits, not if dismissed this session
   useEffect(() => {
@@ -292,23 +273,6 @@ export function FloatingChatBubble() {
         </div>
       )}
 
-      {/* Guest quiz suggestion tooltip */}
-      {guestBubbleVisible && !isOpen && !showOnboardingPulse && (
-        <div
-          className="fixed bottom-[72px] z-[110] max-w-[240px] rounded-xl border border-foreground/20 bg-background/95 backdrop-blur text-foreground px-3 py-2.5 text-xs font-medium shadow-lg cursor-pointer group"
-           style={{ right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3.5rem))' }}
-          onClick={() => { setShowGuestQuizSuggestion(false); setIsOpen(true); }}
-        >
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowGuestQuizSuggestion(false); }}
-            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full border border-border bg-background text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted text-[10px] font-bold"
-            aria-label="Fermer"
-          >
-            <X className="h-3 w-3" />
-          </button>
-          Je peux vous aider à choisir.
-        </div>
-      )}
 
       {/* Hallucination diagnosis suggestion bubble */}
       {showHallucinationBubble && !isOpen && (
@@ -344,11 +308,12 @@ export function FloatingChatBubble() {
             <CrawlersLogo size={56} className="transition-opacity duration-300" />
           </button>
           {/* Notification Badge — outside button to avoid overflow clipping */}
-          {(unreadCount > 0 || showOnboardingPulse || showGuestQuizSuggestion || showHallucinationBubble) && !isOpen && (
+          {(unreadCount > 0 || showOnboardingPulse || showHallucinationBubble) && !isOpen && (
             <span className="fixed bottom-[54px] z-[111] flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold animate-pulse pointer-events-none" style={{ right: 'max(0.25rem, calc((100vw - 72rem) / 2 - 3rem))' }}>
-              {(showOnboardingPulse || showGuestQuizSuggestion) ? '!' : unreadCount > 9 ? '9+' : unreadCount}
+              {showOnboardingPulse ? '!' : unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
+
         </>
       )}
     </>
