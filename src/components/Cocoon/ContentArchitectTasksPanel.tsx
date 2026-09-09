@@ -31,9 +31,11 @@ interface ContentArchitectTasksPanelProps {
   onApplyTask?: (task: QuickWinTask) => void;
 }
 
+type PillarAwareTask = QuickWinTask & { isPillar?: boolean; pillarBoost?: number };
+
 export function ContentArchitectTasksPanel({ domain, trackedSiteId, onApplyTask }: ContentArchitectTasksPanelProps) {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState<QuickWinTask[]>([]);
+  const [tasks, setTasks] = useState<PillarAwareTask[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
