@@ -549,6 +549,7 @@ export type Database = {
       }
       ai_gateway_usage: {
         Row: {
+          attributed_job_id: string | null
           cache_creation_tokens: number | null
           cache_read_tokens: number | null
           completion_tokens: number | null
@@ -564,6 +565,7 @@ export type Database = {
           total_tokens: number | null
         }
         Insert: {
+          attributed_job_id?: string | null
           cache_creation_tokens?: number | null
           cache_read_tokens?: number | null
           completion_tokens?: number | null
@@ -579,6 +581,7 @@ export type Database = {
           total_tokens?: number | null
         }
         Update: {
+          attributed_job_id?: string | null
           cache_creation_tokens?: number | null
           cache_read_tokens?: number | null
           completion_tokens?: number | null
@@ -4543,9 +4546,12 @@ export type Database = {
           feature: string
           id: string
           input: Json
+          input_tokens: number
+          output_tokens: number
           result: Json | null
           started_at: string | null
           status: string
+          total_tokens: number
           user_id: string
         }
         Insert: {
@@ -4557,9 +4563,12 @@ export type Database = {
           feature: string
           id?: string
           input?: Json
+          input_tokens?: number
+          output_tokens?: number
           result?: Json | null
           started_at?: string | null
           status?: string
+          total_tokens?: number
           user_id: string
         }
         Update: {
@@ -4571,9 +4580,12 @@ export type Database = {
           feature?: string
           id?: string
           input?: Json
+          input_tokens?: number
+          output_tokens?: number
           result?: Json | null
           started_at?: string | null
           status?: string
+          total_tokens?: number
           user_id?: string
         }
         Relationships: [
@@ -11383,8 +11395,11 @@ export type Database = {
           created_at: string
           id: string
           idempotency_key: string
+          input_tokens: number
           metadata: Json
+          output_tokens: number
           tool_name: string
+          total_tokens: number
           user_id: string
         }
         Insert: {
@@ -11394,8 +11409,11 @@ export type Database = {
           created_at?: string
           id?: string
           idempotency_key: string
+          input_tokens?: number
           metadata?: Json
+          output_tokens?: number
           tool_name: string
+          total_tokens?: number
           user_id: string
         }
         Update: {
@@ -11405,8 +11423,11 @@ export type Database = {
           created_at?: string
           id?: string
           idempotency_key?: string
+          input_tokens?: number
           metadata?: Json
+          output_tokens?: number
           tool_name?: string
+          total_tokens?: number
           user_id?: string
         }
         Relationships: []
@@ -18143,6 +18164,10 @@ export type Database = {
           }
       atomic_credit_update: {
         Args: { p_amount: number; p_user_id: string }
+        Returns: Json
+      }
+      attribute_ai_tokens: {
+        Args: { _edge_function: string; _job_id: string; _since: string }
         Returns: Json
       }
       backfill_workbench_spiral_data: {
