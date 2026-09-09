@@ -393,6 +393,8 @@ const GenerativeEngineOptimization = () => {
                 <li><Link to="/lexique" className="text-sm text-primary hover:underline">Lexique SEO & GEO — Toutes les définitions</Link></li>
                 <li><Link to="/methodologie" className="text-sm text-primary hover:underline">Méthodologie d'audit : 50+ points analysés</Link></li>
                 <li><Link to="/audit-geo-seo" className="text-sm text-primary hover:underline">Audit GEO SEO à 59 € TTC : correctifs, 3 contenus et fiche Google Maps</Link></li>
+                <li><Link to="/geo-mcp-server" className="text-sm text-primary hover:underline">Serveur MCP GEO : mesurer la visibilité IA depuis un agent</Link></li>
+
               </ul>
             </div>
           </div>
