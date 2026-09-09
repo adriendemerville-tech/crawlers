@@ -106,6 +106,67 @@ export default function GeoMcpServer() {
           adaptée à votre stack, puis re-mesurer pour prouver le résultat.
         </blockquote>
 
+        <McpSessionAnimation
+          windowTitle="Claude Code — serveur MCP Crawlers (GEO)"
+          caption="Reproduction d’une session réelle : mesure des citations IA, correction, re-mesure."
+          steps={[
+            { kind: 'user', text: 'Connecte le serveur MCP Crawlers et dis-moi si ChatGPT cite ma page tarifs.' },
+            {
+              kind: 'tool',
+              name: 'connect',
+              args: 'https://crawlers.fr/mcp  ·  Streamable HTTP  ·  OAuth 2.1\n→ connecté : 14 outils, 3 ressources',
+            },
+            {
+              kind: 'tool',
+              name: 'ai_visibility',
+              args: '{ "url": "https://exemple.fr/tarifs", "engines": ["chatgpt", "gemini", "perplexity", "claude"] }',
+            },
+            {
+              kind: 'result',
+              lines: [
+                'citation_rate: 12% (3/25 questions)',
+                'chatgpt: 0 citation   gemini: 1   perplexity: 2   claude: 0',
+                'sources citées à votre place : 2 concurrents, 1 annuaire',
+                'findings: GEO-ANSWER-001 (high), GEO-SCHEMA-014 (medium)',
+              ],
+            },
+            {
+              kind: 'user',
+              text: 'Corrige GEO-ANSWER-001 dans mon projet.',
+            },
+            {
+              kind: 'tool',
+              name: 'get_fix',
+              args: '{ "finding_id": "GEO-ANSWER-001", "framework": "nextjs" }',
+            },
+            {
+              kind: 'result',
+              lines: [
+                'patch: bloc réponse directe + 3 passages citables',
+                'fichier: app/tarifs/page.tsx',
+                'schema: Offer + FAQPage à ajouter',
+              ],
+            },
+            {
+              kind: 'assistant',
+              text: 'Patch appliqué. Je relance la mesure pour vérifier que le constat disparaît.',
+            },
+            {
+              kind: 'tool',
+              name: 'ai_visibility',
+              args: '{ "url": "https://exemple.fr/tarifs", "compare_to": "run_8f21" }',
+            },
+            {
+              kind: 'result',
+              lines: [
+                'citation_rate: 12% → 34% (8/25)',
+                'GEO-ANSWER-001: résolu',
+                'GEO-SCHEMA-014: encore ouvert',
+              ],
+            },
+          ]}
+        />
+
         <div className="prose prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-strong:text-foreground">
           <section className="mb-12">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
