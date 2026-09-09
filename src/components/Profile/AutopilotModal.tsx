@@ -379,23 +379,43 @@ export function AutopilotModal({ open, onOpenChange, trackedSiteId, siteDomain }
             </div>
           </section>
 
+          {/* ── GEL AUTOMATIQUE ── */}
+          {isFrozen && (
+            <div className="rounded-md border border-amber-500/50 bg-amber-500/5 p-3 text-xs space-y-1">
+              <div className="flex items-center gap-1.5 font-semibold">
+                <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
+                Cycles gelés par le contrôleur
+              </div>
+              <p className="text-muted-foreground">
+                {pausedReason ?? 'Les dernières actions mesurées ont fait baisser les résultats. Les cycles sont suspendus jusqu\'à une reprise manuelle.'}
+              </p>
+            </div>
+          )}
+
           {/* ── ACTIONS ── */}
           <div className="flex items-center gap-2 pt-2">
             {configId && (
               <Button
-                variant={isActive ? 'destructive' : 'default'}
+                variant={isFrozen ? 'outline' : isActive ? 'destructive' : 'default'}
                 size="sm"
-                disabled={toggling}
+                disabled={toggling || resuming}
                 onClick={handleToggleActive}
                 className={`gap-1.5 transition-all duration-500 ${
-                  isActive
+                  !isFrozen && isActive
                     ? 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400 animate-autopilot-glow'
                     : ''
                 }`}
               >
-                {toggling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isActive ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                {isActive ? 'Actif : mettre sur pause' : 'Inactif : cliquer pour activer'}
+                {toggling || resuming
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : isFrozen
+                    ? <RotateCcw className="h-3.5 w-3.5" />
+                    : isActive ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                {isFrozen
+                  ? 'Gelé : relancer l\'autopilote'
+                  : isActive ? 'Actif : mettre sur pause' : 'Inactif : cliquer pour activer'}
               </Button>
+
             )}
             <div className="ml-auto flex gap-2">
               <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Annuler</Button>
