@@ -8,6 +8,7 @@
 import { SITE_URL } from './pageHead';
 import { ORGANIZATION_REF } from './organization';
 import { resolveArticleDates } from '@/lib/blog/lastUpdated';
+import { breadcrumbList } from './breadcrumb';
 
 
 export interface ArticleJsonLdInput {
