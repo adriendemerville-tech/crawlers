@@ -141,6 +141,20 @@
       "when": 1788938473410,
       "tag": "0019_token_accounting_api_mcp",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1788939475298,
+      "tag": "0020_pericles_close_loop",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1788939799959,
+      "tag": "0021_pericles_measure_rewards",
+      "breakpoints": true
     }
   ]
 }
