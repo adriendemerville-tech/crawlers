@@ -194,7 +194,7 @@ export async function writeCocoonFindingsToWorkbench(
         source_record_id: recordId,
         finding_category: f.category || findingKey,
         severity: mapSeverity(f.severity),
-        title: `Cocoon — ${f.title || findingKey}`.slice(0, 280),
+        title: `Cocoon — ${touchesPillar ? '[Pilier] ' : ''}${f.title || findingKey}`.slice(0, 280),
         description: (f.description || '').slice(0, 2000),
         target_url: primaryUrl,
         target_selector: target?.selector ?? null,
