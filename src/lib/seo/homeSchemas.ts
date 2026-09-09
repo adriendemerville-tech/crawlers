@@ -179,6 +179,11 @@ export const HOME_FAQ_ITEMS = [
     a: "Oui. Trois API partagent un même compte développeur : Crawlers API (18 modules SEO, GEO et IA, clé crw_live_), Marina API (audits, clé mk_live_) et Périclès API (tâches de contenu de l'autopilote, clé prm_live_). Toutes fonctionnent en jobs asynchrones par polling, avec SDK TypeScript officiels et facturation à l'usage. Point d'entrée : https://crawlers.fr/developers.",
   },
   {
+    q: 'Crawlers.fr est-il disponible en MCP pour Claude, Cursor ou Codex ?',
+    a: "Oui. Crawlers.fr expose un serveur MCP (Model Context Protocol) en Streamable HTTP avec OAuth 2.1, compatible Claude Code, Claude Desktop, Cursor et tout client MCP conforme. L'agent appelle directement audit_page, audit_site, crawl_site, ai_visibility, analyze_schema, check_indexability, analyze_links et get_fix, reçoit des constats normalisés avec preuve et gravité, applique le correctif dans le code puis relance l'audit pour vérifier. Détails sur https://crawlers.fr/seo-mcp-server et https://crawlers.fr/geo-mcp-server.",
+  },
+
+  {
     q: "Qu'apporte la Matrice Concurrence ?",
     a: "La Matrice Concurrence croise les concurrents et le site cible avec les 20 mots-clés réellement adressés par le marché, dans la SERP Google comme dans les réponses IA. Elle produit une heatmap, les gaps de couverture, les citations IA manquantes et un indice de rentabilité par mot-clé. Elle est accessible gratuitement sur https://crawlers.fr/matrice-concurrence.",
   },
