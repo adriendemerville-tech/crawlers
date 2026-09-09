@@ -165,6 +165,10 @@ export async function writeCocoonFindingsToWorkbench(
 
     if (actionable.length === 0) return { attempted: 0, written: 0 };
 
+    // Pages piliers : un correctif sur un pilier profite à tous ses satellites,
+    // donc il passe devant (boost plafonné, cf. pillarWeighting.ts).
+    const pillars: PillarSet = await resolvePillarSet(sb, opts.trackedSiteId);
+
     // Deduplicate on the idempotency key (same finding id can come from 2 diags)
     const rows = new Map<string, Record<string, unknown>>();
 
@@ -176,6 +180,10 @@ export async function writeCocoonFindingsToWorkbench(
       const isOffsite = OFFSITE_CATEGORIES.has(f.category || '') || OFFSITE_CATEGORIES.has(f.id || '');
       const anchors = isOffsite ? suggestedAnchors(f) : [];
       const recordId = `cocoon_${opts.domain}_${findingKey}${primaryUrl ? `_${shortHash(primaryUrl)}` : ''}`;
+      const pillarUrls = urls.filter((u) => isPillarUrl(pillars, u));
+      const touchesPillar = pillarUrls.length > 0;
+      const highValuePillar = pillarUrls.some((u) => isStrongPillarUrl(pillars, u));
+      const pillarBoost = pillarPriorityMultiplier({ isPillar: touchesPillar, highValue: highValuePillar });
 
       rows.set(recordId, {
         domain: opts.domain,
