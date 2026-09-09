@@ -336,7 +336,7 @@ function ParmenionLandingComponent(): React.ReactElement {
             <h2 className="mb-12 max-w-2xl text-3xl font-bold sm:text-4xl">
               Quatre étapes, de l'analyse au déploiement validé
             </h2>
-            <ol className="grid gap-8 sm:grid-cols-2">
+            <ol className="grid list-none gap-8 sm:grid-cols-2">
               {STEPS.map((s, i) => (
                 <li key={s.title} className="relative rounded-xl border border-border p-6">
                   <span className="mb-4 block text-sm font-semibold text-brand-violet">
