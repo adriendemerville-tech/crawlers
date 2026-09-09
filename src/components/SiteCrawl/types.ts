@@ -36,6 +36,16 @@ export interface CrawlResult {
   created_at: string;
   completed_at: string | null;
   tone_consistency_score: number | null;
+  /** Instantané DataForSEO des mots-clés positionnés du domaine (peut être absent). */
+  ranked_keywords?: {
+    domain: string;
+    total_ranked_keywords: number;
+    estimated_traffic: number;
+    average_position: number;
+    top3: number;
+    top10: number;
+    top_keywords: { keyword: string; position: number; volume: number; url: string }[];
+  } | null;
 }
 
 export interface CustomSelector {
