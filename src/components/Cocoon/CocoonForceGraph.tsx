@@ -761,14 +761,13 @@ export function CocoonForceGraph({
         ctx.fill();
 
         // Inner bright core (highlight)
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, r * (node.isHome ? 0.35 : 0.5), 0, Math.PI * 2);
+        nodeShapePath(ctx, node.x, node.y, r * (node.isHome ? 0.35 : node.isPillar ? 0.45 : 0.5), node.isPillar);
         ctx.fillStyle = `rgba(255, 255, 255, ${baseAlpha * (node.isHome ? 0.7 : 0.5)})`;
         ctx.fill();
 
         // Thin rim
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+        nodeShapePath(ctx, node.x, node.y, r, node.isPillar);
+
         ctx.strokeStyle = isSelected
           ? `rgba(255, 200, 60, 0.9)`
           : isHovered
