@@ -169,6 +169,20 @@
       "when": 1788948070415,
       "tag": "0023_site_crawls_ranked_keywords",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1788957725426,
+      "tag": "0024_sitemap_geo_cluster_head",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1788957801574,
+      "tag": "0025_sitemap_priority_geo_head_09",
+      "breakpoints": true
     }
   ]
 }
