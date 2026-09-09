@@ -37,13 +37,18 @@ export const SILOS: Record<Silo['id'], Silo> = {
   },
   geo: {
     id: 'geo',
-    intent: 'référencement IA, GEO, score GEO, visibilité LLM',
+    intent: 'audit SEO GEO, référencement IA, score GEO, visibilité LLM',
     pillar: {
-      label: 'Référencement IA & GEO : le guide pilier',
-      to: '/generative-engine-optimization',
-      note: 'Absorbe score GEO, outil GEO IA, visibilité LLM, optimisation LLM SEO',
+      label: 'Audit GEO SEO : la page de référence',
+      to: '/audit-geo-seo',
+      note: 'Tête du silo GEO : diagnostic, correctifs, contenus et fiche Google Maps',
     },
     satellites: [
+      {
+        label: 'Référencement IA & GEO : le guide complet',
+        to: '/generative-engine-optimization',
+        note: 'Guide éditorial du silo',
+      },
       { label: 'Audit GEO gratuit (232 points)', to: '/audit-geo' },
       { label: 'Méthode d’audit SEO GEO', to: '/audit-seo-geo' },
       { label: 'Visibilité IA : mesurer ses citations', to: '/visibilite-ia' },
@@ -55,9 +60,9 @@ export const SILOS: Record<Silo['id'], Silo> = {
       { label: 'Place d’échange de backlinks', to: '/marketplace-backlinks' },
       { label: 'Collaborations Instagram', to: '/collab-instagram' },
       { label: 'Audit gratuit avec Marina', to: '/marina' },
-
     ],
   },
+
   'outil-crawl': {
     id: 'outil-crawl',
     intent: 'crawl website, crawl wordpress, site crawler, outil de crawl',

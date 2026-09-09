@@ -101,12 +101,24 @@ async function buildSitemap(): Promise<{ xml: string; source: "db" | "fallback";
     // repli silencieux
   }
 
+  // Priorités du repli : la tête du silo GEO passe devant ses satellites.
+  const PRIORITY_BY_PATH: Record<string, number> = {
+    "/": 1.0,
+    "/audit-geo-seo": 0.95,
+    "/marina": 0.9,
+    "/blog": 0.8,
+    "/generative-engine-optimization": 0.8,
+    "/audit-geo": 0.8,
+    "/audit-seo-geo": 0.7,
+  };
+
   const rows: Entry[] = FALLBACK_PATHS.map((p) => ({
     loc: `${SITE}${p}`,
     lastmod: null,
     changefreq: p === "/" || p === "/blog" ? "daily" : "weekly",
-    priority: p === "/" ? 1.0 : 0.7,
+    priority: PRIORITY_BY_PATH[p] ?? 0.6,
   }));
+
 
   return { xml: toXml(rows), source: "fallback", count: rows.length };
 }
