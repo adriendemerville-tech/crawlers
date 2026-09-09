@@ -94,12 +94,30 @@ async function dispatchWebhooks(admin: any, userId: string, event: string, paylo
 }
 const FEATURE_IDS = new Set(FEATURES.map(f => f.id));
 
+// Rattache les tokens LLM consommés pendant le job (juge unique en base : chaque ligne de
+// coût n'est réclamée qu'une fois, donc pas de double comptage entre jobs concurrents).
+async function attributeTokens(admin: any, jobId: string, fn: string | null, since: string) {
+  if (!fn || fn.startsWith("__")) return { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
+  const { data, error } = await admin.rpc("attribute_ai_tokens", {
+    _job_id: jobId,
+    _edge_function: fn,
+    _since: since,
+  });
+  if (error) {
+    console.error("[crawlers-api] token attribution failed", error.message);
+    return { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
+  }
+  return data ?? { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
+}
+
 // Exécute une feature en background et met à jour le job en DB.
+
 async function runFeature(admin: any, jobId: string, userId: string, feature: string, input: any) {
   const f = FEATURE_MAP.get(feature);
+  const startedAt = new Date().toISOString();
   try {
     await admin.from("crawlers_api_jobs")
-      .update({ status: "running", started_at: new Date().toISOString() })
+      .update({ status: "running", started_at: startedAt })
       .eq("id", jobId);
 
     if (!f?.fn) {
@@ -131,9 +149,12 @@ async function runFeature(admin: any, jobId: string, userId: string, feature: st
       .update({ status: "completed", result, completed_at: new Date().toISOString() })
       .eq("id", jobId);
 
+    const tokens = await attributeTokens(admin, jobId, f.fn, startedAt);
+
     await dispatchWebhooks(admin, userId, "job.completed", {
-      id: jobId, feature, status: "completed", result,
+      id: jobId, feature, status: "completed", result, tokens,
     }).catch(e => console.error("[crawlers-api] webhook dispatch failed", e));
+
   } catch (e) {
     console.error(`[crawlers-api] feature ${feature} failed`, e);
     await admin.from("crawlers_api_jobs")
@@ -144,9 +165,12 @@ async function runFeature(admin: any, jobId: string, userId: string, feature: st
       })
       .eq("id", jobId);
 
+    await attributeTokens(admin, jobId, f?.fn ?? null, startedAt);
+
     await dispatchWebhooks(admin, userId, "job.failed", {
       id: jobId, feature, status: "failed", error: (e as Error).message,
     }).catch(err => console.error("[crawlers-api] webhook dispatch failed", err));
+
   }
 }
 
@@ -298,7 +322,6 @@ Deno.serve(async (req) => {
       }), {
         status: 202,
 
-        status: 202,
         headers: { ...corsHeaders, "Content-Type": "application/json", "Location": `/v1/jobs/${job.id}` },
       });
     }
@@ -309,7 +332,7 @@ Deno.serve(async (req) => {
       const id = jobMatch[1];
       const { data: job, error } = await ctx.admin
         .from("crawlers_api_jobs")
-        .select("id, feature, status, input, result, error, created_at, started_at, completed_at")
+        .select("id, feature, status, input, result, error, created_at, started_at, completed_at, input_tokens, output_tokens, total_tokens")
         .eq("id", id)
         .eq("user_id", ctx.userId)
         .maybeSingle();
@@ -340,7 +363,7 @@ Deno.serve(async (req) => {
       const limit = Math.min(parseInt(url.searchParams.get("limit") || "20", 10) || 20, 100);
       const { data, error } = await ctx.admin
         .from("crawlers_api_jobs")
-        .select("id, feature, status, created_at, completed_at")
+        .select("id, feature, status, created_at, completed_at, input_tokens, output_tokens, total_tokens")
         .eq("user_id", ctx.userId)
         .order("created_at", { ascending: false })
         .limit(limit);
