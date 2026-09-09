@@ -314,7 +314,31 @@ export function AudienceRouter() {
         <div className="flex flex-col items-center justify-center">
           <CrawlersLogoPulse />
         </div>
+      ) : clarify ? (
+        <div className="flex w-full max-w-2xl flex-col items-center gap-8 px-2 text-center">
+          <h2 className="text-2xl font-medium leading-snug text-foreground sm:text-3xl">
+            Vous occupez-vous vous-même de votre site internet ou êtes-vous
+            professionnel du référencement&nbsp;?
+          </h2>
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
+            <button
+              type="button"
+              onClick={() => apply('business')}
+              className="rounded-full border border-foreground/40 px-6 py-3 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
+            >
+              Je m'occupe moi-même de mon site
+            </button>
+            <button
+              type="button"
+              onClick={() => apply('pro')}
+              className="rounded-full border border-foreground/40 px-6 py-3 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
+            >
+              Je suis professionnel du référencement
+            </button>
+          </div>
+        </div>
       ) : (
+
         <div className="flex w-full max-w-3xl flex-col items-center gap-8 px-2 text-center">
           <h2 className="max-w-3xl text-2xl font-medium leading-snug text-foreground sm:text-4xl">
             Pourquoi avez-vous besoin de Crawlers&nbsp;?
