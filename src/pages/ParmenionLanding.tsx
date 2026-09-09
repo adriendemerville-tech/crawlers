@@ -282,6 +282,21 @@ function ParmenionLandingComponent(): React.ReactElement {
           </div>
         </section>
 
+        {/* Questions que vos clients posent déjà aux IA */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-14 sm:py-16">
+            <h2 className="mb-3 text-center font-display text-2xl font-bold sm:text-3xl">
+              Vos clients posent déjà ces questions <span className="text-brand-violet">aux IA</span>
+            </h2>
+            <p className="mx-auto mb-10 max-w-2xl text-center text-muted-foreground">
+              Chaque jour, des clients décrivent leur besoin à ChatGPT ou à Google. Si votre site ne répond pas à ces questions, une autre entreprise est recommandée à votre place.
+            </p>
+            <Suspense fallback={<div className="h-28" />}>
+              <QuestionsMarquee />
+            </Suspense>
+          </div>
+        </section>
+
         {/* Réponse directe */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-3xl px-4 py-14">
