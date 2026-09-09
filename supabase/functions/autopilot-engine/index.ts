@@ -258,6 +258,46 @@ try {
           }
         }
 
+        // ═══ Contrôleur : seuil de pause automatique (auto_pause_threshold) ═══
+        // La récompense mesurée à T+30 (pericles_decision_log.reward_signal) est le seul
+        // juge : si la moyenne des 10 dernières décisions mesurées descend sous
+        // -auto_pause_threshold, on gèle le domaine au lieu de continuer à agir à perte.
+        // Reprise = action humaine (remise en 'idle' depuis l'admin).
+        if (!bypassCooldown && config.status !== 'paused') {
+          const pauseThreshold = Number(config.auto_pause_threshold ?? 15);
+          const { data: health } = await supabase.rpc('pericles_reward_health', { p_domain: siteInfo.domain });
+          const measured = Number((health as any)?.measured ?? 0);
+          const avgReward = Number((health as any)?.avg_reward ?? 0);
+
+          if (measured >= 5 && avgReward <= -pauseThreshold) {
+            const reason = `Récompense moyenne ${avgReward} sur ${measured} décisions mesurées (seuil -${pauseThreshold}) — cycles gelés`;
+            await supabase.from('autopilot_configs').update({
+              status: 'paused', updated_at: new Date().toISOString(),
+            }).eq('id', config.id);
+
+            await supabase.from('autopilot_modification_log').insert({
+              tracked_site_id: config.tracked_site_id, config_id: config.id, user_id: config.user_id,
+              phase: 'implementation', action_type: 'auto_paused', cycle_number: config.total_cycles_run || 0,
+              description: `[PAUSE AUTO] ${reason}`, status: 'simulated',
+            });
+
+            console.warn(`[AutopilotEngine] ⏸️ Pause auto pour ${siteInfo.domain}: ${reason}`);
+            results.push({ site_id: config.tracked_site_id, domain: siteInfo.domain, status: 'auto_paused', error: reason });
+            continue;
+          }
+
+          if (measured >= 5) {
+            console.log(`[AutopilotEngine] 🎯 Récompense ${siteInfo.domain}: ${avgReward} sur ${measured} mesures (seuil -${pauseThreshold})`);
+          }
+        }
+
+        // Un domaine déjà gelé par le contrôleur ne reprend qu'à la main.
+        if (config.status === 'paused' && !bypassCooldown) {
+          results.push({ site_id: config.tracked_site_id, domain: siteInfo.domain, status: 'paused', error: 'Gelé par le contrôleur (récompense négative) — reprise manuelle' });
+          continue;
+        }
+
+
         // ═══ Backlog guard (soft) : si > 5 décisions CMS planned non exécutées,
         // on inhibe UNIQUEMENT la création de nouveaux contenus pour ce cycle.
         // Le pipeline continue normalement (audit/diag/prescribe/execute) sur les autres
