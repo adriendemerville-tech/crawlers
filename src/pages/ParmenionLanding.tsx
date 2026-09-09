@@ -208,6 +208,18 @@ function ParmenionLandingComponent(): React.ReactElement {
     '--brand-gold-muted': '45 90% 95%',
   } as React.CSSProperties;
 
+  // Le body du site reste sombre : sans cela une bande foncée apparaît au-dessus
+  // du header et sous le footer (overscroll).
+  useEffect(() => {
+    const previous = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = 'hsl(43 10% 96%)';
+    return () => {
+      document.body.style.backgroundColor = previous;
+    };
+  }, []);
+
+
+
   return (
     <div className="light-scope min-h-screen bg-background text-foreground" style={lightThemeVars}>
       <Header />
