@@ -362,6 +362,7 @@ export function analyzeHtml(
   if (areTitleAndH1TooSimilar(title, h1)) issues.push('title_h1_too_similar');
   if (h2_count === 0 && word_count > 200) issues.push('missing_h2');
   if (word_count < 100) issues.push('thin_content');
+  if (strong_count === 0 && word_count > 300) issues.push('no_emphasis');
   if (!has_schema_org) issues.push('missing_schema_org');
   if (has_schema_org && schemaValidation.errors.length > 0) issues.push('schema_org_errors');
   if (!has_canonical) issues.push('missing_canonical');
