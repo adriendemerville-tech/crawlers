@@ -281,8 +281,12 @@
   }
 
   html {
-    font-size: 110%;
+    font-size: 100%;
     overflow-x: hidden;
+  }
+
+  @media (min-width: 768px) {
+    html { font-size: 110%; }
   }
 
   body {
