@@ -60,14 +60,14 @@ function HomeHeroComponent() {
           };
 
   return (
-    <section className="relative pt-8 pb-10 sm:pt-10 sm:pb-14 lg:pt-12 lg:pb-16 px-4 sm:px-6 overflow-hidden">
+    <section className="relative pt-6 pb-8 sm:pt-10 sm:pb-14 lg:pt-12 lg:pb-16 px-4 sm:px-6 overflow-hidden">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-40 -top-40 h-[24rem] w-[24rem] rounded-full bg-brand-violet/5 blur-[80px]" />
         <div className="absolute -bottom-40 -right-40 h-[24rem] w-[24rem] rounded-full bg-brand-gold/5 blur-[80px]" />
       </div>
 
       <div className="container mx-auto relative z-10">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 items-start">
           {/* Left: text content */}
           <div className="text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-brand-gold/40 text-brand-gold text-xs font-semibold uppercase tracking-wider mb-4">
@@ -78,12 +78,12 @@ function HomeHeroComponent() {
               {copy.h1}
             </h1>
 
-            <p className="text-base sm:text-lg text-muted-foreground mb-6 max-w-xl mx-auto lg:mx-0">
+            <p className="hidden sm:block text-base sm:text-lg text-muted-foreground mb-6 max-w-xl mx-auto lg:mx-0">
               {copy.subtitle}
             </p>
 
             <ul
-              className="flex flex-wrap gap-3 justify-center lg:justify-start text-sm text-muted-foreground mb-4"
+              className="hidden sm:flex flex-wrap gap-3 justify-center lg:justify-start text-sm text-muted-foreground mb-4"
               role="list"
               aria-label="Avantages"
             >
@@ -95,7 +95,7 @@ function HomeHeroComponent() {
               ))}
             </ul>
 
-            <p className="text-xs text-muted-foreground">{copy.note}</p>
+            <p className="hidden sm:block text-xs text-muted-foreground">{copy.note}</p>
           </div>
 
           {/* Right: auth card */}
