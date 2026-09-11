@@ -5041,7 +5041,18 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           console.warn('[Marina] Audit comparé non disponible (non-fatal):', ratioErr);
         }
 
-        const techHTML = generateTechSectionHTML(expertData, detectedLang, domain, '', comparedHtml);
+        // Mise en exergue (<strong>/<b>) : signal éditorial affiché dans
+        // l'audit technique, SANS incidence sur le score. Non affiché si le
+        // crawl ne l'a pas mesuré (anciens crawls sans colonne strong_count).
+        const emphasisHtml =
+          crawlSnapshot?.pagesWithoutEmphasis != null && crawlSnapshot?.emphasisMeasuredCount
+            ? `<div style="margin-top:16px;padding:14px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;">
+          <h3 style="font-size:14px;font-weight:600;margin:0 0 6px;">Mise en exergue (&lt;strong&gt;/&lt;b&gt;) — signal éditorial</h3>
+          <p style="font-size:12px;color:#374151;margin:0 0 6px;line-height:1.5;"><strong>${crawlSnapshot.pagesWithoutEmphasis}/${crawlSnapshot.emphasisMeasuredCount}</strong> pages de plus de 300 mots sans aucune mise en exergue. Ce signal aide Google à repérer ce que vous jugez important ; il n'entre pas dans le calcul du score.</p>
+          <p style="font-size:12px;color:#374151;margin:0;line-height:1.5;"><strong>Conseil :</strong> une balise &lt;strong&gt; mal placée n'apporte rien. Mieux vaut 2–3 mises en exergue pertinentes sur les mots-clés d'intention que 15 &lt;strong&gt; décoratifs.</p>
+        </div>`
+            : '';
+        const techHTML = generateTechSectionHTML(expertData, detectedLang, domain, '', comparedHtml, emphasisHtml);
 
 
         const geoSubSignalsHtml =
