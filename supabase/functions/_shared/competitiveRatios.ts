@@ -100,6 +100,50 @@ async function fetchHtml(url: string): Promise<string | null> {
     return null;
   }
 }
+/**
+ * Résout le périmètre comparé : la page auditée + jusqu'à 4 pages piliers,
+ * chacune associée à son mot-clé mesuré le plus porteur (keyword_universe).
+ * Aucun LLM, une seule requête.
+ */
+export async function resolveRatioTargets(
+  supabase: any,
+  opts: { url: string; trackedSiteId?: string | null; fallbackKeyword?: string | null },
+): Promise<RatioTarget[]> {
+  const targets: RatioTarget[] = [];
+  const byUrl = new Map<string, { keyword: string; volume: number }>();
+  try {
+    if (opts.trackedSiteId) {
+      const { data } = await supabase
+        .from('keyword_universe')
+        .select('keyword, target_url, search_volume')
+        .eq('tracked_site_id', opts.trackedSiteId)
+        .not('target_url', 'is', null)
+        .order('search_volume', { ascending: false })
+        .limit(500);
+      for (const row of data ?? []) {
+        const u = String(row.target_url || '');
+        const kw = String(row.keyword || '').trim();
+        if (!u || !kw) continue;
+        const prev = byUrl.get(u);
+        const vol = Number(row.search_volume) || 0;
+        if (!prev || vol > prev.volume) byUrl.set(u, { keyword: kw, volume: vol });
+      }
+    }
+  } catch { /* périmètre dégradé, on garde la page auditée */ }
+
+  const auditedKeyword = byUrl.get(opts.url)?.keyword || opts.fallbackKeyword || '';
+  if (auditedKeyword) targets.push({ url: opts.url, keyword: auditedKeyword });
+
+  const pillars = await resolvePillarSet(supabase, opts.trackedSiteId);
+  for (const [u, v] of byUrl) {
+    if (targets.length >= MAX_TARGETS) break;
+    if (u === opts.url) continue;
+    if (!isPillarUrl(pillars, u)) continue;
+    targets.push({ url: u, keyword: v.keyword });
+  }
+  return targets;
+}
+
 
 /**
  * Calcule les ratios de la page auditée et de ses piliers face aux concurrents
