@@ -924,16 +924,11 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     wordCount: totalWordCount || htmlAnalysis?.wordCount || 0,
     imagesTotal: totalImages || htmlAnalysis?.imagesTotal || 0,
     imagesWithoutAlt: totalImagesWithoutAlt,
-    // Mise en exergue (<strong>/<b>) : signal éditorial affiché dans l'audit
-    // technique, SANS incidence sur le score. Non mesuré sur les crawls
-    // antérieurs à la colonne strong_count (toutes les pages à 0) : dans ce
-    // cas on remonte null plutôt qu'un faux « 100 % sans exergue ».
-    pagesWithoutEmphasis: crawlPages.some((p) => Number(p?.strong_count) > 0)
-      ? crawlPages.filter((p) => Number(p?.word_count || 0) > 300 && Number(p?.strong_count || 0) === 0).length
-      : null,
-    emphasisMeasuredCount: crawlPages.some((p) => Number(p?.strong_count) > 0)
-      ? crawlPages.filter((p) => Number(p?.word_count || 0) > 300).length
-      : null,
+    // Mise en exergue (<strong>/<b>) : signal de citabilité IA rattaché à
+    // l'audit STRATÉGIQUE GEO (présence, nombre, qualité sémantique des termes),
+    // SANS incidence sur le score. Retourne measured=false sur les crawls
+    // antérieurs à la mesure, pour ne jamais afficher un faux signal.
+    emphasisQuality: computeEmphasisQuality(crawlPages as any[]),
     h1,
     h2Count: primaryPage?.h2_count ?? (expertDescribesPrimary ? (htmlAnalysis?.h2Count ?? 0) : 0),
     hasSchema: primaryPage?.has_schema_org ?? htmlAnalysis?.hasSchemaOrg ?? false,
