@@ -4,7 +4,7 @@ import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/lib/router-compat';
 import { SiloNav } from '@/components/seo/SiloNav';
-import { ArrowRight, Check, Clock, FileText, MapPin, Shield } from 'lucide-react';
+import { ArrowRight, Bot, Check, Clock, FileText, MapPin, Shield } from 'lucide-react';
 
 const COMPARISON: Array<{ label: string; agency: string; crawlers: string }> = [
   { label: 'Audit technique et éditorial du site', agency: 'Inclus', crawlers: 'Inclus' },
@@ -250,6 +250,92 @@ function PrixAuditSeoComponent(): React.ReactElement {
               des sites de TPE/PME. Un <strong>audit SEO seul</strong> reste un diagnostic : le coût réel
               d'une remise à niveau inclut toujours la mise en œuvre des correctifs.
             </p>
+          </div>
+        </section>
+
+        {/* Audit automatisé avec Crawlers */}
+        <section className="border-b border-border bg-brand-violet-muted/40">
+          <div className="mx-auto max-w-5xl px-6 py-16">
+            <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+              <div>
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-violet/40 px-3 py-1 text-xs font-medium text-brand-violet">
+                  <Bot className="h-3.5 w-3.5" />
+                  Marina, agent d'audit SEO et GEO
+                </div>
+                <h2 className="mb-4 font-display text-2xl font-bold sm:text-3xl">
+                  Faites un <span className="text-brand-violet">audit automatisé</span> avec Crawlers pour 59 €
+                </h2>
+                <p className="citable-passage mb-6 text-muted-foreground">
+                  Marina analyse votre site, mesure votre visibilité sur Google et dans les réponses IA,
+                  puis rédige les correctifs prioritaires. Vous recevez un rapport clair, des contenus prêts
+                  à publier et une fiche Google Maps optimisée. Tout est déployé après votre validation,
+                  sans abonnement.
+                </p>
+                <ul className="mb-8 space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-3">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-violet" />
+                    <span><strong>Audit SEO + GEO</strong> : balises, vitesse, maillage, passages citables, données structurées.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-violet" />
+                    <span><strong>3 contenus rédigés</strong> sur les sujets qui rapportent des clients dans votre métier.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-violet" />
+                    <span><strong>Fiche Google Maps</strong> optimisée : description, catégories, horaires, publication.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-violet" />
+                    <span><strong>Délai fixe</strong> : 72 h ouvrées après validation de votre part.</span>
+                  </li>
+                </ul>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button asChild className="h-12 gap-2 border border-foreground bg-foreground px-6 text-background hover:bg-foreground/90">
+                    <Link to="/audit-geo-seo">
+                      Lancer mon audit gratuit
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild className="h-12 gap-2 border border-foreground bg-transparent px-6 text-foreground hover:bg-foreground hover:text-background">
+                    <Link to="/audit-geo-seo">
+                      Voir l'audit SEO/GEO
+                    </Link>
+                  </Button>
+                </div>
+                <p className="mt-4 text-xs text-muted-foreground">
+                  L'audit gratuit est immédiat. La passe à 59 € TTC n'est proposée que si des correctifs sont utiles.
+                </p>
+              </div>
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
+                <h3 className="mb-4 font-display text-lg font-semibold">Ce que livre la passe à 59 €</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                    <span className="text-sm text-muted-foreground">Audit technique et éditorial</span>
+                    <Check className="h-4 w-4 shrink-0 text-brand-violet" />
+                  </div>
+                  <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                    <span className="text-sm text-muted-foreground">Mesure de visibilité IA (GEO)</span>
+                    <Check className="h-4 w-4 shrink-0 text-brand-violet" />
+                  </div>
+                  <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                    <span className="text-sm text-muted-foreground">3 pages de contenu rédigées</span>
+                    <Check className="h-4 w-4 shrink-0 text-brand-violet" />
+                  </div>
+                  <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                    <span className="text-sm text-muted-foreground">Fiche Google Maps optimisée</span>
+                    <Check className="h-4 w-4 shrink-0 text-brand-violet" />
+                  </div>
+                  <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                    <span className="text-sm text-muted-foreground">Correctifs déployés après validation</span>
+                    <Check className="h-4 w-4 shrink-0 text-brand-violet" />
+                  </div>
+                  <div className="flex items-start justify-between gap-4 pt-2">
+                    <span className="font-display font-semibold">Prix fixe</span>
+                    <span className="font-display text-lg font-bold text-brand-violet">59 € TTC</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
