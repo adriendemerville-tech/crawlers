@@ -73,7 +73,7 @@ function HeroSectionComponent() {
             : 'SEO crawl tool for Google + GEO for AI · one single audit'}
         </p>
         {/* Animated headline */}
-        <h1 className="mb-6 t-display font-extrabold font-display text-center sm:whitespace-nowrap max-sm:text-2xl max-sm:mb-4">
+        <h2 className="mb-6 t-display font-extrabold font-display text-center sm:whitespace-nowrap max-sm:text-2xl max-sm:mb-4">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
             style={{ minWidth: '3.9em', paddingBottom: '0.15em', marginBottom: '-0.15em', marginRight: '0.08em' }}
@@ -91,16 +91,16 @@ function HeroSectionComponent() {
           </span>
           {' '}
           <span className="text-foreground">?</span>
-        </h1>
+        </h2>
 
         {/* Tagline */}
-        <h2 className="mb-10 t-h2 font-medium font-display text-foreground sm:mb-12 px-2 sm:px-0 max-sm:hidden!">
+        <p className="mb-10 t-h2 font-medium font-display text-foreground sm:mb-12 px-2 sm:px-0 max-sm:hidden!">
           {language === 'es'
             ? 'La herramienta de rastreo SEO y GEO. Audite su sitio. Afine la estrategia. Automatice la solución.'
             : language === 'en'
               ? 'The SEO & GEO crawl tool. Audit your site. Refine the strategy. Automate the solution.'
               : 'L\'outil de crawl SEO & GEO. Auditez votre site. Affinez la stratégie. Automatisez la solution.'}
-        </h2>
+        </p>
 
 
         {/* URL input + CTA Audit Expert + note — tout sur une seule ligne */}

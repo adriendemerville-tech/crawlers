@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { AuditedDomainsCounter } from '@/components/AuditedDomainsCounter';
 import { HeroSection } from '@/components/HeroSection';
+import { ManifestoSection } from '@/components/Homepage/ManifestoSection';
 import { AudienceRouter } from '@/components/Home/AudienceRouter';
 import { ToolTabs, ToolTab } from '@/components/ToolTabs';
 import { MobileLexiqueButton } from '@/components/MobileLexiqueButton';
@@ -565,6 +566,7 @@ const Index = () => {
       <main className="flex-1 relative" role="main" aria-label={language === 'fr' ? 'Contenu principal' : language === 'es' ? 'Contenido principal' : 'Main content'}>
         {/* Global premium gradient overlay */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--brand-violet)/0.06),transparent_60%)]" />
+        <ManifestoSection />
         <HeroSection />
 
         {/* ─── Homepage marketing sections ─── */}
