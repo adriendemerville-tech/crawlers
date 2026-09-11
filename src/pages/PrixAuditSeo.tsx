@@ -4,7 +4,7 @@ import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/lib/router-compat';
 import { SiloNav } from '@/components/seo/SiloNav';
-import { ArrowRight, Check, Clock, FileText, MapPin, Shield } from 'lucide-react';
+import { ArrowRight, Bot, Check, Clock, FileText, MapPin, Shield } from 'lucide-react';
 
 const COMPARISON: Array<{ label: string; agency: string; crawlers: string }> = [
   { label: 'Audit technique et éditorial du site', agency: 'Inclus', crawlers: 'Inclus' },
