@@ -570,7 +570,7 @@ Deno.serve(handleRequest(async (req) => {
         const prevCrawlId = recentCrawls[0].id;
         const { data: prevPages } = await supabase
           .from('crawl_pages')
-          .select('url, title, seo_score, word_count, internal_links, external_links, h1, h2_count, h3_count, h4_h6_count, has_noindex, has_nofollow, has_canonical, has_og, has_schema_org, has_hreflang, is_indexable, crawl_depth, page_type_override, issues, body_text_truncated, meta_description, canonical_url, http_status, response_time_ms, images_total, images_without_alt, html_size_bytes, content_hash, path, broken_links, anchor_texts, schema_org_types, schema_org_errors, redirect_url, index_source, custom_extraction')
+          .select('url, title, seo_score, word_count, internal_links, external_links, h1, h2_count, h3_count, h4_h6_count, strong_count, has_noindex, has_nofollow, has_canonical, has_og, has_schema_org, has_hreflang, is_indexable, crawl_depth, page_type_override, issues, body_text_truncated, meta_description, canonical_url, http_status, response_time_ms, images_total, images_without_alt, html_size_bytes, content_hash, path, broken_links, anchor_texts, schema_org_types, schema_org_errors, redirect_url, index_source, custom_extraction')
           .eq('crawl_id', prevCrawlId);
 
         if (prevPages?.length) {
