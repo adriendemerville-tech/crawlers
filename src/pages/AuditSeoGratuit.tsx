@@ -154,7 +154,7 @@ const AuditSeoGratuit = () => {
                   Recevez des recommandations priorisées et du <strong>code correctif personnalisé</strong> prêt à intégrer.
                 </p>
                 <p className="text-base text-muted-foreground mb-8">
-                  Pour aller plus loin, lancez un <Link to="/marina" className="text-primary underline font-medium">audit SEO GEO gratuit</Link> de plus de 40 pages avec Marina : 2 rapports offerts, sans carte bancaire, et mesure réelle de vos citations dans ChatGPT, Gemini, Perplexity, Claude et Mistral.
+                  Pour aller plus loin, lancez un <Link to="/marina" className="text-brand-gold underline font-medium">audit SEO GEO gratuit</Link> de plus de 40 pages avec Marina : 2 rapports offerts, sans carte bancaire, et mesure réelle de vos citations dans ChatGPT, Gemini, Perplexity, Claude et Mistral.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button asChild size="lg" variant="hero">
@@ -163,7 +163,7 @@ const AuditSeoGratuit = () => {
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button asChild size="lg" variant="outline">
+                  <Button asChild size="lg" variant="hero">
                     <Link to="/methodologie">
                       Voir la méthodologie
                     </Link>
@@ -286,7 +286,7 @@ const AuditSeoGratuit = () => {
                     <p className="text-sm text-muted-foreground mb-2">
                       Pour un audit complet (200 points, code correctif, visibilité IA) :
                     </p>
-                    <Button asChild variant="outline" size="sm">
+                    <Button asChild variant="hero" size="sm">
                       <Link to="/audit-expert">
                         Lancer l'audit expert complet
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -336,13 +336,13 @@ const AuditSeoGratuit = () => {
                   </li>
                 </ul>
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button asChild size="lg" className="h-12 gap-2 border-0 bg-[hsl(var(--brand-violet))] px-6 text-white hover:bg-[hsl(var(--brand-violet)/0.9)]">
+                  <Button asChild size="lg" variant="hero" className="h-12 gap-2 px-6">
                     <Link to="/audit-geo-seo">
                       Lancer mon audit gratuit
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button asChild size="lg" variant="outline">
+                  <Button asChild size="lg" variant="hero">
                     <Link to="/audit-geo-seo">
                       Voir l'audit SEO/GEO
                     </Link>
