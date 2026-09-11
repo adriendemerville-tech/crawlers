@@ -97,6 +97,28 @@ export const Route = createFileRoute('/prix-audit-seo')({
               ],
             },
             {
+              '@type': 'Product',
+              '@id': `${URL}#passe`,
+              name: 'Passe unique audit SEO et GEO',
+              description:
+                'Audit SEO et GEO du site, 6 à 10 correctifs prioritaires, 3 pages de contenu rédigées et optimisation de la fiche Google Maps, déployés en 72 h ouvrées après validation.',
+              brand: ORGANIZATION_REF,
+              mainEntityOfPage: { '@id': WEBPAGE_ID },
+              offers: {
+                '@type': 'Offer',
+                '@id': `${URL}#offer`,
+                price: '59',
+                priceCurrency: 'EUR',
+                availability: 'https://schema.org/InStock',
+                url: `${SITE_URL}/audit-geo-seo`,
+                valueAddedTaxIncluded: true,
+                priceValidUntil: '2026-12-31',
+                areaServed: { '@type': 'Country', name: 'France' },
+                seller: ORGANIZATION_REF,
+              },
+            },
+
+            {
               '@type': 'FAQPage',
               '@id': `${URL}#faq`,
               inLanguage: 'fr-FR',
