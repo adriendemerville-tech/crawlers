@@ -224,13 +224,13 @@ export default function EEATPage() {
 
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <Link to="/auth?mode=signup&source=eeat">
-                <Button size="lg" className="gap-2 w-full sm:w-auto border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
+                <Button size="lg" className="gap-2 border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
                   Créer mon compte freelance / agence
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/app/eeat">
-                <Button variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
+                <Button variant="outline" size="lg" className="gap-2">
                   Lancer un audit E-E-A-T en démo
                   <Search className="h-4 w-4" />
                 </Button>

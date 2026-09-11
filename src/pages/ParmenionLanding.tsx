@@ -523,7 +523,7 @@ function ParmenionLandingComponent(): React.ReactElement {
               <Button
                 onClick={handleOrder}
                 disabled={ordering}
-                className="h-12 w-full gap-2 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background"
+                className="h-12 gap-2 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background"
               >
                 {ordering ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Démarrer ma passe — 59 € TTC'}
 

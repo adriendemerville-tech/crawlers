@@ -205,7 +205,7 @@ export function QuickEEATTest() {
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Link to={`/auth?mode=signup&source=eeat-url-scan&url=${encodeURIComponent(url)}`}>
-                    <Button size="lg" className="gap-2 w-full sm:w-auto border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
+                    <Button size="lg" className="gap-2 border-2 border-foreground bg-transparent text-foreground hover:bg-foreground/5">
                       Lancer l'audit E-E-A-T complet
                       <ArrowRight className="h-4 w-4" />
                     </Button>
@@ -214,7 +214,7 @@ export function QuickEEATTest() {
                     variant="outline"
                     size="lg"
                     onClick={() => { setResult(null); setUrl(''); setProgress(0); }}
-                    className="w-full sm:w-auto"
+                    className="w-auto"
                   >
                     Scanner une autre URL
                   </Button>
