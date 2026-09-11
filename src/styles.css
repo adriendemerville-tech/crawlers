@@ -285,6 +285,14 @@
     overflow-x: hidden;
   }
 
+  /* Garde-fou responsive : aucune image/vidéo ne doit élargir son conteneur */
+  img, video, canvas, svg {
+    max-width: 100%;
+  }
+  img, video {
+    height: auto;
+  }
+
   @media (min-width: 768px) {
     html { font-size: 110%; }
   }

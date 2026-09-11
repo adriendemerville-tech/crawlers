@@ -174,7 +174,7 @@ const AuditSeoGratuit = () => {
                 <img 
                   src={heroImage} 
                   alt="Interface de l'audit SEO gratuit Crawlers.fr montrant le score sur 200 points avec les métriques de performance et les graphiques d'analyse" 
-                  className="rounded-2xl shadow-2xl border border-border/50"
+                  className="w-full h-auto rounded-2xl shadow-2xl border border-border/50"
                   width={960}
                   height={540}
                   loading="eager"
