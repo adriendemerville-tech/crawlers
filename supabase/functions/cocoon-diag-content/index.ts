@@ -114,7 +114,7 @@ try {
     // Fetch crawl pages
     const { data: pages } = await supabase
       .from('crawl_pages')
-      .select('url, path, title, h1, h2_count, h3_count, meta_description, word_count, content_hash, images_total, images_without_alt, http_status, is_indexable, has_noindex')
+      .select('url, path, title, h1, h2_count, h3_count, meta_description, word_count, content_hash, images_total, images_without_alt, strong_count, http_status, is_indexable, has_noindex')
       .eq('crawl_id', crawl.id)
       .eq('http_status', 200)
       .limit(500);
