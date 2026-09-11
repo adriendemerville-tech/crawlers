@@ -79,6 +79,7 @@ import { Route as PasseVisibiliteRouteImport } from './routes/passe-visibilite'
 import { Route as PolitiqueConfidentialiteRouteImport } from './routes/politique-confidentialite'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivacyGoogleAdsRouteImport } from './routes/privacy-google-ads'
+import { Route as PrixAuditSeoRouteImport } from './routes/prix-audit-seo'
 import { Route as ProAgencyRouteImport } from './routes/pro-agency'
 import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as ReferencementIaRouteImport } from './routes/referencement-ia'
@@ -524,6 +525,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PrivacyGoogleAdsRoute = PrivacyGoogleAdsRouteImport.update({
   id: '/privacy-google-ads',
   path: '/privacy-google-ads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrixAuditSeoRoute = PrixAuditSeoRouteImport.update({
+  id: '/prix-audit-seo',
+  path: '/prix-audit-seo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProAgencyRoute = ProAgencyRouteImport.update({
@@ -1031,6 +1037,7 @@ export interface FileRoutesByFullPath {
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
+  '/prix-audit-seo': typeof PrixAuditSeoRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
   '/referencement-ia': typeof ReferencementIaRoute
@@ -1188,6 +1195,7 @@ export interface FileRoutesByTo {
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
+  '/prix-audit-seo': typeof PrixAuditSeoRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
   '/referencement-ia': typeof ReferencementIaRoute
@@ -1346,6 +1354,7 @@ export interface FileRoutesById {
   '/politique-confidentialite': typeof PolitiqueConfidentialiteRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-google-ads': typeof PrivacyGoogleAdsRoute
+  '/prix-audit-seo': typeof PrixAuditSeoRoute
   '/pro-agency': typeof ProAgencyRoute
   '/profil': typeof ProfilRoute
   '/referencement-ia': typeof ReferencementIaRoute
@@ -1505,6 +1514,7 @@ export interface FileRouteTypes {
     | '/politique-confidentialite'
     | '/privacy'
     | '/privacy-google-ads'
+    | '/prix-audit-seo'
     | '/pro-agency'
     | '/profil'
     | '/referencement-ia'
@@ -1662,6 +1672,7 @@ export interface FileRouteTypes {
     | '/politique-confidentialite'
     | '/privacy'
     | '/privacy-google-ads'
+    | '/prix-audit-seo'
     | '/pro-agency'
     | '/profil'
     | '/referencement-ia'
@@ -1819,6 +1830,7 @@ export interface FileRouteTypes {
     | '/politique-confidentialite'
     | '/privacy'
     | '/privacy-google-ads'
+    | '/prix-audit-seo'
     | '/pro-agency'
     | '/profil'
     | '/referencement-ia'
@@ -1977,6 +1989,7 @@ export interface RootRouteChildren {
   PolitiqueConfidentialiteRoute: typeof PolitiqueConfidentialiteRoute
   PrivacyRoute: typeof PrivacyRoute
   PrivacyGoogleAdsRoute: typeof PrivacyGoogleAdsRoute
+  PrixAuditSeoRoute: typeof PrixAuditSeoRoute
   ProAgencyRoute: typeof ProAgencyRoute
   ProfilRoute: typeof ProfilRoute
   ReferencementIaRoute: typeof ReferencementIaRoute
@@ -2554,6 +2567,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy-google-ads'
       fullPath: '/privacy-google-ads'
       preLoaderRoute: typeof PrivacyGoogleAdsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prix-audit-seo': {
+      id: '/prix-audit-seo'
+      path: '/prix-audit-seo'
+      fullPath: '/prix-audit-seo'
+      preLoaderRoute: typeof PrixAuditSeoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pro-agency': {
@@ -3225,6 +3245,7 @@ const rootRouteChildren: RootRouteChildren = {
   PolitiqueConfidentialiteRoute: PolitiqueConfidentialiteRoute,
   PrivacyRoute: PrivacyRoute,
   PrivacyGoogleAdsRoute: PrivacyGoogleAdsRoute,
+  PrixAuditSeoRoute: PrixAuditSeoRoute,
   ProAgencyRoute: ProAgencyRoute,
   ProfilRoute: ProfilRoute,
   ReferencementIaRoute: ReferencementIaRoute,
