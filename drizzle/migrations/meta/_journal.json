@@ -232,6 +232,13 @@
       "when": 1788966171447,
       "tag": "0032_restrict_analyzed_urls_writes_to_service_role",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1789104442656,
+      "tag": "0033_add_strong_count_to_crawl_pages",
+      "breakpoints": true
     }
   ]
 }
