@@ -83,7 +83,16 @@ const FAQ_ITEMS: Array<[string, string]> = [
     'Quelle est la différence entre un audit SEO et un audit GEO ?',
     'L\'audit SEO mesure votre visibilité sur Google (balises, contenu, vitesse, maillage). L\'audit GEO mesure en plus votre citabilité par les moteurs IA comme ChatGPT ou Perplexity : passages citables, données structurées, présence dans leurs réponses. La passe Crawlers couvre les deux.',
   ],
+  [
+    'Combien coûte un audit GEO seul ?',
+    'Quand une agence le facture séparément, le supplément observé se situe entre 500 € et 1 500 €. Chez Crawlers, la mesure de visibilité dans les réponses IA est incluse dans la passe unique à 59 € TTC, sans supplément.',
+  ],
+  [
+    'Quel est le tarif d\'un audit SEO chez un freelance ?',
+    'Un freelance SEO facture généralement entre 600 € et 1 500 € pour un audit détaillé d\'un site de TPE/PME. La mise en œuvre des correctifs est le plus souvent facturée séparément, au temps passé.',
+  ],
 ];
+
 
 const INCLUDED = [
   { icon: FileText, title: 'Audit de votre site', description: '6 à 10 correctifs prioritaires sur titres, descriptions, balisage, vitesse et maillage.' },
