@@ -5005,7 +5005,31 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           botRenderingHtml + absenceHtml + sectionTop(renderTopPrioritiesHTML(topSeo)),
           hostDuplication ? buildHostDuplicationHTML(hostDuplication, domain) : '',
         );
-        const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
+        // Audit comparé mensuel (page auditée + piliers) : déterministe, 0 token,
+        // réutilisé depuis le cache pendant tout le mois en cours.
+        let comparedHtml = '';
+        try {
+          const ratioTargets = await resolveRatioTargets(sb, {
+            url,
+            trackedSiteId,
+            fallbackKeyword: identityCard?.main_keyword || null,
+          });
+          if (ratioTargets.length) {
+            const ratios = await getCompetitiveRatios({
+              supabase: sb,
+              domain,
+              targets: ratioTargets,
+              trackedSiteId,
+              userId: parentJob.user_id,
+              caller: 'marina:competitive_ratios',
+            });
+            comparedHtml = renderCompetitiveRatiosHtml(ratios);
+          }
+        } catch (ratioErr) {
+          console.warn('[Marina] Audit comparé non disponible (non-fatal):', ratioErr);
+        }
+
+        const techHTML = generateTechSectionHTML(expertData, detectedLang, domain, '', comparedHtml);
 
 
         const geoSubSignalsHtml =
