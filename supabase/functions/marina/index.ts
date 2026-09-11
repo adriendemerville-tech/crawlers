@@ -1,4 +1,5 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { computeEmphasisQuality, renderEmphasisQualityHtml } from '../_shared/emphasisQuality.ts';
 import {
   extractTopPriorities,
   buildConsolidatedActionPlan,
@@ -924,16 +925,11 @@ function buildMultiPageCrawlSnapshot(crawl: any, crawlPages: any[], expertSeoDat
     wordCount: totalWordCount || htmlAnalysis?.wordCount || 0,
     imagesTotal: totalImages || htmlAnalysis?.imagesTotal || 0,
     imagesWithoutAlt: totalImagesWithoutAlt,
-    // Mise en exergue (<strong>/<b>) : signal éditorial affiché dans l'audit
-    // technique, SANS incidence sur le score. Non mesuré sur les crawls
-    // antérieurs à la colonne strong_count (toutes les pages à 0) : dans ce
-    // cas on remonte null plutôt qu'un faux « 100 % sans exergue ».
-    pagesWithoutEmphasis: crawlPages.some((p) => Number(p?.strong_count) > 0)
-      ? crawlPages.filter((p) => Number(p?.word_count || 0) > 300 && Number(p?.strong_count || 0) === 0).length
-      : null,
-    emphasisMeasuredCount: crawlPages.some((p) => Number(p?.strong_count) > 0)
-      ? crawlPages.filter((p) => Number(p?.word_count || 0) > 300).length
-      : null,
+    // Mise en exergue (<strong>/<b>) : signal de citabilité IA rattaché à
+    // l'audit STRATÉGIQUE GEO (présence, nombre, qualité sémantique des termes),
+    // SANS incidence sur le score. Retourne measured=false sur les crawls
+    // antérieurs à la mesure, pour ne jamais afficher un faux signal.
+    emphasisQuality: computeEmphasisQuality(crawlPages as any[]),
     h1,
     h2Count: primaryPage?.h2_count ?? (expertDescribesPrimary ? (htmlAnalysis?.h2Count ?? 0) : 0),
     hasSchema: primaryPage?.has_schema_org ?? htmlAnalysis?.hasSchemaOrg ?? false,
@@ -1758,7 +1754,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
 }
 
 // ─── Section 2: Technical SEO Audit (standalone HTML) ───
-function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string, topHtml = '', comparedHtml = '', emphasisHtml = ''): string {
+function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string, topHtml = '', comparedHtml = ''): string {
   const tr = getTranslations(lang);
   const techScore = expertSeoData?.totalScore || 0;
   const techMaxScore = expertSeoData?.maxScore || 220;
@@ -1803,7 +1799,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 
       }).join('')}` : ''}
       ${comparedHtml}
-      ${emphasisHtml}
+
 
     </div>`;
 
@@ -1812,7 +1808,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 }
 
 // ─── Section 3: Strategic GEO Audit (standalone HTML) ───
-function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domain: string, llmRealDataRaw?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = '', hasConsolidatedPlan = false, geoSubSignalsHtml = '', comparedHtml = ''): string {
+function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domain: string, llmRealDataRaw?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = '', hasConsolidatedPlan = false, geoSubSignalsHtml = '', comparedHtml = '', emphasisHtml = ''): string {
   // Garde-fou de rendu : aucune fuite de gabarit de prompt ne doit atteindre le
   // rapport, y compris via des données mises en cache avant les garde-fous.
   const strategicData = sanitizeReportData(strategicDataRaw);
@@ -1941,6 +1937,7 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       ${buildModuleSection('Intelligence Marché', '📊', marketIntel)}
       ${buildCompetitiveLandscapeSection(competitive)}
       ${comparedHtml}
+      ${emphasisHtml}
       ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
       ${buildModuleSection("Sentiment d'Expertise", '🎯', expertiseSentiment)}
       ${buildModuleSection('Test adversarial (résistance aux contre-arguments)', '🔴', redTeam)}
@@ -5041,18 +5038,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           console.warn('[Marina] Audit comparé non disponible (non-fatal):', ratioErr);
         }
 
-        // Mise en exergue (<strong>/<b>) : signal éditorial affiché dans
-        // l'audit technique, SANS incidence sur le score. Non affiché si le
-        // crawl ne l'a pas mesuré (anciens crawls sans colonne strong_count).
-        const emphasisHtml =
-          crawlSnapshot?.pagesWithoutEmphasis != null && crawlSnapshot?.emphasisMeasuredCount
-            ? `<div style="margin-top:16px;padding:14px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;">
-          <h3 style="font-size:14px;font-weight:600;margin:0 0 6px;">Mise en exergue (&lt;strong&gt;/&lt;b&gt;) — signal éditorial</h3>
-          <p style="font-size:12px;color:#374151;margin:0 0 6px;line-height:1.5;"><strong>${crawlSnapshot.pagesWithoutEmphasis}/${crawlSnapshot.emphasisMeasuredCount}</strong> pages de plus de 300 mots sans aucune mise en exergue. Ce signal aide Google à repérer ce que vous jugez important ; il n'entre pas dans le calcul du score.</p>
-          <p style="font-size:12px;color:#374151;margin:0;line-height:1.5;"><strong>Conseil :</strong> une balise &lt;strong&gt; mal placée n'apporte rien. Mieux vaut 2–3 mises en exergue pertinentes sur les mots-clés d'intention que 15 &lt;strong&gt; décoratifs.</p>
-        </div>`
-            : '';
-        const techHTML = generateTechSectionHTML(expertData, detectedLang, domain, '', comparedHtml, emphasisHtml);
+        // Mise en exergue (<strong>/<b>) : signal de citabilité IA rendu dans
+        // l'audit STRATÉGIQUE GEO, SANS incidence sur le score. Vide si le
+        // crawl ne l'a pas mesuré (crawls antérieurs à la mesure).
+        const emphasisHtml = renderEmphasisQualityHtml((crawlSnapshot as any)?.emphasisQuality ?? null);
+        const techHTML = generateTechSectionHTML(expertData, detectedLang, domain, '', comparedHtml);
 
 
         const geoSubSignalsHtml =
@@ -5068,6 +5058,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           hasPlan,
           geoSubSignalsHtml,
           comparedHtml,
+          emphasisHtml,
         );
 
 

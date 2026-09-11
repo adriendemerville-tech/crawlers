@@ -4469,6 +4469,7 @@ export type Database = {
           schema_org_types: Json | null
           seo_score: number | null
           strong_count: number
+          strong_terms: Json
           thin_score: number | null
           title: string | null
           tone_analysis: Json | null
@@ -4517,6 +4518,7 @@ export type Database = {
           schema_org_types?: Json | null
           seo_score?: number | null
           strong_count?: number
+          strong_terms?: Json
           thin_score?: number | null
           title?: string | null
           tone_analysis?: Json | null
@@ -4565,6 +4567,7 @@ export type Database = {
           schema_org_types?: Json | null
           seo_score?: number | null
           strong_count?: number
+          strong_terms?: Json
           thin_score?: number | null
           title?: string | null
           tone_analysis?: Json | null

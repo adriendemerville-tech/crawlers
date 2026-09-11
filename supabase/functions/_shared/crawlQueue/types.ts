@@ -13,6 +13,7 @@ export interface PageAnalysis {
   h3_count: number;
   h4_h6_count: number;
   strong_count: number;
+  strong_terms?: string[];
   has_schema_org: boolean;
   has_canonical: boolean;
   canonical_url: string | null;
