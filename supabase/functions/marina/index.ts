@@ -127,6 +127,7 @@ import { captureSiteVisual, buildVisualEvidenceHtml, type VisualCapture } from '
 import { buildStrategicVerdict, type VerdictSignals } from '../_shared/strategicVerdict.ts';
 import { narrateStrategicVerdict } from '../_shared/verdictNarration.ts';
 import { comparePotentialVsMeasured, buildAggregate, AXIS_WEIGHTS } from '../_shared/llmVisibilityScore.ts';
+import { getCompetitiveRatios, resolveRatioTargets, renderCompetitiveRatiosHtml } from '../_shared/competitiveRatios.ts';
 
 import {
   analyzeHostDuplication,
