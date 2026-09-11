@@ -487,6 +487,12 @@ function ParmenionLandingComponent(): React.ReactElement {
                 <p className="mt-6 text-3xl font-bold">59 € <span className="text-base font-normal text-muted-foreground">TTC, une seule fois</span></p>
               </div>
             </div>
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Le détail des tarifs et des facteurs de prix :{' '}
+              <Link to="/prix-audit-seo" className="font-medium text-brand-violet underline underline-offset-4">
+                combien coûte un audit SEO ?
+              </Link>
+            </p>
           </div>
         </section>
 

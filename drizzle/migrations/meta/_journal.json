@@ -253,6 +253,13 @@
       "when": 1789107673711,
       "tag": "0035_add_strong_terms_to_crawl_pages",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1789108104186,
+      "tag": "0036_add_prix_audit_seo_sitemap_entry",
+      "breakpoints": true
     }
   ]
 }
