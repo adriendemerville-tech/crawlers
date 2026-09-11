@@ -264,6 +264,7 @@ const LABELS: Record<string, Record<string, string>> = {
     create_pillar: 'Créer une page pilier pour ce cluster',
     backlink_target: 'Améliorer le maillage interne vers cette page',
     optimize_kw_placement: 'Optimiser le placement du mot-clé dans le title',
+    emphasis_markup: 'Ajouter 2–3 mises en exergue pertinentes',
   },
   en: {
     thin_content: 'Expand page content',
@@ -288,6 +289,7 @@ const LABELS: Record<string, Record<string, string>> = {
     create_pillar: 'Create a pillar page for this cluster',
     backlink_target: 'Improve internal linking to this page',
     optimize_kw_placement: 'Optimize keyword placement in title',
+    emphasis_markup: 'Add 2–3 relevant emphasis markups',
   },
   es: {
     thin_content: 'Ampliar el contenido de la página',
@@ -1428,6 +1430,7 @@ const FINDING_ID_TO_CATEGORY: Record<string, string> = {
   low_heading_diversity: 'semantic_drift',
   no_clear_keyword: 'semantic_drift',
   intent_imbalance: 'semantic_drift',
+  no_emphasis: 'emphasis_markup',
 };
 
 function findingToTasks(finding: any, lang: string, counter: number, sector?: string | null, cmsInventory?: CmsContentInventory | null): StrategicTask[] {

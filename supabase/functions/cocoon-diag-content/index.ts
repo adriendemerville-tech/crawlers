@@ -233,6 +233,21 @@ try {
       });
     }
 
+    // 5b. Pages longues sans mise en exergue (<strong>/<b>) — signal éditorial
+    // uniquement : volontairement exclu du score content_quality plus bas.
+    const noEmphasis = indexablePages.filter(p => (p.word_count || 0) > 300 && (p.strong_count || 0) === 0);
+    if (noEmphasis.length > 0) {
+      findings.push({
+        id: 'no_emphasis',
+        severity: 'warning',
+        category: 'content',
+        title: t('no_emphasis', lang),
+        description: `${noEmphasis.length}/${indexablePages.length} pages de plus de 300 mots sans aucune mise en exergue. ${EMPHASIS_ADVICE}`,
+        affected_urls: noEmphasis.map(p => p.url),
+        data: { count: noEmphasis.length, score_impact: 'none', advice: EMPHASIS_ADVICE },
+      });
+    }
+
     // 6. No images at all
     const noImages = indexablePages.filter(p => (p.images_total || 0) === 0);
     if (noImages.length > 0) {
@@ -271,6 +286,7 @@ try {
       short_meta_desc: { selector: 'meta_description', operation: 'replace' },
       duplicate_content: { selector: 'content', operation: 'replace' },
       images_no_alt: { selector: 'img[alt]', operation: 'replace' },
+      no_emphasis: { selector: 'content', operation: 'replace' },
       no_images: { selector: 'content', operation: 'append' },
       heading_hierarchy: { selector: 'h2,h3', operation: 'replace' },
     };
@@ -284,7 +300,9 @@ try {
 
     // Calculate content quality score (0-100)
     const criticalCount = findings.filter(f => f.severity === 'critical').length;
-    const warningCount = findings.filter(f => f.severity === 'warning').length;
+    // no_emphasis est un signal éditorial sans incidence sur le score : on le
+    // retire des compteurs qui alimentent content_quality.
+    const warningCount = findings.filter(f => f.severity === 'warning' && f.id !== 'no_emphasis').length;
     const healthyRatio = 1 - (thinPages.length + noH1.length + noMeta.length) / Math.max(indexablePages.length, 1);
     totalScore = Math.max(0, Math.min(100, Math.round(healthyRatio * 100 - criticalCount * 10 - warningCount * 3)));
 
