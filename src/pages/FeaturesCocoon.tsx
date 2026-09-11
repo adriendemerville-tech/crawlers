@@ -230,14 +230,14 @@ export default function FeaturesCocoon() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/app/cocoon">
-                <Button size="lg" className="bg-[#4c1d95] hover:bg-[#5b21b6] text-white px-8 py-6 text-base gap-2">
+                <Button size="lg" className="border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background font-semibold px-5 py-6 text-base gap-2">
                   <Network className="w-5 h-5" />
                   {t.accessCocoon}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
               <Link to="/pro-agency">
-                <Button variant="outline" size="lg" className="border-[#fbbf24]/30 text-[#fbbf24] hover:bg-[#fbbf24]/10 px-8 py-6 text-base">
+                <Button variant="outline" size="lg" className="border-[#fbbf24]/40 text-[#fbbf24] bg-transparent hover:bg-[#fbbf24]/10 px-5 py-6 text-base">
                   {t.discoverPro}
                 </Button>
               </Link>
@@ -406,7 +406,7 @@ export default function FeaturesCocoon() {
             <h2 className="text-3xl font-bold text-white font-display">{t.ctaTitle}</h2>
             <p className="text-white/50">{t.ctaDesc}</p>
             <Link to="/app/cocoon">
-              <Button size="lg" className="bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-bold px-10 py-6 text-base gap-2">
+              <Button size="lg" className="border border-[#fbbf24] bg-transparent text-[#fbbf24] hover:bg-[#fbbf24] hover:text-[#0f0a1e] font-bold px-6 py-6 text-base gap-2">
                 {t.ctaButton}
                 <ArrowRight className="w-4 h-4" />
               </Button>

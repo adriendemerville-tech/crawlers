@@ -691,7 +691,7 @@ const Index = () => {
                 <Link to="/pro-agency">
                   <Button
                     size="lg"
-                    className="gap-2 bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold px-8 shadow-lg hover:shadow-xl transition-all"
+                    className="gap-2 px-5 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background font-semibold transition-all"
                   >
                     <Crown className="h-5 w-5 text-yellow-300" />
                     {language === 'fr' ? 'Découvrir Pro Agency' : language === 'es' ? 'Descubrir Pro Agency' : 'Discover Pro Agency'}
@@ -861,7 +861,7 @@ const Index = () => {
                 <Button
                   variant="default"
                   size="lg"
-                  className="gap-2 bg-gradient-to-r from-primary to-violet-600 hover:from-primary/90 hover:to-violet-600/90 text-primary-foreground px-8 py-3 text-base font-bold shadow-md"
+                  className="gap-2 px-5 py-3 text-base border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background font-semibold"
                 >
                   <FileSearch className="h-5 w-5" />
                   {language === 'fr' ? 'Lancer l\'Audit Expert' : language === 'es' ? 'Iniciar Auditoría Experta' : 'Launch Expert Audit'}

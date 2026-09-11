@@ -138,7 +138,7 @@ const AnalyseLogs = () => {
               ]}
             />
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild size="lg" className="text-base px-8 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white">
+              <Button asChild size="lg" className="text-base px-5 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background font-semibold">
                 <Link to="/pro-agency">
                   Activer l'analyse de logs <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -393,7 +393,7 @@ const AnalyseLogs = () => {
               L'analyse de logs est incluse dans les plans Pro Agency. Connectez votre Cloudflare Worker en 5 minutes et commencez à explorer vos données de crawl.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild size="lg" className="text-base px-10 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white">
+              <Button asChild size="lg" className="text-base px-6 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background font-semibold">
                 <Link to="/pro-agency">
                   Découvrir Pro Agency <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>

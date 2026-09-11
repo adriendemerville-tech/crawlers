@@ -199,7 +199,7 @@ export default function ComparatifPlateforme() {
               className="flex flex-wrap justify-center gap-3 pt-2"
             >
               <Link to="/auth">
-                <Button size="lg" className={`gap-2 font-semibold px-8 shadow-lg ${A.ctaBg}`}>
+                <Button size="lg" className="gap-2 px-5 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background font-semibold">
                   Essayer Crawlers gratuitement <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -560,7 +560,7 @@ export default function ComparatifPlateforme() {
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Link to="/auth">
-                <Button size="lg" className={`gap-2 font-semibold px-8 shadow-lg ${A.ctaBg}`}>
+                <Button size="lg" className="gap-2 px-5 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background font-semibold">
                   Commencer gratuitement <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
