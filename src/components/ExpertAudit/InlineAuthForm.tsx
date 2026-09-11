@@ -383,7 +383,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-9 text-sm" disabled={isLoading}>
+                <Button type="submit" variant="outline" className="w-full h-9 text-sm" disabled={isLoading}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
                 </Button>
                 <div className="text-right">
@@ -535,7 +535,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                   </div>
                 )}
 
-                <Button type="submit" className="w-full h-9 text-sm" disabled={isLoading || (!existingUser && !cgvuAccepted)}>
+                <Button type="submit" variant="outline" className="w-full h-9 text-sm" disabled={isLoading || (!existingUser && !cgvuAccepted)}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (existingUser ? t.loginButton : t.signupButton)}
                 </Button>
               </form>
