@@ -84,7 +84,7 @@ function AIVisibilitySectionComponent() {
             : 'SEO crawl tool for Google + GEO for AI · one single audit'}
         </p>
 
-        <h2 className="mb-4 t-display font-extrabold font-display text-center sm:whitespace-nowrap max-sm:text-2xl">
+        <h2 className="mb-4 t-h2 font-extrabold font-display text-center sm:whitespace-nowrap max-sm:text-2xl">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
             style={{ minWidth: '3.9em', paddingBottom: '0.15em', marginBottom: '-0.15em', marginRight: '0.08em' }}
