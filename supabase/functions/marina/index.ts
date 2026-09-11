@@ -127,6 +127,7 @@ import { captureSiteVisual, buildVisualEvidenceHtml, type VisualCapture } from '
 import { buildStrategicVerdict, type VerdictSignals } from '../_shared/strategicVerdict.ts';
 import { narrateStrategicVerdict } from '../_shared/verdictNarration.ts';
 import { comparePotentialVsMeasured, buildAggregate, AXIS_WEIGHTS } from '../_shared/llmVisibilityScore.ts';
+import { getCompetitiveRatios, resolveRatioTargets, renderCompetitiveRatiosHtml } from '../_shared/competitiveRatios.ts';
 
 import {
   analyzeHostDuplication,
@@ -1747,7 +1748,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
 }
 
 // ─── Section 2: Technical SEO Audit (standalone HTML) ───
-function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string, topHtml = ''): string {
+function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string, topHtml = '', comparedHtml = ''): string {
   const tr = getTranslations(lang);
   const techScore = expertSeoData?.totalScore || 0;
   const techMaxScore = expertSeoData?.maxScore || 220;
@@ -1791,13 +1792,15 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
         </div>`;
 
       }).join('')}` : ''}
+      ${comparedHtml}
     </div>`;
+
 
   return wrapStandaloneHTML(content, `${tr.techAudit} - ${domain}`, lang);
 }
 
 // ─── Section 3: Strategic GEO Audit (standalone HTML) ───
-function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domain: string, llmRealDataRaw?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = '', hasConsolidatedPlan = false, geoSubSignalsHtml = ''): string {
+function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domain: string, llmRealDataRaw?: any, topHtmlGeo = '', topHtmlKw = '', topHtmlEeat = '', hasConsolidatedPlan = false, geoSubSignalsHtml = '', comparedHtml = ''): string {
   // Garde-fou de rendu : aucune fuite de gabarit de prompt ne doit atteindre le
   // rapport, y compris via des données mises en cache avant les garde-fous.
   const strategicData = sanitizeReportData(strategicDataRaw);
@@ -1925,6 +1928,7 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       ${buildSocialSignalsSection(socialSignals)}
       ${buildModuleSection('Intelligence Marché', '📊', marketIntel)}
       ${buildCompetitiveLandscapeSection(competitive)}
+      ${comparedHtml}
       ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
       ${buildModuleSection("Sentiment d'Expertise", '🎯', expertiseSentiment)}
       ${buildModuleSection('Test adversarial (résistance aux contre-arguments)', '🔴', redTeam)}
@@ -5001,7 +5005,31 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           botRenderingHtml + absenceHtml + sectionTop(renderTopPrioritiesHTML(topSeo)),
           hostDuplication ? buildHostDuplicationHTML(hostDuplication, domain) : '',
         );
-        const techHTML = generateTechSectionHTML(expertData, detectedLang, domain);
+        // Audit comparé mensuel (page auditée + piliers) : déterministe, 0 token,
+        // réutilisé depuis le cache pendant tout le mois en cours.
+        let comparedHtml = '';
+        try {
+          const ratioTargets = await resolveRatioTargets(sb, {
+            url,
+            trackedSiteId,
+            fallbackKeyword: (identityCardRaw as any)?.mainKeyword || null,
+          });
+          if (ratioTargets.length) {
+            const ratios = await getCompetitiveRatios({
+              supabase: sb,
+              domain,
+              targets: ratioTargets,
+              trackedSiteId,
+              userId: parentJob.user_id,
+              caller: 'marina:competitive_ratios',
+            });
+            comparedHtml = renderCompetitiveRatiosHtml(ratios);
+          }
+        } catch (ratioErr) {
+          console.warn('[Marina] Audit comparé non disponible (non-fatal):', ratioErr);
+        }
+
+        const techHTML = generateTechSectionHTML(expertData, detectedLang, domain, '', comparedHtml);
 
 
         const geoSubSignalsHtml =
@@ -5016,6 +5044,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           trustHtml + sectionTop(renderTopPrioritiesHTML(topEeat)),
           hasPlan,
           geoSubSignalsHtml,
+          comparedHtml,
         );
 
 
