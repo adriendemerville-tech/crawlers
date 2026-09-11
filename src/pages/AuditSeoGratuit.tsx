@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
-  ArrowRight, CheckCircle2, Zap, Shield, Brain,
+  ArrowRight, Bot, Check, CheckCircle2, Zap, Shield, Brain,
   Target, BarChart3, Search, Globe, FileText, Lock, Gauge, Loader2, Smartphone, Monitor
 } from 'lucide-react';
 import heroImage from '@/assets/landing/audit-seo-gratuit-hero.webp';
