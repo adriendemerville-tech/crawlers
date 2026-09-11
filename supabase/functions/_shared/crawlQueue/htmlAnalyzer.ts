@@ -257,6 +257,9 @@ export function analyzeHtml(
   const h2_count = (html.match(/<h2[\s>]/gi) || []).length;
   const h3_count = (html.match(/<h3[\s>]/gi) || []).length;
   const h4_h6_count = (html.match(/<h4[\s>]/gi) || []).length + (html.match(/<h5[\s>]/gi) || []).length + (html.match(/<h6[\s>]/gi) || []).length;
+  // Mise en exergue : <strong> et <b> dans le corps (signal d'extraction pour
+  // Google et les moteurs IA, qui privilégient les passages saillants).
+  const strong_count = (html.match(/<strong[\s>]/gi) || []).length + (html.match(/<b[\s>]/gi) || []).length;
 
   const has_schema_org = /application\/ld\+json/i.test(html) || /itemtype\s*=\s*["']https?:\/\/schema\.org/i.test(html);
   const schemaValidation = validateSchemaOrg(html);
@@ -359,6 +362,7 @@ export function analyzeHtml(
   if (areTitleAndH1TooSimilar(title, h1)) issues.push('title_h1_too_similar');
   if (h2_count === 0 && word_count > 200) issues.push('missing_h2');
   if (word_count < 100) issues.push('thin_content');
+  if (strong_count === 0 && word_count > 300) issues.push('no_emphasis');
   if (!has_schema_org) issues.push('missing_schema_org');
   if (has_schema_org && schemaValidation.errors.length > 0) issues.push('schema_org_errors');
   if (!has_canonical) issues.push('missing_canonical');
@@ -375,7 +379,7 @@ export function analyzeHtml(
 
   return {
     url: pageUrl, path, http_status: 200, title, meta_description, h1,
-    h2_count, h3_count, h4_h6_count,
+    h2_count, h3_count, h4_h6_count, strong_count,
     has_schema_org, has_canonical, canonical_url, has_hreflang, has_og,
     has_noindex, has_nofollow,
     word_count, images_total, images_without_alt,
