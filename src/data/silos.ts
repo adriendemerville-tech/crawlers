@@ -51,6 +51,11 @@ export const SILOS: Record<Silo['id'], Silo> = {
       },
       { label: 'Audit GEO gratuit (232 points)', to: '/audit-geo' },
       { label: 'Méthode d’audit SEO GEO', to: '/audit-seo-geo' },
+      {
+        label: 'Prix d’un audit SEO et GEO : tarifs et comparatif',
+        to: '/prix-audit-seo',
+        note: 'Page tarifaire satellite : renvoie vers la passe unique',
+      },
       { label: 'Visibilité IA : mesurer ses citations', to: '/visibilite-ia' },
       { label: 'Audit SEO par IA : ce qui est mesuré', to: '/audit-seo-par-ia' },
       { label: 'SEO avec Claude (MCP)', to: '/seo-avec-claude' },
