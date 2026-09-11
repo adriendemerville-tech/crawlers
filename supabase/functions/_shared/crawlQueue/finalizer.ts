@@ -485,6 +485,7 @@ ${integrityReport ? summarizeIntegrityReport(integrityReport) : `- Contenu fin (
 - Pages orphelines (0 liens entrants): ${orphanCount}
 - H1 multiples: ${pages.filter((p: any) => ((p.issues as string[]) || []).includes('multiple_h1')).length}
 - H2 manquants: ${pages.filter((p: any) => (p.h2_count || 0) === 0).length}/${pages.length}
+- Pages sans mise en exergue (<strong>/<b>) au-delà de 300 mots: ${pages.filter((p: any) => (p.strong_count || 0) === 0 && (p.word_count || 0) > 300).length}/${pages.length}
 ${avgResponseTime ? `- Temps de réponse moyen: ${avgResponseTime}ms` : ''}
 
 Réponds en JSON STRICT:
