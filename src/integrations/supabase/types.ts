@@ -3047,6 +3047,39 @@ export type Database = {
         }
         Relationships: []
       }
+      competitive_ratio_snapshots: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          period_month: string
+          rows: Json
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          period_month: string
+          rows?: Json
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          period_month?: string
+          rows?: Json
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       competitor_matrix_jobs: {
         Row: {
           ai_citations: Json
