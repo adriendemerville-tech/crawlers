@@ -257,6 +257,9 @@ export function analyzeHtml(
   const h2_count = (html.match(/<h2[\s>]/gi) || []).length;
   const h3_count = (html.match(/<h3[\s>]/gi) || []).length;
   const h4_h6_count = (html.match(/<h4[\s>]/gi) || []).length + (html.match(/<h5[\s>]/gi) || []).length + (html.match(/<h6[\s>]/gi) || []).length;
+  // Mise en exergue : <strong> et <b> dans le corps (signal d'extraction pour
+  // Google et les moteurs IA, qui privilégient les passages saillants).
+  const strong_count = (html.match(/<strong[\s>]/gi) || []).length + (html.match(/<b[\s>]/gi) || []).length;
 
   const has_schema_org = /application\/ld\+json/i.test(html) || /itemtype\s*=\s*["']https?:\/\/schema\.org/i.test(html);
   const schemaValidation = validateSchemaOrg(html);
