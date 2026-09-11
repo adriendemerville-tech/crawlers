@@ -74,7 +74,7 @@ function HomeHeroComponent() {
               {copy.badge}
             </div>
 
-            <h1 className="t-display font-extrabold font-display text-foreground text-balance mb-4">
+            <h1 className="t-h1 font-extrabold font-display text-foreground text-balance mb-4 lg:max-w-xl">
               {copy.h1}
             </h1>
 
