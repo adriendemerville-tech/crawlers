@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
-  ArrowRight, CheckCircle2, Zap, Shield, Brain,
+  ArrowRight, Bot, Check, CheckCircle2, Zap, Shield, Brain,
   Target, BarChart3, Search, Globe, FileText, Lock, Gauge, Loader2, Smartphone, Monitor
 } from 'lucide-react';
 import heroImage from '@/assets/landing/audit-seo-gratuit-hero.webp';
@@ -296,6 +296,94 @@ const AuditSeoGratuit = () => {
                 )}
               </CardContent>
             </Card>
+          </div>
+        </section>
+
+        {/* Conversion vers Marina / audit-geo-seo */}
+        <section className="py-16 px-4 bg-gradient-to-b from-[hsl(var(--brand-violet)/0.08)] to-background">
+          <div className="mx-auto max-w-6xl">
+            <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+              <div>
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[hsl(var(--brand-violet)/0.4)] px-3 py-1 text-xs font-medium text-[hsl(var(--brand-violet))]">
+                  <Bot className="h-3.5 w-3.5" />
+                  Marina, agent d'audit SEO et GEO
+                </div>
+                <h2 className="mb-4 text-2xl font-bold text-foreground sm:text-3xl">
+                  Passez à l'<span className="text-[hsl(var(--brand-violet))]">audit automatisé</span> avec Marina
+                </h2>
+                <p className="citable-passage mb-6 text-muted-foreground leading-relaxed">
+                  L'audit gratuit analyse une page. Marina analyse tout votre site, mesure votre visibilité
+                  sur Google et dans les réponses IA, puis rédige les correctifs prioritaires. Vous recevez
+                  un rapport complet, 3 contenus prêts à publier et une fiche Google Maps optimisée,
+                  le tout déployé après votre validation pour 59 € TTC.
+                </p>
+                <ul className="mb-8 space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-3">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
+                    <span><strong>Audit SEO + GEO</strong> : balises, vitesse, maillage, passages citables, données structurées.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
+                    <span><strong>3 contenus rédigés</strong> sur les sujets qui rapportent des clients dans votre métier.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
+                    <span><strong>Fiche Google Maps</strong> optimisée : description, catégories, horaires, publication.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
+                    <span><strong>Délai fixe</strong> : 72 h ouvrées après validation de votre part.</span>
+                  </li>
+                </ul>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button asChild size="lg" className="h-12 gap-2 border-0 bg-[hsl(var(--brand-violet))] px-6 text-white hover:bg-[hsl(var(--brand-violet)/0.9)]">
+                    <Link to="/audit-geo-seo">
+                      Lancer mon audit gratuit
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link to="/audit-geo-seo">
+                      Voir l'audit SEO/GEO
+                    </Link>
+                  </Button>
+                </div>
+                <p className="mt-4 text-xs text-muted-foreground">
+                  L'audit gratuit est immédiat. La passe à 59 € TTC n'est proposée que si des correctifs sont utiles.
+                </p>
+              </div>
+              <Card className="border border-border bg-card shadow-sm">
+                <CardContent className="p-6 sm:p-8">
+                  <h3 className="mb-4 text-lg font-semibold text-foreground">Ce que livre la passe à 59 €</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                      <span className="text-sm text-muted-foreground">Audit technique et éditorial</span>
+                      <Check className="h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
+                    </div>
+                    <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                      <span className="text-sm text-muted-foreground">Mesure de visibilité IA (GEO)</span>
+                      <Check className="h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
+                    </div>
+                    <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                      <span className="text-sm text-muted-foreground">3 pages de contenu rédigées</span>
+                      <Check className="h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
+                    </div>
+                    <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                      <span className="text-sm text-muted-foreground">Fiche Google Maps optimisée</span>
+                      <Check className="h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
+                    </div>
+                    <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                      <span className="text-sm text-muted-foreground">Correctifs déployés après validation</span>
+                      <Check className="h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
+                    </div>
+                    <div className="flex items-start justify-between gap-4 pt-2">
+                      <span className="font-semibold text-foreground">Prix fixe</span>
+                      <span className="text-lg font-bold text-[hsl(var(--brand-violet))]">59 € TTC</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </section>
 
