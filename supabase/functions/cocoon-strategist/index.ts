@@ -264,6 +264,7 @@ const LABELS: Record<string, Record<string, string>> = {
     create_pillar: 'Créer une page pilier pour ce cluster',
     backlink_target: 'Améliorer le maillage interne vers cette page',
     optimize_kw_placement: 'Optimiser le placement du mot-clé dans le title',
+    emphasis_markup: 'Ajouter 2–3 mises en exergue pertinentes',
   },
   en: {
     thin_content: 'Expand page content',
@@ -288,6 +289,7 @@ const LABELS: Record<string, Record<string, string>> = {
     create_pillar: 'Create a pillar page for this cluster',
     backlink_target: 'Improve internal linking to this page',
     optimize_kw_placement: 'Optimize keyword placement in title',
+    emphasis_markup: 'Add 2–3 relevant emphasis markups',
   },
   es: {
     thin_content: 'Ampliar el contenido de la página',
@@ -1428,6 +1430,7 @@ const FINDING_ID_TO_CATEGORY: Record<string, string> = {
   low_heading_diversity: 'semantic_drift',
   no_clear_keyword: 'semantic_drift',
   intent_imbalance: 'semantic_drift',
+  no_emphasis: 'emphasis_markup',
 };
 
 function findingToTasks(finding: any, lang: string, counter: number, sector?: string | null, cmsInventory?: CmsContentInventory | null): StrategicTask[] {
@@ -1459,6 +1462,24 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
         depends_on: [],
         estimated_impact: impact,
         metadata: { min_word_count: 600, current_avg: finding.data?.avg_word_count },
+      });
+      break;
+
+    case 'emphasis_markup':
+      // Signal éditorial sans incidence sur le score : impact faible, action
+      // de contenu non destructive. Le conseil est toujours rappelé.
+      tasks.push({
+        id: `${baseId}_emphasis`,
+        action_type: 'rewrite_content',
+        priority: 0,
+        title: label('emphasis_markup', lang),
+        description: `${finding.description || ''} Conseil : une balise <strong> mal placée n'apporte rien. Mieux vaut 2–3 mises en exergue pertinentes sur les mots-clés d'intention que 15 <strong> décoratifs.`,
+        affected_urls: urls.slice(0, 10),
+        source_diagnostics: [sourceType],
+        execution_mode: 'content_architect',
+        is_destructive: false,
+        depends_on: [],
+        estimated_impact: 'low',
       });
       break;
 

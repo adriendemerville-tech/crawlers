@@ -56,6 +56,8 @@ const CRITICAL_CATEGORIES = new Set([
   'keyword_gaps',
   'broken_links',
   'anchor_over_optimization',
+  // Signal éditorial (pas de SEO mécanique) mais actionnable au workbench.
+  'no_emphasis',
   // Autorité off-site (audit netlinking P1) : ces findings ne se corrigent pas
   // par injection de code, mais par un achat de backlink ciblé.
   'low_authority',
@@ -111,6 +113,7 @@ const TARGET_MAP: Record<string, { selector: string; operation: string }> = {
   weak_clusters: { selector: 'content', operation: 'create' },
   keyword_gaps: { selector: 'content', operation: 'create' },
   anchor_over_optimization: { selector: 'a[href]', operation: 'replace' },
+  no_emphasis: { selector: 'content', operation: 'replace' },
 };
 
 function mapSeverity(sev?: string): string {
