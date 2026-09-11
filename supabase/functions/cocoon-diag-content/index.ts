@@ -78,7 +78,20 @@ const LABELS: Record<string, Record<string, string>> = {
     en: 'Inconsistent heading hierarchy',
     es: 'Jerarquía de títulos inconsistente',
   },
+  no_emphasis: {
+    fr: 'Aucune mise en exergue (<strong>/<b>) sur des pages longues',
+    en: 'No emphasis markup (<strong>/<b>) on long pages',
+    es: 'Sin énfasis (<strong>/<b>) en páginas largas',
+  },
 };
+
+/**
+ * Conseil éditorial obligatoire, rappelé partout où no_emphasis est affiché
+ * (audit SEO, workbench). La balise <strong> est un signal de pertinence, pas
+ * un levier mécanique de classement : ce finding n'affecte aucun score.
+ */
+const EMPHASIS_ADVICE =
+  "Conseil : une balise <strong> mal placée n'apporte rien. Mieux vaut 2–3 mises en exergue pertinentes sur les mots-clés d'intention que 15 <strong> décoratifs.";
 
 function t(key: string, lang: string): string {
   return LABELS[key]?.[lang] || LABELS[key]?.['fr'] || key;
