@@ -1758,7 +1758,7 @@ function generateCrawlSectionHTML(expertSeoData: any, lang: string, domain: stri
 }
 
 // ─── Section 2: Technical SEO Audit (standalone HTML) ───
-function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string, topHtml = '', comparedHtml = '', emphasisHtml = ''): string {
+function generateTechSectionHTML(expertSeoData: any, lang: string, domain: string, topHtml = '', comparedHtml = ''): string {
   const tr = getTranslations(lang);
   const techScore = expertSeoData?.totalScore || 0;
   const techMaxScore = expertSeoData?.maxScore || 220;
