@@ -300,16 +300,16 @@ const AuditSeoGratuit = () => {
         </section>
 
         {/* Conversion vers Marina / audit-geo-seo */}
-        <section className="py-16 px-4 bg-gradient-to-b from-primary/5 to-background">
+        <section className="py-16 px-4 bg-gradient-to-b from-[hsl(var(--brand-violet)/0.08)] to-background">
           <div className="mx-auto max-w-6xl">
             <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
               <div>
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 px-3 py-1 text-xs font-medium text-primary">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[hsl(var(--brand-violet)/0.4)] px-3 py-1 text-xs font-medium text-[hsl(var(--brand-violet))]">
                   <Bot className="h-3.5 w-3.5" />
                   Marina, agent d'audit SEO et GEO
                 </div>
                 <h2 className="mb-4 text-2xl font-bold text-foreground sm:text-3xl">
-                  Passez à l'<span className="text-primary">audit automatisé</span> avec Marina
+                  Passez à l'<span className="text-[hsl(var(--brand-violet))]">audit automatisé</span> avec Marina
                 </h2>
                 <p className="citable-passage mb-6 text-muted-foreground leading-relaxed">
                   L'audit gratuit analyse une page. Marina analyse tout votre site, mesure votre visibilité
@@ -319,24 +319,24 @@ const AuditSeoGratuit = () => {
                 </p>
                 <ul className="mb-8 space-y-3 text-sm text-muted-foreground">
                   <li className="flex items-start gap-3">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
                     <span><strong>Audit SEO + GEO</strong> : balises, vitesse, maillage, passages citables, données structurées.</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
                     <span><strong>3 contenus rédigés</strong> sur les sujets qui rapportent des clients dans votre métier.</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
                     <span><strong>Fiche Google Maps</strong> optimisée : description, catégories, horaires, publication.</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
                     <span><strong>Délai fixe</strong> : 72 h ouvrées après validation de votre part.</span>
                   </li>
                 </ul>
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button asChild size="lg" variant="hero">
+                  <Button asChild size="lg" className="h-12 gap-2 border-0 bg-[hsl(var(--brand-violet))] px-6 text-white hover:bg-[hsl(var(--brand-violet)/0.9)]">
                     <Link to="/audit-geo-seo">
                       Lancer mon audit gratuit
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -358,27 +358,27 @@ const AuditSeoGratuit = () => {
                   <div className="space-y-4">
                     <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
                       <span className="text-sm text-muted-foreground">Audit technique et éditorial</span>
-                      <Check className="h-4 w-4 shrink-0 text-primary" />
+                      <Check className="h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
                     </div>
                     <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
                       <span className="text-sm text-muted-foreground">Mesure de visibilité IA (GEO)</span>
-                      <Check className="h-4 w-4 shrink-0 text-primary" />
+                      <Check className="h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
                     </div>
                     <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
                       <span className="text-sm text-muted-foreground">3 pages de contenu rédigées</span>
-                      <Check className="h-4 w-4 shrink-0 text-primary" />
+                      <Check className="h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
                     </div>
                     <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
                       <span className="text-sm text-muted-foreground">Fiche Google Maps optimisée</span>
-                      <Check className="h-4 w-4 shrink-0 text-primary" />
+                      <Check className="h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
                     </div>
                     <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
                       <span className="text-sm text-muted-foreground">Correctifs déployés après validation</span>
-                      <Check className="h-4 w-4 shrink-0 text-primary" />
+                      <Check className="h-4 w-4 shrink-0 text-[hsl(var(--brand-violet))]" />
                     </div>
                     <div className="flex items-start justify-between gap-4 pt-2">
                       <span className="font-semibold text-foreground">Prix fixe</span>
-                      <span className="text-lg font-bold text-primary">59 € TTC</span>
+                      <span className="text-lg font-bold text-[hsl(var(--brand-violet))]">59 € TTC</span>
                     </div>
                   </div>
                 </CardContent>
