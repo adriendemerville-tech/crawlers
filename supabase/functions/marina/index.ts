@@ -1803,7 +1803,7 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
 
       }).join('')}` : ''}
       ${comparedHtml}
-      ${emphasisHtml}
+
 
     </div>`;
 
