@@ -1,4 +1,5 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { computeEmphasisQuality, renderEmphasisQualityHtml } from '../_shared/emphasisQuality.ts';
 import {
   extractTopPriorities,
   buildConsolidatedActionPlan,
