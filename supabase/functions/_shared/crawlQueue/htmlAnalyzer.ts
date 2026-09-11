@@ -395,7 +395,7 @@ export function analyzeHtml(
 
   return {
     url: pageUrl, path, http_status: 200, title, meta_description, h1,
-    h2_count, h3_count, h4_h6_count, strong_count,
+    h2_count, h3_count, h4_h6_count, strong_count, strong_terms,
     has_schema_org, has_canonical, canonical_url, has_hreflang, has_og,
     has_noindex, has_nofollow,
     word_count, images_total, images_without_alt,
