@@ -76,7 +76,7 @@ function AIVisibilitySectionComponent() {
       </div>
 
       <div className="relative mx-auto w-full max-w-4xl text-center">
-        <p className="mb-3 t-meta font-semibold uppercase tracking-[0.2em] text-brand-gold">
+        <p className="hidden sm:block mb-3 t-meta font-semibold uppercase tracking-[0.2em] text-brand-gold">
           {language === 'fr'
             ? 'Outil de crawl SEO Google + GEO pour les IA · un seul audit'
             : language === 'es'
@@ -84,7 +84,7 @@ function AIVisibilitySectionComponent() {
             : 'SEO crawl tool for Google + GEO for AI · one single audit'}
         </p>
 
-        <h2 className="mb-4 t-h2 font-extrabold font-display text-center sm:whitespace-nowrap max-sm:text-2xl">
+        <h2 className="hidden sm:block mb-4 t-h2 font-extrabold font-display text-center sm:whitespace-nowrap max-sm:text-2xl">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
             style={{ minWidth: '3.9em', paddingBottom: '0.15em', marginBottom: '-0.15em', marginRight: '0.08em' }}
@@ -103,7 +103,15 @@ function AIVisibilitySectionComponent() {
           <span className="text-foreground">?</span>
         </h2>
 
-        <p className="mb-8 t-h2 font-medium font-display text-foreground max-sm:hidden px-2 sm:px-0">
+        <h2 className="sm:hidden mb-4 t-h2 font-extrabold font-display text-foreground">
+          {language === 'fr'
+            ? 'Votre site est-il visible pour Google et les IA ?'
+            : language === 'es'
+            ? '¿Su sitio es visible para Google y las IA?'
+            : 'Is your site visible to Google and AI?'}
+        </h2>
+
+        <p className="hidden sm:block mb-8 t-h2 font-medium font-display text-foreground px-2 sm:px-0">
           {getSubtitle()}
         </p>
 
@@ -114,7 +122,7 @@ function AIVisibilitySectionComponent() {
             </span>{' '}
             sites audités
           </p>
-          <TrustBadge layout="column" className="flex shrink-0 gap-0.5 py-0 justify-center max-sm:items-center [&_.text-sm]:text-[11px] [&_.text-sm]:whitespace-nowrap [&_.text-sm]:text-center sm:[&_.text-sm]:text-left" />
+          <TrustBadge layout="column" className="hidden sm:flex shrink-0 gap-0.5 py-0 justify-center max-sm:items-center [&_.text-sm]:text-[11px] [&_.text-sm]:whitespace-nowrap [&_.text-sm]:text-center sm:[&_.text-sm]:text-left" />
           <div className="hero-input-wrap min-w-0 relative">
             <Input
               type="text"
@@ -153,7 +161,7 @@ function AIVisibilitySectionComponent() {
           </Link>
         </div>
 
-        <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+        <div className="hidden sm:flex mt-3 sm:mt-4 flex-wrap items-center justify-center gap-3 sm:gap-4">
           <Link to="/auth" className="text-sm font-medium underline underline-offset-4 transition-colors text-foreground">
             {language === 'fr' ? 'Créer un compte gratuit →' : language === 'es' ? 'Crear una cuenta gratis →' : 'Create a free account →'}
           </Link>
