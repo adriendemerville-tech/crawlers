@@ -383,7 +383,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                     </FormItem>
                   )}
                 />
-                <Button type="submit" variant="outline" className="w-full h-9 text-sm" disabled={isLoading}>
+                <Button type="submit" variant="hero" className="w-full h-9 text-sm" disabled={isLoading}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
                 </Button>
                 <div className="text-right">
@@ -525,17 +525,17 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                     />
                     <label htmlFor="cgvu-accept" className="text-[11px] leading-tight text-muted-foreground cursor-pointer">
                       {language === 'fr' ? (
-                        <>J'accepte les <Link to="/cgvu" target="_blank" className="text-primary hover:underline">CGVU</Link></>
+                        <>J'accepte les <Link to="/cgvu" target="_blank" className="text-brand-gold hover:underline">CGVU</Link></>
                       ) : language === 'es' ? (
-                        <>Acepto los <Link to="/cgvu" target="_blank" className="text-primary hover:underline">términos y condiciones</Link></>
+                        <>Acepto los <Link to="/cgvu" target="_blank" className="text-brand-gold hover:underline">términos y condiciones</Link></>
                       ) : (
-                        <>I accept the <Link to="/cgvu" target="_blank" className="text-primary hover:underline">Terms & Conditions</Link></>
+                        <>I accept the <Link to="/cgvu" target="_blank" className="text-brand-gold hover:underline">Terms & Conditions</Link></>
                       )}
                     </label>
                   </div>
                 )}
 
-                <Button type="submit" variant="outline" className="w-full h-9 text-sm" disabled={isLoading || (!existingUser && !cgvuAccepted)}>
+                <Button type="submit" variant="hero" className="w-full h-9 text-sm" disabled={isLoading || (!existingUser && !cgvuAccepted)}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (existingUser ? t.loginButton : t.signupButton)}
                 </Button>
               </form>
@@ -557,7 +557,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
             setIsLogin(!isLogin);
             setExistingUser(false);
           }}
-          className="text-primary hover:underline font-medium"
+          className="text-brand-gold hover:underline font-medium"
         >
           {isLogin ? t.signup : t.login}
         </button>
