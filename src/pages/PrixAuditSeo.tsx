@@ -35,6 +35,33 @@ const PRICE_FACTORS = [
   },
 ];
 
+const PROVIDERS: Array<{ who: string; price: string; delivers: string }> = [
+  { who: 'Outil SEO en libre-service', price: '0 – 30 € / mois', delivers: 'Liste d\'erreurs techniques, sans priorisation ni mise en œuvre' },
+  { who: 'Freelance SEO', price: '600 – 1 500 €', delivers: 'Rapport détaillé et recommandations, mise en œuvre facturée à part' },
+  { who: 'Agence SEO', price: '1 400 – 2 700 €', delivers: 'Audit, contenus et correctifs, délai de 2 à 6 semaines' },
+  { who: 'Passe unique Crawlers', price: '59 € TTC', delivers: 'Audit SEO et GEO, 3 contenus, fiche Google Maps, correctifs déployés' },
+];
+
+const GEO_POINTS = [
+  {
+    title: 'Passages citables',
+    text: 'Les moteurs génératifs reprennent des extraits autonomes. L\'audit vérifie que vos définitions, chiffres et réponses directes sont isolables et attribuables à votre marque.',
+  },
+  {
+    title: 'Données structurées',
+    text: 'Organisation, Service, FAQPage, fil d\'Ariane : un balisage complet aide les modèles à relier une réponse à votre entreprise plutôt qu\'à un annuaire.',
+  },
+  {
+    title: 'Présence mesurée',
+    text: 'Des questions représentatives de votre métier sont posées aux moteurs IA pour savoir si vous êtes cité, et sinon qui l\'est à votre place.',
+  },
+  {
+    title: 'Mise en exergue',
+    text: 'Deux à trois mises en valeur pertinentes sur les mots-clés d\'intention rendent un passage plus repérable qu\'une page entière en gras.',
+  },
+];
+
+
 const FAQ_ITEMS: Array<[string, string]> = [
   [
     'Combien coûte un audit SEO en agence ?',
@@ -56,7 +83,16 @@ const FAQ_ITEMS: Array<[string, string]> = [
     'Quelle est la différence entre un audit SEO et un audit GEO ?',
     'L\'audit SEO mesure votre visibilité sur Google (balises, contenu, vitesse, maillage). L\'audit GEO mesure en plus votre citabilité par les moteurs IA comme ChatGPT ou Perplexity : passages citables, données structurées, présence dans leurs réponses. La passe Crawlers couvre les deux.',
   ],
+  [
+    'Combien coûte un audit GEO seul ?',
+    'Quand une agence le facture séparément, le supplément observé se situe entre 500 € et 1 500 €. Chez Crawlers, la mesure de visibilité dans les réponses IA est incluse dans la passe unique à 59 € TTC, sans supplément.',
+  ],
+  [
+    'Quel est le tarif d\'un audit SEO chez un freelance ?',
+    'Un freelance SEO facture généralement entre 600 € et 1 500 € pour un audit détaillé d\'un site de TPE/PME. La mise en œuvre des correctifs est le plus souvent facturée séparément, au temps passé.',
+  ],
 ];
+
 
 const INCLUDED = [
   { icon: FileText, title: 'Audit de votre site', description: '6 à 10 correctifs prioritaires sur titres, descriptions, balisage, vitesse et maillage.' },
@@ -164,8 +200,8 @@ function PrixAuditSeoComponent(): React.ReactElement {
               À prestation comparable — audit, contenus, fiche Google Maps — voici les ordres de grandeur.
               Les montants agence sont des estimations : chaque prestataire établit son devis.
             </p>
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-              <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
+              <table className="w-full min-w-[560px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-border bg-secondary/60">
                     <th className="px-5 py-3 font-semibold">Prestation</th>
@@ -184,8 +220,104 @@ function PrixAuditSeoComponent(): React.ReactElement {
                 </tbody>
               </table>
             </div>
+            <p className="mt-3 text-xs text-muted-foreground sm:hidden">Faites défiler le tableau horizontalement.</p>
+
+            <h3 className="mt-14 mb-4 font-display text-xl font-semibold">
+              Tarif d'un audit SEO selon le prestataire
+            </h3>
+            <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
+              <table className="w-full min-w-[560px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-secondary/60">
+                    <th className="px-5 py-3 font-semibold">Prestataire</th>
+                    <th className="px-5 py-3 font-semibold">Prix constaté</th>
+                    <th className="px-5 py-3 font-semibold">Ce qui est livré</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {PROVIDERS.map((row) => (
+                    <tr key={row.who} className="border-b border-border last:border-0">
+                      <td className="px-5 py-3 text-foreground">{row.who}</td>
+                      <td className="px-5 py-3 font-medium text-foreground">{row.price}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{row.delivers}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="citable-passage mt-4 max-w-3xl text-sm text-muted-foreground">
+              Ces fourchettes sont des ordres de grandeur observés sur le marché français en 2026 pour
+              des sites de TPE/PME. Un <strong>audit SEO seul</strong> reste un diagnostic : le coût réel
+              d'une remise à niveau inclut toujours la mise en œuvre des correctifs.
+            </p>
           </div>
         </section>
+
+        {/* Prix audit GEO */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-5xl px-6 py-16">
+            <h2 className="mb-4 font-display text-2xl font-bold sm:text-3xl">
+              Combien coûte un <span className="text-brand-violet">audit GEO</span> (visibilité IA) ?
+            </h2>
+            <p className="citable-passage mb-6 max-w-3xl text-muted-foreground">
+              L'audit GEO — Generative Engine Optimization — mesure votre présence dans les réponses de
+              ChatGPT, Perplexity, Google AI Overviews et Copilot. Très peu d'agences le facturent aujourd'hui
+              de façon séparée : quand c'est le cas, le supplément observé se situe entre
+              <strong> 500 € et 1 500 €</strong>. Chez Crawlers, la mesure GEO est incluse dans la passe
+              unique à 59 € TTC, sans supplément.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {GEO_POINTS.map((g) => (
+                <div key={g.title} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+                  <h3 className="mb-2 font-display text-lg font-semibold">{g.title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{g.text}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-6 max-w-3xl text-sm text-muted-foreground">
+              Pour comprendre la méthode de mesure, consultez la page{' '}
+              <Link to="/audit-geo-seo" className="font-medium text-brand-violet underline underline-offset-4">
+                audit GEO et SEO
+              </Link>{' '}
+              ou le{' '}
+              <Link to="/tarifs" className="font-medium text-brand-violet underline underline-offset-4">
+                détail des tarifs Crawlers
+              </Link>.
+            </p>
+          </div>
+        </section>
+
+        {/* Faut-il payer un audit */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-5xl px-6 py-16">
+            <h2 className="mb-4 font-display text-2xl font-bold sm:text-3xl">
+              Un audit SEO payant est-il <span className="text-brand-violet">rentable</span> ?
+            </h2>
+            <p className="citable-passage mb-6 max-w-3xl text-muted-foreground">
+              Un audit n'a de valeur que s'il débouche sur des correctifs appliqués. Un rapport de
+              80 pages jamais mis en œuvre ne rapporte rien. C'est pourquoi le bon critère de choix
+              n'est pas le prix du diagnostic, mais le <strong>coût complet jusqu'au déploiement</strong>.
+            </p>
+            <ul className="max-w-3xl space-y-3 text-sm text-muted-foreground">
+              <li className="rounded-xl border border-border bg-card p-4">
+                <span className="font-medium text-foreground">Site de moins de 20 pages, aucun trafic :</span>{' '}
+                commencez par un audit gratuit, puis une passe unique. Un devis d'agence à quatre chiffres
+                est disproportionné à ce stade.
+              </li>
+              <li className="rounded-xl border border-border bg-card p-4">
+                <span className="font-medium text-foreground">Site marchand ou catalogue de plusieurs centaines de pages :</span>{' '}
+                un audit automatisé identifie vite les problèmes structurels ; un accompagnement humain
+                reste utile pour l'architecture et le netlinking.
+              </li>
+              <li className="rounded-xl border border-border bg-card p-4">
+                <span className="font-medium text-foreground">Chute de trafic récente :</span>{' '}
+                l'urgence est le diagnostic, pas la refonte. Un audit rapide vaut mieux qu'un devis
+                instruit pendant trois semaines.
+              </li>
+            </ul>
+          </div>
+        </section>
+
 
         {/* Ce que comprend la passe */}
         <section className="border-b border-border">

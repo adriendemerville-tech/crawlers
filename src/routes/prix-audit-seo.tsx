@@ -29,7 +29,16 @@ const FAQ: Array<[string, string]> = [
     'Quelle est la différence entre un audit SEO et un audit GEO ?',
     'L\'audit SEO mesure votre visibilité sur Google (balises, contenu, vitesse, maillage). L\'audit GEO mesure en plus votre citabilité par les moteurs IA comme ChatGPT ou Perplexity : passages citables, données structurées, présence dans leurs réponses. La passe Crawlers couvre les deux.',
   ],
+  [
+    'Combien coûte un audit GEO seul ?',
+    'Quand une agence le facture séparément, le supplément observé se situe entre 500 € et 1 500 €. Chez Crawlers, la mesure de visibilité dans les réponses IA est incluse dans la passe unique à 59 € TTC, sans supplément.',
+  ],
+  [
+    'Quel est le tarif d\'un audit SEO chez un freelance ?',
+    'Un freelance SEO facture généralement entre 600 € et 1 500 € pour un audit détaillé d\'un site de TPE/PME. La mise en œuvre des correctifs est le plus souvent facturée séparément, au temps passé.',
+  ],
 ];
+
 
 export const Route = createFileRoute('/prix-audit-seo')({
   head: () =>
@@ -87,6 +96,28 @@ export const Route = createFileRoute('/prix-audit-seo')({
                 { '@type': 'Thing', name: 'Audit GEO' },
               ],
             },
+            {
+              '@type': 'Product',
+              '@id': `${URL}#passe`,
+              name: 'Passe unique audit SEO et GEO',
+              description:
+                'Audit SEO et GEO du site, 6 à 10 correctifs prioritaires, 3 pages de contenu rédigées et optimisation de la fiche Google Maps, déployés en 72 h ouvrées après validation.',
+              brand: ORGANIZATION_REF,
+              mainEntityOfPage: { '@id': WEBPAGE_ID },
+              offers: {
+                '@type': 'Offer',
+                '@id': `${URL}#offer`,
+                price: '59',
+                priceCurrency: 'EUR',
+                availability: 'https://schema.org/InStock',
+                url: `${SITE_URL}/audit-geo-seo`,
+                valueAddedTaxIncluded: true,
+                priceValidUntil: '2026-12-31',
+                areaServed: { '@type': 'Country', name: 'France' },
+                seller: ORGANIZATION_REF,
+              },
+            },
+
             {
               '@type': 'FAQPage',
               '@id': `${URL}#faq`,
