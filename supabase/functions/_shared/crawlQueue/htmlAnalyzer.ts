@@ -260,6 +260,22 @@ export function analyzeHtml(
   // Mise en exergue : <strong> et <b> dans le corps (signal d'extraction pour
   // Google et les moteurs IA, qui privilégient les passages saillants).
   const strong_count = (html.match(/<strong[\s>]/gi) || []).length + (html.match(/<b[\s>]/gi) || []).length;
+  // Termes mis en exergue : conservés (30 max) pour évaluer la qualité
+  // sémantique de la mise en valeur dans l'audit stratégique GEO. 0 token LLM.
+  const strong_terms: string[] = [];
+  {
+    const seen = new Set<string>();
+    const re = /<(strong|b)[^>]*>([\s\S]{0,300}?)<\/\1>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) !== null && strong_terms.length < 30) {
+      const text = m[2].replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim();
+      if (!text || text.length < 2 || text.length > 120) continue;
+      const key = text.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      strong_terms.push(text);
+    }
+  }
 
   const has_schema_org = /application\/ld\+json/i.test(html) || /itemtype\s*=\s*["']https?:\/\/schema\.org/i.test(html);
   const schemaValidation = validateSchemaOrg(html);
