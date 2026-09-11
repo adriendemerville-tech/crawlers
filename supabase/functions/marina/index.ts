@@ -1941,6 +1941,7 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       ${buildModuleSection('Intelligence Marché', '📊', marketIntel)}
       ${buildCompetitiveLandscapeSection(competitive)}
       ${comparedHtml}
+      ${emphasisHtml}
       ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
       ${buildModuleSection("Sentiment d'Expertise", '🎯', expertiseSentiment)}
       ${buildModuleSection('Test adversarial (résistance aux contre-arguments)', '🔴', redTeam)}
