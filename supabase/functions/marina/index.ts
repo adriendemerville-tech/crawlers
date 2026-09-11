@@ -5057,6 +5057,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           hasPlan,
           geoSubSignalsHtml,
           comparedHtml,
+          emphasisHtml,
         );
 
 
