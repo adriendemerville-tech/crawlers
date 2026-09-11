@@ -457,7 +457,7 @@ function PrixAuditSeoComponent(): React.ReactElement {
               Vous saurez en quelques minutes ce qui bloque votre visibilité sur Google et dans les réponses IA.
               La passe à 59 € n'est proposée que si des correctifs sont utiles.
             </p>
-            <Button asChild className="h-12 gap-2 border border-foreground bg-transparent px-8 text-foreground hover:bg-foreground hover:text-background">
+            <Button asChild className="h-12 gap-2 border border-foreground bg-transparent px-5 text-foreground hover:bg-foreground hover:text-background">
               <Link to="/audit-geo-seo">
                 Auditer mon site gratuitement
                 <ArrowRight className="h-4 w-4" />

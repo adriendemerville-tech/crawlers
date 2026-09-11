@@ -150,7 +150,7 @@ const PageSpeedLanding = () => {
             <p className="text-muted-foreground mb-8">
               Analyse complète des Core Web Vitals avec un rapport détaillé et des recommandations d'optimisation prioritaires.
             </p>
-            <Button asChild size="lg" className="text-base px-10">
+            <Button asChild size="lg" className="text-base px-6 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background font-semibold">
               <Link to="/audit-expert">
                 Lancer le test PageSpeed <ArrowRight className="ml-2 h-5 w-5" />
               </Link>

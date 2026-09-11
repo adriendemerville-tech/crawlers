@@ -281,7 +281,7 @@ const AnalyseBotsIA = () => {
             <p className="text-muted-foreground mb-8">
               Obtenez un rapport détaillé sur l'accessibilité de votre site aux bots IA, avec des recommandations concrètes pour maximiser votre visibilité GEO.
             </p>
-            <Button asChild size="lg" className="text-base px-10">
+            <Button asChild size="lg" className="text-base px-6 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background font-semibold">
               <Link to="/audit-expert">
                 Analyser mon site gratuitement <ArrowRight className="ml-2 h-5 w-5" />
               </Link>

@@ -523,7 +523,7 @@ function ParmenionLandingComponent(): React.ReactElement {
               <Button
                 onClick={handleOrder}
                 disabled={ordering}
-                className="h-12 w-full gap-2 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background"
+                className="h-12 gap-2 border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background"
               >
                 {ordering ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Démarrer ma passe — 59 € TTC'}
 
@@ -622,7 +622,7 @@ function ParmenionLandingComponent(): React.ReactElement {
               </p>
               <Button
                 onClick={focusInput}
-                className="h-12 gap-2 border border-foreground bg-transparent px-8 text-foreground hover:bg-foreground hover:text-background"
+                className="h-12 gap-2 border border-foreground bg-transparent px-5 text-foreground hover:bg-foreground hover:text-background"
               >
                 Vérifier ma visibilité maintenant
                 <ArrowRight className="h-4 w-4" />
@@ -638,7 +638,7 @@ function ParmenionLandingComponent(): React.ReactElement {
             <p className="mb-8 text-muted-foreground">Lancez l'analyse gratuite. Vous ne payez que lorsque vous décidez de déployer les correctifs.</p>
             <Button
               onClick={focusInput}
-              className="h-12 gap-2 border border-foreground bg-transparent px-8 text-foreground hover:bg-foreground hover:text-background"
+              className="h-12 gap-2 border border-foreground bg-transparent px-5 text-foreground hover:bg-foreground hover:text-background"
             >
               Lancer mon analyse gratuite
               <ArrowRight className="h-4 w-4" />

@@ -600,7 +600,7 @@ export default function ProAgency() {
                   </Button>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
-                    <Button size="xl" asChild className="bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white shadow-lg font-semibold text-base px-10">
+                    <Button size="xl" asChild className="border border-foreground bg-transparent text-foreground hover:bg-foreground hover:text-background font-semibold text-base px-6">
                       <Link to="/auth">{t.ctaLogin}</Link>
                     </Button>
                     <span className="text-xs text-muted-foreground">{t.or} <Link to="/auth" className="underline hover:text-primary">{t.ctaSubscribe}</Link></span>
