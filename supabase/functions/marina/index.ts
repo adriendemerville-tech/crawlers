@@ -1792,7 +1792,9 @@ function generateTechSectionHTML(expertSeoData: any, lang: string, domain: strin
         </div>`;
 
       }).join('')}` : ''}
+      ${comparedHtml}
     </div>`;
+
 
   return wrapStandaloneHTML(content, `${tr.techAudit} - ${domain}`, lang);
 }
