@@ -4,7 +4,7 @@ import { pageHead } from "@/lib/seo/pageHead";
 import { homeJsonLd } from "@/lib/seo/homeSchemas";
 
 const homeHead = pageHead({
-  title: "Crawlers — la plateforme qui améliore votre visibilité SEO & GEO : audit, positions, IA",
+  title: "Crawlers — crawl, audit SEO & GEO : visibilité IA, positions",
   description: "Crawlers.fr, l'outil de crawl SEO & GEO : audit technique complet, positions SERP, backlinks et citations IA. Démarrez votre audit gratuit, sans engagement.",
   path: "/",
   jsonLd: homeJsonLd,
