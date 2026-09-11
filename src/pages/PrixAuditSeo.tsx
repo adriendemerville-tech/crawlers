@@ -249,7 +249,12 @@ function PrixAuditSeoComponent(): React.ReactElement {
         </section>
 
         <section className="mx-auto max-w-5xl px-6 py-12">
-          <SiloNav currentPath="/prix-audit-seo" />
+<SiloNav
+            silo="geo"
+            currentPath="/prix-audit-seo"
+            heading="Tout le silo visibilité IA"
+            className="rounded-3xl bg-card"
+          />
         </section>
       </main>
       <Footer />
