@@ -105,7 +105,7 @@ export function pageHead(options: PageHeadOptions) {
     { name: 'robots', content: noIndex ? 'noindex, follow' : INDEXABLE },
     { property: 'og:type', content: ogType },
     { property: 'og:site_name', content: 'Crawlers.fr' },
-    { property: 'og:url', content: url },
+    { property: 'og:url', content: canonicalUrl },
     { property: 'og:title', content: fullTitle },
     { property: 'og:description', content: metaDescription },
     { property: 'og:image', content: image },
