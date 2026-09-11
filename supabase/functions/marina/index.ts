@@ -1928,6 +1928,7 @@ function generateStrategicSectionHTML(strategicDataRaw: any, lang: string, domai
       ${buildSocialSignalsSection(socialSignals)}
       ${buildModuleSection('Intelligence Marché', '📊', marketIntel)}
       ${buildCompetitiveLandscapeSection(competitive)}
+      ${comparedHtml}
       ${buildModuleSection('Empreinte Lexicale', '📝', lexicalFootprint)}
       ${buildModuleSection("Sentiment d'Expertise", '🎯', expertiseSentiment)}
       ${buildModuleSection('Test adversarial (résistance aux contre-arguments)', '🔴', redTeam)}
