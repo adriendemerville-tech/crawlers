@@ -1465,6 +1465,24 @@ function findingToTasks(finding: any, lang: string, counter: number, sector?: st
       });
       break;
 
+    case 'emphasis_markup':
+      // Signal éditorial sans incidence sur le score : impact faible, action
+      // de contenu non destructive. Le conseil est toujours rappelé.
+      tasks.push({
+        id: `${baseId}_emphasis`,
+        action_type: 'rewrite_content',
+        priority: 0,
+        title: label('emphasis_markup', lang),
+        description: `${finding.description || ''} Conseil : une balise <strong> mal placée n'apporte rien. Mieux vaut 2–3 mises en exergue pertinentes sur les mots-clés d'intention que 15 <strong> décoratifs.`,
+        affected_urls: urls.slice(0, 10),
+        source_diagnostics: [sourceType],
+        execution_mode: 'content_architect',
+        is_destructive: false,
+        depends_on: [],
+        estimated_impact: 'low',
+      });
+      break;
+
     case 'missing_h1':
     case 'multi_h1':
       tasks.push({
