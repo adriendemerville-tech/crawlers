@@ -5044,6 +5044,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           trustHtml + sectionTop(renderTopPrioritiesHTML(topEeat)),
           hasPlan,
           geoSubSignalsHtml,
+          comparedHtml,
         );
 
 
