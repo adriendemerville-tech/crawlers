@@ -5012,7 +5012,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           const ratioTargets = await resolveRatioTargets(sb, {
             url,
             trackedSiteId,
-            fallbackKeyword: identityCard?.main_keyword || null,
+            fallbackKeyword: (identityCardRaw as any)?.mainKeyword || null,
           });
           if (ratioTargets.length) {
             const ratios = await getCompetitiveRatios({
