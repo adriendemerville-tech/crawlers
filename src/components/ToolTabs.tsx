@@ -40,7 +40,7 @@ export function ToolTabs({
           aria-current={activeTab === 'crawlers' ? 'page' : undefined}
         >
           <Bot className="h-3.5 w-3.5" />
-          <span>{t.tabs.crawlers}</span>
+          <span className="leading-none">{t.tabs.crawlers}</span>
         </button>
         <button
           data-tour="tab-geo"
@@ -54,7 +54,7 @@ export function ToolTabs({
           aria-current={activeTab === 'geo' ? 'page' : undefined}
         >
           <Sparkles className="h-3.5 w-3.5" />
-          <span>{t.tabs.geo}</span>
+          <span className="leading-none">{t.tabs.geo}</span>
         </button>
         <button
           data-tour="tab-llm"
@@ -68,7 +68,7 @@ export function ToolTabs({
           aria-current={activeTab === 'llm' ? 'page' : undefined}
         >
           <Brain className="h-3.5 w-3.5" />
-          <span>{t.tabs.llm}</span>
+          <span className="leading-none">{t.tabs.llm}</span>
         </button>
         <button
           data-tour="tab-pagespeed"
@@ -82,7 +82,7 @@ export function ToolTabs({
           aria-current={activeTab === 'pagespeed' ? 'page' : undefined}
         >
           <Gauge className="h-3.5 w-3.5" />
-          <span>{t.tabs.pagespeed}</span>
+          <span className="leading-none">{t.tabs.pagespeed}</span>
         </button>
       </div>
 
