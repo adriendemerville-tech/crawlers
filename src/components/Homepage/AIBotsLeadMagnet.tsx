@@ -272,7 +272,7 @@ export function AIBotsLeadMagnet() {
           )}
         >
           <Eye className="h-6 w-6 max-sm:h-3 max-sm:w-3" />
-          {t.tabLlm}
+          <span className="leading-none">{t.tabLlm}</span>
         </button>
       </div>
 
