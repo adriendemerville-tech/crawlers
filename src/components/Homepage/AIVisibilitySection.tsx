@@ -76,14 +76,6 @@ function AIVisibilitySectionComponent() {
       </div>
 
       <div className="relative mx-auto w-full max-w-4xl text-center">
-        <p className="hidden sm:block mb-3 t-meta font-semibold uppercase tracking-[0.2em] text-brand-gold">
-          {language === 'fr'
-            ? 'Outil de crawl SEO Google + GEO pour les IA · un seul audit'
-            : language === 'es'
-            ? 'Herramienta de rastreo SEO Google + GEO para las IA · una sola auditoría'
-            : 'SEO crawl tool for Google + GEO for AI · one single audit'}
-        </p>
-
         <h2 className="hidden sm:block mb-4 t-h2 font-extrabold font-display text-center sm:whitespace-nowrap max-sm:text-2xl">
           <span
             className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden align-baseline"
