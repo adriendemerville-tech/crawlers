@@ -248,7 +248,7 @@ export function AIBotsLeadMagnet() {
           )}
         >
           <Gauge className="h-6 w-6 max-sm:h-3 max-sm:w-3" />
-          {t.tabGeo}
+          <span className="leading-none">{t.tabGeo}</span>
         </button>
         <button
           onClick={() => handleTabSwitch('bots')}
@@ -260,7 +260,7 @@ export function AIBotsLeadMagnet() {
           )}
         >
           <Shield className="h-6 w-6 max-sm:h-3 max-sm:w-3" />
-          {t.tabBots}
+          <span className="leading-none">{t.tabBots}</span>
         </button>
         <button
           onClick={() => handleTabSwitch('llm')}
@@ -272,7 +272,7 @@ export function AIBotsLeadMagnet() {
           )}
         >
           <Eye className="h-6 w-6 max-sm:h-3 max-sm:w-3" />
-          {t.tabLlm}
+          <span className="leading-none">{t.tabLlm}</span>
         </button>
       </div>
 
