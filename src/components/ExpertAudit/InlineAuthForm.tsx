@@ -349,7 +349,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                          <Input {...field} type="email" className="pl-8 h-9 text-sm" placeholder="email@example.com" />
+                          <Input {...field} type="email" className="pl-8 h-11 text-sm" placeholder="email@example.com" />
                         </div>
                       </FormControl>
                       <FormMessage className="text-xs" />
