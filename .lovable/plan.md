@@ -4,14 +4,14 @@ Objectif : passer la home `/` (audience pro SEO) d'une page de 16 657 px / 2 226
 
 ## Étape 1 — Réduire la structure (impact majeur)
 
-Réorganiser `src/pages/Index.tsx` en 6 sections :
+Réorganiser `src/pages/Index.tsx` en 6 sections. Les CTA et lead magnets conservent leur wording, leur cible et leur mécanique existants ; on ne change que l'ordre, la densité et le contexte visuel :
 
 1. **Hero** (existant `HomeHero`) : H1 + formulaire d'inscription — inchangé.
 2. **Audit URL** (`AIVisibilitySection`) : champ URL + CTA « Audit Expert » — déjà épuré sur mobile.
 3. **Preuve** : remonter des preuves vérifiables en position 3 (exemple de rapport, métriques produit réelles) — supprimer les 2 témoignages non vérifiables.
-4. **Capacités clés** : fusionner « Score GEO », « Bots IA », « Visibilité LLM » en une seule section à 3 onglets.
-5. **Agents IA + Marina** : fusionner en une seule section.
-6. **Offre agence + FAQ + CTA final**.
+4. **Capacités clés** : fusionner « Score GEO », « Bots IA », « Visibilité LLM » en une seule section à 3 onglets. Les lead magnets à l'intérieur de chaque onglet restent inchangés.
+5. **Agents IA + Marina** : fusionner en une seule section. Les CTA vers Marina ou l'inscription restent inchangés.
+6. **Offre agence + FAQ + CTA final**. Le CTA final conserve son libellé et sa destination actuels.
 
 Sections retirées de la home (contenu conservé sur leurs pages dédiées, avec lien) : Momentum, Pain Points, comparatifs longs, sections secondaires répétitives.
 
