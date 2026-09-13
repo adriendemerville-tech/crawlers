@@ -1,17 +1,17 @@
 # Plan d'amélioration — Home pro mobile
 
-Objectif : passer la home `/` (audience pro SEO) d'une page de 16 657 px / 2 226 mots / 21 sections à un parcours de conversion mobile court : **promesse → preuve → démonstration → inscription**, cible ~1 500 mots et ~6 sections.
+Objectif : passer la home `/` (audience pro SEO) d'une page de 16 657 px / 2 226 mots / 21 sections à un parcours de conversion mobile court : **promesse → preuve → démonstration → inscription**, cible ~1 500 mots et ~6 sections. **Les CTA et lead magnets existants ne sont pas modifiés : on réorganise leur environnement, pas leur wording, leur cible ni leur mécanique.**
 
 ## Étape 1 — Réduire la structure (impact majeur)
 
-Réorganiser `src/pages/Index.tsx` en 6 sections :
+Réorganiser `src/pages/Index.tsx` en 6 sections. Les CTA et lead magnets conservent leur wording, leur cible et leur mécanique existants ; on ne change que l'ordre, la densité et le contexte visuel :
 
 1. **Hero** (existant `HomeHero`) : H1 + formulaire d'inscription — inchangé.
 2. **Audit URL** (`AIVisibilitySection`) : champ URL + CTA « Audit Expert » — déjà épuré sur mobile.
 3. **Preuve** : remonter des preuves vérifiables en position 3 (exemple de rapport, métriques produit réelles) — supprimer les 2 témoignages non vérifiables.
-4. **Capacités clés** : fusionner « Score GEO », « Bots IA », « Visibilité LLM » en une seule section à 3 onglets.
-5. **Agents IA + Marina** : fusionner en une seule section.
-6. **Offre agence + FAQ + CTA final**.
+4. **Capacités clés** : fusionner « Score GEO », « Bots IA », « Visibilité LLM » en une seule section à 3 onglets. Les lead magnets à l'intérieur de chaque onglet restent inchangés.
+5. **Agents IA + Marina** : fusionner en une seule section. Les CTA vers Marina ou l'inscription restent inchangés.
+6. **Offre agence + FAQ + CTA final**. Le CTA final conserve son libellé et sa destination actuels.
 
 Sections retirées de la home (contenu conservé sur leurs pages dédiées, avec lien) : Momentum, Pain Points, comparatifs longs, sections secondaires répétitives.
 
@@ -27,8 +27,8 @@ Sections retirées de la home (contenu conservé sur leurs pages dédiées, avec
 
 ## Étape 4 — Charte graphique
 
-- CTA encore en dégradé/couleurs hors charte → variante `hero` (fond transparent, bordure, texte contrasté, largeur ajustée au libellé).
-- Aligner l'ambiance visuelle sur `/audit-geo-seo` (plus claire et rassurante).
+- **Ne pas modifier les CTA et lead magnets existants** : leur wording, destination et mécanique restent ceux en production. Seuls les éléments décoratifs hors charte déjà présents (gradients non conformes, halos qui débordent) sont nettoyés ou masqués sur mobile.
+- Aligner l'ambiance visuelle sur `/audit-geo-seo` (plus claire et rassurante) sans toucher aux boutons d'action.
 
 ## Étape 5 — Corrections techniques mesurées
 
@@ -40,11 +40,16 @@ Sections retirées de la home (contenu conservé sur leurs pages dédiées, avec
 
 - `AudienceRouter` : passer d'overlay bloquant à bandeau discret non modal, mémorisé, sans empêcher la lecture de la home.
 
+## Contrainte forte
+
+- **CTA et lead magnets : hors périmètre de modification.** On ne change pas leur wording, leur destination, leur variante de bouton, leur mécanique de conversion ni leur logique métier. On peut seulement les déplacer dans la page, les entourer d'un contexte plus léger ou les masquer temporairement sur mobile si une section entière est retirée.
+
 ## Vérification
 
 - Playwright 360/390/430 px : aucune largeur excédentaire, hauteur page et nombre de mots mesurés avant/après.
 - Build OK, zéro erreur console bloquante.
 - Cible : ≤ ~8 000 px de hauteur mobile, ~1 500 mots, 6 sections, 1 action dominante par section.
+- Vérifier que les CTA et lead magnets conservent leur comportement et leur cible d'origine.
 
 ## Hors scope
 
