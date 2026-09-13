@@ -135,18 +135,14 @@ function SendIcon() {
   );
 }
 
-function CrawlersLogoPulse() {
+function CrawlersLogoPulse({ size = 40 }: { size?: number }) {
   return (
-    <div className="relative flex items-center justify-center">
-      <img
-        src="/crawlers-logo-violet.png"
-        alt="Crawlers"
-        className="h-10 w-auto animate-pulse"
-      />
-      <span className="absolute -bottom-6 text-xs tracking-wide text-muted-foreground">
-        Crawlers réfléchit…
-      </span>
-    </div>
+    <img
+      src="/crawlers-logo-violet.png"
+      alt="Crawlers"
+      style={{ height: size, width: 'auto' }}
+      className="animate-pulse"
+    />
   );
 }
 
