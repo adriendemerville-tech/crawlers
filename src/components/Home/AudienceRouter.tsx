@@ -315,7 +315,7 @@ export function AudienceRouter() {
       aria-label="Orientation du visiteur"
       aria-modal="true"
       role="dialog"
-      className="fixed inset-0 z-[100] flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-background px-4 py-8 animate-fade-in sm:px-6"
+      className="fixed inset-0 z-50 flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-background px-4 py-8 animate-fade-in sm:px-6"
     >
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
         <img
