@@ -340,7 +340,7 @@ export function AudienceRouter() {
           </p>
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             <input
-              ref={inputRef as React.RefObject<HTMLInputElement>}
+              ref={inputRef}
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               onKeyDown={(e) => {
