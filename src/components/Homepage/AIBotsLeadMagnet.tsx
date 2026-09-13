@@ -241,37 +241,37 @@ export function AIBotsLeadMagnet() {
         <button
           onClick={() => handleTabSwitch('geo')}
           className={cn(
-            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors max-sm:gap-1 max-sm:px-2.5 max-sm:py-2 max-sm:text-[9px] whitespace-nowrap',
+            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors max-sm:gap-1.5 max-sm:px-3 max-sm:py-3 max-sm:text-sm whitespace-nowrap min-h-[44px]',
             tab === 'geo'
               ? 'bg-brand-violet/15 text-brand-violet border border-brand-violet/30'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
           )}
         >
-          <Gauge className="h-6 w-6 max-sm:h-3 max-sm:w-3" />
+          <Gauge className="h-6 w-6 max-sm:h-4 max-sm:w-4" />
           <span className="leading-none">{t.tabGeo}</span>
         </button>
         <button
           onClick={() => handleTabSwitch('bots')}
           className={cn(
-            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors max-sm:gap-1 max-sm:px-2.5 max-sm:py-2 max-sm:text-[9px] whitespace-nowrap',
+            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors max-sm:gap-1.5 max-sm:px-3 max-sm:py-3 max-sm:text-sm whitespace-nowrap min-h-[44px]',
             tab === 'bots'
               ? 'bg-brand-violet/15 text-brand-violet border border-brand-violet/30'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
           )}
         >
-          <Shield className="h-6 w-6 max-sm:h-3 max-sm:w-3" />
+          <Shield className="h-6 w-6 max-sm:h-4 max-sm:w-4" />
           <span className="leading-none">{t.tabBots}</span>
         </button>
         <button
           onClick={() => handleTabSwitch('llm')}
           className={cn(
-            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors max-sm:gap-1 max-sm:px-2.5 max-sm:py-2 max-sm:text-[9px] whitespace-nowrap',
+            'flex items-center gap-2.5 px-6 py-3 rounded-lg text-lg font-semibold transition-colors max-sm:gap-1.5 max-sm:px-3 max-sm:py-3 max-sm:text-sm whitespace-nowrap min-h-[44px]',
             tab === 'llm'
               ? 'bg-brand-violet/15 text-brand-violet border border-brand-violet/30'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
           )}
         >
-          <Eye className="h-6 w-6 max-sm:h-3 max-sm:w-3" />
+          <Eye className="h-6 w-6 max-sm:h-4 max-sm:w-4" />
           <span className="leading-none">{t.tabLlm}</span>
         </button>
       </div>

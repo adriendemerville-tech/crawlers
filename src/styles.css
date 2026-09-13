@@ -22,6 +22,7 @@
 @source not "../src/components/Console";
 @source not "../src/components/Cocoon";
 @source not "../src/components/ExpertAudit";
+@source "../src/components/ExpertAudit/InlineAuthForm.tsx";
 @source not "../src/components/Matrice";
 @source not "../src/components/ConversionOptimizer";
 @source not "../src/components/Social";

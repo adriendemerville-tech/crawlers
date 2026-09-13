@@ -349,7 +349,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                          <Input {...field} type="email" className="pl-8 h-9 text-sm" placeholder="email@example.com" />
+                          <Input {...field} type="email" className="pl-8 h-11 text-sm" placeholder="email@example.com" />
                         </div>
                       </FormControl>
                       <FormMessage className="text-xs" />
@@ -368,7 +368,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                           <Input
                             {...field}
                             type={showPassword ? 'text' : 'password'}
-                            className="pl-8 pr-8 h-9 text-sm"
+                            className="pl-8 pr-8 h-11 text-sm"
                           />
                           <button
                             type="button"
@@ -383,7 +383,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                     </FormItem>
                   )}
                 />
-                <Button type="submit" variant="hero" className="w-full h-9 text-sm" disabled={isLoading}>
+                <Button type="submit" variant="hero" className="w-full h-11 text-sm" disabled={isLoading}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
                 </Button>
                 <div className="text-right">
@@ -441,7 +441,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                             <FormControl>
                               <div className="relative">
                                 <User className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                                <Input {...field} className="pl-8 h-9 text-sm" />
+                                <Input {...field} className="pl-8 h-11 text-sm" />
                               </div>
                             </FormControl>
                             <FormMessage className="text-xs" />
@@ -455,7 +455,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                           <FormItem>
                             <FormLabel className="text-xs">{t.lastName}</FormLabel>
                             <FormControl>
-                              <Input {...field} className="h-9 text-sm" />
+                              <Input {...field} className="h-11 text-sm" />
                             </FormControl>
                             <FormMessage className="text-xs" />
                           </FormItem>
@@ -477,7 +477,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                           <Input
                             {...field}
                             type="email"
-                            className="pl-8 h-9 text-sm"
+                            className="pl-8 h-11 text-sm"
                             placeholder="email@example.com"
                             onChange={(e) => handleSignupEmailChange(e.target.value, field.onChange)}
                           />
@@ -499,7 +499,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                           <Input
                             {...field}
                             type={showPassword ? 'text' : 'password'}
-                            className="pl-8 pr-8 h-9 text-sm"
+                            className="pl-8 pr-8 h-11 text-sm"
                           />
                           <button
                             type="button"
@@ -535,7 +535,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                   </div>
                 )}
 
-                <Button type="submit" variant="hero" className="w-full h-9 text-sm" disabled={isLoading || (!existingUser && !cgvuAccepted)}>
+                <Button type="submit" variant="hero" className="w-full h-11 text-sm" disabled={isLoading || (!existingUser && !cgvuAccepted)}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (existingUser ? t.loginButton : t.signupButton)}
                 </Button>
               </form>

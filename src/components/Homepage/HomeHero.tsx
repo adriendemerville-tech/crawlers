@@ -62,8 +62,8 @@ function HomeHeroComponent() {
   return (
     <section className="relative pt-6 pb-8 sm:pt-10 sm:pb-14 lg:pt-12 lg:pb-16 px-4 sm:px-6 overflow-hidden">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-40 -top-40 h-[24rem] w-[24rem] rounded-full bg-brand-violet/5 blur-[80px]" />
-        <div className="absolute -bottom-40 -right-40 h-[24rem] w-[24rem] rounded-full bg-brand-gold/5 blur-[80px]" />
+        <div className="absolute -left-40 -top-40 h-[24rem] w-[24rem] rounded-full bg-brand-violet/5 blur-[80px] hidden sm:block" />
+        <div className="absolute -bottom-40 -right-40 h-[24rem] w-[24rem] rounded-full bg-brand-gold/5 blur-[80px] hidden sm:block" />
       </div>
 
       <div className="container mx-auto relative z-10">
