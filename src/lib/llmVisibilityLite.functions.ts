@@ -24,8 +24,8 @@ export interface LlmLitePayload {
 const MODELS = [
   { name: "ChatGPT", model: "openai/gpt-5-nano" },
   { name: "Gemini", model: "google/gemini-2.5-flash-lite" },
-  { name: "Claude", model: "openai/gpt-5-mini" },
-  { name: "Mistral", model: "google/gemini-2.5-flash" },
+  { name: "Claude", model: "anthropic/claude-3-5-sonnet" },
+  { name: "Mistral", model: "mistral/mistral-large-latest" },
 ] as const;
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
