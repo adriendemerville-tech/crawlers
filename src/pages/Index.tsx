@@ -24,7 +24,7 @@ import { Link, useNavigate } from '@/lib/router-compat';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Crown, ArrowRight, FileSearch, Search, Globe, Brain, ShieldCheck } from 'lucide-react';
+import { Crown, ArrowRight, FileSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ActiveCrawlBanner } from '@/components/ActiveCrawlBanner';
 import { PageEditorial } from '@/components/seo/PageEditorial';
@@ -59,11 +59,9 @@ const TrustBanner = lazy(() => import('@/components/HomepageSections').then(m =>
 const AgencyComparisonSection = lazy(() => import('@/components/Homepage/AgencyComparisonSection'));
 const AIAgentsSection = lazy(() => import('@/components/Homepage/AIAgentsSection').then(m => ({ default: m.AIAgentsSection })));
 const ContentArchitectSection = lazy(() => import('@/components/Homepage/ContentArchitectSection').then(m => ({ default: m.ContentArchitectSection })));
-const MarketplaceTeaserSection = lazy(() => import('@/components/Homepage/MarketplaceTeaserSection').then(m => ({ default: m.MarketplaceTeaserSection })));
 const GoogleCrossDataSection = lazy(() => import('@/components/Homepage/GoogleCrossDataSection').then(m => ({ default: m.GoogleCrossDataSection })));
 const PainPointsSection = lazy(() => import('@/components/Homepage/PainPointsSection').then(m => ({ default: m.PainPointsSection })));
 const MarinaDeepAuditSection = lazy(() => import('@/components/Homepage/MarinaDeepAuditSection').then(m => ({ default: m.MarinaDeepAuditSection })));
-const ExtensionSection = lazy(() => import('@/components/Homepage/ExtensionSection').then(m => ({ default: m.ExtensionSection })));
 const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
 const SiloHub = lazy(() => import('@/components/seo/SiloHub').then(m => ({ default: m.SiloHub })));
 
@@ -744,90 +742,13 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Place d'échange de backlinks */}
-        <div className="cv-auto"><Suspense fallback={null}><MarketplaceTeaserSection /></Suspense></div>
-
         {/* Google Cross Data — SEA→SEO Bridge */}
         <div className="cv-auto"><Suspense fallback={null}><GoogleCrossDataSection /></Suspense></div>
 
         {/* Content Architect */}
         <div className="cv-auto-lg home-bias-right"><Suspense fallback={null}><ContentArchitectSection /></Suspense></div>
 
-
-        {/* E-E-A-T Section */}
-        <section className="py-20 relative overflow-hidden cv-auto">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/3 via-transparent to-emerald-500/3" />
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
-              {/* Left — text */}
-              <div className="flex-1 space-y-5">
-                <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  {language === 'fr' ? 'E-E-A-T · Confiance Google' : language === 'es' ? 'E-E-A-T · Confianza Google' : 'E-E-A-T · Google Trust'}
-                </div>
-                <h2 className="t-h1 font-bold">
-                  {language === 'fr'
-                    ? 'Mesurez votre score E-E-A-T et renforcez votre crédibilité'
-                    : language === 'es'
-                    ? 'Mida su puntuación E-E-A-T y refuerce su credibilidad'
-                    : 'Measure your E-E-A-T score and boost your credibility'}
-                </h2>
-                <p className="text-muted-foreground leading-relaxed max-w-xl">
-                  {language === 'fr' ? (
-                    <>
-                      <strong>Expérience, Expertise, Autorité, Fiabilité</strong> — les 4 piliers que Google utilise pour évaluer la qualité de votre contenu. Notre outil <strong>analyse automatiquement vos pages</strong> et génère des recommandations actionnables.
-                    </>
-                  ) : language === 'es' ? (
-                    <>
-                      <strong>Experiencia, Pericia, Autoridad, Fiabilidad</strong> — los 4 pilares que Google usa para evaluar la calidad de su contenido. Nuestra herramienta <strong>analiza automáticamente sus páginas</strong> y genera recomendaciones accionables.
-                    </>
-                  ) : (
-                    <>
-                      <strong>Experience, Expertise, Authoritativeness, Trustworthiness</strong> — the 4 pillars Google uses to evaluate your content quality. Our tool <strong>automatically analyzes your pages</strong> and generates actionable recommendations.
-                    </>
-                  )}
-                </p>
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <Link to="/app/eeat">
-                    <Button size="lg" className="gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0 shadow-lg">
-                      <Search className="h-4 w-4" />
-                      {language === 'fr' ? 'Lancer un audit E-E-A-T gratuit' : language === 'es' ? 'Iniciar una auditoría E-E-A-T gratis' : 'Run a free E-E-A-T audit'}
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link to="/eeat">
-                    <Button variant="outline" size="lg" className="gap-2">
-                      {language === 'fr' ? 'En savoir plus' : language === 'es' ? 'Saber más' : 'Learn more'}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Right — 4 pillar cards */}
-              <div className="grid grid-cols-2 gap-4 w-full lg:w-[420px] shrink-0">
-                {[
-                  { letter: 'E', label: language === 'fr' ? 'Expérience' : 'Experience', Icon: FileSearch },
-                  { letter: 'E', label: language === 'fr' ? 'Expertise' : 'Expertise', Icon: Brain },
-                  { letter: 'A', label: language === 'fr' ? 'Autorité' : 'Authority', Icon: Globe },
-                  { letter: 'T', label: language === 'fr' ? 'Fiabilité' : 'Trust', Icon: ShieldCheck },
-                ].map((p) => (
-                  <div key={p.label} className="rounded-xl border border-border/60 bg-card/80 backdrop-blur p-5 text-center space-y-2 hover:shadow-lg transition-shadow">
-                    <p.Icon className="h-7 w-7 mx-auto text-muted-foreground" strokeWidth={1.5} />
-                    <p className="text-2xl font-black text-foreground">{p.letter}</p>
-                    <p className="text-sm font-medium text-muted-foreground">{p.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-
         <div className="cv-auto home-bias-left"><Suspense fallback={null}><HybridSection /></Suspense></div>
-
-
-        {/* Chrome Extension — short teaser */}
-        <div className="cv-auto home-bias-right"><Suspense fallback={null}><ExtensionSection /></Suspense></div>
 
 
 
