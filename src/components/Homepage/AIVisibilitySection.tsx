@@ -71,8 +71,8 @@ function AIVisibilitySectionComponent() {
   return (
     <section className="relative flex min-h-0 sm:min-h-[40vh] items-center justify-center overflow-hidden px-4 sm:px-6 py-10 sm:py-12">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-60 -top-60 h-[28rem] w-[28rem] rounded-full bg-brand-violet/5 blur-[100px]" />
-        <div className="absolute -bottom-60 -right-60 h-[28rem] w-[28rem] rounded-full bg-brand-violet/5 blur-[100px]" />
+        <div className="absolute -left-60 -top-60 h-[28rem] w-[28rem] rounded-full bg-brand-violet/5 blur-[100px] max-sm:hidden" />
+        <div className="absolute -bottom-60 -right-60 h-[28rem] w-[28rem] rounded-full bg-brand-violet/5 blur-[100px] max-sm:hidden" />
       </div>
 
       <div className="relative mx-auto w-full max-w-4xl text-center">
