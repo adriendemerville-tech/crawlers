@@ -368,7 +368,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                           <Input
                             {...field}
                             type={showPassword ? 'text' : 'password'}
-                            className="pl-8 pr-8 h-9 text-sm"
+                            className="pl-8 pr-8 h-11 text-sm"
                           />
                           <button
                             type="button"
@@ -383,7 +383,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                     </FormItem>
                   )}
                 />
-                <Button type="submit" variant="hero" className="w-full h-9 text-sm" disabled={isLoading}>
+                <Button type="submit" variant="hero" className="w-full h-11 text-sm" disabled={isLoading}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
                 </Button>
                 <div className="text-right">
