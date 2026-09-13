@@ -209,6 +209,15 @@ export function AudienceRouter() {
   }, []);
 
   useEffect(() => {
+    if (!visible) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [visible]);
+
+  useEffect(() => {
     if (visible && !thinking && !clarify && !isListening) inputRef.current?.focus();
   }, [visible, thinking, clarify, isListening]);
 
@@ -304,89 +313,95 @@ export function AudienceRouter() {
   return (
     <section
       aria-label="Orientation du visiteur"
-      className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 px-4 py-3 shadow-sm backdrop-blur-sm animate-fade-in"
+      aria-modal="true"
+      role="dialog"
+      className="fixed inset-0 z-50 flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-background px-4 py-8 animate-fade-in sm:px-6"
     >
-      {thinking ? (
-        <div className="mx-auto flex max-w-5xl items-center justify-center gap-3 py-1 text-sm text-muted-foreground">
-          <CrawlersLogoPulse size={20} />
-          <span>Crawlers réfléchit…</span>
-        </div>
-      ) : clarify ? (
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 sm:flex-row">
-          <p className="text-sm text-foreground">
-            Vous occupez-vous vous-même de votre site ou êtes-vous professionnel du référencement ?
-          </p>
-          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            <button
-              type="button"
-              onClick={() => apply('business')}
-              className="rounded-full border border-foreground/40 px-4 py-2 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
-            >
-              Je m'occupe de mon site
-            </button>
-            <button
-              type="button"
-              onClick={() => apply('pro')}
-              className="rounded-full border border-foreground/40 px-4 py-2 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
-            >
-              Je suis pro SEO
-            </button>
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
+        <img
+          src="/crawlers-logo-violet.png"
+          alt="Crawlers"
+          className="mb-10 h-12 w-auto sm:h-14"
+        />
+        {thinking ? (
+          <div className="flex min-h-48 items-center justify-center gap-4 text-base text-muted-foreground">
+            <CrawlersLogoPulse size={32} />
+            <span>Crawlers réfléchit…</span>
           </div>
-        </div>
-      ) : (
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 sm:flex-row">
-          <p className="text-sm text-foreground">
-            Pourquoi avez-vous besoin de Crawlers ?
-          </p>
-          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            <input
-              ref={inputRef}
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  submit();
-                }
-              }}
-              placeholder={placeholder}
-              aria-label="Pourquoi avez-vous besoin de Crawlers ?"
-              className="min-w-0 flex-1 rounded-full border border-border bg-secondary/40 px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 sm:flex-none sm:w-80"
-            />
-            <button
-              type="button"
-              onClick={toggleVoice}
-              aria-label={isListening ? 'Arrêter la dictée vocale' : 'Dictée vocale'}
-              className={`
-                flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors
-                ${
+        ) : clarify ? (
+          <div className="flex w-full flex-col items-center gap-8">
+            <h2 className="t-h2 max-w-2xl font-display font-bold text-foreground">
+              Vous occupez-vous vous-même de votre site ou êtes-vous professionnel du référencement ?
+            </h2>
+            <div className="flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => apply('business')}
+                className="min-h-11 rounded-full border border-foreground/40 px-5 py-2.5 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
+              >
+                Je m'occupe de mon site
+              </button>
+              <button
+                type="button"
+                onClick={() => apply('pro')}
+                className="min-h-11 rounded-full border border-foreground/40 px-5 py-2.5 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
+              >
+                Je suis pro SEO
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex w-full flex-col items-center">
+            <h2 className="t-h1 mb-8 max-w-2xl font-display font-bold text-foreground">
+              Pourquoi avez-vous besoin de Crawlers ?
+            </h2>
+            <div className="flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border bg-secondary/30 p-2 sm:p-3">
+              <input
+                ref={inputRef}
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submit();
+                  }
+                }}
+                placeholder={placeholder}
+                aria-label="Pourquoi avez-vous besoin de Crawlers ?"
+                className="h-11 min-w-0 flex-1 bg-transparent px-3 text-base text-foreground outline-none placeholder:text-muted-foreground/60"
+              />
+              <button
+                type="button"
+                onClick={toggleVoice}
+                aria-label={isListening ? 'Arrêter la dictée vocale' : 'Dictée vocale'}
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-colors ${
                   isListening
-                    ? 'border-violet-500 text-violet-500 hover:bg-violet-500/10'
+                    ? 'border-brand-violet text-brand-violet hover:bg-brand-violet/10'
                     : 'border-foreground/30 text-foreground hover:border-foreground hover:bg-foreground/5'
-                }
-              `}
-            >
-              <Mic className={`h-4 w-4 ${isListening ? 'animate-pulse' : ''}`} />
-            </button>
-            <button
-              type="button"
-              onClick={submit}
-              disabled={!answer.trim()}
-              aria-label="Envoyer"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground/30 text-foreground transition-colors hover:border-foreground hover:bg-foreground/5 disabled:opacity-30"
-            >
-              <SendIcon className="h-4 w-4" />
-            </button>
+                }`}
+              >
+                <Mic className={`h-4 w-4 ${isListening ? 'animate-pulse' : ''}`} />
+              </button>
+              <button
+                type="button"
+                onClick={submit}
+                disabled={!answer.trim()}
+                aria-label="Envoyer"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-foreground/30 text-foreground transition-colors hover:border-foreground hover:bg-foreground/5 disabled:opacity-30"
+              >
+                <SendIcon />
+              </button>
+            </div>
             <button
               type="button"
               onClick={() => apply('pro')}
-              className="rounded-full border border-foreground/30 px-4 py-2 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
+              className="mt-6 min-h-11 border-0 bg-transparent px-3 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
             >
-              Passer
+              Voir le site sans répondre
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 
