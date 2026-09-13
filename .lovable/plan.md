@@ -40,11 +40,16 @@ Sections retirées de la home (contenu conservé sur leurs pages dédiées, avec
 
 - `AudienceRouter` : passer d'overlay bloquant à bandeau discret non modal, mémorisé, sans empêcher la lecture de la home.
 
+## Contrainte forte
+
+- **CTA et lead magnets : hors périmètre de modification.** On ne change pas leur wording, leur destination, leur variante de bouton, leur mécanique de conversion ni leur logique métier. On peut seulement les déplacer dans la page, les entourer d'un contexte plus léger ou les masquer temporairement sur mobile si une section entière est retirée.
+
 ## Vérification
 
 - Playwright 360/390/430 px : aucune largeur excédentaire, hauteur page et nombre de mots mesurés avant/après.
 - Build OK, zéro erreur console bloquante.
 - Cible : ≤ ~8 000 px de hauteur mobile, ~1 500 mots, 6 sections, 1 action dominante par section.
+- Vérifier que les CTA et lead magnets conservent leur comportement et leur cible d'origine.
 
 ## Hors scope
 
