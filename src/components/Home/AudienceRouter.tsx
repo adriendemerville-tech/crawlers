@@ -308,105 +308,86 @@ export function AudienceRouter() {
   return (
     <section
       aria-label="Orientation du visiteur"
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-4 animate-fade-in"
+      className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 px-4 py-3 shadow-sm backdrop-blur-sm animate-fade-in"
     >
       {thinking ? (
-        <div className="flex flex-col items-center justify-center">
-          <CrawlersLogoPulse />
+        <div className="mx-auto flex max-w-5xl items-center justify-center gap-3 py-1 text-sm text-muted-foreground">
+          <CrawlersLogoPulse size={20} />
+          <span>Crawlers réfléchit…</span>
         </div>
       ) : clarify ? (
-        <div className="flex w-full max-w-2xl flex-col items-center gap-8 px-2 text-center">
-          <h2 className="text-2xl font-medium leading-snug text-foreground sm:text-3xl">
-            Vous occupez-vous vous-même de votre site internet ou êtes-vous
-            professionnel du référencement&nbsp;?
-          </h2>
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 sm:flex-row">
+          <p className="text-sm text-foreground">
+            Vous occupez-vous vous-même de votre site ou êtes-vous professionnel du référencement ?
+          </p>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             <button
               type="button"
               onClick={() => apply('business')}
-              className="rounded-full border border-foreground/40 px-6 py-3 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
+              className="rounded-full border border-foreground/40 px-4 py-2 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
             >
-              Je m'occupe moi-même de mon site
+              Je m'occupe de mon site
             </button>
             <button
               type="button"
               onClick={() => apply('pro')}
-              className="rounded-full border border-foreground/40 px-6 py-3 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
+              className="rounded-full border border-foreground/40 px-4 py-2 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
             >
-              Je suis professionnel du référencement
+              Je suis pro SEO
             </button>
           </div>
         </div>
       ) : (
-
-        <div className="flex w-full max-w-3xl flex-col items-center gap-8 px-2 text-center">
-          <h2 className="max-w-3xl text-2xl font-medium leading-snug text-foreground sm:text-4xl">
-            Pourquoi avez-vous besoin de Crawlers&nbsp;?
-          </h2>
-
-          <div className="w-full">
-            <div className="flex items-end gap-2 rounded-3xl border border-border bg-secondary/40 px-3 py-3 backdrop-blur-sm">
-              <button
-                type="button"
-                aria-label="Options"
-                className="mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <Plus className="h-5 w-5" />
-              </button>
-
-              <textarea
-                ref={inputRef}
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    submit();
-                  }
-                }}
-                rows={1}
-                placeholder={placeholder}
-                aria-label="Pourquoi avez-vous besoin de Crawlers ?"
-                className="max-h-32 min-h-[2rem] flex-1 resize-none bg-transparent px-1 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 sm:text-base"
-              />
-
-              <div className="flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
-                  onClick={toggleVoice}
-                  aria-label={isListening ? 'Arrêter la dictée vocale' : 'Dictée vocale'}
-                  className={`
-                    flex h-8 w-8 items-center justify-center rounded-full border transition-colors
-                    ${
-                      isListening
-                        ? 'border-violet-500 text-violet-500 hover:bg-violet-500/10'
-                        : 'border-foreground/30 text-foreground hover:border-foreground hover:bg-foreground/5'
-                    }
-                  `}
-                >
-                  <Mic className={`h-5 w-5 ${isListening ? 'animate-pulse' : ''}`} />
-                </button>
-                <button
-                  type="button"
-                  onClick={submit}
-                  disabled={!answer.trim()}
-                  aria-label="Envoyer"
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-foreground/30 text-foreground transition-colors hover:border-foreground hover:bg-foreground/5 disabled:opacity-30"
-                >
-                  <SendIcon />
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4 flex justify-center">
-              <button
-                type="button"
-                onClick={() => apply('pro')}
-                className="text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
-              >
-                Voir le site sans répondre
-              </button>
-            </div>
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 sm:flex-row">
+          <p className="text-sm text-foreground">
+            Pourquoi avez-vous besoin de Crawlers ?
+          </p>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            <input
+              ref={inputRef as React.RefObject<HTMLInputElement>}
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  submit();
+                }
+              }}
+              placeholder={placeholder}
+              aria-label="Pourquoi avez-vous besoin de Crawlers ?"
+              className="min-w-0 flex-1 rounded-full border border-border bg-secondary/40 px-4 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 sm:flex-none sm:w-80"
+            />
+            <button
+              type="button"
+              onClick={toggleVoice}
+              aria-label={isListening ? 'Arrêter la dictée vocale' : 'Dictée vocale'}
+              className={`
+                flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors
+                ${
+                  isListening
+                    ? 'border-violet-500 text-violet-500 hover:bg-violet-500/10'
+                    : 'border-foreground/30 text-foreground hover:border-foreground hover:bg-foreground/5'
+                }
+              `}
+            >
+              <Mic className={`h-4 w-4 ${isListening ? 'animate-pulse' : ''}`} />
+            </button>
+            <button
+              type="button"
+              onClick={submit}
+              disabled={!answer.trim()}
+              aria-label="Envoyer"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-foreground/30 text-foreground transition-colors hover:border-foreground hover:bg-foreground/5 disabled:opacity-30"
+            >
+              <SendIcon className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => apply('pro')}
+              className="rounded-full border border-foreground/30 px-4 py-2 text-sm text-foreground transition-colors hover:border-foreground hover:bg-foreground/5"
+            >
+              Passer
+            </button>
           </div>
         </div>
       )}
