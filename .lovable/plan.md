@@ -1,6 +1,6 @@
 # Plan d'amélioration — Home pro mobile
 
-Objectif : passer la home `/` (audience pro SEO) d'une page de 16 657 px / 2 226 mots / 21 sections à un parcours de conversion mobile court : **promesse → preuve → démonstration → inscription**, cible ~1 500 mots et ~6 sections.
+Objectif : passer la home `/` (audience pro SEO) d'une page de 16 657 px / 2 226 mots / 21 sections à un parcours de conversion mobile court : **promesse → preuve → démonstration → inscription**, cible ~1 500 mots et ~6 sections. **Les CTA et lead magnets existants ne sont pas modifiés : on réorganise leur environnement, pas leur wording, leur cible ni leur mécanique.**
 
 ## Étape 1 — Réduire la structure (impact majeur)
 
