@@ -27,8 +27,8 @@ Sections retirées de la home (contenu conservé sur leurs pages dédiées, avec
 
 ## Étape 4 — Charte graphique
 
-- CTA encore en dégradé/couleurs hors charte → variante `hero` (fond transparent, bordure, texte contrasté, largeur ajustée au libellé).
-- Aligner l'ambiance visuelle sur `/audit-geo-seo` (plus claire et rassurante).
+- **Ne pas modifier les CTA et lead magnets existants** : leur wording, destination et mécanique restent ceux en production. Seuls les éléments décoratifs hors charte déjà présents (gradients non conformes, halos qui débordent) sont nettoyés ou masqués sur mobile.
+- Aligner l'ambiance visuelle sur `/audit-geo-seo` (plus claire et rassurante) sans toucher aux boutons d'action.
 
 ## Étape 5 — Corrections techniques mesurées
 
