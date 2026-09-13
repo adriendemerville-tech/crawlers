@@ -199,7 +199,7 @@ export function AudienceRouter() {
   const [thinking, setThinking] = useState(false);
   const [clarify, setClarify] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   // Client-only : jamais rendu en SSR, donc aucun impact sur le HTML indexé.
