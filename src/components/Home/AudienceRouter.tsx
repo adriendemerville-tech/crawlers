@@ -324,7 +324,7 @@ export function AudienceRouter() {
           className="mb-10 h-12 w-auto sm:h-14"
         />
         {thinking ? (
-          <div className="flex min-h-48 items-center justify-center gap-4 text-base text-muted-foreground">
+          <div className="flex min-h-48 items-center justify-center gap-8 text-base text-muted-foreground">
             <CrawlersLogoPulse size={32} />
             <span>Crawlers réfléchit…</span>
           </div>
