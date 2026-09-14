@@ -13,6 +13,7 @@ import {
   type SiteIdentity,
 } from '../contentIntegrity/index.ts';
 import { writeIntegrityFindingsToWorkbench } from '../contentIntegrity/workbench.ts';
+import { writeEmphasisFindingsToWorkbench } from '../emphasisWorkbench.ts';
 import { aggregateBotRendering } from '../botRenderingShell.ts';
 import { verifyAbsences, type AbsenceVerificationReport } from '../absenceVerification.ts';
 import { detectRiskClaims, detectAuthorityMismatch } from '../trustClaims.ts';
