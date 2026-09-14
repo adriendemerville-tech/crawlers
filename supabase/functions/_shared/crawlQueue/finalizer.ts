@@ -13,6 +13,7 @@ import {
   type SiteIdentity,
 } from '../contentIntegrity/index.ts';
 import { writeIntegrityFindingsToWorkbench } from '../contentIntegrity/workbench.ts';
+import { writeEmphasisFindingsToWorkbench } from '../emphasisWorkbench.ts';
 import { aggregateBotRendering } from '../botRenderingShell.ts';
 import { verifyAbsences, type AbsenceVerificationReport } from '../absenceVerification.ts';
 import { detectRiskClaims, detectAuthorityMismatch } from '../trustClaims.ts';
@@ -336,6 +337,14 @@ async function runContentIntegrity(
   // Remontée dans le Workbench (source consommée par Parménion & le Stratège)
   if (job.user_id) {
     await writeIntegrityFindingsToWorkbench(supabase, report, {
+      domain,
+      userId: job.user_id,
+      trackedSiteId: (site as any)?.id || null,
+      sourceFunction: 'crawl',
+    }).catch(() => {});
+
+    // Signal éditorial des mises en exergue (<strong>/<b>) — hors score.
+    await writeEmphasisFindingsToWorkbench(supabase, pages, {
       domain,
       userId: job.user_id,
       trackedSiteId: (site as any)?.id || null,
