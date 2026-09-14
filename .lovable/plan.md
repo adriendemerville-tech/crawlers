@@ -148,6 +148,7 @@ Ce que la mesure change concrètement dans le cycle :
 - **Limite assumée :** un delta n'est pas une preuve de causalité. Une mise à
   jour d'algorithme ou une saisonnalité peut porter le gain. Le contexte marché
   réduit ce biais sans le supprimer, et rien n'est présenté comme certain.
+
 ## Ordre de réalisation
 
 1. Bloc 4 (cycle de vie) puis Bloc 2 (attribution IA) : coût quasi nul, aucune
