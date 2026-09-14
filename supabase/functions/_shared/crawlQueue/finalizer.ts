@@ -341,6 +341,14 @@ async function runContentIntegrity(
       trackedSiteId: (site as any)?.id || null,
       sourceFunction: 'crawl',
     }).catch(() => {});
+
+    // Signal éditorial des mises en exergue (<strong>/<b>) — hors score.
+    await writeEmphasisFindingsToWorkbench(supabase, pages, {
+      domain,
+      userId: job.user_id,
+      trackedSiteId: (site as any)?.id || null,
+      sourceFunction: 'crawl',
+    }).catch(() => {});
   }
 
   console.log(
