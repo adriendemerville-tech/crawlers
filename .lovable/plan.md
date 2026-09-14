@@ -53,6 +53,54 @@ mesure ──► photo APRÈS ──► récompense GSC (existante)
 - `score_spiral_priority` ajoute deux termes bornés, volontairement plus faibles que le signal GSC : contexte marché entre −8 et +6, récompense IA entre −6 et +6, avec repli neutre quand la mesure est absente.
 - Le seuil de pause automatique reste piloté par le seul signal GSC : un marché défavorable ne doit pas geler un domaine.
 
+## Bloc 4 — Cycle de vie du constat dans le Workbench
+
+Aujourd'hui un constat exécuté passe en `done` tout de suite : la boucle perd la
+trace au moment même où la mesure commence. C'est le vrai défaut.
+
+Nouveau cycle, sans nouvelle file :
+
+```text
+pending ─► in_progress ─► executed (mesure en cours) ─► done | regressed
+```
+
+- `executed` : l'action est faite mais pas encore jugée. Le constat **reste
+  visible** dans le Workbench, en lecture seule, avec la date de mesure attendue.
+- `done` : mesure terminée et récompense positive. Le constat sort de la file.
+- `regressed` : mesure terminée et récompense négative. Le constat redevient
+  éligible, avec le motif (perte propre ou perte concurrentielle nommée) et le
+  compteur de tentatives incrémenté.
+- Les états `executed` **ne comptent pas** dans le plafond de 40 constats actifs
+  par domaine, sinon la file se bouche pendant les 14 à 30 jours de mesure.
+- `workbench-hygiene` archive un `executed` jamais mesurable au bout de 45 jours,
+  en `dismissed` et jamais en `done`.
+
+## Conséquences de la mesure du ROI
+
+Ce que la mesure change concrètement dans le cycle :
+
+- **Le ROI devient une donnée, pas une promesse.** Chaque action porte son gain
+  mesuré en clics, position et citations IA. On peut dire quel type d'action
+  rapporte sur un domaine donné, et arrêter ceux qui ne rapportent rien.
+- **Le ROI face à la concurrence sépare deux échecs très différents :** perdre
+  parce que notre action était mauvaise, ou perdre parce qu'un concurrent a
+  investi plus. Le premier justifie de refaire autrement ; le second justifie
+  de changer de terrain, pas de s'acharner.
+- **Effet de sélection :** le score de priorité privilégie progressivement les
+  familles d'actions rentables sur ce domaine. Risque à surveiller : un
+  enfermement sur ce qui marche déjà. D'où des bornes volontairement faibles sur
+  les nouveaux signaux et le maintien de la rotation de clusters existante.
+- **Effet sur la pause automatique :** inchangée, toujours pilotée par le seul
+  signal GSC. Un marché globalement défavorable ne doit pas geler un domaine dont
+  les actions sont saines.
+- **Effet de latence :** un jugement fiable coûte 14 jours en SEO et 30 en IA. La
+  boucle reste donc lente par nature ; la vitesse vient du nombre d'actions en
+  parallèle, pas du raccourcissement des fenêtres.
+- **Limite assumée :** un delta n'est pas une preuve de causalité. Une mise à
+  jour d'algorithme ou une saisonnalité peut porter le gain. Le contexte marché
+  réduit ce biais sans le supprimer, et rien n'est présenté comme certain.
+
+
 ## Coût et garde-fous
 
 - SERP : 3 à 5 requêtes par décision et par phase, mutualisées et mises en cache 24 h. Plafond dur par domaine et par jour, sinon la phase est marquée non mesurée.
