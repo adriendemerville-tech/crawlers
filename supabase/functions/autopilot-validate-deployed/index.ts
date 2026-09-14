@@ -1,5 +1,6 @@
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { arbitrateNegativeRewards } from '../_shared/periclesCompetitiveScan.ts';
 
 const MAX_ITEMS = 10;
 const MIN_BODY_CHARS = 500;
@@ -7,6 +8,37 @@ const JACCARD_THRESHOLD = 0.5;
 const QUALITY_THRESHOLD = 40;
 const MAX_ATTEMPTS = 3;
 const MIN_DEPLOYED_MINUTES = 60;
+/** Fenêtre GSC de mesure de la récompense Périclès (jours) */
+const REWARD_WINDOW_DAYS = 14;
+
+/**
+ * La validation technique conclut « done » : le changement est bien en ligne.
+ * Le verdict de rentabilité reste ouvert (`reward_verdict = 'pending_measure'`)
+ * jusqu'à la mesure GSC/GEO de Périclès, qui écrira 'rewarded' | 'regressed'
+ * | 'market_loss'. Les deux jugements restent volontairement distincts.
+ */
+function doneUpdate(attempt?: number): Record<string, unknown> {
+  return {
+    status: 'done',
+    ...(attempt === undefined ? {} : { validate_attempts: attempt }),
+    reward_verdict: 'pending_measure',
+    measurement_due_at: new Date(Date.now() + REWARD_WINDOW_DAYS * 86400_000).toISOString(),
+  };
+}
+
+/**
+ * Écrit le verdict technique sans jamais le perdre : si les colonnes de verdict
+ * de rentabilité n'existent pas encore en base, on retombe sur les seules
+ * colonnes historiques (`status`, `validate_attempts`).
+ */
+async function markDone(sb: any, id: string, attempt?: number): Promise<void> {
+  const { error } = await sb.from('architect_workbench').update(doneUpdate(attempt)).eq('id', id);
+  if (!error) return;
+  console.warn(`[autopilot-validate-deployed] verdict fields unavailable (${error.message}) — repli statut seul`);
+  await sb.from('architect_workbench')
+    .update({ status: 'done', ...(attempt === undefined ? {} : { validate_attempts: attempt }) })
+    .eq('id', id);
+}
 
 const SCRIPT_MARKERS = ['CRAWLERS_FIX', 'crawlers-geo', 'serve-client-script', 'crawlers.fr'];
 
@@ -178,7 +210,17 @@ Deno.serve(handleRequest(async (_req) => {
     .limit(MAX_ITEMS);
 
   if (error) return jsonError(`DB error: ${error.message}`, 500);
-  if (!items || items.length === 0) return jsonOk({ validated: 0, message: 'No items to validate' });
+
+  // Arbitrage concurrentiel conditionnel : uniquement sur les décisions déjà
+  // mesurées à récompense négative et non encore arbitrées (≤ 3 × 3 requêtes SERP).
+  let arbitration: unknown[] = [];
+  try {
+    arbitration = await arbitrateNegativeRewards(sb, 3);
+  } catch (e) {
+    console.warn(`[autopilot-validate-deployed] arbitrage concurrentiel: ${(e as Error).message}`);
+  }
+
+  if (!items || items.length === 0) return jsonOk({ validated: 0, arbitration, message: 'No items to validate' });
 
   const results: Array<{ id: string; verdict: string; details: Record<string, unknown> }> = [];
 
@@ -188,7 +230,7 @@ Deno.serve(handleRequest(async (_req) => {
     const isContentLane = item.action_type === 'content' || item.action_type === 'both';
 
     if (!url) {
-      await sb.from('architect_workbench').update({ status: 'done' }).eq('id', item.id);
+      await markDone(sb, item.id);
       results.push({ id: item.id, verdict: 'done_no_url', details: {} });
       continue;
     }
@@ -216,7 +258,7 @@ Deno.serve(handleRequest(async (_req) => {
       verdict = injection.ok ? 'done' : 'retry';
 
       if (verdict === 'done') {
-        await sb.from('architect_workbench').update({ status: 'done', validate_attempts: attempt }).eq('id', item.id);
+        await markDone(sb, item.id, attempt);
       } else if (attempt >= MAX_ATTEMPTS) {
         await sb.from('architect_workbench').update({ status: 'failed' as any, validate_attempts: attempt }).eq('id', item.id);
         verdict = 'failed';
@@ -262,7 +304,7 @@ Deno.serve(handleRequest(async (_req) => {
       }
 
       if (verdict === 'done') {
-        await sb.from('architect_workbench').update({ status: 'done', validate_attempts: attempt }).eq('id', item.id);
+        await markDone(sb, item.id, attempt);
       } else if (attempt >= MAX_ATTEMPTS) {
         await sb.from('architect_workbench').update({ status: 'failed' as any, validate_attempts: attempt }).eq('id', item.id);
         verdict = 'failed';
@@ -289,7 +331,7 @@ Deno.serve(handleRequest(async (_req) => {
   const retried = results.filter(r => r.verdict === 'retry').length;
 
   console.log(`[autopilot-validate-deployed] Processed ${results.length}: ${done} done, ${failed} failed, ${retried} retry`);
-  return jsonOk({ validated: results.length, done, failed, retried, results });
+  return jsonOk({ validated: results.length, done, failed, retried, results, arbitration });
 }, 'autopilot-validate-deployed'));
 
 // ── Log helper ────────────────────────────────────────────

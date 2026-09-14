@@ -137,6 +137,29 @@ Deno.serve(async (req) => {
       results.archive_errors = await updateInBatches(supabase, uniqueIds, { status: "dismissed" });
     }
     results.archived = uniqueIds.length;
+
+    // ── 2b. Verdict de récompense non mesurable : au-delà de 45 jours après
+    // l'échéance, la fenêtre GSC/GEO n'apportera plus de signal exploitable.
+    // Le constat reste `done` (le changement est bien en ligne) : seul le
+    // verdict est clos en `unmeasurable`, sans invention de résultat.
+    const fortyFiveDaysAgo = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: unmeasurable } = await supabase
+      .from("architect_workbench")
+      .select("id")
+      .eq("status", "done")
+      .eq("reward_verdict", "pending_measure")
+      .lt("measurement_due_at", fortyFiveDaysAgo)
+      .limit(300);
+
+    const unmeasurableIds = (unmeasurable || []).map((r: any) => r.id);
+    if (unmeasurableIds.length > 0) {
+      await updateInBatches(supabase, unmeasurableIds, {
+        reward_verdict: "unmeasurable",
+        reward_verdict_reason: "Fenêtre de mesure dépassée : aucun signal GSC/GEO exploitable.",
+        reward_verdict_at: new Date().toISOString(),
+      });
+    }
+    results.reward_verdicts_closed = unmeasurableIds.length;
   }
 
   // ── 3. Plafond par domaine : garder les N meilleurs constats actifs, écarter le reste ──

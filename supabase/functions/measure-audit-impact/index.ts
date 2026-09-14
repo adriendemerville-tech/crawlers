@@ -384,6 +384,20 @@ try {
         // Capture LLM visibility at each phase (baseline, t30, t60, t90)
         if (snapshot.tracked_site_id) {
           try {
+            // Rattachement de la mesure IA à la dernière action Périclès réellement
+            // exécutée sur ce domaine (45 j max) : sans lien, la mesure GEO ne peut
+            // servir de récompense à aucune décision.
+            const { data: lastDecision } = await supabase
+              .from('pericles_decision_log')
+              .select('id')
+              .eq('domain', snapshot.domain)
+              .eq('status', 'completed')
+              .not('execution_completed_at', 'is', null)
+              .gt('execution_completed_at', new Date(Date.now() - 45 * 86400_000).toISOString())
+              .order('execution_completed_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+
             const geoResp = await fetch(
               `${Deno.env.get('SUPABASE_URL')}/functions/v1/snapshot-geo-visibility`,
               {
@@ -398,6 +412,7 @@ try {
                   user_id: snapshot.user_id,
                   measurement_phase: currentPhase,
                   audit_impact_snapshot_id: snapshot.id,
+                  pericles_decision_id: lastDecision?.id ?? null,
                 }),
               }
             )

@@ -134,7 +134,7 @@ Deno.serve(handleRequest(async (req) => {
 try {
     const supabase = getServiceClient()
     const body = await req.json()
-    const { domain, tracked_site_id, user_id, measurement_phase, audit_impact_snapshot_id } = body
+    const { domain, tracked_site_id, user_id, measurement_phase, audit_impact_snapshot_id, pericles_decision_id } = body
 
     if (!domain || !tracked_site_id || !user_id) {
       return new Response(JSON.stringify({ success: false, error: 'Missing required fields' }), {
@@ -202,32 +202,43 @@ try {
     }
 
     // Insert snapshot
+    const snapshotRow: Record<string, unknown> = {
+      tracked_site_id,
+      user_id,
+      domain,
+      measurement_phase: phase,
+      audit_impact_snapshot_id: audit_impact_snapshot_id || null,
+      overall_score: overallScore,
+      cited_count: citedCount,
+      total_models: totalModels,
+      citation_rate: Math.round(citationRate * 10) / 10,
+      provider_scores: providers,
+      avg_sentiment_score: Math.round(avgSentiment * 100) / 100,
+      recommendation_rate: Math.round(recommendationRate * 10) / 10,
+      brand_mention_count: brandMentionCount,
+      prompts_used: prompts,
+      market_sector: site?.market_sector || null,
+      delta_overall_score: deltaOverall,
+      delta_citation_rate: deltaCitation,
+      delta_sentiment: deltaSentiment,
+    }
+
+    // Rattachement à la décision Périclès : sans lui, la mesure IA n'est reliée
+    // à aucune action. La mesure ne doit jamais être perdue si la colonne
+    // n'existe pas encore : on retente alors sans le rattachement.
     const { error: insertErr } = await supabase
       .from('geo_visibility_snapshots')
-      .insert({
-        tracked_site_id,
-        user_id,
-        domain,
-        measurement_phase: phase,
-        audit_impact_snapshot_id: audit_impact_snapshot_id || null,
-        overall_score: overallScore,
-        cited_count: citedCount,
-        total_models: totalModels,
-        citation_rate: Math.round(citationRate * 10) / 10,
-        provider_scores: providers,
-        avg_sentiment_score: Math.round(avgSentiment * 100) / 100,
-        recommendation_rate: Math.round(recommendationRate * 10) / 10,
-        brand_mention_count: brandMentionCount,
-        prompts_used: prompts,
-        market_sector: site?.market_sector || null,
-        delta_overall_score: deltaOverall,
-        delta_citation_rate: deltaCitation,
-        delta_sentiment: deltaSentiment,
-      })
+      .insert({ ...snapshotRow, pericles_decision_id: pericles_decision_id || null })
 
     if (insertErr) {
-      console.error('[snapshot-geo] Insert error:', insertErr)
-      throw insertErr
+      console.warn('[snapshot-geo] Insert with decision linkage failed:', insertErr.message)
+      const { error: retryErr } = await supabase
+        .from('geo_visibility_snapshots')
+        .insert(snapshotRow)
+      if (retryErr) {
+        console.error('[snapshot-geo] Insert error:', retryErr)
+        throw retryErr
+      }
     }
 
     console.log(`[snapshot-geo] ✅ ${domain} ${phase}: score=${overallScore}, cited=${citedCount}/${totalModels}`)
