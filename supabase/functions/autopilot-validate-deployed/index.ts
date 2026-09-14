@@ -26,6 +26,20 @@ function doneUpdate(attempt?: number): Record<string, unknown> {
   };
 }
 
+/**
+ * Écrit le verdict technique sans jamais le perdre : si les colonnes de verdict
+ * de rentabilité n'existent pas encore en base, on retombe sur les seules
+ * colonnes historiques (`status`, `validate_attempts`).
+ */
+async function markDone(sb: any, id: string, attempt?: number): Promise<void> {
+  const { error } = await sb.from('architect_workbench').update(doneUpdate(attempt)).eq('id', id);
+  if (!error) return;
+  console.warn(`[autopilot-validate-deployed] verdict fields unavailable (${error.message}) — repli statut seul`);
+  await sb.from('architect_workbench')
+    .update({ status: 'done', ...(attempt === undefined ? {} : { validate_attempts: attempt }) })
+    .eq('id', id);
+}
+
 const SCRIPT_MARKERS = ['CRAWLERS_FIX', 'crawlers-geo', 'serve-client-script', 'crawlers.fr'];
 
 // ── Helpers ───────────────────────────────────────────────
