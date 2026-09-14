@@ -33,9 +33,9 @@ Passé au crible, tout n'est pas nécessaire au même titre.
 
 **Nécessaire, et c'est le vrai défaut de la boucle :**
 
-- Le cycle de vie du constat (Bloc 4). Aujourd'hui un constat exécuté sort de la
-  file avant d'être jugé : la boucle ne peut structurellement pas apprendre de
-  ses échecs. Sans ça, les deux autres blocs mesurent dans le vide.
+- Le rattachement du verdict au constat (Bloc 4). L'état d'attente existe déjà
+  (`deployed`), mais il est jugé sur un contrôle technique, pas sur la récompense
+  mesurée, et il occupe le plafond de la file pendant la mesure.
 - L'attribution de la visibilité IA (Bloc 2). Les mesures existent déjà et sont
   déjà payées ; il ne manque qu'une colonne de rattachement. Coût quasi nul,
   gain immédiat, aucun risque.
@@ -98,31 +98,31 @@ Effet unique : qualifier l'échec.
 - `score_spiral_priority` ajoute **un seul** terme borné : récompense IA entre −6 et +6, repli neutre quand la mesure est absente. Le contexte marché n'entre pas dans le score, il corrige la récompense en amont.
 - Le seuil de pause automatique reste piloté par le seul signal GSC : un marché défavorable ne doit pas geler un domaine.
 
-## Bloc 4 — Cycle de vie du constat dans le Workbench
+## Bloc 4 — Cycle de vie du constat dans le Workbench (correction après vérification)
 
-Aujourd'hui un constat exécuté passe en `done` tout de suite : la boucle perd la
-trace au moment même où la mesure commence. C'est le vrai défaut.
-
-Réponse directe : **le constat reste dans le Workbench pendant toute la durée de
-la mesure**, puis il est classé selon le verdict.
-
-Nouveau cycle, sans nouvelle file :
+Vérification faite dans le code : le cycle de vie **existe déjà** en partie. Après
+une exécution réelle, le constat passe en `deployed` (avec `deployed_at` et
+`validate_attempts`), et `autopilot-validate-deployed` le classe ensuite en `done`
+ou `failed`. Il n'y a donc **rien à réinventer** : pas de nouvel état `executed`,
+pas de `regressed`.
 
 ```text
-pending ─► in_progress ─► executed (mesure en cours) ─► done | regressed
+pending ─► in_progress ─► deployed (mesure en cours) ─► done | failed
 ```
 
-- `executed` : l'action est faite mais pas encore jugée. Le constat **reste
-  visible** dans le Workbench, en lecture seule, avec la date de mesure attendue.
-  C'est le seul état qui permet de suivre l'action jusqu'au verdict.
-- `done` : mesure terminée et récompense positive. Le constat sort de la file.
-- `regressed` : mesure terminée et récompense négative. Le constat redevient
-  éligible, avec le motif (perte propre ou perte concurrentielle nommée) et le
-  compteur de tentatives incrémenté.
-- Les états `executed` **ne comptent pas** dans le plafond de 40 constats actifs
-  par domaine, sinon la file se bouche pendant les 14 à 30 jours de mesure.
-- `workbench-hygiene` archive un `executed` jamais mesurable au bout de 45 jours,
+Ce qui manque réellement, et ce que le plan ajoute :
+
+- Le verdict est aujourd'hui rendu par une validation technique (le correctif est-il
+  bien en place ?), pas par la **récompense mesurée**. On rattache le verdict à la
+  décision Périclès : un `failed` sur récompense négative porte le motif
+  (perte propre ou perte concurrentielle nommée).
+- Les constats en `deployed` **ne comptent pas** dans le plafond de 40 constats
+  actifs par domaine, sinon la file se bouche pendant les 14 à 30 jours de mesure.
+- `workbench-hygiene` archive un `deployed` jamais mesurable au bout de 45 jours,
   en `dismissed` et jamais en `done`.
+- Le Workbench affiche l'état « en mesure » et la date de verdict attendue, en
+  lecture seule.
+
 
 ## Conséquences de la mesure du ROI
 
@@ -170,7 +170,8 @@ Ce que la mesure change concrètement dans le cycle :
 ## Détails techniques
 
 - `supabase/functions/pericles-competitive-scan/index.ts` : nouvelle fonction, entrée `{ decision_id }`, lecture via `getSerp`, appelée seulement sur récompense négative.
-- Migration : table `pericles_competitive_snapshots`, colonnes `market_context` et `geo_reward_signal` sur `pericles_decision_log`, colonne de rattachement sur `geo_visibility_snapshots`, nouveaux états sur `architect_workbench`.
+- Migration : table `pericles_competitive_snapshots`, colonnes `market_context` et `geo_reward_signal` sur `pericles_decision_log`, colonne de rattachement sur `geo_visibility_snapshots`. Aucun nouvel état sur `architect_workbench` : `deployed` / `done` / `failed` existent déjà.
+- `supabase/functions/autopilot-validate-deployed/index.ts` : le verdict lit aussi la récompense mesurée et enregistre le motif de l'échec.
 - Migration : mise à jour de `pericles_measure_rewards` (neutralisation par contexte marché, récompense IA) et de `score_spiral_priority` (un seul terme borné ajouté).
 - `supabase/functions/cron-geo-pipeline/index.ts` : propage la décision et la phase à `snapshot-geo-visibility`.
 - `supabase/functions/workbench-hygiene/index.ts` : exclut `executed` du plafond de 40, archive au-delà de 45 jours.
