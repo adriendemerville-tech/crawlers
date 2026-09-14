@@ -98,31 +98,31 @@ Effet unique : qualifier l'échec.
 - `score_spiral_priority` ajoute **un seul** terme borné : récompense IA entre −6 et +6, repli neutre quand la mesure est absente. Le contexte marché n'entre pas dans le score, il corrige la récompense en amont.
 - Le seuil de pause automatique reste piloté par le seul signal GSC : un marché défavorable ne doit pas geler un domaine.
 
-## Bloc 4 — Cycle de vie du constat dans le Workbench
+## Bloc 4 — Cycle de vie du constat dans le Workbench (correction après vérification)
 
-Aujourd'hui un constat exécuté passe en `done` tout de suite : la boucle perd la
-trace au moment même où la mesure commence. C'est le vrai défaut.
-
-Réponse directe : **le constat reste dans le Workbench pendant toute la durée de
-la mesure**, puis il est classé selon le verdict.
-
-Nouveau cycle, sans nouvelle file :
+Vérification faite dans le code : le cycle de vie **existe déjà** en partie. Après
+une exécution réelle, le constat passe en `deployed` (avec `deployed_at` et
+`validate_attempts`), et `autopilot-validate-deployed` le classe ensuite en `done`
+ou `failed`. Il n'y a donc **rien à réinventer** : pas de nouvel état `executed`,
+pas de `regressed`.
 
 ```text
-pending ─► in_progress ─► executed (mesure en cours) ─► done | regressed
+pending ─► in_progress ─► deployed (mesure en cours) ─► done | failed
 ```
 
-- `executed` : l'action est faite mais pas encore jugée. Le constat **reste
-  visible** dans le Workbench, en lecture seule, avec la date de mesure attendue.
-  C'est le seul état qui permet de suivre l'action jusqu'au verdict.
-- `done` : mesure terminée et récompense positive. Le constat sort de la file.
-- `regressed` : mesure terminée et récompense négative. Le constat redevient
-  éligible, avec le motif (perte propre ou perte concurrentielle nommée) et le
-  compteur de tentatives incrémenté.
-- Les états `executed` **ne comptent pas** dans le plafond de 40 constats actifs
-  par domaine, sinon la file se bouche pendant les 14 à 30 jours de mesure.
-- `workbench-hygiene` archive un `executed` jamais mesurable au bout de 45 jours,
+Ce qui manque réellement, et ce que le plan ajoute :
+
+- Le verdict est aujourd'hui rendu par une validation technique (le correctif est-il
+  bien en place ?), pas par la **récompense mesurée**. On rattache le verdict à la
+  décision Périclès : un `failed` sur récompense négative porte le motif
+  (perte propre ou perte concurrentielle nommée).
+- Les constats en `deployed` **ne comptent pas** dans le plafond de 40 constats
+  actifs par domaine, sinon la file se bouche pendant les 14 à 30 jours de mesure.
+- `workbench-hygiene` archive un `deployed` jamais mesurable au bout de 45 jours,
   en `dismissed` et jamais en `done`.
+- Le Workbench affiche l'état « en mesure » et la date de verdict attendue, en
+  lecture seule.
+
 
 ## Conséquences de la mesure du ROI
 
