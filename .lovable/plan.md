@@ -28,12 +28,64 @@ mesure ──► photo APRÈS ──► récompense GSC (existante)
 1. La récompense ne regarde que nos propres clics/positions GSC : une baisse due à un concurrent qui progresse est comptée comme un échec de notre action.
 2. Les mesures de visibilité IA existent mais ne sont rattachées à aucune décision : impossible de dire quelle action a fait bouger les citations.
 
-## Bloc 1 — Scan concurrentiel (amont / aval)
+## Revue critique de ce plan
 
-- Nouvelle fonction `pericles-competitive-scan`, appelée avec un identifiant de décision et une phase (`before` / `after`).
-- Elle prend les 3 à 5 mots-clés du cluster visé par la décision et interroge le **pool SERP mutualisé** (`_shared/serpPool.ts`, classe `position`, TTL 24 h) — jamais DataForSEO en direct, donc coût quasi nul quand un autre module a déjà payé la requête.
-- Elle enregistre pour chaque mot-clé : notre position, les 5 premiers domaines et leur position.
-- Table `pericles_competitive_snapshots` (décision, phase, mot-clé, notre position, top 5, date), RLS propriétaire + service role, `GRANT` explicites.
+Passé au crible, tout n'est pas nécessaire au même titre.
+
+**Nécessaire, et c'est le vrai défaut de la boucle :**
+
+- Le cycle de vie du constat (Bloc 4). Aujourd'hui un constat exécuté sort de la
+  file avant d'être jugé : la boucle ne peut structurellement pas apprendre de
+  ses échecs. Sans ça, les deux autres blocs mesurent dans le vide.
+- L'attribution de la visibilité IA (Bloc 2). Les mesures existent déjà et sont
+  déjà payées ; il ne manque qu'une colonne de rattachement. Coût quasi nul,
+  gain immédiat, aucun risque.
+
+**Nécessaire mais à conditionner (correction apportée au Bloc 1) :**
+
+- Scanner la concurrence sur **chaque** décision, deux fois, était surdimensionné :
+  cela achète de la donnée SERP pour 80 % de décisions dont le résultat GSC est
+  déjà clair. Le scan ne sert qu'à **arbitrer un échec** : « ai-je mal fait, ou
+  un concurrent a-t-il fait mieux ? ». Il devient donc conditionnel.
+
+**Superflu, retiré :**
+
+- Un scan `before` systématique. La photo « avant » se reconstitue depuis le pool
+  SERP et `keyword_universe`, qui historisent déjà les positions. Une seule photo
+  payée, au moment de l'arbitrage, suffit.
+- Un terme de score dédié au contexte marché. Un troisième terme dans
+  `score_spiral_priority` rend le score illisible pour un gain marginal. Le
+  contexte marché sert à **neutraliser** une récompense négative injuste, pas à
+  créer un signal parallèle.
+
+**Risque principal restant :** attribuer un delta à une action. Ni le SEO ni
+l'IA ne donnent de causalité propre. Le plan ne prétend donc pas mesurer une
+cause, seulement écarter les faux échecs les plus évidents.
+
+## Bloc 1 — Arbitrage concurrentiel (conditionnel)
+
+Déclenchement : **uniquement** quand la récompense GSC mesurée est négative.
+Aucun scan quand l'action a visiblement réussi.
+
+- Nouvelle fonction `pericles-competitive-scan`, entrée `{ decision_id }`, une
+  seule phase : l'état du marché au moment du verdict.
+- 3 mots-clés maximum du cluster visé, lus via le **pool SERP mutualisé**
+  (`_shared/serpPool.ts`, classe `position`, TTL 24 h) — jamais DataForSEO en
+  direct. Coût nul quand un autre module a déjà payé la requête.
+- Position « avant » reconstituée depuis l'historique déjà stocké
+  (`keyword_universe`, `serp_pool`) : aucune requête supplémentaire.
+- Table `pericles_competitive_snapshots` (décision, mot-clé, notre position,
+  top 5 domaines et positions, date), RLS propriétaire + service role, `GRANT`
+  explicites.
+
+Effet unique : qualifier l'échec.
+
+- Un concurrent identifié a pris la place → `market_context = 'competitor_gain'`,
+  récompense négative **neutralisée** (ramenée à 0), motif nommé dans le Workbench.
+- Personne n'a bougé au-dessus de nous → `market_context = 'self_loss'`,
+  récompense négative conservée telle quelle.
+- Scan impossible ou plafond atteint → `market_context = null`, récompense
+  conservée. Jamais de neutralisation par défaut.
 
 À la mesure, comparaison des deux phases pour produire un **contexte marché** :
 
