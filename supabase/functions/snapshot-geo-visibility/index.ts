@@ -134,7 +134,7 @@ Deno.serve(handleRequest(async (req) => {
 try {
     const supabase = getServiceClient()
     const body = await req.json()
-    const { domain, tracked_site_id, user_id, measurement_phase, audit_impact_snapshot_id } = body
+    const { domain, tracked_site_id, user_id, measurement_phase, audit_impact_snapshot_id, pericles_decision_id } = body
 
     if (!domain || !tracked_site_id || !user_id) {
       return new Response(JSON.stringify({ success: false, error: 'Missing required fields' }), {
@@ -210,6 +210,9 @@ try {
         domain,
         measurement_phase: phase,
         audit_impact_snapshot_id: audit_impact_snapshot_id || null,
+        // Rattachement à la décision Périclès : sans lui, la mesure IA n'est
+        // reliée à aucune action et ne peut pas servir de récompense.
+        pericles_decision_id: pericles_decision_id || null,
         overall_score: overallScore,
         cited_count: citedCount,
         total_models: totalModels,

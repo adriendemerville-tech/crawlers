@@ -599,7 +599,7 @@ try {
 
           // ═══ POST-EXECUTE ═══
           if (phase === 'execute') {
-            await markDeployedItems(supabase, siteInfo.domain, executionResults);
+            await markDeployedItems(supabase, siteInfo.domain, executionResults, lastDecisionId);
           }
 
           // ═══ Store execution results ═══

@@ -15,7 +15,12 @@ export async function markDeployedItems(
   supabase: Supabase,
   domain: string,
   executionResults: any[],
+  /** Décision Périclès à l'origine de l'exécution : sert de clé de mesure. */
+  periclesDecisionId?: string | null,
 ) {
+  const linkage = periclesDecisionId
+    ? { pericles_decision_id: periclesDecisionId, reward_verdict: 'pending_measure' }
+    : {};
   const realContentSuccesses = executionResults.filter(
     (r: any) => r.status === 'success' && r.cms_action && (
       r.cms_action === 'create-post' || r.cms_action === 'update-post' ||
@@ -40,6 +45,7 @@ export async function markDeployedItems(
           deployed_at: new Date().toISOString(),
           validate_attempts: 0,
           updated_at: new Date().toISOString(),
+          ...linkage,
         })
         .eq('domain', domain)
         .in('status', ['pending', 'in_progress'])
@@ -64,6 +70,7 @@ export async function markDeployedItems(
           deployed_at: new Date().toISOString(),
           validate_attempts: 0,
           updated_at: new Date().toISOString(),
+          ...linkage,
         })
         .eq('domain', domain)
         .in('status', ['pending', 'in_progress'])
