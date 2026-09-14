@@ -145,20 +145,29 @@ Ce que la mesure change concrètement dans le cycle :
 - **Limite assumée :** un delta n'est pas une preuve de causalité. Une mise à
   jour d'algorithme ou une saisonnalité peut porter le gain. Le contexte marché
   réduit ce biais sans le supprimer, et rien n'est présenté comme certain.
+## Ordre de réalisation
 
+1. Bloc 4 (cycle de vie) puis Bloc 2 (attribution IA) : coût quasi nul, aucune
+   dépendance externe, bénéfice immédiat sur la boucle.
+2. Bloc 1 (arbitrage concurrentiel) une fois qu'il y a des récompenses négatives
+   réellement mesurées à arbitrer — sinon on construit un juge sans dossier.
+3. Bloc 3 (réinjection) en dernier, quand les deux signaux existent.
 
 ## Coût et garde-fous
 
-- SERP : 3 à 5 requêtes par décision et par phase, mutualisées et mises en cache 24 h. Plafond dur par domaine et par jour, sinon la phase est marquée non mesurée.
+- SERP : au maximum 3 requêtes, et seulement sur une décision jugée négative,
+  donc une minorité. Mutualisées et mises en cache 24 h. Plafond dur par domaine
+  et par jour, sinon la décision reste « non arbitrée ».
 - IA : aucun appel supplémentaire, seulement le rattachement des mesures déjà planifiées.
 - LLM : zéro appel ajouté à la boucle.
-- Invariant : une phase manquante ne devient jamais un zéro. Elle reste « non mesurée » et n'influence pas le score.
+- Invariant : une mesure manquante ne devient jamais un zéro. Elle reste
+  « non mesurée » et n'influence ni le score ni la récompense.
 
 ## Détails techniques
 
-- `supabase/functions/pericles-competitive-scan/index.ts` : nouvelle fonction, entrée `{ decision_id, phase }`, lecture via `getSerp`.
-- `supabase/functions/autopilot-engine/index.ts` : déclenche la phase `before` après `execution_completed_at`, en tâche non bloquante.
-- Migration : table `pericles_competitive_snapshots`, colonnes `market_context_signal` et `geo_reward_signal` sur `pericles_decision_log`, colonnes de rattachement sur `geo_visibility_snapshots`.
-- Migration : mise à jour de `pericles_measure_rewards` (calcul du contexte marché et de la récompense IA) et de `score_spiral_priority` (deux termes bornés).
+- `supabase/functions/pericles-competitive-scan/index.ts` : nouvelle fonction, entrée `{ decision_id }`, lecture via `getSerp`, appelée seulement sur récompense négative.
+- Migration : table `pericles_competitive_snapshots`, colonnes `market_context` et `geo_reward_signal` sur `pericles_decision_log`, colonne de rattachement sur `geo_visibility_snapshots`, nouveaux états sur `architect_workbench`.
+- Migration : mise à jour de `pericles_measure_rewards` (neutralisation par contexte marché, récompense IA) et de `score_spiral_priority` (un seul terme borné ajouté).
 - `supabase/functions/cron-geo-pipeline/index.ts` : propage la décision et la phase à `snapshot-geo-visibility`.
-- UI : colonne « contexte marché » et « effet IA » dans le Workbench et le tableau de bord Périclès, en lecture seule.
+- `supabase/functions/workbench-hygiene/index.ts` : exclut `executed` du plafond de 40, archive au-delà de 45 jours.
+- UI : colonnes « en mesure », « verdict » et « effet IA » dans le Workbench et le tableau de bord Périclès, en lecture seule.
