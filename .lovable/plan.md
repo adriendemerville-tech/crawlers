@@ -87,22 +87,16 @@ Effet unique : qualifier l'échec.
 - Scan impossible ou plafond atteint → `market_context = null`, récompense
   conservée. Jamais de neutralisation par défaut.
 
-À la mesure, comparaison des deux phases pour produire un **contexte marché** :
-
-- notre position s'améliore et les concurrents stagnent → gain propre, récompense pleine ;
-- tout le monde progresse ou recule ensemble → mouvement de marché, récompense atténuée ;
-- nous reculons pendant qu'un concurrent identifié gagne la place → perte concurrentielle nommée, remontée dans le Workbench.
-
 ## Bloc 2 — Attribution de la visibilité IA
 
 - Ajout d'un lien décision sur les mesures de visibilité IA (`geo_visibility_snapshots.pericles_decision_id`, plus la phase).
-- Photo avant à l'exécution, photo après à J+30 (le délai réel d'un changement de citation), sur rotation quotidienne pour garder le budget IA actuel — pas d'augmentation du nombre de modèles interrogés.
+- Photo avant à l'exécution, photo après à J+30 (le délai réel d'un changement de citation), sur la rotation quotidienne existante — pas d'augmentation du nombre de modèles interrogés.
 - Nouveau signal `geo_reward_signal` sur la décision : delta du taux de citation et du score global, mesuré seulement si les deux photos existent.
 
 ## Bloc 3 — Réinjection
 
-- `pericles_measure_rewards` écrit les deux nouveaux champs en même temps que la récompense existante, dans la même transaction : un seul juge, pas de second mécanisme concurrent.
-- `score_spiral_priority` ajoute deux termes bornés, volontairement plus faibles que le signal GSC : contexte marché entre −8 et +6, récompense IA entre −6 et +6, avec repli neutre quand la mesure est absente.
+- `pericles_measure_rewards` reste le juge unique : il applique la neutralisation du contexte marché puis écrit `geo_reward_signal`, dans la même transaction que la récompense existante.
+- `score_spiral_priority` ajoute **un seul** terme borné : récompense IA entre −6 et +6, repli neutre quand la mesure est absente. Le contexte marché n'entre pas dans le score, il corrige la récompense en amont.
 - Le seuil de pause automatique reste piloté par le seul signal GSC : un marché défavorable ne doit pas geler un domaine.
 
 ## Bloc 4 — Cycle de vie du constat dans le Workbench
