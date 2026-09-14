@@ -18801,6 +18801,10 @@ export type Database = {
         Args: { p_decision_id: string; p_market_context: string }
         Returns: undefined
       }
+      pericles_decision_queries: {
+        Args: { p_decision_id: string; p_domain: string }
+        Returns: string[]
+      }
       pericles_decision_urls: {
         Args: { p_decision_id: string }
         Returns: string[]
