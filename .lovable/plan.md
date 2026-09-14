@@ -33,9 +33,9 @@ Passé au crible, tout n'est pas nécessaire au même titre.
 
 **Nécessaire, et c'est le vrai défaut de la boucle :**
 
-- Le cycle de vie du constat (Bloc 4). Aujourd'hui un constat exécuté sort de la
-  file avant d'être jugé : la boucle ne peut structurellement pas apprendre de
-  ses échecs. Sans ça, les deux autres blocs mesurent dans le vide.
+- Le rattachement du verdict au constat (Bloc 4). L'état d'attente existe déjà
+  (`deployed`), mais il est jugé sur un contrôle technique, pas sur la récompense
+  mesurée, et il occupe le plafond de la file pendant la mesure.
 - L'attribution de la visibilité IA (Bloc 2). Les mesures existent déjà et sont
   déjà payées ; il ne manque qu'une colonne de rattachement. Coût quasi nul,
   gain immédiat, aucun risque.
@@ -170,7 +170,8 @@ Ce que la mesure change concrètement dans le cycle :
 ## Détails techniques
 
 - `supabase/functions/pericles-competitive-scan/index.ts` : nouvelle fonction, entrée `{ decision_id }`, lecture via `getSerp`, appelée seulement sur récompense négative.
-- Migration : table `pericles_competitive_snapshots`, colonnes `market_context` et `geo_reward_signal` sur `pericles_decision_log`, colonne de rattachement sur `geo_visibility_snapshots`, nouveaux états sur `architect_workbench`.
+- Migration : table `pericles_competitive_snapshots`, colonnes `market_context` et `geo_reward_signal` sur `pericles_decision_log`, colonne de rattachement sur `geo_visibility_snapshots`. Aucun nouvel état sur `architect_workbench` : `deployed` / `done` / `failed` existent déjà.
+- `supabase/functions/autopilot-validate-deployed/index.ts` : le verdict lit aussi la récompense mesurée et enregistre le motif de l'échec.
 - Migration : mise à jour de `pericles_measure_rewards` (neutralisation par contexte marché, récompense IA) et de `score_spiral_priority` (un seul terme borné ajouté).
 - `supabase/functions/cron-geo-pipeline/index.ts` : propage la décision et la phase à `snapshot-geo-visibility`.
 - `supabase/functions/workbench-hygiene/index.ts` : exclut `executed` du plafond de 40, archive au-delà de 45 jours.
