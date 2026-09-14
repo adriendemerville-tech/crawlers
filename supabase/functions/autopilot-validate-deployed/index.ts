@@ -230,7 +230,7 @@ Deno.serve(handleRequest(async (_req) => {
     const isContentLane = item.action_type === 'content' || item.action_type === 'both';
 
     if (!url) {
-      await sb.from('architect_workbench').update(doneUpdate()).eq('id', item.id);
+      await markDone(sb, item.id);
       results.push({ id: item.id, verdict: 'done_no_url', details: {} });
       continue;
     }
