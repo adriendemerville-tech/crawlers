@@ -12892,6 +12892,9 @@ export type Database = {
           is_error: boolean
           market_context: string | null
           measured_at: string | null
+          measured_keyword_count: number | null
+          measured_scope: string | null
+          measured_target_urls: string[] | null
           pipeline_phase: string | null
           raw_reward_signal: number | null
           reward_signal: number | null
@@ -12943,6 +12946,9 @@ export type Database = {
           is_error?: boolean
           market_context?: string | null
           measured_at?: string | null
+          measured_keyword_count?: number | null
+          measured_scope?: string | null
+          measured_target_urls?: string[] | null
           pipeline_phase?: string | null
           raw_reward_signal?: number | null
           reward_signal?: number | null
@@ -12994,6 +13000,9 @@ export type Database = {
           is_error?: boolean
           market_context?: string | null
           measured_at?: string | null
+          measured_keyword_count?: number | null
+          measured_scope?: string | null
+          measured_target_urls?: string[] | null
           pipeline_phase?: string | null
           raw_reward_signal?: number | null
           reward_signal?: number | null
@@ -18792,10 +18801,15 @@ export type Database = {
         Args: { p_decision_id: string; p_market_context: string }
         Returns: undefined
       }
+      pericles_decision_urls: {
+        Args: { p_decision_id: string }
+        Returns: string[]
+      }
       pericles_error_rate: {
         Args: { p_domain: string; p_last_n?: number }
         Returns: Json
       }
+      pericles_geo_reward: { Args: { p_decision_id: string }; Returns: number }
       pericles_measure_rewards: {
         Args: { p_domain?: string; p_limit?: number; p_window_days?: number }
         Returns: Json

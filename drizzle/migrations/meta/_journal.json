@@ -281,6 +281,34 @@
       "when": 1789400573064,
       "tag": "0039_fix_spiral_cluster_id_casts",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1789403987192,
+      "tag": "0040_pericles_reward_scope_per_action",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1789404034690,
+      "tag": "0041_fix_pericles_geo_reward_column",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1789404098509,
+      "tag": "0042_pericles_measure_rewards_use_geo_helper",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1789404202329,
+      "tag": "0043_pericles_decision_urls_attribution",
+      "breakpoints": true
     }
   ]
 }
