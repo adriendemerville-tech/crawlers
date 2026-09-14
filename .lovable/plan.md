@@ -2,7 +2,11 @@
 
 ## Réponse courte aux deux questions
 
-- **À quelle étape ?** Deux fois par décision : une **photo avant** juste avant l'exécution (étape `execute`), une **photo après** au moment de la mesure (`pericles_measure_rewards`, J+14, et J+30 pour l'IA). Rien n'est ajouté à `prescribe` : la prescription reste rapide et déterministe.
+- **`prescribe` n'est pas supprimée.** Elle continue de choisir l'action, le cluster et la page cible. Rien ne change à cette étape.
+- **À quelle étape ?** Deux photos SERP et deux photos IA sont ajoutées **autour de l'exécution** :
+  - photo **avant** juste après `execute` ;
+  - photo **après** au moment de la mesure (`pericles_measure_rewards`, J+14 pour le SEO, J+30 pour l'IA).
+- **Comment ça communique ?** Tout est rattaché à l'identifiant de la décision (`pericles_decision_log`). La mesure enrichit deux nouveaux signaux sur cette même ligne, et le score de priorité les relit au tour suivant. Aucun nouvel orchestrateur, aucun appel LLM.
 - **Comment ça communique ?** Tout est rattaché à l'identifiant de la décision (`pericles_decision_log`). La mesure enrichit deux nouveaux signaux sur cette même ligne, et le score de priorité les relit au tour suivant. Aucun nouvel orchestrateur, aucun appel LLM.
 
 ```text
