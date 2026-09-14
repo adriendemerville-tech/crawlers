@@ -258,7 +258,7 @@ Deno.serve(handleRequest(async (_req) => {
       verdict = injection.ok ? 'done' : 'retry';
 
       if (verdict === 'done') {
-        await sb.from('architect_workbench').update(doneUpdate(attempt)).eq('id', item.id);
+        await markDone(sb, item.id, attempt);
       } else if (attempt >= MAX_ATTEMPTS) {
         await sb.from('architect_workbench').update({ status: 'failed' as any, validate_attempts: attempt }).eq('id', item.id);
         verdict = 'failed';
