@@ -260,6 +260,13 @@
       "when": 1789108104186,
       "tag": "0036_add_prix_audit_seo_sitemap_entry",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1789400298740,
+      "tag": "0037_pericles_attribution_schema",
+      "breakpoints": true
     }
   ]
 }

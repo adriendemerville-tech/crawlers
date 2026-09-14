@@ -856,9 +856,14 @@ export type Database = {
           is_quick_win: boolean
           keyword_coverage_score: number
           manual_priority: number | null
+          measurement_due_at: string | null
           payload: Json | null
+          pericles_decision_id: string | null
           priority_score: number | null
           priority_tag: string | null
+          reward_verdict: string | null
+          reward_verdict_at: string | null
+          reward_verdict_reason: string | null
           ring_proximity_score: number
           roi_tier: string | null
           seasonal_boost_score: number
@@ -903,9 +908,14 @@ export type Database = {
           is_quick_win?: boolean
           keyword_coverage_score?: number
           manual_priority?: number | null
+          measurement_due_at?: string | null
           payload?: Json | null
+          pericles_decision_id?: string | null
           priority_score?: number | null
           priority_tag?: string | null
+          reward_verdict?: string | null
+          reward_verdict_at?: string | null
+          reward_verdict_reason?: string | null
           ring_proximity_score?: number
           roi_tier?: string | null
           seasonal_boost_score?: number
@@ -950,9 +960,14 @@ export type Database = {
           is_quick_win?: boolean
           keyword_coverage_score?: number
           manual_priority?: number | null
+          measurement_due_at?: string | null
           payload?: Json | null
+          pericles_decision_id?: string | null
           priority_score?: number | null
           priority_tag?: string | null
+          reward_verdict?: string | null
+          reward_verdict_at?: string | null
+          reward_verdict_reason?: string | null
           ring_proximity_score?: number
           roi_tier?: string | null
           seasonal_boost_score?: number
@@ -6433,6 +6448,7 @@ export type Database = {
           measured_at: string
           measurement_phase: string
           overall_score: number | null
+          pericles_decision_id: string | null
           prompts_used: Json | null
           provider_scores: Json | null
           recommendation_rate: number | null
@@ -6456,6 +6472,7 @@ export type Database = {
           measured_at?: string
           measurement_phase?: string
           overall_score?: number | null
+          pericles_decision_id?: string | null
           prompts_used?: Json | null
           provider_scores?: Json | null
           recommendation_rate?: number | null
@@ -6479,6 +6496,7 @@ export type Database = {
           measured_at?: string
           measurement_phase?: string
           overall_score?: number | null
+          pericles_decision_id?: string | null
           prompts_used?: Json | null
           provider_scores?: Json | null
           recommendation_rate?: number | null
@@ -6492,6 +6510,13 @@ export type Database = {
             columns: ["audit_impact_snapshot_id"]
             isOneToOne: false
             referencedRelation: "audit_impact_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "geo_visibility_snapshots_pericles_decision_id_fkey"
+            columns: ["pericles_decision_id"]
+            isOneToOne: false
+            referencedRelation: "pericles_decision_log"
             referencedColumns: ["id"]
           },
           {
@@ -12779,6 +12804,59 @@ export type Database = {
         }
         Relationships: []
       }
+      pericles_competitive_snapshots: {
+        Row: {
+          created_at: string
+          decision_id: string
+          domain: string
+          gainers: Json
+          id: string
+          keyword: string
+          measured_at: string
+          our_position: number | null
+          our_previous_position: number | null
+          serp_source: string | null
+          top_domains: Json
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          decision_id: string
+          domain: string
+          gainers?: Json
+          id?: string
+          keyword: string
+          measured_at?: string
+          our_position?: number | null
+          our_previous_position?: number | null
+          serp_source?: string | null
+          top_domains?: Json
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          decision_id?: string
+          domain?: string
+          gainers?: Json
+          id?: string
+          keyword?: string
+          measured_at?: string
+          our_position?: number | null
+          our_previous_position?: number | null
+          serp_source?: string | null
+          top_domains?: Json
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pericles_competitive_snapshots_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "pericles_decision_log"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pericles_decision_log: {
         Row: {
           action_payload: Json
@@ -12788,6 +12866,7 @@ export type Database = {
           baseline_impressions: number | null
           baseline_position: number | null
           calibration_note: string | null
+          competitive_measured_at: string | null
           created_at: string
           cycle_number: number
           domain: string
@@ -12799,6 +12878,8 @@ export type Database = {
           execution_started_at: string | null
           final_scope: Json
           functions_called: string[]
+          geo_measured_at: string | null
+          geo_reward_signal: number | null
           goal_changed: boolean
           goal_cluster_id: string | null
           goal_description: string
@@ -12809,8 +12890,10 @@ export type Database = {
           impact_predicted: string | null
           initial_scope: Json
           is_error: boolean
+          market_context: string | null
           measured_at: string | null
           pipeline_phase: string | null
+          raw_reward_signal: number | null
           reward_signal: number | null
           risk_calibrated: number | null
           risk_iterations: number
@@ -12834,6 +12917,7 @@ export type Database = {
           baseline_impressions?: number | null
           baseline_position?: number | null
           calibration_note?: string | null
+          competitive_measured_at?: string | null
           created_at?: string
           cycle_number?: number
           domain: string
@@ -12845,6 +12929,8 @@ export type Database = {
           execution_started_at?: string | null
           final_scope?: Json
           functions_called?: string[]
+          geo_measured_at?: string | null
+          geo_reward_signal?: number | null
           goal_changed?: boolean
           goal_cluster_id?: string | null
           goal_description: string
@@ -12855,8 +12941,10 @@ export type Database = {
           impact_predicted?: string | null
           initial_scope?: Json
           is_error?: boolean
+          market_context?: string | null
           measured_at?: string | null
           pipeline_phase?: string | null
+          raw_reward_signal?: number | null
           reward_signal?: number | null
           risk_calibrated?: number | null
           risk_iterations?: number
@@ -12880,6 +12968,7 @@ export type Database = {
           baseline_impressions?: number | null
           baseline_position?: number | null
           calibration_note?: string | null
+          competitive_measured_at?: string | null
           created_at?: string
           cycle_number?: number
           domain?: string
@@ -12891,6 +12980,8 @@ export type Database = {
           execution_started_at?: string | null
           final_scope?: Json
           functions_called?: string[]
+          geo_measured_at?: string | null
+          geo_reward_signal?: number | null
           goal_changed?: boolean
           goal_cluster_id?: string | null
           goal_description?: string
@@ -12901,8 +12992,10 @@ export type Database = {
           impact_predicted?: string | null
           initial_scope?: Json
           is_error?: boolean
+          market_context?: string | null
           measured_at?: string | null
           pipeline_phase?: string | null
+          raw_reward_signal?: number | null
           reward_signal?: number | null
           risk_calibrated?: number | null
           risk_iterations?: number
@@ -18694,6 +18787,10 @@ export type Database = {
           is_active: boolean
           target_id: string
         }[]
+      }
+      pericles_apply_market_context: {
+        Args: { p_decision_id: string; p_market_context: string }
+        Returns: undefined
       }
       pericles_error_rate: {
         Args: { p_domain: string; p_last_n?: number }
