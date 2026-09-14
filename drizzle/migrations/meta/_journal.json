@@ -309,6 +309,13 @@
       "when": 1789404202329,
       "tag": "0043_pericles_decision_urls_attribution",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1789404326372,
+      "tag": "0044_fix_pericles_decision_urls_flatten",
+      "breakpoints": true
     }
   ]
 }
