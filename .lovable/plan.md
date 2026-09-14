@@ -7,7 +7,6 @@
   - photo **avant** juste après `execute` ;
   - photo **après** au moment de la mesure (`pericles_measure_rewards`, J+14 pour le SEO, J+30 pour l'IA).
 - **Comment ça communique ?** Tout est rattaché à l'identifiant de la décision (`pericles_decision_log`). La mesure enrichit deux nouveaux signaux sur cette même ligne, et le score de priorité les relit au tour suivant. Aucun nouvel orchestrateur, aucun appel LLM.
-- **Comment ça communique ?** Tout est rattaché à l'identifiant de la décision (`pericles_decision_log`). La mesure enrichit deux nouveaux signaux sur cette même ligne, et le score de priorité les relit au tour suivant. Aucun nouvel orchestrateur, aucun appel LLM.
 
 ```text
 prescribe ──► execute ──┬─► photo AVANT : positions concurrents + visibilité IA
@@ -149,6 +148,7 @@ Ce que la mesure change concrètement dans le cycle :
 - **Limite assumée :** un delta n'est pas une preuve de causalité. Une mise à
   jour d'algorithme ou une saisonnalité peut porter le gain. Le contexte marché
   réduit ce biais sans le supprimer, et rien n'est présenté comme certain.
+
 ## Ordre de réalisation
 
 1. Bloc 4 (cycle de vie) puis Bloc 2 (attribution IA) : coût quasi nul, aucune
