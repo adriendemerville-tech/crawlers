@@ -104,6 +104,9 @@ Effet unique : qualifier l'échec.
 Aujourd'hui un constat exécuté passe en `done` tout de suite : la boucle perd la
 trace au moment même où la mesure commence. C'est le vrai défaut.
 
+Réponse directe : **le constat reste dans le Workbench pendant toute la durée de
+la mesure**, puis il est classé selon le verdict.
+
 Nouveau cycle, sans nouvelle file :
 
 ```text
@@ -112,6 +115,7 @@ pending ─► in_progress ─► executed (mesure en cours) ─► done | regre
 
 - `executed` : l'action est faite mais pas encore jugée. Le constat **reste
   visible** dans le Workbench, en lecture seule, avec la date de mesure attendue.
+  C'est le seul état qui permet de suivre l'action jusqu'au verdict.
 - `done` : mesure terminée et récompense positive. Le constat sort de la file.
 - `regressed` : mesure terminée et récompense négative. Le constat redevient
   éligible, avec le motif (perte propre ou perte concurrentielle nommée) et le
