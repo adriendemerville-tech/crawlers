@@ -19,6 +19,8 @@ mesure ──► photo APRÈS ──► récompense GSC (existante)
                         + récompense IA (nouveau)
                                   │
                         réinjection dans le score de priorité
+                                  │
+                        prochain tour : prescribe reçoit le score mis à jour
 ```
 
 ## Ce qui manque aujourd'hui
