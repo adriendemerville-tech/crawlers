@@ -44,9 +44,9 @@ export function FreeTrialBanner() {
   };
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-amber-300/50 bg-amber-50/80 dark:bg-amber-950/30 dark:border-amber-700/40 px-4 py-2.5 mb-4">
+    <div className="flex w-full max-w-full flex-wrap items-center gap-2 overflow-hidden rounded-lg border border-amber-300/50 bg-amber-50/80 dark:bg-amber-950/30 dark:border-amber-700/40 px-3 py-2.5 mb-4 sm:px-4">
       <Gift className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
-      <p className="text-sm font-medium text-amber-800 dark:text-amber-300 flex-1">
+      <p className="min-w-0 flex-1 break-words text-sm font-medium leading-snug text-amber-800 dark:text-amber-300">
         {label}
       </p>
       <Button variant="ghost" size="icon" onClick={handleDismiss} className="shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200" aria-label="Fermer">
