@@ -12897,6 +12897,7 @@ export type Database = {
           measured_target_urls: string[] | null
           pipeline_phase: string | null
           raw_reward_signal: number | null
+          reward_measured_by: string | null
           reward_signal: number | null
           risk_calibrated: number | null
           risk_iterations: number
@@ -12951,6 +12952,7 @@ export type Database = {
           measured_target_urls?: string[] | null
           pipeline_phase?: string | null
           raw_reward_signal?: number | null
+          reward_measured_by?: string | null
           reward_signal?: number | null
           risk_calibrated?: number | null
           risk_iterations?: number
@@ -13005,6 +13007,7 @@ export type Database = {
           measured_target_urls?: string[] | null
           pipeline_phase?: string | null
           raw_reward_signal?: number | null
+          reward_measured_by?: string | null
           reward_signal?: number | null
           risk_calibrated?: number | null
           risk_iterations?: number
