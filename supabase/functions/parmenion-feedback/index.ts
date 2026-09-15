@@ -99,12 +99,18 @@ try {
     const supabase = getServiceClient();
 
 
-    // Find decisions ready for feedback (completed, no measurement yet, > 30 days old)
+    // Juge unique de la récompense : Parménion et Périclès partagent la même
+    // ligne. On ne recalcule que si la mesure existante a plus de 7 jours,
+    // sinon on réutilise la donnée déjà écrite (par l'un ou par l'autre).
+    const FRESH_MS = 7 * 24 * 60 * 60 * 1000;
+    const freshCutoff = new Date(Date.now() - FRESH_MS).toISOString();
+
+    // Find decisions ready for feedback (completed, > 30 days old)
     let query = supabase
       .from('pericles_decision_log')
       .select('*')
       .eq('status', 'completed')
-      .is('measured_at', null)
+      .or(`measured_at.is.null,measured_at.lt.${freshCutoff}`)
       .lt('execution_completed_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
     if (decision_id) {
