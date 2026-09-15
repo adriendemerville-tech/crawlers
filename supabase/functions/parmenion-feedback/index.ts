@@ -224,6 +224,7 @@ try {
           is_error: isError,
           error_category: errorCategory,
           measured_at: new Date().toISOString(),
+          reward_measured_by: 'parmenion',
           t30_clicks: t30Clicks,
           t30_impressions: t30Impressions,
           t30_ctr: t30Ctr,
