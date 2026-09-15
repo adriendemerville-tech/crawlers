@@ -330,6 +330,13 @@
       "when": 1789404489565,
       "tag": "0046_pericles_measure_rewards_scoped_queries",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1789457759783,
+      "tag": "0047_pericles_single_reward_judge",
+      "breakpoints": true
     }
   ]
 }

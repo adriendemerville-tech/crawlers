@@ -40,7 +40,6 @@ import criticalCss from "../styles.critical.css?raw";
 // Les polices passent par le pipeline Vite (nom haché sous /assets) : servies
 // depuis /public elles arrivaient sans aucun TTL, soit 70 Kio resservis à
 // chaque visite d'après PageSpeed.
-import spaceGroteskFontUrl from "../assets/fonts/space-grotesk-latin-wght-normal.woff2?url";
 
 const supabaseOrigin = "https://tutlimtasnjabdfhpewu.supabase.co";
 
@@ -56,7 +55,7 @@ const SITE_DESCRIPTION =
 
 // styles.css reste non bloquant jusqu'à son événement load : le premier rendu
 // est assuré par le CSS critique inline, puis la feuille complète prend le relais.
-const CSS_SWAP = `(function(){function s(){var l=document.getElementById('main-css');if(!l){document.addEventListener('DOMContentLoaded',s,{once:true});return;}var go=function(){l.media='all';};l.addEventListener('load',go,{once:true});if(document.readyState==='complete')go();}s();})();`;
+const CSS_SWAP = `(function(){function s(){var l=document.getElementById('main-css');if(!l){document.addEventListener('DOMContentLoaded',s,{once:true});return;}var go=function(){l.media='all';};l.addEventListener('load',go,{once:true});if(document.readyState==='complete'){go();}else{window.addEventListener('load',go,{once:true});}setTimeout(go,2500);}s();})();`;
 
 // ported from index.html — gtag bootstrap (gtag.js itself is loaded by GTM below)
 const GTAG_BOOTSTRAP = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-0S0D56VSWQ', { send_page_view: false });`;
@@ -140,7 +139,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // Inter reste chargé à la demande par @font-face lorsqu'il est utilisé.
       {
         rel: "preload",
-        href: spaceGroteskFontUrl,
+        href: "/fonts/space-grotesk-latin-wght-normal.woff2",
         as: "font",
         type: "font/woff2",
         crossOrigin: "anonymous",

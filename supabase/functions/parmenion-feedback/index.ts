@@ -99,12 +99,18 @@ try {
     const supabase = getServiceClient();
 
 
-    // Find decisions ready for feedback (completed, no measurement yet, > 30 days old)
+    // Juge unique de la récompense : Parménion et Périclès partagent la même
+    // ligne. On ne recalcule que si la mesure existante a plus de 7 jours,
+    // sinon on réutilise la donnée déjà écrite (par l'un ou par l'autre).
+    const FRESH_MS = 7 * 24 * 60 * 60 * 1000;
+    const freshCutoff = new Date(Date.now() - FRESH_MS).toISOString();
+
+    // Find decisions ready for feedback (completed, > 30 days old)
     let query = supabase
       .from('pericles_decision_log')
       .select('*')
       .eq('status', 'completed')
-      .is('measured_at', null)
+      .or(`measured_at.is.null,measured_at.lt.${freshCutoff}`)
       .lt('execution_completed_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
     if (decision_id) {
@@ -121,6 +127,27 @@ try {
     const results: any[] = [];
 
     for (const decision of decisions) {
+      // Relecture juste avant écriture : si Périclès (ou un autre appel) a
+      // mesuré cette décision il y a moins de 7 jours, on réutilise sa valeur.
+      const { data: fresh } = await supabase
+        .from('pericles_decision_log')
+        .select('measured_at, reward_signal, reward_measured_by, impact_actual')
+        .eq('id', decision.id)
+        .maybeSingle();
+
+      if (fresh?.measured_at && Date.parse(fresh.measured_at) > Date.now() - FRESH_MS) {
+        results.push({
+          id: decision.id,
+          domain: decision.domain,
+          status: 'reused',
+          measured_by: fresh.reward_measured_by ?? 'pericles',
+          measured_at: fresh.measured_at,
+          reward_signal: fresh.reward_signal,
+          impact_actual: fresh.impact_actual,
+        });
+        continue;
+      }
+
       // Fetch current GSC data for comparison
       const { data: gscSnapshot } = await supabase
         .from('audit_impact_snapshots')
@@ -197,6 +224,7 @@ try {
           is_error: isError,
           error_category: errorCategory,
           measured_at: new Date().toISOString(),
+          reward_measured_by: 'parmenion',
           t30_clicks: t30Clicks,
           t30_impressions: t30Impressions,
           t30_ctr: t30Ctr,

@@ -37,7 +37,7 @@ export function SiloHub() {
                   <li key={s.to}>
                     <Link
                       to={s.to}
-                      className="text-sm text-foreground/75 hover:text-foreground no-underline"
+                      className="flex min-h-11 items-center text-sm text-foreground/75 hover:text-foreground no-underline"
                     >
                       {s.label}
                     </Link>
