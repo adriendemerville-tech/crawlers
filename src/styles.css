@@ -28,6 +28,7 @@
 @source not "../src/components/Social";
 @source not "../src/components/ReportPreview";
 @source not "../src/components/Profile";
+@source "../src/components/Profile/FreeTrialBanner.tsx";
 /* Support (bulle Félix) reste dans le CSS critique : présent sur toutes les pages publiques */
 @source not "../src/components/Copilot";
 @source not "../src/components/SiteCrawl";
