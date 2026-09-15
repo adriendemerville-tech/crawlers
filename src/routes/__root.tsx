@@ -56,7 +56,7 @@ const SITE_DESCRIPTION =
 
 // styles.css reste non bloquant jusqu'à son événement load : le premier rendu
 // est assuré par le CSS critique inline, puis la feuille complète prend le relais.
-const CSS_SWAP = `(function(){function s(){var l=document.getElementById('main-css');if(!l){document.addEventListener('DOMContentLoaded',s,{once:true});return;}var go=function(){l.media='all';};l.addEventListener('load',go,{once:true});if(document.readyState==='complete')go();}s();})();`;
+const CSS_SWAP = `(function(){function s(){var l=document.getElementById('main-css');if(!l){document.addEventListener('DOMContentLoaded',s,{once:true});return;}var go=function(){l.media='all';};l.addEventListener('load',go,{once:true});if(document.readyState==='complete'){go();}else{window.addEventListener('load',go,{once:true});}setTimeout(go,2500);}s();})();`;
 
 // ported from index.html — gtag bootstrap (gtag.js itself is loaded by GTM below)
 const GTAG_BOOTSTRAP = `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-0S0D56VSWQ', { send_page_view: false });`;
