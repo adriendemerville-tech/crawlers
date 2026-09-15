@@ -127,6 +127,27 @@ try {
     const results: any[] = [];
 
     for (const decision of decisions) {
+      // Relecture juste avant écriture : si Périclès (ou un autre appel) a
+      // mesuré cette décision il y a moins de 7 jours, on réutilise sa valeur.
+      const { data: fresh } = await supabase
+        .from('pericles_decision_log')
+        .select('measured_at, reward_signal, reward_measured_by, impact_actual')
+        .eq('id', decision.id)
+        .maybeSingle();
+
+      if (fresh?.measured_at && Date.parse(fresh.measured_at) > Date.now() - FRESH_MS) {
+        results.push({
+          id: decision.id,
+          domain: decision.domain,
+          status: 'reused',
+          measured_by: fresh.reward_measured_by ?? 'pericles',
+          measured_at: fresh.measured_at,
+          reward_signal: fresh.reward_signal,
+          impact_actual: fresh.impact_actual,
+        });
+        continue;
+      }
+
       // Fetch current GSC data for comparison
       const { data: gscSnapshot } = await supabase
         .from('audit_impact_snapshots')
