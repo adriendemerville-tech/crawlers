@@ -337,6 +337,13 @@
       "when": 1789457759783,
       "tag": "0047_pericles_single_reward_judge",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1789458848475,
+      "tag": "0048_version_pericles_cron_jobs",
+      "breakpoints": true
     }
   ]
 }

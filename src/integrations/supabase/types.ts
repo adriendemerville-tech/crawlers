@@ -4727,6 +4727,24 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_call_config: {
+        Row: {
+          name: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          name: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          name?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       cross_agent_insights: {
         Row: {
           created_at: string
@@ -18554,6 +18572,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      cron_post: {
+        Args: { p_body?: Json; p_function: string }
+        Returns: number
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -18583,6 +18605,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      ensure_pericles_crons: { Args: never; Returns: Json }
       expire_stale_cocoon_items: { Args: never; Returns: Json }
       get_active_seasonal_context: {
         Args: { p_geo?: string; p_sector?: string }
