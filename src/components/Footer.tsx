@@ -298,7 +298,7 @@ function FooterComponent() {
                     <li key={link.href + link.label}>
                       <SmartLink
                         to={link.href}
-                        className="text-sm transition-colors text-muted-foreground hover:text-primary"
+                        className="flex min-h-11 items-center text-sm transition-colors text-muted-foreground hover:text-primary"
                         title={link.description}
                       >
                         {link.label}
