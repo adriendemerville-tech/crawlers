@@ -707,7 +707,7 @@ Si aucun changement détecté, retourne : { "changes": [], "summary": "Aucun cha
           
           // Fetch latest decision logs, autopilot configs, and modification logs in parallel
           const [decisionsResp, configsResp, modsResp] = await Promise.all([
-            sb.from("parmenion_decision_log")
+            sb.from("pericles_decision_log")
               .select("cycle_number, goal_type, goal_description, action_type, status, impact_level, risk_predicted, risk_calibrated, is_error, error_category, calibration_note, impact_predicted, impact_actual, estimated_tokens, functions_called, scope_reductions, goal_changed, execution_error, created_at, domain, final_scope")
               .order("created_at", { ascending: false })
               .limit(10),
@@ -1596,7 +1596,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
           // ── Parménion ──
           if (wantsParmenion) {
             const [decisionsResp, configsResp] = await Promise.all([
-              sb.from("parmenion_decision_log")
+              sb.from("pericles_decision_log")
                 .select("cycle_number, goal_type, goal_description, action_type, status, impact_level, risk_predicted, is_error, error_category, impact_predicted, impact_actual, created_at, domain, execution_error")
                 .order("created_at", { ascending: false })
                 .limit(10),
@@ -1626,7 +1626,7 @@ Tu dois traduire ces données techniques en langage clair et naturel pour le cr�
                 .select("domain, problem_description, created_at, is_crawled, ai_response")
                 .order("created_at", { ascending: false })
                 .limit(15),
-              sb.from("parmenion_decision_log")
+              sb.from("pericles_decision_log")
                 .select("cycle_number, domain, goal_description, error_category, calibration_note, execution_error, created_at")
                 .eq("is_error", true)
                 .order("created_at", { ascending: false })

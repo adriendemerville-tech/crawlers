@@ -79,7 +79,7 @@ try {
 
     // ═══ PHASE 0: Determine current pipeline phase ═══
     const { data: lastCompletedDecisions } = await supabase
-      .from('parmenion_decision_log')
+      .from('pericles_decision_log')
       .select('pipeline_phase, status, execution_results, goal_type, goal_description, action_type, functions_called, execution_error, created_at')
       .eq('domain', domain)
       .in('status', ['completed', 'dry_run'])
@@ -124,7 +124,7 @@ try {
         if (newCount >= 5) {
           console.error(`[Parménion] 🚨 ALERTING crawl stuck ${domain}: ${newCount} cycles consécutifs reportés. Vérifier crawl-site / cron-crawl-scheduler.`);
           // Trace dans parmenion_decision_log pour observabilité
-          await supabase.from('parmenion_decision_log').insert({
+          await supabase.from('pericles_decision_log').insert({
             tracked_site_id, domain, cycle_number,
             pipeline_phase: currentPhase, action_type: 'crawl_stuck_alert',
             status: 'degraded',
@@ -185,7 +185,7 @@ try {
 
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { data: recentAuditAttempts } = await supabase
-        .from('parmenion_decision_log')
+        .from('pericles_decision_log')
         .select('id, status, created_at')
         .eq('domain', domain)
         .eq('pipeline_phase', 'audit')
@@ -232,7 +232,7 @@ try {
     
     // Segmented reliability: track error rates per action_type for smarter gating
     const { data: segmentedFeedback } = await supabase
-      .from('parmenion_decision_log')
+      .from('pericles_decision_log')
       .select('action_type, is_error, status, impact_predicted, impact_actual')
       .eq('domain', domain)
       .in('status', ['completed'])
@@ -785,7 +785,7 @@ try {
       let deterministicExecute = false;
       if (currentPhase === 'execute') {
         const { data: lastPrescribe } = await supabase
-          .from('parmenion_decision_log')
+          .from('pericles_decision_log')
           .select('id, action_type, action_payload, goal_type, goal_description, created_at')
           .eq('domain', domain)
           .eq('pipeline_phase', 'prescribe')
@@ -803,7 +803,7 @@ try {
         // ─── Anti double-execute guard (V2 + V3) ───
         if ((hasV3Plan || hasV2Plan) && lastPrescribe) {
           const { data: priorExecute } = await supabase
-            .from('parmenion_decision_log')
+            .from('pericles_decision_log')
             .select('id, status, created_at')
             .eq('domain', domain)
             .eq('pipeline_phase', 'execute')
@@ -1030,7 +1030,7 @@ try {
     if (currentPhase === 'validate') {
       // Compter les cycles validate déjà exécutés pour ce domaine
       const { count: prevValidateCount } = await supabase
-        .from('parmenion_decision_log')
+        .from('pericles_decision_log')
         .select('id', { count: 'exact', head: true })
         .eq('domain', domain)
         .eq('pipeline_phase', 'validate')
@@ -1047,7 +1047,7 @@ try {
       } else {
         // Récupérer URLs touchées au dernier cycle execute
         const { data: lastExecute } = await supabase
-          .from('parmenion_decision_log')
+          .from('pericles_decision_log')
           .select('action_payload, execution_results, created_at')
           .eq('domain', domain)
           .eq('pipeline_phase', 'execute')
@@ -1121,7 +1121,7 @@ try {
     };
 
     const { data: logData, error: logError } = await supabase
-      .from('parmenion_decision_log')
+      .from('pericles_decision_log')
       .insert(logEntry)
       .select('id')
       .single();
