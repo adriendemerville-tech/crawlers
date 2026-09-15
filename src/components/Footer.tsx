@@ -320,7 +320,7 @@ function FooterComponent() {
                       <SmartLink
                         to={link.href}
                         external={(link as any).external}
-                        className={`inline-flex items-center gap-1.5 text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : (link as any).rss ? 'text-foreground hover:text-primary font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                        className={`inline-flex min-h-11 items-center gap-1.5 text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : (link as any).rss ? 'text-foreground hover:text-primary font-medium' : 'text-muted-foreground hover:text-primary'}`}
                         title={link.description}
                       >
                         {(link as any).rss && <Rss className="h-3.5 w-3.5" />}
@@ -343,7 +343,7 @@ function FooterComponent() {
                     <li key={link.href}>
                       <SmartLink
                         to={link.href}
-                        className={`text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                        className={`flex min-h-11 items-center text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                         title={link.description}
                       >
                         {link.label}
@@ -365,7 +365,7 @@ function FooterComponent() {
                   <SmartLink
                     key={link.href}
                     to={link.href}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                    className="flex min-h-11 items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
                   >
                     <Shield className="h-3 w-3" />
                     {link.label}
