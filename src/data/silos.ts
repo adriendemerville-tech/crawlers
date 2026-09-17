@@ -57,6 +57,12 @@ export const SILOS: Record<Silo['id'], Silo> = {
         note: 'Page tarifaire satellite : renvoie vers la passe unique',
       },
       { label: 'Visibilité IA : mesurer ses citations', to: '/visibilite-ia' },
+      {
+        label: 'GEO vs SEO : pourquoi ne pas les opposer',
+        to: '/geo-vs-seo',
+        note: 'Page comparative : différences réelles et chantiers communs',
+      },
+
       { label: 'Audit SEO par IA : ce qui est mesuré', to: '/audit-seo-par-ia' },
       { label: 'SEO avec Claude (MCP)', to: '/seo-avec-claude' },
       { label: 'Serveur MCP GEO : visibilité IA par agent', to: '/geo-mcp-server' },
