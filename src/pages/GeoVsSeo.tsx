@@ -103,10 +103,13 @@ function GeoVsSeoPage() {
             GEO et SEO : pourquoi il ne faut pas les opposer en 2027
           </h1>
           <p className="mt-5 text-base md:text-lg leading-relaxed text-muted-foreground">
-            Le SEO cherche une position dans les résultats de Google. Le GEO cherche une citation
-            dans la réponse d’un modèle génératif. Les deux se disputent la même attention, mais
-            reposent sur le même travail : un contenu accessible, structuré et vérifiable.
+            Le <strong className="font-semibold text-foreground">SEO</strong> cherche une position
+            dans les résultats de Google. Le{' '}
+            <strong className="font-semibold text-foreground">GEO</strong> cherche une citation dans
+            la réponse d’un modèle génératif. Les deux se disputent la même attention, mais reposent
+            sur le même travail : un contenu accessible, structuré et vérifiable.
           </p>
+
 
           <CitablePassage className="mt-8" source="Crawlers.fr">
             Le GEO (Generative Engine Optimization) ne remplace pas le SEO : il en dépend. Les
