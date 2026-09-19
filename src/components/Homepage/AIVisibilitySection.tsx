@@ -103,9 +103,6 @@ function AIVisibilitySectionComponent() {
             : 'Is your site visible to Google and AI?'}
         </h2>
 
-        <p className="hidden sm:block mb-8 t-h2 font-medium font-display text-foreground px-2 sm:px-0">
-          {getSubtitle()}
-        </p>
 
         <div className="hero-actions mt-2 mx-auto w-full" style={{ maxWidth: 'min(96%, 46rem)' }}>
           <p className="hero-domains hidden sm:block shrink-0 text-left text-[13px] leading-tight text-muted-foreground whitespace-nowrap" aria-live="polite">
