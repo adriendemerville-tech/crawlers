@@ -765,6 +765,16 @@ summary::-webkit-details-marker {
 .t-body    { font-size: 0.9375rem;                        line-height: 1.6; }
 .t-meta    { font-size: 0.8125rem;                        line-height: 1.45; }
 
+/* Aiguillage home : la question reste lisible sur une ligne, même à 320 px. */
+.audience-router-question {
+  font-size: clamp(0.6875rem, 3.75vw, 0.9375rem);
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+@media (min-width: 640px) {
+  .audience-router-question { font-size: 1.875rem; }
+}
+
 
 /* Lead magnet GEO : champ + bouton sur une ligne en desktop, empilés en mobile. */
 .magnet-actions { display: flex; flex-direction: column; gap: 0.75rem; }

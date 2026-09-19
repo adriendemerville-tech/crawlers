@@ -203,7 +203,7 @@ export function AudienceRouter() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
-  // Client-only : jamais rendu en SSR, donc aucun impact sur le HTML indexé.
+  // Le choix mémorisé retire l'aiguillage dès l'hydratation.
   useEffect(() => {
     if (getStoredChoice()) setVisible(false);
   }, []);
@@ -352,7 +352,7 @@ export function AudienceRouter() {
           </div>
         ) : (
           <div className="flex w-full flex-col items-center">
-            <h2 className="mb-8 whitespace-nowrap font-display text-sm font-bold text-foreground sm:text-3xl">
+            <h2 className="audience-router-question mb-8 whitespace-nowrap font-display font-bold text-foreground">
               Pourquoi avez-vous besoin de Crawlers ?
             </h2>
             <div className="flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border bg-secondary/30 p-2 sm:p-3">
