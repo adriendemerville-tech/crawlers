@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link, useNavigate } from '@/lib/router-compat';
-import { TrustBadge } from '@/components/TrustBadge';
 import { getAuditedDomainsCount } from '@/lib/auditedDomains.functions';
 
 const HERO_WORD_CLASS =
@@ -57,16 +56,6 @@ function AIVisibilitySectionComponent() {
     }
   };
 
-  const getSubtitle = () => {
-    switch (language) {
-      case 'es':
-        return 'La herramienta de rastreo SEO y GEO. Audite su sitio. Afine la estrategia. Automatice la solución.';
-      case 'en':
-        return 'The SEO & GEO crawl tool. Audit your site. Refine the strategy. Automate the solution.';
-      default:
-        return "L'outil de crawl SEO & GEO. Auditez votre site. Affinez la stratégie. Automatisez la solution.";
-    }
-  };
 
   return (
     <section className="relative flex min-h-0 sm:min-h-[40vh] items-center justify-center overflow-hidden px-4 sm:px-6 py-10 sm:py-12">
@@ -103,9 +92,6 @@ function AIVisibilitySectionComponent() {
             : 'Is your site visible to Google and AI?'}
         </h2>
 
-        <p className="hidden sm:block mb-8 t-h2 font-medium font-display text-foreground px-2 sm:px-0">
-          {getSubtitle()}
-        </p>
 
         <div className="hero-actions mt-2 mx-auto w-full" style={{ maxWidth: 'min(96%, 46rem)' }}>
           <p className="hero-domains hidden sm:block shrink-0 text-left text-[13px] leading-tight text-muted-foreground whitespace-nowrap" aria-live="polite">
@@ -114,7 +100,6 @@ function AIVisibilitySectionComponent() {
             </span>{' '}
             sites audités
           </p>
-          <TrustBadge layout="column" className="hidden sm:flex shrink-0 gap-0.5 py-0 justify-center max-sm:items-center [&_.text-sm]:text-[11px] [&_.text-sm]:whitespace-nowrap [&_.text-sm]:text-center sm:[&_.text-sm]:text-left" />
           <div className="hero-input-wrap min-w-0 relative">
             <Input
               type="text"
@@ -153,13 +138,10 @@ function AIVisibilitySectionComponent() {
           </Link>
         </div>
 
-        <div className="hidden sm:flex mt-3 sm:mt-4 flex-wrap items-center justify-center gap-3 sm:gap-4">
+        <div className="hidden sm:flex mt-3 sm:mt-4 items-center justify-center gap-3 sm:gap-4">
           <Link to="/auth" className="text-sm font-medium underline underline-offset-4 transition-colors text-foreground">
             {language === 'fr' ? 'Créer un compte gratuit →' : language === 'es' ? 'Crear una cuenta gratis →' : 'Create a free account →'}
           </Link>
-          <span className="text-[13px] text-muted-foreground">
-            {language === 'fr' ? 'Essai gratuit, sans carte bancaire' : language === 'es' ? 'Prueba gratis, sin tarjeta bancaria' : 'Free trial, no credit card'}
-          </span>
         </div>
       </div>
     </section>
