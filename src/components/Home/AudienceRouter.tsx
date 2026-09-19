@@ -315,7 +315,7 @@ export function AudienceRouter() {
       aria-label="Orientation du visiteur"
       aria-modal="true"
       role="dialog"
-      className="fixed inset-0 z-50 flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-background px-4 py-8 animate-fade-in sm:px-6"
+      className="fixed inset-0 z-50 flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-background px-4 py-8 sm:px-6"
     >
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
         <img
@@ -352,7 +352,7 @@ export function AudienceRouter() {
           </div>
         ) : (
           <div className="flex w-full flex-col items-center">
-            <h2 className="mb-8 whitespace-nowrap font-display text-[15px] font-bold text-foreground sm:text-3xl">
+            <h2 className="mb-8 whitespace-nowrap font-display text-sm font-bold text-foreground sm:text-3xl">
               Pourquoi avez-vous besoin de Crawlers ?
             </h2>
             <div className="flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border bg-secondary/30 p-2 sm:p-3">
