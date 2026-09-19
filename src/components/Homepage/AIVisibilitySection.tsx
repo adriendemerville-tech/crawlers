@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link, useNavigate } from '@/lib/router-compat';
-import { TrustBadge } from '@/components/TrustBadge';
 import { getAuditedDomainsCount } from '@/lib/auditedDomains.functions';
 
 const HERO_WORD_CLASS =
@@ -57,16 +56,6 @@ function AIVisibilitySectionComponent() {
     }
   };
 
-  const getSubtitle = () => {
-    switch (language) {
-      case 'es':
-        return 'La herramienta de rastreo SEO y GEO. Audite su sitio. Afine la estrategia. Automatice la solución.';
-      case 'en':
-        return 'The SEO & GEO crawl tool. Audit your site. Refine the strategy. Automate the solution.';
-      default:
-        return "L'outil de crawl SEO & GEO. Auditez votre site. Affinez la stratégie. Automatisez la solution.";
-    }
-  };
 
   return (
     <section className="relative flex min-h-0 sm:min-h-[40vh] items-center justify-center overflow-hidden px-4 sm:px-6 py-10 sm:py-12">
