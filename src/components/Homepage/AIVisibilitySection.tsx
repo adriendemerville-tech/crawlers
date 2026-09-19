@@ -111,7 +111,6 @@ function AIVisibilitySectionComponent() {
             </span>{' '}
             sites audités
           </p>
-          <TrustBadge layout="column" className="hidden sm:flex shrink-0 gap-0.5 py-0 justify-center max-sm:items-center [&_.text-sm]:text-[11px] [&_.text-sm]:whitespace-nowrap [&_.text-sm]:text-center sm:[&_.text-sm]:text-left" />
           <div className="hero-input-wrap min-w-0 relative">
             <Input
               type="text"
