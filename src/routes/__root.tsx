@@ -97,7 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: SITE_TITLE },
       { property: "og:description", content: SITE_DESCRIPTION },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://crawlers.fr/og-image.png" },
+      { property: "og:image", content: "https://crawlers.fr/og-crawlers-1600.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       {
@@ -111,7 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@crawlersfr" },
       { name: "twitter:title", content: SITE_TITLE },
       { name: "twitter:description", content: SITE_DESCRIPTION },
-      { name: "twitter:image", content: "https://crawlers.fr/og-image.png" },
+      { name: "twitter:image", content: "https://crawlers.fr/og-crawlers-1600.png" },
       { name: "twitter:image:alt", content: "Crawlers.fr - Plateforme SEO, GEO & IA Complète" },
       { name: "theme-color", content: "#7c3aed" },
       { name: "msapplication-TileColor", content: "#7c3aed" },
