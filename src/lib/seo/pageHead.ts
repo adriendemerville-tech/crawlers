@@ -7,7 +7,7 @@
  */
 
 export const SITE_URL = 'https://crawlers.fr';
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-crawlers-1600.png`;
 
 export interface PageHeadOptions {
   /** Page <title>. "| Crawlers.fr" is appended when missing. */
