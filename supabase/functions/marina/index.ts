@@ -3705,7 +3705,9 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
       // fait pareil avec des tours courts (~70 s) et beaucoup de tours, chaque
       // tour étant persisté en checkpoint donc reprenable après un kill.
       const crawlWaitRound = Number((intermediateData as any)?.crawlWaitRound || 0);
-      const MAX_CRAWL_WAIT_ROUNDS = 20;
+      // 50 tours ≈ 60 min : un crawl de 150 pages a déjà pris 34 min ; avec
+      // 20 tours (~25 min) la synthèse partait avant la fin → « Pages explorées n/d ».
+      const MAX_CRAWL_WAIT_ROUNDS = 50;
 
 
       await updateProgress(66, 'multi_crawl');
@@ -3784,7 +3786,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         // Fenêtre alignée sur le crawl découpé en lots : 8 tours d'attente de
         // ~3 min = jusqu'à ~25 min d'attente côté Marina, plus la marge des
         // relais du worker → 60 min.
-        const inFlightWindowStart = Date.now() - 60 * 60 * 1000;
+        const inFlightWindowStart = Date.now() - 90 * 60 * 1000;
         const inFlightCrawl = crawlRows.find(
           (c) => IN_FLIGHT_STATUSES.includes(c.status) && new Date(c.created_at).getTime() > inFlightWindowStart,
         );

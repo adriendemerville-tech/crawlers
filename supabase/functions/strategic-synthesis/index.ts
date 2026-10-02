@@ -204,8 +204,8 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       baseContext += `ANTI-HOMONYMIE: "${resolvedEntityName}" opère dans le secteur "${sectorLabel || productsLabel}". Ne confonds PAS avec des homonymes célèbres (politiciens, artistes, etc.). Tous les concurrents doivent être dans le MÊME secteur d'activité.\n`;
     }
     if (competitors?.length > 0) {
-      const compLines = competitors.map((c: any, i: number) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Score:${c.score || 0}`).join('\n');
-      baseContext += `CONCURRENTS:\n${compLines}\n`;
+      const compLines = competitors.map((c: any, i: number) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Position:${c.rank || 'N/A'} Score:${c.score || 0}`).join('\n');
+      baseContext += `CONCURRENTS MESURÉS DANS GOOGLE (positions réelles, prioritaires sur toute déduction):\n${compLines}\nRÈGLE: leader = acteur mesuré le mieux positionné, direct_competitor = le suivant ; n'invente aucun autre acteur pour ces deux rôles. Un domaine distinct du site audité au nom proche (collectivité, maison mère) EST un concurrent SERP.\n`;
     }
     if (hallucinationCorrections) {
       const corrections = Object.entries(hallucinationCorrections).filter(([_, v]) => v).map(([k, v]) => `${k}="${v}"`).join(', ');
