@@ -361,6 +361,21 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
     }
     parsedAnalysis = sanitize(parsedAnalysis, domainSlug, humanBrandName);
 
+    // Garde déterministe : chaque rôle = l'acteur SERP imposé, sinon null.
+    {
+      const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+      const cl = parsedAnalysis.competitive_landscape || {};
+      for (const r of SERP_ROLES) {
+        const m = serpRoles[r];
+        const llm = cl[r];
+        if (!m) { cl[r] = null; continue; }
+        const same = llm?.url && host(llm.url) === host(m.url);
+        cl[r] = { ...(same ? llm : {}), name: m.name, url: m.url, serp_position: m.rank || null, source: 'serp' };
+        if (!same) cl[r].analysis = `Classé en position ${m.rank || 'n/d'} sur les requêtes principales du site.`;
+      }
+      parsedAnalysis.competitive_landscape = cl;
+    }
+
     // ── Supplement main_keywords if < 5 ──
     if (parsedAnalysis.keyword_positioning?.main_keywords?.length < 5 && mktData?.top_keywords) {
       const mk = parsedAnalysis.keyword_positioning.main_keywords;
