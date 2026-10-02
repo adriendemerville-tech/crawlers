@@ -403,18 +403,19 @@ export async function findLocalCompetitor(
   siteContext?: Record<string, unknown> | null,
   /** Focus de la page auditée : localité et prestation déduites du slug. */
   pageScope?: { locality?: string | null; service?: string | null } | null,
+  /** Requête phare réellement positionnée : sa SERP fait remonter les vrais concurrents. */
+  seedKeywords: string[] = [],
 ): Promise<{ name: string; url: string; rank: number; score?: number }[] | null> {
   if (!hasDataForSeoCredentials()) return null;
 
   const pageLocality = String(pageScope?.locality || '').trim();
   const pageService = String(pageScope?.service || '').trim();
 
-  // 1. IDENTITY CARD FIRST — sauf page localisée : la carte d'identité liste des
-  // concurrents de niveau domaine, muets sur la SERP de la commune testée.
-  if (!pageLocality && siteContext?.competitors && Array.isArray(siteContext.competitors) && (siteContext.competitors as string[]).length > 0) {
-    console.log(`🎯 Concurrents connus (carte d'identité): ${(siteContext.competitors as string[]).join(', ')}`);
-    return (siteContext.competitors as string[]).slice(0, 3).map((c: string, i: number) => ({ name: c, url: '', rank: 0, score: 100 - i }));
-  }
+  // 1. Carte d'identité : noms sans URL ni position → complément seulement.
+  // La SERP mesurée reste prioritaire, sinon un acteur qui domine la page 1
+  // de la requête phare disparaît au profit de concurrents déclarés.
+  const identityCompetitors: string[] = !pageLocality && Array.isArray(siteContext?.competitors)
+    ? (siteContext!.competitors as string[]).filter(Boolean) : [];
 
   // 2. BUILD SMART QUERIES
   const businessType = (siteContext?.business_type as string) || '';
@@ -437,6 +438,8 @@ export async function findLocalCompetitor(
   const sectorWords = sector.split(' ').filter(w => w.length > 2).slice(0, 3).join(' ');
   const productWords = productsServices ? productsServices.split(/[,;]/).map(s => s.trim()).filter(s => s.length > 2)[0] || '' : '';
   const queries: string[] = [];
+  const headKeyword = seedKeywords.map((k) => String(k || '').trim()).find((k) => k.length > 3);
+  if (headKeyword) queries.push(headKeyword);
   if (pageLocality) {
     // Page localisée : on interroge la SERP telle que le prospect la tape,
     // « prestation + ville », en partant de la prestation du slug puis du
@@ -472,7 +475,7 @@ export async function findLocalCompetitor(
   }
 
 
-  const uniqueQueries = [...new Set(queries.filter(q => q.trim().length > 3))].slice(0, 2);
+  const uniqueQueries = [...new Set(queries.filter(q => q.trim().length > 3))].slice(0, headKeyword ? 3 : 2);
   console.log(`🏙️ Recherche concurrents (${pageLocality ? `page localisée: ${pageLocality}` : businessType || 'auto'}): ${uniqueQueries.map(q => `"${q}"`).join(', ')}`);
 
   // 3. MULTI-QUERY SERP FETCH
@@ -506,8 +509,12 @@ export async function findLocalCompetitor(
         else { scoreMap.set(d, { name: item.title?.split(' - ')[0]?.split(' | ')[0]?.trim() || item.domain, url: item.url, rank: item.rank_absolute || item.rank_group || 0, score: rankScore }); }
       }
     }
-    if (scoreMap.size === 0) { console.log('⚠️ Aucun concurrent valide trouvé dans les SERPs'); return null; }
-    const sorted = [...scoreMap.values()].sort((a, b) => b.score - a.score).slice(0, 3);
+    const measured = [...scoreMap.values()].sort((a, b) => b.score - a.score);
+    const fromIdentity = identityCompetitors
+      .filter((c) => !measured.some((v) => v.name.toLowerCase().includes(c.toLowerCase()) || c.toLowerCase().includes(v.name.toLowerCase())))
+      .map((c, i) => ({ name: c, url: '', rank: 0, score: 1 - i * 0.01 }));
+    if (measured.length === 0 && fromIdentity.length === 0) { console.log('⚠️ Aucun concurrent valide trouvé dans les SERPs'); return null; }
+    const sorted = [...measured, ...fromIdentity].slice(0, 4);
     console.log(`✅ Top concurrents: ${sorted.map(c => `"${c.name}" (score:${c.score}, pos:${c.rank})`).join(', ')}`);
     return sorted;
   } catch (error) { console.error('❌ Erreur recherche concurrents:', error); return null; }
