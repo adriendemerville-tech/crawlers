@@ -265,7 +265,7 @@ Deno.serve(handleRequest(async (req) => {
         withDeadline(fetchMarketData(domain, context, pageContentContext, url, existingKeywords), 120_000, 'market_data'),
         needsLlmCheck && supabaseUrl && supabaseAnonKey
           ? withDeadline((async () => { const r = await fetch(`${supabaseUrl}/functions/v1/check-llm`, { method: 'POST', headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ url, lang: 'fr' }), signal: AbortSignal.timeout(40000) }); if (!r.ok) { await r.text(); return null; } const d = await r.json(); return d.success && d.data ? d.data : null; })(), 45_000, 'check_llm') : Promise.resolve(null),
-        !isContentMode && context.locationCode ? withDeadline(findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext, context.languageCode, context.seDomain, siteIdentityCtx, { locality: auditedPageFocus.locality, service: auditedPageFocus.service }), 20_000, 'local_competitor') : Promise.resolve(null),
+        !isContentMode && context.locationCode ? withDeadline(findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext, context.languageCode, context.seDomain, siteIdentityCtx, { locality: auditedPageFocus.locality, service: auditedPageFocus.service }, existingKeywords.filter((k) => k.toLowerCase().replace(/\s+/g, '') !== domainSlug.toLowerCase()).slice(0, 1)), 25_000, 'local_competitor') : Promise.resolve(null),
 
         !isContentMode ? withDeadline(searchFounderProfile(domain, context.location, { brandName: context.brandName, siteText: pageContentContext }), 20_000, 'founder') : Promise.resolve(null),
         // hqHint : l'adresse (ou la ville GMB) de la carte d'identité désigne le siège.
@@ -392,7 +392,7 @@ Deno.serve(handleRequest(async (req) => {
 
     if (!isContentMode && localCompetitorsAll.length > 0) {
       const compLines = localCompetitorsAll.map((c, i) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Position:${c.rank || 'N/A'} Score:${c.score || 0}`).join('\n');
-      userPrompt = `CONCURRENTS IDENTIFIÉS:\n${compLines}\nUtilise le #1 comme direct_competitor.\n` + userPrompt;
+      userPrompt = `CONCURRENTS MESURÉS DANS GOOGLE (positions réelles, prioritaires sur toute déduction):\n${compLines}\nRÈGLE: leader = acteur mesuré le mieux positionné, direct_competitor = le suivant ; n'invente aucun autre acteur pour ces deux rôles. Un domaine distinct du site audité au nom proche (collectivité, maison mère) EST un concurrent SERP.\n` + userPrompt;
     }
 
     if (hallucinationCorrections) {
