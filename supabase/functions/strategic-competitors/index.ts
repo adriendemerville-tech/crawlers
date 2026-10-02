@@ -13,6 +13,7 @@ import {
   serpItemToCandidate, pickSpokesperson, toFounderInfo, fetchLegalPagePersons,
   type PersonCandidate,
 } from '../_shared/personAuthority.ts';
+import { findLocalCompetitor } from '../_shared/strategicAudit/socialDiscovery.ts';
 
 
 const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
@@ -228,7 +229,7 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
     if (!url || !domain) return json({ error: 'url and domain required' }, 400);
 
     const cleanDomain = domain.replace(/^www\./, '');
-    const ck = cacheKey('strategic-competitors', { domain: cleanDomain });
+    const ck = cacheKey('strategic-competitors', { domain: cleanDomain, v: 2 });
     const cached = await getCached(ck);
     if (cached) { console.log(`⚡ [strategic-competitors] Cache hit`); return json({ success: true, cached: true, data: cached }); }
 
@@ -248,8 +249,22 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
     // Skip competitor/founder search in content mode
     const skipExtra = isContentMode === true;
 
+    // Requête phare réellement positionnée (ex. « conservatoire avignon ») :
+    // sa SERP fait remonter les vrais concurrents, mesurés et non devinés.
+    let seedKeywords: string[] = [];
+    if (!skipExtra) {
+      try {
+        const { data: snap } = await getServiceClient().from('serp_snapshots').select('sample_keywords').ilike('domain', `%${cleanDomain}%`).order('measured_at', { ascending: false }).limit(1).maybeSingle();
+        const slug = cleanDomain.split('.')[0].toLowerCase();
+        seedKeywords = ((snap as any)?.sample_keywords || [])
+          .filter((k: any) => k?.keyword && String(k.keyword).toLowerCase().replace(/\s+/g, '') !== slug)
+          .sort((a: any, b: any) => (Number(b.search_volume ?? b.volume ?? 0) - Number(a.search_volume ?? a.volume ?? 0)))
+          .slice(0, 1).map((k: any) => String(k.keyword));
+      } catch { /* sans requête phare : requêtes secteur + ville */ }
+    }
+
     const [competitors, founderInfo, gmbData, fbData] = await Promise.all([
-      !skipExtra ? findLocalCompetitors(cleanDomain, sector, locationCode, languageCode, seDomain, siteCtx) : Promise.resolve(null),
+      !skipExtra ? findLocalCompetitor(cleanDomain, sector, locationCode, pageContentContext || '', languageCode, seDomain, siteCtx, null, seedKeywords) : Promise.resolve(null),
       !skipExtra ? searchFounderProfile(cleanDomain, location, brandName) : Promise.resolve({ name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null }),
       !skipExtra ? detectGMB(cleanDomain, brandName, locationCode, languageCode) : Promise.resolve(null),
       !skipExtra ? searchFacebookPage(brandName, sector, locationCode, languageCode) : Promise.resolve({ pageUrl: null, pageName: null, found: false }),
