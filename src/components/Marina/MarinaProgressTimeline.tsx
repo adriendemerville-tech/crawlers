@@ -145,9 +145,17 @@ export default function MarinaProgressTimeline({
     return () => window.clearInterval(id);
   }, []);
 
+  // Calcul sur l'horloge réelle : les onglets en arrière-plan ralentissent
+  // setInterval, un compteur incrémental prendrait alors du retard.
   useEffect(() => {
-    const id = window.setInterval(() => setElapsed((e) => e + 1), 1000);
-    return () => window.clearInterval(id);
+    const start = Date.now();
+    const tick = () => setElapsed(Math.floor((Date.now() - start) / 1000));
+    const id = window.setInterval(tick, 1000);
+    document.addEventListener('visibilitychange', tick);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', tick);
+    };
   }, []);
 
   const explicitIndex = STEPS.findIndex((s) => s.key === phase);
