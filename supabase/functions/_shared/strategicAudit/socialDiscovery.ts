@@ -438,8 +438,10 @@ export async function findLocalCompetitor(
   const sectorWords = sector.split(' ').filter(w => w.length > 2).slice(0, 3).join(' ');
   const productWords = productsServices ? productsServices.split(/[,;]/).map(s => s.trim()).filter(s => s.length > 2)[0] || '' : '';
   const queries: string[] = [];
-  const headKeyword = seedKeywords.map((k) => String(k || '').trim()).find((k) => k.length > 3);
-  if (headKeyword) queries.push(headKeyword);
+  // Mots-clés les plus importants du site (volume), qu'il y soit bien ou mal
+  // classé : la SERP de ces requêtes est le juge de paix.
+  const headKeywords = [...new Set(seedKeywords.map((k) => String(k || '').trim()).filter((k) => k.length > 3))].slice(0, 3);
+  queries.push(...headKeywords);
   if (pageLocality) {
     // Page localisée : on interroge la SERP telle que le prospect la tape,
     // « prestation + ville », en partant de la prestation du slug puis du
@@ -475,7 +477,8 @@ export async function findLocalCompetitor(
   }
 
 
-  const uniqueQueries = [...new Set(queries.filter(q => q.trim().length > 3))].slice(0, headKeyword ? 3 : 2);
+  // Avec des mots-clés mesurés, seules leurs SERP comptent ; sinon requêtes métier.
+  const uniqueQueries = headKeywords.length > 0 ? headKeywords : [...new Set(queries.filter(q => q.trim().length > 3))].slice(0, 2);
   console.log(`🏙️ Recherche concurrents (${pageLocality ? `page localisée: ${pageLocality}` : businessType || 'auto'}): ${uniqueQueries.map(q => `"${q}"`).join(', ')}`);
 
   // 3. MULTI-QUERY SERP FETCH
@@ -510,11 +513,10 @@ export async function findLocalCompetitor(
       }
     }
     const measured = [...scoreMap.values()].sort((a, b) => b.score - a.score);
-    const fromIdentity = identityCompetitors
-      .filter((c) => !measured.some((v) => v.name.toLowerCase().includes(c.toLowerCase()) || c.toLowerCase().includes(v.name.toLowerCase())))
-      .map((c, i) => ({ name: c, url: '', rank: 0, score: 1 - i * 0.01 }));
-    if (measured.length === 0 && fromIdentity.length === 0) { console.log('⚠️ Aucun concurrent valide trouvé dans les SERPs'); return null; }
-    const sorted = [...measured, ...fromIdentity].slice(0, 4);
+    // Aucun acteur hors SERP : la carte d'identité ne comble jamais un vide.
+    void identityCompetitors;
+    if (measured.length === 0) { console.log('Aucun concurrent valide trouvé dans les SERPs'); return null; }
+    const sorted = measured.slice(0, 4);
     console.log(`✅ Top concurrents: ${sorted.map(c => `"${c.name}" (score:${c.score}, pos:${c.rank})`).join(', ')}`);
     return sorted;
   } catch (error) { console.error('❌ Erreur recherche concurrents:', error); return null; }

@@ -124,11 +124,14 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       console.log('⚡ [orchestrator] Using cached context — skipping data collection');
       if (jobSb && jobId) await jobSb.from('async_jobs').update({ progress: 75 }).eq('id', jobId);
 
+      // Concurrents SERP toujours fournis (cache 24 h côté strategic-competitors).
+      const compRes: any = await invokeFunction('strategic-competitors', { url: normalizedUrl, domain, isContentMode: false }, 60_000).catch(() => null);
+      const cachedCompetitors = compRes?.data?.competitors ?? cachedContext.competitors ?? null;
       const synthResult = await invokeFunction('strategic-synthesis', {
         url: normalizedUrl, domain,
         crawlData: { pageContentContext: cachedContext.pageContentContext, brandSignals: cachedContext.brandSignals, eeatSignals: cachedContext.eeatSignals, ctaSeoSignals: cachedContext.ctaSeoSignals || {}, businessContext: {} },
         marketData: { marketData: cachedContext.marketData, rankingOverview: cachedContext.rankingOverview },
-        competitorsData: { competitors: null, founderInfo: cachedContext.founderInfo, gmbData: cachedContext.gmbData, facebookPageInfo: cachedContext.facebookPageInfo },
+        competitorsData: { competitors: cachedCompetitors, founderInfo: cachedContext.founderInfo, gmbData: cachedContext.gmbData, facebookPageInfo: cachedContext.facebookPageInfo },
         llmData: cachedContext.llmData,
         toolsData, lang, hallucinationCorrections, competitorCorrections,
         modelOverride,

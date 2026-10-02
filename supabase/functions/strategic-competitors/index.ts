@@ -259,7 +259,7 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
         seedKeywords = ((snap as any)?.sample_keywords || [])
           .filter((k: any) => k?.keyword && String(k.keyword).toLowerCase().replace(/\s+/g, '') !== slug)
           .sort((a: any, b: any) => (Number(b.search_volume ?? b.volume ?? 0) - Number(a.search_volume ?? a.volume ?? 0)))
-          .slice(0, 1).map((k: any) => String(k.keyword));
+          .slice(0, 3).map((k: any) => String(k.keyword));
       } catch { /* sans requête phare : requêtes secteur + ville */ }
     }
 

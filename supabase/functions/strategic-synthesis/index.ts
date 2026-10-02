@@ -203,10 +203,12 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       baseContext += `SECTEUR D'ACTIVITÉ: ${sectorLabel}${productsLabel ? ` — Produits/Services: ${productsLabel}` : ''}${businessTypeLabel ? ` — Type: ${businessTypeLabel}` : ''}\n`;
       baseContext += `ANTI-HOMONYMIE: "${resolvedEntityName}" opère dans le secteur "${sectorLabel || productsLabel}". Ne confonds PAS avec des homonymes célèbres (politiciens, artistes, etc.). Tous les concurrents doivent être dans le MÊME secteur d'activité.\n`;
     }
-    if (competitors?.length > 0) {
-      const compLines = competitors.map((c: any, i: number) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Position:${c.rank || 'N/A'} Score:${c.score || 0}`).join('\n');
-      baseContext += `CONCURRENTS MESURÉS DANS GOOGLE (positions réelles, prioritaires sur toute déduction):\n${compLines}\nRÈGLE: leader = acteur mesuré le mieux positionné, direct_competitor = le suivant ; n'invente aucun autre acteur pour ces deux rôles. Un domaine distinct du site audité au nom proche (collectivité, maison mère) EST un concurrent SERP.\n`;
-    }
+    // Rôles attribués par la SERP (score pondéré par position), jamais par le LLM.
+    const SERP_ROLES = ['leader', 'direct_competitor', 'challenger', 'inspiration_source'] as const;
+    const serpRoles: Record<string, any> = {};
+    (competitors || []).filter((c: any) => c?.url).slice(0, 4).forEach((c: any, i: number) => { serpRoles[SERP_ROLES[i]] = c; });
+    const roleLines = SERP_ROLES.map((r) => serpRoles[r] ? `  ${r}: "${serpRoles[r].name}" URL:${serpRoles[r].url} Position:${serpRoles[r].rank || 'N/A'}` : `  ${r}: AUCUN (renvoie null)`).join('\n');
+    baseContext += `CONCURRENTS IMPOSÉS PAR LA SERP (mots-clés principaux du site):\n${roleLines}\nRÈGLE ABSOLUE: n'utilise QUE ces acteurs, dans ces rôles. N'invente, n'ajoute ni ne remplace aucun acteur ; rôle AUCUN = null.\n`;
     if (hallucinationCorrections) {
       const corrections = Object.entries(hallucinationCorrections).filter(([_, v]) => v).map(([k, v]) => `${k}="${v}"`).join(', ');
       if (corrections) baseContext += `CORRECTIONS: ${corrections}\n`;
@@ -358,6 +360,21 @@ const json = (data: any, status = 200) => new Response(JSON.stringify(data), { s
       return walk(obj);
     }
     parsedAnalysis = sanitize(parsedAnalysis, domainSlug, humanBrandName);
+
+    // Garde déterministe : chaque rôle = l'acteur SERP imposé, sinon null.
+    {
+      const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+      const cl = parsedAnalysis.competitive_landscape || {};
+      for (const r of SERP_ROLES) {
+        const m = serpRoles[r];
+        const llm = cl[r];
+        if (!m) { cl[r] = null; continue; }
+        const same = llm?.url && host(llm.url) === host(m.url);
+        cl[r] = { ...(same ? llm : {}), name: m.name, url: m.url, serp_position: m.rank || null, source: 'serp' };
+        if (!same) cl[r].analysis = `Classé en position ${m.rank || 'n/d'} sur les requêtes principales du site.`;
+      }
+      parsedAnalysis.competitive_landscape = cl;
+    }
 
     // ── Supplement main_keywords if < 5 ──
     if (parsedAnalysis.keyword_positioning?.main_keywords?.length < 5 && mktData?.top_keywords) {
