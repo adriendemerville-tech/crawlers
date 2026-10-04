@@ -324,6 +324,9 @@ export interface ContentBrief {
   // ── Structure ──
   page_type: PageType;
   target_length: { min: number; max: number; ideal: number };
+  /** 'serp' si calibrée sur la page 1 Google du mot-clé, sinon défaut du type de page */
+  length_source?: 'serp' | 'page_type';
+  serp_length_sample?: number;
   h2_count: { min: number; max: number };
   h3_per_h2: { min: number; max: number };
   include_faq: boolean;
@@ -731,6 +734,60 @@ export interface BuildContentBriefInput {
   supabase?: any;
 }
 
+// ═══ SERP LENGTH BENCHMARK ═══
+// Médiane des mots des pages page 1 (top 5, hors domaine cible). SERP via serpPool (cache 7 j).
+const LENGTH_CACHE = new Map<string, { length: { min: number; max: number; ideal: number }; sample: number } | null>();
+
+async function countWords(url: string): Promise<number | null> {
+  try {
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(6000),
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersBot/1.0; +https://crawlers.fr)' },
+    });
+    if (!res.ok || !(res.headers.get('content-type') || '').includes('html')) return null;
+    let html = (await res.text()).slice(0, 1_500_000);
+    const main = html.match(/<(main|article)[\s\S]*?<\/\1>/i);
+    if (main) html = main[0];
+    const text = html
+      .replace(/<(script|style|noscript|svg|nav|header|footer|form)[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z#0-9]+;/gi, ' ');
+    const n = text.split(/\s+/).filter((w) => /\p{L}{2,}/u.test(w)).length;
+    return n >= 150 ? n : null; // coquille JS ou page vide : ignorée
+  } catch { return null; }
+}
+
+export async function estimateSerpLength(
+  keyword: string,
+  bounds: { min: number; max: number; ideal: number },
+  language = 'fr',
+  domain = '',
+): Promise<{ length: { min: number; max: number; ideal: number }; sample: number } | null> {
+  if (!keyword?.trim()) return null;
+  const key = `${language}|${keyword.toLowerCase().trim()}`;
+  if (LENGTH_CACHE.has(key)) return LENGTH_CACHE.get(key)!;
+  const { getSerp } = await import('./serpPool.ts');
+  const serp = await getSerp(keyword, { caller: 'content-brief-length', usageClass: 'intent', language, country: language === 'fr' ? 'fr' : undefined, skipFanout: true });
+  const own = domain.replace(/^www\./, '');
+  const urls = (serp?.organic ?? [])
+    .filter((r) => r.url && !(own && r.domain?.replace(/^www\./, '').endsWith(own)))
+    .slice(0, 5).map((r) => r.url);
+  const counts = (await Promise.all(urls.map(countWords))).filter((n): n is number => n !== null).sort((a, b) => a - b);
+  let out = null;
+  if (counts.length >= 3) {
+    const median = counts[Math.floor(counts.length / 2)];
+    const ceil = Math.round(bounds.max * 1.25);
+    const ideal = Math.round(Math.min(Math.max(median * 1.1, bounds.min), ceil) / 50) * 50;
+    out = {
+      length: { min: Math.max(bounds.min, Math.round(ideal * 0.8)), max: Math.min(ceil, Math.max(Math.round(ideal * 1.3), bounds.min)), ideal },
+      sample: counts.length,
+    };
+    if (out.length.min > out.length.ideal) out.length.min = bounds.min;
+  }
+  LENGTH_CACHE.set(key, out);
+  return out;
+}
+
 export async function buildContentBrief(input: BuildContentBriefInput): Promise<ContentBrief> {
   const {
     page_type, keyword, target_url, domain, tracked_site_id,
@@ -760,9 +817,14 @@ export async function buildContentBrief(input: BuildContentBriefInput): Promise<
     internalLinks = await resolveInternalLinks(input.supabase, domain, tracked_site_id, page_type, keyword);
   }
 
+  // Longueur calibrée sur la SERP du sujet (sans LLM), bornée par le type de page
+  const serpLen = await estimateSerpLength(keyword, config.length, language, domain).catch(() => null);
+
   return {
     page_type,
-    target_length: config.length,
+    target_length: serpLen?.length ?? config.length,
+    length_source: serpLen ? 'serp' : 'page_type',
+    serp_length_sample: serpLen?.sample ?? 0,
     h2_count: config.h2,
     h3_per_h2: config.h3_per_h2,
     include_faq: config.faq,
@@ -834,7 +896,7 @@ export function briefToPromptBlock(brief: ContentBrief): string {
 
   // Structure
   lines.push(`── STRUCTURE ──`);
-  lines.push(`Longueur: ${brief.target_length.min}-${brief.target_length.max} mots (idéal: ${brief.target_length.ideal})`);
+  lines.push(`Longueur: ${brief.target_length.min}-${brief.target_length.max} mots (idéal: ${brief.target_length.ideal})${brief.length_source === 'serp' ? ` — calibrée sur la médiane de ${brief.serp_length_sample} pages classées en page 1` : ''}`);
   lines.push(`H2: ${brief.h2_count.min}-${brief.h2_count.max} sections | H3 par H2: ${brief.h3_per_h2.min}-${brief.h3_per_h2.max}`);
   if (brief.include_faq) lines.push(`FAQ: OUI, ${brief.faq_count} questions (formulées comme un utilisateur poserait à un LLM)`);
   if (brief.include_table) lines.push(`Tableau comparatif: OUI (au moins 1)`);
