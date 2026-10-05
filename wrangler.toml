@@ -16,10 +16,21 @@ workers_dev = false
 # have a non-redirecting origin endpoint. Use Cloudflare Logpush instead for
 # HTTP logging on a Lovable custom domain.
 #
-# routes = [
-#   { pattern = "crawlers.fr/*", zone_name = "crawlers.fr" },
-#   { pattern = "www.crawlers.fr/*", zone_name = "crawlers.fr" },
-# ]
+# NEVER re-add crawlers.fr/* (redirect loop above).
+#
+# Narrow routes only: /functions/v1/* is proxied by the Worker to the backend
+# Edge Functions (Lovable hosting returns 406 "Only HTML requests" on the
+# custom domain for non-HTML requests, e.g. the MCP endpoint). Every other path
+# never reaches the Worker, so no loop is possible.
+#
+# After editing: redeploy via the existing workflow (.github/workflows/
+# deploy-cf-worker.yml or scripts/deploy-worker-wrangler.sh), then check in the
+# Cloudflare dashboard (Workers Routes for zone crawlers.fr) that ONLY these two
+# routes are attached to crawlers-logger.
+routes = [
+  { pattern = "crawlers.fr/functions/v1/*", zone_name = "crawlers.fr" },
+  { pattern = "www.crawlers.fr/functions/v1/*", zone_name = "crawlers.fr" },
+]
 
 # Variables d'environnement non secrètes (les secrets se poussent via `wrangler secret put`)
 # [vars]
