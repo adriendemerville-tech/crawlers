@@ -567,7 +567,7 @@ const DOC_SECTIONS: DocSection[] = [
         title: "Qu'est-ce que le serveur MCP Crawlers ?",
         content: `Crawlers.fr expose ses outils d'audit SEO/GEO comme un <strong>serveur MCP</strong> (Model Context Protocol) compatible avec Claude, et tout client MCP.
 <p class="mt-2">Cela signifie que Claude peut directement appeler les outils Crawlers pour auditer un site, vérifier sa visibilité IA, générer du code correctif et mesurer l'impact — le tout en langage naturel.</p>
-<p class="mt-2 text-sm text-muted-foreground">Endpoint : <code>POST /functions/v1/mcp-server</code></p>`,
+<p class="mt-2 text-sm text-muted-foreground">Endpoint : <code>POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code></p>`,
       },
       {
         id: 'mcp-outils-gratuits',

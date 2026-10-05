@@ -103,10 +103,29 @@ async function flushBuffer(secret) {
   }
 }
 
+const SUPABASE_ORIGIN = "https://tutlimtasnjabdfhpewu.supabase.co";
+const HOP_HEADERS = ["host", "cf-connecting-ip", "cf-ipcountry", "cf-ray", "cf-visitor", "x-forwarded-host", "x-real-ip"];
+
+async function proxyToSupabase(request, url) {
+  const headers = new Headers(request.headers);
+  for (const h of HOP_HEADERS) headers.delete(h);
+  const hasBody = !["GET", "HEAD"].includes(request.method);
+  return fetch(SUPABASE_ORIGIN + url.pathname + url.search, {
+    method: request.method,
+    headers,
+    body: hasBody ? request.body : undefined,
+    redirect: "manual",
+  });
+}
+
 export default {
   async fetch(request, env, ctx) {
-    const secret = env.CRAWLERS_SECRET;
     const url = new URL(request.url);
+    // Proxy /functions/v1/* vers les Edge Functions (l'hébergement du site n'accepte que du HTML).
+    if (url.pathname.startsWith("/functions/v1/")) {
+      return proxyToSupabase(request, url);
+    }
+    const secret = env.CRAWLERS_SECRET;
 
     // ── Proxy /robots.txt → inline project robots.txt ─────────
     if (url.pathname === "/robots.txt") {
