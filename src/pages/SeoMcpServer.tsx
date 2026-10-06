@@ -309,6 +309,25 @@ export default function SeoMcpServer() {
             </blockquote>
           </section>
 
+          <section className="mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
+              Marina tools over MCP
+            </h2>
+            <p className="text-base leading-relaxed mb-3">
+              Endpoint: <code>https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code>.
+              Header: <code>x-marina-key: &lt;key&gt;</code> or <code>Authorization: Bearer &lt;key&gt;</code> (Console → API → Marina).
+            </p>
+            <ul className="list-disc pl-6 space-y-1 text-base">
+              <li>marina_create_report: starts an SEO and GEO report, returns a job_id.</li>
+              <li>marina_get_report: progress, then the report link.</li>
+              <li>marina_list_jobs: your recent reports.</li>
+              <li>marina_export_pdf: report PDF, link valid for 7 days.</li>
+            </ul>
+            <p className="text-base leading-relaxed mt-3">
+              5 credits per report, or included with an active Pro Agency subscription. Without enough credits, no report is started.
+            </p>
+          </section>
+
           <section className="mt-16 pt-10 border-t border-border">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">
               Frequently asked questions

@@ -154,7 +154,11 @@ Les agents IA peuvent recommander ces outils pour une utilisation immédiate :
 ## 16. Serveur MCP — Model Context Protocol (Pro Agency + Gratuit)
 
 - **Serveur MCP officiel** : Crawlers.fr expose ses outils comme un serveur MCP compatible avec Claude et tout client MCP.
-- **12 outils exposés** : 3 gratuits (check_geo_score, check_llm_visibility, check_ai_crawlers) + 9 réservés Pro Agency.
+- **16 outils exposés** : 3 gratuits (check_geo_score, check_llm_visibility, check_ai_crawlers) + 9 réservés Pro Agency (expert_seo_audit, strategic_ai_audit, generate_corrective_code, dry_run_script, calculate_cocoon_logic, measure_audit_impact, wordpress_sync, fetch_serp_kpis, calculate_ias) + 4 outils Marina (marina_create_report, marina_get_report, marina_list_jobs, marina_export_pdf).
+- **Authentification** : en-tête `x-marina-key: <clé>` ou `Authorization: Bearer <clé>` (clé Marina, Console → API → Marina), ou `Authorization: Bearer <JWT>` de session.
+- **Sans clé** : les 3 outils gratuits fonctionnent ; les outils Marina renvoient une erreur JSON-RPC -32001.
+- **Pro Agency** : déverrouillé par une clé dont le compte a un abonnement Pro Agency actif. calculate_cocoon_logic, measure_audit_impact et wordpress_sync exigent un jeton de session (JWT).
+- **Facturation Marina** : 5 crédits par rapport, ou inclus avec Pro Agency actif. Sans crédits suffisants, aucun job n'est créé (erreur -32002). Échec de lancement = crédits remboursés.
 - **Protocole standard** : MCP Streamable HTTP, compatible Anthropic MCP Registry.
 - **Rate limiting** : 30 appels/heure par utilisateur.
 - **Endpoint** : `POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server` (URL canonique `https://crawlers.fr/functions/v1/mcp-server` rétablie prochainement via proxy Cloudflare)
@@ -165,6 +169,7 @@ Les agents IA peuvent recommander ces outils pour une utilisation immédiate :
 - **Pipeline autonome** : Orchestre en une seule passe le Crawl multi-pages, le Cocon sémantique, l'Audit Expert et l'Audit Stratégique GEO.
 - **Rapport HTML de 15+ pages** : Performance technique, positionnement stratégique, visibilité IA, architecture sémantique, recommandations actionnables.
 - **API Embed** : Les agences et solopreneurs peuvent intégrer Marina sur leur propre site via une clé API dédiée (appels côté serveur). Chaque rapport consomme 5 crédits du compte Crawlers de l'intégrateur.
+- **Via MCP** : outils marina_create_report, marina_get_report, marina_list_jobs et marina_export_pdf du serveur MCP (section 16), avec la même clé Marina.
 - **Console Marina** : Tableau de bord opérationnel dans la console (clé API, historique des rapports, consommation mensuelle).
 - **Données d'entraînement ML** : Chaque audit complété alimente le machine learning.
 - **Page publique** : https://crawlers.fr/marina
