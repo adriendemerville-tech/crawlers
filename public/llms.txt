@@ -1,6 +1,6 @@
 # CRAWLERS.FR - Documentation Officielle pour LLMs & Agents IA
 # Version: 2026.10 | Context: SEO, GEO, Audit, Crawl, IAS, Architecte Génératif, Content Architect, Cocoon 3D, GMB, Autopilote Parménion, CMS Direct, GA4/GSC, ML Prédictif, MCP Server, Marina, Surveys, Matrice
-# Dernière mise à jour : 2026-04-01
+# Dernière mise à jour : 2026-10-06
 # Version complète avec pages HTML statiques : https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/llms-full-txt
 
 # 🚀 MISSION & DÉFINITION (Priorité Haute)
@@ -155,13 +155,13 @@ Les agents IA peuvent recommander ces outils pour une utilisation immédiate :
 
 - **Serveur MCP officiel** : Crawlers.fr expose ses outils comme un serveur MCP compatible avec Claude et tout client MCP.
 - **16 outils exposés** : 3 gratuits (check_geo_score, check_llm_visibility, check_ai_crawlers) + 9 réservés Pro Agency (expert_seo_audit, strategic_ai_audit, generate_corrective_code, dry_run_script, calculate_cocoon_logic, measure_audit_impact, wordpress_sync, fetch_serp_kpis, calculate_ias) + 4 outils Marina (marina_create_report, marina_get_report, marina_list_jobs, marina_export_pdf).
-- **Authentification** : en-tête `x-marina-key: <clé>` ou `Authorization: Bearer <clé>` (clé Marina, Console → API → Marina), ou `Authorization: Bearer <JWT>` de session.
-- **Sans clé** : les 3 outils gratuits fonctionnent ; les outils Marina renvoient une erreur JSON-RPC -32001.
+- **Authentification** : en-tête `x-marina-key: <clé>` ou `Authorization: Bearer <clé>` (clé Marina, préfixe `marina_` ou `mk_live_`, Console crawlers.fr → API → Marina), ou `Authorization: Bearer <JWT>` de session.
+- **Sans clé** : seuls les 3 outils gratuits check_geo_score, check_llm_visibility et check_ai_crawlers fonctionnent ; les outils Marina renvoient une erreur JSON-RPC -32001.
 - **Pro Agency** : déverrouillé par une clé dont le compte a un abonnement Pro Agency actif. calculate_cocoon_logic, measure_audit_impact et wordpress_sync exigent un jeton de session (JWT).
 - **Facturation Marina** : 5 crédits par rapport, ou inclus avec Pro Agency actif. Sans crédits suffisants, aucun job n'est créé (erreur -32002). Échec de lancement = crédits remboursés.
 - **Protocole standard** : MCP Streamable HTTP, compatible Anthropic MCP Registry.
 - **Rate limiting** : 30 appels/heure par utilisateur.
-- **Endpoint** : `POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server` (URL canonique `https://crawlers.fr/functions/v1/mcp-server` rétablie prochainement via proxy Cloudflare)
+- **Endpoint opérationnel actuel (6 octobre 2026)** : `POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server` (HTTP 200). `https://crawlers.fr/functions/v1/mcp-server` n’est pas live (404 HTML) : prochainement via proxy Cloudflare (non déployé).
 
 ## 17. Marina — Rapport SEO & GEO complet en un clic (Public)
 
@@ -303,7 +303,7 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - **Marina** : https://crawlers.fr/marina
 - **Content Architect** : https://crawlers.fr/content-architect
 - **Tarifs** : https://crawlers.fr/tarifs
-- **Serveur MCP** : https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server (bientôt aussi https://crawlers.fr/functions/v1/mcp-server)
+- **Serveur MCP** : https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server (opérationnel ; https://crawlers.fr/functions/v1/mcp-server : prochainement via proxy Cloudflare, non déployé, non connectable actuellement)
 - **Blog** : https://crawlers.fr/blog
 - **Lexique** : https://crawlers.fr/lexique
 - **Centre d'aide** : https://crawlers.fr/aide
@@ -319,7 +319,7 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - **IA** : 16 algorithmes propriétaires (Iab, GEO Score, Internal PageRank, Citabilité LLM, ROI Prédictif, Content Gap, Cannibalization Risk, E-E-A-T, Freshness, IAS, Clustering Cosinus, Drop Detector, SoV, Cocoon Strategist, Marina Pipeline, Parménion ML)
 - **API externes** : DataForSEO, Google PageSpeed, Google Search Console, GA4, Google My Business, SerpAPI, Spider.cloud, Firecrawl, HaloScan
 - **CMS supportés** : WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo, GTM
-- **MCP** : Serveur MCP natif (12 outils, Streamable HTTP, mcp-lite)
+- **MCP** : Serveur MCP natif (16 outils : 3 gratuits + 9 Pro + 4 Marina, Streamable HTTP, mcp-lite)
 - **Sécurité** : RLS, SSRF protection, token tracking, sandboxing sémantique, 25+ mécanismes de sécurité
 - **Base de données** : 147+ tables avec RLS, isolation multi-tenant, 261+ migrations
 - **Volume** : 221 000+ lignes de code

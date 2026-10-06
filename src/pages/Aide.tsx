@@ -580,7 +580,7 @@ const DOC_SECTIONS: DocSection[] = [
       },
       {
         id: 'mcp-outils-pro',
-        title: 'Outils MCP Pro Agency (token requis)',
+        title: 'Outils MCP Pro Agency (clé Marina ou JWT requis)',
         content: `<ul class="list-disc pl-6 space-y-1">
 <li><strong>expert_seo_audit</strong> — Audit SEO 200 points</li>
 <li><strong>strategic_ai_audit</strong> — Audit stratégique IA multi-axes</li>
@@ -592,7 +592,7 @@ const DOC_SECTIONS: DocSection[] = [
 <li><strong>fetch_serp_kpis</strong> — KPIs SERP hebdomadaires</li>
 <li><strong>calculate_ias</strong> — Indice d'Alignement Stratégique</li>
 </ul>
-<p class="mt-2 text-sm text-muted-foreground">Authentification via token Supabase d'un compte Pro Agency. Rate limit : 30 appels/heure.</p>`,
+<p class="mt-2 text-sm text-muted-foreground">Authentification : <code>x-marina-key: &lt;clé&gt;</code> ou <code>Authorization: Bearer &lt;clé&gt;</code>, clé Marina (<code>marina_</code> ou <code>mk_live_</code>) d’un compte Pro Agency actif. calculate_cocoon_logic, wordpress_sync et measure_audit_impact exigent un JWT de session. Rate limit : 30 appels/heure.</p>`,
       },
       {
         id: 'mcp-usage',
@@ -603,9 +603,10 @@ const DOC_SECTIONS: DocSection[] = [
 <li>Demandez en langage naturel : « Audite le site example.com »</li>
 <li>Claude appelle les outils Crawlers et synthétise les résultats</li>
 </ol>
-<p class="mt-2">Pour les outils Pro, votre token d'authentification Crawlers est transmis automatiquement.</p>
+<p class="mt-2">Configurez votre clé Marina dans les en-têtes de votre client MCP (Console crawlers.fr → API → Marina).</p>
 <p class="mt-4 font-semibold">Outils Marina via MCP</p>
-<p class="mt-1">Endpoint <code>https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code>, en-tête <code>x-marina-key: &lt;clé&gt;</code> ou <code>Authorization: Bearer &lt;clé&gt;</code> (Console → API → Marina). Outils : marina_create_report, marina_get_report, marina_list_jobs, marina_export_pdf (PDF, lien 7 jours). 5 crédits par rapport, ou inclus avec Pro Agency actif ; aucun rapport sans crédits.</p>`,
+<p class="mt-1">Endpoint <code>https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code>, en-tête <code>x-marina-key: &lt;clé&gt;</code> ou <code>Authorization: Bearer &lt;clé&gt;</code> (Console crawlers.fr → API → Marina ; préfixes <code>marina_</code> et <code>mk_live_</code>). Outils : marina_create_report, marina_get_report, marina_list_jobs, marina_export_pdf (PDF, lien 7 jours). 5 crédits par rapport, ou inclus avec Pro Agency actif ; solde insuffisant = JSON-RPC -32002, aucun job créé. Sans clé, seuls check_geo_score, check_llm_visibility et check_ai_crawlers fonctionnent ; Marina renvoie JSON-RPC -32001.</p>
+<p class="mt-2">Le futur proxy <code>https://crawlers.fr/functions/v1/mcp-server</code> n’est pas déployé ni connectable : prochainement via proxy Cloudflare.</p>`,
       },
     ],
   },
@@ -618,7 +619,7 @@ const DOC_SECTIONS: DocSection[] = [
         id: 'marina-overview',
         title: "Qu'est-ce que Marina ?",
         content: `Marina est un pipeline d'audit SEO/GEO automatisé qui génère un rapport HTML complet de 15+ pages en ~3 minutes. Il combine en une seule passe : audit technique (200 critères), audit stratégique GEO, visibilité IA (5 LLMs), et analyse de cocon sémantique.
-<p class="mt-2"><strong>Coût :</strong> 30 crédits par rapport.</p>
+<p class="mt-2"><strong>Coût :</strong> 5 crédits par rapport (inclus avec Pro Agency actif pour les rapports via MCP).</p>
 <p class="mt-1"><strong>Page dédiée :</strong> <a href="/marina" class="text-primary underline">crawlers.fr/marina</a></p>`,
       },
       {

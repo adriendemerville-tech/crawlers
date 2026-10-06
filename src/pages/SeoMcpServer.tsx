@@ -29,11 +29,11 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Which clients are supported?',
-    a: 'Any MCP client speaking Streamable HTTP with OAuth 2.1 authentication, including Claude Desktop, Claude Code and Cursor.',
+    a: 'Any MCP client supporting Streamable HTTP and configurable authentication headers, including Claude Desktop, Claude Code and Cursor. The live endpoint accepts a Marina key, not an OAuth connection flow.',
   },
   {
     q: 'How is it billed?',
-    a: 'Reads and job status calls are free. Tools that trigger a crawl or a computation consume your plan quota first, then your pay-as-you-go developer wallet. Every billed call is logged with its cost.',
+    a: 'The live endpoint exposes 3 free tools without a key, 9 Pro tools and 4 Marina tools. Marina reports cost 5 credits, or are included with active Pro Agency. Insufficient credits return JSON-RPC -32002 and no job is created.',
   },
   {
     q: 'Does the agent change my site?',
@@ -86,7 +86,7 @@ export default function SeoMcpServer() {
             { kind: 'assistant', text: 'Connecting to the Crawlers MCP server.' },
             {
               kind: 'connect',
-              text: 'https://crawlers.fr/mcp · Streamable HTTP · OAuth 2.1 — connected: 14 tools, 3 resources',
+              text: 'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server · Streamable HTTP · x-marina-key: <key> or Authorization: Bearer <key> — 16 tools (3 free + 9 Pro + 4 Marina)',
             },
             { kind: 'user', text: 'Audit the SEO of /contact.' },
             { kind: 'assistant', text: 'I’ll use the audit_page tool to analyse the page.' },
@@ -264,17 +264,17 @@ export default function SeoMcpServer() {
               MCP client compatibility
             </h2>
             <p className="text-base leading-relaxed mb-6">
-              The server implements the Model Context Protocol over Streamable HTTP with OAuth 2.1,
-              so any conformant client can call it.
+              The live server implements the Model Context Protocol over Streamable HTTP.
+              Use a client that lets you configure x-marina-key or Authorization headers.
             </p>
             <DataTable
               caption="Compatibility of MCP clients with the Crawlers audit server."
               columns={['Client', 'Transport', 'Auth', 'Typical use']}
               rows={[
-                ['Claude Code', 'Streamable HTTP', 'OAuth 2.1', 'Audit and fix inside the repository'],
-                ['Claude Desktop', 'Streamable HTTP', 'OAuth 2.1', 'Conversational diagnosis'],
-                ['Cursor', 'Streamable HTTP', 'OAuth 2.1', 'Audit while editing'],
-                ['Any conformant client', 'Streamable HTTP', 'OAuth 2.1', 'Custom automation'],
+                ['Claude Code', 'Streamable HTTP', 'Marina key / Bearer', 'Audit and fix inside the repository'],
+                ['Claude Desktop', 'Streamable HTTP', 'Marina key / Bearer', 'Conversational diagnosis'],
+                ['Cursor', 'Streamable HTTP', 'Marina key / Bearer', 'Audit while editing'],
+                ['Any conformant client', 'Streamable HTTP', 'Marina key / Bearer', 'Custom automation'],
               ]}
             />
           </section>
@@ -302,10 +302,12 @@ export default function SeoMcpServer() {
               Connecting and billing
             </h2>
             <blockquote className="citable-passage border-l-2 border-border pl-4 text-base leading-relaxed">
-              The server uses Streamable HTTP with OAuth 2.1. You add it to your MCP client,
-              authorise your Crawlers.fr account, and the tools appear in the conversation. Free
-              calls cover reads and job status; billed calls draw on your plan quota and then on your
-              pay-as-you-go wallet, with a daily cap that protects you against runaway agent loops.
+              The operational endpoint is <code>POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code> over Streamable HTTP.
+              Get your Marina key (prefix <code>marina_</code> or <code>mk_live_</code>) from Console crawlers.fr → API → Marina.
+              Set <code>x-marina-key: &lt;key&gt;</code> or <code>Authorization: Bearer &lt;key&gt;</code>.
+              There are 16 tools: 3 free + 9 Pro + 4 Marina. A key belonging to an active Pro Agency account unlocks Pro access;
+              calculate_cocoon_logic, wordpress_sync and measure_audit_impact still require a session JWT.
+              Marina costs 5 credits per report, or is included with active Pro Agency.
             </blockquote>
           </section>
 
@@ -315,7 +317,7 @@ export default function SeoMcpServer() {
             </h2>
             <p className="text-base leading-relaxed mb-3">
               Endpoint: <code>https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code>.
-              Header: <code>x-marina-key: &lt;key&gt;</code> or <code>Authorization: Bearer &lt;key&gt;</code> (Console → API → Marina).
+              Header: <code>x-marina-key: &lt;key&gt;</code> or <code>Authorization: Bearer &lt;key&gt;</code> (Console crawlers.fr → API → Marina; prefixes <code>marina_</code> and <code>mk_live_</code>).
             </p>
             <ul className="list-disc pl-6 space-y-1 text-base">
               <li>marina_create_report: starts an SEO and GEO report, returns a job_id.</li>
@@ -324,7 +326,9 @@ export default function SeoMcpServer() {
               <li>marina_export_pdf: report PDF, link valid for 7 days.</li>
             </ul>
             <p className="text-base leading-relaxed mt-3">
-              5 credits per report, or included with an active Pro Agency subscription. Without enough credits, no report is started.
+              5 credits per report, or included with an active Pro Agency subscription. Without enough credits: JSON-RPC -32002, no job created.
+              Without a key, only check_geo_score, check_llm_visibility and check_ai_crawlers are free; Marina returns JSON-RPC -32001.
+              The future proxy <code>https://crawlers.fr/functions/v1/mcp-server</code> is not live: coming via Cloudflare (not deployed).
             </p>
           </section>
 
