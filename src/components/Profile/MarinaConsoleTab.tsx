@@ -270,7 +270,8 @@ export function MarinaConsoleTab() {
       .from('marina_api_keys')
       .update({ is_active: !key.is_active })
       .eq('id', key.id);
-    if (!error) loadKeys();
+    if (error) toast.error(t3(language, 'Action impossible', 'Action failed', 'Acción imposible'));
+    else loadKeys();
   };
 
   const deleteKey = async (id: string) => {
