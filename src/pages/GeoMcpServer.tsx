@@ -63,11 +63,11 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Quels clients MCP sont compatibles ?',
-    a: 'Tout client MCP parlant Streamable HTTP avec authentification OAuth 2.1, notamment Claude Desktop, Claude Code et Cursor.',
+    a: 'Tout client MCP prenant en charge Streamable HTTP et des en-têtes d’authentification configurables, notamment Claude Desktop, Claude Code et Cursor. L’endpoint opérationnel accepte une clé Marina, pas un parcours OAuth.',
   },
   {
     q: 'Comment est-ce facturé ?',
-    a: 'Les lectures et les statuts de jobs sont gratuits. Les outils qui déclenchent un crawl ou un calcul consomment d’abord le quota de votre plan, puis votre portefeuille développeur en paiement à l’usage, avec un plafond journalier.',
+    a: 'L’endpoint opérationnel expose 3 outils gratuits sans clé, 9 outils Pro et 4 outils Marina. Un rapport Marina coûte 5 crédits, ou est inclus avec Pro Agency actif. Un solde insuffisant renvoie JSON-RPC -32002 sans créer de job.',
   },
   {
     q: 'L’agent modifie-t-il mon site ?',
@@ -117,7 +117,7 @@ export default function GeoMcpServer() {
             { kind: 'assistant', text: 'Je me connecte au serveur MCP Crawlers.' },
             {
               kind: 'connect',
-              text: 'https://crawlers.fr/mcp · Streamable HTTP · OAuth 2.1 — connecté : 14 outils, 3 ressources',
+              text: 'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server · Streamable HTTP · x-marina-key: <clé> ou Authorization: Bearer <clé> — 16 outils (3 gratuits + 9 Pro + 4 Marina)',
             },
             { kind: 'user', text: 'Dis-moi si ChatGPT cite ma page tarifs.' },
             { kind: 'assistant', text: 'J’utilise l’outil ai_visibility pour mesurer tes citations dans les moteurs génératifs.' },
@@ -320,10 +320,10 @@ export default function GeoMcpServer() {
               caption="Compatibilité des clients MCP avec le serveur GEO Crawlers.fr."
               columns={['Client', 'Transport', 'Authentification', 'Usage typique']}
               rows={[
-                ['Claude Code', 'Streamable HTTP', 'OAuth 2.1', 'Mesure et correction dans le dépôt'],
-                ['Claude Desktop', 'Streamable HTTP', 'OAuth 2.1', 'Diagnostic conversationnel'],
-                ['Cursor', 'Streamable HTTP', 'OAuth 2.1', 'Correction pendant l’édition'],
-                ['Client MCP conforme', 'Streamable HTTP', 'OAuth 2.1', 'Automatisation sur mesure'],
+                ['Claude Code', 'Streamable HTTP', 'Clé Marina / Bearer', 'Mesure et correction dans le dépôt'],
+                ['Claude Desktop', 'Streamable HTTP', 'Clé Marina / Bearer', 'Diagnostic conversationnel'],
+                ['Cursor', 'Streamable HTTP', 'Clé Marina / Bearer', 'Correction pendant l’édition'],
+                ['Client MCP conforme', 'Streamable HTTP', 'Clé Marina / Bearer', 'Automatisation sur mesure'],
               ]}
             />
 
@@ -352,11 +352,12 @@ export default function GeoMcpServer() {
               Connexion et facturation
             </h2>
             <blockquote className="citable-passage border-l-2 border-border pl-4 text-base leading-relaxed">
-              Le serveur utilise Streamable HTTP avec OAuth 2.1. Vous l’ajoutez à votre client MCP,
-              vous autorisez votre compte Crawlers.fr, et les outils apparaissent dans la
-              conversation. Les appels gratuits couvrent les lectures et les statuts ; les appels
-              facturés puisent dans le quota de votre plan puis dans votre portefeuille à l’usage,
-              avec un plafond journalier qui protège contre les boucles d’agent incontrôlées.
+              L’endpoint opérationnel est <code>POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code>, en Streamable HTTP.
+              Récupérez votre clé Marina (préfixe <code>marina_</code> ou <code>mk_live_</code>) dans Console crawlers.fr → API → Marina.
+              Configurez <code>x-marina-key: &lt;clé&gt;</code> ou <code>Authorization: Bearer &lt;clé&gt;</code>.
+              Les 16 outils se répartissent en 3 gratuits + 9 Pro + 4 Marina. Une clé rattachée à un compte Pro Agency actif ouvre l’accès Pro ;
+              calculate_cocoon_logic, wordpress_sync et measure_audit_impact exigent toujours un JWT de session.
+              Marina coûte 5 crédits par rapport, ou est inclus avec Pro Agency actif.
             </blockquote>
           </section>
 
@@ -366,7 +367,7 @@ export default function GeoMcpServer() {
             </h2>
             <p className="text-base leading-relaxed mb-3">
               Endpoint : <code>https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code>.
-              En-tête : <code>x-marina-key: &lt;clé&gt;</code> ou <code>Authorization: Bearer &lt;clé&gt;</code> (Console → API → Marina).
+              En-tête : <code>x-marina-key: &lt;clé&gt;</code> ou <code>Authorization: Bearer &lt;clé&gt;</code> (Console crawlers.fr → API → Marina ; préfixes <code>marina_</code> et <code>mk_live_</code>).
             </p>
             <ul className="list-disc pl-6 space-y-1 text-base">
               <li>marina_create_report : lance un rapport SEO et GEO, renvoie un job_id.</li>
@@ -375,7 +376,9 @@ export default function GeoMcpServer() {
               <li>marina_export_pdf : PDF du rapport, lien valable 7 jours.</li>
             </ul>
             <p className="text-base leading-relaxed mt-3">
-              5 crédits par rapport, ou inclus avec un abonnement Pro Agency actif. Sans crédits suffisants, aucun rapport n'est lancé.
+              5 crédits par rapport, ou inclus avec un abonnement Pro Agency actif. Sans crédits suffisants : JSON-RPC -32002, aucun job créé.
+              Sans clé, seuls check_geo_score, check_llm_visibility et check_ai_crawlers sont gratuits ; Marina renvoie JSON-RPC -32001.
+              Le futur proxy <code>https://crawlers.fr/functions/v1/mcp-server</code> n’est pas live : prochainement via Cloudflare (non déployé).
             </p>
           </section>
 
