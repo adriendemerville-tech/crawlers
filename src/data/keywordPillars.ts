@@ -233,6 +233,10 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
           ],
         },
       },
+      {
+        h2: "Outils Marina via MCP",
+        body: "Le serveur MCP https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server expose quatre outils Marina : marina_create_report lance un rapport SEO et GEO, marina_get_report suit son avancement et renvoie le lien du rapport, marina_list_jobs liste vos rapports, marina_export_pdf fournit le PDF (lien valable 7 jours). Authentifiez-vous avec votre clé Marina dans l'en-tête x-marina-key: <clé> ou Authorization: Bearer <clé> (Console → API → Marina). Un rapport coûte 5 crédits, ou est inclus avec un abonnement Pro Agency actif ; sans crédits suffisants, aucun rapport n'est lancé.",
+      },
     ],
     faqs: [
       { q: "Faut-il un abonnement Crawlers.fr pour utiliser Claude avec le MCP ?", a: "Il faut un compte Crawlers.fr. Les lectures et les statuts de tâche sont gratuits, les outils qui déclenchent un crawl ou un calcul sont décomptés du quota de votre plan puis, au-delà, de votre portefeuille pay-as-you-go." },

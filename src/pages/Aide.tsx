@@ -599,11 +599,13 @@ const DOC_SECTIONS: DocSection[] = [
         title: 'Comment utiliser le MCP avec Claude ?',
         content: `<ol class="list-decimal pl-6 space-y-1">
 <li>Configurez le serveur MCP dans votre client Claude avec l'endpoint Crawlers</li>
-<li>Claude découvre automatiquement les 12 outils disponibles</li>
+<li>Claude découvre automatiquement les 16 outils disponibles</li>
 <li>Demandez en langage naturel : « Audite le site example.com »</li>
 <li>Claude appelle les outils Crawlers et synthétise les résultats</li>
 </ol>
-<p class="mt-2">Pour les outils Pro, votre token d'authentification Crawlers est transmis automatiquement.</p>`,
+<p class="mt-2">Pour les outils Pro, votre token d'authentification Crawlers est transmis automatiquement.</p>
+<p class="mt-4 font-semibold">Outils Marina via MCP</p>
+<p class="mt-1">Endpoint <code>https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code>, en-tête <code>x-marina-key: &lt;clé&gt;</code> ou <code>Authorization: Bearer &lt;clé&gt;</code> (Console → API → Marina). Outils : marina_create_report, marina_get_report, marina_list_jobs, marina_export_pdf (PDF, lien 7 jours). 5 crédits par rapport, ou inclus avec Pro Agency actif ; aucun rapport sans crédits.</p>`,
       },
     ],
   },
