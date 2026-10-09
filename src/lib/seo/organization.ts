@@ -2,9 +2,9 @@
  * Nœud d'identité canonique de Crawlers.fr (schema.org Organization).
  *
  * Un agent IA lit ce nœud pour décider si l'entreprise est réelle avant de la
- * recommander : la corroboration repose sur `postalAddress` + `contactPoint` +
- * `sameAs` + `identifier` (SIREN), cohérents entre le site, la fiche Google
- * Business et l'annuaire légal.
+ * recommander : la corroboration repose sur `identifier` (SIREN, TVA),
+ * `contactPoint`, `founder` et `sameAs` (profils externes officiels), cohérents
+ * entre le site et les registres légaux.
  *
  * Source unique : ne jamais dupliquer ces valeurs ailleurs. Les autres schémas
  * (Article.publisher, VideoObject.publisher…) référencent `ORGANIZATION_REF`
@@ -15,6 +15,12 @@ export const SITE_URL_CANONICAL = 'https://crawlers.fr';
 
 export const ORGANIZATION_ID = `${SITE_URL_CANONICAL}/#organization`;
 
+/** Profils EXTERNES officiels de Crawlers.fr (annuaires de confiance, LinkedIn société, Product Hunt, G2…).
+ *  Jamais une page de crawlers.fr ni un profil personnel. */
+export const SAME_AS: string[] = [];
+/** Email public de contact : mettre l'adresse ici quand la réception de la boîte est confirmée. null = pas d'email publié. */
+export const CONTACT_EMAIL: string | null = null;
+
 /** Référence légère utilisable partout où un `publisher`/`provider` est attendu. */
 export const ORGANIZATION_REF = {
   '@type': 'Organization',
@@ -22,6 +28,9 @@ export const ORGANIZATION_REF = {
   name: 'Crawlers.fr',
   url: SITE_URL_CANONICAL,
 } as const;
+
+const emailField: { email?: string } = CONTACT_EMAIL ? { email: CONTACT_EMAIL } : {};
+const sameAsField: { sameAs?: string[] } = SAME_AS.length > 0 ? { sameAs: SAME_AS } : {};
 
 /** Nœud complet, émis une seule fois par page (JSON-LD sitewide du root). */
 export const ORGANIZATION_NODE = {
@@ -45,17 +54,9 @@ export const ORGANIZATION_NODE = {
   image: `${SITE_URL_CANONICAL}/og-image.png`,
   description:
     "Plateforme SaaS d'acquisition française : suite GEO et plateforme d'intelligence de visibilité réunissant diagnostic technique, score de citabilité par les moteurs génératifs, correction automatique des pages et connexion directe aux CMS.",
-  email: 'contact@crawlers.fr',
+  ...emailField,
   foundingDate: '2025',
   slogan: 'Visible dans Google comme dans les réponses des IA.',
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: 'Saint-Rémy-de-Provence',
-    addressLocality: 'Saint-Rémy-de-Provence',
-    postalCode: '13210',
-    addressRegion: 'Provence-Alpes-Côte d\u2019Azur',
-    addressCountry: 'FR',
-  },
   areaServed: [
     { '@type': 'Country', name: 'France' },
     { '@type': 'Country', name: 'Belgique' },
@@ -79,7 +80,7 @@ export const ORGANIZATION_NODE = {
     {
       '@type': 'ContactPoint',
       contactType: 'customer support',
-      email: 'contact@crawlers.fr',
+      ...emailField,
       url: `${SITE_URL_CANONICAL}/contact`,
       availableLanguage: ['fr', 'en', 'es'],
       areaServed: 'FR',
@@ -87,14 +88,14 @@ export const ORGANIZATION_NODE = {
     {
       '@type': 'ContactPoint',
       contactType: 'sales',
-      email: 'contact@crawlers.fr',
+      ...emailField,
       url: `${SITE_URL_CANONICAL}/tarifs`,
       availableLanguage: ['fr', 'en'],
     },
     {
       '@type': 'ContactPoint',
       contactType: 'technical support',
-      email: 'contact@crawlers.fr',
+      ...emailField,
       url: `${SITE_URL_CANONICAL}/aide`,
       availableLanguage: ['fr', 'en'],
     },
@@ -116,7 +117,7 @@ export const ORGANIZATION_NODE = {
     'Maillage interne et cocon sémantique',
     'E-E-A-T',
   ],
-  sameAs: ['https://www.linkedin.com/in/adrien-de-volontat/'],
+  ...sameAsField,
 } as const;
 
 /** Nœud WebSite lié à l'Organization, avec action de recherche. */

@@ -11,7 +11,7 @@
  */
 
 import { SITE_URL } from '@/lib/seo/pageHead';
-import { ORGANIZATION_REF } from '@/lib/seo/organization';
+import { ORGANIZATION_REF, ORGANIZATION_ID } from '@/lib/seo/organization';
 import { breadcrumbList } from '@/lib/seo/breadcrumb';
 
 const ORG = ORGANIZATION_REF;
@@ -55,6 +55,7 @@ const softwareApplication = {
   datePublished: '2026-03-18',
   url: SITE_URL,
   creator: ORG,
+  publisher: { '@id': ORGANIZATION_ID },
   description:
     "Plateforme SaaS d'acquisition française : suite GEO et plateforme d'intelligence de visibilité couvrant l'audit SEO, le GEO et la visibilité IA. Audit technique 200+ points, matrice de concurrence SERP et citations IA, audit Marina, cocon sémantique 3D, autopilote éditorial, détection de bots IA, et API développeurs pour piloter tous les modules par programmation.",
   offers: [
