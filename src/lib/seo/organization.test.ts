@@ -49,16 +49,18 @@ describe('nœud Organization canonique', () => {
     expect(ORGANIZATION_NODE.legalName).toBeTruthy();
     expect(ORGANIZATION_NODE.url).toBe('https://crawlers.fr');
     expect(ORGANIZATION_NODE.logo.url).toMatch(/^https:\/\/crawlers\.fr\//);
-    expect(ORGANIZATION_NODE.address.addressCountry).toBe('FR');
-    expect(ORGANIZATION_NODE.address.addressLocality).toBeTruthy();
+    expect('address' in ORGANIZATION_NODE).toBe(false);
     expect(ORGANIZATION_NODE.contactPoint.length).toBeGreaterThan(0);
     for (const contact of ORGANIZATION_NODE.contactPoint) {
       expect(contact.contactType).toBeTruthy();
-      expect(contact.email).toMatch(/@/);
+      expect(contact.url).toMatch(/^https:\/\/crawlers\.fr\//);
+      if (CONTACT_EMAIL) expect(contact.email).toBe(CONTACT_EMAIL);
+      else expect('email' in contact).toBe(false);
     }
     const siren = ORGANIZATION_NODE.identifier.find((id) => id.propertyID === 'SIREN');
     expect(siren?.value).toMatch(/^\d{9}$/);
-    expect(ORGANIZATION_NODE.sameAs.length).toBeGreaterThan(0);
+    if (SAME_AS.length > 0) expect(ORGANIZATION_NODE.sameAs).toEqual(SAME_AS);
+    else expect('sameAs' in ORGANIZATION_NODE).toBe(false);
   });
 
   it('lie le nœud WebSite à cet @id, sans dupliquer le nœud', () => {
