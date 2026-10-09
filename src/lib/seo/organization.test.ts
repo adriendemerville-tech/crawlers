@@ -14,6 +14,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+  CONTACT_EMAIL,
+  SAME_AS,
   ORGANIZATION_ID,
   ORGANIZATION_NODE,
   ORGANIZATION_REF,
