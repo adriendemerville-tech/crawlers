@@ -115,12 +115,8 @@ const Index = () => {
         {/* Global premium gradient overlay */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--brand-violet)/0.06),transparent_60%)]" />
         <HomeHero />
-        <section id="video-presentation" className="relative py-12 px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center">Crawlers en 2 minutes</h2>
-            <p className="mt-3 mb-6 text-center text-muted-foreground">
-              Découvrez comment Crawlers analyse votre visibilité sur Google et dans les moteurs de réponse IA.
-            </p>
+        <section id="video-presentation" aria-label="Vidéo de présentation" className="relative py-8 px-4">
+          <div className="max-w-2xl mx-auto">
             <PromoVideo
               src="/videos/crawlers-home.mp4"
               poster="/videos/crawlers-home-poster.jpg"
@@ -255,13 +251,6 @@ const Index = () => {
                 </div>
               </div>
             </div>
-            <p className="mx-auto mb-6 max-w-2xl text-xs text-muted-foreground">
-              {language === 'fr'
-                ? 'Tous les audits sont intégrés aux abonnements. Agent d\u2019analyse Marina disponible par API.'
-                : language === 'es'
-                  ? 'Todas las auditorías están incluidas en las suscripciones. Agente de análisis Marina disponible por API.'
-                  : 'All audits are included in subscriptions. Marina analysis agent available via API.'}
-            </p>
             <div className="flex flex-col items-center gap-4 mb-6">
               <Link to="/pro-agency">
                 <Button
