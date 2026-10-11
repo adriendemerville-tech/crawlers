@@ -353,7 +353,7 @@ export function AudienceRouter() {
         ) : (
           <div className="flex w-full flex-col items-center">
             <h2 className="audience-router-question mb-8 whitespace-nowrap font-display font-bold text-foreground">
-              Pourquoi avez-vous besoin de Crawlers ?
+              Bienvenue ! Pourquoi avez-vous besoin de Crawlers ?
             </h2>
             <div className="flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border bg-secondary/30 p-2 sm:p-3">
               <input
