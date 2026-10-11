@@ -126,6 +126,7 @@ const Index = () => {
               poster="/videos/crawlers-home-poster.jpg"
               title="Vidéo de présentation de Crawlers"
               trackingId="crawlers-home"
+              captionsSrc="/videos/crawlers-home.vtt"
             />
           </div>
         </section>
