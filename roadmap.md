@@ -9,3 +9,6 @@
 - [x] Offre Parmenion 59 € intacte (passe_orders/passe_passes, parmenion_pass, ParmenionLanding, ParmenionCta, passe-visibilite)
 
 Note : les anciennes tables parmenion_* existent toujours → l'orchestrateur non migré continue de fonctionner sans panne, mais écrit dans les anciennes tables jusqu'à sa migration.
+
+- [ ] Audit et test des connexions CMS + déploiement contenu/code correctif (en attente du mode de test)
+- [ ] Audit et test du Social Hub + publication de posts (en attente du mode de test)
