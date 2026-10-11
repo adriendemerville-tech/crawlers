@@ -138,11 +138,6 @@ function AIVisibilitySectionComponent() {
           </Link>
         </div>
 
-        <div className="hidden sm:flex mt-3 sm:mt-4 items-center justify-center gap-3 sm:gap-4">
-          <Link to="/auth" className="text-sm font-medium underline underline-offset-4 transition-colors text-foreground">
-            {language === 'fr' ? 'Créer un compte gratuit →' : language === 'es' ? 'Crear una cuenta gratis →' : 'Create a free account →'}
-          </Link>
-        </div>
       </div>
     </section>
   );
