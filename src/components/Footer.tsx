@@ -266,8 +266,8 @@ function FooterComponent() {
       )}
 
       <footer className="border-t border-border bg-card" role="contentinfo">
-        <div className="w-full px-4 py-12 sm:px-6">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-5">
+        <div className="w-full px-4 py-6 sm:px-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-5">
             
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -288,17 +288,17 @@ function FooterComponent() {
               </div>
             </div>
 
-            <div className="sm:col-span-2 space-y-4">
+            <div className="sm:col-span-2 space-y-2">
               <p className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 {t3(language, 'Nos Outils', 'Our Tools', 'Herramientas')}
               </p>
               <nav aria-label="Outils d'analyse">
-                <ul className="grid grid-cols-2 gap-x-6 gap-y-2">
+                <ul className="grid grid-cols-2 gap-x-6 gap-y-0">
                   {toolsLinks.map((link) => (
                     <li key={link.href + link.label}>
                       <SmartLink
                         to={link.href}
-                        className="flex min-h-11 items-center text-sm transition-colors text-muted-foreground hover:text-primary"
+                        className="flex min-h-8 md:min-h-0 md:py-0.5 items-center text-xs transition-colors text-muted-foreground hover:text-primary"
                         title={link.description}
                       >
                         {link.label}
@@ -309,18 +309,18 @@ function FooterComponent() {
               </nav>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               <p className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 {t3(language, 'Ressources', 'Resources', 'Recursos')}
               </p>
               <nav aria-label="Ressources">
-                <ul className="space-y-2">
+                <ul className="space-y-0">
                   {resourcesLinks.map((link) => (
                     <li key={link.href}>
                       <SmartLink
                         to={link.href}
                         external={(link as any).external}
-                        className={`inline-flex min-h-11 items-center gap-1.5 text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : (link as any).rss ? 'text-foreground hover:text-primary font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                        className={`inline-flex min-h-8 md:min-h-0 md:py-0.5 items-center gap-1.5 text-xs transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : (link as any).rss ? 'text-foreground hover:text-primary font-medium' : 'text-muted-foreground hover:text-primary'}`}
                         title={link.description}
                       >
                         {(link as any).rss && <Rss className="h-3.5 w-3.5" />}
@@ -333,17 +333,17 @@ function FooterComponent() {
               </nav>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               <p className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 {t3(language, 'Technique', 'Technical', 'Técnico')}
               </p>
               <nav aria-label="Technique">
-                <ul className="space-y-2">
+                <ul className="space-y-0">
                   {technicalLinks.map((link) => (
                     <li key={link.href}>
                       <SmartLink
                         to={link.href}
-                        className={`flex min-h-11 items-center text-sm transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                        className={`flex min-h-8 md:min-h-0 md:py-0.5 items-center text-xs transition-colors ${(link as any).gold ? 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                         title={link.description}
                       >
                         {link.label}
