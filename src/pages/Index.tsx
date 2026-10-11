@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 // FAQ rendue en SSR (texte + FAQPage visibles par les bots) : import statique.
 import { Header } from '@/components/Header';
 import { HomeHero } from '@/components/Homepage/HomeHero';
+import { PromoVideo } from '@/components/marketing/PromoVideo';
 import { AIVisibilitySection } from '@/components/Homepage/AIVisibilitySection';
 import { AIBotsLeadMagnet } from '@/components/Homepage/AIBotsLeadMagnet';
 import { AudienceRouter } from '@/components/Home/AudienceRouter';
@@ -114,6 +115,20 @@ const Index = () => {
         {/* Global premium gradient overlay */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--brand-violet)/0.06),transparent_60%)]" />
         <HomeHero />
+        <section id="video-presentation" className="relative py-12 px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center">Crawlers en 2 minutes</h2>
+            <p className="mt-3 mb-6 text-center text-muted-foreground">
+              Découvrez comment Crawlers analyse votre visibilité sur Google et dans les moteurs de réponse IA.
+            </p>
+            <PromoVideo
+              src="/videos/crawlers-home.mp4"
+              poster="/videos/crawlers-home-poster.jpg"
+              title="Vidéo de présentation de Crawlers"
+              trackingId="crawlers-home"
+            />
+          </div>
+        </section>
         <AIVisibilitySection />
 
         {/* ─── Homepage marketing sections ───
