@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DirectAnswer } from '@/components/seo/DirectAnswer';
 import { StartupTrialOffer } from '@/components/StartupTrialOffer';
 import { Link } from '@/lib/router-compat';
+import { OffreJeuneEntrepriseVideo } from '@/components/marketing/OffreJeuneEntrepriseVideo';
 
 const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
 
@@ -99,6 +100,8 @@ export default function OffreJeuneEntreprise() {
         />
 
         <OfferCta />
+
+        <OffreJeuneEntrepriseVideo />
 
         <nav aria-label="Sommaire" className="mb-12 rounded-lg border border-border p-5">
           <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
