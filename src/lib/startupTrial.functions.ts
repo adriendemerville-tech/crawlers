@@ -147,6 +147,20 @@ export const redeemStartupTrialToken = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     const tokenHash = await sha256Hex(data.token);
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    // Jeton issu d'une candidature validée : réservé à l'email de la candidature.
+    const { data: tokenRow } = await supabaseAdmin
+      .from('startup_trial_signup_tokens').select('id').eq('token_hash', tokenHash).maybeSingle();
+    if (tokenRow) {
+      const { data: cand } = await supabaseAdmin
+        .from('startup_trial_candidatures').select('email').eq('signup_token_id', tokenRow.id).maybeSingle();
+      if (cand) {
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+        const userEmail = authUser?.user?.email?.toLowerCase() ?? '';
+        if (userEmail !== cand.email.toLowerCase()) {
+          throw new Error('Ce lien est réservé à l’adresse email indiquée dans la candidature.');
+        }
+      }
+    }
     const { data: result, error } = await supabaseAdmin.rpc('redeem_startup_trial_signup_token', {
       p_token_hash: tokenHash,
       p_user_id: context.userId,
@@ -425,6 +439,7 @@ export const decideStartupCandidature = createServerFn({ method: 'POST' })
     const { error: mailError } = await supabaseAdmin.rpc('enqueue_email', {
       queue_name: 'transactional_emails',
       payload: {
+        message_id: crypto.randomUUID(),
         to: c.email,
         subject,
         html,
