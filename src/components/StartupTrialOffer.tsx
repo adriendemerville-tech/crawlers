@@ -2,15 +2,13 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { Building2, CheckCircle2, FileCheck2, Loader2, Upload, XCircle } from 'lucide-react';
-import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from '@/lib/router-compat';
-import { claimStartupTrialToken, verifyStartupSiret } from '@/lib/startupTrial.functions';
+import { submitStartupCandidature, verifyStartupSiret } from '@/lib/startupTrial.functions';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -25,15 +23,16 @@ async function fileToBase64(file: File) {
 
 export function StartupTrialOffer() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const verify = useServerFn(verifyStartupSiret);
-  const claim = useServerFn(claimStartupTrialToken);
+  const submit = useServerFn(submitStartupCandidature);
   const [open, setOpen] = useState(false);
   const [siret, setSiret] = useState('');
   const [company, setCompany] = useState<{ legalName: string; creationDate: string; siret: string } | null>(null);
+  const [activity, setActivity] = useState('');
+  const [email, setEmail] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
-  const [manualReview, setManualReview] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const verifyMutation = useMutation({
     mutationFn: () => verify({ data: { siret } }),
@@ -45,47 +44,39 @@ export function StartupTrialOffer() {
       }
       setError('');
       setCompany({ legalName: result.legalName, creationDate: result.creationDate, siret: result.siret });
+      if (!email && user?.email) setEmail(user.email);
     },
     onError: (err: Error) => setError(err.message),
   });
 
-  const claimMutation = useMutation({
+  const submitMutation = useMutation({
     mutationFn: async () => {
       if (!company || !file) throw new Error('Complétez la vérification et joignez le Kbis.');
       if (file.type !== 'application/pdf' || file.size > MAX_FILE_SIZE) throw new Error('Le Kbis doit être un PDF de 10 Mo maximum.');
       const kbisPdfBase64 = await fileToBase64(file);
-      return claim({ data: { siret: company.siret, kbisPdfBase64 } });
+      return submit({ data: { siret: company.siret, activity, email, kbisPdfBase64 } });
     },
     onSuccess: (result) => {
-      if (result.status === 'approved' && result.token) {
-        // Le jeton encode la gratuité : il est consommé dès qu'une session existe.
-        sessionStorage.setItem('startup_trial_token', result.token);
-        toast.success('Kbis conforme : créez votre compte pour activer vos 12 mois offerts.');
-        if (user) {
-          navigate('/app/console?startup=' + encodeURIComponent(result.token));
-        } else {
-          navigate('/signup?startup=' + encodeURIComponent(result.token));
-        }
+      if (result.ok) {
+        setSubmitted(true);
         return;
       }
-      if (result.status === 'review') {
-        setManualReview(true);
-        return;
-      }
-      setError(result.reason ?? 'Vérification refusée.');
+      setError(result.reason ?? 'Candidature refusée.');
     },
     onError: (err: Error) => setError(err.message),
   });
 
-  if (manualReview) {
+  if (submitted) {
     return (
       <Alert className="border-amber-500/50 bg-amber-500/5">
         <FileCheck2 className="h-5 w-5 text-amber-500" />
-        <AlertTitle>Dossier en attente de vérification</AlertTitle>
-        <AlertDescription>Le SIRET est éligible, mais le Kbis nécessite une vérification manuelle avant l’activation de l’offre.</AlertDescription>
+        <AlertTitle>Candidature reçue</AlertTitle>
+        <AlertDescription>Candidature reçue, nous revenons vers vous après vérification.</AlertDescription>
       </Alert>
     );
   }
+
+  const canSubmit = !!file && activity.trim().length >= 2 && /^\S+@\S+\.\S+$/.test(email.trim());
 
   return (
     <Card className="border-amber-500/50 bg-amber-500/5">
@@ -121,15 +112,31 @@ export function StartupTrialOffer() {
               </div>
             )}
 
-            {company && <div className="space-y-2"><Label htmlFor="startup-kbis">Extrait Kbis (PDF, 10 Mo maximum)</Label><Input id="startup-kbis" type="file" accept="application/pdf" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /><p className="text-xs text-muted-foreground">Le document est conservé dans un espace privé et rapproché automatiquement du SIRET et de la raison sociale.</p></div>}
+            {company && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="startup-activity">Activité</Label>
+                  <Input id="startup-activity" value={activity} maxLength={300} onChange={(event) => setActivity(event.target.value)} placeholder="Ex. agence de référencement" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="startup-email">Email</Label>
+                  <Input id="startup-email" type="email" value={email} maxLength={255} onChange={(event) => setEmail(event.target.value)} placeholder="vous@entreprise.fr" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="startup-kbis">Extrait Kbis (PDF, 10 Mo maximum)</Label>
+                  <Input id="startup-kbis" type="file" accept="application/pdf" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+                  <p className="text-xs text-muted-foreground">Le document est conservé dans un espace privé et rapproché automatiquement du SIRET et de la raison sociale.</p>
+                </div>
+              </>
+            )}
 
             {error && <Alert variant="destructive"><XCircle className="h-4 w-4" /><AlertDescription>{error}</AlertDescription></Alert>}
 
-            {company && <Button variant="outline" onClick={() => claimMutation.mutate()} disabled={claimMutation.isPending || !file}>
-              {claimMutation.isPending ? <Loader2 className="animate-spin" /> : <FileCheck2 />}
-              {user ? 'Activer mon année Pro Agency' : 'Valider et créer mon compte'}
+            {company && <Button variant="outline" onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending || !canSubmit}>
+              {submitMutation.isPending ? <Loader2 className="animate-spin" /> : <FileCheck2 />}
+              Envoyer ma candidature
             </Button>}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Upload className="h-3.5 w-3.5" />Si le Kbis est conforme, vous êtes redirigé vers l’inscription avec vos 12 mois déjà acquis.</div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Upload className="h-3.5 w-3.5" />Chaque candidature est vérifiée au cas par cas avant l’activation de l’offre.</div>
           </div>
         )}
       </CardContent>

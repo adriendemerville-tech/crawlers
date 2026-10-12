@@ -351,6 +351,13 @@
       "when": 1791310527119,
       "tag": "0049_marina_keys_owner_update_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1791795867720,
+      "tag": "0050_startup_trial_candidatures",
+      "breakpoints": true
     }
   ]
 }

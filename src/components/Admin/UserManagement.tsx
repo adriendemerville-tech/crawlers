@@ -16,6 +16,7 @@ import { UserKpiModal } from './UserKpiModal';
 import { useUserActions } from '@/hooks/useUserActions';
 import { PayingUsersTab } from './PayingUsersTab';
 import { StartupTrialsTab } from './StartupTrialsTab';
+import { StartupCandidaturesTab } from './StartupCandidaturesTab';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
 
 /** Actionable event types to expose in the filter (label → event_type(s)) */
@@ -71,6 +72,7 @@ export function UserManagement() {
   const [showPendingTab, setShowPendingTab] = useState(false);
   const [showPayingTab, setShowPayingTab] = useState(false);
   const [showStartupTab, setShowStartupTab] = useState(false);
+  const [startupSubTab, setStartupSubTab] = useState<'candidatures' | 'trials'>('candidatures');
 
   // Create user state
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -549,7 +551,13 @@ export function UserManagement() {
       <CardContent>
         {showStartupTab ? (
           /* ====== Startup Trial Applications Tab ====== */
-          <StartupTrialsTab />
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className={`h-7 text-xs ${startupSubTab === 'candidatures' ? 'border-foreground' : ''}`} onClick={() => setStartupSubTab('candidatures')}>Candidatures Jeune Entreprise</Button>
+              <Button size="sm" variant="outline" className={`h-7 text-xs ${startupSubTab === 'trials' ? 'border-foreground' : ''}`} onClick={() => setStartupSubTab('trials')}>Offres activées</Button>
+            </div>
+            {startupSubTab === 'candidatures' ? <StartupCandidaturesTab /> : <StartupTrialsTab />}
+          </div>
         ) : showPayingTab ? (
           /* ====== Paying Users Tab ====== */
           <PayingUsersTab />
