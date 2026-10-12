@@ -16527,6 +16527,60 @@ export type Database = {
         }
         Relationships: []
       }
+      startup_trial_candidatures: {
+        Row: {
+          activated_user_id: string | null
+          activity: string
+          company_name: string
+          creation_date: string
+          decided_at: string | null
+          decided_by: string | null
+          email: string
+          id: string
+          kbis_path: string
+          rejection_reason: string | null
+          signup_token_id: string | null
+          siret: string
+          status: string
+          submitted_at: string
+          verification_details: Json
+        }
+        Insert: {
+          activated_user_id?: string | null
+          activity: string
+          company_name: string
+          creation_date: string
+          decided_at?: string | null
+          decided_by?: string | null
+          email: string
+          id?: string
+          kbis_path: string
+          rejection_reason?: string | null
+          signup_token_id?: string | null
+          siret: string
+          status?: string
+          submitted_at?: string
+          verification_details?: Json
+        }
+        Update: {
+          activated_user_id?: string | null
+          activity?: string
+          company_name?: string
+          creation_date?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          email?: string
+          id?: string
+          kbis_path?: string
+          rejection_reason?: string | null
+          signup_token_id?: string | null
+          siret?: string
+          status?: string
+          submitted_at?: string
+          verification_details?: Json
+        }
+        Relationships: []
+      }
       startup_trial_signup_tokens: {
         Row: {
           claimed_at: string | null
