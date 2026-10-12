@@ -239,3 +239,205 @@ export const submitStartupTrial = createServerFn({ method: 'POST' })
       kbisCheck,
     };
   });
+
+// ---------------------------------------------------------------------------
+// Candidatures à validation manuelle (formulaire public → décision admin)
+// ---------------------------------------------------------------------------
+
+const SITE_ORIGIN = 'https://crawlers.fr';
+const CANDIDATURE_TOKEN_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+}
+
+/** Formulaire public : crée une candidature « en attente », n'active rien. */
+export const submitStartupCandidature = createServerFn({ method: 'POST' })
+  .inputValidator((data) => z.object({
+    siret: siretSchema,
+    activity: z.string().trim().min(2).max(300),
+    email: z.string().trim().toLowerCase().email().max(255),
+    kbisPdfBase64: z.string().min(100).max(14_000_000),
+  }).parse(data))
+  .handler(async ({ data }) => {
+    const verified = await lookupEligibleCompany(data.siret);
+    if (!verified.eligible || !verified.legalName || !verified.creationDate) {
+      return { ok: false as const, reason: verified.reason ?? 'Entreprise non éligible.' };
+    }
+    const binary = Uint8Array.from(atob(data.kbisPdfBase64.replace(/^data:[^,]+,/, '')), (c) => c.charCodeAt(0));
+    if (binary.byteLength > 10 * 1024 * 1024) return { ok: false as const, reason: 'Le Kbis dépasse 10 Mo.' };
+    if (String.fromCharCode(...binary.slice(0, 5)) !== '%PDF-') return { ok: false as const, reason: 'Le fichier fourni n’est pas un PDF valide.' };
+
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const [{ data: activated }, { data: open }] = await Promise.all([
+      supabaseAdmin.from('startup_trial_applications').select('id').eq('siret', data.siret).maybeSingle(),
+      supabaseAdmin.from('startup_trial_candidatures').select('id').eq('siret', data.siret).in('status', ['pending', 'approved']).maybeSingle(),
+    ]);
+    if (activated) return { ok: false as const, reason: 'Une offre jeune entreprise a déjà été activée pour ce SIRET.' };
+    if (open) return { ok: false as const, reason: 'Une candidature est déjà en cours pour ce SIRET.' };
+
+    const { verifyKbisDocument } = await import('@/lib/kbisCheck.server');
+    const pdfBuffer = binary.buffer.slice(binary.byteOffset, binary.byteOffset + binary.byteLength) as ArrayBuffer;
+    const kbisCheck = await verifyKbisDocument(pdfBuffer, data.siret, verified.legalName);
+
+    const kbisPath = `candidatures/${crypto.randomUUID()}.pdf`;
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('startup-trial-kbis')
+      .upload(kbisPath, binary, { contentType: 'application/pdf', upsert: false });
+    if (uploadError) {
+      console.error('[startup-candidature] kbis upload failed', uploadError);
+      return { ok: false as const, reason: 'Le dépôt du Kbis a échoué. Réessayez.' };
+    }
+
+    const { error } = await supabaseAdmin.from('startup_trial_candidatures').insert({
+      company_name: verified.legalName,
+      siret: data.siret,
+      kbis_path: kbisPath,
+      activity: data.activity,
+      creation_date: verified.creationDate,
+      email: data.email,
+      verification_details: { source: 'recherche-entreprises.api.gouv.fr', kbis: { method: 'pdf-text-extraction', ...kbisCheck } },
+    });
+    if (error) {
+      console.error('[startup-candidature] insert failed', error);
+      if (error.code === '23505') return { ok: false as const, reason: 'Une candidature est déjà en cours pour ce SIRET.' };
+      return { ok: false as const, reason: 'Impossible d’enregistrer la candidature. Réessayez.' };
+    }
+    return { ok: true as const, reason: null };
+  });
+
+async function assertAdmin(context: { supabase: { rpc: (fn: 'has_role', args: { _user_id: string; _role: 'admin' }) => PromiseLike<{ data: boolean | null }> }; userId: string }) {
+  const { data } = await context.supabase.rpc('has_role', { _user_id: context.userId, _role: 'admin' });
+  if (!data) throw new Error('Accès réservé aux administrateurs.');
+}
+
+/** Admin : liste des candidatures + URL signée (1 h) du Kbis. */
+export const listStartupCandidatures = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data: rows, error } = await context.supabase
+      .from('startup_trial_candidatures')
+      .select('id, company_name, siret, kbis_path, activity, creation_date, email, submitted_at, status, decided_at, rejection_reason')
+      .order('submitted_at', { ascending: false })
+      .limit(300);
+    if (error) throw new Error(error.message);
+    const list = rows ?? [];
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const signed = list.length
+      ? (await supabaseAdmin.storage.from('startup-trial-kbis').createSignedUrls(list.map((r) => r.kbis_path), 3600)).data ?? []
+      : [];
+    const urlByPath = new Map(signed.map((s) => [s.path, s.signedUrl]));
+    return list.map((r) => ({ ...r, kbis_url: urlByPath.get(r.kbis_path) ?? null }));
+  });
+
+/** Admin : valider (active 12 mois via le mécanisme existant) ou refuser. */
+export const decideStartupCandidature = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({
+    id: z.string().uuid(),
+    decision: z.enum(['approve', 'reject']),
+    reason: z.string().trim().max(1000).optional(),
+  }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: c, error: readError } = await supabaseAdmin
+      .from('startup_trial_candidatures').select('*').eq('id', data.id).maybeSingle();
+    if (readError || !c) throw new Error('Candidature introuvable.');
+    if (c.status !== 'pending') throw new Error('Cette candidature a déjà été traitée.');
+
+    const now = new Date().toISOString();
+    let mode: 'activated' | 'signup_link' | 'rejected' = 'rejected';
+    let signupLink: string | null = null;
+    const update: Record<string, unknown> = { decided_at: now, decided_by: context.userId };
+
+    if (data.decision === 'reject') {
+      update.status = 'rejected';
+      update.rejection_reason = data.reason || null;
+    } else {
+      const { data: profile } = await supabaseAdmin
+        .from('profiles').select('user_id').ilike('email', c.email).limit(1).maybeSingle();
+      const details = { ...(c.verification_details as Record<string, unknown>), manual_review: { decided_by: context.userId, decided_at: now, candidature_id: c.id } };
+      if (profile?.user_id) {
+        const { error } = await supabaseAdmin.rpc('activate_startup_trial_application', {
+          p_user_id: profile.user_id,
+          p_siret: c.siret,
+          p_legal_name: c.company_name,
+          p_creation_date: c.creation_date,
+          p_kbis_path: c.kbis_path,
+          p_status: 'approved',
+          p_verification_details: details,
+        });
+        if (error) {
+          console.error('[startup-candidature] activation failed', error);
+          const raw = `${error.message ?? ''}`;
+          if (raw.includes('already been claimed')) throw new Error('Une offre a déjà été activée pour ce compte ou ce SIRET.');
+          if (raw.includes('not eligible')) throw new Error('Entreprise de plus de 12 mois : activation impossible.');
+          throw new Error(`Activation impossible : ${raw || 'erreur inconnue'}`);
+        }
+        mode = 'activated';
+        update.activated_user_id = profile.user_id;
+      } else {
+        // Lien d'inscription à usage unique, lié à l'email de la candidature (contrôlé au rachat).
+        const token = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+        const { data: tokenRow, error } = await supabaseAdmin.from('startup_trial_signup_tokens').insert({
+          token_hash: await sha256Hex(token),
+          siret: c.siret,
+          legal_name: c.company_name,
+          creation_date: c.creation_date,
+          kbis_path: c.kbis_path,
+          verification_details: details,
+          expires_at: new Date(Date.now() + CANDIDATURE_TOKEN_TTL_MS).toISOString(),
+        }).select('id').single();
+        if (error || !tokenRow) {
+          console.error('[startup-candidature] token creation failed', error);
+          throw new Error('Impossible de générer le lien d’inscription.');
+        }
+        mode = 'signup_link';
+        signupLink = `${SITE_ORIGIN}/signup?startup=${encodeURIComponent(token)}`;
+        update.signup_token_id = tokenRow.id;
+      }
+      update.status = 'approved';
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from('startup_trial_candidatures').update(update).eq('id', c.id).eq('status', 'pending');
+    if (updateError) throw new Error(updateError.message);
+
+    // Email au candidat : uniquement ici, suite au clic admin.
+    const company = escapeHtml(c.company_name);
+    let subject: string; let html: string; let text: string;
+    if (data.decision === 'reject') {
+      const reason = data.reason ? escapeHtml(data.reason) : null;
+      subject = 'Votre candidature Offre Jeune Entreprise';
+      html = `<div style="font-family:Arial,sans-serif;color:#111;max-width:560px"><p>Bonjour,</p><p>Après vérification, nous ne pouvons pas donner suite à la candidature de <strong>${company}</strong> à l’Offre Jeune Entreprise de Crawlers.fr.</p>${reason ? `<p><strong>Motif :</strong> ${reason}</p>` : ''}<p>Vous pouvez nous répondre si vous pensez qu’il s’agit d’une erreur.</p><p>L’équipe Crawlers.fr</p></div>`;
+      text = `Après vérification, nous ne pouvons pas donner suite à la candidature de ${c.company_name}.${data.reason ? ` Motif : ${data.reason}` : ''}`;
+    } else if (mode === 'activated') {
+      subject = 'Votre plan Pro Agency est activé pour 12 mois';
+      html = `<div style="font-family:Arial,sans-serif;color:#111;max-width:560px"><p>Bonjour,</p><p>Bonne nouvelle : la candidature de <strong>${company}</strong> est validée. Le plan Pro Agency est activé sur votre compte pour 12 mois.</p><p><a href="${SITE_ORIGIN}/app/console" style="display:inline-block;border:2px solid #111;color:#111;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Ouvrir ma console</a></p><p>L’équipe Crawlers.fr</p></div>`;
+      text = `La candidature de ${c.company_name} est validée : Pro Agency activé 12 mois. ${SITE_ORIGIN}/app/console`;
+    } else {
+      subject = 'Votre candidature est validée : créez votre compte';
+      html = `<div style="font-family:Arial,sans-serif;color:#111;max-width:560px"><p>Bonjour,</p><p>Bonne nouvelle : la candidature de <strong>${company}</strong> est validée. Créez votre compte avec cette adresse email pour activer vos 12 mois de Pro Agency.</p><p><a href="${signupLink}" style="display:inline-block;border:2px solid #111;color:#111;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Créer mon compte</a></p><p>Ce lien est personnel, à usage unique et valable 14 jours.</p><p>L’équipe Crawlers.fr</p></div>`;
+      text = `Candidature validée. Créez votre compte avec cette adresse pour activer Pro Agency 12 mois : ${signupLink} (usage unique, 14 jours).`;
+    }
+    const { error: mailError } = await supabaseAdmin.rpc('enqueue_email', {
+      queue_name: 'transactional_emails',
+      payload: {
+        to: c.email,
+        subject,
+        html,
+        text,
+        from: 'noreply@notify.crawlers.fr',
+        sender_domain: 'notify.crawlers.fr',
+        purpose: 'transactional',
+        label: `startup-candidature-${data.decision}`,
+        idempotency_key: `startup-candidature-${c.id}-${data.decision}`,
+        queued_at: now,
+      },
+    });
+    if (mailError) console.error('[startup-candidature] email enqueue failed', mailError);
+
+    return { mode, emailQueued: !mailError };
+  });
