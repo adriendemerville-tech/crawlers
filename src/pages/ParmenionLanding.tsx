@@ -297,6 +297,7 @@ function ParmenionLandingComponent(): React.ReactElement {
               title="Vidéo de présentation de Crawlers"
               captionsSrc="/videos/crawlers-home.vtt"
               trackingId="crawlers-audit-geo-seo"
+              autoplayMuted
             />
           </div>
         </section>
