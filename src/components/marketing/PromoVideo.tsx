@@ -10,6 +10,8 @@ export interface PromoVideoProps {
   /** Piste WebVTT optionnelle (sous-titres français). */
   captionsSrc?: string;
   className?: string;
+  /** Lecture auto muette à l'écran + bouton « Activer le son » (défaut : false). */
+  autoplayMuted?: boolean;
 }
 
 type Gtag = (...args: unknown[]) => void;
@@ -30,10 +32,11 @@ const MILESTONES = [25, 50, 75, 100] as const;
  * Lecteur vidéo marketing : aucun autoplay, `preload="none"`, source posée
  * seulement à l'approche de l'écran, suivi GA4 lecture + paliers 25/50/75/100.
  */
-export function PromoVideo({ src, poster, title, trackingId, captionsSrc, className }: PromoVideoProps) {
+export function PromoVideo({ src, poster, title, trackingId, captionsSrc, className, autoplayMuted = false }: PromoVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [near, setNear] = useState(false);
+  const [muted, setMuted] = useState(true);
   const sent = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -76,6 +79,31 @@ export function PromoVideo({ src, poster, title, trackingId, captionsSrc, classN
 
   const handleEnded = () => fire('p100', 'video_progress', 100);
 
+  // Lecture auto muette (opt-in) : démarre à l'écran, pause hors écran.
+  useEffect(() => {
+    if (!autoplayMuted || !near) return;
+    const el = containerRef.current;
+    const v = videoRef.current;
+    if (!el || !v || typeof IntersectionObserver === 'undefined') return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) void v.play().catch(() => undefined);
+        else v.pause();
+      },
+      { threshold: 0.25 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [autoplayMuted, near]);
+
+  const toggleSound = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    setMuted(v.muted);
+    if (!v.muted) void v.play().catch(() => undefined);
+  };
+
   return (
     <div
       ref={containerRef}
@@ -87,15 +115,28 @@ export function PromoVideo({ src, poster, title, trackingId, captionsSrc, classN
         poster={poster}
         controls
         playsInline
+        muted={autoplayMuted ? true : undefined}
         preload="none"
         aria-label={title}
         onPlay={handlePlay}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
+        onVolumeChange={autoplayMuted ? (e) => setMuted(e.currentTarget.muted) : undefined}
       >
         {near && <source src={src} type="video/mp4" />}
         {captionsSrc && <track kind="subtitles" src={captionsSrc} srcLang="fr" label="Français" />}
       </video>
+      {autoplayMuted && (
+        <button
+          type="button"
+          onClick={toggleSound}
+          aria-label={muted ? 'Activer le son' : 'Couper le son'}
+          className="absolute left-3 top-3 inline-flex items-center rounded-full border-2 border-white bg-transparent px-4 py-2 text-sm font-semibold text-white"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
+        >
+          {muted ? 'Activer le son' : 'Couper le son'}
+        </button>
+      )}
     </div>
   );
 }
