@@ -364,7 +364,7 @@ export const decideStartupCandidature = createServerFn({ method: 'POST' })
     const now = new Date().toISOString();
     let mode: 'activated' | 'signup_link' | 'rejected' = 'rejected';
     let signupLink: string | null = null;
-    const update: Record<string, unknown> = { decided_at: now, decided_by: context.userId };
+    const update: { decided_at: string; decided_by: string; status?: string; rejection_reason?: string | null; activated_user_id?: string; signup_token_id?: string } = { decided_at: now, decided_by: context.userId };
 
     if (data.decision === 'reject') {
       update.status = 'rejected';
