@@ -4,6 +4,7 @@ import { Footer } from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/lib/router-compat';
+import { PromoVideo } from '@/components/marketing/PromoVideo';
 import { SiloNav } from '@/components/seo/SiloNav';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -287,6 +288,19 @@ function ParmenionLandingComponent(): React.ReactElement {
             </Suspense>
           </div>
         </section>
+
+        <section id="video-presentation" aria-label="Vidéo de présentation" className="border-b border-border">
+          <div className="mx-auto max-w-2xl px-4 py-8">
+            <PromoVideo
+              src="/videos/crawlers-home.mp4"
+              poster="/videos/crawlers-home-poster.jpg"
+              title="Vidéo de présentation de Crawlers"
+              captionsSrc="/videos/crawlers-home.vtt"
+              trackingId="crawlers-audit-geo-seo"
+            />
+          </div>
+        </section>
+
 
         {/* Secteurs */}
         <section className="border-b border-border">
