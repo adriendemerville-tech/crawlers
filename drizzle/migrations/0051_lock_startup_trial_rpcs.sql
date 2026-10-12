@@ -1,0 +1,10 @@
+REVOKE EXECUTE ON FUNCTION public.activate_startup_trial_application(uuid, text, text, date, text, jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.activate_startup_trial_application(uuid, text, text, date, text, jsonb, text) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.redeem_startup_trial_signup_token(text, uuid) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.submit_startup_trial_application(text, text, date, text, jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.purge_expired_startup_trial_tokens() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.activate_startup_trial_application(uuid, text, text, date, text, jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.activate_startup_trial_application(uuid, text, text, date, text, jsonb, text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.redeem_startup_trial_signup_token(text, uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.purge_expired_startup_trial_tokens() TO service_role;
+COMMENT ON FUNCTION public.submit_startup_trial_application(text, text, date, text, jsonb) IS 'DEPRECATED: Jeune Entreprise grant only via admin validation of startup_trial_candidatures';
