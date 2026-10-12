@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 // FAQ rendue en SSR (texte + FAQPage visibles par les bots) : import statique.
 import { Header } from '@/components/Header';
 import { HomeHero } from '@/components/Homepage/HomeHero';
-import { PromoVideo } from '@/components/marketing/PromoVideo';
+import { OffreJeuneEntrepriseVideo } from '@/components/marketing/OffreJeuneEntrepriseVideo';
 import { AIVisibilitySection } from '@/components/Homepage/AIVisibilitySection';
 import { AIBotsLeadMagnet } from '@/components/Homepage/AIBotsLeadMagnet';
 import { AudienceRouter } from '@/components/Home/AudienceRouter';
@@ -117,13 +117,12 @@ const Index = () => {
         <HomeHero />
         <section id="video-presentation" aria-label="Vidéo de présentation" className="relative py-8 px-4">
           <div className="max-w-2xl mx-auto">
-            <PromoVideo
-              src="/videos/crawlers-home.mp4"
-              poster="/videos/crawlers-home-poster.jpg"
-              title="Vidéo de présentation de Crawlers"
-              trackingId="crawlers-home"
-              captionsSrc="/videos/crawlers-home.vtt"
-            />
+            <OffreJeuneEntrepriseVideo />
+            <p className="-mt-8 text-center text-sm">
+              <Link to="/offre-jeune-entreprise" className="font-medium text-foreground underline underline-offset-4">
+                Freelance SEO/GEO de moins de 12 mois ? Crawlers gratuit 12 mois, sur candidature →
+              </Link>
+            </p>
           </div>
         </section>
         <AIVisibilitySection />
