@@ -3045,7 +3045,7 @@ function compileMarinaReport(
 
   // Charte Crawlers : le blanc-label garde ses couleurs client, les emoji sont
   // retirés dans tous les cas.
-  return sanitizeMarinaHtml(compiled, { keepColors: Boolean(isWL) });
+  return sanitizeMarinaHtml(softenTinyGains(compiled), { keepColors: Boolean(isWL) });
 }
 
 
