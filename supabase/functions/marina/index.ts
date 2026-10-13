@@ -580,6 +580,7 @@ function getToolbarHtml(domain: string, lang: string): string {
         var doc = new jsPDF('p', 'mm', 'a4');
         var curY = mTop;
         var first = true;
+        var secPages = {}; var tocInfo = null;
         for (var i = 0; i < sections.length; i++) {
           var sec = sections[i];
           try {
