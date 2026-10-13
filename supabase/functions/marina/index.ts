@@ -1,4 +1,5 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts';
+import { detectFounderFromCrawl, dropFalseAbsences, decisionBlockHTML, LIGHTER_REPORT_CSS } from '../_shared/marinaReportFinish.ts';
 import { computeEmphasisQuality, renderEmphasisQualityHtml } from '../_shared/emphasisQuality.ts';
 import {
   extractTopPriorities,
