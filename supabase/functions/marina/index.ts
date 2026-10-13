@@ -2788,6 +2788,24 @@ function buildReportIntroHTML(
  * Conclusion en fin de rapport : hiérarchisation des chantiers en trois horizons.
  * Déterministe, dérivée du plan d'action consolidé (aucun appel LLM).
  */
+/** Pilote et indicateur de suivi déduits du libellé de l'action (règles fixes, 0 token). */
+function actionOwnerKpi(title: string, lang: string): { owner: string; kpi: string } {
+  const en = lang === 'en';
+  const x = String(title || '').toLowerCase();
+  const r = (o: [string, string], k: [string, string]) => ({ owner: en ? o[1] : o[0], kpi: en ? k[1] : k[0] });
+  if (/lcp|tbt|cls|vitesse|performance|javascript|rendu|ssr|cache|https|redirect|robots|sitemap|canonical|index|crawl|balise|schema|json-ld|hreflang/.test(x))
+    return r(['Développeur', 'Developer'], ['Pages indexées et Core Web Vitals (Search Console)', 'Indexed pages and Core Web Vitals (Search Console)']);
+  if (/backlink|autorit|netlink|référent|toxic|profil de liens/.test(x))
+    return r(['Dirigeant / relations presse', 'Founder / PR'], ['Domaines référents éditoriaux gagnés par mois', 'Editorial referring domains gained per month']);
+  if (/auteur|fondateur|porte-parole|e-e-a-t|expert|avis|témoign/.test(x))
+    return r(['Dirigeant', 'Founder'], ['Pages signées par un expert identifié', 'Pages signed by an identified expert']);
+  if (/maillage|cocon|orphelin|lien interne|liens internes|cluster/.test(x))
+    return r(['Responsable SEO', 'SEO lead'], ['Pages orphelines restantes', 'Remaining orphan pages']);
+  if (/\bia\b|llm|geo|citab|chatgpt|perplexity|gemini|faq/.test(x))
+    return r(['Rédacteur', 'Content writer'], ['Taux de citation dans les moteurs IA', 'AI engine citation rate']);
+  return r(['Rédacteur', 'Content writer'], ['Clics organiques sur les pages concernées', 'Organic clicks on the pages concerned']);
+}
+
 function buildConclusionHTML(
   lang: string,
   domain: string,
@@ -2813,7 +2831,7 @@ function buildConclusionHTML(
       <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:2px;">${horizon}</div>
       <div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:8px;">${label}</div>
       ${items.length
-        ? `<ol style="padding-left:18px;font-size:13px;color:#374151;line-height:1.7;margin:0;">${items.slice(0, 4).map((i) => `<li style="margin:0 0 4px 0;">${i.title}${i.roi ? ` <span style="color:#6b7280;font-size:12px;">— ${i.roi.tier_label}, ${i.roi.effort_label.toLowerCase()}</span>` : ''}</li>`).join('')}</ol>`
+        ? `<ol style="padding-left:18px;font-size:13px;color:#374151;line-height:1.7;margin:0;">${items.slice(0, 5).map((i) => { const ok = actionOwnerKpi(i.title, lang); return `<li style="margin:0 0 6px 0;">${i.title}${i.roi ? ` <span style="color:#6b7280;font-size:12px;">— ${i.roi.tier_label}, ${i.roi.effort_label.toLowerCase()}</span>` : ''}<div style="font-size:11.5px;color:#6b7280;">${t('Pilote', 'Owner', 'Responsable')} : ${ok.owner} · ${t('Indicateur', 'KPI', 'Indicador')} : ${ok.kpi}</div></li>`; }).join('')}</ol>`
         : `<p style="font-size:13px;color:#6b7280;margin:0;">${t('Aucun chantier de ce niveau détecté.', 'No item detected at this level.', 'Ningún elemento detectado en este nivel.')}</p>`}
     </div>`;
 
@@ -2849,14 +2867,9 @@ function buildConclusionHTML(
       critical, '#ef4444',
     )}
     ${bucket(
-      t('Consolider', 'Consolidate', 'Consolidar'),
-      t('Horizon 30 à 60 jours', 'Horizon 30 to 60 days', 'Horizonte 30 a 60 días'),
-      important, '#d4af37',
-    )}
-    ${bucket(
-      t('Amplifier', 'Amplify', 'Amplificar'),
-      t('Horizon 60 à 90 jours', 'Horizon 60 to 90 days', 'Horizonte 60 a 90 días'),
-      rest, '#6d28d9',
+      t('Consolider et amplifier', 'Consolidate and amplify', 'Consolidar y amplificar'),
+      t('Horizon 30 à 90 jours', 'Horizon 30 to 90 days', 'Horizonte 30 a 90 días'),
+      [...important, ...rest], '#6d28d9',
     )}
     <p style="font-size:12px;color:#6b7280;line-height:1.7;margin:12px 0 0 0;">
       ${t(
@@ -4912,7 +4925,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               const sig = severityFromSignal({ value: score, threshold: 40, direction: 'below', coverage: 1 });
               eeatFindings.push({
                 title: `Autorité de domaine faible (Authority Score ${score}/100)`,
-                description: `${refs} domaine(s) référent(s) mesuré(s) — ${sig.basis}. Acquérir des liens éditoriaux thématiques (relations presse, partenariats sectoriels, contenus citables) pour lever le plafond de positions atteignable.`,
+                description: `${refs} domaine(s) référent(s) mesuré(s) — ${sig.basis}.${refs >= 100 ? ` Score bas malgré un volume élevé de référents : ces liens viennent surtout de sites peu reconnus (annuaires, réseaux propres, pages sans trafic) ; c'est la qualité des référents, pas leur nombre, qui fait monter l'autorité.` : ''} Acquérir des liens éditoriaux thématiques (relations presse, partenariats sectoriels, contenus citables) pour lever le plafond de positions atteignable.`,
                 priority: sig.severity === 'critical' ? 'critical' : sig.severity === 'important' ? 'important' : 'suggestion',
                 category: 'eeat',
                 gap_ratio: sig.gapRatio,
