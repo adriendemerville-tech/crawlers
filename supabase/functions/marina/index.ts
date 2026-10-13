@@ -315,6 +315,10 @@ function renderJsonSection(data: any, depth = 0): string {
 
 // ─── Shared styles & helpers for report sections ───
 function getMarinaStyles(): string {
+  return getMarinaBaseStyles() + LIGHTER_REPORT_CSS;
+}
+
+function getMarinaBaseStyles(): string {
   return `
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: #f8fafc; padding: 24px 16px; color: #1e293b; line-height: 1.6; }
@@ -2471,7 +2475,7 @@ function extractObservedCitation(raw: any): { ratePct: number | null; observatio
 function buildExecutiveSummaryHTML(
   lang: string,
   domain: string,
-  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number; roi?: RoiSummary | null; verdictSignals?: VerdictSignals | null; verdictHtml?: string | null; geoDeterministic?: number | null; geoCalibration?: any },
+  ctx: { expertData?: any; strategicData?: any; crawlSnapshot?: any; degraded?: boolean; criticalCount?: number; roi?: RoiSummary | null; verdictSignals?: VerdictSignals | null; verdictHtml?: string | null; geoDeterministic?: number | null; geoCalibration?: any; plan?: any[] },
 
 ): string {
   const isEn = lang === 'en';
@@ -2596,7 +2600,8 @@ function buildExecutiveSummaryHTML(
       ${cell(t('Pages explorées', 'Pages crawled', 'Páginas rastreadas'), pages ? String(pages) : 'n/d', 'pages_crawled')}
       ${ctx.roi ? cell(t('Gains rapides', 'Quick wins', 'Ganancias rápidas'), `${ctx.roi.quickWins}${ctx.roi.quickWinDays ? ` · ~${ctx.roi.quickWinDays} j` : ''}`, 'quick_win_days') : ''}
     </div>
-    ${ctx.roi ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;">${ctx.roi.sentence}${ctx.roi.topQuickWins.length ? ` ${t('À traiter en premier', 'Start with', 'Empezar por')} : ${ctx.roi.topQuickWins.join(' ; ')}.` : ''}</p>` : ''}
+    ${decisionBlockHTML(ctx.plan, lang)}
+    ${ctx.roi ? `<p style="font-size:13px;line-height:1.7;color:#374151;margin:12px 0 0 0;">${ctx.roi.sentence}</p>` : ''}
     ${penaltyHTML}
     ${cruxHTML}
     ${calibrationHTML}
@@ -4572,6 +4577,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
 
 
       let crawlSnapshot: any = null;
+      let marinaCrawlPages: any[] = [];
       let hostDuplication: HostDuplicationResult | null = null;
       let archetypeAnalysis: ArchetypeAnalysis | null = null;
       try {
@@ -4606,6 +4612,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
             console.warn(`[Marina] Crawl pages lookup failed for crawl ${latestCrawl.id}: ${crawlPagesError.message}`);
           } else if (crawlPages?.length) {
             crawlSnapshot = buildMultiPageCrawlSnapshot(latestCrawl, crawlPages, expertData, domain, url);
+            marinaCrawlPages = crawlPages as any[];
 
             // Doublon d'hôte (www vs apex) : preuve directe dans les pages
             // crawlées + sonde HTTP de 2 requêtes pour savoir si une 301 existe.
@@ -4949,7 +4956,11 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
           category: 'cocoon',
         })));
 
-
+        // Une page service / offre n'est jamais déclarée absente si le crawl la contient.
+        for (const arr of [seoFindings, geoFindings, kwFindings, eeatFindings, cocoonFindings]) {
+          const kept = dropFalseAbsences(arr, marinaCrawlPages);
+          arr.splice(0, arr.length, ...kept);
+        }
         const topSeo    = extractTopPriorities('seo', seoFindings);
         const topGeo    = extractTopPriorities('geo', geoFindings);
         const topKw     = extractTopPriorities('keywords', kwFindings);
@@ -4962,6 +4973,23 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
         // et produit un verdict d'écart entre les deux familles. Calculée AVANT
         // l'écriture du workbench : ses plafonds doivent entrer dans le plan de
         // CE run, pas du suivant.
+        // Fondateur détecté sur une page du domaine (À propos / équipe / schema
+        // Person) : il est nommé et compte pour l'E-E-A-T. Jamais inventé.
+        if (strategicData && !strategicData?.social_signals?.thought_leadership?.founder_name) {
+          const f = detectFounderFromCrawl(marinaCrawlPages);
+          if (f) {
+            strategicData.social_signals = strategicData.social_signals || {};
+            const tl0 = strategicData.social_signals.thought_leadership || {};
+            strategicData.social_signals.thought_leadership = {
+              ...tl0,
+              founder_name: f.name,
+              founder_role: f.role,
+              founder_profile_url: tl0.founder_profile_url || f.url,
+              founder_authority: tl0.founder_authority || 'corroborated',
+              founder_resolution: `Détecté sur la page ${f.url} du domaine.`,
+            };
+          }
+        }
         const tlSignals = strategicData?.social_signals?.thought_leadership || null;
         const geoSubSignalsReport = buildGeoSubSignals({
           // Le breakdown est imbriqué sous llm_visibility dans l'objet d'audit
@@ -5387,6 +5415,7 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               expertData, strategicData, crawlSnapshot, degraded: strategicDegradation.degraded,
               criticalCount: (consolidatedPlan || []).filter((i: any) => i.severity === 'critical').length,
               roi: roiSummary,
+              plan: consolidatedPlan || [],
               verdictSignals,
               verdictHtml: narratedVerdict.html,
               // Juge unique du GEO : les 10 sous-signaux, calibrés par la
