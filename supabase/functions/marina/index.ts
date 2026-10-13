@@ -2960,7 +2960,7 @@ function compileMarinaReport(
 
     <!-- Section 1 : Audit stratégique — le score de tête du rapport, périmètre domaine.
          Placé en premier : c'est le cadre de lecture de tout ce qui suit. -->
-    <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
+    <div id="m-strategic" data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
 
     ${llmVisibilityBlock ? `
     <!-- Visibilité / citabilité IA, rattachée à la section stratégique (elle en est l'objet).
@@ -2972,18 +2972,18 @@ function compileMarinaReport(
     ${sectionHTMLs.ownerPerformance ? `
     <div class="marina-separator"></div>
     <!-- Section 1b : données propriétaires GSC/GA4 (périmètre site, mutualisable) -->
-    ${sectionHTMLs.ownerPerformance}
+    <div id="m-owner">${sectionHTMLs.ownerPerformance}</div>
     ` : ''}
 
     <div class="marina-separator"></div>
 
     <!-- Section 2: Crawl (périmètre site) -->
-    <div data-marina-scope="site" data-marina-block="crawl">${crawlContent}</div>
+    <div id="m-crawl" data-marina-scope="site" data-marina-block="crawl">${crawlContent}</div>
 
     ${sectionHTMLs.archetypes ? `
     <div class="marina-separator"></div>
     <!-- Audit par type de page (périmètre site) -->
-    ${sectionHTMLs.archetypes}
+    <div id="m-archetypes">${sectionHTMLs.archetypes}</div>
     ` : ''}
 
     <div class="marina-separator"></div>
@@ -2995,13 +2995,13 @@ function compileMarinaReport(
     ` : ''}
 
     <!-- Section 3: Technical SEO (périmètre page) -->
-    <div data-marina-scope="page" data-marina-block="tech">${techContent}</div>
+    <div id="m-tech" data-marina-scope="page" data-marina-block="tech">${techContent}</div>
 
 
     <div class="marina-separator"></div>
 
     <!-- Section 4: Cocoon (périmètre site) -->
-    <div data-marina-scope="site" data-marina-block="cocoon">${cocoonContent}</div>
+    <div id="m-cocoon" data-marina-scope="site" data-marina-block="cocoon">${cocoonContent}</div>
 
     ${sectionHTMLs.cocoonPage ? `
     <div class="marina-separator"></div>
@@ -3013,16 +3013,16 @@ function compileMarinaReport(
     ${sectionHTMLs.indexation ? `
     <div class="marina-separator"></div>
     <!-- Section 5: Indexation Health (périmètre site) -->
-    <div data-marina-scope="site" data-marina-block="indexation">${extractBodyContent(sectionHTMLs.indexation, { stripHeader: true, stripFooter: true })}</div>
+    <div id="m-indexation" data-marina-scope="site" data-marina-block="indexation">${extractBodyContent(sectionHTMLs.indexation, { stripHeader: true, stripFooter: true })}</div>
     ` : ''}
 
     ${sectionHTMLs.consolidatedPlan ? `
     <div class="marina-separator"></div>
     <!-- Final Section: Consolidated Action Plan -->
-    <div data-marina-scope="page" data-marina-block="plan">${sectionHTMLs.consolidatedPlan}</div>
+    <div id="m-plan" data-marina-scope="page" data-marina-block="plan">${sectionHTMLs.consolidatedPlan}</div>
     ` : ''}
 
-    ${sectionHTMLs.conclusion || ''}
+    <div id="m-conclusion">${sectionHTMLs.conclusion || ''}</div>
 
     ${sectionHTMLs.disclosure || ''}
 
