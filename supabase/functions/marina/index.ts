@@ -368,7 +368,8 @@ function getMarinaStyles(): string {
     .marina-toolbar .copied { color: #22c55e; border-color: #22c55e; }
     @media print {
       body { padding: 0; }
-      @page { margin: 15mm 10mm; }
+      @page { margin: 15mm 10mm; @bottom-center { content: counter(page) " / " counter(pages); font-size: 9px; color: #6b7280; } }
+      [data-marina-toc], [data-marina-block], #m-summary, #m-conclusion { break-before: page; }
       .section { break-inside: auto; }
       .marina-toolbar { display: none !important; }
     }
