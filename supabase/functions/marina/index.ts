@@ -600,11 +600,17 @@ function getToolbarHtml(domain: string, lang: string): string {
           var imgData = canvas.toDataURL('image/jpeg', 0.92);
           var secW = usableW;
           var secH = (canvas.height * secW) / canvas.width;
-          if (curY + secH <= pdfH - mBot) {
-            doc.addImage(imgData, 'JPEG', mSide, curY, secW, secH);
-            curY += secH + 2;
-          } else if (secH <= usableH) {
+          if (!(curY + secH <= pdfH - mBot) && secH <= usableH) {
             if (!first || curY > mTop + 5) { doc.addPage(); curY = mTop; }
+          }
+          var startPage = doc.getNumberOfPages();
+          if (sec.id) secPages[sec.id] = startPage;
+          var innerIds = sec.querySelectorAll ? sec.querySelectorAll('[id^="m-"]') : [];
+          for (var k = 0; k < innerIds.length; k++) { if (!secPages[innerIds[k].id]) secPages[innerIds[k].id] = startPage; }
+          if (sec.hasAttribute && sec.hasAttribute('data-marina-toc')) {
+            tocInfo = { page: startPage, y: curY, mmPerPx: secW / (sec.getBoundingClientRect().width || 1), el: sec };
+          }
+          if (curY + secH <= pdfH - mBot) {
             doc.addImage(imgData, 'JPEG', mSide, curY, secW, secH);
             curY += secH + 2;
           } else {
@@ -627,6 +633,30 @@ function getToolbarHtml(domain: string, lang: string): string {
             curY += 2;
           }
           first = false;
+        }
+        // Sommaire : numéro de page + lien cliquable vers chaque section.
+        if (tocInfo) {
+          var tocRect = tocInfo.el.getBoundingClientRect();
+          var items = tocInfo.el.querySelectorAll('[data-toc-target]');
+          doc.setPage(tocInfo.page);
+          doc.setFontSize(10); doc.setTextColor(55, 65, 81);
+          for (var t = 0; t < items.length; t++) {
+            var target = items[t].getAttribute('data-toc-target');
+            var pg = secPages[target];
+            if (!pg) continue;
+            var r = items[t].getBoundingClientRect();
+            var yTop = tocInfo.y + (r.top - tocRect.top) * tocInfo.mmPerPx;
+            var hMm = r.height * tocInfo.mmPerPx;
+            doc.text('p. ' + pg, pdfW - mSide - 4, yTop + hMm / 2 + 1.2, { align: 'right' });
+            doc.link(mSide, yTop, usableW, hMm, { pageNumber: pg });
+          }
+        }
+        // Pagination : numéro sur chaque page.
+        var total = doc.getNumberOfPages();
+        for (var pn = 1; pn <= total; pn++) {
+          doc.setPage(pn);
+          doc.setFontSize(8); doc.setTextColor(107, 114, 128);
+          doc.text(pn + ' / ' + total, pdfW / 2, pdfH - 6, { align: 'center' });
         }
         if (toolbar) toolbar.style.display = '';
         var fname = 'marina_${domain.replace(/[^a-zA-Z0-9.-]/g, '_')}_' + new Date().toISOString().slice(0,10) + '.pdf';
