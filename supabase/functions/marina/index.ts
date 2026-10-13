@@ -2933,28 +2933,30 @@ function compileMarinaReport(
 
     ${introHtml}
 
-    ${sectionHTMLs.summary || ''}
+    <!-- Sommaire cliquable (numéros de page remplis à l'export PDF) -->
+    <div class="toc" data-pdf-section data-marina-toc>
+      <div class="section-title" style="margin-bottom:8px;">${lang === 'fr' ? 'Sommaire' : lang === 'es' ? 'Índice' : 'Contents'}</div>
+      ${sectionHTMLs.summary ? marinaAnchorTitle('m-summary', lang === 'fr' ? 'Synthèse décisionnelle' : 'Executive summary', '0') : ''}
+      ${marinaAnchorTitle('m-strategic', tr.strategicAudit, '1')}
+      ${sectionHTMLs.ownerPerformance ? marinaAnchorTitle('m-owner', lang === 'fr' ? 'Données propriétaires du domaine' : 'First-party domain data', '1b') : ''}
+      ${marinaAnchorTitle('m-crawl', tr.crawlReport, '2')}
+      ${sectionHTMLs.archetypes ? marinaAnchorTitle('m-archetypes', lang === 'fr' ? 'Audit par type de page' : 'Audit by page type', '2b') : ''}
+      ${marinaAnchorTitle('m-tech', tr.techAudit, '3')}
+      ${marinaAnchorTitle('m-cocoon', tr.cocoonAnalysis, '4')}
+      ${sectionHTMLs.indexation ? marinaAnchorTitle('m-indexation', lang === 'fr' ? "Santé d'indexation" : 'Indexation Health', '5') : ''}
+      ${sectionHTMLs.consolidatedPlan ? marinaAnchorTitle('m-plan', lang === 'fr' ? "Plan d'action consolidé" : 'Consolidated Action Plan', sectionHTMLs.indexation ? '6' : '5') : ''}
+      ${sectionHTMLs.conclusion ? marinaAnchorTitle('m-conclusion', lang === 'fr' ? 'Conclusion et priorités' : 'Conclusion and priorities', sectionHTMLs.indexation ? '7' : '6') : ''}
+    </div>
+
+    ${renderEvidenceLegend(lang)}
+
+    <div id="m-summary">${sectionHTMLs.summary || ''}</div>
 
     ${sectionHTMLs.identity || ''}
 
     ${sectionHTMLs.intro || ''}
 
     ${sectionHTMLs.visual || ''}
-
-
-
-    <!-- Table of Contents -->
-    <div class="toc" data-pdf-section>
-      <div class="toc-item"><span class="section-number">1</span> 🎯 ${tr.strategicAudit}</div>
-      ${sectionHTMLs.ownerPerformance ? `<div class="toc-item"><span class="section-number">1b</span> ${lang === 'fr' ? 'Données propriétaires du domaine' : lang === 'es' ? 'Datos propietarios del dominio' : 'First-party domain data'}</div>` : ''}
-      <div class="toc-item"><span class="section-number">2</span> 🕷️ ${tr.crawlReport}</div>
-      ${sectionHTMLs.archetypes ? `<div class="toc-item"><span class="section-number">2b</span> ${lang === 'fr' ? 'Audit par type de page' : lang === 'es' ? 'Auditoría por tipo de página' : 'Audit by page type'}</div>` : ''}
-      <div class="toc-item"><span class="section-number">3</span> 🔍 ${tr.techAudit}</div>
-      <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
-      ${sectionHTMLs.indexation ? `<div class="toc-item"><span class="section-number">5</span> 📊 ${lang === 'fr' ? 'Santé d\'indexation' : lang === 'es' ? 'Salud de indexación' : 'Indexation Health'}</div>` : ''}
-      ${sectionHTMLs.consolidatedPlan ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '6' : '5'}</span> ${lang === 'fr' ? "Plan d'action consolidé" : lang === 'es' ? 'Plan de acción consolidado' : 'Consolidated Action Plan'}</div>` : ''}
-      ${sectionHTMLs.conclusion ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '7' : '6'}</span> ${lang === 'fr' ? 'Conclusion et priorités' : lang === 'es' ? 'Conclusión y prioridades' : 'Conclusion and priorities'}</div>` : ''}
-    </div>
 
     <!-- Section 1 : Audit stratégique — le score de tête du rapport, périmètre domaine.
          Placé en premier : c'est le cadre de lecture de tout ce qui suit. -->
