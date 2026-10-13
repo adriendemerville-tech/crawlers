@@ -4363,6 +4363,25 @@ async function runPipeline(jobId: string, url: string, lang?: string, phase?: st
               return null;
             }
 
+            // Garde : le cocon lit crawl_pages du dernier crawl terminé. Si un
+            // crawl est encore en vol (pending/processing/analyzing), on attend
+            // sa fin (borné) au lieu de calculer un graphe vide.
+            {
+              const bare = String(domain).replace(/^www\./, '');
+              const waitStart = Date.now();
+              while (Date.now() - waitStart < 150_000) {
+                const { data: inflight } = await sb
+                  .from('site_crawls' as any)
+                  .select('id, status')
+                  .or(`domain.eq.${bare},domain.eq.www.${bare}`)
+                  .in('status', ['pending', 'processing', 'analyzing'])
+                  .limit(1);
+                if (!inflight || (inflight as any[]).length === 0) break;
+                console.log(`[Marina] Cocoon en attente de la fin du crawl ${(inflight as any[])[0].id}`);
+                await new Promise(r => setTimeout(r, 5_000));
+              }
+            }
+
             console.log(`[Marina] Phase 3: calculate-cocoon-logic for tracked_site ${trackedSiteId}`);
             const result = await callFunction('calculate-cocoon-logic', {
               tracked_site_id: trackedSiteId,
