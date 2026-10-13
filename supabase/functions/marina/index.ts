@@ -684,11 +684,54 @@ const SECTION_LEADS: Record<string, { fr: string; en: string; es: string }> = {
   },
 };
 
+/** Note de confiance affichée en tête de chaque grande section (déterministe). */
+const SECTION_CONFIDENCE: Record<string, { tag: string; fr: string; en: string }> = {
+  crawl: { tag: 'MESURÉ', fr: 'élevée — pages réellement explorées et lues par notre robot.', en: 'high — pages actually fetched and parsed by our crawler.' },
+  tech: { tag: 'MESURÉ', fr: 'élevée — contrôles techniques exécutés sur le code servi.', en: 'high — technical checks run on the served code.' },
+  strategic: { tag: 'TESTÉ / DÉDUIT', fr: 'moyenne — réponses réelles des IA, interprétées par notre moteur.', en: 'medium — real AI answers, interpreted by our engine.' },
+  cocoon: { tag: 'DÉDUIT', fr: 'moyenne — regroupements calculés à partir du maillage mesuré.', en: 'medium — clusters computed from the measured linking.' },
+  indexation: { tag: 'MESURÉ', fr: 'élevée si la Search Console est connectée, sinon indicative.', en: 'high when Search Console is connected, otherwise indicative.' },
+};
+
+/** Ancres du sommaire : id de section → libellé. */
+function marinaAnchorTitle(id: string, label: string, n: string): string {
+  return `<a class="toc-item" href="#${id}" data-toc-target="${id}" style="color:inherit;text-decoration:none;"><span class="section-number">${n}</span><span style="flex:1;">${label}</span><span class="toc-page" data-toc-page="${id}" style="color:#6b7280;font-size:12px;"></span></a>`;
+}
+
+/**
+ * Remplace les gains chiffrés non crédibles (moins de 50 visites/mois) par un
+ * impact qualitatif. Appliqué sur le HTML final : aucune donnée source modifiée.
+ */
+function softenTinyGains(html: string): string {
+  return html.replace(/\+\s?(\d{1,3}(?:[\s\u202f]\d{3})*)\s?(visites?|visits?)\s?\/\s?(mois|month)/gi, (m, n, w) => {
+    const v = parseInt(String(n).replace(/[\s\u202f]/g, ''), 10);
+    if (!Number.isFinite(v) || v >= 50) return m;
+    return /visit/i.test(w) && !/visite/i.test(w) ? 'low impact (under 50 visits/month)' : 'impact faible (moins de 50 visites/mois)';
+  });
+}
+
+/** Légende des niveaux de preuve + guide de lecture en 3 niveaux. */
+function renderEvidenceLegend(lang: string): string {
+  if (lang !== 'fr') {
+    return `<div class="section" data-pdf-section style="border-left:6px solid #6d28d9;"><div class="section-title">How to read this report</div><p class="intro-text"><strong>1. Decision</strong> (first pages): key messages, alerts, quick wins. <strong>2. Steering</strong>: detailed sections. <strong>3. Evidence</strong>: raw tables at the end of each section.</p><p class="intro-text"><strong>MEASURED</strong> observed by our tools · <strong>TESTED</strong> real answers from AI engines · <strong>INFERRED</strong> derived from measured facts · <strong>ESTIMATED</strong> projection, order of magnitude only.</p></div>`;
+  }
+  const tag = (t: string) => `<span style="display:inline-block;padding:1px 8px;border:1px solid #6d28d9;border-radius:10px;font-size:10.5px;font-weight:700;color:#6d28d9;">${t}</span>`;
+  return `<div class="section" data-pdf-section style="border-left:6px solid #6d28d9;">
+    <div class="section-title">Comment lire ce rapport</div>
+    <p class="intro-text"><strong>1. Décision</strong> (premières pages) : messages critiques, alertes et gains rapides, à lire en 5 minutes. <strong>2. Pilotage</strong> : sections détaillées, chacune ouverte par sa note de confiance. <strong>3. Preuves</strong> : tableaux bruts en fin de section, à consulter au besoin.</p>
+    <p class="intro-text" style="margin-bottom:0;">${tag('MESURÉ')} constaté par nos outils &nbsp; ${tag('TESTÉ')} réponses réelles des IA &nbsp; ${tag('DÉDUIT')} conclusion tirée de faits mesurés &nbsp; ${tag('ESTIMÉ')} projection, ordre de grandeur seulement</p>
+  </div>`;
+}
+
 function sectionLead(key: keyof typeof SECTION_LEADS | string, lang: string): string {
   const entry = SECTION_LEADS[key];
   if (!entry) return '';
   const text = lang === 'en' ? entry.en : lang === 'es' ? entry.es : entry.fr;
-  return `<p style="font-size:12.5px;line-height:1.7;color:#4b5563;background:#faf9f5;border-left:3px solid #d4af37;padding:10px 14px;border-radius:6px;margin:0 0 16px 0;">${text}</p>`;
+  const conf = SECTION_CONFIDENCE[key];
+  const confHtml = conf
+    ? `<p style="font-size:11.5px;color:#374151;margin:0 0 14px 0;"><strong>${lang === 'en' ? 'Data confidence' : lang === 'es' ? 'Confianza de los datos' : 'Confiance des données'} :</strong> <span style="display:inline-block;padding:1px 8px;border:1px solid #6d28d9;border-radius:10px;font-size:10.5px;font-weight:700;color:#6d28d9;">${conf.tag}</span> ${lang === 'fr' ? conf.fr : conf.en}</p>`
+    : '';
+  return `<p style="font-size:12.5px;line-height:1.7;color:#4b5563;background:#faf9f5;border-left:3px solid #d4af37;padding:10px 14px;border-radius:6px;margin:0 0 8px 0;">${text}</p>${confHtml}`;
 }
 
 
