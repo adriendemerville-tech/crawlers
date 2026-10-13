@@ -17,6 +17,10 @@ function htmlResponse(body: string, status: number): Response {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'private, max-age=300',
       'X-Robots-Tag': 'noindex, nofollow',
+      // Le rapport charge html2canvas/jsPDF depuis cdnjs pour son bouton PDF :
+      // la CSP globale du site les bloquait (« Failed to load html2canvas »).
+      'Content-Security-Policy':
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
     },
   });
 }
