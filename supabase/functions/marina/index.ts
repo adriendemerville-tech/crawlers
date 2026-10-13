@@ -368,7 +368,8 @@ function getMarinaStyles(): string {
     .marina-toolbar .copied { color: #22c55e; border-color: #22c55e; }
     @media print {
       body { padding: 0; }
-      @page { margin: 15mm 10mm; }
+      @page { margin: 15mm 10mm; @bottom-center { content: counter(page) " / " counter(pages); font-size: 9px; color: #6b7280; } }
+      [data-marina-toc], [data-marina-block], #m-summary, #m-conclusion { break-before: page; }
       .section { break-inside: auto; }
       .marina-toolbar { display: none !important; }
     }
@@ -398,7 +399,7 @@ function getTranslations(lang: string) {
       roadmap: 'Plan d\'action prioritaire',
       noData: 'Données non disponibles',
       poweredBy: 'Propulsé par Crawlers AI',
-      cocoonPending: 'L\'analyse du cocon sémantique n\'a pas retourné de données pour ce site. Un crawl multi-pages est nécessaire.',
+      cocoonPending: '<strong>Module non abouti.</strong> Le cocon sémantique n\'a pas pu être calculé : l\'exploration multi-pages du site n\'était pas terminée ou n\'a pas fourni assez de pages exploitables au moment du calcul. <br><strong>Alternative manuelle :</strong> listez vos 5 à 10 pages clés (services, offres, guides), vérifiez que chacune reçoit au moins 3 liens internes depuis des pages proches du même thème, et qu\'aucune page importante n\'est à plus de 3 clics de l\'accueil. Relancez l\'audit pour obtenir le graphe complet.',
       toolbarPdf: 'Télécharger PDF',
       toolbarPrint: 'Imprimer',
       toolbarCopy: 'Copier le lien',
@@ -420,7 +421,7 @@ function getTranslations(lang: string) {
       roadmap: 'Priority Action Plan',
       noData: 'Data not available',
       poweredBy: 'Powered by Crawlers AI',
-      cocoonPending: 'Semantic cocoon analysis returned no data. A multi-page crawl is required.',
+      cocoonPending: '<strong>Module incomplete.</strong> The semantic cocoon could not be computed: the multi-page crawl was not finished or returned too few usable pages. <br><strong>Manual alternative:</strong> list your 5-10 key pages, check each receives at least 3 internal links from related pages and sits within 3 clicks of the home page. Re-run the audit for the full graph.',
       toolbarPdf: 'Download PDF',
       toolbarPrint: 'Print',
       toolbarCopy: 'Copy link',
@@ -580,6 +581,7 @@ function getToolbarHtml(domain: string, lang: string): string {
         var doc = new jsPDF('p', 'mm', 'a4');
         var curY = mTop;
         var first = true;
+        var secPages = {}; var tocInfo = null;
         for (var i = 0; i < sections.length; i++) {
           var sec = sections[i];
           try {
@@ -600,11 +602,17 @@ function getToolbarHtml(domain: string, lang: string): string {
           var imgData = canvas.toDataURL('image/jpeg', 0.92);
           var secW = usableW;
           var secH = (canvas.height * secW) / canvas.width;
-          if (curY + secH <= pdfH - mBot) {
-            doc.addImage(imgData, 'JPEG', mSide, curY, secW, secH);
-            curY += secH + 2;
-          } else if (secH <= usableH) {
+          if (!(curY + secH <= pdfH - mBot) && secH <= usableH) {
             if (!first || curY > mTop + 5) { doc.addPage(); curY = mTop; }
+          }
+          var startPage = doc.getNumberOfPages();
+          if (sec.id) secPages[sec.id] = startPage;
+          var innerIds = sec.querySelectorAll ? sec.querySelectorAll('[id^="m-"]') : [];
+          for (var k = 0; k < innerIds.length; k++) { if (!secPages[innerIds[k].id]) secPages[innerIds[k].id] = startPage; }
+          if (sec.hasAttribute && sec.hasAttribute('data-marina-toc')) {
+            tocInfo = { page: startPage, y: curY, mmPerPx: secW / (sec.getBoundingClientRect().width || 1), el: sec };
+          }
+          if (curY + secH <= pdfH - mBot) {
             doc.addImage(imgData, 'JPEG', mSide, curY, secW, secH);
             curY += secH + 2;
           } else {
@@ -627,6 +635,30 @@ function getToolbarHtml(domain: string, lang: string): string {
             curY += 2;
           }
           first = false;
+        }
+        // Sommaire : numéro de page + lien cliquable vers chaque section.
+        if (tocInfo) {
+          var tocRect = tocInfo.el.getBoundingClientRect();
+          var items = tocInfo.el.querySelectorAll('[data-toc-target]');
+          doc.setPage(tocInfo.page);
+          doc.setFontSize(10); doc.setTextColor(55, 65, 81);
+          for (var t = 0; t < items.length; t++) {
+            var target = items[t].getAttribute('data-toc-target');
+            var pg = secPages[target];
+            if (!pg) continue;
+            var r = items[t].getBoundingClientRect();
+            var yTop = tocInfo.y + (r.top - tocRect.top) * tocInfo.mmPerPx;
+            var hMm = r.height * tocInfo.mmPerPx;
+            doc.text('p. ' + pg, pdfW - mSide - 4, yTop + hMm / 2 + 1.2, { align: 'right' });
+            doc.link(mSide, yTop, usableW, hMm, { pageNumber: pg });
+          }
+        }
+        // Pagination : numéro sur chaque page.
+        var total = doc.getNumberOfPages();
+        for (var pn = 1; pn <= total; pn++) {
+          doc.setPage(pn);
+          doc.setFontSize(8); doc.setTextColor(107, 114, 128);
+          doc.text(pn + ' / ' + total, pdfW / 2, pdfH - 6, { align: 'center' });
         }
         if (toolbar) toolbar.style.display = '';
         var fname = 'marina_${domain.replace(/[^a-zA-Z0-9.-]/g, '_')}_' + new Date().toISOString().slice(0,10) + '.pdf';
@@ -684,11 +716,54 @@ const SECTION_LEADS: Record<string, { fr: string; en: string; es: string }> = {
   },
 };
 
+/** Note de confiance affichée en tête de chaque grande section (déterministe). */
+const SECTION_CONFIDENCE: Record<string, { tag: string; fr: string; en: string }> = {
+  crawl: { tag: 'MESURÉ', fr: 'élevée — pages réellement explorées et lues par notre robot.', en: 'high — pages actually fetched and parsed by our crawler.' },
+  tech: { tag: 'MESURÉ', fr: 'élevée — contrôles techniques exécutés sur le code servi.', en: 'high — technical checks run on the served code.' },
+  strategic: { tag: 'TESTÉ / DÉDUIT', fr: 'moyenne — réponses réelles des IA, interprétées par notre moteur.', en: 'medium — real AI answers, interpreted by our engine.' },
+  cocoon: { tag: 'DÉDUIT', fr: 'moyenne — regroupements calculés à partir du maillage mesuré.', en: 'medium — clusters computed from the measured linking.' },
+  indexation: { tag: 'MESURÉ', fr: 'élevée si la Search Console est connectée, sinon indicative.', en: 'high when Search Console is connected, otherwise indicative.' },
+};
+
+/** Ancres du sommaire : id de section → libellé. */
+function marinaAnchorTitle(id: string, label: string, n: string): string {
+  return `<a class="toc-item" href="#${id}" data-toc-target="${id}" style="color:inherit;text-decoration:none;"><span class="section-number">${n}</span><span style="flex:1;">${label}</span><span class="toc-page" data-toc-page="${id}" style="color:#6b7280;font-size:12px;"></span></a>`;
+}
+
+/**
+ * Remplace les gains chiffrés non crédibles (moins de 50 visites/mois) par un
+ * impact qualitatif. Appliqué sur le HTML final : aucune donnée source modifiée.
+ */
+function softenTinyGains(html: string): string {
+  return html.replace(/\+\s?(\d{1,3}(?:[\s\u202f]\d{3})*)\s?(visites?|visits?)\s?\/\s?(mois|month)/gi, (m, n, w) => {
+    const v = parseInt(String(n).replace(/[\s\u202f]/g, ''), 10);
+    if (!Number.isFinite(v) || v >= 50) return m;
+    return /visit/i.test(w) && !/visite/i.test(w) ? 'low impact (under 50 visits/month)' : 'impact faible (moins de 50 visites/mois)';
+  });
+}
+
+/** Légende des niveaux de preuve + guide de lecture en 3 niveaux. */
+function renderEvidenceLegend(lang: string): string {
+  if (lang !== 'fr') {
+    return `<div class="section" data-pdf-section style="border-left:6px solid #6d28d9;"><div class="section-title">How to read this report</div><p class="intro-text"><strong>1. Decision</strong> (first pages): key messages, alerts, quick wins. <strong>2. Steering</strong>: detailed sections. <strong>3. Evidence</strong>: raw tables at the end of each section.</p><p class="intro-text"><strong>MEASURED</strong> observed by our tools · <strong>TESTED</strong> real answers from AI engines · <strong>INFERRED</strong> derived from measured facts · <strong>ESTIMATED</strong> projection, order of magnitude only.</p></div>`;
+  }
+  const tag = (t: string) => `<span style="display:inline-block;padding:1px 8px;border:1px solid #6d28d9;border-radius:10px;font-size:10.5px;font-weight:700;color:#6d28d9;">${t}</span>`;
+  return `<div class="section" data-pdf-section style="border-left:6px solid #6d28d9;">
+    <div class="section-title">Comment lire ce rapport</div>
+    <p class="intro-text"><strong>1. Décision</strong> (premières pages) : messages critiques, alertes et gains rapides, à lire en 5 minutes. <strong>2. Pilotage</strong> : sections détaillées, chacune ouverte par sa note de confiance. <strong>3. Preuves</strong> : tableaux bruts en fin de section, à consulter au besoin.</p>
+    <p class="intro-text" style="margin-bottom:0;">${tag('MESURÉ')} constaté par nos outils &nbsp; ${tag('TESTÉ')} réponses réelles des IA &nbsp; ${tag('DÉDUIT')} conclusion tirée de faits mesurés &nbsp; ${tag('ESTIMÉ')} projection, ordre de grandeur seulement</p>
+  </div>`;
+}
+
 function sectionLead(key: keyof typeof SECTION_LEADS | string, lang: string): string {
   const entry = SECTION_LEADS[key];
   if (!entry) return '';
   const text = lang === 'en' ? entry.en : lang === 'es' ? entry.es : entry.fr;
-  return `<p style="font-size:12.5px;line-height:1.7;color:#4b5563;background:#faf9f5;border-left:3px solid #d4af37;padding:10px 14px;border-radius:6px;margin:0 0 16px 0;">${text}</p>`;
+  const conf = SECTION_CONFIDENCE[key];
+  const confHtml = conf
+    ? `<p style="font-size:11.5px;color:#374151;margin:0 0 14px 0;"><strong>${lang === 'en' ? 'Data confidence' : lang === 'es' ? 'Confianza de los datos' : 'Confiance des données'} :</strong> <span style="display:inline-block;padding:1px 8px;border:1px solid #6d28d9;border-radius:10px;font-size:10.5px;font-weight:700;color:#6d28d9;">${conf.tag}</span> ${lang === 'fr' ? conf.fr : conf.en}</p>`
+    : '';
+  return `<p style="font-size:12.5px;line-height:1.7;color:#4b5563;background:#faf9f5;border-left:3px solid #d4af37;padding:10px 14px;border-radius:6px;margin:0 0 8px 0;">${text}</p>${confHtml}`;
 }
 
 
@@ -2890,7 +2965,24 @@ function compileMarinaReport(
 
     ${introHtml}
 
-    ${sectionHTMLs.summary || ''}
+    <!-- Sommaire cliquable (numéros de page remplis à l'export PDF) -->
+    <div class="toc" data-pdf-section data-marina-toc>
+      <div class="section-title" style="margin-bottom:8px;">${lang === 'fr' ? 'Sommaire' : lang === 'es' ? 'Índice' : 'Contents'}</div>
+      ${sectionHTMLs.summary ? marinaAnchorTitle('m-summary', lang === 'fr' ? 'Synthèse décisionnelle' : 'Executive summary', '0') : ''}
+      ${marinaAnchorTitle('m-strategic', tr.strategicAudit, '1')}
+      ${sectionHTMLs.ownerPerformance ? marinaAnchorTitle('m-owner', lang === 'fr' ? 'Données propriétaires du domaine' : 'First-party domain data', '1b') : ''}
+      ${marinaAnchorTitle('m-crawl', tr.crawlReport, '2')}
+      ${sectionHTMLs.archetypes ? marinaAnchorTitle('m-archetypes', lang === 'fr' ? 'Audit par type de page' : 'Audit by page type', '2b') : ''}
+      ${marinaAnchorTitle('m-tech', tr.techAudit, '3')}
+      ${marinaAnchorTitle('m-cocoon', tr.cocoonAnalysis, '4')}
+      ${sectionHTMLs.indexation ? marinaAnchorTitle('m-indexation', lang === 'fr' ? "Santé d'indexation" : 'Indexation Health', '5') : ''}
+      ${sectionHTMLs.consolidatedPlan ? marinaAnchorTitle('m-plan', lang === 'fr' ? "Plan d'action consolidé" : 'Consolidated Action Plan', sectionHTMLs.indexation ? '6' : '5') : ''}
+      ${sectionHTMLs.conclusion ? marinaAnchorTitle('m-conclusion', lang === 'fr' ? 'Conclusion et priorités' : 'Conclusion and priorities', sectionHTMLs.indexation ? '7' : '6') : ''}
+    </div>
+
+    ${renderEvidenceLegend(lang)}
+
+    <div id="m-summary">${sectionHTMLs.summary || ''}</div>
 
     ${sectionHTMLs.identity || ''}
 
@@ -2898,24 +2990,9 @@ function compileMarinaReport(
 
     ${sectionHTMLs.visual || ''}
 
-
-
-    <!-- Table of Contents -->
-    <div class="toc" data-pdf-section>
-      <div class="toc-item"><span class="section-number">1</span> 🎯 ${tr.strategicAudit}</div>
-      ${sectionHTMLs.ownerPerformance ? `<div class="toc-item"><span class="section-number">1b</span> ${lang === 'fr' ? 'Données propriétaires du domaine' : lang === 'es' ? 'Datos propietarios del dominio' : 'First-party domain data'}</div>` : ''}
-      <div class="toc-item"><span class="section-number">2</span> 🕷️ ${tr.crawlReport}</div>
-      ${sectionHTMLs.archetypes ? `<div class="toc-item"><span class="section-number">2b</span> ${lang === 'fr' ? 'Audit par type de page' : lang === 'es' ? 'Auditoría por tipo de página' : 'Audit by page type'}</div>` : ''}
-      <div class="toc-item"><span class="section-number">3</span> 🔍 ${tr.techAudit}</div>
-      <div class="toc-item"><span class="section-number">4</span> 🕸️ ${tr.cocoonAnalysis}</div>
-      ${sectionHTMLs.indexation ? `<div class="toc-item"><span class="section-number">5</span> 📊 ${lang === 'fr' ? 'Santé d\'indexation' : lang === 'es' ? 'Salud de indexación' : 'Indexation Health'}</div>` : ''}
-      ${sectionHTMLs.consolidatedPlan ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '6' : '5'}</span> ${lang === 'fr' ? "Plan d'action consolidé" : lang === 'es' ? 'Plan de acción consolidado' : 'Consolidated Action Plan'}</div>` : ''}
-      ${sectionHTMLs.conclusion ? `<div class="toc-item"><span class="section-number">${sectionHTMLs.indexation ? '7' : '6'}</span> ${lang === 'fr' ? 'Conclusion et priorités' : lang === 'es' ? 'Conclusión y prioridades' : 'Conclusion and priorities'}</div>` : ''}
-    </div>
-
     <!-- Section 1 : Audit stratégique — le score de tête du rapport, périmètre domaine.
          Placé en premier : c'est le cadre de lecture de tout ce qui suit. -->
-    <div data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
+    <div id="m-strategic" data-marina-scope="page" data-marina-block="strategic">${strategicContent}</div>
 
     ${llmVisibilityBlock ? `
     <!-- Visibilité / citabilité IA, rattachée à la section stratégique (elle en est l'objet).
@@ -2927,18 +3004,18 @@ function compileMarinaReport(
     ${sectionHTMLs.ownerPerformance ? `
     <div class="marina-separator"></div>
     <!-- Section 1b : données propriétaires GSC/GA4 (périmètre site, mutualisable) -->
-    ${sectionHTMLs.ownerPerformance}
+    <div id="m-owner">${sectionHTMLs.ownerPerformance}</div>
     ` : ''}
 
     <div class="marina-separator"></div>
 
     <!-- Section 2: Crawl (périmètre site) -->
-    <div data-marina-scope="site" data-marina-block="crawl">${crawlContent}</div>
+    <div id="m-crawl" data-marina-scope="site" data-marina-block="crawl">${crawlContent}</div>
 
     ${sectionHTMLs.archetypes ? `
     <div class="marina-separator"></div>
     <!-- Audit par type de page (périmètre site) -->
-    ${sectionHTMLs.archetypes}
+    <div id="m-archetypes">${sectionHTMLs.archetypes}</div>
     ` : ''}
 
     <div class="marina-separator"></div>
@@ -2950,13 +3027,13 @@ function compileMarinaReport(
     ` : ''}
 
     <!-- Section 3: Technical SEO (périmètre page) -->
-    <div data-marina-scope="page" data-marina-block="tech">${techContent}</div>
+    <div id="m-tech" data-marina-scope="page" data-marina-block="tech">${techContent}</div>
 
 
     <div class="marina-separator"></div>
 
     <!-- Section 4: Cocoon (périmètre site) -->
-    <div data-marina-scope="site" data-marina-block="cocoon">${cocoonContent}</div>
+    <div id="m-cocoon" data-marina-scope="site" data-marina-block="cocoon">${cocoonContent}</div>
 
     ${sectionHTMLs.cocoonPage ? `
     <div class="marina-separator"></div>
@@ -2968,16 +3045,16 @@ function compileMarinaReport(
     ${sectionHTMLs.indexation ? `
     <div class="marina-separator"></div>
     <!-- Section 5: Indexation Health (périmètre site) -->
-    <div data-marina-scope="site" data-marina-block="indexation">${extractBodyContent(sectionHTMLs.indexation, { stripHeader: true, stripFooter: true })}</div>
+    <div id="m-indexation" data-marina-scope="site" data-marina-block="indexation">${extractBodyContent(sectionHTMLs.indexation, { stripHeader: true, stripFooter: true })}</div>
     ` : ''}
 
     ${sectionHTMLs.consolidatedPlan ? `
     <div class="marina-separator"></div>
     <!-- Final Section: Consolidated Action Plan -->
-    <div data-marina-scope="page" data-marina-block="plan">${sectionHTMLs.consolidatedPlan}</div>
+    <div id="m-plan" data-marina-scope="page" data-marina-block="plan">${sectionHTMLs.consolidatedPlan}</div>
     ` : ''}
 
-    ${sectionHTMLs.conclusion || ''}
+    <div id="m-conclusion">${sectionHTMLs.conclusion || ''}</div>
 
     ${sectionHTMLs.disclosure || ''}
 
@@ -3000,7 +3077,7 @@ function compileMarinaReport(
 
   // Charte Crawlers : le blanc-label garde ses couleurs client, les emoji sont
   // retirés dans tous les cas.
-  return sanitizeMarinaHtml(compiled, { keepColors: Boolean(isWL) });
+  return sanitizeMarinaHtml(softenTinyGains(compiled), { keepColors: Boolean(isWL) });
 }
 
 
