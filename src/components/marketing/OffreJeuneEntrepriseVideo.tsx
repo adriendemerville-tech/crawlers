@@ -75,7 +75,7 @@ export function OffreJeuneEntrepriseVideo() {
         aria-label="Vidéo de présentation de l'offre jeune entreprise Crawlers.fr"
       >
         {visible && <source src={src.mp4} type="video/mp4" />}
-        <track kind="captions" src={VTT} srcLang="fr" label="Français" default />
+        <track kind="captions" src={VTT} srcLang="fr" label="Français" />
       </video>
       <button
         type="button"
