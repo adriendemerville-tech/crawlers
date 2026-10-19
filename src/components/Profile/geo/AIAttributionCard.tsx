@@ -147,7 +147,7 @@ export function AIAttributionCard({ trackedSiteId }: AIAttributionCardProps) {
     setConnecting(true);
     try {
       const { data: res, error: fnError } = await supabase.functions.invoke('gsc-auth', {
-        body: { action: 'login', user_id: user.id, frontend_origin: window.location.origin },
+        body: { action: 'login', user_id: user.id, frontend_origin: window.location.origin, modules: ['ga4'] },
       });
       if (fnError) throw fnError;
       if (res?.auth_url) window.location.href = res.auth_url;

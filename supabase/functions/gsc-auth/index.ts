@@ -16,8 +16,25 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
   const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 
-  // The canonical redirect URI registered in Google Cloud Console
-  const REDIRECT_URI = `${supabaseUrl}/functions/v1/gsc-auth`;
+  // Redirect URIs: legacy server-side callback (GET on this function) stays functional;
+  // GOOGLE_GSC_REDIRECT_URI can point to the front page https://crawlers.fr/oauth/google/callback
+  const LEGACY_REDIRECT_URI = `${supabaseUrl}/functions/v1/gsc-auth`;
+  const REDIRECT_URI = Deno.env.get('GOOGLE_GSC_REDIRECT_URI') || LEGACY_REDIRECT_URI;
+
+  // Exact whitelist for post-OAuth redirect origins
+  const ALLOWED_RETURN_ORIGINS = new Set([
+    'https://crawlers.fr',
+    'https://www.crawlers.fr',
+    'http://localhost:8080',
+    'http://localhost:5173',
+  ]);
+  const safeRedirectBase = (origin: string | undefined): string => {
+    if (!origin) return 'https://crawlers.fr';
+    if (ALLOWED_RETURN_ORIGINS.has(origin)) return origin;
+    // Lovable preview origins: https://id-preview--<uuid>.lovable.app
+    if (/^https:\/\/[a-z0-9-]+--[a-z0-9-]+\.lovable\.app$/.test(origin)) return origin;
+    return 'https://crawlers.fr';
+  };
 
   if (!clientId || !clientSecret) {
     return jsonError('Google GSC credentials not configured', 500);
@@ -26,18 +43,21 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
   const supabase = getServiceClient();
 
   // ═══════════════════════════════════════════════════════════════════
-  // GET: Server-side OAuth callback from Google
-  // Google redirects here with ?code=...&state=user_id|frontend_origin
+  // OAuth callback core — shared by the legacy GET callback and the
+  // front-page callback (POST action=exchange). Returns a 302 Response;
+  // the POST wrapper converts its Location header into JSON.
+  // state format: "user_id|frontend_origin"
   // ═══════════════════════════════════════════════════════════════════
-  if (req.method === 'GET') {
-    const url = new URL(req.url);
-    const code = url.searchParams.get('code');
-    const state = url.searchParams.get('state') || '';
-    const error = url.searchParams.get('error');
+  const runOAuthCallback = async (
+    code: string | null,
+    state: string,
+    error: string | null,
+    redirectUri: string,
+  ): Promise<Response> => {
 
     // state format: "user_id|frontend_origin"
     const [userId, frontendOrigin] = state.split('|');
-    const redirectBase = frontendOrigin || 'https://crawlers.fr';
+    const redirectBase = safeRedirectBase(frontendOrigin);
 
     if (error) {
       return new Response(null, {
@@ -63,7 +83,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
           client_secret: clientSecret,
           code,
           grant_type: 'authorization_code',
-          redirect_uri: REDIRECT_URI,
+          redirect_uri: redirectUri, // must match the URI used in the authorization request
         }),
       });
 
@@ -333,13 +353,27 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         headers: { Location: `${redirectBase}/console?gsc_error=internal` },
       });
     }
+  };
+
+  // ═══════════════════════════════════════════════════════════════════
+  // GET: Legacy server-side OAuth callback from Google (stays functional)
+  // Google redirects here with ?code=...&state=user_id|frontend_origin
+  // ═══════════════════════════════════════════════════════════════════
+  if (req.method === 'GET') {
+    const url = new URL(req.url);
+    return runOAuthCallback(
+      url.searchParams.get('code'),
+      url.searchParams.get('state') || '',
+      url.searchParams.get('error'),
+      LEGACY_REDIRECT_URI,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // POST: API calls (login, fetch)
+  // POST: API calls (login, exchange, fetch)
   // ═══════════════════════════════════════════════════════════════════
   try {
-    const { action, site_url, user_id: body_user_id, frontend_origin, start_date, end_date, connection_id, google_email, modules, extra_scopes } = await req.json();
+    const { action, site_url, user_id: body_user_id, frontend_origin, start_date, end_date, connection_id, google_email, modules, code, state, error: oauth_error } = await req.json();
 
     // ─── SECURITY: Validate JWT and enforce real user_id ─────────
     const authHeader = req.headers.get('Authorization') || '';
@@ -364,53 +398,37 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
       user_id = user.id;
     }
 
-    // Check if full Google access is enabled via system_config
     const supabase = getServiceClient();
-    let fullGoogleAccess = false;
-    const { data: accessConfig } = await supabase
-      .from('system_config')
-      .select('value')
-      .eq('key', 'ga4_oauth_enabled')
-      .maybeSingle();
-    if (accessConfig?.value && typeof accessConfig.value === 'object' && (accessConfig.value as any).active === true) {
-      fullGoogleAccess = true;
-    }
 
-    // === LOGIN: Generate OAuth URL (UNIFIED — accepts modules[] or extra_scopes[]) ===
+    // === LOGIN: Generate OAuth URL (progressive scopes — only requested modules[]) ===
     if (action === 'login') {
       // state format: "user_id|frontend_origin" — backward compatible
       const stateValue = `${user_id || ''}|${frontend_origin || ''}`;
 
-      // Map module aliases → Google scopes (frontend can request "ads", "gmb", "ga4", "gsc", "gtm", "indexing")
+      // Module aliases → Google scopes. MODULE_SCOPES is the single source of truth;
+      // unknown modules are ignored. The indexing module was removed (scope retired).
       const MODULE_SCOPES: Record<string, string[]> = {
         gsc: ['https://www.googleapis.com/auth/webmasters.readonly'],
         ga4: ['https://www.googleapis.com/auth/analytics.readonly'],
         gmb: ['https://www.googleapis.com/auth/business.manage'],
-        ads: ['https://www.googleapis.com/auth/adwords', 'https://www.googleapis.com/auth/userinfo.email'],
+        ads: ['https://www.googleapis.com/auth/adwords'],
         gtm: [
           'https://www.googleapis.com/auth/tagmanager.edit.containers',
           'https://www.googleapis.com/auth/tagmanager.publish',
         ],
-        indexing: ['https://www.googleapis.com/auth/indexing'],
       };
 
-      // Always include GSC (legacy default for this endpoint)
-      const scopeSet = new Set<string>(['https://www.googleapis.com/auth/webmasters.readonly']);
+      // Non-sensitive scopes always requested (openid/email → google_email no longer "unknown")
+      const scopeSet = new Set<string>(['openid', 'email']);
 
-      // Mode 1: explicit modules[] from frontend (e.g. ["gsc","ga4","ads"])
       if (Array.isArray(modules) && modules.length > 0) {
         for (const m of modules) {
           const s = MODULE_SCOPES[String(m).toLowerCase()];
           if (s) s.forEach(v => scopeSet.add(v));
         }
-      } else if (fullGoogleAccess) {
-        // Mode 2: legacy "full access" flag — request everything except Ads (still gated)
-        ['ga4', 'gtm', 'gmb', 'indexing'].forEach(k => MODULE_SCOPES[k].forEach(v => scopeSet.add(v)));
-      }
-
-      // Mode 3: explicit extra_scopes[] (escape hatch)
-      if (Array.isArray(extra_scopes)) {
-        for (const s of extra_scopes) if (typeof s === 'string') scopeSet.add(s);
+      } else {
+        // Default: GSC only (legacy behavior for this endpoint)
+        MODULE_SCOPES.gsc.forEach(v => scopeSet.add(v));
       }
 
       const params = new URLSearchParams({
@@ -428,6 +446,22 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         auth_url: `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
         scopes_requested: Array.from(scopeSet),
       }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // === EXCHANGE: front-page callback (https://crawlers.fr/oauth/google/callback) ===
+    // The front page receives code/state/error from Google and POSTs them here.
+    // Uses the same redirect_uri as the authorization request (REDIRECT_URI).
+    if (action === 'exchange') {
+      const resp = await runOAuthCallback(
+        typeof code === 'string' ? code : null,
+        typeof state === 'string' ? state : '',
+        typeof oauth_error === 'string' ? oauth_error : null,
+        REDIRECT_URI,
+      );
+      const location = resp.headers.get('Location') || 'https://crawlers.fr/console?gsc_error=internal';
+      return new Response(JSON.stringify({ redirect_url: location }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

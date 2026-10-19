@@ -68,7 +68,7 @@ const PolitiqueConfidentialite = () => {
                 <li>{t3(language, 'Type de persona (indépendant, agence, e-commerce, etc.)', 'Persona type (freelancer, agency, e-commerce, etc.)', 'Tipo de persona (independiente, agencia, e-commerce, etc.)')}</li>
                 <li>{t3(language, 'Historique des achats de crédits et abonnements (Pro Agency, Pro Agency+)', 'Credit purchases and subscription history (Pro Agency, Pro Agency+)', 'Historial de compras de créditos y suscripciones (Pro Agency, Pro Agency+)')}</li>
                 <li>{t3(language, 'Solde de crédits', 'Credit balance', 'Saldo de créditos')}</li>
-                <li>{t3(language, 'Tokens d\'accès Google Search Console / GA4 (chiffrés, stockés côté serveur)', 'Google Search Console / GA4 access tokens (encrypted, stored server-side)', 'Tokens de acceso Google Search Console / GA4 (cifrados, almacenados del lado del servidor)')}</li>
+                <li>{t3(language, 'Tokens d\'accès Google Search Console / GA4 (stockés côté serveur, accès restreint au compte propriétaire, chiffrés au repos par notre hébergeur)', 'Google Search Console / GA4 access tokens (stored server-side, access restricted to the owning account, encrypted at rest by our hosting provider)', 'Tokens de acceso Google Search Console / GA4 (almacenados del lado del servidor, acceso restringido a la cuenta propietaria, cifrados en reposo por nuestro proveedor de alojamiento)')}</li>
                 <li>{t3(language, 'Identifiants CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo) : clés API ou tokens OAuth chiffrés', 'CMS credentials (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): encrypted API keys or OAuth tokens', 'Credenciales CMS (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo): claves API o tokens OAuth cifrados')}</li>
                 <li>{t3(language, 'Connexion Google My Business (OAuth, optionnelle)', 'Google My Business connection (OAuth, optional)', 'Conexión Google My Business (OAuth, opcional)')}</li>
               </ul>
@@ -306,8 +306,52 @@ const PolitiqueConfidentialite = () => {
               </div>
             </section>
 
+            <section className="mb-10">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">{t3(language, 'Données Google', 'Google data', 'Datos de Google')}</h2>
+              <p className="text-muted-foreground mb-4">
+                {t3(language,
+                  'Crawlers peut se connecter à votre compte Google, uniquement avec votre consentement explicite. Chaque accès n\'est demandé qu\'au moment où vous activez le module correspondant (autorisation incrémentale) : vous pouvez connecter un module sans jamais activer les autres.',
+                  'Crawlers can connect to your Google account, only with your explicit consent. Each access is requested only when you activate the corresponding module (incremental authorization): you can connect one module without ever enabling the others.',
+                  'Crawlers puede conectarse a su cuenta de Google, solo con su consentimiento explícito. Cada acceso se solicita únicamente cuando activa el módulo correspondiente (autorización incremental): puede conectar un módulo sin activar nunca los demás.')}
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
+                <li>{t3(language,
+                  'Search Console (lecture seule) : liste de vos propriétés, statistiques de recherche (clics, impressions, positions, requêtes), sitemaps et état d\'indexation de vos pages. Finalité : suivre et auditer la visibilité de vos sites dans Google.',
+                  'Search Console (read-only): list of your properties, search statistics (clicks, impressions, positions, queries), sitemaps and indexing status of your pages. Purpose: track and audit your sites\' visibility in Google.',
+                  'Search Console (solo lectura): lista de sus propiedades, estadísticas de búsqueda (clics, impresiones, posiciones, consultas), sitemaps y estado de indexación de sus páginas. Finalidad: seguir y auditar la visibilidad de sus sitios en Google.')}</li>
+                <li>{t3(language,
+                  'Google Analytics 4 (lecture seule) : métriques de trafic de vos propriétés GA4 (sessions, utilisateurs, canaux d\'acquisition). Finalité : croiser trafic réel et visibilité dans vos tableaux de bord.',
+                  'Google Analytics 4 (read-only): traffic metrics from your GA4 properties (sessions, users, acquisition channels). Purpose: cross-reference real traffic and visibility in your dashboards.',
+                  'Google Analytics 4 (solo lectura): métricas de tráfico de sus propiedades GA4 (sesiones, usuarios, canales de adquisición). Finalidad: cruzar tráfico real y visibilidad en sus paneles.')}</li>
+                <li>{t3(language,
+                  'Tag Manager : lecture et publication de conteneurs, uniquement lorsque vous déployez notre widget de mesure depuis l\'interface. Finalité : installer le suivi des visites de robots IA sur votre site.',
+                  'Tag Manager: reading and publishing containers, only when you deploy our measurement widget from the interface. Purpose: install AI bot visit tracking on your site.',
+                  'Tag Manager: lectura y publicación de contenedores, solo cuando despliega nuestro widget de medición desde la interfaz. Finalidad: instalar el seguimiento de visitas de robots IA en su sitio.')}</li>
+                <li>{t3(language,
+                  'Fiche d\'établissement (Google Business Profile) : liste de vos établissements et leurs informations publiques. Finalité : alimenter le suivi de visibilité locale.',
+                  'Business Profile: list of your locations and their public information. Purpose: power local visibility tracking.',
+                  'Ficha de establecimiento (Google Business Profile): lista de sus establecimientos y su información pública. Finalidad: alimentar el seguimiento de visibilidad local.')}</li>
+                <li>{t3(language,
+                  'Google Ads (lecture) : liste de vos comptes et leurs performances. Finalité : comparer vos investissements publicitaires à votre visibilité naturelle.',
+                  'Google Ads (read): list of your accounts and their performance. Purpose: compare your advertising spend with your organic visibility.',
+                  'Google Ads (lectura): lista de sus cuentas y sus rendimientos. Finalidad: comparar sus inversiones publicitarias con su visibilidad natural.')}</li>
+              </ul>
+              <p className="text-muted-foreground mb-4">
+                {t3(language,
+                  'Nous ne vendons jamais ces données, ne les utilisons pas à des fins publicitaires et ne les utilisons pas pour entraîner des modèles d\'intelligence artificielle. Vous pouvez révoquer chaque accès à tout moment depuis la page Console → API ou depuis votre compte Google (myaccount.google.com/permissions). À la déconnexion, les tokens correspondants sont supprimés de nos serveurs.',
+                  'We never sell this data, never use it for advertising purposes, and never use it to train artificial intelligence models. You can revoke each access at any time from the Console → API page or from your Google account (myaccount.google.com/permissions). Upon disconnection, the corresponding tokens are deleted from our servers.',
+                  'Nunca vendemos estos datos, no los utilizamos con fines publicitarios ni para entrenar modelos de inteligencia artificial. Puede revocar cada acceso en cualquier momento desde la página Consola → API o desde su cuenta de Google (myaccount.google.com/permissions). Al desconectarse, los tokens correspondientes se eliminan de nuestros servidores.')}
+              </p>
+              <p className="text-muted-foreground">
+                {t3(language,
+                  'L\'utilisation et le transfert vers toute autre application des informations reçues des API Google par Crawlers respecteront le Règlement relatif aux données utilisateur des services d\'API Google (https://developers.google.com/terms/api-services-user-data-policy), y compris les exigences d\'utilisation limitée.',
+                  'Crawlers\' use and transfer to any other app of information received from Google APIs will adhere to the Google API Services User Data Policy (https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements.',
+                  'El uso y la transferencia a cualquier otra aplicación de la información recibida de las API de Google por parte de Crawlers respetarán la Política de datos de usuario de los servicios de API de Google (https://developers.google.com/terms/api-services-user-data-policy), incluidos los requisitos de uso limitado.')}
+              </p>
+            </section>
+
             <p className="text-sm text-muted-foreground mt-12">
-              {t3(language, 'Dernière mise à jour : 2 avril 2026', 'Last updated: April 2, 2026', 'Última actualización: 2 de abril de 2026')}
+              {t3(language, 'Dernière mise à jour : 19 octobre 2026', 'Last updated: October 19, 2026', 'Última actualización: 19 de octubre de 2026')}
             </p>
           </article>
         </div>

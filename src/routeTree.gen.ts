@@ -162,6 +162,7 @@ import { Route as AppRapportMatriceRouteImport } from './routes/app/rapport/matr
 import { Route as DocsApiCrawlersRouteImport } from './routes/docs/api/crawlers'
 import { Route as DocsApiMarinaRouteImport } from './routes/docs/api/marina'
 import { Route as DocsApiPericlesRouteImport } from './routes/docs/api/pericles'
+import { Route as OauthGoogleCallbackRouteImport } from './routes/oauth/google/callback'
 import { Route as ApiPublicHooksCompetitorMatrixTickRouteImport } from './routes/api/public/hooks/competitor-matrix-tick'
 import { Route as ApiPublicHooksLinkHealthScanRouteImport } from './routes/api/public/hooks/link-health-scan'
 import { Route as ApiPublicHooksMarinaBatchTickRouteImport } from './routes/api/public/hooks/marina-batch-tick'
@@ -947,6 +948,11 @@ const DocsApiPericlesRoute = DocsApiPericlesRouteImport.update({
   path: '/docs/api/pericles',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OauthGoogleCallbackRoute = OauthGoogleCallbackRouteImport.update({
+  id: '/oauth/google/callback',
+  path: '/oauth/google/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksCompetitorMatrixTickRoute =
   ApiPublicHooksCompetitorMatrixTickRouteImport.update({
     id: '/api/public/hooks/competitor-matrix-tick',
@@ -1120,6 +1126,7 @@ export interface FileRoutesByFullPath {
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
   '/docs/api/pericles': typeof DocsApiPericlesRoute
+  '/oauth/google/callback': typeof OauthGoogleCallbackRoute
   '/api/public/hooks/competitor-matrix-tick': typeof ApiPublicHooksCompetitorMatrixTickRoute
   '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
@@ -1278,6 +1285,7 @@ export interface FileRoutesByTo {
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
   '/docs/api/pericles': typeof DocsApiPericlesRoute
+  '/oauth/google/callback': typeof OauthGoogleCallbackRoute
   '/api/public/hooks/competitor-matrix-tick': typeof ApiPublicHooksCompetitorMatrixTickRoute
   '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
@@ -1437,6 +1445,7 @@ export interface FileRoutesById {
   '/docs/api/crawlers': typeof DocsApiCrawlersRoute
   '/docs/api/marina': typeof DocsApiMarinaRoute
   '/docs/api/pericles': typeof DocsApiPericlesRoute
+  '/oauth/google/callback': typeof OauthGoogleCallbackRoute
   '/api/public/hooks/competitor-matrix-tick': typeof ApiPublicHooksCompetitorMatrixTickRoute
   '/api/public/hooks/link-health-scan': typeof ApiPublicHooksLinkHealthScanRoute
   '/api/public/hooks/marina-batch-tick': typeof ApiPublicHooksMarinaBatchTickRoute
@@ -1597,6 +1606,7 @@ export interface FileRouteTypes {
     | '/docs/api/crawlers'
     | '/docs/api/marina'
     | '/docs/api/pericles'
+    | '/oauth/google/callback'
     | '/api/public/hooks/competitor-matrix-tick'
     | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
@@ -1755,6 +1765,7 @@ export interface FileRouteTypes {
     | '/docs/api/crawlers'
     | '/docs/api/marina'
     | '/docs/api/pericles'
+    | '/oauth/google/callback'
     | '/api/public/hooks/competitor-matrix-tick'
     | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
@@ -1913,6 +1924,7 @@ export interface FileRouteTypes {
     | '/docs/api/crawlers'
     | '/docs/api/marina'
     | '/docs/api/pericles'
+    | '/oauth/google/callback'
     | '/api/public/hooks/competitor-matrix-tick'
     | '/api/public/hooks/link-health-scan'
     | '/api/public/hooks/marina-batch-tick'
@@ -2072,6 +2084,7 @@ export interface RootRouteChildren {
   DocsApiCrawlersRoute: typeof DocsApiCrawlersRoute
   DocsApiMarinaRoute: typeof DocsApiMarinaRoute
   DocsApiPericlesRoute: typeof DocsApiPericlesRoute
+  OauthGoogleCallbackRoute: typeof OauthGoogleCallbackRoute
   ApiPublicHooksCompetitorMatrixTickRoute: typeof ApiPublicHooksCompetitorMatrixTickRoute
   ApiPublicHooksLinkHealthScanRoute: typeof ApiPublicHooksLinkHealthScanRoute
   ApiPublicHooksMarinaBatchTickRoute: typeof ApiPublicHooksMarinaBatchTickRoute
@@ -3150,6 +3163,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsApiPericlesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/oauth/google/callback': {
+      id: '/oauth/google/callback'
+      path: '/oauth/google/callback'
+      fullPath: '/oauth/google/callback'
+      preLoaderRoute: typeof OauthGoogleCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/competitor-matrix-tick': {
       id: '/api/public/hooks/competitor-matrix-tick'
       path: '/api/public/hooks/competitor-matrix-tick'
@@ -3330,6 +3350,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsApiCrawlersRoute: DocsApiCrawlersRoute,
   DocsApiMarinaRoute: DocsApiMarinaRoute,
   DocsApiPericlesRoute: DocsApiPericlesRoute,
+  OauthGoogleCallbackRoute: OauthGoogleCallbackRoute,
   ApiPublicHooksCompetitorMatrixTickRoute:
     ApiPublicHooksCompetitorMatrixTickRoute,
   ApiPublicHooksLinkHealthScanRoute: ApiPublicHooksLinkHealthScanRoute,
