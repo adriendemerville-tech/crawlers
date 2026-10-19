@@ -43,14 +43,17 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
   const supabase = getServiceClient();
 
   // ═══════════════════════════════════════════════════════════════════
-  // GET: Server-side OAuth callback from Google
-  // Google redirects here with ?code=...&state=user_id|frontend_origin
+  // OAuth callback core — shared by the legacy GET callback and the
+  // front-page callback (POST action=exchange). Returns a 302 Response;
+  // the POST wrapper converts its Location header into JSON.
+  // state format: "user_id|frontend_origin"
   // ═══════════════════════════════════════════════════════════════════
-  if (req.method === 'GET') {
-    const url = new URL(req.url);
-    const code = url.searchParams.get('code');
-    const state = url.searchParams.get('state') || '';
-    const error = url.searchParams.get('error');
+  const runOAuthCallback = async (
+    code: string | null,
+    state: string,
+    error: string | null,
+    redirectUri: string,
+  ): Promise<Response> => {
 
     // state format: "user_id|frontend_origin"
     const [userId, frontendOrigin] = state.split('|');
@@ -80,7 +83,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
           client_secret: clientSecret,
           code,
           grant_type: 'authorization_code',
-          redirect_uri: LEGACY_REDIRECT_URI, // GET callback always uses the legacy URI
+          redirect_uri: redirectUri, // must match the URI used in the authorization request
         }),
       });
 
