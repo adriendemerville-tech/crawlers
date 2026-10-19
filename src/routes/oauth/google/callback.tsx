@@ -7,7 +7,7 @@ export const Route = createFileRoute("/oauth/google/callback")({
     title: "Connexion Google | Crawlers.fr",
     description: "Finalisation de la connexion de votre compte Google à Crawlers.",
     path: "/oauth/google/callback",
-    noindex: true,
+    noIndex: true,
   }),
   component: OAuthGoogleCallback,
 });
