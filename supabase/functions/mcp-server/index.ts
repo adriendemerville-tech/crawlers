@@ -648,6 +648,104 @@ reg("marina_get_report", { description: "Status / result of a Marina job owned b
 reg("marina_list_jobs", { description: "List the caller's Marina jobs (most recent first). Free.", inputSchema: { type: "object" as const, properties: { limit: { type: "integer" as const, minimum: 1, maximum: 50, default: 20 }, status: { type: "string" as const, enum: ["pending", "processing", "completed", "partial", "failed"] } }, additionalProperties: false }, handler: marinaListJobs });
 reg("marina_export_pdf", { description: "Export a completed Marina report as PDF (signed URL valid 7 days). Free.", inputSchema: jobIdSchema, handler: marinaExportPdf });
 
+// ── Search Console (lecture seule, admin uniquement, liste blanche serveur) ──
+
+const gscSiteProp = { site: { type: "string" as const, description: "Domaine nu, sc-domain: ou URL http/https de la propriété" } };
+const gscDateProp = { type: "string" as const, pattern: "^\\d{4}-\\d{2}-\\d{2}$", description: "YYYY-MM-DD" };
+
+reg("gsc_list_sites", {
+  description: "Liste les propriétés Search Console autorisées du compte Google connecté. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: { type: "object" as const, properties: {}, additionalProperties: false },
+  handler: gscListSites,
+});
+
+reg("gsc_search_analytics", {
+  description: "Données Search Analytics (clics, impressions, CTR, position) d'une propriété autorisée. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      ...gscSiteProp,
+      start_date: gscDateProp,
+      end_date: gscDateProp,
+      dimensions: { type: "array" as const, items: { type: "string" as const, enum: ["query", "page", "country", "device", "date"] }, maxItems: 3, uniqueItems: true },
+      filters: { type: "array" as const, maxItems: 5, items: { type: "object" as const, properties: { dimension: { type: "string" as const, enum: ["query", "page", "country", "device"] }, operator: { type: "string" as const, enum: ["equals", "notEquals", "contains", "notContains", "includingRegex", "excludingRegex"] }, expression: { type: "string" as const, maxLength: 500 } }, required: ["dimension" as const, "operator" as const, "expression" as const], additionalProperties: false } },
+      search_type: { type: "string" as const, enum: ["web", "image", "video", "news", "discover", "googleNews"], default: "web" },
+      row_limit: { type: "integer" as const, minimum: 1, maximum: 5000, default: 1000 },
+      start_row: { type: "integer" as const, minimum: 0, default: 0 },
+    },
+    required: ["site" as const],
+    additionalProperties: false,
+  },
+  handler: gscSearchAnalytics,
+});
+
+const gscTopSchema = {
+  type: "object" as const,
+  properties: {
+    ...gscSiteProp,
+    days: { type: "integer" as const, enum: [7, 28, 90], default: 28 },
+    limit: { type: "integer" as const, minimum: 1, maximum: 100, default: 25 },
+    country: { type: "string" as const, pattern: "^[a-zA-Z]{3}$", description: "ISO 3166-1 alpha-3" },
+    device: { type: "string" as const, enum: ["desktop", "mobile", "tablet"] },
+  },
+  required: ["site" as const],
+  additionalProperties: false,
+};
+
+reg("gsc_top_queries", {
+  description: "Top requêtes par clics sur 7/28/90 jours, avec delta vs période précédente. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: gscTopSchema,
+  handler: (a: Record<string, unknown>) => gscTop('query', a),
+});
+
+reg("gsc_top_pages", {
+  description: "Top pages par clics sur 7/28/90 jours, avec delta vs période précédente. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: gscTopSchema,
+  handler: (a: Record<string, unknown>) => gscTop('page', a),
+});
+
+reg("gsc_position_history", {
+  description: "Séries quotidiennes de positions lues en base (gsc_daily_positions), sans appel Google. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      ...gscSiteProp,
+      query: { type: "string" as const, maxLength: 500 },
+      days: { type: "integer" as const, minimum: 1, maximum: 90, default: 28 },
+    },
+    required: ["site" as const],
+    additionalProperties: false,
+  },
+  handler: gscPositionHistory,
+});
+
+reg("gsc_url_inspection", {
+  description: "Inspection d'URLs (verdict, indexation, canoniques, rich results) — 5 URLs max par appel. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      ...gscSiteProp,
+      urls: { type: "array" as const, minItems: 1, maxItems: 5, items: { type: "string" as const, description: "URL absolue http/https de la propriété" } },
+    },
+    required: ["site" as const, "urls" as const],
+    additionalProperties: false,
+  },
+  handler: gscUrlInspection,
+});
+
+reg("gsc_list_sitemaps", {
+  description: "Liste les sitemaps soumis d'une propriété autorisée (statut, warnings, erreurs). Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: { type: "object" as const, properties: { ...gscSiteProp }, required: ["site" as const], additionalProperties: false },
+  handler: gscListSitemaps,
+});
+
 // ── HTTP ────────────────────────────────────────────────
 
 const transport = new StreamableHttpTransport();
