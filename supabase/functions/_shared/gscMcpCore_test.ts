@@ -118,7 +118,7 @@ Deno.test('decideGscAccess : pas d\'appelant refusé', () => {
 Deno.test('validateSearchAnalytics : défauts J-30 → J-2', () => {
   const v = validateSearchAnalytics({ site: 'crawlers.fr' });
   assert(!('code' in v));
-  const input = v as ReturnType<typeof validateSearchAnalytics> & { start_date: string };
+  const input = v as { start_date: string; end_date: string; row_limit: number; search_type: string };
   assertEquals(input.end_date, shiftDays(todayUtc(), -2));
   assertEquals(input.row_limit, 1000);
   assertEquals(input.search_type, 'web');
