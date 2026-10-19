@@ -54,7 +54,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
 
     // state format: "user_id|frontend_origin"
     const [userId, frontendOrigin] = state.split('|');
-    const redirectBase = frontendOrigin || 'https://crawlers.fr';
+    const redirectBase = safeRedirectBase(frontendOrigin);
 
     if (error) {
       return new Response(null, {
@@ -80,7 +80,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
           client_secret: clientSecret,
           code,
           grant_type: 'authorization_code',
-          redirect_uri: REDIRECT_URI,
+          redirect_uri: LEGACY_REDIRECT_URI, // GET callback always uses the legacy URI
         }),
       });
 
