@@ -126,8 +126,8 @@ const softwareApplication = {
     'Copilot conversationnel avec mémoire vectorielle',
     'Connexion CMS directe (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo, Webflow, REST custom)',
     'Extension Chrome Crawlers AI Sidebar',
-    'Serveur MCP mcp-server : audit SEO et GEO appelables depuis Claude Code, Claude Desktop et Cursor, en Streamable HTTP avec une clé Marina ou un JWT',
-    'Outils gratuits check_geo_score, check_llm_visibility et check_ai_crawlers, puis outils Pro Agency sur le même serveur',
+    'Serveur MCP mcp-server 1.2.0 : 27 outils appelables depuis Claude Code, Claude Desktop et Cursor, en Streamable HTTP avec une clé Marina ou un JWT',
+    'Sans clé : check_geo_score, check_llm_visibility et check_ai_crawlers. Pro Agency : expert_seo_audit et strategic_ai_audit (job_id puis get_audit_job), keyword_research, serp_ranking, backlink_snapshot',
 
     'Marque blanche agence et gestion d’équipe multi-rôles',
   ],
@@ -182,7 +182,7 @@ export const HOME_FAQ_ITEMS = [
   },
   {
     q: 'Crawlers.fr est-il disponible en MCP pour Claude, Cursor ou Codex ?',
-    a: "Oui. L'endpoint opérationnel est le serveur mcp-server, en Streamable HTTP, avec une clé Marina ou un JWT (pas OAuth). Sans clé : check_geo_score, check_llm_visibility et check_ai_crawlers. Avec Pro Agency : expert_seo_audit, strategic_ai_audit, generate_corrective_code, et les autres outils enregistrés. Un second serveur, en OAuth, expose d'autres noms (audit_page, analyze_schema, check_indexability, analyze_links, start_site_crawl, start_geo_audit). Détails sur https://crawlers.fr/seo-mcp-server et https://crawlers.fr/geo-mcp-server.",
+    a: "Oui. L'endpoint opérationnel est mcp-server 1.2.0, en Streamable HTTP, avec une clé Marina ou un JWT (pas OAuth) : 27 outils. Sans clé : check_geo_score, check_llm_visibility et check_ai_crawlers. Avec Pro Agency : expert_seo_audit et strategic_ai_audit renvoient un job_id à suivre avec get_audit_job (sync: true pour le mode bloquant), ainsi que keyword_research, serp_ranking, backlink_snapshot et generate_corrective_code. Un second serveur, en OAuth, expose d'autres noms (audit_page, analyze_schema, check_indexability, analyze_links, start_site_crawl, start_geo_audit, serp_ranking). Détails sur https://crawlers.fr/seo-mcp-server et https://crawlers.fr/geo-mcp-server.",
   },
 
   {

@@ -17,7 +17,7 @@ import { DataTable } from '@/components/seo/DataTable';
  * outil, corrige et re-mesure. Rassure le visiteur sur l'usage réel.
  */
 const MCP_CONNECT =
-  'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server · Streamable HTTP · x-marina-key ou Bearer — 23 outils enregistrés';
+  'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server · Streamable HTTP · x-marina-key ou Bearer — 27 outils enregistrés (1.2.0)';
 
 const MCP_DEMOS: Record<string, { windowTitle: string; caption: string; steps: McpStep[] }> = {
   'seo-avec-claude': {
@@ -28,7 +28,7 @@ const MCP_DEMOS: Record<string, { windowTitle: string; caption: string; steps: M
       { kind: 'assistant', text: 'Je me connecte au serveur mcp-server.' },
       { kind: 'connect', text: MCP_CONNECT },
       { kind: 'user', text: 'Audite le SEO de cette URL.' },
-      { kind: 'assistant', text: 'J’appelle expert_seo_audit. L’outil est réservé à Pro Agency et attend une url.' },
+      { kind: 'assistant', text: 'J’appelle expert_seo_audit. Pro Agency. La réponse est un job_id, pas le rapport.' },
       {
         kind: 'tool',
         name: 'expert_seo_audit',
@@ -37,9 +37,19 @@ const MCP_DEMOS: Record<string, { windowTitle: string; caption: string; steps: M
       {
         kind: 'result',
         lines: [
-          'La réponse est le JSON de la fonction d’audit.',
-          'Ce panneau n’affiche pas une mesure d’exemple.fr.',
+          'job_id à suivre avec get_audit_job.',
+          'sync: true force le mode bloquant. Aucune mesure d’exemple.fr ici.',
         ],
+      },
+      { kind: 'assistant', text: 'Je lis le job avec get_audit_job.' },
+      {
+        kind: 'tool',
+        name: 'get_audit_job',
+        args: '{ "job_id": "<uuid renvoyé>" }',
+      },
+      {
+        kind: 'result',
+        lines: ['Statut du job, puis le JSON du résultat une fois terminé.'],
       },
       { kind: 'user', text: 'Génère le JavaScript correctif.' },
       { kind: 'assistant', text: 'J’appelle generate_corrective_code.' },
@@ -95,7 +105,7 @@ const MCP_DEMOS: Record<string, { windowTitle: string; caption: string; steps: M
       { kind: 'assistant', text: 'Je me connecte au serveur mcp-server.' },
       { kind: 'connect', text: MCP_CONNECT },
       { kind: 'user', text: 'Audite cette URL.' },
-      { kind: 'assistant', text: 'J’appelle expert_seo_audit. L’outil attend une url et un compte Pro Agency.' },
+      { kind: 'assistant', text: 'J’appelle expert_seo_audit. Pro Agency. La réponse est un job_id.' },
       {
         kind: 'tool',
         name: 'expert_seo_audit',
@@ -103,7 +113,10 @@ const MCP_DEMOS: Record<string, { windowTitle: string; caption: string; steps: M
       },
       {
         kind: 'result',
-        lines: ['JSON de l’audit SEO décrit comme 200 points. Réservé Pro Agency.'],
+        lines: [
+          'job_id à suivre avec get_audit_job.',
+          'sync: true force le mode bloquant. Audit décrit comme 200 points.',
+        ],
       },
       { kind: 'user', text: 'Produis le correctif.' },
       { kind: 'assistant', text: 'J’appelle generate_corrective_code.' },

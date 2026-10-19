@@ -164,17 +164,17 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
         h2: "La boucle audit → lecture du JSON → correction → nouvel appel",
         body: "Le serveur mcp-server expose des outils nommés. Claude les appelle, lit le JSON, et peut rappeler le même outil. Le code ne publie pas d'identifiant de règle stable.",
         h3s: [
-          { title: "1. Audit", body: "Sur un compte Pro Agency, Claude appelle expert_seo_audit avec une url, ou strategic_ai_audit avec une url et un secteur facultatif." },
-          { title: "2. Lecture", body: "La réponse est le JSON de la fonction appelée. Cette page ne décrit pas un format de constats au-delà de cette description." },
+          { title: "1. Audit", body: "Sur un compte Pro Agency, Claude appelle expert_seo_audit ou strategic_ai_audit. Les deux renvoient un job_id. sync: true force le mode bloquant." },
+          { title: "2. Lecture", body: "get_audit_job lit le statut, puis le JSON du résultat quand le job est terminé. L’appel est authentifié et gratuit, hors quota DataForSEO." },
           { title: "3. Correction", body: "generate_corrective_code produit du JavaScript correctif à partir de l'url. L'agent l'applique dans le dépôt. wordpress_sync injecte un correctif WordPress, avec un JWT de session." },
-          { title: "4. Vérification", body: "Nouvel appel du même outil sur la même url. On compare les deux JSON." },
+          { title: "4. Vérification", body: "Nouvel appel du même outil, puis get_audit_job. On compare les deux JSON une fois les jobs terminés." },
         ],
       },
       {
         h2: "Ce que Claude peut faire avec Crawlers.fr",
-        body: "Les outils du serveur mcp-server couvrent le score GEO, la visibilité LLM, les bots IA, l'audit SEO, l'audit stratégique, le JavaScript correctif, le test sandbox, le cocon sémantique, la mesure d'impact, l'injection WordPress, les KPI SERP, l'indice d'alignement, les rapports Marina et, pour les administrateurs, la lecture Search Console.",
+        body: "Les 27 outils de mcp-server 1.2.0 couvrent le score GEO, la visibilité LLM, les bots IA, l'audit SEO et l'audit stratégique (job_id puis get_audit_job), la recherche de mots-clés, la SERP organique, le résumé de backlinks, le JavaScript correctif, le test sandbox, le cocon sémantique, la mesure d'impact, l'injection WordPress, les KPI SERP, l'indice d'alignement, les rapports Marina et, pour les administrateurs, la lecture Search Console.",
         h3s: [
-          { title: "Auditer sans quitter l'éditeur", body: "Dans Claude Code, expert_seo_audit s'appelle pendant que vous codez. La réponse est le JSON de l'audit." },
+          { title: "Auditer sans quitter l'éditeur", body: "Dans Claude Code, expert_seo_audit s'appelle pendant que vous codez et renvoie un job_id. get_audit_job lit le résultat. sync: true force le mode bloquant." },
           { title: "Corriger à partir de ce JSON", body: "generate_corrective_code renvoie du JavaScript. Le serveur mcp-server n'expose pas de ressource « règle d'audit » distincte." },
           { title: "Rapport long", body: "marina_create_report renvoie un job_id. marina_get_report lit ensuite l'avancement et le lien du rapport." },
         ],
@@ -190,9 +190,9 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       },
       {
         h2: "Le second serveur, en OAuth",
-        body: "supabase/functions/mcp authentifie l'utilisateur en OAuth 2.1. Ce n'est pas l'endpoint mcp-server. Le tableau omet un outil de ce serveur dont l'annonce publique est reportée.",
+        body: "supabase/functions/mcp authentifie l'utilisateur en OAuth 2.1. Ce n'est pas l'endpoint mcp-server. Il expose aussi un serp_ranking, distinct de celui de mcp-server : toujours facturé au wallet.",
         table: {
-          caption: "Outils enregistrés sur le serveur OAuth mcp. Un outil de ce serveur n’est pas annoncé ici.",
+          caption: "Outils enregistrés sur le serveur OAuth mcp, y compris serp_ranking.",
           columns: ["Outil", "Ce que dit l'enregistrement"],
           rows: MCP_OAUTH_TOOLS.map((tool) => [tool.name, tool.summaryFr]),
         },
@@ -222,7 +222,7 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
       },
     ],
     faqs: [
-      { q: "Faut-il un abonnement Crawlers.fr pour utiliser Claude avec le MCP ?", a: "Les trois outils check_geo_score, check_llm_visibility et check_ai_crawlers répondent sans clé. Les neuf outils Pro exigent un compte Pro Agency. Un rapport Marina coûte 5 crédits, ou est inclus avec Pro Agency actif." },
+      { q: "Faut-il un abonnement Crawlers.fr pour utiliser Claude avec le MCP ?", a: "Les trois outils check_geo_score, check_llm_visibility et check_ai_crawlers répondent sans clé. Les douze outils Pro Agency, dont keyword_research, serp_ranking et backlink_snapshot, exigent un compte Pro Agency. get_audit_job est authentifié et gratuit. Un rapport Marina coûte 5 crédits, ou est inclus avec Pro Agency actif." },
       { q: "Quels clients sont compatibles ?", a: "Tout client MCP en Streamable HTTP qui peut envoyer l'en-tête x-marina-key ou Authorization: Bearer. Claude Desktop, Claude Code et Cursor en font partie. L'endpoint mcp-server n'utilise pas OAuth." },
       { q: "Claude modifie-t-il mon site directement ?", a: "generate_corrective_code renvoie du JavaScript. C'est l'agent qui l'écrit dans le dépôt. wordpress_sync injecte un correctif dans WordPress pour un site connecté, avec un JWT de session et un compte Pro Agency." },
       { q: "Est-ce du SEO ou du GEO ?", a: "Les deux, selon l'outil : expert_seo_audit pour le SEO, check_geo_score et check_llm_visibility (ChatGPT, Gemini, Perplexity, Claude) pour le GEO, check_ai_crawlers pour GPTBot, ClaudeBot et Google-Extended." },
@@ -403,7 +403,7 @@ export const KEYWORD_PILLARS: Record<string, KeywordPillar> = {
         h3s: [
           { title: "Priorisation par gain attendu", body: "Les constats bloquants passent devant les optimisations de confort. L'ordre du plan d'action suit l'impact estimé, pas l'ordre des règles." },
           { title: "Comparaison entre deux audits", body: "Le rapport de vérification affiche l'écart de score et l'état de chaque identifiant : résolu, ouvert, ou apparu depuis." },
-          { title: "Automatisation par agent", body: "Les mêmes constats sont exposés par l'API REST et le serveur MCP, ce qui permet à un agent de développement de boucler sans interface." },
+          { title: "Automatisation par agent", body: "Sur mcp-server, expert_seo_audit et strategic_ai_audit renvoient un job_id. get_audit_job lit le résultat une fois le job terminé. sync: true force le mode bloquant." },
         ],
         table: {
           caption: "Étapes de la boucle audit, correction et vérification, avec la preuve attendue à chaque étape.",

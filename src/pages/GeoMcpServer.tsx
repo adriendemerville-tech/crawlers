@@ -28,7 +28,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Quelle différence avec un audit GEO classique ?',
-    a: 'L’audit classique produit un rapport ponctuel. Le serveur MCP rend la mesure appelable en boucle par un agent : mesurer, corriger, re-mesurer, avec un identifiant de constat stable dont la disparition prouve la résolution.',
+    a: 'L’audit classique produit un rapport ponctuel. Le serveur MCP rend la mesure appelable par un agent. expert_seo_audit et strategic_ai_audit renvoient un job_id à suivre avec get_audit_job ; sync: true force le mode bloquant.',
   },
   {
     q: 'Quels clients MCP sont compatibles ?',
@@ -36,7 +36,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Comment est-ce facturé ?',
-    a: 'L’endpoint opérationnel enregistre 23 outils : 3 sans clé, 9 pour Pro Agency, 4 outils Marina, et 7 outils Search Console en lecture seule réservés aux administrateurs. Un rapport Marina coûte 5 crédits, ou est inclus avec Pro Agency actif. Un solde insuffisant renvoie JSON-RPC -32002 sans créer de job.',
+    a: 'L’endpoint opérationnel enregistre 27 outils (mcp-server 1.2.0) : 3 sans clé, 12 Pro Agency (dont keyword_research, serp_ranking et backlink_snapshot), get_audit_job authentifié et gratuit, 4 outils Marina, et 7 outils Search Console en lecture seule réservés aux administrateurs. Un rapport Marina coûte 5 crédits, ou est inclus avec Pro Agency actif. Un solde insuffisant renvoie JSON-RPC -32002 sans créer de job.',
   },
   {
     q: 'L’agent modifie-t-il mon site ?',
@@ -238,11 +238,11 @@ export default function GeoMcpServer() {
             <h3 className="text-xl font-semibold mt-8 mb-2">Second serveur, autres outils</h3>
             <p className="text-base leading-relaxed mb-4">
               Un second serveur, <code>supabase/functions/mcp</code>, s’authentifie en OAuth 2.1.
-              Ce n’est pas l’endpoint ci-dessus. Le tableau omet un outil de ce serveur dont
-              l’annonce publique est reportée.
+              Ce n’est pas l’endpoint ci-dessus. Son outil serp_ranking est distinct de celui
+              de mcp-server : il est toujours facturé au wallet.
             </p>
             <DataTable
-              caption="Outils enregistrés sur le serveur OAuth mcp. Un outil de ce serveur n’est pas annoncé ici."
+              caption="Outils enregistrés sur le serveur OAuth mcp, y compris serp_ranking."
               columns={['Outil', 'Ce que dit l’enregistrement']}
               rows={MCP_OAUTH_TOOLS.map((tool) => [tool.name, tool.summaryFr])}
             />
@@ -270,7 +270,7 @@ export default function GeoMcpServer() {
             <ol className="text-base leading-relaxed space-y-2">
               <li>check_llm_visibility sur le domaine (sans clé).</li>
               <li>check_geo_score sur le même domaine.</li>
-              <li>expert_seo_audit sur l’URL à revoir, si le compte est Pro Agency.</li>
+              <li>expert_seo_audit sur l’URL à revoir (Pro Agency) : la réponse est un job_id, lu avec get_audit_job. sync: true force le mode bloquant.</li>
               <li>generate_corrective_code pour obtenir le JavaScript correctif.</li>
               <li>L’agent modifie les fichiers du dépôt. L’outil ne les déploie pas tout seul.</li>
               <li>Nouvel appel de check_llm_visibility pour comparer les JSON.</li>

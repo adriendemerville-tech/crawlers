@@ -54,11 +54,28 @@ Les tokens servent à **mesurer**, pas à facturer : le prix reste celui de
 l'outil. Un appel MCP sans `metadata.job_id` n'est pas encore rattaché — limite
 connue.
 
+## Mise à jour 2026-10-19 — serveur connecté `mcp-server`
+
+`keyword_research`, `serp_ranking` et `backlink_snapshot` sont exposés en
+lecture seule sur `supabase/functions/mcp-server` (version 1.2.0), avec le
+garde Pro Agency et le rate limit 30/h de ce serveur. Ils ne passent pas par
+`mcp_authorize_call` et ne débitent pas les micro-crédits de
+`mcp_tool_pricing`.
+
+Le coût DataForSEO estimé d'un `backlink_snapshot` (3 tâches live, 10+10
+lignes) est d'environ 0,073 $, d'après la grille publique Backlinks
+(0,024 $ / tâche + 0,000036 $ / ligne). Les 60 micro-crédits de la grille
+(0,06 €) sont en dessous de ce coût et n'ont pas été modifiés. La ligne reste
+`enabled` tel que la base le décide (le seed de la migration 0016 laisse le
+défaut `true` ; l'audit du 2026-09-09 observait `enabled=false` en production).
+
 ## Dettes ouvertes
 
 - Plafond journalier non atomique (race condition possible).
-- `get_fix`, `keyword_research`, `backlink_snapshot` tarifés mais moteurs non
-  branchés (outils désactivés côté enregistrement).
+- `get_fix` tarifé mais moteur non branché sur le serveur OAuth.
+- `keyword_research` et `backlink_snapshot` restent non enregistrés sur le
+  serveur OAuth `mcp`. Leur tarif wallet n'est pas aligné sur le coût
+  DataForSEO (surtout `backlink_snapshot`).
 - `/v1/wallet/balance` estime les jobs restants avec un coût fixe, incohérent
   avec la grille réelle.
 

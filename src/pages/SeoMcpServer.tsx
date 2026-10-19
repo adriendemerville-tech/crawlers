@@ -32,7 +32,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'How is it billed?',
-    a: 'The live endpoint registers 23 tools: 3 with no key, 9 for Pro Agency, 4 Marina tools, and 7 read-only Search Console tools reserved for admins. Marina reports cost 5 credits, or are included with active Pro Agency. Insufficient credits return JSON-RPC -32002 and no job is created.',
+    a: 'The live endpoint registers 27 tools (mcp-server 1.2.0): 3 with no key, 12 for Pro Agency (including keyword_research, serp_ranking and backlink_snapshot), get_audit_job authenticated and free, 4 Marina tools, and 7 read-only Search Console tools reserved for admins. Marina reports cost 5 credits, or are included with active Pro Agency. Insufficient credits return JSON-RPC -32002 and no job is created.',
   },
   {
     q: 'Does the agent change my site?',
@@ -143,8 +143,9 @@ export default function SeoMcpServer() {
             <article className="mb-5">
               <h3 className="text-xl font-semibold mt-6 mb-2">A verifiable loop</h3>
               <p className="text-base leading-relaxed">
-                Call expert_seo_audit, then generate_corrective_code, then expert_seo_audit again.
-                The comparison is between the two JSON payloads.
+                Call expert_seo_audit, read the result with get_audit_job, then generate_corrective_code,
+                then expert_seo_audit again. sync: true forces the blocking call. The comparison is
+                between the two completed JSON payloads.
               </p>
             </article>
             <article className="mb-5">
@@ -188,11 +189,11 @@ export default function SeoMcpServer() {
             <h3 className="text-xl font-semibold mt-8 mb-2">Second server, different tools</h3>
             <p className="text-base leading-relaxed mb-4">
               A second server, <code>supabase/functions/mcp</code>, uses OAuth 2.1. It is not the
-              endpoint above. Its registered tools are listed here, except one whose public
-              announcement is deferred.
+              endpoint above. Its serp_ranking tool is separate from the one on mcp-server:
+              it is always billed to the wallet.
             </p>
             <DataTable
-              caption="Tools registered on the OAuth server mcp. One tool on that server is not announced here."
+              caption="Tools registered on the OAuth server mcp, including serp_ranking."
               columns={['Tool', 'What the registration says']}
               rows={MCP_OAUTH_TOOLS.map((tool) => [tool.name, tool.summaryEn])}
             />
@@ -240,8 +241,8 @@ export default function SeoMcpServer() {
               instructions.
             </p>
             <ol className="text-base leading-relaxed space-y-2">
-              <li>expert_seo_audit on the URL being edited (Pro Agency).</li>
-              <li>The agent reads the JSON the tool returns.</li>
+              <li>expert_seo_audit on the URL being edited (Pro Agency). The response is a job_id; read it with get_audit_job. sync: true forces the blocking call.</li>
+              <li>The agent reads the audit JSON once get_audit_job reports the job as completed.</li>
               <li>generate_corrective_code asks for corrective JavaScript for that URL.</li>
               <li>The agent edits the files in the repository. The tool itself does not commit them.</li>
               <li>expert_seo_audit again, to compare the new JSON with the previous one.</li>

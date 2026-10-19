@@ -1,18 +1,16 @@
 /**
  * Inventaire public des outils MCP, calé sur le code.
  *
- * Serveur opérationnel : supabase/functions/mcp-server (reg() dans index.ts).
- * Serveur OAuth : supabase/functions/mcp, généré depuis src/lib/mcp.
- *
- * keyword_research et backlink_snapshot ne sont enregistrés sur aucun des deux.
- * serp_ranking est enregistré sur le serveur OAuth uniquement ; il n'est pas
- * annoncé ici comme disponible (chantier séparé sur mcp-server).
+ * Serveur opérationnel : supabase/functions/mcp-server (reg() dans index.ts), version 1.2.0.
+ * 27 outils : 3 sans clé, 12 Pro Agency, get_audit_job (authentifié, gratuit),
+ * 4 Marina, 7 Search Console admin.
+ * Serveur OAuth : supabase/functions/mcp, généré depuis src/lib/mcp (serp_ranking inclus).
  */
 
 export const MCP_SERVER_ENDPOINT =
   'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server';
 
-export type McpServerAccess = 'free' | 'pro' | 'marina' | 'gsc';
+export type McpServerAccess = 'free' | 'pro' | 'auth' | 'marina' | 'gsc';
 
 export interface McpServerTool {
   name: string;
@@ -44,14 +42,38 @@ export const MCP_SERVER_TOOLS: McpServerTool[] = [
   {
     name: 'expert_seo_audit',
     access: 'pro',
-    summaryFr: 'Audit SEO décrit comme 200 points. Réservé Pro Agency. Entrée : url.',
-    summaryEn: 'SEO audit described as 200 points. Pro Agency required. Input: url.',
+    summaryFr: 'Lance un audit SEO décrit comme 200 points et renvoie un job_id à suivre avec get_audit_job. sync: true force le mode bloquant. Réservé Pro Agency. Entrée : url, lang facultatif (fr, en, es).',
+    summaryEn: 'Starts a 200-point SEO audit and returns a job_id to poll with get_audit_job. sync: true forces the blocking call. Pro Agency required. Input: url, optional lang (fr, en, es).',
   },
   {
     name: 'strategic_ai_audit',
     access: 'pro',
-    summaryFr: 'Audit stratégique IA : SEO, GEO et concurrence. Réservé Pro Agency. Entrée : url, sector facultatif.',
-    summaryEn: 'Strategic AI audit: SEO, GEO and competitive. Pro Agency required. Input: url, optional sector.',
+    summaryFr: 'Lance un audit stratégique IA (SEO, GEO et concurrence) et renvoie un job_id à suivre avec get_audit_job. sync: true force le mode bloquant. Réservé Pro Agency. Entrée : url, sector et lang facultatifs.',
+    summaryEn: 'Starts a strategic AI audit (SEO, GEO and competitive) and returns a job_id to poll with get_audit_job. sync: true forces the blocking call. Pro Agency required. Input: url, optional sector and lang.',
+  },
+  {
+    name: 'get_audit_job',
+    access: 'auth',
+    summaryFr: 'Statut et résultat d’un audit lancé par expert_seo_audit ou strategic_ai_audit, réservé au compte propriétaire. Authentification requise. Gratuit, hors quota DataForSEO. Entrée : job_id.',
+    summaryEn: 'Status and result of an audit started by expert_seo_audit or strategic_ai_audit, limited to the owning account. Authentication required. Free, outside the DataForSEO quota. Input: job_id.',
+  },
+  {
+    name: 'keyword_research',
+    access: 'pro',
+    summaryFr: 'Idées de mots-clés Google (volume et difficulté Labs de 0 à 100). France et fr par défaut, 5 graines maximum, 15 résultats par défaut et 25 au maximum. Pro Agency, lecture seule, 30 appels par heure.',
+    summaryEn: 'Google keyword ideas (volume and Labs difficulty from 0 to 100). France and fr by default, up to 5 seeds, 15 results by default and 25 at most. Pro Agency, read-only, 30 calls per hour.',
+  },
+  {
+    name: 'serp_ranking',
+    access: 'pro',
+    summaryFr: 'SERP Google organique d’un mot-clé, et position d’un domaine s’il est fourni. France et fr par défaut, profondeur 10 ou 20 (10 par défaut). Pro Agency, lecture seule, 30 appels par heure. Entrée : keyword.',
+    summaryEn: 'Live Google organic SERP for a keyword, and a domain’s position when one is given. France and fr by default, depth 10 or 20 (default 10). Pro Agency, read-only, 30 calls per hour. Input: keyword.',
+  },
+  {
+    name: 'backlink_snapshot',
+    access: 'pro',
+    summaryFr: 'Résumé des backlinks, domaines référents et ancres d’un domaine. 10 lignes par défaut, 20 au maximum pour les référents et pour les ancres. Pro Agency, lecture seule, 30 appels par heure. Entrée : domain.',
+    summaryEn: 'Summary of a domain’s backlinks, referring domains and anchors. 10 rows by default, 20 at most for referrers and for anchors. Pro Agency, read-only, 30 calls per hour. Input: domain.',
   },
   {
     name: 'generate_corrective_code',
@@ -166,6 +188,7 @@ export const MCP_SERVER_TOOLS: McpServerTool[] = [
 export const MCP_SERVER_ACCESS_FR: Record<McpServerAccess, string> = {
   free: 'Sans clé',
   pro: 'Pro Agency',
+  auth: 'Clé ou JWT, gratuit',
   marina: 'Clé Marina ou JWT',
   gsc: 'Admin, lecture seule',
 };
@@ -173,11 +196,12 @@ export const MCP_SERVER_ACCESS_FR: Record<McpServerAccess, string> = {
 export const MCP_SERVER_ACCESS_EN: Record<McpServerAccess, string> = {
   free: 'No key',
   pro: 'Pro Agency',
+  auth: 'Key or JWT, free',
   marina: 'Marina key or JWT',
   gsc: 'Admin, read-only',
 };
 
-/** Outils du serveur OAuth `mcp` (src/lib/mcp), hors serp_ranking. */
+/** Outils du serveur OAuth `mcp` (src/lib/mcp), y compris serp_ranking. */
 export const MCP_OAUTH_TOOLS: { name: string; summaryFr: string; summaryEn: string }[] = [
   {
     name: 'whoami',
@@ -244,10 +268,15 @@ export const MCP_OAUTH_TOOLS: { name: string; summaryFr: string; summaryEn: stri
     summaryFr: 'Compare le domaine à 1 à 3 concurrents et renvoie un job_id.',
     summaryEn: 'Compares the domain with 1 to 3 competitors and returns a job_id.',
   },
+  {
+    name: 'serp_ranking',
+    summaryFr: 'Relève les positions SERP d’un mot-clé auprès de plusieurs fournisseurs. Toujours facturé au wallet. Renvoie un job_id. Entrée : keyword, domain et location facultatifs.',
+    summaryEn: 'Collects SERP positions for a keyword from several data providers. Always billed to the wallet. Returns a job_id. Input: keyword, optional domain and location.',
+  },
 ];
 
 export const MCP_SERVER_COUNT_FR =
-  '23 outils enregistrés : 3 sans clé, 9 Pro Agency, 4 Marina, 7 Search Console réservés aux administrateurs (lecture seule).';
+  '27 outils enregistrés (mcp-server 1.2.0) : 3 sans clé, 12 Pro Agency, get_audit_job authentifié et gratuit, 4 Marina, 7 Search Console réservés aux administrateurs (lecture seule).';
 
 export const MCP_SERVER_COUNT_EN =
-  '23 registered tools: 3 with no key, 9 Pro Agency, 4 Marina, 7 Search Console tools reserved for admins (read-only).';
+  '27 registered tools (mcp-server 1.2.0): 3 with no key, 12 Pro Agency, get_audit_job authenticated and free, 4 Marina, 7 Search Console tools reserved for admins (read-only).';

@@ -582,8 +582,12 @@ const DOC_SECTIONS: DocSection[] = [
         id: 'mcp-outils-pro',
         title: 'Outils MCP Pro Agency (clé Marina ou JWT requis)',
         content: `<ul class="list-disc pl-6 space-y-1">
-<li><strong>expert_seo_audit</strong> — Audit SEO 200 points</li>
-<li><strong>strategic_ai_audit</strong> — Audit stratégique IA multi-axes</li>
+<li><strong>expert_seo_audit</strong> — Lance l'audit SEO 200 points et renvoie un <code>job_id</code> (le résultat se lit avec <code>get_audit_job</code> ; <code>sync: true</code> garde l'appel bloquant)</li>
+<li><strong>strategic_ai_audit</strong> — Lance l'audit stratégique IA et renvoie un <code>job_id</code> (même récupération)</li>
+<li><strong>get_audit_job</strong> — Statut et résultat d’un audit du compte. Authentifié, gratuit, hors quota DataForSEO (ce n’est pas une barrière Pro Agency)</li>
+<li><strong>keyword_research</strong> — Idées de mots-clés, volume et difficulté (France / fr par défaut, 25 résultats max)</li>
+<li><strong>serp_ranking</strong> — SERP Google organique d'un mot-clé et position d'un domaine</li>
+<li><strong>backlink_snapshot</strong> — Résumé backlinks, domaines référents et ancres</li>
 <li><strong>generate_corrective_code</strong> — Génération de code correctif JS</li>
 <li><strong>dry_run_script</strong> — Test sandbox avant déploiement</li>
 <li><strong>calculate_cocoon_logic</strong> — Cocon sémantique TF-IDF</li>
@@ -599,7 +603,7 @@ const DOC_SECTIONS: DocSection[] = [
         title: 'Comment utiliser le MCP avec Claude ?',
         content: `<ol class="list-decimal pl-6 space-y-1">
 <li>Configurez le serveur MCP dans votre client Claude avec l'endpoint Crawlers</li>
-<li>Claude découvre les 23 outils enregistrés (3 sans clé, 9 Pro Agency, 4 Marina, 7 Search Console réservés aux administrateurs)</li>
+<li>Claude découvre les 27 outils enregistrés (mcp-server 1.2.0 : 3 sans clé, 12 Pro Agency, get_audit_job authentifié et gratuit, 4 Marina, 7 Search Console réservés aux administrateurs)</li>
 <li>Demandez en langage naturel : « Audite le site example.com »</li>
 <li>Claude appelle les outils Crawlers et synthétise les résultats</li>
 </ol>
@@ -607,7 +611,7 @@ const DOC_SECTIONS: DocSection[] = [
 <p class="mt-4 font-semibold">Outils Marina via MCP</p>
 <p class="mt-1">Endpoint <code>https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code>, en-tête <code>x-marina-key: &lt;clé&gt;</code> ou <code>Authorization: Bearer &lt;clé&gt;</code> (Console crawlers.fr → API → Marina ; préfixes <code>marina_</code> et <code>mk_live_</code>). Outils : marina_create_report, marina_get_report, marina_list_jobs, marina_export_pdf (PDF, lien 7 jours). 5 crédits par rapport, ou inclus avec Pro Agency actif ; solde insuffisant = JSON-RPC -32002, aucun job créé. Sans clé, seuls check_geo_score, check_llm_visibility et check_ai_crawlers fonctionnent ; Marina renvoie JSON-RPC -32001.</p>
 <p class="mt-2">Sept outils Search Console, réservés aux administrateurs et en lecture seule : gsc_list_sites, gsc_search_analytics, gsc_top_queries, gsc_top_pages, gsc_position_history, gsc_url_inspection, gsc_list_sitemaps.</p>
-<p class="mt-2">Un second serveur (<code>supabase/functions/mcp</code>, OAuth 2.1) enregistre d’autres outils : whoami, list_my_sites, get_site_audit, get_job, get_wallet_balance, list_tools_pricing, audit_page, analyze_schema, check_indexability, analyze_links, start_site_crawl, start_geo_audit, start_competitor_matrix. Un outil supplémentaire de ce serveur n’est pas annoncé ici.</p>
+<p class="mt-2">Un second serveur (<code>supabase/functions/mcp</code>, OAuth 2.1) enregistre d’autres outils : whoami, list_my_sites, get_site_audit, get_job, get_wallet_balance, list_tools_pricing, audit_page, analyze_schema, check_indexability, analyze_links, start_site_crawl, start_geo_audit, start_competitor_matrix, serp_ranking (toujours facturé au wallet). Ce n’est pas l’endpoint mcp-server.</p>
 <p class="mt-2">Le futur proxy <code>https://crawlers.fr/functions/v1/mcp-server</code> n’est pas déployé ni connectable : prochainement via proxy Cloudflare.</p>`,
       },
     ],
