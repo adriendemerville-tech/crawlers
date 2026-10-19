@@ -353,10 +353,24 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         headers: { Location: `${redirectBase}/console?gsc_error=internal` },
       });
     }
+  };
+
+  // ═══════════════════════════════════════════════════════════════════
+  // GET: Legacy server-side OAuth callback from Google (stays functional)
+  // Google redirects here with ?code=...&state=user_id|frontend_origin
+  // ═══════════════════════════════════════════════════════════════════
+  if (req.method === 'GET') {
+    const url = new URL(req.url);
+    return runOAuthCallback(
+      url.searchParams.get('code'),
+      url.searchParams.get('state') || '',
+      url.searchParams.get('error'),
+      LEGACY_REDIRECT_URI,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // POST: API calls (login, fetch)
+  // POST: API calls (login, exchange, fetch)
   // ═══════════════════════════════════════════════════════════════════
   try {
     const { action, site_url, user_id: body_user_id, frontend_origin, start_date, end_date, connection_id, google_email, modules, extra_scopes } = await req.json();
