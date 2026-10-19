@@ -7,6 +7,14 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { MARINA_MCP_REPORT_COST, checkMarinaEntitlement, chargeMarinaReport, refundMarinaReport } from "../_shared/marinaBilling.ts";
+import { resolveGoogleToken } from "../_shared/resolveGoogleToken.ts";
+import { resolveGscAccess } from "../_shared/gscQuery.ts";
+import {
+  allowedDomains, normalizeSiteInput, isAllowedSite, filterAllowedProperties,
+  decideGscAccess, validateSearchAnalytics, validateTop, validateHistory, validateInspection,
+  mapGoogleError, computeTotals, computeTopWithDeltas, shiftDays,
+  type GscCaller, type AnalyticsRow,
+} from "../_shared/gscMcpCore.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const FREE_TOOLS = new Set(['check_geo_score', 'check_llm_visibility', 'check_ai_crawlers']);
