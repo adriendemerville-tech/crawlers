@@ -1,7 +1,7 @@
 {
   "name": "Crawlers.fr",
   "description": "SEO & GEO audit platform — score, analyze and auto-fix your site visibility in Google and AI engines. Covers classic SEO, Generative Engine Optimization (GEO), and Local SEO in one tool.",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "author": "Adrien de Volontat",
   "homepage": "https://crawlers.fr",
   "repository": "https://github.com/crawlers-fr",
@@ -51,27 +51,90 @@
     },
     {
       "name": "expert_seo_audit",
-      "description": "Run a comprehensive 200-point SEO audit on a URL. Covers technical SEO, on-page optimization, structured data, Core Web Vitals, accessibility, and security. Returns detailed scores and actionable recommendations.",
+      "description": "Lance un audit SEO 200 points. Réponse immédiate : job_id. Récupérer le résultat avec get_audit_job. sync=true conserve l'appel bloquant (dépasse ~60 s).",
       "tier": "pro",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "url": { "type": "string", "description": "Full URL to audit (e.g. https://example.com/page)" }
+          "url": { "type": "string", "description": "URL à auditer (un domaine nu est préfixé https://)" },
+          "lang": { "type": "string", "enum": ["fr", "en", "es"] },
+          "sync": { "type": "boolean", "description": "true = réponse bloquante historique" }
         },
         "required": ["url"]
       }
     },
     {
       "name": "strategic_ai_audit",
-      "description": "Run a strategic AI-powered audit combining SEO signals, GEO readiness, competitive positioning, and content gap analysis. Uses LLM reasoning to produce prioritized recommendations.",
+      "description": "Lance un audit stratégique IA (SEO, GEO, concurrence). Réponse immédiate : job_id. Récupérer le résultat avec get_audit_job. sync=true conserve l'appel bloquant.",
       "tier": "pro",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "url": { "type": "string", "description": "Full URL to audit" },
-          "sector": { "type": "string", "description": "Business sector for competitive context (optional)" }
+          "url": { "type": "string", "description": "URL à auditer" },
+          "sector": { "type": "string", "description": "Secteur pour le contexte concurrentiel (optionnel)" },
+          "lang": { "type": "string", "enum": ["fr", "en", "es"] },
+          "sync": { "type": "boolean", "description": "true = réponse bloquante historique" }
         },
         "required": ["url"]
+      }
+    },
+    {
+      "name": "get_audit_job",
+      "description": "Statut et résultat d'un job expert_seo_audit ou strategic_ai_audit appartenant à l'appelant.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "job_id": { "type": "string", "description": "UUID renvoyé au lancement" }
+        },
+        "required": ["job_id"]
+      }
+    },
+    {
+      "name": "keyword_research",
+      "description": "Idées de mots-clés, volume et difficulté Labs (0-100). Défaut France / fr. Lecture seule.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "keyword": { "type": "string", "description": "Graine unique" },
+          "keywords": { "type": "array", "items": { "type": "string" }, "maxItems": 5, "description": "1 à 5 graines" },
+          "language_code": { "type": "string", "default": "fr" },
+          "country": { "type": "string", "default": "fr", "description": "fr, be, ch, ca, lu, de, gb, us, es, it" },
+          "location_code": { "type": "integer", "description": "Code DataForSEO, défaut 2250 (France)" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 25, "default": 15 }
+        }
+      }
+    },
+    {
+      "name": "serp_ranking",
+      "description": "SERP Google organique pour un mot-clé, et position du domaine s'il est fourni. Lecture seule.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "keyword": { "type": "string" },
+          "domain": { "type": "string" },
+          "language_code": { "type": "string", "default": "fr" },
+          "country": { "type": "string", "default": "fr" },
+          "location_code": { "type": "integer" },
+          "depth": { "type": "integer", "enum": [10, 20], "default": 10 }
+        },
+        "required": ["keyword"]
+      }
+    },
+    {
+      "name": "backlink_snapshot",
+      "description": "Résumé backlinks, domaines référents et ancres d'un domaine. Lecture seule.",
+      "tier": "pro",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": { "type": "string" },
+          "referring_limit": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10 },
+          "anchor_limit": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10 }
+        },
+        "required": ["domain"]
       }
     },
     {

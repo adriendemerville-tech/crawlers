@@ -23,6 +23,7 @@ import { handleRequest } from '../_shared/serveHandler.ts';
 import { applyMarketWeighting } from '../_shared/marketPriority.ts';
 import { buildAeoRewrite, writeAeoRewritePrescriptions } from '../_shared/aeoRewrites.ts';
 import { stripBoilerplate } from '../_shared/contentIntegrity/normalize.ts';
+import { keepAlive, startDetachedAudit } from '../_shared/mcpAuditJob.ts';
 
 
 // ── Shared strategic audit modules ──
@@ -89,6 +90,8 @@ Deno.serve(handleRequest(async (req) => {
 
   try {
     const body = await req.json();
+    const detached = startDetachedAudit('audit-strategique-ia', body);
+    if (detached) return detached;
     const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, lang } = body;
     const asyncMode = body.async === true;
     const outputLang = lang || 'fr';
@@ -110,10 +113,11 @@ Deno.serve(handleRequest(async (req) => {
       const { data: job, error: jobError } = await sb.from('async_jobs').insert({ user_id: user.id, function_name: 'audit-strategique-ia', status: 'pending', input_payload: { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, lang } }).select('id').single();
       if (jobError || !job) return json({ error: 'Failed to create job' }, 500);
 
-      fetch(`${supabaseUrl}/functions/v1/audit-strategique-ia`, {
+      const selfInvoke = fetch(`${supabaseUrl}/functions/v1/audit-strategique-ia`, {
         method: 'POST', headers: { 'Authorization': `Bearer ${serviceKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...body, async: false, _job_id: job.id }),
       }).catch(err => console.error('[audit-strategique-ia] Async self-invoke failed:', err));
+      keepAlive(selfInvoke);
 
       return json({ job_id: job.id, status: 'pending' }, 202);
     }

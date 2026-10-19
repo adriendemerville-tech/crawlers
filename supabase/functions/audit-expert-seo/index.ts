@@ -15,6 +15,7 @@ import { measurePerformance, measureTtfbDirect } from '../_shared/perfMeasuremen
 import { computeCruxWeighting } from '../_shared/cruxWeighting.ts';
 import { geoFactsFromExpertAudit, expertFactsFromAuditPayload } from '../_shared/geoFactsFromExpertAudit.ts';
 import { buildGeoSubSignals } from '../_shared/geoSubSignals.ts';
+import { isUuid, persistAuditResult, startDetachedAudit, updateAuditJob } from '../_shared/mcpAuditJob.ts';
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
@@ -2129,27 +2130,38 @@ Deno.serve(handleRequest(async (req) => {
 
   if (!acquireConcurrency('audit-expert-seo', 40)) return concurrencyResponse(corsHeaders);
 
+  let mcpJobId: string | undefined;
+  const respond = async (payload: unknown, status = 200) => {
+    await persistAuditResult(mcpJobId, payload, status);
+    return new Response(JSON.stringify(payload), {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  };
+
   try {
-    const { url, lang } = await req.json();
+    const body = await req.json();
+    const detached = startDetachedAudit('audit-expert-seo', body);
+    if (detached) return detached;
+
+    const { url, lang } = body as { url?: string; lang?: string };
     const outputLang = lang || 'fr';
+    mcpJobId = isUuid((body as { _job_id?: unknown })._job_id) ? (body as { _job_id: string })._job_id : undefined;
+    if (mcpJobId) {
+      await updateAuditJob(mcpJobId, { status: 'processing', started_at: new Date().toISOString(), progress: 5 });
+    }
     
     if (!url) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'URL is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return respond({ success: false, error: 'URL is required' }, 400);
     }
     
     // Validation de base de l'URL
     const trimmedUrl = url.trim();
     if (trimmedUrl.length < 4 || !trimmedUrl.includes('.')) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `URL invalide: "${trimmedUrl}" n'est pas une adresse web valide. Veuillez entrer une URL complète (ex: example.com)`
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return respond({
+        success: false,
+        error: `URL invalide: "${trimmedUrl}" n'est pas une adresse web valide. Veuillez entrer une URL complète (ex: example.com)`,
+      }, 200);
     }
     
     // Étape 1: Normalisation et résolution de l'URL
@@ -2187,45 +2199,36 @@ Deno.serve(handleRequest(async (req) => {
           console.log('[SmartFetch] ✅ Succès avec www');
         } catch {
           // Échec définitif
-          return new Response(
-            JSON.stringify({ 
-              success: false, 
-              error: isConnectionError 
-                ? `Site inaccessible: Le serveur de "${domain}" ne répond pas. Vérifiez que l'URL est correcte et que le site est en ligne.`
-                : `Impossible d'accéder à "${domain}": ${errorMessage}. Vérifiez l'orthographe de l'URL.` 
-            }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          return respond({
+            success: false,
+            error: isConnectionError
+              ? `Site inaccessible: Le serveur de "${domain}" ne répond pas. Vérifiez que l'URL est correcte et que le site est en ligne.`
+              : `Impossible d'accéder à "${domain}": ${errorMessage}. Vérifiez l'orthographe de l'URL.`,
+          }, 200);
         }
       } else {
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: isConnectionError 
-              ? `Site inaccessible: Le serveur de "${domain}" ne répond pas. Vérifiez que l'URL est correcte et que le site est en ligne.`
-              : `Impossible d'accéder à "${domain}": ${errorMessage}. Vérifiez l'orthographe de l'URL.` 
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return respond({
+          success: false,
+          error: isConnectionError
+            ? `Site inaccessible: Le serveur de "${domain}" ne répond pas. Vérifiez que l'URL est correcte et que le site est en ligne.`
+            : `Impossible d'accéder à "${domain}": ${errorMessage}. Vérifiez l'orthographe de l'URL.`,
+        }, 200);
       }
     }
     
     // Check for blocking error
     if (!smartFetchResult.selfAudit.isReliable && smartFetchResult.selfAudit.reliabilityScore < 0.4) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'RENDERING_REQUIRED',
-          message: smartFetchResult.selfAudit.reason,
-          meta: {
-            scannedAt: new Date().toISOString(),
-            renderingMode: smartFetchResult.renderingMode,
-            reliabilityScore: smartFetchResult.selfAudit.reliabilityScore,
-            blockingError: smartFetchResult.selfAudit.reason
-          }
-        }),
-        { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return respond({
+        success: false,
+        error: 'RENDERING_REQUIRED',
+        message: smartFetchResult.selfAudit.reason,
+        meta: {
+          scannedAt: new Date().toISOString(),
+          renderingMode: smartFetchResult.renderingMode,
+          reliabilityScore: smartFetchResult.selfAudit.reliabilityScore,
+          blockingError: smartFetchResult.selfAudit.reason
+        }
+      }, 422);
     }
     
     // Step 2: Run all checks in parallel (including broken links)
@@ -2715,17 +2718,11 @@ Deno.serve(handleRequest(async (req) => {
       }
     } catch {}
 
-    return new Response(
-      JSON.stringify(responseData),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return respond(responseData, 200);
     
   } catch (error) {
     console.error('[AUDIT-EXPERT-SEO] Erreur:', error);
-    return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Audit failed' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return respond({ success: false, error: error instanceof Error ? error.message : 'Audit failed' }, 500);
   } finally {
     releaseConcurrency('audit-expert-seo');
   }
