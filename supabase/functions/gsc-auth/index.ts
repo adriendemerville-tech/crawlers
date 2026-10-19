@@ -450,6 +450,23 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
       });
     }
 
+    // === EXCHANGE: front-page callback (https://crawlers.fr/oauth/google/callback) ===
+    // The front page receives code/state/error from Google and POSTs them here.
+    // Uses the same redirect_uri as the authorization request (REDIRECT_URI).
+    if (action === 'exchange') {
+      const body = await req.clone().json().catch(() => ({} as any));
+      const resp = await runOAuthCallback(
+        typeof body.code === 'string' ? body.code : null,
+        typeof body.state === 'string' ? body.state : '',
+        typeof body.error === 'string' ? body.error : null,
+        REDIRECT_URI,
+      );
+      const location = resp.headers.get('Location') || 'https://crawlers.fr/console?gsc_error=internal';
+      return new Response(JSON.stringify({ redirect_url: location }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // === STATUS: Check connection status for a user ===
     if (action === 'status') {
       if (!user_id) {
