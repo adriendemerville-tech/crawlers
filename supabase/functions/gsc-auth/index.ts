@@ -373,7 +373,7 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
   // POST: API calls (login, exchange, fetch)
   // ═══════════════════════════════════════════════════════════════════
   try {
-    const { action, site_url, user_id: body_user_id, frontend_origin, start_date, end_date, connection_id, google_email, modules } = await req.json();
+    const { action, site_url, user_id: body_user_id, frontend_origin, start_date, end_date, connection_id, google_email, modules, code, state, error: oauth_error } = await req.json();
 
     // ─── SECURITY: Validate JWT and enforce real user_id ─────────
     const authHeader = req.headers.get('Authorization') || '';
@@ -454,11 +454,10 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
     // The front page receives code/state/error from Google and POSTs them here.
     // Uses the same redirect_uri as the authorization request (REDIRECT_URI).
     if (action === 'exchange') {
-      const body = await req.clone().json().catch(() => ({} as any));
       const resp = await runOAuthCallback(
-        typeof body.code === 'string' ? body.code : null,
-        typeof body.state === 'string' ? body.state : '',
-        typeof body.error === 'string' ? body.error : null,
+        typeof code === 'string' ? code : null,
+        typeof state === 'string' ? state : '',
+        typeof oauth_error === 'string' ? oauth_error : null,
         REDIRECT_URI,
       );
       const location = resp.headers.get('Location') || 'https://crawlers.fr/console?gsc_error=internal';
