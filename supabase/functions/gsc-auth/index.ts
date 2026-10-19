@@ -16,8 +16,25 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
   const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 
-  // The canonical redirect URI registered in Google Cloud Console
-  const REDIRECT_URI = `${supabaseUrl}/functions/v1/gsc-auth`;
+  // Redirect URIs: legacy server-side callback (GET on this function) stays functional;
+  // GOOGLE_GSC_REDIRECT_URI can point to the front page https://crawlers.fr/oauth/google/callback
+  const LEGACY_REDIRECT_URI = `${supabaseUrl}/functions/v1/gsc-auth`;
+  const REDIRECT_URI = Deno.env.get('GOOGLE_GSC_REDIRECT_URI') || LEGACY_REDIRECT_URI;
+
+  // Exact whitelist for post-OAuth redirect origins
+  const ALLOWED_RETURN_ORIGINS = new Set([
+    'https://crawlers.fr',
+    'https://www.crawlers.fr',
+    'http://localhost:8080',
+    'http://localhost:5173',
+  ]);
+  const safeRedirectBase = (origin: string | undefined): string => {
+    if (!origin) return 'https://crawlers.fr';
+    if (ALLOWED_RETURN_ORIGINS.has(origin)) return origin;
+    // Lovable preview origins: https://id-preview--<uuid>.lovable.app
+    if (/^https:\/\/[a-z0-9-]+--[a-z0-9-]+\.lovable\.app$/.test(origin)) return origin;
+    return 'https://crawlers.fr';
+  };
 
   if (!clientId || !clientSecret) {
     return jsonError('Google GSC credentials not configured', 500);
