@@ -381,53 +381,37 @@ const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
       user_id = user.id;
     }
 
-    // Check if full Google access is enabled via system_config
     const supabase = getServiceClient();
-    let fullGoogleAccess = false;
-    const { data: accessConfig } = await supabase
-      .from('system_config')
-      .select('value')
-      .eq('key', 'ga4_oauth_enabled')
-      .maybeSingle();
-    if (accessConfig?.value && typeof accessConfig.value === 'object' && (accessConfig.value as any).active === true) {
-      fullGoogleAccess = true;
-    }
 
-    // === LOGIN: Generate OAuth URL (UNIFIED — accepts modules[] or extra_scopes[]) ===
+    // === LOGIN: Generate OAuth URL (progressive scopes — only requested modules[]) ===
     if (action === 'login') {
       // state format: "user_id|frontend_origin" — backward compatible
       const stateValue = `${user_id || ''}|${frontend_origin || ''}`;
 
-      // Map module aliases → Google scopes (frontend can request "ads", "gmb", "ga4", "gsc", "gtm", "indexing")
+      // Module aliases → Google scopes. MODULE_SCOPES is the single source of truth;
+      // unknown modules are ignored. The indexing module was removed (scope retired).
       const MODULE_SCOPES: Record<string, string[]> = {
         gsc: ['https://www.googleapis.com/auth/webmasters.readonly'],
         ga4: ['https://www.googleapis.com/auth/analytics.readonly'],
         gmb: ['https://www.googleapis.com/auth/business.manage'],
-        ads: ['https://www.googleapis.com/auth/adwords', 'https://www.googleapis.com/auth/userinfo.email'],
+        ads: ['https://www.googleapis.com/auth/adwords'],
         gtm: [
           'https://www.googleapis.com/auth/tagmanager.edit.containers',
           'https://www.googleapis.com/auth/tagmanager.publish',
         ],
-        indexing: ['https://www.googleapis.com/auth/indexing'],
       };
 
-      // Always include GSC (legacy default for this endpoint)
-      const scopeSet = new Set<string>(['https://www.googleapis.com/auth/webmasters.readonly']);
+      // Non-sensitive scopes always requested (openid/email → google_email no longer "unknown")
+      const scopeSet = new Set<string>(['openid', 'email']);
 
-      // Mode 1: explicit modules[] from frontend (e.g. ["gsc","ga4","ads"])
       if (Array.isArray(modules) && modules.length > 0) {
         for (const m of modules) {
           const s = MODULE_SCOPES[String(m).toLowerCase()];
           if (s) s.forEach(v => scopeSet.add(v));
         }
-      } else if (fullGoogleAccess) {
-        // Mode 2: legacy "full access" flag — request everything except Ads (still gated)
-        ['ga4', 'gtm', 'gmb', 'indexing'].forEach(k => MODULE_SCOPES[k].forEach(v => scopeSet.add(v)));
-      }
-
-      // Mode 3: explicit extra_scopes[] (escape hatch)
-      if (Array.isArray(extra_scopes)) {
-        for (const s of extra_scopes) if (typeof s === 'string') scopeSet.add(s);
+      } else {
+        // Default: GSC only (legacy behavior for this endpoint)
+        MODULE_SCOPES.gsc.forEach(v => scopeSet.add(v));
       }
 
       const params = new URLSearchParams({
