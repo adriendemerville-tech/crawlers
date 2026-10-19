@@ -499,7 +499,7 @@ export function ExternalApisTab({ onConnectionChange }: { onConnectionChange?: (
       try {
         const { data: { user } } = await supabase.auth.getUser();
         const { data, error } = await supabase.functions.invoke('gsc-auth', {
-          body: { action: 'login', user_id: user?.id, frontend_origin: window.location.origin },
+          body: { action: 'login', user_id: user?.id, frontend_origin: window.location.origin, modules: [service.id] },
         });
         if (error) throw error;
         if (data?.auth_url) window.location.href = data.auth_url;
