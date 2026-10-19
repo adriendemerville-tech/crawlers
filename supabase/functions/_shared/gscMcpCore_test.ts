@@ -19,7 +19,32 @@ import {
   defaultWindow,
   todayUtc,
   shiftDays,
+  gscRequestUrl,
+  trackedSiteDomainVariants,
 } from './gscMcpCore.ts';
+
+Deno.test('gscRequestUrl : inspection sur Search Console', () => {
+  assertEquals(gscRequestUrl('/v1/urlInspection/index:inspect'),
+    'https://searchconsole.googleapis.com/v1/urlInspection/index:inspect');
+});
+
+Deno.test('gscRequestUrl : autres outils sur Webmasters v3', () => {
+  for (const path of [
+    '/webmasters/v3/sites',
+    '/webmasters/v3/sites/sc-domain%3Acrawlers.fr/searchAnalytics/query',
+    '/webmasters/v3/sites/sc-domain%3Acrawlers.fr/sitemaps',
+  ]) {
+    assertEquals(gscRequestUrl(path), `https://www.googleapis.com${path}`);
+  }
+});
+
+Deno.test('trackedSiteDomainVariants : domaine nu et www pour chaque domaine autorisé', () => {
+  for (const domain of allowedDomains(null)) {
+    assertEquals(trackedSiteDomainVariants(domain), [domain, `www.${domain}`]);
+    assertEquals(trackedSiteDomainVariants(normalizeSiteInput(`https://www.${domain}/`) ?? ''),
+      [domain, `www.${domain}`]);
+  }
+});
 
 // ── Liste blanche ────────────────────────────────────────────
 

@@ -13,6 +13,7 @@ import {
   allowedDomains, normalizeSiteInput, isAllowedSite, filterAllowedProperties,
   decideGscAccess, validateSearchAnalytics, validateTop, validateHistory, validateInspection,
   mapGoogleError, computeTotals, computeTopWithDeltas, shiftDays,
+  gscRequestUrl, trackedSiteDomainVariants,
   type GscCaller, type AnalyticsRow,
 } from "../_shared/gscMcpCore.ts";
 
@@ -447,7 +448,7 @@ async function callerGoogleToken(c: Caller, domain: string): Promise<string> {
 }
 
 async function gscFetch(token: string, path: string, init: RequestInit = {}): Promise<any> {
-  const res = await fetch(`https://www.googleapis.com${path}`, {
+  const res = await fetch(gscRequestUrl(path), {
     ...init,
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(init.headers ?? {}) },
     signal: AbortSignal.timeout(GSC_TIMEOUT_MS),
@@ -544,7 +545,8 @@ async function gscPositionHistory(args: Record<string, unknown>) {
   const bare = requireAllowedSite(v.site);
   const sb = getServiceClient();
   // Site suivi appartenant à l'appelant : jamais de user_id venant du client.
-  const { data: site } = await sb.from('tracked_sites').select('id').eq('user_id', c.userId).eq('domain', bare).maybeSingle();
+  const { data: site } = await sb.from('tracked_sites').select('id').eq('user_id', c.userId)
+    .in('domain', trackedSiteDomainVariants(bare)).order('domain', { ascending: true }).limit(1).maybeSingle();
   if (!site) throw new RpcError(-32003, 'Propriété non autorisée');
   const since = shiftDays(new Date().toISOString().slice(0, 10), -v.days);
   let q = sb.from('gsc_daily_positions')

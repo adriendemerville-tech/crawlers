@@ -11,6 +11,18 @@ export interface GscToolError {
   message: string;
 }
 
+export function gscRequestUrl(path: string): string {
+  const origin = path === '/v1/urlInspection/index:inspect'
+    ? 'https://searchconsole.googleapis.com'
+    : 'https://www.googleapis.com';
+  return `${origin}${path}`;
+}
+
+/** Variantes de stockage pour un domaine déjà normalisé et autorisé. */
+export function trackedSiteDomainVariants(bare: string): string[] {
+  return [bare, `www.${bare}`];
+}
+
 // ── Liste blanche ────────────────────────────────────────────
 
 const DEFAULT_ALLOWED_DOMAINS = ['dictadevi.io', 'crawlers.fr', 'iktracker.fr'];
