@@ -7,6 +7,14 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { MARINA_MCP_REPORT_COST, checkMarinaEntitlement, chargeMarinaReport, refundMarinaReport } from "../_shared/marinaBilling.ts";
+import { resolveGoogleToken } from "../_shared/resolveGoogleToken.ts";
+import { resolveGscAccess } from "../_shared/gscQuery.ts";
+import {
+  allowedDomains, normalizeSiteInput, isAllowedSite, filterAllowedProperties,
+  decideGscAccess, validateSearchAnalytics, validateTop, validateHistory, validateInspection,
+  mapGoogleError, computeTotals, computeTopWithDeltas, shiftDays,
+  type GscCaller, type AnalyticsRow,
+} from "../_shared/gscMcpCore.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const FREE_TOOLS = new Set(['check_geo_score', 'check_llm_visibility', 'check_ai_crawlers']);
@@ -370,6 +378,247 @@ async function marinaExportPdf(args: Record<string, unknown>) {
   return textJson({ job_id: job.id, pdf_url: signed.signedUrl });
 }
 
+// ── Outils Search Console (lecture seule, admin uniquement) ─────
+
+const GSC_TIMEOUT_MS = 20000;
+
+/** Interrupteur serveur : les outils GSC ne répondent que si mcp_gsc_enabled === true. */
+async function gscEnabled(): Promise<boolean> {
+  try {
+    const { data } = await getServiceClient().from('system_config').select('value').eq('key', 'mcp_gsc_enabled').maybeSingle();
+    const v = (data as any)?.value;
+    return v === true || v === 'true';
+  } catch { return false; }
+}
+
+/** Services cochés sur la clé Marina de l'appelant (permission explicite `gsc`). */
+async function keyServices(key: string): Promise<string[]> {
+  const { data } = await getServiceClient().from('marina_api_keys').select('selected_services').eq('api_key', key).maybeSingle();
+  const s = (data as any)?.selected_services;
+  return Array.isArray(s) ? s.map(String) : [];
+}
+
+/**
+ * Garde commune des 6 outils GSC : interrupteur, auth, admin obligatoire,
+ * permission `gsc` sur la clé, quota 30/h. Retourne l'appelant ou jette un RpcError.
+ */
+async function requireGscCaller(tool: string, args: unknown, t0: number): Promise<Caller> {
+  if (!(await gscEnabled())) throw new RpcError(-32001, 'Outils GSC désactivés.');
+  let c: Caller | null | 'invalid_key' = null;
+  try { c = await resolveCaller(); } catch { c = null; }
+  if (!c || c === 'invalid_key') {
+    await log(null, tool, args, 'unauthorized', 'no auth', Date.now() - t0);
+    throw new RpcError(-32001, 'Authentification requise.');
+  }
+  const gscCaller: GscCaller = {
+    isAdmin: c.isAdmin,
+    via: c.via,
+    ...(c.via === 'key' ? { keyServices: await keyServices(c.key!) } : {}),
+  };
+  const denied = decideGscAccess(gscCaller);
+  if (denied) {
+    await log(c.userId, tool, args, 'forbidden', denied.message, Date.now() - t0);
+    throw new RpcError(denied.code, denied.message);
+  }
+  if (!(await rateOk(c.userId, tool))) {
+    await log(c.userId, tool, args, 'rate_limited', '30/h', Date.now() - t0);
+    throw new RpcError(-32002, 'Limite de 30 appels par heure atteinte.');
+  }
+  return c;
+}
+
+/** Domaine nu autorisé ou RpcError -32003, AVANT tout appel Google ou lecture base. */
+function requireAllowedSite(site: unknown): string {
+  const bare = normalizeSiteInput(site);
+  if (!bare || !isAllowedSite(site, allowedDomains(Deno.env.get('MCP_GSC_ALLOWED_SITES')))) {
+    throw new RpcError(-32003, 'Propriété non autorisée');
+  }
+  return bare;
+}
+
+/** Token Google de l'appelant uniquement (jamais celui d'un autre utilisateur). */
+async function callerGoogleToken(c: Caller, domain: string): Promise<string> {
+  const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
+  const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
+  if (!clientId || !clientSecret) throw new RpcError(-32603, 'Connexion Google non configurée.');
+  const resolved = await resolveGoogleToken(getServiceClient(), c.userId, domain, clientId, clientSecret);
+  if (!resolved?.access_token) throw new RpcError(-32001, 'Connexion Google expirée ou droits insuffisants : reconnecte Google dans Console');
+  return resolved.access_token;
+}
+
+async function gscFetch(token: string, path: string, init: RequestInit = {}): Promise<any> {
+  const res = await fetch(`https://www.googleapis.com${path}`, {
+    ...init,
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(init.headers ?? {}) },
+    signal: AbortSignal.timeout(GSC_TIMEOUT_MS),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const err = mapGoogleError(res.status, body, res.headers.get('Retry-After'));
+    throw new RpcError(err.code, err.message);
+  }
+  return res.json();
+}
+
+const gscPost = (token: string, path: string, body: unknown) =>
+  gscFetch(token, path, { method: 'POST', body: JSON.stringify(body) });
+
+async function gscListSites() {
+  const tool = 'gsc_list_sites'; const t0 = Date.now();
+  const c = await requireGscCaller(tool, {}, t0);
+  // Token résolu sur un domaine autorisé : la liste est ensuite filtrée par la liste blanche.
+  const domains = allowedDomains(Deno.env.get('MCP_GSC_ALLOWED_SITES'));
+  const token = await callerGoogleToken(c, domains[0]!);
+  const data = await gscFetch(token, '/webmasters/v3/sites');
+  const sites = filterAllowedProperties(data?.siteEntry ?? [], domains);
+  await log(c.userId, tool, {}, 'success', null, Date.now() - t0);
+  return textJson(sites);
+}
+
+function analyticsBody(v: { start_date: string; end_date: string; dimensions: string[]; filters: Array<{ dimension: string; operator: string; expression: string }>; search_type: string; row_limit: number; start_row: number }) {
+  return {
+    startDate: v.start_date,
+    endDate: v.end_date,
+    dimensions: v.dimensions,
+    type: v.search_type,
+    rowLimit: v.row_limit,
+    startRow: v.start_row,
+    ...(v.filters.length ? { dimensionFilterGroups: [{ groupType: 'and', filters: v.filters }] } : {}),
+  };
+}
+
+async function gscSearchAnalytics(args: Record<string, unknown>) {
+  const tool = 'gsc_search_analytics'; const t0 = Date.now();
+  const c = await requireGscCaller(tool, args, t0);
+  const v = validateSearchAnalytics(args);
+  if ('code' in v) throw new RpcError(v.code, v.message);
+  const bare = requireAllowedSite(v.site);
+  const access = await resolveGscAccess(getServiceClient(), c.userId, bare);
+  if (!access) throw new RpcError(-32001, 'Connexion Google expirée ou droits insuffisants : reconnecte Google dans Console');
+  const data = await gscPost(access.accessToken, `/webmasters/v3/sites/${encodeURIComponent(access.siteUrl)}/searchAnalytics/query`, analyticsBody(v));
+  const rows: AnalyticsRow[] = (data?.rows ?? []).map((r: any) => ({
+    keys: (r.keys ?? []).map(String),
+    clicks: r.clicks ?? 0,
+    impressions: r.impressions ?? 0,
+    ctr: r.ctr ?? 0,
+    position: r.position ?? 0,
+  }));
+  await log(c.userId, tool, args, 'success', null, Date.now() - t0);
+  return textJson({ site_url: access.siteUrl, start_date: v.start_date, end_date: v.end_date, rows, totals: computeTotals(rows) });
+}
+
+async function gscTop(dimension: 'query' | 'page', args: Record<string, unknown>) {
+  const tool = dimension === 'query' ? 'gsc_top_queries' : 'gsc_top_pages'; const t0 = Date.now();
+  const c = await requireGscCaller(tool, args, t0);
+  const v = validateTop(args);
+  if ('code' in v) throw new RpcError(v.code, v.message);
+  const bare = requireAllowedSite(v.site);
+  const access = await resolveGscAccess(getServiceClient(), c.userId, bare);
+  if (!access) throw new RpcError(-32001, 'Connexion Google expirée ou droits insuffisants : reconnecte Google dans Console');
+
+  const filters: Array<{ dimension: string; operator: string; expression: string }> = [];
+  if (v.country) filters.push({ dimension: 'country', operator: 'equals', expression: v.country });
+  if (v.device) filters.push({ dimension: 'device', operator: 'equals', expression: v.device.toUpperCase() });
+
+  const end = shiftDays(new Date().toISOString().slice(0, 10), -2);
+  const start = shiftDays(end, -(v.days - 1));
+  const prevEnd = shiftDays(start, -1);
+  const prevStart = shiftDays(prevEnd, -(v.days - 1));
+  const path = `/webmasters/v3/sites/${encodeURIComponent(access.siteUrl)}/searchAnalytics/query`;
+  const base = { dimensions: [dimension], type: 'web', rowLimit: 5000, startRow: 0, ...(filters.length ? { dimensionFilterGroups: [{ groupType: 'and', filters }] } : {}) };
+  const [cur, prev] = await Promise.all([
+    gscPost(access.accessToken, path, { ...base, startDate: start, endDate: end }),
+    gscPost(access.accessToken, path, { ...base, startDate: prevStart, endDate: prevEnd }),
+  ]);
+  const toRows = (d: any): AnalyticsRow[] => (d?.rows ?? []).map((r: any) => ({ keys: (r.keys ?? []).map(String), clicks: r.clicks ?? 0, impressions: r.impressions ?? 0, ctr: r.ctr ?? 0, position: r.position ?? 0 }));
+  const out = computeTopWithDeltas(toRows(cur), toRows(prev), v.limit);
+  await log(c.userId, tool, args, 'success', null, Date.now() - t0);
+  return textJson({ site_url: access.siteUrl, period: { start_date: start, end_date: end, days: v.days }, previous_period: { start_date: prevStart, end_date: prevEnd }, results: out });
+}
+
+async function gscPositionHistory(args: Record<string, unknown>) {
+  const tool = 'gsc_position_history'; const t0 = Date.now();
+  const c = await requireGscCaller(tool, args, t0);
+  const v = validateHistory(args);
+  if ('code' in v) throw new RpcError(v.code, v.message);
+  const bare = requireAllowedSite(v.site);
+  const sb = getServiceClient();
+  // Site suivi appartenant à l'appelant : jamais de user_id venant du client.
+  const { data: site } = await sb.from('tracked_sites').select('id').eq('user_id', c.userId).eq('domain', bare).maybeSingle();
+  if (!site) throw new RpcError(-32003, 'Propriété non autorisée');
+  const since = shiftDays(new Date().toISOString().slice(0, 10), -v.days);
+  let q = sb.from('gsc_daily_positions')
+    .select('query, position, clicks, date_val')
+    .eq('user_id', c.userId)
+    .eq('tracked_site_id', (site as any).id)
+    .gte('date_val', since)
+    .order('date_val', { ascending: true })
+    .limit(5000);
+  if (v.query) q = q.eq('query', v.query);
+  const { data, error } = await q;
+  if (error) throw new RpcError(-32603, `Lecture de l'historique impossible : ${error.message}`);
+  await log(c.userId, tool, args, 'success', null, Date.now() - t0);
+  return textJson({ domain: bare, days: v.days, series: (data ?? []).map((r: any) => ({ date: r.date_val, query: r.query, position: r.position, clicks: r.clicks })) });
+}
+
+async function gscUrlInspection(args: Record<string, unknown>) {
+  const tool = 'gsc_url_inspection'; const t0 = Date.now();
+  const c = await requireGscCaller(tool, args, t0);
+  const v = validateInspection(args);
+  if ('code' in v) throw new RpcError(v.code, v.message);
+  const bare = requireAllowedSite(v.site);
+  const access = await resolveGscAccess(getServiceClient(), c.userId, bare);
+  if (!access) throw new RpcError(-32001, 'Connexion Google expirée ou droits insuffisants : reconnecte Google dans Console');
+  const results = [];
+  for (const url of v.urls) {
+    const data = await gscPost(access.accessToken, '/v1/urlInspection/index:inspect', { inspectionUrl: url, siteUrl: access.siteUrl });
+    const r = data?.inspectionResult?.indexStatusResult ?? {};
+    const rich = data?.inspectionResult?.richResultsResult ?? {};
+    results.push({
+      url,
+      verdict: r.verdict ?? null,
+      coverage_state: r.coverageState ?? null,
+      indexing_state: r.indexingState ?? null,
+      last_crawl_time: r.lastCrawlTime ?? null,
+      robots_txt_state: r.robotsTxtState ?? null,
+      page_fetch_state: r.pageFetchState ?? null,
+      google_canonical: r.googleCanonical ?? null,
+      user_canonical: r.userCanonical ?? null,
+      crawled_as: r.crawledAs ?? null,
+      rich_results: {
+        verdict: rich.verdict ?? null,
+        types: (rich.detectedItems ?? []).map((i: any) => String(i?.richResultType ?? '')).filter(Boolean),
+        issues: (rich.detectedItems ?? []).flatMap((i: any) => (i?.items ?? []).flatMap((it: any) => (it?.issues ?? []).map((iss: any) => String(iss?.issueMessage ?? '')).filter(Boolean))),
+      },
+    });
+  }
+  await log(c.userId, tool, args, 'success', null, Date.now() - t0);
+  return textJson({ site_url: access.siteUrl, results });
+}
+
+async function gscListSitemaps(args: Record<string, unknown>) {
+  const tool = 'gsc_list_sitemaps'; const t0 = Date.now();
+  const c = await requireGscCaller(tool, args, t0);
+  const site = args['site'];
+  if (typeof site !== 'string' || !site.trim()) throw new RpcError(-32602, 'site est requis.');
+  const bare = requireAllowedSite(site);
+  const access = await resolveGscAccess(getServiceClient(), c.userId, bare);
+  if (!access) throw new RpcError(-32001, 'Connexion Google expirée ou droits insuffisants : reconnecte Google dans Console');
+  const data = await gscFetch(access.accessToken, `/webmasters/v3/sites/${encodeURIComponent(access.siteUrl)}/sitemaps`);
+  const sitemaps = (data?.sitemap ?? []).map((s: any) => ({
+    path: s.path ?? null,
+    last_submitted: s.lastSubmitted ?? null,
+    last_downloaded: s.lastDownloaded ?? null,
+    is_pending: s.isPending === true,
+    is_sitemaps_index: s.isSitemapsIndex === true,
+    warnings: Number(s.warnings ?? 0),
+    errors: Number(s.errors ?? 0),
+    contents: (s.contents ?? []).map((ct: any) => ({ type: ct.type ?? null, submitted: Number(ct.submitted ?? 0) })),
+  }));
+  await log(c.userId, tool, args, 'success', null, Date.now() - t0);
+  return textJson(sitemaps);
+}
+
 // ── MCP Server (no schemaAdapter = raw JSON Schema) ─────
 
 const SERVER_VERSION = '1.1.0';
@@ -398,6 +647,104 @@ reg("marina_create_report", { description: "Launch a Marina SEO+GEO audit report
 reg("marina_get_report", { description: "Status / result of a Marina job owned by the caller. Free.", inputSchema: jobIdSchema, handler: marinaGetReport });
 reg("marina_list_jobs", { description: "List the caller's Marina jobs (most recent first). Free.", inputSchema: { type: "object" as const, properties: { limit: { type: "integer" as const, minimum: 1, maximum: 50, default: 20 }, status: { type: "string" as const, enum: ["pending", "processing", "completed", "partial", "failed"] } }, additionalProperties: false }, handler: marinaListJobs });
 reg("marina_export_pdf", { description: "Export a completed Marina report as PDF (signed URL valid 7 days). Free.", inputSchema: jobIdSchema, handler: marinaExportPdf });
+
+// ── Search Console (lecture seule, admin uniquement, liste blanche serveur) ──
+
+const gscSiteProp = { site: { type: "string" as const, description: "Domaine nu, sc-domain: ou URL http/https de la propriété" } };
+const gscDateProp = { type: "string" as const, pattern: "^\\d{4}-\\d{2}-\\d{2}$", description: "YYYY-MM-DD" };
+
+reg("gsc_list_sites", {
+  description: "Liste les propriétés Search Console autorisées du compte Google connecté. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: { type: "object" as const, properties: {}, additionalProperties: false },
+  handler: gscListSites,
+});
+
+reg("gsc_search_analytics", {
+  description: "Données Search Analytics (clics, impressions, CTR, position) d'une propriété autorisée. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      ...gscSiteProp,
+      start_date: gscDateProp,
+      end_date: gscDateProp,
+      dimensions: { type: "array" as const, items: { type: "string" as const, enum: ["query", "page", "country", "device", "date"] }, maxItems: 3, uniqueItems: true },
+      filters: { type: "array" as const, maxItems: 5, items: { type: "object" as const, properties: { dimension: { type: "string" as const, enum: ["query", "page", "country", "device"] }, operator: { type: "string" as const, enum: ["equals", "notEquals", "contains", "notContains", "includingRegex", "excludingRegex"] }, expression: { type: "string" as const, maxLength: 500 } }, required: ["dimension" as const, "operator" as const, "expression" as const], additionalProperties: false } },
+      search_type: { type: "string" as const, enum: ["web", "image", "video", "news", "discover", "googleNews"], default: "web" },
+      row_limit: { type: "integer" as const, minimum: 1, maximum: 5000, default: 1000 },
+      start_row: { type: "integer" as const, minimum: 0, default: 0 },
+    },
+    required: ["site" as const],
+    additionalProperties: false,
+  },
+  handler: gscSearchAnalytics,
+});
+
+const gscTopSchema = {
+  type: "object" as const,
+  properties: {
+    ...gscSiteProp,
+    days: { type: "integer" as const, enum: [7, 28, 90], default: 28 },
+    limit: { type: "integer" as const, minimum: 1, maximum: 100, default: 25 },
+    country: { type: "string" as const, pattern: "^[a-zA-Z]{3}$", description: "ISO 3166-1 alpha-3" },
+    device: { type: "string" as const, enum: ["desktop", "mobile", "tablet"] },
+  },
+  required: ["site" as const],
+  additionalProperties: false,
+};
+
+reg("gsc_top_queries", {
+  description: "Top requêtes par clics sur 7/28/90 jours, avec delta vs période précédente. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: gscTopSchema,
+  handler: (a: Record<string, unknown>) => gscTop('query', a),
+});
+
+reg("gsc_top_pages", {
+  description: "Top pages par clics sur 7/28/90 jours, avec delta vs période précédente. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: gscTopSchema,
+  handler: (a: Record<string, unknown>) => gscTop('page', a),
+});
+
+reg("gsc_position_history", {
+  description: "Séries quotidiennes de positions lues en base (gsc_daily_positions), sans appel Google. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      ...gscSiteProp,
+      query: { type: "string" as const, maxLength: 500 },
+      days: { type: "integer" as const, minimum: 1, maximum: 90, default: 28 },
+    },
+    required: ["site" as const],
+    additionalProperties: false,
+  },
+  handler: gscPositionHistory,
+});
+
+reg("gsc_url_inspection", {
+  description: "Inspection d'URLs (verdict, indexation, canoniques, rich results) — 5 URLs max par appel. Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      ...gscSiteProp,
+      urls: { type: "array" as const, minItems: 1, maxItems: 5, items: { type: "string" as const, description: "URL absolue http/https de la propriété" } },
+    },
+    required: ["site" as const, "urls" as const],
+    additionalProperties: false,
+  },
+  handler: gscUrlInspection,
+});
+
+reg("gsc_list_sitemaps", {
+  description: "Liste les sitemaps soumis d'une propriété autorisée (statut, warnings, erreurs). Admin uniquement. Lecture seule.",
+  annotations: { readOnlyHint: true },
+  inputSchema: { type: "object" as const, properties: { ...gscSiteProp }, required: ["site" as const], additionalProperties: false },
+  handler: gscListSitemaps,
+});
 
 // ── HTTP ────────────────────────────────────────────────
 
