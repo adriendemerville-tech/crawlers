@@ -16,6 +16,15 @@ import {
   gscRequestUrl, trackedSiteDomainVariants,
   type GscCaller, type AnalyticsRow,
 } from "../_shared/gscMcpCore.ts";
+import {
+  DataForSeoError,
+  MCP_DATA_LIMITS,
+  LOCATION_CODES,
+  rankSerp,
+  researchKeywords,
+  snapshotBacklinks,
+} from "../_shared/mcpDataForSeo.ts";
+import { AUDIT_FUNCTION_NAMES, isUuid } from "../_shared/mcpAuditJob.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const FREE_TOOLS = new Set(['check_geo_score', 'check_llm_visibility', 'check_ai_crawlers']);
@@ -621,9 +630,154 @@ async function gscListSitemaps(args: Record<string, unknown>) {
   return textJson(sitemaps);
 }
 
+// ── Outils DataForSEO (lecture seule, Pro Agency, 30/h) ──
+
+async function requireProCaller(tool: string, args: unknown, t0: number): Promise<Caller> {
+  if (!(await checkKillSwitch())) {
+    await log(null, tool, args, 'blocked', 'disabled', Date.now() - t0);
+    throw new RpcError(-32001, 'MCP Crawlers temporairement désactivé.');
+  }
+  let c: Caller | null | 'invalid_key' = null;
+  try { c = await resolveCaller(); } catch { c = null; }
+  if (c === 'invalid_key') {
+    await log(null, tool, args, 'unauthorized', 'invalid key', Date.now() - t0);
+    throw new RpcError(-32001, `Clé Marina invalide ou désactivée. ${AUTH_HEADERS_HINT}`);
+  }
+  if (!c) {
+    await log(null, tool, args, 'unauthorized', 'no token', Date.now() - t0);
+    throw new RpcError(-32001, `Accès Pro Agency requis. ${AUTH_HEADERS_HINT} https://crawlers.fr/tarifs`);
+  }
+  if (!c.isAdmin && !c.isProAgency) {
+    await log(c.userId, tool, args, 'forbidden', 'not pro', Date.now() - t0);
+    throw new RpcError(-32001, 'Réservé Pro Agency. https://crawlers.fr/tarifs');
+  }
+  if (!(await rateOk(c.userId, tool))) {
+    await log(c.userId, tool, args, 'rate_limited', '30/h', Date.now() - t0);
+    throw new RpcError(-32002, 'Limite de 30 appels par heure atteinte.');
+  }
+  return c;
+}
+
+async function runDataTool(tool: string, args: Record<string, unknown>, fn: () => Promise<unknown>) {
+  const t0 = Date.now();
+  const c = await requireProCaller(tool, args, t0);
+  try {
+    const data = await fn();
+    await log(c.userId, tool, args, 'success', null, Date.now() - t0);
+    return textJson(data);
+  } catch (e) {
+    if (e instanceof RpcError) throw e;
+    const msg = e instanceof Error ? e.message : 'erreur DataForSEO';
+    await log(c.userId, tool, args, 'error', msg.slice(0, 300), Date.now() - t0);
+    const clientError = e instanceof DataForSeoError && !msg.startsWith('DataForSEO ');
+    throw new RpcError(clientError ? -32602 : -32603, msg.slice(0, 300));
+  }
+}
+
+const keywordResearch = (args: Record<string, unknown>) => runDataTool('keyword_research', args, () => researchKeywords(args));
+const serpRanking = (args: Record<string, unknown>) => runDataTool('serp_ranking', args, () => rankSerp(args));
+const backlinkSnapshot = (args: Record<string, unknown>) => runDataTool('backlink_snapshot', args, () => snapshotBacklinks(args));
+
+// ── Audits longs : job + polling (le client mcp-remote coupe vers 60 s) ──
+
+const AUDIT_TOOLS = {
+  expert_seo_audit: 'audit-expert-seo',
+  strategic_ai_audit: 'audit-strategique-ia',
+} as const;
+
+async function launchAudit(tool: keyof typeof AUDIT_TOOLS, args: Record<string, unknown>) {
+  if (args['sync'] === true) return handler(tool)(args);
+  const t0 = Date.now();
+  const c = await requireProCaller(tool, args, t0);
+  const url = normalizeHttpUrl(args['url'], 'url', true);
+  const payload: Record<string, unknown> = { url };
+  if (args['lang'] !== undefined) {
+    const lang = String(args['lang']);
+    if (!['fr', 'en', 'es'].includes(lang)) throw new RpcError(-32602, 'lang doit valoir fr, en ou es.');
+    payload['lang'] = lang;
+  }
+  if (tool === 'strategic_ai_audit' && args['sector'] !== undefined) {
+    const sector = String(args['sector']).trim().slice(0, 120);
+    if (sector) payload['sector'] = sector;
+  }
+
+  const sb = getServiceClient();
+  const { data: job, error } = await sb.from('async_jobs').insert({
+    user_id: c.userId,
+    function_name: AUDIT_TOOLS[tool],
+    status: 'pending',
+    progress: 0,
+    input_payload: payload,
+  }).select('id').single();
+  if (error || !job) {
+    await log(c.userId, tool, args, 'error', error?.message ?? 'insert job', Date.now() - t0);
+    throw new RpcError(-32603, 'Création du job impossible.');
+  }
+  const jobId = String((job as { id: string }).id);
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!serviceKey) {
+    await sb.from('async_jobs').update({ status: 'failed', error_message: 'service role manquant', completed_at: new Date().toISOString() }).eq('id', jobId);
+    throw new RpcError(-32603, 'Lancement asynchrone indisponible.');
+  }
+
+  const res = await callFn(AUDIT_TOOLS[tool], { ...payload, _job_id: jobId, _detach: true }, `Bearer ${serviceKey}`);
+  if (res.error) {
+    await sb.from('async_jobs').update({ status: 'failed', error_message: res.error.slice(0, 500), completed_at: new Date().toISOString() }).eq('id', jobId);
+    await log(c.userId, tool, args, 'error', res.error.slice(0, 300), Date.now() - t0);
+    throw new RpcError(-32603, `Lancement de l'audit impossible : ${res.error.slice(0, 300)}`);
+  }
+  await log(c.userId, tool, args, 'success', null, Date.now() - t0);
+  return textJson({
+    job_id: jobId,
+    status: 'pending',
+    poll_with: 'get_audit_job',
+    sync_available: true,
+  });
+}
+
+async function getAuditJob(args: Record<string, unknown>) {
+  const tool = 'get_audit_job';
+  const t0 = Date.now();
+  if (!(await checkKillSwitch())) throw new RpcError(-32001, 'MCP Crawlers temporairement désactivé.');
+  let c: Caller | null | 'invalid_key' = null;
+  try { c = await resolveCaller(); } catch { c = null; }
+  if (!c || c === 'invalid_key') {
+    await log(null, tool, args, 'unauthorized', 'no auth', Date.now() - t0);
+    throw new RpcError(-32001, `Authentification requise. ${AUTH_HEADERS_HINT}`);
+  }
+  const jobId = args['job_id'];
+  if (!isUuid(jobId)) throw new RpcError(-32602, 'job_id doit être un UUID.');
+  let q = getServiceClient().from('async_jobs')
+    .select('id, user_id, function_name, status, progress, error_message, result_data, created_at, started_at, completed_at')
+    .eq('id', jobId)
+    .in('function_name', [...AUDIT_FUNCTION_NAMES]);
+  if (!c.isAdmin) q = q.eq('user_id', c.userId);
+  const { data, error } = await q.maybeSingle();
+  if (error) throw new RpcError(-32603, `Lecture du job impossible : ${error.message}`);
+  if (!data) throw new RpcError(-32003, 'Job introuvable pour ce compte');
+  const row = data as {
+    id: string; function_name: string; status: string; progress: number | null;
+    error_message: string | null; result_data: unknown; created_at: string;
+    started_at: string | null; completed_at: string | null;
+  };
+  const toolName = row.function_name === 'audit-expert-seo' ? 'expert_seo_audit' : 'strategic_ai_audit';
+  await log(c.userId, tool, args, 'success', null, Date.now() - t0);
+  return textJson({
+    job_id: row.id,
+    tool: toolName,
+    status: row.status,
+    progress: row.progress,
+    error: row.status === 'failed' ? row.error_message : null,
+    created_at: row.created_at,
+    started_at: row.started_at,
+    completed_at: row.completed_at,
+    ...(row.status === 'completed' || row.status === 'failed' ? { result: row.result_data } : {}),
+  });
+}
+
 // ── MCP Server (no schemaAdapter = raw JSON Schema) ─────
 
-const SERVER_VERSION = '1.1.0';
+const SERVER_VERSION = '1.2.0';
 const mcp = new McpServer({ name: "crawlers-fr", version: SERVER_VERSION });
 let TOOL_COUNT = 0;
 const reg = (name: string, def: any) => { TOOL_COUNT++; mcp.tool(name, def); };
@@ -634,8 +788,61 @@ const urlSchema = { type: "object" as const, properties: { url: { type: "string"
 reg("check_geo_score", { description: "GEO score (0-100) for AI engine optimization.", inputSchema: domainSchema, handler: handler('check_geo_score') });
 reg("check_llm_visibility", { description: "Domain visibility across LLMs (ChatGPT, Gemini, Perplexity, Claude).", inputSchema: domainSchema, handler: handler('check_llm_visibility') });
 reg("check_ai_crawlers", { description: "AI bot analysis (GPTBot, ClaudeBot, Google-Extended).", inputSchema: domainSchema, handler: handler('check_ai_crawlers') });
-reg("expert_seo_audit", { description: "200-point SEO audit. Pro Agency required.", inputSchema: urlSchema, handler: handler('expert_seo_audit') });
-reg("strategic_ai_audit", { description: "Strategic AI audit: SEO+GEO+competitive. Pro Agency required.", inputSchema: { type: "object" as const, properties: { url: { type: "string" as const }, sector: { type: "string" as const } }, required: ["url" as const] }, handler: handler('strategic_ai_audit') });
+reg("expert_seo_audit", { description: "Lance un audit SEO 200 points et renvoie un job_id. L'audit dépasse le timeout des clients MCP (~60 s) : interroger get_audit_job. Pro Agency. sync:true force l'ancien appel bloquant.", inputSchema: { type: "object" as const, properties: { url: { type: "string" as const, description: "URL à auditer (un domaine nu est préfixé https://)" }, lang: { type: "string" as const, enum: ["fr", "en", "es"] }, sync: { type: "boolean" as const, description: "true = réponse bloquante historique, au-delà de 60 s" } }, required: ["url" as const], additionalProperties: false }, handler: (a: Record<string, unknown>) => launchAudit('expert_seo_audit', a) });
+reg("strategic_ai_audit", { description: "Lance un audit stratégique IA (SEO+GEO+concurrence) et renvoie un job_id. Interroger get_audit_job. Pro Agency. sync:true force l'ancien appel bloquant.", inputSchema: { type: "object" as const, properties: { url: { type: "string" as const, description: "URL à auditer" }, sector: { type: "string" as const }, lang: { type: "string" as const, enum: ["fr", "en", "es"] }, sync: { type: "boolean" as const, description: "true = réponse bloquante historique, au-delà de 60 s" } }, required: ["url" as const], additionalProperties: false }, handler: (a: Record<string, unknown>) => launchAudit('strategic_ai_audit', a) });
+reg("get_audit_job", { description: "Statut et résultat d'un audit lancé par expert_seo_audit ou strategic_ai_audit, réservé au compte propriétaire. Gratuit, hors quota DataForSEO.", annotations: { readOnlyHint: true }, inputSchema: { type: "object" as const, properties: { job_id: { type: "string" as const, description: "UUID renvoyé au lancement" } }, required: ["job_id" as const], additionalProperties: false }, handler: getAuditJob });
+
+const countryEnum = Object.keys(LOCATION_CODES);
+reg("keyword_research", {
+  description: "Idées de mots-clés Google (volume + difficulté Labs 0-100). France / fr par défaut. Pro Agency, lecture seule, 30 appels/heure. Coût DataForSEO estimé : environ 0,014 $ pour 15 idées (Labs keyword_ideas, 0,012 $ + 0,00012 $/idée) ; + environ 0,004 $ si bulk_keyword_difficulty est nécessaire. Estimation, grilles publiques DataForSEO.",
+  annotations: { readOnlyHint: true, openWorldHint: true },
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      keyword: { type: "string" as const, description: "Graine (alternative à keywords)" },
+      keywords: { type: "array" as const, maxItems: MCP_DATA_LIMITS.keywordSeeds, items: { type: "string" as const, maxLength: MCP_DATA_LIMITS.keywordSeedLength }, description: "1 à 5 graines" },
+      language_code: { type: "string" as const, pattern: "^[a-z]{2}$", default: "fr" },
+      country: { type: "string" as const, enum: countryEnum, default: "fr", description: "Pays, ignoré si location_code est fourni" },
+      location_code: { type: "integer" as const, description: "Code DataForSEO. Défaut France = 2250" },
+      limit: { type: "integer" as const, minimum: 1, maximum: MCP_DATA_LIMITS.keywordResultsMax, default: MCP_DATA_LIMITS.keywordResultsDefault },
+    },
+    additionalProperties: false,
+  },
+  handler: keywordResearch,
+});
+reg("serp_ranking", {
+  description: "SERP Google organique live pour un mot-clé, et position d'un domaine s'il est fourni. France / fr, depth 10. Pro Agency, lecture seule, 30/h. Coût DataForSEO estimé : 0,002 $ (depth 10) ou 0,004 $ (depth 20), live/regular. Estimation, grille publique SERP organic.",
+  annotations: { readOnlyHint: true, openWorldHint: true },
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      keyword: { type: "string" as const, minLength: 2, maxLength: 200 },
+      domain: { type: "string" as const, description: "Domaine à repérer dans les résultats organiques" },
+      language_code: { type: "string" as const, pattern: "^[a-z]{2}$", default: "fr" },
+      country: { type: "string" as const, enum: countryEnum, default: "fr" },
+      location_code: { type: "integer" as const, description: "Code DataForSEO. Défaut France = 2250" },
+      depth: { type: "integer" as const, enum: [10, 20], default: 10 },
+    },
+    required: ["keyword" as const],
+    additionalProperties: false,
+  },
+  handler: serpRanking,
+});
+reg("backlink_snapshot", {
+  description: "Résumé de backlinks, domaines référents et ancres d'un domaine. Pro Agency, lecture seule, 30/h. Coût DataForSEO estimé : environ 0,073 $ (3 tâches live × 0,024 $ + 0,000036 $ par ligne, 10 référents et 10 ancres). Estimation, grille publique Backlinks. Le tarif wallet historique de 60 micro-crédits (0,06 €) n'est pas débité ici.",
+  annotations: { readOnlyHint: true, openWorldHint: true },
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      domain: { type: "string" as const, description: "Domaine nu ou URL" },
+      referring_limit: { type: "integer" as const, minimum: 1, maximum: MCP_DATA_LIMITS.backlinkRowsMax, default: MCP_DATA_LIMITS.backlinkRowsDefault },
+      anchor_limit: { type: "integer" as const, minimum: 1, maximum: MCP_DATA_LIMITS.backlinkRowsMax, default: MCP_DATA_LIMITS.backlinkRowsDefault },
+    },
+    required: ["domain" as const],
+    additionalProperties: false,
+  },
+  handler: backlinkSnapshot,
+});
 reg("generate_corrective_code", { description: "Generate JS corrective code for SEO/GEO fixes. Pro Agency required.", inputSchema: { type: "object" as const, properties: { url: { type: "string" as const }, audit_id: { type: "string" as const } }, required: ["url" as const] }, handler: handler('generate_corrective_code') });
 reg("dry_run_script", { description: "Sandbox test of a generated corrective script (site_script_rules id) on the live page: JS errors, CLS, JSON-LD validity. Pro Agency required.", inputSchema: { type: "object" as const, properties: { script_id: { type: "string" as const, description: "site_script_rules UUID" }, target_url: { type: "string" as const, description: "Optional test URL; defaults to the rule domain" } }, required: ["script_id" as const] }, handler: handler('dry_run_script') });
 reg("calculate_cocoon_logic", { description: "Semantic cocoon via TF-IDF. Pro Agency required.", inputSchema: { type: "object" as const, properties: { domain: { type: "string" as const }, tracked_site_id: { type: "string" as const } }, required: ["domain" as const, "tracked_site_id" as const] }, handler: handler('calculate_cocoon_logic') });

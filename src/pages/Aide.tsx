@@ -582,8 +582,12 @@ const DOC_SECTIONS: DocSection[] = [
         id: 'mcp-outils-pro',
         title: 'Outils MCP Pro Agency (clé Marina ou JWT requis)',
         content: `<ul class="list-disc pl-6 space-y-1">
-<li><strong>expert_seo_audit</strong> — Audit SEO 200 points</li>
-<li><strong>strategic_ai_audit</strong> — Audit stratégique IA multi-axes</li>
+<li><strong>expert_seo_audit</strong> — Lance l'audit SEO 200 points et renvoie un <code>job_id</code> (le résultat se lit avec <code>get_audit_job</code> ; <code>sync: true</code> garde l'appel bloquant)</li>
+<li><strong>strategic_ai_audit</strong> — Lance l'audit stratégique IA et renvoie un <code>job_id</code> (même récupération)</li>
+<li><strong>get_audit_job</strong> — Statut et résultat d'un audit lancé par le compte</li>
+<li><strong>keyword_research</strong> — Idées de mots-clés, volume et difficulté (France / fr par défaut, 25 résultats max)</li>
+<li><strong>serp_ranking</strong> — SERP Google organique d'un mot-clé et position d'un domaine</li>
+<li><strong>backlink_snapshot</strong> — Résumé backlinks, domaines référents et ancres</li>
 <li><strong>generate_corrective_code</strong> — Génération de code correctif JS</li>
 <li><strong>dry_run_script</strong> — Test sandbox avant déploiement</li>
 <li><strong>calculate_cocoon_logic</strong> — Cocon sémantique TF-IDF</li>
@@ -599,7 +603,7 @@ const DOC_SECTIONS: DocSection[] = [
         title: 'Comment utiliser le MCP avec Claude ?',
         content: `<ol class="list-decimal pl-6 space-y-1">
 <li>Configurez le serveur MCP dans votre client Claude avec l'endpoint Crawlers</li>
-<li>Claude découvre automatiquement les 16 outils disponibles</li>
+<li>Claude découvre les outils annoncés par le serveur (version 1.2.0, compte rendu par le GET de l'endpoint)</li>
 <li>Demandez en langage naturel : « Audite le site example.com »</li>
 <li>Claude appelle les outils Crawlers et synthétise les résultats</li>
 </ol>

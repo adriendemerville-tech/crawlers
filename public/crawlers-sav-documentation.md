@@ -633,9 +633,13 @@ Endpoint : `POST https://api.crawlers.fr/functions/v1/mcp-server`
 - **check_llm_visibility** : Visibilité sur ChatGPT, Gemini, Perplexity, Claude, Mistral, Llama
 - **check_ai_crawlers** : Analyse des bots IA (GPTBot, ClaudeBot, Google-Extended)
 
-### Outils MCP Pro Agency (token requis)
-- **expert_seo_audit** : Audit SEO 200 points
-- **strategic_ai_audit** : Audit stratégique IA multi-axes
+### Outils MCP Pro Agency (clé Marina ou JWT requis)
+- **expert_seo_audit** : lance l'audit SEO 200 points et renvoie un `job_id`. Le résultat se lit avec `get_audit_job`. `sync: true` garde l'appel bloquant, qui dépasse le timeout des clients MCP (~60 s).
+- **strategic_ai_audit** : lance l'audit stratégique IA et renvoie un `job_id` (même récupération).
+- **get_audit_job** : statut et résultat d'un audit appartenant au compte. Paramètre `job_id`.
+- **keyword_research** : idées de mots-clés, volume et difficulté Labs. Paramètres : `keyword` ou `keywords` (5 max), `language_code` (défaut `fr`), `country` (défaut `fr`) ou `location_code`, `limit` (défaut 15, max 25).
+- **serp_ranking** : SERP Google organique. Paramètres : `keyword` (requis), `domain` (position si fourni), `language_code`, `country` ou `location_code`, `depth` 10 ou 20.
+- **backlink_snapshot** : résumé, domaines référents et ancres. Paramètres : `domain` (requis), `referring_limit` et `anchor_limit` (défaut 10, max 20).
 - **generate_corrective_code** : Génération de code correctif JS
 - **dry_run_script** : Test sandbox avant déploiement
 - **calculate_cocoon_logic** : Cocon sémantique TF-IDF
@@ -644,11 +648,11 @@ Endpoint : `POST https://api.crawlers.fr/functions/v1/mcp-server`
 - **fetch_serp_kpis** : KPIs SERP hebdomadaires
 - **calculate_ias** : Indice d'Alignement Stratégique
 
-Authentification : token Supabase d'un compte Pro Agency. Rate limit : 30 appels/heure.
+Authentification : clé Marina (`x-marina-key` ou `Authorization: Bearer`) ou JWT de session d'un compte Pro Agency. Rate limit : 30 appels/heure et par outil. Les trois outils DataForSEO sont en lecture seule et n'écrivent pas de données métier.
 
 ### Comment utiliser le MCP avec Claude ?
 1. Configurez le serveur MCP dans votre client Claude avec l'endpoint Crawlers
-2. Claude découvre automatiquement les 12 outils disponibles
+2. Claude découvre les outils annoncés par le serveur (version 1.2.0)
 3. Demandez en langage naturel : « Audite le site example.com »
 4. Claude appelle les outils Crawlers et synthétise les résultats
 
