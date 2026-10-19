@@ -14,9 +14,9 @@ export const ARTICLE_SEO_OVERRIDES: Record<string, {
     ogTitle: "Guide GPTBot & Crawlers IA 2026"
   },
   'crawler-definition-seo-geo': {
-    title: "Un crawler c'est quoi ? Définition, rôle en SEO et GEO | Crawlers.fr",
-    description: "Découvrez ce qu'est un crawler web : son histoire, son rôle crucial pour le SEO et le GEO, et pourquoi les crawlers IA changent la donne en 2026.",
-    ogTitle: "Crawler Web : Définition Complète 2026"
+    title: "Crawler : traduction et définition | Crawlers.fr",
+    description: "Crawler se traduit par « robot d'indexation ». Définition courte, différence avec bot et spider, et rôle du crawl en SEO comme en GEO.",
+    ogTitle: "Crawler : traduction et définition"
   },
   'guide-visibilite-technique-ia': {
     title: "Robots.txt, JSON-LD, Sitemaps : Guide Technique Visibilité IA 2026 | Crawlers.fr",

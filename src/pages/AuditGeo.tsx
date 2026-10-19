@@ -43,6 +43,10 @@ const FAQS: { q: string; a: string }[] = [
     a: "232 points de contrôle techniques répartis sur 11 sous-signaux GEO, plus le volet SEO technique et sémantique. Chaque point est soit mesuré, soit marqué non mesuré : aucun score n'est estimé silencieusement.",
   },
   {
+    q: 'Peut-on faire un audit GEO d’un site WordPress ?',
+    a: "Oui, sans extension. L’audit lit le HTML servi et le robots.txt à la racine, comme pour un autre CMS. Sur WordPress, ce fichier est souvent écrit par une extension SEO : il autorise ou bloque GPTBot, ClaudeBot et Google-Extended. Un site connecté peut ensuite recevoir un correctif via le pont CMS (outil wordpress_sync, compte Pro Agency, jeton de session).",
+  },
+  {
     q: 'Pourquoi ne pas demander directement un audit à ChatGPT ou Claude ?',
     a: "Parce qu'un modèle de langage n'a pas les moyens techniques de produire un audit : il ne crawle pas la page entière ni ses ressources, n'a pas accès aux SERP en temps réel, ne connaît pas le profil de backlinks, ne conserve aucune mémoire d'un audit à l'autre et change d'appréciation à chaque exécution. Le résultat est imprédictible. Crawlers.fr mesure d'abord la donnée réelle du site — rendu servi aux robots, contenu de chaque page, positions, backlinks — on la conserve en mémoire pour croiser les signaux et suivre l'évolution du référencement page par page, et l'IA n'intervient qu'ensuite, pour calculer des probabilités et mettre l'analyse en forme. L'IA est utile pour raisonner sur des faits ; elle n'est pas fiable pour aller chercher les faits.",
   },
@@ -287,6 +291,54 @@ const AuditGeo = () => {
         </section>
 
         <MarinaCitablePassage />
+
+        <section className="mx-auto max-w-3xl px-4 pb-12" aria-labelledby="audit-geo-wordpress-title">
+          <h2 id="audit-geo-wordpress-title" className="text-2xl font-semibold text-foreground mb-4">
+            Audit GEO WordPress
+          </h2>
+          <p className="text-muted-foreground leading-relaxed">
+            Un audit GEO WordPress mesure la même chose que sur un autre CMS : les robots d’IA peuvent-ils
+            lire le HTML servi, et les moteurs génératifs citent-ils le site. Aucune extension n’est
+            nécessaire pour l’audit : le crawl lit la page rendue, pas la base WordPress.
+          </p>
+          <p className="mt-4 text-muted-foreground leading-relaxed">
+            Le contrôle porte sur des signaux que WordPress expose déjà :
+          </p>
+          <ul className="mt-3 space-y-2 text-sm text-muted-foreground list-disc pl-5">
+            <li>
+              Le fichier <code>robots.txt</code> à la racine, souvent produit par une extension SEO.
+              Il autorise ou bloque GPTBot, ClaudeBot et Google-Extended. L’outil{' '}
+              <code>check_ai_crawlers</code> analyse ces trois bots à partir du domaine.
+            </li>
+            <li>
+              Le HTML réellement servi par le thème, le constructeur ou le cache. Un texte qui
+              n’existe qu’après exécution du JavaScript n’est pas le texte lu par le robot.
+            </li>
+            <li>
+              Le JSON-LD présent dans ce HTML, et les passages qu’un modèle peut citer tels quels.
+            </li>
+          </ul>
+          <p className="mt-4 text-muted-foreground leading-relaxed">
+            Crawlers reconnaît WordPress aux empreintes publiques du HTML : chemins{' '}
+            <code>/wp-content/</code> ou <code>/wp-includes/</code>, balise <code>generator</code>,
+            API <code>/wp-json/</code>, cookie <code>wordpress_</code>. Pour un site déjà connecté,
+            l’outil <code>wordpress_sync</code> injecte un correctif via le pont CMS. Cet appel est
+            réservé à un compte Pro Agency et exige un jeton de session.
+          </p>
+          <p className="mt-4 text-sm">
+            <Link to="/crawl" className="text-primary hover:underline">
+              Crawl WordPress
+            </Link>
+            {' · '}
+            <Link to="/modifier-code-wordpress" className="text-primary hover:underline">
+              Modifier le code WordPress
+            </Link>
+            {' · '}
+            <Link to="/geo-mcp-server" className="text-primary hover:underline">
+              Serveur MCP GEO
+            </Link>
+          </p>
+        </section>
 
         <section className="mx-auto max-w-3xl px-4 pb-16" aria-labelledby="geo-faq">
           <h2 id="geo-faq" className="text-2xl font-semibold text-foreground mb-6">

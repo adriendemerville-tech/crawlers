@@ -574,7 +574,7 @@ const DOC_SECTIONS: DocSection[] = [
         title: 'Outils MCP gratuits (sans authentification)',
         content: `<ul class="list-disc pl-6 space-y-1">
 <li><strong>check_geo_score</strong> — Score GEO (0-100) pour l'optimisation moteurs IA</li>
-<li><strong>check_llm_visibility</strong> — Visibilité sur ChatGPT, Gemini, Perplexity, Claude, Mistral</li>
+<li><strong>check_llm_visibility</strong> — Visibilité sur ChatGPT, Gemini, Perplexity et Claude</li>
 <li><strong>check_ai_crawlers</strong> — Analyse des bots IA (GPTBot, ClaudeBot, Google-Extended)</li>
 </ul>`,
       },
@@ -599,13 +599,15 @@ const DOC_SECTIONS: DocSection[] = [
         title: 'Comment utiliser le MCP avec Claude ?',
         content: `<ol class="list-decimal pl-6 space-y-1">
 <li>Configurez le serveur MCP dans votre client Claude avec l'endpoint Crawlers</li>
-<li>Claude découvre automatiquement les 16 outils disponibles</li>
+<li>Claude découvre les 23 outils enregistrés (3 sans clé, 9 Pro Agency, 4 Marina, 7 Search Console réservés aux administrateurs)</li>
 <li>Demandez en langage naturel : « Audite le site example.com »</li>
 <li>Claude appelle les outils Crawlers et synthétise les résultats</li>
 </ol>
 <p class="mt-2">Configurez votre clé Marina dans les en-têtes de votre client MCP (Console crawlers.fr → API → Marina).</p>
 <p class="mt-4 font-semibold">Outils Marina via MCP</p>
 <p class="mt-1">Endpoint <code>https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code>, en-tête <code>x-marina-key: &lt;clé&gt;</code> ou <code>Authorization: Bearer &lt;clé&gt;</code> (Console crawlers.fr → API → Marina ; préfixes <code>marina_</code> et <code>mk_live_</code>). Outils : marina_create_report, marina_get_report, marina_list_jobs, marina_export_pdf (PDF, lien 7 jours). 5 crédits par rapport, ou inclus avec Pro Agency actif ; solde insuffisant = JSON-RPC -32002, aucun job créé. Sans clé, seuls check_geo_score, check_llm_visibility et check_ai_crawlers fonctionnent ; Marina renvoie JSON-RPC -32001.</p>
+<p class="mt-2">Sept outils Search Console, réservés aux administrateurs et en lecture seule : gsc_list_sites, gsc_search_analytics, gsc_top_queries, gsc_top_pages, gsc_position_history, gsc_url_inspection, gsc_list_sitemaps.</p>
+<p class="mt-2">Un second serveur (<code>supabase/functions/mcp</code>, OAuth 2.1) enregistre d’autres outils : whoami, list_my_sites, get_site_audit, get_job, get_wallet_balance, list_tools_pricing, audit_page, analyze_schema, check_indexability, analyze_links, start_site_crawl, start_geo_audit, start_competitor_matrix. Un outil supplémentaire de ce serveur n’est pas annoncé ici.</p>
 <p class="mt-2">Le futur proxy <code>https://crawlers.fr/functions/v1/mcp-server</code> n’est pas déployé ni connectable : prochainement via proxy Cloudflare.</p>`,
       },
     ],

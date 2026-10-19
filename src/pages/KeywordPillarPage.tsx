@@ -16,158 +16,105 @@ import { DataTable } from '@/components/seo/DataTable';
  * (fenêtre type Claude Code) qui connecte le serveur MCP Crawlers, appelle un
  * outil, corrige et re-mesure. Rassure le visiteur sur l'usage réel.
  */
+const MCP_CONNECT =
+  'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server · Streamable HTTP · x-marina-key ou Bearer — 23 outils enregistrés';
+
 const MCP_DEMOS: Record<string, { windowTitle: string; caption: string; steps: McpStep[] }> = {
   'seo-avec-claude': {
     windowTitle: 'Claude Code — serveur MCP Crawlers',
-    caption: 'Reproduction d’une session réelle : Claude Code pilote Crawlers via le MCP.',
+    caption: 'Exemple de dialogue avec des outils enregistrés sur mcp-server. Aucun score d’exemple.',
     steps: [
       { kind: 'user', text: 'Connecte le serveur MCP Crawlers.fr' },
-      { kind: 'assistant', text: 'Je me connecte au serveur MCP Crawlers.' },
-      { kind: 'connect', text: 'https://crawlers.fr/mcp · Streamable HTTP · OAuth 2.1 — connecté : 14 outils, 3 ressources' },
-      { kind: 'user', text: 'Audit le SEO de ma page produit.' },
-      { kind: 'assistant', text: 'J’utilise l’outil audit_page pour analyser la page.' },
+      { kind: 'assistant', text: 'Je me connecte au serveur mcp-server.' },
+      { kind: 'connect', text: MCP_CONNECT },
+      { kind: 'user', text: 'Audite le SEO de cette URL.' },
+      { kind: 'assistant', text: 'J’appelle expert_seo_audit. L’outil est réservé à Pro Agency et attend une url.' },
       {
         kind: 'tool',
-        name: 'audit_page',
+        name: 'expert_seo_audit',
         args: '{ "url": "https://exemple.fr/produit" }',
       },
       {
-        kind: 'dashboard',
-        title: 'Résultats — audit_page',
-        metrics: [
-          { label: 'Score SEO', value: '58/100', tone: 'bad' },
-          { label: 'Constats', value: '3', tone: 'warn' },
-          { label: 'Critiques', value: '2', tone: 'bad' },
-          { label: 'Corrections dispo', value: '3/3', tone: 'good' },
-        ],
-        rows: [
-          { id: 'SEO-H1-001', severity: 'high', label: 'Aucun h1 dans le HTML servi' },
-          { id: 'SEO-SCHEMA-003', severity: 'high', label: 'Schema Product absent' },
-          { id: 'SEO-META-007', severity: 'medium', label: 'Meta description trop courte' },
+        kind: 'result',
+        lines: [
+          'La réponse est le JSON de la fonction d’audit.',
+          'Ce panneau n’affiche pas une mesure d’exemple.fr.',
         ],
       },
-      { kind: 'assistant', text: 'Veux-tu que j’exporte ces constats, ou que je corrige les deux critiques avec get_fix ?' },
-      { kind: 'user', text: 'Corrige les deux critiques.' },
-      { kind: 'assistant', text: 'J’utilise l’outil get_fix pour générer le patch adapté à ta stack.' },
+      { kind: 'user', text: 'Génère le JavaScript correctif.' },
+      { kind: 'assistant', text: 'J’appelle generate_corrective_code.' },
       {
         kind: 'tool',
-        name: 'get_fix',
-        args: '{ "finding_ids": ["SEO-H1-001", "SEO-SCHEMA-003"], "framework": "nextjs" }',
+        name: 'generate_corrective_code',
+        args: '{ "url": "https://exemple.fr/produit" }',
       },
       {
         kind: 'result',
-        lines: ['patch: h1 unique + schema Product/Offer', 'fichier: app/produit/page.tsx'],
-      },
-      { kind: 'assistant', text: 'Patch appliqué. Je relance audit_page pour vérifier.' },
-      {
-        kind: 'dashboard',
-        title: 'Vérification — audit_page (comparaison)',
-        metrics: [
-          { label: 'Score SEO', value: '58 → 91', tone: 'good' },
-          { label: 'SEO-H1-001', value: 'Résolu', tone: 'good' },
-          { label: 'SEO-SCHEMA-003', value: 'Résolu', tone: 'good' },
-          { label: 'Reste', value: '1 medium', tone: 'warn' },
-        ],
+        lines: ['JavaScript correctif SEO/GEO. L’application dans le dépôt reste le fait de l’agent.'],
       },
     ],
   },
   'visibilite-ia': {
     windowTitle: 'Claude — serveur MCP Crawlers (visibilité IA)',
-    caption: 'Reproduction d’une session réelle : mesure des citations dans les réponses IA, puis correction.',
+    caption: 'Exemple d’appel à check_llm_visibility, outil gratuit réellement enregistré.',
     steps: [
       { kind: 'user', text: 'Connecte le MCP Crawlers.fr' },
-      { kind: 'assistant', text: 'Je me connecte au serveur MCP Crawlers.' },
-      { kind: 'connect', text: 'https://crawlers.fr/mcp · Streamable HTTP · OAuth 2.1 — connecté : 14 outils, 3 ressources' },
-      { kind: 'user', text: 'Est-ce que ChatGPT et Perplexity citent mon site sur mes requêtes clés ?' },
-      { kind: 'assistant', text: 'J’utilise l’outil ai_visibility pour mesurer tes citations dans les réponses IA.' },
+      { kind: 'assistant', text: 'Je me connecte au serveur mcp-server.' },
+      { kind: 'connect', text: MCP_CONNECT },
+      { kind: 'user', text: 'Est-ce que les modèles citent ce domaine ?' },
+      { kind: 'assistant', text: 'J’appelle check_llm_visibility. Entrée : domain. Moteurs indiqués : ChatGPT, Gemini, Perplexity, Claude.' },
       {
         kind: 'tool',
-        name: 'ai_visibility',
-        args: '{ "url": "https://exemple.fr", "engines": ["chatgpt", "gemini", "perplexity", "claude"] }',
-      },
-      {
-        kind: 'dashboard',
-        title: 'Résultats — ai_visibility (25 questions)',
-        metrics: [
-          { label: 'Taux de citation', value: '8%', tone: 'bad' },
-          { label: 'ChatGPT', value: '0', tone: 'bad' },
-          { label: 'Perplexity', value: '1', tone: 'warn' },
-          { label: 'Concurrents cités', value: '2', tone: 'bad' },
-        ],
-        rows: [
-          { id: 'GEO-ANSWER-001', severity: 'high', label: 'Aucune réponse directe citable' },
-          { id: 'GEO-FANOUT-004', severity: 'medium', label: 'Requêtes fan-out non couvertes' },
-        ],
-      },
-      { kind: 'assistant', text: 'Veux-tu exporter ces données, ou que je corrige GEO-ANSWER-001 ?' },
-      { kind: 'user', text: 'Corrige GEO-ANSWER-001.' },
-      {
-        kind: 'tool',
-        name: 'get_fix',
-        args: '{ "finding_id": "GEO-ANSWER-001" }',
+        name: 'check_llm_visibility',
+        args: '{ "domain": "exemple.fr" }',
       },
       {
         kind: 'result',
-        lines: ['patch: bloc réponse directe + 3 passages citables + schema FAQPage'],
-      },
-      { kind: 'assistant', text: 'Correctif appliqué. Je re-mesure la visibilité.' },
-      {
-        kind: 'dashboard',
-        title: 'Vérification — ai_visibility (comparaison)',
-        metrics: [
-          { label: 'Taux de citation', value: '8 → 29%', tone: 'good' },
-          { label: 'GEO-ANSWER-001', value: 'Résolu', tone: 'good' },
+        lines: [
+          'Visibilité du domaine sur les quatre moteurs nommés dans l’outil.',
+          'Aucun taux n’est inventé dans cet exemple.',
         ],
+      },
+      { kind: 'assistant', text: 'Le score GEO du même domaine se demande avec check_geo_score.' },
+      {
+        kind: 'tool',
+        name: 'check_geo_score',
+        args: '{ "domain": "exemple.fr" }',
+      },
+      {
+        kind: 'result',
+        lines: ['Score GEO de 0 à 100.'],
       },
     ],
   },
   'audit-seo-par-ia': {
     windowTitle: 'Claude Code — audit SEO piloté par MCP',
-    caption: 'Reproduction d’une session réelle : audit complet, corrections, vérification — sans ouvrir l’interface.',
+    caption: 'Exemple d’appel à expert_seo_audit puis generate_corrective_code. Aucun score d’exemple.',
     steps: [
       { kind: 'user', text: 'Connecte le MCP Crawlers.fr' },
-      { kind: 'assistant', text: 'Je me connecte au serveur MCP Crawlers.' },
-      { kind: 'connect', text: 'https://crawlers.fr/mcp · Streamable HTTP · OAuth 2.1 — connecté : 14 outils, 3 ressources' },
-      { kind: 'user', text: 'Audit le SEO du site exemple.fr' },
-      { kind: 'assistant', text: 'J’utilise l’outil audit_site pour crawler le domaine.' },
+      { kind: 'assistant', text: 'Je me connecte au serveur mcp-server.' },
+      { kind: 'connect', text: MCP_CONNECT },
+      { kind: 'user', text: 'Audite cette URL.' },
+      { kind: 'assistant', text: 'J’appelle expert_seo_audit. L’outil attend une url et un compte Pro Agency.' },
       {
         kind: 'tool',
-        name: 'audit_site',
-        args: '{ "domain": "exemple.fr", "max_pages": 200 }',
-      },
-      {
-        kind: 'dashboard',
-        title: 'Résultats — audit_site',
-        metrics: [
-          { label: 'Pages crawlées', value: '198', tone: 'neutral' },
-          { label: 'Score global', value: '64/100', tone: 'warn' },
-          { label: 'Critiques', value: '7', tone: 'bad' },
-          { label: 'Pages orphelines', value: '2', tone: 'warn' },
-        ],
-        rows: [
-          { id: 'SEO-CANON-002', severity: 'high', label: 'Canonical manquante (×4)' },
-          { id: 'SEO-ORPHAN-010', severity: 'medium', label: 'Pages orphelines (×2)' },
-        ],
-      },
-      { kind: 'assistant', text: 'Veux-tu exporter ces données, ou que je corrige les canonicals avec get_fix ?' },
-      { kind: 'user', text: 'Corrige les canonicals.' },
-      {
-        kind: 'tool',
-        name: 'get_fix',
-        args: '{ "finding_id": "SEO-CANON-002", "framework": "nextjs" }',
+        name: 'expert_seo_audit',
+        args: '{ "url": "https://exemple.fr" }',
       },
       {
         kind: 'result',
-        lines: ['patch: metadata.alternates.canonical sur 4 pages', 'fichiers touchés: 4'],
+        lines: ['JSON de l’audit SEO décrit comme 200 points. Réservé Pro Agency.'],
       },
-      { kind: 'assistant', text: 'Corrections appliquées. Je relance audit_page pour vérifier.' },
+      { kind: 'user', text: 'Produis le correctif.' },
+      { kind: 'assistant', text: 'J’appelle generate_corrective_code.' },
       {
-        kind: 'dashboard',
-        title: 'Vérification — audit_page (comparaison)',
-        metrics: [
-          { label: 'Score', value: '64 → 92', tone: 'good' },
-          { label: 'SEO-CANON-002', value: 'Résolu 4/4', tone: 'good' },
-        ],
+        kind: 'tool',
+        name: 'generate_corrective_code',
+        args: '{ "url": "https://exemple.fr" }',
+      },
+      {
+        kind: 'result',
+        lines: ['JavaScript correctif. Pas de patch par framework dans le contrat de l’outil.'],
       },
     ],
   },

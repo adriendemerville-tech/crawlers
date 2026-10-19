@@ -5,22 +5,21 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import { McpSessionAnimation } from '@/components/Mcp/McpSessionAnimation';
 import { DataTable } from '@/components/seo/DataTable';
+import {
+  MCP_OAUTH_TOOLS,
+  MCP_SERVER_ACCESS_EN,
+  MCP_SERVER_COUNT_EN,
+  MCP_SERVER_ENDPOINT,
+  MCP_SERVER_TOOLS,
+} from '@/data/mcpPublicCatalog';
 
 
 const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
 
-const TOOLS: { name: string; body: string }[] = [
-  { name: 'crawl_site', body: 'Starts an asynchronous crawl of a domain and returns a job id. Poll get_job for progress and results.' },
-  { name: 'audit_page', body: 'Audits a single URL: HTTP status, canonical, headings, metadata, structured data, render-shell detection, extracted text.' },
-  { name: 'audit_site', body: 'Runs a full technical and generative-visibility audit across a crawled domain.' },
-  { name: 'list_findings', body: 'Returns normalised findings with a stable rule id, severity, evidence and whether a fix is available.' },
-  { name: 'get_fix', body: 'Returns the correction for a finding, adapted to your stack: plain HTML, WordPress, Next.js or TanStack Start.' },
-  { name: 'check_indexability', body: 'Checks robots.txt, meta robots, canonical target and HTTP chain for a given URL.' },
-  { name: 'analyze_schema', body: 'Validates JSON-LD against the visible content and reports mismatches, not just syntax errors.' },
-  { name: 'analyze_links', body: 'Internal link graph for a page or a site: inbound links, click depth, orphan detection, broken link verdicts.' },
-  { name: 'ai_visibility', body: 'Queries the major generative engines on a generated question set and reports observed brand citations.' },
-  { name: 'get_job', body: 'Reads the status and payload of any asynchronous job. Free of charge.' },
-];
+const TOOLS = MCP_SERVER_TOOLS.map((tool) => ({
+  name: tool.name,
+  body: `${tool.summaryEn} Access: ${MCP_SERVER_ACCESS_EN[tool.access]}.`,
+}));
 
 const FAQS: { q: string; a: string }[] = [
   {
@@ -33,7 +32,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'How is it billed?',
-    a: 'The live endpoint exposes 3 free tools without a key, 9 Pro tools and 4 Marina tools. Marina reports cost 5 credits, or are included with active Pro Agency. Insufficient credits return JSON-RPC -32002 and no job is created.',
+    a: 'The live endpoint registers 23 tools: 3 with no key, 9 for Pro Agency, 4 Marina tools, and 7 read-only Search Console tools reserved for admins. Marina reports cost 5 credits, or are included with active Pro Agency. Insufficient credits return JSON-RPC -32002 and no job is created.',
   },
   {
     q: 'Does the agent change my site?',
@@ -73,73 +72,50 @@ export default function SeoMcpServer() {
         </h1>
 
         <blockquote className="citable-passage border-l-2 border-border pl-4 text-lg text-foreground/85 leading-relaxed mb-10">
-          Crawlers.fr exposes its crawl and audit engine as a Model Context Protocol server. Claude
-          Code, Claude Desktop and Cursor can call it to audit a URL, receive normalised findings,
-          request a stack-specific fix, apply it, then re-audit to prove the problem is gone.
+          Crawlers.fr exposes its audit engine as a Model Context Protocol server. Claude Code,
+          Claude Desktop and Cursor call the tools registered on mcp-server: a GEO score, LLM
+          visibility, an SEO audit, corrective JavaScript, and Marina reports. The names below
+          are the ones in the server code.
         </blockquote>
 
         <McpSessionAnimation
           windowTitle="Claude Code — Crawlers MCP server"
-          caption="Typographic reproduction of a real session: audit, fix, re-audit."
+          caption="Example dialogue using tools that are actually registered. No sample score is shown."
           steps={[
             { kind: 'user', text: 'Connect the Crawlers.fr MCP server' },
             { kind: 'assistant', text: 'Connecting to the Crawlers MCP server.' },
             {
               kind: 'connect',
-              text: 'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server · Streamable HTTP · x-marina-key: <key> or Authorization: Bearer <key> — 16 tools (3 free + 9 Pro + 4 Marina)',
+              text: `${MCP_SERVER_ENDPOINT} · Streamable HTTP · x-marina-key or Authorization: Bearer — ${MCP_SERVER_COUNT_EN}`,
             },
-            { kind: 'user', text: 'Audit the SEO of /contact.' },
-            { kind: 'assistant', text: 'I’ll use the audit_page tool to analyse the page.' },
+            { kind: 'user', text: 'Audit the SEO of this URL.' },
+            { kind: 'assistant', text: 'I’ll call expert_seo_audit. It is a registered Pro Agency tool and expects a url.' },
             {
               kind: 'tool',
-              name: 'audit_page',
+              name: 'expert_seo_audit',
               args: '{ "url": "https://example.com/contact" }',
-            },
-            {
-              kind: 'dashboard',
-              title: 'Results — audit_page',
-              metrics: [
-                { label: 'SEO score', value: '61/100', tone: 'warn' },
-                { label: 'Findings', value: '3', tone: 'warn' },
-                { label: 'Critical', value: '2', tone: 'bad' },
-                { label: 'Fixes available', value: '3/3', tone: 'good' },
-              ],
-              rows: [
-                { id: 'SEO-CANON-002', severity: 'high', label: 'Missing canonical' },
-                { id: 'SEO-H1-001', severity: 'high', label: 'No h1 in served HTML' },
-                { id: 'SEO-META-007', severity: 'medium', label: 'Meta description too short' },
-              ],
-            },
-            {
-              kind: 'assistant',
-              text: 'Want me to export these findings, or fix the two critical ones with get_fix?',
-            },
-            { kind: 'user', text: 'Fix the critical ones for Next.js.' },
-            {
-              kind: 'tool',
-              name: 'get_fix',
-              args: '{ "finding_ids": ["SEO-CANON-002", "SEO-H1-001"], "framework": "nextjs" }',
             },
             {
               kind: 'result',
               lines: [
-                'patch: metadata.alternates.canonical in app/contact/page.tsx',
-                'patch: promote section title to h1',
-                'files touched: 1',
+                'The tool returns the JSON produced by the audit function.',
+                'This panel is an example of the call, not a measurement of example.com.',
               ],
             },
             {
               kind: 'assistant',
-              text: 'Patches applied. Re-auditing to confirm the findings are gone.',
+              text: 'To generate corrective JavaScript, the registered tool is generate_corrective_code (url, optional audit_id).',
             },
             {
-              kind: 'dashboard',
-              title: 'Verification — audit_page (comparison)',
-              metrics: [
-                { label: 'SEO score', value: '61 → 94', tone: 'good' },
-                { label: 'SEO-CANON-002', value: 'Resolved', tone: 'good' },
-                { label: 'SEO-H1-001', value: 'Resolved', tone: 'good' },
-                { label: 'SEO-META-007', value: 'Open', tone: 'warn' },
+              kind: 'tool',
+              name: 'generate_corrective_code',
+              args: '{ "url": "https://example.com/contact" }',
+            },
+            {
+              kind: 'result',
+              lines: [
+                'Returns JavaScript corrective code for SEO/GEO fixes.',
+                'Applying it in the repository is done by the agent, not by this tool.',
               ],
             },
           ]}
@@ -157,25 +133,27 @@ export default function SeoMcpServer() {
               agent stops guessing and starts measuring.
             </p>
             <article className="mb-5">
-              <h3 className="text-xl font-semibold mt-6 mb-2">Findings, not opinions</h3>
+              <h3 className="text-xl font-semibold mt-6 mb-2">JSON, not an opinion</h3>
               <p className="text-base leading-relaxed">
-                Every issue comes back as a structured unit: rule id, severity, evidence,
-                explanation, and whether a fix exists for your framework. That structure is what
-                makes it actionable by code.
+                expert_seo_audit and the other registered tools return the JSON of the function
+                they call. The registration does not define rule ids, a severity scale, or a
+                per-framework patch format.
               </p>
             </article>
             <article className="mb-5">
               <h3 className="text-xl font-semibold mt-6 mb-2">A verifiable loop</h3>
               <p className="text-base leading-relaxed">
-                Audit, fix, re-audit. The finding id is stable, so its disappearance is the proof.
-                No re-measurement means no proof, only a claim.
+                Call expert_seo_audit, then generate_corrective_code, then expert_seo_audit again.
+                The comparison is between the two JSON payloads.
               </p>
             </article>
             <article className="mb-5">
-              <h3 className="text-xl font-semibold mt-6 mb-2">Root cause before symptoms</h3>
+              <h3 className="text-xl font-semibold mt-6 mb-2">Then a corrective script</h3>
               <p className="text-base leading-relaxed">
-                A page whose text only exists after JavaScript execution is reported as a rendering
-                shell, not as thin content. Fixing the wrong layer wastes an entire sprint.
+                generate_corrective_code returns JavaScript. dry_run_script tests a generated
+                script (a site_script_rules id) on the live page: JS errors, CLS and JSON-LD
+                validity. wordpress_sync injects a fix into a connected WordPress site and
+                requires a session JWT.
               </p>
             </article>
           </section>
@@ -185,8 +163,7 @@ export default function SeoMcpServer() {
               Tools exposed by the server
             </h2>
             <p className="text-base leading-relaxed mb-6">
-              Tool availability depends on your plan and wallet. Long-running work is asynchronous:
-              the agent starts a job, then reads the result.
+              {MCP_SERVER_COUNT_EN} Descriptions follow the text registered with each tool.
             </p>
             <ul className="list-none p-0 grid gap-3">
               {TOOLS.map((tool) => (
@@ -200,63 +177,37 @@ export default function SeoMcpServer() {
               ))}
             </ul>
             <DataTable
-              caption="Crawlers MCP tools: returned data, execution mode and billing class."
-              columns={['Tool', 'Returns', 'Execution', 'Billing']}
-              rows={[
-                ['audit_page', 'HTTP status, canonical, headings, metadata, JSON-LD, extracted text, render-shell verdict', 'Synchronous', 'Metered'],
-                ['audit_site', 'Site-wide technical and generative-visibility findings, grouped by severity', 'Asynchronous', 'Metered'],
-                ['crawl_site', 'Job id, then crawled URLs with status and click depth', 'Asynchronous', 'Metered'],
-                ['list_findings', 'Normalised findings: rule id, severity, evidence, fix availability', 'Synchronous', 'Free'],
-                ['get_fix', 'Stack-specific patch: HTML, WordPress, Next.js, TanStack Start', 'Synchronous', 'Metered'],
-                ['check_indexability', 'robots.txt, meta robots, canonical target, redirect chain', 'Synchronous', 'Metered'],
-                ['analyze_schema', 'Mismatches between JSON-LD and visible content', 'Synchronous', 'Metered'],
-                ['analyze_links', 'Inbound links, click depth, orphan pages, broken-link verdicts', 'Synchronous', 'Metered'],
-                ['ai_visibility', 'Observed brand citations per engine across a generated question set', 'Asynchronous', 'Metered'],
-                ['get_job', 'Status and payload of any asynchronous job', 'Synchronous', 'Free'],
-              ]}
+              caption="Tools registered on mcp-server: description and access, taken from the server code."
+              columns={['Tool', 'What the registration says', 'Access']}
+              rows={MCP_SERVER_TOOLS.map((tool) => [
+                tool.name,
+                tool.summaryEn,
+                MCP_SERVER_ACCESS_EN[tool.access],
+              ])}
+            />
+            <h3 className="text-xl font-semibold mt-8 mb-2">Second server, different tools</h3>
+            <p className="text-base leading-relaxed mb-4">
+              A second server, <code>supabase/functions/mcp</code>, uses OAuth 2.1. It is not the
+              endpoint above. Its registered tools are listed here, except one whose public
+              announcement is deferred.
+            </p>
+            <DataTable
+              caption="Tools registered on the OAuth server mcp. One tool on that server is not announced here."
+              columns={['Tool', 'What the registration says']}
+              rows={MCP_OAUTH_TOOLS.map((tool) => [tool.name, tool.summaryEn])}
             />
           </section>
 
           <section className="mb-12">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-              Anatomy of a finding
+              What a tool returns
             </h2>
-            <p className="text-base leading-relaxed mb-6">
-              A finding is a stable unit, which is exactly what makes verification possible. Without
-              a stable rule id, re-auditing compares nothing.
+            <p className="text-base leading-relaxed">
+              Each registered tool returns the JSON of the function it calls. This page does not
+              publish rule identifiers, severity scales or stack-specific patch formats: that
+              contract is not in the MCP registration. To compare two passes, call the same tool
+              again and read the two payloads.
             </p>
-            <article className="mb-5">
-              <h3 className="text-xl font-semibold mt-6 mb-2">Rule id</h3>
-              <p className="text-base leading-relaxed">
-                A code such as SEO-H1-001, invariant across audits. Its disappearance after a patch
-                is the proof the fix worked.
-              </p>
-            </article>
-            <article className="mb-5">
-              <h3 className="text-xl font-semibold mt-6 mb-2">Evidence</h3>
-              <p className="text-base leading-relaxed">
-                The measured value, the excerpt and the URL. A finding with no evidence is never
-                handed to the agent.
-              </p>
-            </article>
-            <article className="mb-5">
-              <h3 className="text-xl font-semibold mt-6 mb-2">Severity and fix availability</h3>
-              <p className="text-base leading-relaxed">
-                Severity reflects expected impact, not rule order. Fix availability lists the stacks
-                a patch exists for, so the agent knows whether it can act.
-              </p>
-            </article>
-            <DataTable
-              caption="Sample normalised findings with severity, typical evidence and covered stacks."
-              columns={['Finding id', 'Rule', 'Severity', 'Typical evidence', 'Covered stacks']}
-              rows={[
-                ['SEO-H1-001', 'Exactly one h1', 'Critical', 'No h1 in served HTML', 'HTML, WordPress, Next.js'],
-                ['SEO-CANON-002', 'Canonical present and consistent', 'Critical', 'No canonical tag, duplicate on /?ref=', 'HTML, WordPress, Next.js'],
-                ['SEO-META-007', 'Useful meta description', 'Medium', '62 characters, below display threshold', 'HTML, WordPress, Next.js'],
-                ['SEO-RENDER-005', 'Content served without JavaScript', 'Critical', 'Extracted text under 200 characters before hydration', 'Next.js, TanStack Start'],
-                ['GEO-ANSWER-001', 'Citable direct answer', 'Critical', 'No standalone 2-4 sentence passage', 'HTML, WordPress, Next.js'],
-              ]}
-            />
           </section>
 
           <section className="mb-12">
@@ -289,11 +240,11 @@ export default function SeoMcpServer() {
               instructions.
             </p>
             <ol className="text-base leading-relaxed space-y-2">
-              <li>audit_page on the route being edited.</li>
-              <li>list_findings returns a missing canonical, a short description, absent JSON-LD.</li>
-              <li>get_fix for each finding, scoped to the detected framework.</li>
-              <li>The agent edits the files in the repository.</li>
-              <li>audit_page again: the resolved findings are gone, the remaining ones are listed.</li>
+              <li>expert_seo_audit on the URL being edited (Pro Agency).</li>
+              <li>The agent reads the JSON the tool returns.</li>
+              <li>generate_corrective_code asks for corrective JavaScript for that URL.</li>
+              <li>The agent edits the files in the repository. The tool itself does not commit them.</li>
+              <li>expert_seo_audit again, to compare the new JSON with the previous one.</li>
             </ol>
           </section>
 
@@ -305,7 +256,7 @@ export default function SeoMcpServer() {
               The operational endpoint is <code>POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code> over Streamable HTTP.
               Get your Marina key (prefix <code>marina_</code> or <code>mk_live_</code>) from Console crawlers.fr → API → Marina.
               Set <code>x-marina-key: &lt;key&gt;</code> or <code>Authorization: Bearer &lt;key&gt;</code>.
-              There are 16 tools: 3 free + 9 Pro + 4 Marina. A key belonging to an active Pro Agency account unlocks Pro access;
+              {MCP_SERVER_COUNT_EN} A key belonging to an active Pro Agency account unlocks Pro access;
               calculate_cocoon_logic, wordpress_sync and measure_audit_impact still require a session JWT.
               Marina costs 5 credits per report, or is included with active Pro Agency.
             </blockquote>
@@ -360,9 +311,9 @@ export default function SeoMcpServer() {
                 { label: 'Model Context Protocol specification', href: 'https://modelcontextprotocol.io/specification', note: 'Streamable HTTP transport, tools, resources and prompts.' },
                 { label: 'Anthropic MCP documentation', href: 'https://docs.anthropic.com/en/docs/mcp', note: 'Adding an MCP server to Claude Desktop and Claude Code.' },
                 { label: 'Google Search Central', href: 'https://developers.google.com/search/docs', note: 'Official guidance on canonicals, indexing and rendering.' },
-                { label: 'Schema.org', href: 'https://schema.org/docs/schemas.html', note: 'Structured-data vocabulary validated by analyze_schema.' },
-                { label: 'Web Vitals', href: 'https://web.dev/articles/vitals', note: 'LCP, INP and CLS thresholds used in performance scoring.' },
-                { label: 'Robots Exclusion Protocol (RFC 9309)', href: 'https://www.rfc-editor.org/rfc/rfc9309.html', note: 'robots.txt standard applied by check_indexability.' },
+                { label: 'Schema.org', href: 'https://schema.org/docs/schemas.html', note: 'Structured-data vocabulary. On the OAuth server, analyze_schema reads the machine layer of a page.' },
+                { label: 'Web Vitals', href: 'https://web.dev/articles/vitals', note: 'Definitions of LCP, INP and CLS. dry_run_script reports CLS for a tested script.' },
+                { label: 'Robots Exclusion Protocol (RFC 9309)', href: 'https://www.rfc-editor.org/rfc/rfc9309.html', note: 'robots.txt standard. On the OAuth server, check_indexability reads robot access.' },
               ].map((ref) => (
                 <li key={ref.href} className="rounded-lg border border-border bg-card/30 p-4 not-prose">
                   <a

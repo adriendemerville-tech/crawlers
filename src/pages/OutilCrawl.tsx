@@ -136,7 +136,9 @@ export default function OutilCrawl() {
           </p>
           <p className="text-base leading-relaxed text-foreground/80">
             Le même mécanisme s’applique aux autres CMS : le crawl lit le HTML servi, pas la base de
-            données, il ne dépend donc d’aucune extension.
+            données, il ne dépend donc d’aucune extension. Pour la citabilité du même HTML par les
+            moteurs génératifs, voir l’{' '}
+            <Link to="/audit-geo#audit-geo-wordpress" className="underline">audit GEO WordPress</Link>.
           </p>
         </section>
 

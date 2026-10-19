@@ -75,6 +75,14 @@ export const Route = createFileRoute("/audit-geo")({
           mainEntity: [
             {
               "@type": "Question",
+              name: "Peut-on faire un audit GEO d’un site WordPress ?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Oui, sans extension. L’audit lit le HTML servi et le robots.txt à la racine, comme pour un autre CMS. Sur WordPress, ce fichier est souvent écrit par une extension SEO : il autorise ou bloque GPTBot, ClaudeBot et Google-Extended. Un site connecté peut ensuite recevoir un correctif via le pont CMS (outil wordpress_sync, compte Pro Agency, jeton de session).",
+              },
+            },
+            {
+              "@type": "Question",
               name: "Pourquoi ne pas demander directement un audit à ChatGPT ou Claude ?",
               acceptedAnswer: {
                 "@type": "Answer",

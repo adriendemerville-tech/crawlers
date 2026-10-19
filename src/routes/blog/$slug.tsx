@@ -8,7 +8,9 @@ import {
   buildArticleJsonLd,
   buildBreadcrumbJsonLd,
   buildDefinedTermJsonLd,
+  buildFaqJsonLd,
 } from "@/lib/seo/articleSchema";
+import { CRAWLER_DEFINITION_FAQS } from "@/data/crawlerDefinitionFaq";
 import { resolveLastUpdated } from "@/lib/blog/lastUpdated";
 
 /**
@@ -189,6 +191,16 @@ export const Route = createFileRoute("/blog/$slug")({
                 definition: DEFINITION_ARTICLES[params.slug].definition,
                 path,
               }),
+            ]
+          : []),
+        ...(params.slug === "crawler-definition-seo-geo"
+          ? [
+              buildFaqJsonLd(
+                CRAWLER_DEFINITION_FAQS.map((item) => ({
+                  question: item.q,
+                  answer: item.a,
+                })),
+              ),
             ]
           : []),
       ],

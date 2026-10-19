@@ -9,7 +9,7 @@ export const Route = createFileRoute("/comparatif-crawlers-screaming-frog")({
     pageHead({
       title: "Alternative Screaming Frog 2026 : crawl en ligne sans limite",
       description:
-        "Crawlers.fr vs Screaming Frog sur 10 critères : crawl en ligne jusqu'à 10 000 URL, rendu JavaScript, cocon sémantique, visibilité ChatGPT.",
+        "Ahrefs vs Screaming Frog et Semrush vs Screaming Frog, à côté de Crawlers.fr : crawl en ligne ou logiciel de bureau, visibilité IA, sans prix ajouté.",
       path: "/comparatif-crawlers-screaming-frog",
       ogType: "article",
       jsonLd: SCREAMING_FROG_JSONLD,

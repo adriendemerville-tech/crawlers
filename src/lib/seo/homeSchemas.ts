@@ -32,8 +32,8 @@ const TOOLS: Array<{ name: string; path: string; description: string }> = [
   { name: 'PageSpeed', path: '/pagespeed', description: 'Core Web Vitals mobile et desktop, terrain CrUX puis médiane de runs.' },
   { name: 'Observatoire sectoriel', path: '/observatoire', description: 'Indicateurs SEO et GEO agrégés par secteur.' },
   { name: 'API développeurs Crawlers', path: '/developers', description: 'Accès programmatique à l’ensemble des modules SEO, GEO et IA : jobs asynchrones REST, SDK TypeScript, wallet à l’usage.' },
-  { name: 'Serveur MCP SEO', path: '/seo-mcp-server', description: 'Serveur Model Context Protocol exposant l’audit SEO technique à Claude Code, Claude Desktop, Cursor et tout client MCP conforme : audit_page, audit_site, crawl_site, get_fix, check_indexability, analyze_schema, analyze_links.' },
-  { name: 'Serveur MCP GEO', path: '/geo-mcp-server', description: 'Serveur Model Context Protocol pour la visibilité générative : mesure des citations dans ChatGPT, Perplexity, Gemini, Claude et Mistral, concurrents cités, couverture des bots IA et correctifs de citabilité.' },
+  { name: 'Serveur MCP SEO', path: '/seo-mcp-server', description: 'Serveur mcp-server (Streamable HTTP, clé Marina ou JWT) : expert_seo_audit, strategic_ai_audit, generate_corrective_code, dry_run_script, calculate_cocoon_logic, fetch_serp_kpis, calculate_ias, wordpress_sync, measure_audit_impact, quatre outils Marina et sept lectures Search Console réservées aux administrateurs.' },
+  { name: 'Serveur MCP GEO', path: '/geo-mcp-server', description: 'Même serveur : check_geo_score (0-100), check_llm_visibility (ChatGPT, Gemini, Perplexity, Claude) et check_ai_crawlers (GPTBot, ClaudeBot, Google-Extended), sans clé.' },
 
 ];
 
@@ -126,8 +126,8 @@ const softwareApplication = {
     'Copilot conversationnel avec mémoire vectorielle',
     'Connexion CMS directe (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo, Webflow, REST custom)',
     'Extension Chrome Crawlers AI Sidebar',
-    'Serveur MCP (Model Context Protocol) : audit SEO et GEO appelable depuis Claude Code, Claude Desktop, Cursor et tout client MCP conforme, en Streamable HTTP avec OAuth 2.1',
-    'Boucle agent audit → constat normalisé → correctif → re-vérification exposée en MCP',
+    'Serveur MCP mcp-server : audit SEO et GEO appelables depuis Claude Code, Claude Desktop et Cursor, en Streamable HTTP avec une clé Marina ou un JWT',
+    'Outils gratuits check_geo_score, check_llm_visibility et check_ai_crawlers, puis outils Pro Agency sur le même serveur',
 
     'Marque blanche agence et gestion d’équipe multi-rôles',
   ],
@@ -182,7 +182,7 @@ export const HOME_FAQ_ITEMS = [
   },
   {
     q: 'Crawlers.fr est-il disponible en MCP pour Claude, Cursor ou Codex ?',
-    a: "Oui. Crawlers.fr expose un serveur MCP (Model Context Protocol) en Streamable HTTP avec OAuth 2.1, compatible Claude Code, Claude Desktop, Cursor et tout client MCP conforme. L'agent appelle directement audit_page, audit_site, crawl_site, ai_visibility, analyze_schema, check_indexability, analyze_links et get_fix, reçoit des constats normalisés avec preuve et gravité, applique le correctif dans le code puis relance l'audit pour vérifier. Détails sur https://crawlers.fr/seo-mcp-server et https://crawlers.fr/geo-mcp-server.",
+    a: "Oui. L'endpoint opérationnel est le serveur mcp-server, en Streamable HTTP, avec une clé Marina ou un JWT (pas OAuth). Sans clé : check_geo_score, check_llm_visibility et check_ai_crawlers. Avec Pro Agency : expert_seo_audit, strategic_ai_audit, generate_corrective_code, et les autres outils enregistrés. Un second serveur, en OAuth, expose d'autres noms (audit_page, analyze_schema, check_indexability, analyze_links, start_site_crawl, start_geo_audit). Détails sur https://crawlers.fr/seo-mcp-server et https://crawlers.fr/geo-mcp-server.",
   },
 
   {

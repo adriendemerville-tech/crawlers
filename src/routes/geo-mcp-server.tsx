@@ -5,7 +5,7 @@ import { breadcrumbList } from "@/lib/seo/breadcrumb";
 
 const TITLE = "Serveur MCP GEO : mesurez votre visibilité IA | Crawlers";
 const DESCRIPTION =
-  "Un serveur MCP qui donne aux agents IA un vrai moteur de mesure GEO : citations dans ChatGPT, Gemini, Perplexity et Claude, constats normalisés, corrections et re-mesure.";
+  "Serveur MCP GEO : check_geo_score, check_llm_visibility (ChatGPT, Gemini, Perplexity, Claude) et check_ai_crawlers, parmi les 23 outils de mcp-server.";
 
 export const Route = createFileRoute("/geo-mcp-server")({
   head: () =>
