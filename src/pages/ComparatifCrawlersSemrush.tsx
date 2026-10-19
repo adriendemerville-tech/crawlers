@@ -49,6 +49,10 @@ const breadcrumbSD = {
 
 const faqItems = [
   {
+    q: "Qu'est-ce que le crawler Semrush ?",
+    a: "Le crawler Semrush est le robot du module Site Audit. Il parcourt le site depuis les serveurs Semrush. Le user-agent public associé à cette exploration s'appelle SemrushBot. Crawlers.fr est un autre crawl, hébergé lui aussi, qui ajoute un score GEO, une lecture de visibilité sur ChatGPT, Gemini, Perplexity et Claude, et un correctif injectable sur un WordPress connecté.",
+  },
+  {
     q: "Quelle est la différence principale entre Crawlers.fr et Semrush ?",
     a: "Semrush est une suite SEO complète axée sur le référencement Google (mots-clés, backlinks, positions). Crawlers.fr est une plateforme Identity-First qui combine SEO technique, GEO (visibilité IA) et génération de contenu/code correctif. Les deux sont complémentaires.",
   },
@@ -303,6 +307,58 @@ const ComparatifCrawlersSemrush = () => {
                     </ul>
                   </div>
                 </div>
+
+                {/* ═══ H2 : Semrush crawler ═══ */}
+                <h2 id="semrush-crawler" className="text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">
+                  <Bot className="h-5 w-5 text-primary" />
+                  Semrush crawler : le robot du Site Audit
+                </h2>
+                <p>
+                  <strong>Semrush crawler</strong> désigne le robot qui explore un site pour le module Site Audit.
+                  Cette exploration part des serveurs Semrush. Le user-agent public documenté pour ce passage s'appelle <strong>SemrushBot</strong>.
+                  Le crawl est un module d'une suite plus large (mots-clés, backlinks, positions) : il ne se confond pas avec l'ensemble de Semrush.
+                </p>
+                <p>
+                  Le tableau suivant reste qualitatif. Les plafonds d'URL et les prix Semrush dépendent de l'offre : ils ne sont pas repris ici.
+                  La colonne Crawlers.fr ne cite que des fonctions présentes dans le code.
+                </p>
+                <div className="overflow-x-auto rounded-lg border border-border bg-card my-4 not-prose">
+                  <table className="w-full text-xs sm:text-sm" aria-label="Semrush crawler comparé au crawl Crawlers.fr">
+                    <thead>
+                      <tr className="bg-muted/50 border-b border-border">
+                        <th className="text-left p-3 font-semibold text-foreground">Critère</th>
+                        <th className="text-left p-3 font-semibold text-foreground">Semrush crawler</th>
+                        <th className="text-left p-3 font-semibold text-foreground bg-primary/5">Crawlers.fr</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-muted-foreground">
+                      <tr className="border-b border-border/50">
+                        <td className="p-3 font-medium text-foreground">Où tourne le crawl</td>
+                        <td className="p-3">Dans le cloud Semrush (module Site Audit, robot SemrushBot).</td>
+                        <td className="p-3 bg-primary/5">Côté serveur Crawlers, sans logiciel à installer.</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="p-3 font-medium text-foreground">Ce que le crawl produit</td>
+                        <td className="p-3">Un rapport technique d'audit de site. Le détail des contrôles n'est pas chiffré ici.</td>
+                        <td className="p-3 bg-primary/5">Le HTML servi, un audit SEO (expert_seo_audit, décrit comme 200 points) et un score GEO (check_geo_score).</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="p-3 font-medium text-foreground">Réponses des IA</td>
+                        <td className="p-3">Non affirmé comme une fonction de ce robot.</td>
+                        <td className="p-3 bg-primary/5">check_llm_visibility sur ChatGPT, Gemini, Perplexity et Claude. check_ai_crawlers sur GPTBot, ClaudeBot et Google-Extended.</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-medium text-foreground">Après le constat</td>
+                        <td className="p-3">Le rapport reste dans la suite. Aucune injection WordPress n'est affirmée ici.</td>
+                        <td className="p-3 bg-primary/5">generate_corrective_code produit du JavaScript correctif. wordpress_sync l'injecte dans WordPress pour un site connecté (Pro Agency, jeton de session).</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p>
+                  Pour la comparaison avec le logiciel de bureau, voir{' '}
+                  <Link to="/comparatif-crawlers-screaming-frog#semrush-vs-screaming-frog" className="text-primary hover:underline font-medium">Semrush vs Screaming Frog</Link>.
+                </p>
 
                 {/* ═══ H2 : Crawl Semrush vs Crawl Crawlers.fr ═══ */}
                 <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">

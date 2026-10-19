@@ -436,6 +436,9 @@ const ModifierCodeWordPress = () => {
                 Le plugin WordPress et le widget GTM Crawlers.fr automatisent cette optimisation en injectant les bonnes balises SEO, le JSON-LD automatique et les signaux sémantiques que les crawlers IA (GPTBot, PerplexityBot, ClaudeBot) recherchent.
                 Le résultat : un <strong className="text-foreground">gain de performance LLM</strong> mesurable dès la première synchronisation, sans toucher une ligne de code.
               </p>
+              <p>
+                Pour mesurer d’abord le HTML servi et la politique robots, voir l’<Link to="/audit-geo#audit-geo-wordpress" className="text-primary hover:underline">audit GEO WordPress</Link>.
+              </p>
             </div>
           </div>
         </section>

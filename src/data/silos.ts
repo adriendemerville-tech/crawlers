@@ -25,7 +25,7 @@ export const SILOS: Record<Silo['id'], Silo> = {
     id: 'crawler',
     intent: 'crawler, les crawlers, définition crawler SEO',
     pillar: {
-      label: 'Crawler : définition SEO & GEO',
+      label: 'Crawler : traduction et définition',
       to: '/blog/crawler-definition-seo-geo',
       note: 'Page de référence du silo « crawler »',
     },

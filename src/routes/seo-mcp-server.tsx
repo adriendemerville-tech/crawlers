@@ -5,7 +5,7 @@ import { breadcrumbList } from "@/lib/seo/breadcrumb";
 
 const TITLE = "SEO MCP Server for Claude & Cursor | Crawlers";
 const DESCRIPTION =
-  "An MCP server that gives AI coding agents a real SEO audit engine: crawl, normalised findings, stack-specific fixes and verification. Claude Code, Claude Desktop, Cursor.";
+  "MCP server for Claude and Cursor: 27 tools on mcp-server 1.2.0, including keyword research, SERP ranking, backlinks, async SEO audits and Marina reports.";
 
 export const Route = createFileRoute("/seo-mcp-server")({
   head: () =>

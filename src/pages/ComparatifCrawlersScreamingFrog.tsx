@@ -13,6 +13,94 @@ const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: 
  * Cible : « alternative Screaming Frog », « Screaming Frog en ligne », « Screaming Frog gratuit ».
  */
 
+const AHREFS_VS_SF: { criteria: string; left: string; sf: string; crawlers: string }[] = [
+  {
+    criteria: 'Forme de l’outil',
+    left: 'Suite SEO en ligne. Le crawl est un module (Site Audit), à côté des mots-clés et des backlinks.',
+    sf: 'Logiciel de bureau (Windows, macOS, Linux), dont le métier est le crawl.',
+    crawlers: 'Application en ligne : rien à installer, le crawl tourne côté serveur.',
+  },
+  {
+    criteria: 'Périmètre du crawl',
+    left: 'Audit technique du site dans le cloud. Les plafonds dépendent de l’offre Ahrefs : ils ne sont pas chiffrés ici.',
+    sf: 'Exploration technique en local. La version gratuite plafonne à 500 URL par crawl.',
+    crawlers: 'Crawl du HTML servi, audit SEO (outil expert_seo_audit, décrit comme 200 points) et score GEO (check_geo_score).',
+  },
+  {
+    criteria: 'Visibilité dans les réponses IA',
+    left: 'Non affirmée ici. Le cœur public d’Ahrefs reste l’audit de site, les mots-clés et les backlinks.',
+    sf: 'Hors du périmètre d’un crawler de bureau.',
+    crawlers: 'check_llm_visibility (ChatGPT, Gemini, Perplexity, Claude) et check_ai_crawlers (GPTBot, ClaudeBot, Google-Extended).',
+  },
+  {
+    criteria: 'WordPress',
+    left: 'Le crawl lit le site public. Rien de spécifique à WordPress n’est affirmé ici.',
+    sf: 'Même lecture du HTML public, en local.',
+    crawlers: 'Empreintes WordPress lues dans le HTML. Injection d’un correctif via wordpress_sync si le site est connecté (Pro Agency, jeton de session).',
+  },
+];
+
+const SEMRUSH_VS_SF: { criteria: string; left: string; sf: string; crawlers: string }[] = [
+  {
+    criteria: 'Forme de l’outil',
+    left: 'Suite SEO en ligne. Le crawler est le robot du module Site Audit (user-agent public SemrushBot).',
+    sf: 'Logiciel de bureau, crawl lancé sur le poste.',
+    crawlers: 'Crawl hébergé, lancé depuis le navigateur, sans logiciel à installer.',
+  },
+  {
+    criteria: 'Périmètre du crawl',
+    left: 'Rapport technique d’audit de site. Les quotas dépendent de l’offre Semrush : ils ne sont pas chiffrés dans ce tableau.',
+    sf: 'Tableaux techniques locaux. Version gratuite limitée à 500 URL par crawl.',
+    crawlers: 'HTML servi, audit SEO et score GEO. La découverte de sitemap côté serveur plafonne à 10 000 URL dans le code (fetch-sitemap-tree).',
+  },
+  {
+    criteria: 'Visibilité dans les réponses IA',
+    left: 'Non affirmée ici comme une fonction du crawler Semrush.',
+    sf: 'Non couvert.',
+    crawlers: 'Score GEO et visibilité LLM sur ChatGPT, Gemini, Perplexity et Claude.',
+  },
+  {
+    criteria: 'Sortie exploitable',
+    left: 'Rapport d’audit dans la suite Semrush. Le détail des exports n’est pas repris ici.',
+    sf: 'Exports de tableaux, à lire soi-même.',
+    crawlers: 'JSON d’audit, JavaScript correctif (generate_corrective_code) et, sur WordPress connecté, injection via wordpress_sync.',
+  },
+];
+
+function TripleTable({
+  caption,
+  leftHeader,
+  rows,
+}: {
+  caption: string;
+  leftHeader: string;
+  rows: { criteria: string; left: string; sf: string; crawlers: string }[];
+}) {
+  return (
+    <table className="w-full text-sm border border-border rounded-lg overflow-hidden mb-4">
+      <caption className="sr-only">{caption}</caption>
+      <thead>
+        <tr className="border-b border-border text-left">
+          <th className="p-3 font-semibold">Critère</th>
+          <th className="p-3 font-semibold">{leftHeader}</th>
+          <th className="p-3 font-semibold">Screaming Frog</th>
+          <th className="p-3 font-semibold">Crawlers.fr</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr key={r.criteria} className="border-b border-border/60 align-top">
+            <td className="p-3 font-medium">{r.criteria}</td>
+            <td className="p-3 text-foreground/80">{r.left}</td>
+            <td className="p-3 text-foreground/80">{r.sf}</td>
+            <td className="p-3 text-foreground/80">{r.crawlers}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 const ROWS: { criteria: string; sf: string; crawlers: string }[] = [
   { criteria: 'Nature de l’outil', sf: 'Logiciel à installer sur Windows, macOS ou Linux', crawlers: 'Application en ligne, rien à installer' },
   { criteria: 'Limite gratuite', sf: '500 URL par crawl, fonctions avancées désactivées', crawlers: 'Deux rapports complets offerts sans compte, jusqu’à 10 000 URL selon l’offre' },
@@ -90,6 +178,41 @@ export default function ComparatifCrawlersScreamingFrog() {
               ))}
             </tbody>
           </table>
+        </section>
+
+        <section className="mb-14 overflow-x-auto" id="ahrefs-vs-screaming-frog">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">Ahrefs vs Screaming Frog</h2>
+          <p className="text-base leading-relaxed text-foreground/80 mb-4">
+            La requête compare deux crawlers de natures différentes. Ahrefs est une suite en ligne,
+            Screaming Frog un logiciel de bureau. Le tableau ci-dessous s’en tient à ces caractéristiques
+            publiques. La colonne Crawlers.fr ne reprend que des faits présents dans le code du produit.
+            Aucun prix et aucun plafond Ahrefs ne sont indiqués.
+          </p>
+          <TripleTable
+            caption="Ahrefs vs Screaming Frog, avec Crawlers.fr"
+            leftHeader="Ahrefs"
+            rows={AHREFS_VS_SF}
+          />
+          <p className="text-sm text-foreground/70">
+            Voir aussi <Link to="/comparatif-crawlers-ahrefs" className="underline">Crawlers.fr vs Ahrefs</Link>.
+          </p>
+        </section>
+
+        <section className="mb-14 overflow-x-auto" id="semrush-vs-screaming-frog">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">Semrush vs Screaming Frog</h2>
+          <p className="text-base leading-relaxed text-foreground/80 mb-4">
+            Semrush crawle depuis son cloud (module Site Audit, robot public SemrushBot). Screaming Frog
+            crawle depuis le poste. Les quotas Semrush varient selon l’offre : ce tableau ne les chiffre pas.
+          </p>
+          <TripleTable
+            caption="Semrush vs Screaming Frog, avec Crawlers.fr"
+            leftHeader="Semrush"
+            rows={SEMRUSH_VS_SF}
+          />
+          <p className="text-sm text-foreground/70">
+            Le détail du crawler Semrush est sur{' '}
+            <Link to="/comparatif-crawlers-semrush" className="underline">Crawlers.fr vs Semrush</Link>.
+          </p>
         </section>
 
         <section className="mb-14">

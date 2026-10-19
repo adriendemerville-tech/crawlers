@@ -32,8 +32,8 @@ const TOOLS: Array<{ name: string; path: string; description: string }> = [
   { name: 'PageSpeed', path: '/pagespeed', description: 'Core Web Vitals mobile et desktop, terrain CrUX puis médiane de runs.' },
   { name: 'Observatoire sectoriel', path: '/observatoire', description: 'Indicateurs SEO et GEO agrégés par secteur.' },
   { name: 'API développeurs Crawlers', path: '/developers', description: 'Accès programmatique à l’ensemble des modules SEO, GEO et IA : jobs asynchrones REST, SDK TypeScript, wallet à l’usage.' },
-  { name: 'Serveur MCP SEO', path: '/seo-mcp-server', description: 'Serveur Model Context Protocol exposant l’audit SEO technique à Claude Code, Claude Desktop, Cursor et tout client MCP conforme : audit_page, audit_site, crawl_site, get_fix, check_indexability, analyze_schema, analyze_links.' },
-  { name: 'Serveur MCP GEO', path: '/geo-mcp-server', description: 'Serveur Model Context Protocol pour la visibilité générative : mesure des citations dans ChatGPT, Perplexity, Gemini, Claude et Mistral, concurrents cités, couverture des bots IA et correctifs de citabilité.' },
+  { name: 'Serveur MCP SEO', path: '/seo-mcp-server', description: 'Serveur mcp-server (Streamable HTTP, clé Marina ou JWT) : expert_seo_audit, strategic_ai_audit, generate_corrective_code, dry_run_script, calculate_cocoon_logic, fetch_serp_kpis, calculate_ias, wordpress_sync, measure_audit_impact, quatre outils Marina et sept lectures Search Console réservées aux administrateurs.' },
+  { name: 'Serveur MCP GEO', path: '/geo-mcp-server', description: 'Même serveur : check_geo_score (0-100), check_llm_visibility (ChatGPT, Gemini, Perplexity, Claude) et check_ai_crawlers (GPTBot, ClaudeBot, Google-Extended), sans clé.' },
 
 ];
 
@@ -126,8 +126,8 @@ const softwareApplication = {
     'Copilot conversationnel avec mémoire vectorielle',
     'Connexion CMS directe (WordPress, Shopify, Wix, PrestaShop, Drupal, Odoo, Webflow, REST custom)',
     'Extension Chrome Crawlers AI Sidebar',
-    'Serveur MCP (Model Context Protocol) : audit SEO et GEO appelable depuis Claude Code, Claude Desktop, Cursor et tout client MCP conforme, en Streamable HTTP avec OAuth 2.1',
-    'Boucle agent audit → constat normalisé → correctif → re-vérification exposée en MCP',
+    'Serveur MCP mcp-server 1.2.0 : 27 outils appelables depuis Claude Code, Claude Desktop et Cursor, en Streamable HTTP avec une clé Marina ou un JWT',
+    'Sans clé : check_geo_score, check_llm_visibility et check_ai_crawlers. Pro Agency : expert_seo_audit et strategic_ai_audit (job_id puis get_audit_job), keyword_research, serp_ranking, backlink_snapshot',
 
     'Marque blanche agence et gestion d’équipe multi-rôles',
   ],
@@ -182,7 +182,7 @@ export const HOME_FAQ_ITEMS = [
   },
   {
     q: 'Crawlers.fr est-il disponible en MCP pour Claude, Cursor ou Codex ?',
-    a: "Oui. Crawlers.fr expose un serveur MCP (Model Context Protocol) en Streamable HTTP avec OAuth 2.1, compatible Claude Code, Claude Desktop, Cursor et tout client MCP conforme. L'agent appelle directement audit_page, audit_site, crawl_site, ai_visibility, analyze_schema, check_indexability, analyze_links et get_fix, reçoit des constats normalisés avec preuve et gravité, applique le correctif dans le code puis relance l'audit pour vérifier. Détails sur https://crawlers.fr/seo-mcp-server et https://crawlers.fr/geo-mcp-server.",
+    a: "Oui. L'endpoint opérationnel est mcp-server 1.2.0, en Streamable HTTP, avec une clé Marina ou un JWT (pas OAuth) : 27 outils. Sans clé : check_geo_score, check_llm_visibility et check_ai_crawlers. Avec Pro Agency : expert_seo_audit et strategic_ai_audit renvoient un job_id à suivre avec get_audit_job (sync: true pour le mode bloquant), ainsi que keyword_research, serp_ranking, backlink_snapshot et generate_corrective_code. Un second serveur, en OAuth, expose d'autres noms (audit_page, analyze_schema, check_indexability, analyze_links, start_site_crawl, start_geo_audit, serp_ranking). Détails sur https://crawlers.fr/seo-mcp-server et https://crawlers.fr/geo-mcp-server.",
   },
 
   {

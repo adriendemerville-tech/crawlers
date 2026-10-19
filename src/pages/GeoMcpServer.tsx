@@ -5,52 +5,21 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import { McpSessionAnimation } from '@/components/Mcp/McpSessionAnimation';
 import { DataTable } from '@/components/seo/DataTable';
+import {
+  MCP_OAUTH_TOOLS,
+  MCP_SERVER_ACCESS_FR,
+  MCP_SERVER_COUNT_FR,
+  MCP_SERVER_ENDPOINT,
+  MCP_SERVER_TOOLS,
+} from '@/data/mcpPublicCatalog';
 
 
 const Footer = lazy(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
 
-const OUTILS: { name: string; body: string }[] = [
-  {
-    name: 'ai_visibility',
-    body: 'Interroge les principaux moteurs génératifs sur un jeu de questions généré et rapporte les citations réellement observées de votre marque.',
-  },
-  {
-    name: 'audit_page',
-    body: 'Audite une URL : statut HTTP, canonical, titres, métadonnées, données structurées, détection de coquille JavaScript, texte extrait.',
-  },
-  {
-    name: 'audit_site',
-    body: 'Lance un audit technique et de visibilité générative complet sur un domaine crawlé.',
-  },
-  {
-    name: 'crawl_site',
-    body: 'Démarre un crawl asynchrone d’un domaine et renvoie un identifiant de job. Le résultat se lit ensuite avec get_job.',
-  },
-  {
-    name: 'list_findings',
-    body: 'Renvoie des constats normalisés : identifiant de règle stable, gravité, preuve, et disponibilité d’une correction.',
-  },
-  {
-    name: 'get_fix',
-    body: 'Renvoie la correction d’un constat, adaptée à votre stack : HTML, WordPress, Next.js ou TanStack Start.',
-  },
-  {
-    name: 'analyze_schema',
-    body: 'Valide le JSON-LD par rapport au contenu visible et signale les incohérences, pas seulement les erreurs de syntaxe.',
-  },
-  {
-    name: 'check_indexability',
-    body: 'Vérifie robots.txt, meta robots, cible canonical et chaîne HTTP d’une URL.',
-  },
-  {
-    name: 'analyze_links',
-    body: 'Graphe de liens internes d’une page ou d’un site : liens entrants, profondeur de clic, pages orphelines, verdicts sur les liens cassés.',
-  },
-  {
-    name: 'get_job',
-    body: 'Lit le statut et le résultat de tout job asynchrone. Gratuit.',
-  },
-];
+const OUTILS = MCP_SERVER_TOOLS.map((tool) => ({
+  name: tool.name,
+  body: `${tool.summaryFr} Accès : ${MCP_SERVER_ACCESS_FR[tool.access]}.`,
+}));
 
 const FAQS: { q: string; a: string }[] = [
   {
@@ -59,7 +28,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Quelle différence avec un audit GEO classique ?',
-    a: 'L’audit classique produit un rapport ponctuel. Le serveur MCP rend la mesure appelable en boucle par un agent : mesurer, corriger, re-mesurer, avec un identifiant de constat stable dont la disparition prouve la résolution.',
+    a: 'L’audit classique produit un rapport ponctuel. Le serveur MCP rend la mesure appelable par un agent. expert_seo_audit et strategic_ai_audit renvoient un job_id à suivre avec get_audit_job ; sync: true force le mode bloquant.',
   },
   {
     q: 'Quels clients MCP sont compatibles ?',
@@ -67,7 +36,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Comment est-ce facturé ?',
-    a: 'L’endpoint opérationnel expose 3 outils gratuits sans clé, 9 outils Pro et 4 outils Marina. Un rapport Marina coûte 5 crédits, ou est inclus avec Pro Agency actif. Un solde insuffisant renvoie JSON-RPC -32002 sans créer de job.',
+    a: 'L’endpoint opérationnel enregistre 27 outils (mcp-server 1.2.0) : 3 sans clé, 12 Pro Agency (dont keyword_research, serp_ranking et backlink_snapshot), get_audit_job authentifié et gratuit, 4 outils Marina, et 7 outils Search Console en lecture seule réservés aux administrateurs. Un rapport Marina coûte 5 crédits, ou est inclus avec Pro Agency actif. Un solde insuffisant renvoie JSON-RPC -32002 sans créer de job.',
   },
   {
     q: 'L’agent modifie-t-il mon site ?',
@@ -103,77 +72,45 @@ export default function GeoMcpServer() {
         </h1>
 
         <blockquote className="citable-passage border-l-2 border-border pl-4 text-lg text-foreground/85 leading-relaxed mb-10">
-          Crawlers.fr expose son moteur de crawl, d’audit et de mesure GEO comme un serveur Model
-          Context Protocol. Claude Code, Claude Desktop et Cursor peuvent vérifier si les moteurs
-          génératifs citent vos pages, obtenir des constats normalisés, demander la correction
-          adaptée à votre stack, puis re-mesurer pour prouver le résultat.
+          Crawlers.fr expose son moteur d’audit comme un serveur Model Context Protocol. Claude
+          Code, Claude Desktop et Cursor appellent les outils enregistrés sur mcp-server : score
+          GEO, visibilité LLM, audit SEO, JavaScript correctif et rapports Marina. Les noms
+          ci-dessous sont ceux du code du serveur.
         </blockquote>
 
         <McpSessionAnimation
           windowTitle="Claude Code — serveur MCP Crawlers (GEO)"
-          caption="Reproduction d’une session réelle : mesure des citations IA, correction, re-mesure."
+          caption="Exemple de dialogue avec les outils réellement enregistrés. Aucun score d’exemple n’est affiché."
           steps={[
             { kind: 'user', text: 'Connecte le MCP Crawlers.fr' },
             { kind: 'assistant', text: 'Je me connecte au serveur MCP Crawlers.' },
             {
               kind: 'connect',
-              text: 'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server · Streamable HTTP · x-marina-key: <clé> ou Authorization: Bearer <clé> — 16 outils (3 gratuits + 9 Pro + 4 Marina)',
+              text: `${MCP_SERVER_ENDPOINT} · Streamable HTTP · x-marina-key ou Authorization: Bearer — ${MCP_SERVER_COUNT_FR}`,
             },
-            { kind: 'user', text: 'Dis-moi si ChatGPT cite ma page tarifs.' },
-            { kind: 'assistant', text: 'J’utilise l’outil ai_visibility pour mesurer tes citations dans les moteurs génératifs.' },
+            { kind: 'user', text: 'Dis-moi si les modèles citent ce domaine.' },
+            { kind: 'assistant', text: 'J’appelle check_llm_visibility. L’outil est gratuit et attend un domain.' },
             {
               kind: 'tool',
-              name: 'ai_visibility',
-              args: '{ "url": "https://exemple.fr/tarifs", "engines": ["chatgpt", "gemini", "perplexity", "claude"] }',
-            },
-            {
-              kind: 'dashboard',
-              title: 'Résultats — ai_visibility (25 questions)',
-              metrics: [
-                { label: 'Taux de citation', value: '12%', tone: 'bad' },
-                { label: 'ChatGPT', value: '0', tone: 'bad' },
-                { label: 'Perplexity', value: '2', tone: 'warn' },
-                { label: 'Concurrents cités', value: '3', tone: 'bad' },
-              ],
-              rows: [
-                { id: 'GEO-ANSWER-001', severity: 'high', label: 'Aucune réponse directe citable' },
-                { id: 'GEO-SCHEMA-014', severity: 'medium', label: 'Schema Offer/FAQPage absent' },
-              ],
-            },
-            {
-              kind: 'assistant',
-              text: 'Veux-tu exporter ces données, ou que je corrige GEO-ANSWER-001 dans ton projet ?',
-            },
-            {
-              kind: 'user',
-              text: 'Corrige GEO-ANSWER-001.',
-            },
-            { kind: 'assistant', text: 'J’utilise l’outil get_fix pour générer le patch adapté à ta stack.' },
-            {
-              kind: 'tool',
-              name: 'get_fix',
-              args: '{ "finding_id": "GEO-ANSWER-001", "framework": "nextjs" }',
+              name: 'check_llm_visibility',
+              args: '{ "domain": "exemple.fr" }',
             },
             {
               kind: 'result',
               lines: [
-                'patch: bloc réponse directe + 3 passages citables',
-                'fichier: app/tarifs/page.tsx',
-                'schema: Offer + FAQPage à ajouter',
+                'Visibilité du domaine sur ChatGPT, Gemini, Perplexity et Claude.',
+                'Ce panneau illustre l’appel. Il n’affiche pas une mesure d’exemple.fr.',
               ],
             },
+            { kind: 'assistant', text: 'Pour le score GEO du même domaine, l’outil enregistré est check_geo_score.' },
             {
-              kind: 'assistant',
-              text: 'Patch appliqué. Je relance ai_visibility pour vérifier que le constat disparaît.',
+              kind: 'tool',
+              name: 'check_geo_score',
+              args: '{ "domain": "exemple.fr" }',
             },
             {
-              kind: 'dashboard',
-              title: 'Vérification — ai_visibility (comparaison)',
-              metrics: [
-                { label: 'Taux de citation', value: '12 → 34%', tone: 'good' },
-                { label: 'GEO-ANSWER-001', value: 'Résolu', tone: 'good' },
-                { label: 'GEO-SCHEMA-014', value: 'Ouvert', tone: 'warn' },
-              ],
+              kind: 'result',
+              lines: ['Score GEO de 0 à 100, renvoyé par la fonction check-geo.'],
             },
           ]}
         />
@@ -190,18 +127,18 @@ export default function GeoMcpServer() {
               fossé : l’agent cesse de deviner et commence à mesurer.
             </p>
             <article className="mb-5">
-              <h3 className="text-xl font-semibold mt-6 mb-2">Des constats, pas des opinions</h3>
+              <h3 className="text-xl font-semibold mt-6 mb-2">Du JSON, pas un avis</h3>
               <p className="text-base leading-relaxed">
-                Chaque problème revient sous forme d’unité structurée : identifiant de règle,
-                gravité, preuve, explication, et existence d’une correction pour votre framework.
-                C’est cette structure qui le rend exploitable par du code.
+                Chaque outil renvoie le JSON de la fonction qu’il appelle. L’enregistrement MCP
+                ne publie pas d’identifiant de règle, d’échelle de gravité ni de patch par
+                framework.
               </p>
             </article>
             <article className="mb-5">
               <h3 className="text-xl font-semibold mt-6 mb-2">Une boucle vérifiable</h3>
               <p className="text-base leading-relaxed">
-                Auditer, corriger, re-auditer. L’identifiant du constat est stable : sa disparition
-                est la preuve. Sans re-mesure, il n’y a pas de preuve, seulement une affirmation.
+                Auditer, corriger, re-auditer. On relance le même outil et on compare les JSON.
+                L’enregistrement MCP ne publie pas d’identifiant de règle stable.
               </p>
             </article>
             <article className="mb-5">
@@ -209,50 +146,48 @@ export default function GeoMcpServer() {
                 Les citations IA mesurées, pas supposées
               </h3>
               <p className="text-base leading-relaxed">
-                L’outil ai_visibility interroge ChatGPT, Gemini, Perplexity et Claude sur un jeu de
-                questions représentatif de votre marché et rapporte les citations observées de votre
-                marque, de vos concurrents et les sources citées.
+                L’outil enregistré s’appelle check_llm_visibility. Sa description indique la
+                visibilité du domaine sur ChatGPT, Gemini, Perplexity et Claude. Le score GEO
+                séparé est check_geo_score (0 à 100). Les bots lus par check_ai_crawlers sont
+                GPTBot, ClaudeBot et Google-Extended.
               </p>
             </article>
           </section>
 
           <section className="mb-12">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-              Ce que le serveur mesure en GEO
+              Ce que les outils GEO enregistrés mesurent
             </h2>
             <p className="text-base leading-relaxed mb-6">
-              La visibilité générative n’est pas un classement : c’est la capacité d’un moteur IA à
-              vous citer quand votre marché pose une question. Le serveur la décompose en signaux
-              mesurables.
+              Trois outils gratuits portent la mesure GEO sur ce serveur. Leur contrat est celui
+              de leur description enregistrée, pas un catalogue d’indicateurs supplémentaire.
             </p>
             <article className="mb-5">
-              <h3 className="text-xl font-semibold mt-6 mb-2">Citations observées par moteur</h3>
+              <h3 className="text-xl font-semibold mt-6 mb-2">check_geo_score</h3>
               <p className="text-base leading-relaxed">
-                Pour chaque question du jeu de benchmark, le serveur rapporte si ChatGPT, Gemini,
-                Perplexity et Claude citent votre marque, et à quelle position dans la réponse.
+                Score GEO de 0 à 100 pour un domaine. Aucun sous-indicateur n’est promis par
+                l’enregistrement de l’outil.
               </p>
             </article>
             <article className="mb-5">
-              <h3 className="text-xl font-semibold mt-6 mb-2">Sources citées et concurrents</h3>
+              <h3 className="text-xl font-semibold mt-6 mb-2">check_llm_visibility</h3>
               <p className="text-base leading-relaxed">
-                Quand un moteur cite un concurrent ou un média à votre place, la source est
-                enregistrée. Vous savez qui capte la citation et pourquoi il est préféré.
+                Visibilité du domaine sur ChatGPT, Gemini, Perplexity et Claude. L’outil ne
+                publie pas, dans son contrat, un nombre de questions ni un taux.
               </p>
             </article>
             <article className="mb-5">
-              <h3 className="text-xl font-semibold mt-6 mb-2">Détection du fan-out</h3>
+              <h3 className="text-xl font-semibold mt-6 mb-2">check_ai_crawlers</h3>
               <p className="text-base leading-relaxed">
-                Les moteurs génératifs décomposent une question en sous-requêtes. Le serveur détecte
-                ce fan-out pour identifier les angles où votre contenu est absent, pas seulement la
-                requête principale.
+                Analyse des bots GPTBot, ClaudeBot et Google-Extended pour le domaine.
               </p>
             </article>
             <article className="mb-5">
-              <h3 className="text-xl font-semibold mt-6 mb-2">Prérequis techniques GEO</h3>
+              <h3 className="text-xl font-semibold mt-6 mb-2">Audits réservés à Pro Agency</h3>
               <p className="text-base leading-relaxed">
-                Contenu servi sans JavaScript, passages citables, données structurées cohérentes,
-                FAQ : les constats techniques qui bloquent la citation sont rattachés au même
-                identifiant stable que le reste de l’audit.
+                strategic_ai_audit couvre SEO, GEO et concurrence à partir d’une URL.
+                expert_seo_audit est l’audit SEO décrit comme 200 points.
+                generate_corrective_code produit du JavaScript correctif.
               </p>
             </article>
             <DataTable
@@ -266,18 +201,10 @@ export default function GeoMcpServer() {
                 ['Mistral', 'MistralAI-User', 'Parfois', 'Sources francophones structurées'],
               ]}
             />
-            <DataTable
-              caption="Indicateurs GEO mesurés par le serveur MCP et fréquence de mesure recommandée."
-              columns={['Indicateur', 'Unité', 'Source de la mesure', 'Fréquence']}
-              rows={[
-                ['Taux de citation', '% des questions', 'Interrogation réelle des moteurs', 'Mensuelle'],
-                ['Citations par moteur', 'Nombre', 'Interrogation réelle des moteurs', 'Mensuelle'],
-                ['Concurrents cités', 'Nombre de domaines', 'Sources de la réponse', 'Mensuelle'],
-                ['Couverture bots IA', '% du sitemap', 'Logs serveur vérifiés (rDNS, ASN)', 'Hebdomadaire'],
-                ['Passages citables', 'Nombre par page', 'Analyse du HTML servi', 'À chaque audit'],
-                ['Sous-questions couvertes', '% du fan-out', 'Décomposition des requêtes', 'Mensuelle'],
-              ]}
-            />
+            <p className="text-sm text-foreground/70 mt-3">
+              Le tableau des robots ci-dessus décrit des crawlers publics. Il ne liste pas des
+              champs renvoyés par le serveur MCP.
+            </p>
           </section>
 
 
@@ -286,8 +213,7 @@ export default function GeoMcpServer() {
               Les outils exposés par le serveur
             </h2>
             <p className="text-base leading-relaxed mb-6">
-              La disponibilité des outils dépend de votre plan et de votre portefeuille. Les
-              traitements longs sont asynchrones : l’agent démarre un job, puis lit le résultat.
+              {MCP_SERVER_COUNT_FR} Les descriptions suivent le texte enregistré avec chaque outil.
             </p>
             <ul className="list-none p-0 grid gap-3">
               {OUTILS.map((outil) => (
@@ -301,20 +227,24 @@ export default function GeoMcpServer() {
               ))}
             </ul>
             <DataTable
-              caption="Outils du serveur MCP GEO : données renvoyées, mode d'exécution et facturation."
-              columns={['Outil', 'Données renvoyées', 'Exécution', 'Facturation']}
-              rows={[
-                ['ai_visibility', 'Citations observées par moteur, concurrents cités, sources retenues', 'Asynchrone', 'Décompté'],
-                ['audit_page', 'Statut HTTP, canonical, titres, JSON-LD, texte extrait, coquille JavaScript', 'Synchrone', 'Décompté'],
-                ['audit_site', 'Constats techniques et GEO agrégés par gravité sur un domaine', 'Asynchrone', 'Décompté'],
-                ['crawl_site', 'Identifiant de job, URL crawlées, statut et profondeur de clic', 'Asynchrone', 'Décompté'],
-                ['list_findings', 'Constats normalisés : identifiant, gravité, preuve, correction', 'Synchrone', 'Gratuit'],
-                ['get_fix', 'Patch adapté à la pile : HTML, WordPress, Next.js, TanStack Start', 'Synchrone', 'Décompté'],
-                ['analyze_schema', 'Écarts entre JSON-LD et contenu visible', 'Synchrone', 'Décompté'],
-                ['check_indexability', 'robots.txt, meta robots, canonical, chaîne de redirections', 'Synchrone', 'Décompté'],
-                ['analyze_links', 'Liens entrants, profondeur, pages orphelines, liens cassés', 'Synchrone', 'Décompté'],
-                ['get_job', 'Statut et résultat de tout job asynchrone', 'Synchrone', 'Gratuit'],
-              ]}
+              caption="Outils enregistrés sur mcp-server : description et accès, repris du code du serveur."
+              columns={['Outil', 'Ce que dit l’enregistrement', 'Accès']}
+              rows={MCP_SERVER_TOOLS.map((tool) => [
+                tool.name,
+                tool.summaryFr,
+                MCP_SERVER_ACCESS_FR[tool.access],
+              ])}
+            />
+            <h3 className="text-xl font-semibold mt-8 mb-2">Second serveur, autres outils</h3>
+            <p className="text-base leading-relaxed mb-4">
+              Un second serveur, <code>supabase/functions/mcp</code>, s’authentifie en OAuth 2.1.
+              Ce n’est pas l’endpoint ci-dessus. Son outil serp_ranking est distinct de celui
+              de mcp-server : il est toujours facturé au wallet.
+            </p>
+            <DataTable
+              caption="Outils enregistrés sur le serveur OAuth mcp, y compris serp_ranking."
+              columns={['Outil', 'Ce que dit l’enregistrement']}
+              rows={MCP_OAUTH_TOOLS.map((tool) => [tool.name, tool.summaryFr])}
             />
             <DataTable
               caption="Compatibilité des clients MCP avec le serveur GEO Crawlers.fr."
@@ -338,12 +268,12 @@ export default function GeoMcpServer() {
               boucle sans instruction supplémentaire.
             </p>
             <ol className="text-base leading-relaxed space-y-2">
-              <li>ai_visibility sur le domaine : quelles questions citent les concurrents ?</li>
-              <li>audit_page sur la page à optimiser : structure, données structurées, texte servi.</li>
-              <li>list_findings renvoie les constats : FAQ absente, contenu non citable, coquille JS.</li>
-              <li>get_fix pour chaque constat, adapté au framework détecté.</li>
-              <li>L’agent modifie les fichiers du dépôt.</li>
-              <li>ai_visibility à nouveau : la citation apparaît ou les constats restants sont listés.</li>
+              <li>check_llm_visibility sur le domaine (sans clé).</li>
+              <li>check_geo_score sur le même domaine.</li>
+              <li>expert_seo_audit sur l’URL à revoir (Pro Agency) : la réponse est un job_id, lu avec get_audit_job. sync: true force le mode bloquant.</li>
+              <li>generate_corrective_code pour obtenir le JavaScript correctif.</li>
+              <li>L’agent modifie les fichiers du dépôt. L’outil ne les déploie pas tout seul.</li>
+              <li>Nouvel appel de check_llm_visibility pour comparer les JSON.</li>
             </ol>
           </section>
 
@@ -355,7 +285,7 @@ export default function GeoMcpServer() {
               L’endpoint opérationnel est <code>POST https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/mcp-server</code>, en Streamable HTTP.
               Récupérez votre clé Marina (préfixe <code>marina_</code> ou <code>mk_live_</code>) dans Console crawlers.fr → API → Marina.
               Configurez <code>x-marina-key: &lt;clé&gt;</code> ou <code>Authorization: Bearer &lt;clé&gt;</code>.
-              Les 16 outils se répartissent en 3 gratuits + 9 Pro + 4 Marina. Une clé rattachée à un compte Pro Agency actif ouvre l’accès Pro ;
+              {MCP_SERVER_COUNT_FR} Une clé rattachée à un compte Pro Agency actif ouvre l’accès Pro ;
               calculate_cocoon_logic, wordpress_sync et measure_audit_impact exigent toujours un JWT de session.
               Marina coûte 5 crédits par rapport, ou est inclus avec Pro Agency actif.
             </blockquote>

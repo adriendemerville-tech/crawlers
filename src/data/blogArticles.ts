@@ -78,12 +78,12 @@ export const blogArticles: BlogArticle[] = [
     slug: 'crawler-definition-seo-geo',
     type: 'pillar',
     title: {
-      fr: 'Un crawler c\'est quoi ? Tout comprendre de ce rouage essentiel pour le SEO et le GEO',
-      en: 'What is a Crawler? Understanding This Essential Component for SEO and GEO',
-      es: '¿Qué es un Crawler? Entender este engranaje esencial para SEO y GEO',
+      fr: 'Crawler : traduction et définition',
+      en: 'Crawler: translation and definition',
+      es: 'Crawler: traducción y definición',
     },
     description: {
-      fr: 'Découvrez ce qu\'est un crawler web : son histoire, son rôle crucial pour le SEO et le GEO, et pourquoi vous devez désormais parler aux robots avant vos clients.',
+      fr: 'Crawler se traduit par « robot d\'indexation ». Définition courte, différence avec bot et spider, et rôle du crawl en SEO comme en GEO.',
       en: 'Discover what a web crawler is: its history, crucial role for SEO and GEO, and why you must now speak to robots before your customers.',
       es: 'Descubre qué es un crawler web: su historia, papel crucial para SEO y GEO, y por qué debes hablar a los robots antes que a tus clientes.',
     },

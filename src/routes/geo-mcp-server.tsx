@@ -5,7 +5,7 @@ import { breadcrumbList } from "@/lib/seo/breadcrumb";
 
 const TITLE = "Serveur MCP GEO : mesurez votre visibilité IA | Crawlers";
 const DESCRIPTION =
-  "Un serveur MCP qui donne aux agents IA un vrai moteur de mesure GEO : citations dans ChatGPT, Gemini, Perplexity et Claude, constats normalisés, corrections et re-mesure.";
+  "Serveur MCP GEO : check_geo_score, check_llm_visibility (ChatGPT, Gemini, Perplexity, Claude) et check_ai_crawlers, parmi les 27 outils de mcp-server 1.2.0.";
 
 export const Route = createFileRoute("/geo-mcp-server")({
   head: () =>
@@ -55,7 +55,7 @@ export const Route = createFileRoute("/geo-mcp-server")({
               name: "Quelle différence avec un audit GEO classique ?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "L’audit classique produit un rapport ponctuel. Le serveur MCP rend la mesure appelable en boucle par un agent : mesurer, corriger, re-mesurer, avec un identifiant de constat stable dont la disparition prouve la résolution.",
+                text: "L’audit classique produit un rapport ponctuel. Le serveur MCP rend la mesure appelable par un agent. expert_seo_audit et strategic_ai_audit renvoient un job_id à suivre avec get_audit_job ; sync: true force le mode bloquant.",
               },
             },
             {
@@ -63,7 +63,7 @@ export const Route = createFileRoute("/geo-mcp-server")({
               name: "Comment est-ce facturé ?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Les lectures et les statuts de jobs sont gratuits. Les outils qui déclenchent un crawl ou un calcul consomment d’abord le quota de votre plan, puis votre portefeuille développeur en paiement à l’usage, avec un plafond journalier.",
+                text: "L’endpoint opérationnel enregistre 27 outils (mcp-server 1.2.0) : 3 sans clé, 12 Pro Agency (dont keyword_research, serp_ranking et backlink_snapshot), get_audit_job authentifié et gratuit, 4 outils Marina, et 7 outils Search Console en lecture seule réservés aux administrateurs. Un rapport Marina coûte 5 crédits, ou est inclus avec Pro Agency actif. Un solde insuffisant renvoie JSON-RPC -32002 sans créer de job.",
               },
             },
           ],

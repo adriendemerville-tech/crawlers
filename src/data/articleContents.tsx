@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from '@/lib/router-compat';
 import { SummaryBox, RichLink, GeoTable, SgeSummaryBox, AuthorCard, RichLinkCard } from '@/components/Blog';
 import type { GeoTableRow } from '@/components/Blog';
+import { CRAWLER_DEFINITION_FAQS } from '@/data/crawlerDefinitionFaq';
 
 
 // Tableaux de données GEO réutilisables
@@ -1659,7 +1660,11 @@ Allow: /`}</pre>
     fr: (
       <>
         <AuthorCard name="Adrien" position="top" />
-        
+
+        <p className="citable-passage text-lg font-medium text-foreground mb-6 leading-relaxed">
+          <strong>Crawler = robot d'indexation.</strong> Traduction française de « crawler » : <strong>robot d'indexation</strong>. Le mot désigne un programme qui parcourt les pages d'un site, lien après lien, pour en collecter le contenu.
+        </p>
+
         <SgeSummaryBox
           points={[
             'Un crawler est un robot automatisé qui parcourt le web pour indexer les contenus.',
@@ -1700,7 +1705,7 @@ Allow: /`}</pre>
           description="Découvrez tous les crawlers IA qui parcourent le web et comment les gérer"
         />
 
-        <h2 className="text-2xl font-bold mt-10 mb-4">Crawler : traduction française, définition courte et synonymes</h2>
+        <h2 className="text-2xl font-bold mt-10 mb-4">Crawler : traduction et définition</h2>
         <p>
           <strong>Traduction de « crawler » en français</strong> : le terme officiel recommandé est <strong>« robot d'indexation »</strong>. On rencontre aussi <strong>« explorateur de web »</strong>, <strong>« collecteur »</strong> et l'image d'origine, <strong>« araignée du web »</strong> (de l'anglais <em>web spider</em>), parce que le robot suit les liens comme une araignée suit sa toile. Le verbe anglais <em>to crawl</em> signifie littéralement « ramper, avancer pas à pas » : c'est exactement ce que fait le robot, page après page, lien après lien.
         </p>
@@ -1831,18 +1836,15 @@ Allow: /`}</pre>
           Sur les 1 800 sites francophones audités par Crawlers.fr en 2026, seuls 12 % cochent ces sept cases. C'est la fenêtre de tir concrète pour dépasser vos concurrents sur les crawlers autant que sur les humains.
         </p>
 
-        <h2 className="text-2xl font-bold mt-10 mb-4">FAQ : les crawlers en 2026</h2>
-        <h3 className="text-xl font-semibold mt-6 mb-2">Un crawler et un bot, c'est la même chose ?</h3>
+        <h2 className="text-2xl font-bold mt-10 mb-4">FAQ : traduction et définition de crawler</h2>
+        {CRAWLER_DEFINITION_FAQS.map((item) => (
+          <React.Fragment key={item.q}>
+            <h3 className="text-xl font-semibold mt-6 mb-2">{item.q}</h3>
+            <p>{item.a}</p>
+          </React.Fragment>
+        ))}
         <p>
-          Presque. Tous les crawlers sont des bots, mais tous les bots ne sont pas des crawlers. Un crawler est un bot spécialisé dans la découverte et l'indexation de pages web. Les bots peuvent aussi être des scrapers, des chatbots, des agents de monitoring.
-        </p>
-        <h3 className="text-xl font-semibold mt-6 mb-2">Faut-il bloquer les crawlers IA comme GPTBot ?</h3>
-        <p>
-          Cela dépend de votre stratégie. Bloquer GPTBot vous protège de l'entraînement des modèles OpenAI, mais vous coupe aussi des citations dans ChatGPT Search. En 2026, la plupart des sites B2B choisissent d'autoriser les crawlers IA pour capter le trafic de citation.
-        </p>
-        <h3 className="text-xl font-semibold mt-6 mb-2">Comment savoir quels crawlers visitent mon site ?</h3>
-        <p>
-          Trois méthodes : l'analyse de logs serveur, un outil dédié comme <Link to="/analyse-logs" className="text-primary hover:underline">Analyse Logs</Link>, ou un audit ponctuel via notre <Link to="/audit-seo-gratuit" className="text-primary hover:underline">audit SEO gratuit</Link>.
+          Pour la lecture des journaux, voir <Link to="/analyse-logs" className="text-primary hover:underline">l'analyse de logs</Link>. Pour un contrôle ponctuel du HTML servi, voir <Link to="/audit-seo-gratuit" className="text-primary hover:underline">l'audit SEO gratuit</Link>.
         </p>
 
 
