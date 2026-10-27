@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, type ComponentType } from 'react';
+import { useState, useCallback, useEffect, type ComponentType, type ReactNode } from 'react';
 import { ActiveCrawlBanner } from '@/components/ActiveCrawlBanner';
 import { AnomalyAlertsBanner } from '@/components/Console/AnomalyAlertsBanner';
 
@@ -166,7 +166,7 @@ function SortableSiteButton({ id, label, isActive, isRefreshing, onClick }: {
 }
 
 // ─── KPI Card ───
-function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip }: { label: string; value: string; icon: ComponentType<{ className?: string }>; valueClassName?: string; onRefresh?: () => Promise<void>; tooltip?: string }) {
+function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip, muted }: { label: string; value: string; icon: ComponentType<{ className?: string }>; valueClassName?: string; onRefresh?: () => Promise<void>; tooltip?: string; muted?: boolean }) {
   const [refreshing, setRefreshing] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -178,7 +178,7 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip 
   };
 
   return (
-    <div className="relative group min-w-0 rounded-lg border bg-card p-2 flex flex-col justify-between min-h-[52px]">
+    <div className={cn('relative group min-w-0 rounded-lg border bg-card p-2 flex flex-col justify-between min-h-[52px]', muted && 'opacity-40 pointer-events-none')}>
       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
         <Icon className="h-3 w-3 shrink-0" />
         <span className="leading-tight">{label}</span>
@@ -217,16 +217,17 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh, tooltip 
 }
 
 // ─── Sortable KPI Grid ───
-function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: {
+function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh, trailing }: {
   kpiDefinitions: Record<string, { label: string; value: string; icon: ComponentType<{ className?: string }>; valueClassName?: string; tooltip?: string }>;
   defaultOrder: string[];
   disabled: boolean;
   onRefresh?: Record<string, () => Promise<void>>;
+  trailing?: ReactNode;
 }) {
   return (
     <Card className="border-0 shadow-none bg-transparent">
       <CardContent className="p-0">
-        <div className={cn('grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2', disabled && 'opacity-40 pointer-events-none')}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2">
           {defaultOrder.map(id => {
             const def = kpiDefinitions[id];
             if (!def) return null;
@@ -239,9 +240,11 @@ function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: 
                 valueClassName={def.valueClassName}
                 onRefresh={onRefresh?.[id]}
                 tooltip={def.tooltip}
+                muted={disabled}
               />
             );
           })}
+          {trailing}
         </div>
       </CardContent>
     </Card>
@@ -655,8 +658,6 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
 
                     </div>
 
-                    <AuditScoresBanner domain={h.currentSite.domain} showStrategic={false} />
-
                     {/* KPI Cards */}
                     {(() => {
                       const defaultKpiOrder = ['performanceMobile', 'performanceDesktop', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
@@ -706,6 +707,7 @@ export function MyTracking({ externalSiteId, forceApiPanel, onApiPanelOpened }: 
                           defaultOrder={defaultKpiOrder}
                           disabled={!h.latestStats}
                           onRefresh={h.latestStats ? kpiRefreshMap : undefined}
+                          trailing={<AuditScoresBanner domain={h.currentSite.domain} showStrategic={false} variant="card" />}
                         />
                       );
                     })()}
