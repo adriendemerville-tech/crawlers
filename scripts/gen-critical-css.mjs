@@ -95,5 +95,9 @@ if (theme) {
 }
 
 const out = root.toString().replace(/\n\s*/g, '\n').trim();
-fs.writeFileSync('src/styles.critical.css', out);
-console.log(`src/styles.critical.css — ${(out.length / 1024).toFixed(1)} Ko (source ${cssFiles[0].f})`);
+// Règles hors @layer pour les champs à icône : le prune les jette (la home
+// n'a pas pl-10) alors qu'elles doivent gagner sur le .px-3 critique.
+const iconFix = fs.readFileSync(path.join('src', 'styles.icon-fields.css'), 'utf8').trim();
+const critical = `${out}\n${iconFix}\n`;
+fs.writeFileSync('src/styles.critical.css', critical);
+console.log(`src/styles.critical.css — ${(critical.length / 1024).toFixed(1)} Ko (source ${cssFiles[0].f})`);

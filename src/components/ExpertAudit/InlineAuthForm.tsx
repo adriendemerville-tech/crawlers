@@ -348,7 +348,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                       <FormLabel className="text-xs">{t.email}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                          <Mail className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                           <Input {...field} type="email" className="pl-8 h-11 text-sm" placeholder="email@example.com" />
                         </div>
                       </FormControl>
@@ -364,7 +364,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                       <FormLabel className="text-xs">{t.password}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Lock className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                          <Lock className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             {...field}
                             type={showPassword ? 'text' : 'password'}
@@ -373,7 +373,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            className="absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center p-0 text-muted-foreground hover:text-foreground"
                           >
                             {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                           </button>
@@ -440,7 +440,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                             <FormLabel className="text-xs">{t.firstName}</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <User className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                <User className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                                 <Input {...field} className="pl-8 h-11 text-sm" />
                               </div>
                             </FormControl>
@@ -473,7 +473,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                       <FormLabel className="text-xs">{t.email}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                          <Mail className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             {...field}
                             type="email"
@@ -495,7 +495,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                       <FormLabel className="text-xs">{t.password}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Lock className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                          <Lock className="pointer-events-none absolute left-2.5 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             {...field}
                             type={showPassword ? 'text' : 'password'}
@@ -504,7 +504,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess, showPersonaG
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            className="absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center p-0 text-muted-foreground hover:text-foreground"
                           >
                             {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                           </button>

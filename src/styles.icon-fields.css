@@ -1,0 +1,109 @@
+/*
+  Champs avec icône (connexion, inscription, réinitialisation).
+
+  L'input shadcn porte `px-3` (padding-inline). La feuille critique, inlinée
+  après styles.css, réémet `.px-3` dans @layer utilities. Ce shorthand
+  logique écrase alors le padding-left / padding-right de `.pl-*` et `.pr-*`,
+  et le texte passe sous l'icône — y compris quand le navigateur préremplit
+  le champ. Ces règles sont hors @layer : elles gagnent sur toute couche.
+*/
+
+.px-3.pl-8 { padding-left: 2rem; }
+.px-3.pl-9 { padding-left: 2.25rem; }
+.px-3.pl-10 { padding-left: 2.5rem; }
+.px-3.pr-8 { padding-right: 2rem; }
+.px-3.pr-9 { padding-right: 2.25rem; }
+.px-3.pr-10 { padding-right: 2.5rem; }
+
+input.px-3.pl-8:-webkit-autofill,
+input.px-3.pl-8:-webkit-autofill:hover,
+input.px-3.pl-8:-webkit-autofill:focus,
+input.px-3.pl-8:-webkit-autofill:active,
+input.px-3.pl-8:autofill {
+  padding-left: 2rem;
+}
+
+input.px-3.pl-9:-webkit-autofill,
+input.px-3.pl-9:-webkit-autofill:hover,
+input.px-3.pl-9:-webkit-autofill:focus,
+input.px-3.pl-9:-webkit-autofill:active,
+input.px-3.pl-9:autofill {
+  padding-left: 2.25rem;
+}
+
+input.px-3.pl-10:-webkit-autofill,
+input.px-3.pl-10:-webkit-autofill:hover,
+input.px-3.pl-10:-webkit-autofill:focus,
+input.px-3.pl-10:-webkit-autofill:active,
+input.px-3.pl-10:autofill {
+  padding-left: 2.5rem;
+}
+
+input.px-3.pr-8:-webkit-autofill,
+input.px-3.pr-8:-webkit-autofill:hover,
+input.px-3.pr-8:-webkit-autofill:focus,
+input.px-3.pr-8:-webkit-autofill:active,
+input.px-3.pr-8:autofill {
+  padding-right: 2rem;
+}
+
+input.px-3.pr-9:-webkit-autofill,
+input.px-3.pr-9:-webkit-autofill:hover,
+input.px-3.pr-9:-webkit-autofill:focus,
+input.px-3.pr-9:-webkit-autofill:active,
+input.px-3.pr-9:autofill {
+  padding-right: 2.25rem;
+}
+
+input.px-3.pr-10:-webkit-autofill,
+input.px-3.pr-10:-webkit-autofill:hover,
+input.px-3.pr-10:-webkit-autofill:focus,
+input.px-3.pr-10:-webkit-autofill:active,
+input.px-3.pr-10:autofill {
+  padding-right: 2.5rem;
+}
+
+input.px-3.pl-8:-webkit-autofill,
+input.px-3.pl-8:-webkit-autofill:hover,
+input.px-3.pl-8:-webkit-autofill:focus,
+input.px-3.pl-8:-webkit-autofill:active,
+input.px-3.pl-9:-webkit-autofill,
+input.px-3.pl-9:-webkit-autofill:hover,
+input.px-3.pl-9:-webkit-autofill:focus,
+input.px-3.pl-9:-webkit-autofill:active,
+input.px-3.pl-10:-webkit-autofill,
+input.px-3.pl-10:-webkit-autofill:hover,
+input.px-3.pl-10:-webkit-autofill:focus,
+input.px-3.pl-10:-webkit-autofill:active,
+input.px-3.pr-8:-webkit-autofill,
+input.px-3.pr-8:-webkit-autofill:hover,
+input.px-3.pr-8:-webkit-autofill:focus,
+input.px-3.pr-8:-webkit-autofill:active,
+input.px-3.pr-9:-webkit-autofill,
+input.px-3.pr-9:-webkit-autofill:hover,
+input.px-3.pr-9:-webkit-autofill:focus,
+input.px-3.pr-9:-webkit-autofill:active,
+input.px-3.pr-10:-webkit-autofill,
+input.px-3.pr-10:-webkit-autofill:hover,
+input.px-3.pr-10:-webkit-autofill:focus,
+input.px-3.pr-10:-webkit-autofill:active,
+input.px-3.pl-8:autofill,
+input.px-3.pl-9:autofill,
+input.px-3.pl-10:autofill,
+input.px-3.pr-8:autofill,
+input.px-3.pr-9:autofill,
+input.px-3.pr-10:autofill {
+  -webkit-text-fill-color: hsl(var(--foreground));
+  caret-color: hsl(var(--primary));
+  box-shadow: 0 0 0 1000px hsl(var(--background)) inset;
+}
+
+input.px-3.pl-8:-webkit-autofill:focus,
+input.px-3.pl-9:-webkit-autofill:focus,
+input.px-3.pl-10:-webkit-autofill:focus,
+input.px-3.pr-8:-webkit-autofill:focus,
+input.px-3.pr-9:-webkit-autofill:focus,
+input.px-3.pr-10:-webkit-autofill:focus {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}

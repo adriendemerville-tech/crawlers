@@ -9,6 +9,7 @@
   }
 }
 @import "./styles.theme.css";
+@import "./styles.icon-fields.css";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
