@@ -59,3 +59,39 @@
 @source "../src/pages/SeaSeoBridge.tsx";
 @source "../src/pages/SiteCrawl.tsx";
 @source "../src/pages/SocialHub.tsx";
+
+/* En-tête « Marina à la carte » (console ?tab=marina).
+   Hors @layer : styles.app.css réémet .flex-col dans la couche utilities
+   après les media queries de styles.css. Une media query n'ajoute pas de
+   spécificité, donc sm:flex-row restait en colonne et les boutons passaient
+   sous le titre même sur un écran large. */
+.marina-carte-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 100%;
+}
+.marina-carte-header__title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 18rem;
+  min-width: min(100%, 12rem);
+  max-width: 100%;
+}
+.marina-carte-header__title > svg {
+  flex-shrink: 0;
+}
+.marina-carte-header__title > div {
+  min-width: 0;
+}
+.marina-carte-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  max-width: 100%;
+}
