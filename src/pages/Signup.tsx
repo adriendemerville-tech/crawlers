@@ -651,7 +651,7 @@ export default function Signup() {
                       <FormLabel className="text-xs">{t.firstName}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                          <User className="pointer-events-none absolute left-3 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                           <Input {...field} className="pl-9 h-9 text-sm" autoFocus />
                         </div>
                       </FormControl>
@@ -672,7 +672,7 @@ export default function Signup() {
                     <FormLabel className="text-xs">{t.email}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Mail className="pointer-events-none absolute left-3 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                         <Input {...field} type="email" className="pl-9 h-9 text-sm caret-primary" placeholder="email@example.com" />
                       </div>
                     </FormControl>
@@ -685,9 +685,9 @@ export default function Signup() {
                     <FormLabel className="text-xs">{t.password}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        {!field.value && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />}
-                        <Input {...field} type={showPassword ? 'text' : 'password'} className={`${field.value ? 'pl-3' : 'pl-9'} pr-9 h-9 text-sm`} />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        <Lock className="pointer-events-none absolute left-3 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input {...field} type={showPassword ? 'text' : 'password'} className="pl-9 pr-9 h-9 text-sm" />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center p-0 text-muted-foreground hover:text-foreground">
                           {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                         </button>
                       </div>
@@ -701,9 +701,9 @@ export default function Signup() {
                     <FormLabel className="text-xs">{t.confirmPassword}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        {!field.value && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />}
-                        <Input {...field} type={showConfirmPassword ? 'text' : 'password'} className={`${field.value ? 'pl-3' : 'pl-9'} pr-9 h-9 text-sm`} />
-                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        <Lock className="pointer-events-none absolute left-3 top-1/2 z-10 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                        <Input {...field} type={showConfirmPassword ? 'text' : 'password'} className="pl-9 pr-9 h-9 text-sm" />
+                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center p-0 text-muted-foreground hover:text-foreground">
                           {showConfirmPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                         </button>
                       </div>

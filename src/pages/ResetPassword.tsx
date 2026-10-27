@@ -192,13 +192,14 @@ const ResetPassword = () => {
                           <Input
                             type={showPassword ? 'text' : 'password'}
                             placeholder="••••••••"
+                            className="pr-10"
                             {...field}
                           />
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                            className="absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center p-0"
                             onClick={() => setShowPassword(!showPassword)}
                           >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -220,13 +221,14 @@ const ResetPassword = () => {
                           <Input
                             type={showConfirm ? 'text' : 'password'}
                             placeholder="••••••••"
+                            className="pr-10"
                             {...field}
                           />
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                            className="absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center p-0"
                             onClick={() => setShowConfirm(!showConfirm)}
                           >
                             {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

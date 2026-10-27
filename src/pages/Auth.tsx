@@ -430,7 +430,7 @@ export default function Auth() {
                         <FormLabel>{t.email}</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Mail className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input {...field} type="email" className="pl-10 caret-primary" autoFocus placeholder="email@example.com" />
                           </div>
                         </FormControl>
@@ -454,7 +454,7 @@ export default function Auth() {
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                              className="absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center p-0 text-muted-foreground hover:text-foreground"
                             >
                               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
@@ -524,7 +524,7 @@ export default function Auth() {
                           <FormLabel>{t.firstName}</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <User className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                               <Input {...field} className="pl-10" />
                             </div>
                           </FormControl>
@@ -554,7 +554,7 @@ export default function Auth() {
                         <FormLabel>{t.email}</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Mail className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input {...field} type="email" className="pl-10 caret-primary" autoFocus placeholder="email@example.com" />
                           </div>
                         </FormControl>
@@ -578,7 +578,7 @@ export default function Auth() {
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                              className="absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center p-0 text-muted-foreground hover:text-foreground"
                             >
                               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
