@@ -305,9 +305,9 @@ export function MarinaConsoleTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
+      {/* Header — classes dédiées : sm:flex-row est écrasé par .flex-col réémis plus tard */}
+      <div className="marina-carte-header">
+        <div className="marina-carte-header__title">
           <Anchor className="h-6 w-6 text-primary" />
           <div>
             <h2 className="text-xl font-bold">Marina à la carte</h2>
@@ -320,7 +320,7 @@ export function MarinaConsoleTab() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
+        <div className="marina-carte-header__actions">
           {isAgencyPro && (
             <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
               {t3(language, 'Inclus dans votre plan', 'Included in your plan', 'Incluido en su plan')}
