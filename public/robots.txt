@@ -376,6 +376,10 @@ Sitemap: https://crawlers.fr/sitemap.xml
 # Stratège Cocoon       : https://crawlers.fr/stratege-cocoon
 # Social Content Hub    : https://crawlers.fr/social-content-creator
 # Guides                : https://crawlers.fr/guides
+# Guide artisan         : https://crawlers.fr/guide/artisan-seo
+# Guide e-commerce      : https://crawlers.fr/guide/ecommerce-seo
+# Guide agence          : https://crawlers.fr/guide/agence-seo
+# Guide SaaS            : https://crawlers.fr/guide/saas-seo
 # Guide audit SEO       : https://crawlers.fr/guide-audit-seo
 # Blog                  : https://crawlers.fr/blog
 # Lexique               : https://crawlers.fr/lexique

@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { notFound } from '@tanstack/react-router';
 import { useParams, Link } from '@/lib/router-compat';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -18,20 +19,7 @@ export default function ExpertTermPage() {
   
   const term = getExpertTermBySlug(slug || '', language);
   
-  if (!term) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold mb-4">Terme non trouvé</h1>
-          <Link to="/lexique" className="text-primary hover:underline">
-            Retour au lexique
-          </Link>
-        </main>
-        <Suspense fallback={null}><Footer /></Suspense>
-      </div>
-    );
-  }
+  if (!term) throw notFound();
 
   const category = expertCategories[term.category];
   const categoryLabel = category.label[language as keyof typeof category.label] || category.label.fr;

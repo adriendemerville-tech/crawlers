@@ -379,6 +379,10 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - [Comparatif plateformes SEO IA](/comparatif-plateforme-seo-ia): Panorama des solutions SEO et GEO.
 - [Guide audit SEO](/guide-audit-seo): Méthodologie d'audit pas à pas.
 - [Guides](/guides): Hub des guides SEO et GEO.
+- [SEO artisan](/guide/artisan-seo): Visibilité Google et assistants IA pour un site d'artisan.
+- [SEO e-commerce](/guide/ecommerce-seo): Fiches produit, catégories et citations pour une boutique.
+- [SEO agence](/guide/agence-seo): Méthode de mesure et de restitution pour agences et consultants.
+- [SEO SaaS](/guide/saas-seo): Pages d'usage, documentation et visibilité d'un logiciel.
 - [Blog](/blog): Articles SEO, GEO et visibilité IA.
 - [Lexique](/lexique): Définitions SEO, GEO et IA.
 - [FAQ](/faq): Questions fréquentes.
