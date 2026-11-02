@@ -1,5 +1,6 @@
 import { memo, useEffect, useState, lazy, Suspense } from 'react';
-import { useParams, Navigate } from '@/lib/router-compat';
+import { notFound } from '@tanstack/react-router';
+import { useParams } from '@/lib/router-compat';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -21,7 +22,7 @@ function LandingPageComponent() {
   const { slug } = useParams<{ slug: string }>();
   const [landing, setLanding] = useState<LandingDraft | null>(null);
   const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const [missing, setMissing] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -37,7 +38,7 @@ function LandingPageComponent() {
         .single();
 
       if (error || !data) {
-        setNotFound(true);
+        setMissing(true);
       } else {
         setLanding(data as unknown as LandingDraft);
       }
@@ -55,9 +56,7 @@ function LandingPageComponent() {
     );
   }
 
-  if (notFound || !landing) {
-    return <Navigate to="/404" replace />;
-  }
+  if (missing || !landing) throw notFound();
 
   const canonicalUrl = `https://crawlers.fr/landing/${landing.slug}`;
 

@@ -1,6 +1,6 @@
 import { memo, lazy, Suspense } from 'react';
-import { getRouteApi } from '@tanstack/react-router';
-import { Link, Navigate } from '@/lib/router-compat';
+import { getRouteApi, notFound } from '@tanstack/react-router';
+import { Link } from '@/lib/router-compat';
 import { GuideTemplate, type GuideData } from '@/components/Guide/GuideTemplate';
 import { Header } from '@/components/Header';
 
@@ -15,9 +15,7 @@ function GuideLandingPageComponent(): React.ReactElement {
   };
   const { guide, siblings } = data;
 
-  if (!guide) {
-    return <Navigate to="/404" replace />;
-  }
+  if (!guide) throw notFound();
 
   return (
     <>

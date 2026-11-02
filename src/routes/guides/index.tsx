@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import GuidesHub from "@/pages/GuidesHub";
 import { pageHead } from "@/lib/seo/pageHead";
 import { supabase } from "@/integrations/supabase/client";
+import { listBuiltinGuideEntries } from "@/data/professionGuides";
 
 export interface GuideEntry {
   slug: string;
@@ -14,13 +15,22 @@ export const Route = createFileRoute("/guides/")({
   // Chargé côté serveur : la liste des guides (titres + liens) doit figurer
   // dans le HTML initial, sinon les crawlers IA ne voient qu'un hero vide.
   loader: async (): Promise<GuideEntry[]> => {
-    const { data } = await supabase
-      .from("seo_page_drafts" as any)
-      .select("slug, title, meta_description, guide_category")
-      .eq("page_type", "guide")
-      .eq("status", "published")
-      .order("created_at", { ascending: true });
-    return (data as unknown as GuideEntry[]) ?? [];
+    let fromDb: GuideEntry[] = [];
+    try {
+      const { data } = await supabase
+        .from("seo_page_drafts" as any)
+        .select("slug, title, meta_description, guide_category")
+        .eq("page_type", "guide")
+        .eq("status", "published")
+        .abortSignal(AbortSignal.timeout(3000))
+        .order("created_at", { ascending: true });
+      fromDb = (data as unknown as GuideEntry[]) ?? [];
+    } catch (error) {
+      console.error("guides hub lookup timed out or failed", error);
+    }
+    const published = new Set(fromDb.map((guide) => guide.slug));
+    const builtin = listBuiltinGuideEntries().filter((guide) => !published.has(guide.slug));
+    return [...fromDb, ...builtin];
   },
   head: () => pageHead({
     title: "Guides SEO & GEO par métier | Crawlers",

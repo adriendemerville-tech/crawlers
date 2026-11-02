@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { appendProfessionGuideEntries } from "@/data/professionGuides";
 
 const SITE = "https://crawlers.fr";
 const DOMAIN = "crawlers.fr";
@@ -27,6 +28,10 @@ const FALLBACK_PATHS = [
   "/mentions-legales",
   "/cgvu",
   "/politique-confidentialite",
+  "/guide/artisan-seo",
+  "/guide/ecommerce-seo",
+  "/guide/agence-seo",
+  "/guide/saas-seo",
 ];
 
 function escapeXml(str: string): string {
@@ -94,7 +99,10 @@ async function buildSitemap(): Promise<{ xml: string; source: "db" | "fallback";
             lastmod:
               typeof e.lastmod === "string" && e.lastmod.includes("T") ? e.lastmod.split("T")[0]! : e.lastmod || null,
           }));
-        if (rows.length > 0) return { xml: toXml(rows), source: "db", count: rows.length };
+        if (rows.length > 0) {
+          const withGuides = appendProfessionGuideEntries(rows);
+          return { xml: toXml(withGuides), source: "db", count: withGuides.length };
+        }
       }
     }
   } catch {
@@ -124,7 +132,8 @@ async function buildSitemap(): Promise<{ xml: string; source: "db" | "fallback";
   }));
 
 
-  return { xml: toXml(rows), source: "fallback", count: rows.length };
+  const withGuides = appendProfessionGuideEntries(rows);
+  return { xml: toXml(withGuides), source: "fallback", count: withGuides.length };
 }
 
 export const Route = createFileRoute("/sitemap.xml")({

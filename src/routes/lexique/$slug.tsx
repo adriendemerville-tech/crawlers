@@ -1,10 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import ExpertTermPage from "@/pages/Lexique/ExpertTermPage";
+import { getExpertTermBySlug } from "@/data/expertTerms";
 import { getExpertTermMeta } from "@/data/expertTermsMeta.generated";
 import { pageHead } from "@/lib/seo/pageHead";
 import { buildBreadcrumbJsonLd, buildDefinedTermJsonLd } from "@/lib/seo/articleSchema";
 
 export const Route = createFileRoute("/lexique/$slug")({
+  loader: ({ params }) => {
+    if (!getExpertTermBySlug(params.slug, "fr")) throw notFound();
+    return null;
+  },
   head: ({ params }) => {
     const term = getExpertTermMeta(params.slug, "fr");
     if (!term) {

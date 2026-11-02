@@ -1,5 +1,6 @@
 import { Header } from '@/components/Header';
-import { Link, useLocation, Navigate } from '@/lib/router-compat';
+import { notFound } from '@tanstack/react-router';
+import { Link, useLocation } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { lazy, Suspense } from 'react';
@@ -147,7 +148,7 @@ export default function KeywordPillarPage() {
   const data = KEYWORD_PILLARS[slug];
   useCanonicalHreflang(`/${slug}`);
 
-  if (!data) return <Navigate to="/404" replace />;
+  if (!data) throw notFound();
 
   const silo = siloForPath(`/${slug}`);
 

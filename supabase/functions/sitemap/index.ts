@@ -1,6 +1,7 @@
 import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest } from '../_shared/serveHandler.ts';
+import { appendProfessionGuideEntries } from '../_shared/professionGuides.ts';
 
 const SITE_URL = 'https://crawlers.fr';
 
@@ -71,7 +72,7 @@ Deno.serve(handleRequest(async (req) => {
     }
 
     // Format lastmod dates (ensure YYYY-MM-DD) ; null = pas de <lastmod> émis
-    const formatted = entries.map(e => ({
+    const formatted = appendProfessionGuideEntries(entries).map(e => ({
       ...e,
       lastmod: typeof e.lastmod === 'string' && e.lastmod.includes('T')
         ? e.lastmod.split('T')[0]

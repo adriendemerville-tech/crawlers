@@ -14,6 +14,7 @@ import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts'
 import { submitToIndexNow } from '../_shared/urlIndexing.ts'
+import { appendProfessionGuideEntries } from '../_shared/professionGuides.ts'
 
 const DEFAULT_DOMAIN = 'crawlers.fr';
 const SITE_URL = 'https://crawlers.fr';
@@ -86,7 +87,7 @@ Deno.serve(handleRequest(async (req) => {
     }
 
     // 3. Format dates to YYYY-MM-DD ; null = pas de <lastmod> émis
-    const formatted = indexable.map(e => ({
+    const formatted = appendProfessionGuideEntries(indexable).map(e => ({
       ...e,
       lastmod: typeof e.lastmod === 'string' && e.lastmod.includes('T')
         ? e.lastmod.split('T')[0]
