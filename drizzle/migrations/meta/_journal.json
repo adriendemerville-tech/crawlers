@@ -372,6 +372,13 @@
       "when": 1794490844761,
       "tag": "0052_tighten_storage_and_duplicate_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1794495180285,
+      "tag": "0053_replace_tautology_read_policies",
+      "breakpoints": true
     }
   ]
 }
