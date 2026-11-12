@@ -365,6 +365,13 @@
       "when": 1791796547342,
       "tag": "0051_lock_startup_trial_rpcs",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1794490844761,
+      "tag": "0052_tighten_storage_and_duplicate_policies",
+      "breakpoints": true
     }
   ]
 }
