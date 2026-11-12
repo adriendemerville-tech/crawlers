@@ -390,6 +390,10 @@ Sitemap: https://crawlers.fr/sitemap.xml
 # Stratège Cocoon       : https://crawlers.fr/stratege-cocoon
 # Social Content Hub    : https://crawlers.fr/social-content-creator
 # Guides                : https://crawlers.fr/guides
+# Guide artisan         : https://crawlers.fr/guide/artisan-seo
+# Guide e-commerce      : https://crawlers.fr/guide/ecommerce-seo
+# Guide agence          : https://crawlers.fr/guide/agence-seo
+# Guide SaaS            : https://crawlers.fr/guide/saas-seo
 # Guide audit SEO       : https://crawlers.fr/guide-audit-seo
 # Blog                  : https://crawlers.fr/blog
 # Lexique               : https://crawlers.fr/lexique
@@ -447,8 +451,23 @@ Sitemap: https://crawlers.fr/sitemap.xml
               "X-Prerender-UA": ua.slice(0, 60),
             },
           });
+        } else if (prerendered.status === 404 || prerendered.status === 410) {
+          // Ne pas retomber sur l'origine : elle répond souvent 200 (soft 404).
+          const body = await prerendered.text();
+          const html = body.trim().startsWith("<")
+            ? body
+            : `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Page introuvable | Crawlers.fr</title><meta name="robots" content="noindex, follow"></head><body><h1>404</h1><p>Cette adresse ne correspond à aucune page.</p></body></html>`;
+          response = new Response(request.method === "HEAD" ? null : html, {
+            status: prerendered.status,
+            headers: {
+              "Content-Type": "text/html; charset=utf-8",
+              "X-Robots-Tag": "noindex, follow",
+              "Cache-Control": "public, max-age=300",
+              "X-Prerender-Bot": "1",
+            },
+          });
         } else {
-          // Fallback : SPA classique si render-page échoue
+          // Fallback : origine si render-page échoue autrement qu'en 404
           response = await fetchLovableOrigin(request);
         }
       } catch (e) {

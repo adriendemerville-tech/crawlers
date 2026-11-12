@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import GuideLandingPage from "@/pages/GuideLandingPage";
 import { supabase } from "@/integrations/supabase/client";
 import { pageHead } from "@/lib/seo/pageHead";
 import { parseGuideFromDb } from "@/lib/guides/parseGuide";
+import { getBuiltinGuideRow, listBuiltinGuideEntries } from "@/data/professionGuides";
 import {
   buildArticleJsonLd,
   buildBreadcrumbJsonLd,
@@ -21,30 +22,56 @@ export const Route = createFileRoute("/guide/$slug")({
   // serveur pour figurer dans le HTML initial (crawlers SEO et IA).
   loader: async ({
     params,
-  }): Promise<{ guide: GuideData | null; siblings: SiblingGuide[] }> => {
-    const [{ data }, { data: others }] = await Promise.all([
-      supabase
-        .from("seo_page_drafts" as never)
-        .select("*")
-        .eq("slug", params.slug)
-        .eq("status", "published")
-        .eq("page_type", "guide")
-        .maybeSingle(),
-      supabase
-        .from("seo_page_drafts" as never)
-        .select("slug, title")
-        .eq("status", "published")
-        .eq("page_type", "guide")
-        .neq("slug", params.slug)
-        .order("slug", { ascending: true }),
-    ]);
+  }): Promise<{ guide: GuideData; siblings: SiblingGuide[] }> => {
+    // La base reste prioritaire (guide publié dans l'admin). Si elle ne
+    // répond pas, les quatre guides métier du dépôt sont servis quand même.
+    // Un slug inconnu lève notFound() : statut 404, pas une redirection vers /404.
+    let data: unknown = null;
+    let others: SiblingGuide[] | null = null;
+    try {
+      const [{ data: row }, { data: rest }] = await Promise.all([
+        supabase
+          .from("seo_page_drafts" as never)
+          .select("*")
+          .eq("slug", params.slug)
+          .eq("status", "published")
+          .eq("page_type", "guide")
+          .abortSignal(AbortSignal.timeout(3000))
+          .maybeSingle(),
+        supabase
+          .from("seo_page_drafts" as never)
+          .select("slug, title")
+          .eq("status", "published")
+          .eq("page_type", "guide")
+          .neq("slug", params.slug)
+          .abortSignal(AbortSignal.timeout(3000))
+          .order("slug", { ascending: true }),
+      ]);
+      data = row;
+      others = (rest as unknown as SiblingGuide[]) ?? null;
+    } catch (error) {
+      console.error("guide lookup timed out or failed", error);
+    }
 
-    const siblings = ((others as unknown as SiblingGuide[]) ?? []).filter(
-      (g) => g.slug && g.title,
-    );
+    const source = data ?? getBuiltinGuideRow(params.slug);
+    if (!source) throw notFound();
 
-    if (!data) return { guide: null, siblings };
-    return { guide: parseGuideFromDb(data), siblings };
+    const siblings = new Map<string, SiblingGuide>();
+    for (const guide of others ?? []) {
+      if (guide.slug && guide.title && guide.slug !== params.slug) {
+        siblings.set(guide.slug, guide);
+      }
+    }
+    for (const guide of listBuiltinGuideEntries()) {
+      if (guide.slug !== params.slug && !siblings.has(guide.slug)) {
+        siblings.set(guide.slug, { slug: guide.slug, title: guide.title });
+      }
+    }
+
+    return {
+      guide: parseGuideFromDb(source),
+      siblings: [...siblings.values()].sort((a, b) => a.slug.localeCompare(b.slug)),
+    };
   },
   head: ({ params, loaderData }) => {
     const path = `/guide/${params.slug}`;

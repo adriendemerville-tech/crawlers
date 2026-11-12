@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { handleRequest, jsonOk, jsonError } from '../_shared/serveHandler.ts';
+import { getBuiltinPrerenderGuide } from '../_shared/professionGuides.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -122,6 +123,43 @@ function markdownToHtml(md: string): string {
   // Clean any remaining markers
   html = html.replace(/%%TABLE_START%%/g, "").replace(/%%TABLE_END%%/g, "");
   return html;
+}
+
+/** HTML 404 avec noindex. Le statut HTTP est 404, pas une redirection vers /404. */
+function htmlNotFound(route: string): Response {
+  const safeRoute = escapeHtml(route || "/");
+  const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page introuvable | Crawlers.fr</title>
+  <meta name="robots" content="noindex, follow">
+  <meta name="description" content="Cette adresse ne correspond à aucune page de Crawlers.fr.">
+</head>
+<body>
+  <main>
+    <h1>404 — Page introuvable</h1>
+    <p>L'adresse ${safeRoute} ne correspond à aucune page.</p>
+    <ul>
+      <li><a href="${baseUrl}/">Accueil</a></li>
+      <li><a href="${baseUrl}/guides">Guides</a></li>
+      <li><a href="${baseUrl}/audit-expert">Audit gratuit</a></li>
+      <li><a href="${baseUrl}/tarifs">Tarifs</a></li>
+      <li><a href="${baseUrl}/sitemap.xml">Sitemap</a></li>
+    </ul>
+  </main>
+</body>
+</html>`;
+  return new Response(html, {
+    status: 404,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "text/html; charset=utf-8",
+      "X-Robots-Tag": "noindex, follow",
+      "Cache-Control": "public, max-age=300",
+    },
+  });
 }
 
 /** Count words in text (strip markdown/html) */
@@ -840,7 +878,7 @@ Deno.serve(handleRequest(async (req) => {
         }
       }
 
-      const { data: guide, error: guideError } = await supabase
+      const { data: dbGuide, error: guideError } = await supabase
         .from("seo_page_drafts")
         .select("title, slug, meta_title, meta_description, content, target_keyword, published_at, guide_category, guide_target")
         .eq("slug", slug)
@@ -848,16 +886,34 @@ Deno.serve(handleRequest(async (req) => {
         .eq("page_type", "guide")
         .single();
 
-      if (guideError || !guide) {
-        return new Response(JSON.stringify({ error: "Guide not found", slug }), {
-          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      const builtinGuide = (!dbGuide || guideError) ? getBuiltinPrerenderGuide(slug) : null;
+      const guide = dbGuide ?? (builtinGuide ? {
+        title: builtinGuide.title,
+        slug: builtinGuide.slug,
+        meta_title: builtinGuide.meta_title,
+        meta_description: builtinGuide.meta_description,
+        content: builtinGuide.content,
+        target_keyword: builtinGuide.target_keyword,
+        published_at: builtinGuide.published_at,
+        guide_category: builtinGuide.guide_category,
+        guide_target: builtinGuide.guide_target,
+      } : null);
+
+      if (!guide) {
+        if (format === "json") {
+          return new Response(JSON.stringify({ error: "Guide not found", slug }), {
+            status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        return htmlNotFound(route);
       }
 
       const guideFullUrl = `${baseUrl}/guide/${guide.slug}`;
       const guideContentHtml = markdownToHtml(guide.content || '');
       const guideWordCount = countWords(guide.content || '');
-      const guideFaqs = extractFaqFromContent(guide.content || "");
+      const guideFaqs = builtinGuide?.faqs?.length
+        ? builtinGuide.faqs
+        : extractFaqFromContent(guide.content || "");
 
       const guideBreadcrumb = breadcrumbJsonLd([
         { name: "Accueil", url: baseUrl },
@@ -966,10 +1022,13 @@ Deno.serve(handleRequest(async (req) => {
     // ── Static routes ──
     const meta = PUBLIC_ROUTES[route];
     if (!meta) {
-      return new Response(
-        JSON.stringify({ error: "Route not found", available_routes: [...Object.keys(PUBLIC_ROUTES), "/blog/<slug>", "/landing/<slug>", "/guide/<slug>"] }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      if (format === "json") {
+        return new Response(
+          JSON.stringify({ error: "Route not found", available_routes: [...Object.keys(PUBLIC_ROUTES), "/blog/<slug>", "/landing/<slug>", "/guide/<slug>"] }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      return htmlNotFound(route);
     }
 
     if (!noCache) {

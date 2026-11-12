@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import LandingPage from "@/pages/LandingPage";
 import { supabase } from "@/integrations/supabase/client";
 import { pageHead } from "@/lib/seo/pageHead";
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/landing/$slug")({
       .eq("page_type", "landing")
       .maybeSingle();
     const row = data as { title?: string; meta_title?: string | null; meta_description?: string | null } | null;
-    if (!row?.title) return { title: null, description: null };
+    if (!row?.title) throw notFound();
     return {
       title: row.meta_title || `${row.title} | Crawlers.fr`,
       description:
