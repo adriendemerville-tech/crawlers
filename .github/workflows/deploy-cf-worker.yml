@@ -19,12 +19,25 @@ jobs:
         with:
           node-version: "20"
 
+      # bun.lock fait exécuter `bun` par cloudflare/wrangler-action@v3
+      # (`bun i wrangler@4`, puis `bunx`). Le runner n'a pas bun : le job
+      # échoue aussitôt (« Unable to locate executable file: bun »,
+      # run 43208566863). On installe bun avant l'action.
+      # `--config wrangler.toml` est obligatoire : `.wrangler/deploy/config.json`
+      # redirige sinon vers dist/server/wrangler.json, absent du dépôt (build
+      # Lovable, gitignoré). Les routes restent celles de wrangler.toml,
+      # uniquement /functions/v1/*.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Deploy worker via Wrangler
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: deploy
+          packageManager: bun
+          command: "deploy --config wrangler.toml"
 
       - name: Verify GPTBot response
         run: |
