@@ -29,6 +29,7 @@ import { StartupTrialWelcome } from "@/components/StartupTrialWelcome";
 
 import NotFound from "@/pages/NotFound";
 import { SITEWIDE_JSONLD } from "@/lib/seo/organization";
+import { withNotFoundHead } from "@/lib/seo/notFoundSeo";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { initGlobalErrorListener } from "@/lib/globalErrorListener";
 
@@ -76,7 +77,7 @@ const GTM_LAZY_LOADER = `(function() {var loaded = false;function loadGTM() {if 
 const GA4_FALLBACK_LOADER = `(function(){var h=window.location.hostname;if(h.includes('lovableproject.com')||h.includes('lovable.app')||h==='localhost')return;window.addEventListener('load',function(){setTimeout(function(){if(window.google_tag_manager&&window.google_tag_manager['GTM-TDGHZZ49'])return;if(document.querySelector('script[src*="googletagmanager.com/gtag/js"]'))return;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-0S0D56VSWQ';s.onload=function(){try{window.gtag('config','G-0S0D56VSWQ',{send_page_view:true});}catch(e){}};document.head.appendChild(s);},4000);});})();`;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  head: (ctx) => withNotFoundHead({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1.0, maximum-scale=5" },
@@ -158,7 +159,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { children: GTM_LAZY_LOADER },
       { children: GA4_FALLBACK_LOADER },
     ],
-  }),
+  }, ctx),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFound,
